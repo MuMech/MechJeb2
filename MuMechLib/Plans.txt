@@ -25,3 +25,37 @@
 * Allow a "no-autopilot" mode (enabled/disabled via part.cfg?)
         - Requires separating all autopilot functionality from information displays
             - Split Ascent Stats into its own ComputerModule
+            
+* Create PartExtensions and VesselExtensions classes
+
+* Move everything in ARUtils somewhere else:
+        - Move vessel-related functions into VesselState and VesselExtensions
+        - Move part-related functions into PartExtensions
+        - Move random utilities into MuUtils
+
+* Figure out multithreading to offload the FuelFlowAnalyzer and landing autopilot simulations
+
+* Split up MechJebCore? 
+  Possible parts that could be separated out:
+        - GUI
+        - ComputerModule callbacks
+        - stuff that figures out which MechJebCore is controlling the vessel
+        - attitude controller
+        - thrust controller
+        - warp controller
+        - autostaging controller
+        
+* Add a check that will throttle down to prevent overheats during any sort of autopilot operation
+        - can probably just move the ascent AP code that does this into the Core
+        
+* Allow auto-staging during any sort of autopilot operation
+        - a toggle like in the ascent AP, but in the main menu?
+        
+
+
+
+
+
+
+
+
