@@ -1,5 +1,8 @@
 * Convert to PartModule
-	- Are there any Part class callbacks we use that don't exist anymore in PartModule?
+        - Turn MechJebCore into its own PartModule
+	    - Are there any Part class callbacks we use that don't exist anymore in PartModule?
+        - Turn the classes that handle part animations into separate PartModules
+
 
 * Explicit support for third-party ComputerModules?
 
