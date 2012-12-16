@@ -1,0 +1,12 @@
+
+
+Convert to PartModule
+   -Are there any Part class callbacks we use that don't exist anymore in PartModule
+   
+Explicit support for third-party ComputerModules?
+
+New GUI?
+   -Protractor-like icon?
+
+Add a system for ComputerModules to easily have in-VAB GUI windows
+
