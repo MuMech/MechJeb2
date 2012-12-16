@@ -1,17 +1,24 @@
 * Convert to PartModule
-	- Are there any Part class callbacks we use that don't exist anymore in PartModule
-   
+	- Are there any Part class callbacks we use that don't exist anymore in PartModule?
+
 * Explicit support for third-party ComputerModules?
 
-* New GUI?
+* New GUI
 	- Protractor-like icon?
 		Look for a 2D artist
 	- Choose either a new GUIStyle or create one from scratch.
 	- Customizable info-windows: make lists with all the variables/titles, and allow the user to build his own windows
 
 * Add a system for ComputerModules to easily have in-VAB GUI windows
-	- Maybe just a EditorGUI() in addition to WindowGUI()?
+	- Maybe just a drawEditorGUI() in addition to drawGUI()?
+        - Figure out good way to make sure settings are saved if they're modified in the editor
+          (onPartUpdate/onPartFixedUpdate don't get called there, and that's where MechJebCore currently saves settings)
 
 * Change (most) orbital operations to create maneuver nodes
+        - Might want to have two modes: a full-auto mode (like now) and a mode that just creates maneuver nodes
 
 * Make the Core control more streamlined, and add RCS translation control
+
+* Allow a "no-autopilot" mode (enabled/disabled via part.cfg?)
+        - Requires separating all autopilot functionality from information displays
+            - Split Ascent Stats into its own ComputerModule
