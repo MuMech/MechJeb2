@@ -1,12 +1,17 @@
-
-
-Convert to PartModule
-   -Are there any Part class callbacks we use that don't exist anymore in PartModule
+* Convert to PartModule
+	- Are there any Part class callbacks we use that don't exist anymore in PartModule
    
-Explicit support for third-party ComputerModules?
+* Explicit support for third-party ComputerModules?
 
-New GUI?
-   -Protractor-like icon?
+* New GUI?
+	- Protractor-like icon?
+		Look for a 2D artist
+	- Choose either a new GUIStyle or create one from scratch.
+	- Customizable info-windows: make lists with all the variables/titles, and allow the user to build his own windows
 
-Add a system for ComputerModules to easily have in-VAB GUI windows
+* Add a system for ComputerModules to easily have in-VAB GUI windows
+	- Maybe just a EditorGUI() in addition to WindowGUI()?
 
+* Change (most) orbital operations to create maneuver nodes
+
+* Make the Core control more streamlined, and add RCS translation control
