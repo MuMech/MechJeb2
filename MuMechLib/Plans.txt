@@ -1,7 +1,8 @@
 * Convert to PartModule
-        - Turn MechJebCore into its own PartModule
-	    - Are there any Part class callbacks we use that don't exist anymore in PartModule?
-	    - Can we do all necessary cleanup in OnDestroy?
+DONE    - Turn MechJebCore into its own PartModule
+        - Are there any Part class callbacks we use that don't exist anymore in PartModule?
+        - Can we do all necessary cleanup in OnDestroy?
+            Should work, though there are times that strong references are kept around and the part becomes a zombie. We should move cleanup to it's own function and call it from OnDestroy, register on Vessel.OnJustAboutToBeDestroyed and wherever else looks good.
         - Turn the classes that handle part animations into separate PartModules
 
 * Split up MechJebCore?
@@ -19,16 +20,19 @@
 
 * Explicit support for third-party ComputerModules and DisplayModules?
 
+* New settings system? The old one works reasonably now, but N3X15 coded some functions to work with setting a bit better, may be worth trying... And we could work something in for Vessel-specific saving too.
+
 * New GUI
-	- Protractor-like icon?
-		Look for a 2D artist
-	- Choose either a new GUIStyle or create one from scratch.
-	- Customizable info-windows: make lists with all the variables/titles, and allow the user to build his own windows
+    - Protractor-like icon?
+        Look for a 2D artist
+    - Choose either a new GUIStyle or create one from scratch.
+    - Customizable info-windows: make lists with all the variables/titles, and allow the user to build his own windows
 
 * Add a system for DisplayModules to easily have in-VAB GUI windows?
-	- Maybe just a drawEditorGUI() in addition to drawGUI()?
+    - Maybe just a drawEditorGUI() in addition to drawGUI()?
         - Figure out good way to make sure settings are saved if they're modified in the editor
           (onPartUpdate/onPartFixedUpdate don't get called there, and that's where MechJebCore currently saves settings)
+          We should move to Update/FixedUpdate on the core (which runs independent from the Part being active), to avoid all kinds of problems
 
 * Change (most) orbital operations to create maneuver nodes
         - Split orbital operations into:
@@ -42,13 +46,11 @@
 
 * Create PartExtensions and VesselExtensions classes
 
-
 * Allow a "no-autopilot" mode (enabled/disabled via part.cfg?)
         - Requires separating all autopilot functionality from information displays
             - Split Ascent Stats into its own ComputerModule
             - Split landing AP simulations from autopilot
             - Split orbital operations dV calculations from autopilot
-
 
 * Move everything in ARUtils somewhere else:
         - Move vessel-related functions into VesselState and VesselExtensions
@@ -59,15 +61,18 @@
         - Then make separate ComputerModules just to do the simulations. Other classes can
           turn these ComputerModules on or off. When they're on they periodically rerun the simulations
           and update their results, which other classes can read off.
+            Check out the old MechJebModuleAscension.cs/optimalAscent.cs for a threaded implementation of a module, it works well enough (the threading, the calculator isn't very good XD)
 
 * Add a check that will throttle down to prevent overheats during any sort of autopilot operation
         - can probably just move the ascent AP code that does this into the Core
         - Actually, maybe we should have a separate throttle-limiter ComputerModule that handles
           both overheats and terminal velocity. People might like to be able to let MJ auto-throttle
           without using the full ascent AP. The ascent AP interface can also toggle this module on and off.
+            Good idea, I think this belongs in the ThrustController, or else we may have to start worrying with the ComputerModule execution order too much.
 
 * Allow auto-staging during any sort of autopilot operation
         - a toggle like in the ascent AP, but in the main menu?
+            We need an options screen, but we may want to add the auto-staging thing in multiple places so the user can disable it as needed? Maybe having some options directly in the menu may be indeed an option.
 
 * Move Core (ThrustController) landing function into landing autopilot, since nothing else uses it?
 

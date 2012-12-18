@@ -6,16 +6,20 @@ using System.Text;
 namespace MuMech
 {
     //Should this really be a ComputerModule? It doesn't use any of the callbacks. It does use the vesselState.
-    class WarpController : ComputerModule 
+    public class WarpController : ComputerModule
     {
-        public WarpController(MechJebCore core) : base(core) { }
+        public WarpController(MechJebCore core)
+            : base(core)
+        {
+            priority = 100;
+        }
 
         double warpIncreaseAttemptTime = 0;
 
 
         public bool warpIncrease(ComputerModule controller, bool instant = false, double maxRate = 100000.0)
         {
-//            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return false;
+            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return false;
 
             //need to use instantaneous altitude and not the time-averaged vesselState.altitudeASL,
             //because the game freaks out really hard if you try to violate the altitude limits
@@ -58,7 +62,7 @@ namespace MuMech
 
         public void warpDecrease(ComputerModule controller, bool instant = false)
         {
-//            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
+            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
 
             if (TimeWarp.CurrentRateIndex > 0
                 /*&& timeWarp.warpRates[TimeWarp.CurrentRateIndex] == TimeWarp.CurrentRate*/)
@@ -69,14 +73,14 @@ namespace MuMech
 
         public void warpMinimum(ComputerModule controller, bool instant = false)
         {
-//            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
+            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
             if (TimeWarp.CurrentRateIndex <= 0) return; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kracken)
             TimeWarp.SetRate(0, instant);
         }
 
         public void warpPhysics(ComputerModule controller, bool instant = false)
         {
-//            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
+            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
 
             if ((TimeWarp.WarpMode == TimeWarp.Modes.LOW) || (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] <= TimeWarp.MaxPhysicsRate))
             {
@@ -92,7 +96,7 @@ namespace MuMech
 
         public void warpTo(ComputerModule controller, double timeLeft, double[] lookaheadTimes, double maxRate = 100000.0)
         {
-//            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
+            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
 
             if ((TimeWarp.WarpMode == TimeWarp.Modes.HIGH) && ((timeLeft < lookaheadTimes[TimeWarp.CurrentRateIndex])
                 || (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] > maxRate)))

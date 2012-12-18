@@ -6,11 +6,19 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class ComputerModule
+    public class ComputerModule : IComparable<ComputerModule>
     {
         public Part part = null;
         public MechJebCore core = null;
         public VesselState vesselState = null;
+
+        public int priority = 0;
+
+        public int CompareTo(ComputerModule other)
+        {
+            if (other == null) return 1;
+            return priority.CompareTo(other.priority);
+        }
 
         protected bool _enabled = false;
         public bool enabled
@@ -44,8 +52,6 @@ namespace MuMech
             vesselState = core.vesselState;
         }
 
-
-
         public virtual void onModuleEnabled()
         {
         }
@@ -58,27 +64,23 @@ namespace MuMech
         {
         }
 
-
         public virtual void drive(FlightCtrlState s)
         {
         }
 
+        /*
+                public virtual void onLoadGlobalSettings(SettingsManager settings)
+                {
+                    windowPos = new Rect(settings["windowPos_" + GetType().Name].value_vector.x, settings["windowPos_" + GetType().Name].value_vector.y, 10, 10);
+                    enabled = settings["windowStat_" + GetType().Name].value_bool;
+                }
 
-
-/*        public virtual void onLoadGlobalSettings(SettingsManager settings)
-        {
-            windowPos = new Rect(settings["windowPos_" + GetType().Name].value_vector.x, settings["windowPos_" + GetType().Name].value_vector.y, 10, 10);
-            enabled = settings["windowStat_" + GetType().Name].value_bool;
-        }
-
-        public virtual void onSaveGlobalSettings(SettingsManager settings)
-        {
-            settings["windowPos_" + GetType().Name].value_vector = new Vector4(windowPos.x, windowPos.y);
-            settings["windowStat_" + GetType().Name].value_bool = enabled;
-        }*/
-
-
-
+                public virtual void onSaveGlobalSettings(SettingsManager settings)
+                {
+                    settings["windowPos_" + GetType().Name].value_vector = new Vector4(windowPos.x, windowPos.y);
+                    settings["windowStat_" + GetType().Name].value_bool = enabled;
+                }
+         */
 
         public virtual void OnStart(PartModule.StartState state)
         {
@@ -116,13 +118,9 @@ namespace MuMech
         {
         }
 
-
-/*        public virtual void registerLuaMembers(LuaTable index)
-        {
-        }*/
-
-
-
+        /*        public virtual void registerLuaMembers(LuaTable index)
+                {
+                }*/
 
         protected void print(String s)
         {

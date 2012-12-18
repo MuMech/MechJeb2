@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class DisplayModule
+    public class DisplayModule
     {
         public Part part = null;
         public MechJebCore core = null;

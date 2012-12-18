@@ -6,9 +6,13 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class AttitudeController : ComputerModule
+    public class AttitudeController : ComputerModule
     {
-        public AttitudeController(MechJebCore core) : base(core) { }
+        public AttitudeController(MechJebCore core)
+            : base(core)
+        {
+            priority = 800;
+        }
 
         public float stress;
 
@@ -154,29 +158,29 @@ namespace MuMech
                 case AttitudeReference.SURFACE_VELOCITY:
                     rotRef = Quaternion.LookRotation(vesselState.velocityVesselSurfaceUnit, vesselState.up);
                     break;
-/*                case AttitudeReference.TARGET:
-                    fwd = (targetPosition() - part.vessel.GetTransform().position).normalized;
-                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
-                    Vector3.OrthoNormalize(ref fwd, ref up);
-                    rotRef = Quaternion.LookRotation(fwd, up);
-                    break;
-                case AttitudeReference.RELATIVE_VELOCITY:
-                    fwd = relativeVelocityToTarget().normalized;
-                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
-                    Vector3.OrthoNormalize(ref fwd, ref up);
-                    rotRef = Quaternion.LookRotation(fwd, up);
-                    break;
-                case AttitudeReference.TARGET_ORIENTATION:
-                    Transform targetTransform = FlightGlobals.fetch.VesselTarget.GetTransform();
-                    if (FlightGlobals.fetch.VesselTarget is ModuleDockingNode)
-                    {
-                        rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
-                    }
-                    else
-                    {
-                        rotRef = Quaternion.LookRotation(targetTransform.up, targetTransform.right);
-                    }
-                    break;*/
+                /*                case AttitudeReference.TARGET:
+                                    fwd = (targetPosition() - part.vessel.GetTransform().position).normalized;
+                                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                                    Vector3.OrthoNormalize(ref fwd, ref up);
+                                    rotRef = Quaternion.LookRotation(fwd, up);
+                                    break;
+                                case AttitudeReference.RELATIVE_VELOCITY:
+                                    fwd = relativeVelocityToTarget().normalized;
+                                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                                    Vector3.OrthoNormalize(ref fwd, ref up);
+                                    rotRef = Quaternion.LookRotation(fwd, up);
+                                    break;
+                                case AttitudeReference.TARGET_ORIENTATION:
+                                    Transform targetTransform = FlightGlobals.fetch.VesselTarget.GetTransform();
+                                    if (FlightGlobals.fetch.VesselTarget is ModuleDockingNode)
+                                    {
+                                        rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
+                                    }
+                                    else
+                                    {
+                                        rotRef = Quaternion.LookRotation(targetTransform.up, targetTransform.right);
+                                    }
+                                    break;*/
                 case AttitudeReference.MANEUVER_NODE:
                     fwd = part.vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(part.vessel.orbit);
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
@@ -199,10 +203,10 @@ namespace MuMech
 
         public bool attitudeTo(Quaternion attitude, AttitudeReference reference, ComputerModule controller)
         {
-/*            if ((controlModule != null) && (controller != null) && (controlModule != controller))
-            {
-                return false;
-            }*/
+            /*            if ((controlModule != null) && (controller != null) && (controlModule != controller))
+                        {
+                            return false;
+                        }*/
 
             attitudeReference = reference;
             attitudeTarget = attitude;
@@ -239,17 +243,18 @@ namespace MuMech
 
         }
 
-        public bool attitudeTo(double heading, double pitch, double roll, ComputerModule controller) {
+        public bool attitudeTo(double heading, double pitch, double roll, ComputerModule controller)
+        {
             Quaternion attitude = Quaternion.AngleAxis((float)heading, Vector3.up) * Quaternion.AngleAxis(-(float)pitch, Vector3.right) * Quaternion.AngleAxis(-(float)roll, Vector3.forward);
             return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller);
         }
 
         public bool attitudeDeactivate(ComputerModule controller)
         {
-/*            if ((controlModule != null) && (controller != null) && (controlModule != controller))
-            {
-                return false;
-            }*/
+            /*            if ((controlModule != null) && (controller != null) && (controlModule != controller))
+                        {
+                            return false;
+                        }*/
 
             _attitudeActive = false;
             attitudeChanged = true;
@@ -283,10 +288,10 @@ namespace MuMech
 
                 attitudeChanged = false;
 
-/*                foreach (ComputerModule module in modules)
-                {
-                    module.onAttitudeChange(_oldAttitudeReference, _oldAttitudeTarget, attitudeReference, attitudeTarget);
-                }*/
+                /*                foreach (ComputerModule module in modules)
+                                {
+                                    module.onAttitudeChange(_oldAttitudeReference, _oldAttitudeTarget, attitudeReference, attitudeTarget);
+                                }*/
             }
 
         }

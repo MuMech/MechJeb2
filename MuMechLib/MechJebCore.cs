@@ -6,37 +6,83 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebCore : PartModule
+    public class MechJebCore : PartModule, IComparable<MechJebCore>
     {
-        List<ComputerModule> computerModules = new List<ComputerModule>();
-        List<DisplayModule> displayModules = new List<DisplayModule>();
+        private const int windowIDbase = 60606;
+
+        private List<ComputerModule> computerModules = new List<ComputerModule>();
+        private List<DisplayModule> displayModules = new List<DisplayModule>();
+        private bool modulesUpdated = false;
+
         public AttitudeController attitude;
-        public WarpController warp;
-        public ThrustController thrust;
         public StagingController staging;
+        public ThrustController thrust;
+        public WarpController warp;
 
         public VesselState vesselState = new VesselState();
 
-        private static int windowIDbase = 60606;
+        public int GetImportance()
+        {
+            if (part.State == PartStates.DEAD)
+            {
+                return 0;
+            }
+            else
+            {
+                return GetInstanceID();
+            }
+        }
 
+        public int CompareTo(MechJebCore other)
+        {
+            if (other == null) return 1;
+            return GetImportance().CompareTo(other.GetImportance());
+        }
+
+        public T GetComputerModule<T>() where T : ComputerModule
+        {
+            return (T)computerModules.First(a => a.GetType() == typeof(T));
+        }
+
+        public T GetDisplayModule<T>() where T : DisplayModule
+        {
+            return (T)displayModules.First(a => a.GetType() == typeof(T));
+        }
+
+        public ComputerModule GetComputerModule(string type)
+        {
+            return computerModules.First(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
+        }
+
+        public DisplayModule GetDisplayModule(string type)
+        {
+            return displayModules.First(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
+        }
+
+        public void AddComputerModule(ComputerModule module)
+        {
+            computerModules.Add(module);
+            modulesUpdated = true;
+        }
+
+        public void AddDisplayModule(DisplayModule module)
+        {
+            displayModules.Add(module);
+            modulesUpdated = true;
+        }
 
         public override void OnStart(PartModule.StartState state)
         {
             print("MechJebCore.OnStart");
-            part.force_activate(); //part needs to be activated for OnFixedUpdate to get called. but maybe we should just use FixedUpdate instead?
+
+            AddComputerModule(attitude = new AttitudeController(this));
+            AddComputerModule(thrust = new ThrustController(this));
+            AddComputerModule(staging = new StagingController(this));
+            AddComputerModule(warp = new WarpController(this));
 
             //computer modules
-            computerModules.Add(new MechJebModuleAscentComputer(this));
+            AddComputerModule(new MechJebModuleAscentComputer(this));
             
-            attitude = new AttitudeController(this);
-            warp = new WarpController(this);
-            thrust = new ThrustController(this);
-            staging = new StagingController(this);
-            computerModules.Add(warp);
-            computerModules.Add(attitude);
-            computerModules.Add(thrust);
-            computerModules.Add(staging);
-
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
@@ -46,7 +92,6 @@ namespace MuMech
 
             //still need the logic that handles vessel changes and multiple MechJebs:
             part.vessel.OnFlyByWire += drive;
-            RenderingManager.AddToPostDrawQueue(0, drawGUI);
         }
 
         public override void OnActive()
@@ -76,9 +121,20 @@ namespace MuMech
             }
         }
 
-        public override void OnFixedUpdate()
+        public void FixedUpdate()
         {
+            if (this != vessel.GetMasterMechJeb())
+            {
+                return;
+            }
+
             vesselState.Update(part.vessel);
+
+            if (modulesUpdated)
+            {
+                computerModules.Sort();
+                modulesUpdated = false;
+            }
 
             foreach (ComputerModule module in computerModules)
             {
@@ -86,8 +142,19 @@ namespace MuMech
             }
         }
 
-        public override void OnUpdate()
+        public void Update()
         {
+            if (this != vessel.GetMasterMechJeb())
+            {
+                return;
+            }
+
+            if (modulesUpdated)
+            {
+                computerModules.Sort();
+                modulesUpdated = false;
+            }
+
             if (Input.GetKey(KeyCode.Y))
             {
                 print("prograde");
@@ -103,7 +170,6 @@ namespace MuMech
                 print("nml+");
                 attitude.attitudeTo(Vector3.left, AttitudeController.AttitudeReference.ORBIT, null);
             }
-
 
             foreach (ComputerModule module in computerModules)
             {
@@ -131,7 +197,6 @@ namespace MuMech
             }
         }
 
-
         public void OnDestroy()
         {
             print("MechJebCore.OnDestroy");
@@ -142,21 +207,22 @@ namespace MuMech
 
             //still need logic to handle vessel changes and multiple MechJebs
             vessel.OnFlyByWire -= onFlyByWire;
-            RenderingManager.RemoveFromPostDrawQueue(0, drawGUI);
         }
-
 
         private void onFlyByWire(FlightCtrlState s)
         {
-            //still need logic to handle vessel changes and multiple MechJebs
-            if (part.vessel != FlightGlobals.ActiveVessel)
+            if (this != vessel.GetMasterMechJeb())
             {
                 return;
             }
-            drive(s);
-            FlightInputHandler.state.mainThrottle = s.mainThrottle; //so that the on-screen throttle gauge reflects the autopilot throttle
-        }
 
+            drive(s);
+
+            if (vessel == FlightGlobals.ActiveVessel)
+            {
+                FlightInputHandler.state.mainThrottle = s.mainThrottle; //so that the on-screen throttle gauge reflects the autopilot throttle
+            }
+        }
 
         private void drive(FlightCtrlState s)
         {
@@ -167,9 +233,9 @@ namespace MuMech
             }
         }
 
-        private void drawGUI()
+        private void OnGUI()
         {
-            if ((part.State != PartStates.DEAD) && (part.vessel == FlightGlobals.ActiveVessel))
+            if ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD) && (this == vessel.GetMasterMechJeb()))
             {
                 int wid = 0;
                 foreach (DisplayModule module in displayModules)
@@ -180,10 +246,10 @@ namespace MuMech
             }
         }
 
-        //what is this for?
+        // VAB/SPH description
         public override string GetInfo()
         {
-            return "[" + base.GetInfo() + "] - MechJebCore.GetInfo()";
+            return "Attitude control by MechJeb™";
         }
     }
 }

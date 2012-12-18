@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MuMech
 {
-    class MechJebModuleAscentComputer : ComputerModule
+    public class MechJebModuleAscentComputer : ComputerModule
     {
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
     }

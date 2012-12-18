@@ -8,7 +8,7 @@ namespace MuMech
 {
     //Copied verbatim from old VesselState. Should this class be reorganized at all?
 
-    class VesselState
+    public class VesselState
     {
         public double time;            //planetarium time
         public double deltaT;          //TimeWarp.fixedDeltaTime

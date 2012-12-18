@@ -21,7 +21,7 @@ namespace MuMech
                 //test whether something can get fuel.
                 return p.RequestFuel(p, 0, Part.getFuelReqId());
             }
-            else if(p.Modules.OfType<ModuleEngines>().Count() > 0)
+            else if (p.Modules.OfType<ModuleEngines>().Count() > 0)
             {
                 return !p.Modules.OfType<ModuleEngines>().First().getFlameoutState;
             }

@@ -7,9 +7,13 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class ThrustController : ComputerModule
+    public class ThrustController : ComputerModule
     {
-        public ThrustController(MechJebCore core) : base(core) { }
+        public ThrustController(MechJebCore core)
+            : base(core)
+        {
+            priority = 200;
+        }
 
         public float trans_spd_act = 0;
         public float trans_prev_thrust = 0;
@@ -201,9 +205,9 @@ namespace MuMech
                 double t_act = (t_Kp * t_err) + (t_Ki * t_integral) + (t_Kd * t_deriv);
                 t_prev_err = t_err;
 
-                if ((tmode != TMode.KEEP_VERTICAL) 
-                    || !trans_kill_h 
-                    || (core.attitude.attitudeError < 2) 
+                if ((tmode != TMode.KEEP_VERTICAL)
+                    || !trans_kill_h
+                    || (core.attitude.attitudeError < 2)
                     || ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) < 1000) && (core.attitude.attitudeError < 90)))
                 {
                     if (tmode == TMode.DIRECT)
