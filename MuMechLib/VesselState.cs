@@ -29,6 +29,10 @@ namespace MuMech
         public Vector3d velocityVesselOrbit;
         public Vector3d velocityVesselOrbitUnit;
 
+        public Vector3d vectorToTarget;
+        public Vector3d relativeVelocityToTarget;
+        public double distanceToTarget;
+
         public Vector3d angularVelocity;
         public Vector3d angularMomentum;
 
@@ -79,6 +83,8 @@ namespace MuMech
         public double atmosphericDensity;
         public double angleToPrograde;
 
+        CelestialBody mainBody;
+
         public void Update(Vessel vessel)
         {
             time = Planetarium.GetUniversalTime();
@@ -98,6 +104,19 @@ namespace MuMech
             velocityVesselSurface = velocityVesselOrbit - vessel.mainBody.getRFrmVel(CoM);
             velocityVesselSurfaceUnit = velocityVesselSurface.normalized;
             velocityMainBodySurface = rotationSurface * velocityVesselSurface;
+
+            if (FlightGlobals.fetch.VesselTarget != null)
+            {
+                vectorToTarget = FlightGlobals.fetch.VesselTarget.GetTransform().position - vessel.transform.position;
+                relativeVelocityToTarget = velocityVesselOrbit - FlightGlobals.fetch.VesselTarget.GetObtVelocity();
+                distanceToTarget = vectorToTarget.magnitude;
+            }
+            else
+            {
+                vectorToTarget = Vector3d.zero;
+                relativeVelocityToTarget = Vector3d.zero;
+                distanceToTarget = 0;
+            }
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
 
@@ -181,7 +200,7 @@ namespace MuMech
             {
                 if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
                 {
-                    double partMass = p.totalMass();
+                    double partMass = p.TotalMass();
                     mass += partMass;
                     massDrag += partMass * p.maximum_drag;
                 }
@@ -189,7 +208,7 @@ namespace MuMech
                 MoI += p.Rigidbody.inertiaTensor;
                 if (((p.State == PartStates.ACTIVE) || ((Staging.CurrentStage > Staging.lastStage) && (p.inverseStage == Staging.lastStage))) && ((p is LiquidEngine) || (p is LiquidFuelEngine) || (p is SolidRocket) || (p is AtmosphericEngine) || p.Modules.Contains("ModuleEngines")))
                 {
-                    if (p is LiquidEngine && p.engineHasFuel())
+                    if (p is LiquidEngine && p.EngineHasFuel())
                     {
                         double usableFraction = Vector3d.Dot((p.transform.rotation * ((LiquidEngine)p).thrustVector).normalized, forward);
                         thrustAvailable += ((LiquidEngine)p).maxThrust * usableFraction;
@@ -199,7 +218,7 @@ namespace MuMech
                             torqueThrustPYAvailable += Math.Sin(Math.Abs(((LiquidEngine)p).gimbalRange) * Math.PI / 180) * ((LiquidEngine)p).maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
                         }
                     }
-                    else if (p is LiquidFuelEngine && p.engineHasFuel())
+                    else if (p is LiquidFuelEngine && p.EngineHasFuel())
                     {
                         double usableFraction = Vector3d.Dot((p.transform.rotation * ((LiquidFuelEngine)p).thrustVector).normalized, forward);
                         thrustAvailable += ((LiquidFuelEngine)p).maxThrust * usableFraction;
@@ -215,7 +234,7 @@ namespace MuMech
                         thrustAvailable += ((SolidRocket)p).thrust * usableFraction;
                         thrustMinimum += ((SolidRocket)p).thrust * usableFraction;
                     }
-                    else if (p is AtmosphericEngine && p.engineHasFuel())
+                    else if (p is AtmosphericEngine && p.EngineHasFuel())
                     {
                         double usableFraction = Vector3d.Dot((p.transform.rotation * ((AtmosphericEngine)p).thrustVector).normalized, forward);
                         thrustAvailable += ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * usableFraction;
@@ -228,7 +247,7 @@ namespace MuMech
                     {
                         foreach (PartModule pm in p.Modules)
                         {
-                            if ((pm is ModuleEngines) && (pm.isEnabled) && p.engineHasFuel())
+                            if ((pm is ModuleEngines) && (pm.isEnabled) && p.EngineHasFuel())
                             {
                                 ModuleEngines e = (ModuleEngines)pm;
                                 double usableFraction = 1; // Vector3d.Dot((p.transform.rotation * e.thrustTransform.forward).normalized, forward); // TODO: Fix usableFraction
@@ -269,14 +288,19 @@ namespace MuMech
 
             maxThrustAccel = thrustAvailable / mass;
             minThrustAccel = thrustMinimum / mass;
+
+            mainBody = vessel.mainBody;
         }
 
         public double TerminalVelocity()
         {
-            return Math.Sqrt((2 * gravityForce.magnitude * mass) / (0.009785 * Math.Exp(-altitudeASL / 5000.0) * massDrag));
+            if (altitudeASL > mainBody.maxAtmosphereAltitude) return Double.MaxValue;
+
+            double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(CoM, mainBody));
+            return Math.Sqrt(2 * localg * mass / (massDrag * FlightGlobals.DragMultiplier * airDensity));
         }
 
-        public double thrustAccel(double throttle)
+        public double ThrustAccel(double throttle)
         {
             return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
         }

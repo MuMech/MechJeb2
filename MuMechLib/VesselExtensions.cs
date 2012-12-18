@@ -21,5 +21,10 @@ namespace MuMech
         {
             return vessel.GetModules<MechJebCore>().Max();
         }
+
+        public static bool LiftedOff(this Vessel vessel)
+        {
+            return vessel.situation != Vessel.Situations.PRELAUNCH;
+        }
     }
 }

@@ -14,12 +14,14 @@ namespace MuMech
         private List<DisplayModule> displayModules = new List<DisplayModule>();
         private bool modulesUpdated = false;
 
-        public AttitudeController attitude;
-        public StagingController staging;
-        public ThrustController thrust;
-        public WarpController warp;
+        public MechJebModuleAttitudeController attitude;
+        public MechJebModuleStagingController staging;
+        public MechJebModuleThrustController thrust;
+        public MechJebModuleWarpController warp;
 
         public VesselState vesselState = new VesselState();
+
+        private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to 
 
         public int GetImportance()
         {
@@ -73,14 +75,11 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            print("MechJebCore.OnStart");
+            AddComputerModule(attitude = new MechJebModuleAttitudeController(this));
+            AddComputerModule(thrust = new MechJebModuleThrustController(this));
+            AddComputerModule(staging = new MechJebModuleStagingController(this));
+            AddComputerModule(warp = new MechJebModuleWarpController(this));
 
-            AddComputerModule(attitude = new AttitudeController(this));
-            AddComputerModule(thrust = new ThrustController(this));
-            AddComputerModule(staging = new StagingController(this));
-            AddComputerModule(warp = new WarpController(this));
-
-            //computer modules
             AddComputerModule(new MechJebModuleAscentComputer(this));
             
             foreach (ComputerModule module in computerModules)
@@ -88,15 +87,14 @@ namespace MuMech
                 module.OnStart(state);
             }
 
-            attitude.enabled = true; //attitude controller should always be enabled
+            attitude.enabled = true; //for testing
 
-            //still need the logic that handles vessel changes and multiple MechJebs:
             part.vessel.OnFlyByWire += drive;
+            controlledVessel = part.vessel;
         }
 
         public override void OnActive()
         {
-            print("MechJebCore.OnActive");
             foreach (ComputerModule module in computerModules)
             {
                 module.OnActive();
@@ -105,7 +103,6 @@ namespace MuMech
         
         public override void OnInactive()
         {
-            print("MechJebCore.OnInactive");
             foreach (ComputerModule module in computerModules)
             {
                 module.OnInactive();
@@ -114,7 +111,6 @@ namespace MuMech
 
         public override void OnAwake()
         {
-            print("MechJebCore.OnAwake");
             foreach (ComputerModule module in computerModules)
             {
                 module.OnAwake();
@@ -158,17 +154,17 @@ namespace MuMech
             if (Input.GetKey(KeyCode.Y))
             {
                 print("prograde");
-                attitude.attitudeTo(Vector3.forward, AttitudeController.AttitudeReference.ORBIT, null);
+                attitude.attitudeTo(Vector3.forward, MechJebModuleAttitudeController.AttitudeReference.ORBIT, null);
             }
             if (Input.GetKey(KeyCode.U))
             {
                 print("rad+");
-                attitude.attitudeTo(Vector3.up, AttitudeController.AttitudeReference.ORBIT, null);
+                attitude.attitudeTo(Vector3.up, MechJebModuleAttitudeController.AttitudeReference.ORBIT, null);
             }
             if (Input.GetKey(KeyCode.B)) 
             {
                 print("nml+");
-                attitude.attitudeTo(Vector3.left, AttitudeController.AttitudeReference.ORBIT, null);
+                attitude.attitudeTo(Vector3.left, MechJebModuleAttitudeController.AttitudeReference.ORBIT, null);
             }
 
             foreach (ComputerModule module in computerModules)
@@ -205,12 +201,21 @@ namespace MuMech
                 module.OnDestroy();
             }
 
-            //still need logic to handle vessel changes and multiple MechJebs
             vessel.OnFlyByWire -= onFlyByWire;
+            controlledVessel = null;
         }
 
         private void onFlyByWire(FlightCtrlState s)
         {
+            //handle vessel changes due to docking/undocking
+            if (controlledVessel != part.vessel)
+            {
+                if (controlledVessel != null) controlledVessel.OnFlyByWire -= onFlyByWire;
+                part.vessel.OnFlyByWire += onFlyByWire;
+                controlledVessel = part.vessel;
+                return;
+            }
+
             if (this != vessel.GetMasterMechJeb())
             {
                 return;

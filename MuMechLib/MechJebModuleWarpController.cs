@@ -6,9 +6,9 @@ using System.Text;
 namespace MuMech
 {
     //Should this really be a ComputerModule? It doesn't use any of the callbacks. It does use the vesselState.
-    public class WarpController : ComputerModule
+    public class MechJebModuleWarpController : ComputerModule
     {
-        public WarpController(MechJebCore core)
+        public MechJebModuleWarpController(MechJebCore core)
             : base(core)
         {
             priority = 100;

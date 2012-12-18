@@ -7,20 +7,25 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class ThrustController : ComputerModule
+    public class MechJebModuleThrustController : ComputerModule
     {
-        public ThrustController(MechJebCore core)
+        public MechJebModuleThrustController(MechJebCore core)
             : base(core)
         {
             priority = 200;
         }
 
+
+        //turn these into properties? implement settings saving
         public float trans_spd_act = 0;
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
         public bool trans_land = false;
         public bool trans_land_gears = false;
         public double trans_land_touchdown_speed = 0.5;
+        public bool limitToTerminalVelocity = false;
+        public bool limitToPreventOverheats = false;
+
 
         private bool tmode_changed = false;
 
@@ -70,7 +75,7 @@ namespace MuMech
 
                 if (trans_land)
                 {
-                    if (part.vessel.Landed || part.vessel.Splashed)
+                    if (part.vessel.LandedOrSplashed)
                     {
                         tmode = TMode.OFF;
                         trans_land = false;
@@ -82,14 +87,14 @@ namespace MuMech
                         if (Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) > 0)
                         {
                             //if we have positive vertical velocity, point up and don't thrust:
-                            core.attitude.attitudeTo(Vector3d.up, AttitudeController.AttitudeReference.SURFACE_NORTH, null);
+                            core.attitude.attitudeTo(Vector3d.up, MechJebModuleAttitudeController.AttitudeReference.SURFACE_NORTH, null);
                             tmode = TMode.DIRECT;
                             trans_spd_act = 0;
                         }
                         else if (Vector3d.Angle(vesselState.forward, -vesselState.velocityVesselSurface) > 90)
                         {
                             //if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
-                            core.attitude.attitudeTo(Vector3d.back, AttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
+                            core.attitude.attitudeTo(Vector3d.back, MechJebModuleAttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
                             tmode = TMode.DIRECT;
                             trans_spd_act = 0;
                         }
@@ -104,7 +109,7 @@ namespace MuMech
                         else if (minalt > 200)
                         {
                             //if we're above 200m, point retrograde and control surface velocity:
-                            core.attitude.attitudeTo(Vector3d.back, AttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
+                            core.attitude.attitudeTo(Vector3d.back, MechJebModuleAttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
 
                             tmode = TMode.KEEP_SURFACE;
                             trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
@@ -129,7 +134,7 @@ namespace MuMech
                                 //if we're falling at a significant angle from vertical, our vertical speed might be
                                 //quite small but we might still need to decelerate. Control the total speed instead
                                 //by thrusting directly retrograde
-                                core.attitude.attitudeTo(Vector3d.back, AttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
+                                core.attitude.attitudeTo(Vector3d.back, MechJebModuleAttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
                                 tmode = TMode.KEEP_SURFACE;
                                 trans_spd_act *= -1;
                             }
@@ -188,7 +193,7 @@ namespace MuMech
                                     rot = dir.normalized;
                                 }
                             }
-                            core.attitude.attitudeTo(rot, AttitudeController.AttitudeReference.INERTIAL, null);
+                            core.attitude.attitudeTo(rot, MechJebModuleAttitudeController.AttitudeReference.INERTIAL, null);
                         }
                         break;
                 }
@@ -231,8 +236,43 @@ namespace MuMech
                     }
                 }
             }
+
+
+            if (limitToTerminalVelocity)
+            {
+                s.mainThrottle = Mathf.Min(s.mainThrottle, terminalVelocityThrottle());
+            }
+
+            if (limitToPreventOverheats)
+            {
+                s.mainThrottle = Mathf.Min(s.mainThrottle, temperatureSafetyThrottle());
+            }
         }
 
+        float terminalVelocityThrottle()
+        {
+            if (vesselState.altitudeASL > part.vessel.mainBody.maxAtmosphereAltitude) return 1.0F;
+
+            double velocityRatio = Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) / vesselState.TerminalVelocity();
+
+            if (velocityRatio < 1.0) return 1.0F; //full throttle if under terminal velocity
+
+            //throttle down quickly as we exceed terminal velocity:
+            double falloff = 15.0;
+            return Mathf.Clamp((float)(1.0 - falloff * (velocityRatio - 1.0)), 0.0F, 1.0F);
+        }
+
+
+        //limit the throttle if something is close to overheating
+        float temperatureSafetyThrottle()
+        {
+            float maxTempRatio = part.vessel.parts.Max(p => p.temperature / p.maxTemp);
+
+            //reduce throttle as the max temp. ratio approaches 1 within the safety margin
+            float tempSafetyMargin = 0.05f;
+            if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
+            else return (1 - maxTempRatio) / tempSafetyMargin;
+        }
 
         public override void OnUpdate()
         {

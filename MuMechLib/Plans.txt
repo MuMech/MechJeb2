@@ -21,6 +21,10 @@ DONE    - Turn MechJebCore into its own PartModule
 * Explicit support for third-party ComputerModules and DisplayModules?
 
 * New settings system? The old one works reasonably now, but N3X15 coded some functions to work with setting a bit better, may be worth trying... And we could work something in for Vessel-specific saving too.
+    - Does N3X15's PluginConfiguration actually have any benefits over our SettingsManager?
+    - for vessel-specifc info the OnSave/OnLoad ConfigNode system is worth trying; it 
+	  should save any vessel-specific info we have directly to the SFS
+	
 
 * New GUI
     - Protractor-like icon?
@@ -31,7 +35,7 @@ DONE    - Turn MechJebCore into its own PartModule
 * Add a system for DisplayModules to easily have in-VAB GUI windows?
     - Maybe just a drawEditorGUI() in addition to drawGUI()?
         - Figure out good way to make sure settings are saved if they're modified in the editor
-          (onPartUpdate/onPartFixedUpdate don't get called there, and that's where MechJebCore currently saves settings)
+          (OnUpdate/OnFixedUpdate don't get called there, and that's where MechJebCore used to save settings)
           We should move to Update/FixedUpdate on the core (which runs independent from the Part being active), to avoid all kinds of problems
 
 * Change (most) orbital operations to create maneuver nodes
@@ -63,12 +67,8 @@ DONE    - Turn MechJebCore into its own PartModule
           and update their results, which other classes can read off.
             Check out the old MechJebModuleAscension.cs/optimalAscent.cs for a threaded implementation of a module, it works well enough (the threading, the calculator isn't very good XD)
 
-* Add a check that will throttle down to prevent overheats during any sort of autopilot operation
-        - can probably just move the ascent AP code that does this into the Core
-        - Actually, maybe we should have a separate throttle-limiter ComputerModule that handles
-          both overheats and terminal velocity. People might like to be able to let MJ auto-throttle
-          without using the full ascent AP. The ascent AP interface can also toggle this module on and off.
-            Good idea, I think this belongs in the ThrustController, or else we may have to start worrying with the ComputerModule execution order too much.
+DONE * Add a check that will throttle down to prevent overheats during any sort of autopilot operation
+        - Moved ascent AP code into thrust controller
 
 * Allow auto-staging during any sort of autopilot operation
         - a toggle like in the ascent AP, but in the main menu?

@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class AttitudeController : ComputerModule
+    public class MechJebModuleAttitudeController : ComputerModule
     {
-        public AttitudeController(MechJebCore core)
+        public MechJebModuleAttitudeController(MechJebCore core)
             : base(core)
         {
             priority = 800;
