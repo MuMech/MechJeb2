@@ -68,6 +68,14 @@ namespace MuMech
         {
         }
 
+        public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+        }
+
+        public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+        }
+
         protected virtual void WindowGUI(int windowID)
         {
             GUI.DragWindow();

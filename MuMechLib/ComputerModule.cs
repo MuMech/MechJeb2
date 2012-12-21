@@ -106,11 +106,11 @@ namespace MuMech
         {
         }
 
-        public virtual void OnLoad(ConfigNode node)
+        public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
         }
 
-        public virtual void OnSave(ConfigNode node)
+        public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
         }
 

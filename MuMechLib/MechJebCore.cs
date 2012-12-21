@@ -177,9 +177,17 @@ namespace MuMech
         {
             print("MechJebCore.OnLoad");
             base.OnLoad(node); //is this necessary?
+
+            ConfigNode type = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg", vessel) ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg", vessel) : "");
+            ConfigNode global = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg") ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg") : "");
+
             foreach (ComputerModule module in computerModules)
             {
-                module.OnLoad(node);
+                module.OnLoad(node, type, global);
+            }
+            foreach (DisplayModule module in displayModules)
+            {
+                module.OnLoad(node, type, global);
             }
         }
 
@@ -187,10 +195,21 @@ namespace MuMech
         {
             print("MechJebCore.OnSave");
             base.OnSave(node); //is this necessary?
+
+            ConfigNode type = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg", vessel) ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg", vessel) : "");
+            ConfigNode global = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg") ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg") : "");
+
             foreach (ComputerModule module in computerModules)
             {
-                module.OnSave(node);
+                module.OnSave(node, type, global);
             }
+            foreach (DisplayModule module in displayModules)
+            {
+                module.OnSave(node, type, global);
+            }
+
+            KSP.IO.File.WriteAllText<MechJebCore>(type.ToString(), "mechjeb_settings.cfg", vessel);
+            KSP.IO.File.WriteAllText<MechJebCore>(global.ToString(), "mechjeb_settings.cfg");
         }
 
         public void OnDestroy()
