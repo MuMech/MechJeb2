@@ -6,14 +6,14 @@ DONE    - Turn MechJebCore into its own PartModule
         - Turn the classes that handle part animations into separate PartModules
 
 * Split up MechJebCore?
-  Possible parts that could be separated out:
+  Core has the following parts:
         - GUI
-        - ComputerModule callbacks
-        - stuff that figures out which MechJebCore is controlling the vessel
-        - attitude controller
-        - thrust controller
-        - warp controller
-        - autostaging controller
+DONE    - ComputerModule callbacks
+DONE    - stuff that figures out which MechJebCore is controlling the vessel
+DONE    - attitude controller
+DONE    - thrust controller
+DONE    - warp controller
+DONE    - autostaging controller
         - settings saving
 
 * Split existing modules into ComputerModules and DisplayModules
@@ -34,9 +34,9 @@ DONE    - Turn MechJebCore into its own PartModule
 
 * Add a system for DisplayModules to easily have in-VAB GUI windows?
     - Maybe just a drawEditorGUI() in addition to drawGUI()?
-        - Figure out good way to make sure settings are saved if they're modified in the editor
-          (OnUpdate/OnFixedUpdate don't get called there, and that's where MechJebCore used to save settings)
-          We should move to Update/FixedUpdate on the core (which runs independent from the Part being active), to avoid all kinds of problems
+    - Figure out good way to make sure settings are saved if they're modified in the editor
+      (OnUpdate/OnFixedUpdate don't get called there, and that's where MechJebCore used to save settings)
+        We should move to Update/FixedUpdate on the core (which runs independent from the Part being active), to avoid all kinds of problems
 
 * Change (most) orbital operations to create maneuver nodes
         - Split orbital operations into:
@@ -57,6 +57,7 @@ DONE    - Turn MechJebCore into its own PartModule
             - Split orbital operations dV calculations from autopilot
 
 * Move everything in ARUtils somewhere else:
+DONE    - Move staging functions into staging controller
         - Move vessel-related functions into VesselState and VesselExtensions
         - Move part-related functions into PartExtensions
         - Move random utilities into MuUtils

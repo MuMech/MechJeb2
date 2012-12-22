@@ -23,6 +23,20 @@ namespace MuMech
 
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to 
 
+        //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
+        //If it isn't the correct one, fixes it before returning false
+        bool CheckControlledVessel()
+        {
+            if (controlledVessel == part.vessel) return true;
+
+            //else we have an onFlyByWire callback registered with the wrong vessel:
+            //handle vessel changes due to docking/undocking
+            if (controlledVessel != null) controlledVessel.OnFlyByWire -= onFlyByWire;
+            part.vessel.OnFlyByWire += onFlyByWire;
+            controlledVessel = part.vessel;
+            return false;
+        }
+
         public int GetImportance()
         {
             if (part.State == PartStates.DEAD)
@@ -119,6 +133,8 @@ namespace MuMech
 
         public void FixedUpdate()
         {
+            CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
+
             if (this != vessel.GetMasterMechJeb())
             {
                 return;
@@ -154,18 +170,19 @@ namespace MuMech
             if (Input.GetKey(KeyCode.Y))
             {
                 print("prograde");
-                attitude.attitudeTo(Vector3.forward, MechJebModuleAttitudeController.AttitudeReference.ORBIT, null);
+                attitude.attitudeTo(Vector3.forward, AttitudeReference.ORBIT, null);
             }
             if (Input.GetKey(KeyCode.U))
             {
                 print("rad+");
-                attitude.attitudeTo(Vector3.up, MechJebModuleAttitudeController.AttitudeReference.ORBIT, null);
+                attitude.attitudeTo(Vector3.up, AttitudeReference.ORBIT, null);
             }
             if (Input.GetKey(KeyCode.B)) 
             {
                 print("nml+");
-                attitude.attitudeTo(Vector3.left, MechJebModuleAttitudeController.AttitudeReference.ORBIT, null);
+                attitude.attitudeTo(Vector3.left, AttitudeReference.ORBIT, null);
             }
+
 
             foreach (ComputerModule module in computerModules)
             {
@@ -226,16 +243,7 @@ namespace MuMech
 
         private void onFlyByWire(FlightCtrlState s)
         {
-            //handle vessel changes due to docking/undocking
-            if (controlledVessel != part.vessel)
-            {
-                if (controlledVessel != null) controlledVessel.OnFlyByWire -= onFlyByWire;
-                part.vessel.OnFlyByWire += onFlyByWire;
-                controlledVessel = part.vessel;
-                return;
-            }
-
-            if (this != vessel.GetMasterMechJeb())
+            if (!CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
                 return;
             }

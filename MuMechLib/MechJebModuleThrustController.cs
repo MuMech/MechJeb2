@@ -87,14 +87,14 @@ namespace MuMech
                         if (Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) > 0)
                         {
                             //if we have positive vertical velocity, point up and don't thrust:
-                            core.attitude.attitudeTo(Vector3d.up, MechJebModuleAttitudeController.AttitudeReference.SURFACE_NORTH, null);
+                            core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
                             tmode = TMode.DIRECT;
                             trans_spd_act = 0;
                         }
                         else if (Vector3d.Angle(vesselState.forward, -vesselState.velocityVesselSurface) > 90)
                         {
                             //if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
-                            core.attitude.attitudeTo(Vector3d.back, MechJebModuleAttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
+                            core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                             tmode = TMode.DIRECT;
                             trans_spd_act = 0;
                         }
@@ -109,7 +109,7 @@ namespace MuMech
                         else if (minalt > 200)
                         {
                             //if we're above 200m, point retrograde and control surface velocity:
-                            core.attitude.attitudeTo(Vector3d.back, MechJebModuleAttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
+                            core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
 
                             tmode = TMode.KEEP_SURFACE;
                             trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
@@ -134,7 +134,7 @@ namespace MuMech
                                 //if we're falling at a significant angle from vertical, our vertical speed might be
                                 //quite small but we might still need to decelerate. Control the total speed instead
                                 //by thrusting directly retrograde
-                                core.attitude.attitudeTo(Vector3d.back, MechJebModuleAttitudeController.AttitudeReference.SURFACE_VELOCITY, null);
+                                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                                 tmode = TMode.KEEP_SURFACE;
                                 trans_spd_act *= -1;
                             }
@@ -193,7 +193,7 @@ namespace MuMech
                                     rot = dir.normalized;
                                 }
                             }
-                            core.attitude.attitudeTo(rot, MechJebModuleAttitudeController.AttitudeReference.INERTIAL, null);
+                            core.attitude.attitudeTo(rot, AttitudeReference.INERTIAL, null);
                         }
                         break;
                 }

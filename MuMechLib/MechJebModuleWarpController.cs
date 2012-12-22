@@ -5,6 +5,7 @@ using System.Text;
 
 namespace MuMech
 {
+    //Todo: rewrite this class from scratch to make sure it makes sense.
     //Should this really be a ComputerModule? It doesn't use any of the callbacks. It does use the vesselState.
     public class MechJebModuleWarpController : ComputerModule
     {
@@ -17,99 +18,140 @@ namespace MuMech
         double warpIncreaseAttemptTime = 0;
 
 
-        public bool warpIncrease(ComputerModule controller, bool instant = false, double maxRate = 100000.0)
+        public void WarpToUT(double UT, double maxRate = 100000)
         {
-            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return false;
+            double desiredRate = 1.0 * (UT - vesselState.time);
+            desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
-            //need to use instantaneous altitude and not the time-averaged vesselState.altitudeASL,
-            //because the game freaks out really hard if you try to violate the altitude limits
-            double instantAltitudeASL = (vesselState.CoM - part.vessel.mainBody.position).magnitude - part.vessel.mainBody.Radius;
-
-            if ((TimeWarp.WarpMode == TimeWarp.Modes.LOW) && ((instantAltitudeASL > part.vessel.mainBody.maxAtmosphereAltitude) || part.vessel.Landed))
+            if (!part.vessel.LandedOrSplashed &&
+               vesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, part.vessel.mainBody))
             {
-                warpIncreaseAttemptTime = vesselState.time;
-                TimeWarp.SetRate(0, instant);
-                return true;
-            }
-
-            //conditions to increase warp:
-            //-we are not already at max warp
-            //-the most recent non-instant warp change has completed
-            //-the next warp rate is not greater than maxRate
-            //-we are out of the atmosphere, or the next warp rate is still a physics rate, or we are landed
-            //-increasing the rate is allowed by altitude limits, or we are landed
-            //-we did not increase the warp within the last 2 seconds
-            if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.warpRates.Length
-                && (TimeWarp.CurrentRate == 0 || TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] == TimeWarp.CurrentRate)
-                && TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate
-                && (instantAltitudeASL > part.vessel.mainBody.maxAtmosphereAltitude
-                    || TimeWarp.WarpMode == TimeWarp.Modes.LOW
-                    || TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= TimeWarp.MaxPhysicsRate
-                    || part.vessel.Landed)
-                && (instantAltitudeASL > TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, part.vessel.mainBody)
-                    || part.vessel.Landed)
-                && vesselState.time - warpIncreaseAttemptTime > 2)
-            {
-                warpIncreaseAttemptTime = vesselState.time;
-                TimeWarp.SetRate(TimeWarp.CurrentRateIndex + 1, instant);
-                return true;
+                //too low to use any regular warp rates. Use physics warp at a max of x2:
+                WarpPhysicsAtRate((float)Math.Min(desiredRate, 2));
             }
             else
             {
-                return false;
+                WarpRegularAtRate((float)desiredRate);
             }
         }
-
-        public void warpDecrease(ComputerModule controller, bool instant = false)
+         
+        //warp at the highest regular warp rate that is <= maxRate
+        public void WarpRegularAtRate(float maxRate, bool instantOnIncrease = false, bool instantOnDecrease = true)
         {
-            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
+            if (!CheckRegularWarp()) return;
 
-            if (TimeWarp.CurrentRateIndex > 0
-                /*&& timeWarp.warpRates[TimeWarp.CurrentRateIndex] == TimeWarp.CurrentRate*/)
+            if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] > maxRate)
             {
-                TimeWarp.SetRate(TimeWarp.CurrentRateIndex - 1, instant);
+                DecreaseRegularWarp(instantOnDecrease);
+            }
+            else if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
+            {
+                IncreaseRegularWarp(instantOnIncrease);
             }
         }
 
-        public void warpMinimum(ComputerModule controller, bool instant = false)
+        //warp at the highest regular warp rate that is <= maxRate
+        public void WarpPhysicsAtRate(float maxRate, bool instantOnIncrease = false, bool instantOnDecrease = true)
         {
-            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
-            if (TimeWarp.CurrentRateIndex <= 0) return; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kracken)
+            if (!CheckPhysicsWarp()) return;
+
+            if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] > maxRate)
+            {
+                DecreasePhysicsWarp(instantOnDecrease);
+            }
+            else if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
+            {
+                IncreasePhysicsWarp(instantOnIncrease);
+            }
+        }
+        
+        //If the warp mode is regular warp, returns true
+        //If the warp mode is physics warp, switches it to regular warp and returns false
+        private bool CheckRegularWarp()
+        {
+            if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
+            {
+                TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
+                TimeWarp.SetRate(0, true);
+                return false; 
+            }
+            return true;
+        }
+
+        //If the warp mode is physics warp, returns true
+        //If the warp mode is regular warp, switches it to physics warp and returns false
+        private bool CheckPhysicsWarp()
+        {
+            if (TimeWarp.WarpMode != TimeWarp.Modes.LOW)
+            {
+                TimeWarp.fetch.Mode = TimeWarp.Modes.LOW;
+                TimeWarp.SetRate(0, true);
+                return false; 
+            }
+            return true;
+        }
+
+
+        public bool IncreaseRegularWarp(bool instant = false)
+        {
+            if (!CheckRegularWarp()) return false; //make sure we are in regular warp
+
+            //do a bunch of checks to see if we can increase the warp rate:
+            if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.warpRates.Length) return false; //already at max warp
+            if (!part.vessel.LandedOrSplashed)
+            {
+                double instantAltitudeASL = (vesselState.CoM - part.vessel.mainBody.position).magnitude - part.vessel.mainBody.Radius;
+                if (TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, part.vessel.mainBody) > instantAltitudeASL) return false;
+                //altitude too low to increase warp
+            }
+            if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate) return false; //most recent warp change is not yet complete
+            if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
+
+            warpIncreaseAttemptTime = vesselState.time;
+            TimeWarp.SetRate(TimeWarp.CurrentRateIndex + 1, instant);
+            return true;
+        }
+
+        public bool IncreasePhysicsWarp(bool instant = false)
+        {
+            if (!CheckPhysicsWarp()) return false; //make sure we are in regular warp
+
+            //do a bunch of checks to see if we can increase the warp rate:
+            if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.physicsWarpRates.Length) return false; //already at max warp
+            if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate) return false; //most recent warp change is not yet complete
+            if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
+
+            warpIncreaseAttemptTime = vesselState.time;
+            TimeWarp.SetRate(TimeWarp.CurrentRateIndex + 1, instant);
+            return true;
+        }
+
+        public bool DecreaseRegularWarp(bool instant = false)
+        {
+            if (!CheckRegularWarp()) return false;
+
+            if (TimeWarp.CurrentRateIndex == 0) return false; //already at minimum warp
+
+            TimeWarp.SetRate(TimeWarp.CurrentRateIndex - 1, instant);
+            return true;
+        }
+
+        public bool DecreasePhysicsWarp(bool instant = false)
+        {
+            if (!CheckPhysicsWarp()) return false;
+
+            if (TimeWarp.CurrentRateIndex == 0) return false; //already at minimum warp
+
+            TimeWarp.SetRate(TimeWarp.CurrentRateIndex - 1, instant);
+            return true;
+        }
+
+
+        public bool MinimumWarp(bool instant = false)
+        {
+            if (TimeWarp.CurrentRateIndex == 0) return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kracken)
             TimeWarp.SetRate(0, instant);
-        }
-
-        public void warpPhysics(ComputerModule controller, bool instant = false)
-        {
-            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
-
-            if ((TimeWarp.WarpMode == TimeWarp.Modes.LOW) || (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] <= TimeWarp.MaxPhysicsRate))
-            {
-                return;
-            }
-            else
-            {
-                int newIndex = TimeWarp.CurrentRateIndex;
-                while (newIndex > 0 && TimeWarp.fetch.warpRates[newIndex] > TimeWarp.MaxPhysicsRate) newIndex--;
-                TimeWarp.SetRate(newIndex, instant);
-            }
-        }
-
-        public void warpTo(ComputerModule controller, double timeLeft, double[] lookaheadTimes, double maxRate = 100000.0)
-        {
-            //            if ((controlModule != null) && (controller != null) && (controlModule != controller)) return;
-
-            if ((TimeWarp.WarpMode == TimeWarp.Modes.HIGH) && ((timeLeft < lookaheadTimes[TimeWarp.CurrentRateIndex])
-                || (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] > maxRate)))
-            {
-                warpDecrease(controller, true);
-            }
-            else if ((TimeWarp.CurrentRateIndex < TimeWarp.fetch.warpRates.Length - 1
-                && lookaheadTimes[TimeWarp.CurrentRateIndex + 1] < timeLeft
-                && TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
-                || (TimeWarp.WarpMode == TimeWarp.Modes.LOW))
-            {
-                warpIncrease(controller, false, maxRate);
-            }
+            return true;
         }
     }
 }

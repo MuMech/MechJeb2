@@ -6,8 +6,25 @@ using UnityEngine;
 
 namespace MuMech
 {
+    //put this enum at namespace scope so we can reference as just AttitudeReference
+    //and not the very long MechJebModuleAttitudeController.AttitudeReference
+    public enum AttitudeReference
+    {
+        INERTIAL,          //world coordinate system.
+        ORBIT,             //forward = prograde, left = normal plus, up = radial plus
+        ORBIT_HORIZONTAL,  //forward = surface projection of orbit velocity, up = surface normal
+        SURFACE_NORTH,     //forward = north, left = west, up = surface normal
+        SURFACE_VELOCITY,  //forward = surface frame vessel velocity, up = perpendicular component of surface normal
+        TARGET,            //forward = toward target, up = perpendicular component of vessel heading
+        RELATIVE_VELOCITY, //forward = toward relative velocity direction, up = tbd
+        TARGET_ORIENTATION,//forward = direction target is facing, up = target up
+        MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
+    }
+
+    
     public class MechJebModuleAttitudeController : ComputerModule
     {
+
         public MechJebModuleAttitudeController(MechJebCore core)
             : base(core)
         {
@@ -46,21 +63,6 @@ namespace MuMech
         private int rapidRestY = 0;
         private int rapidRestZ = 0;
         private int rapidToggleRestFactor = 8; //Factor the axis is divided by if the rapid toggle resting is activated
-
-
-        public enum AttitudeReference
-        {
-            INERTIAL,          //world coordinate system.
-            ORBIT,             //forward = prograde, left = normal plus, up = radial plus
-            ORBIT_HORIZONTAL,  //forward = surface projection of orbit velocity, up = surface normal
-            SURFACE_NORTH,     //forward = north, left = west, up = surface normal
-            SURFACE_VELOCITY,  //forward = surface frame vessel velocity, up = perpendicular component of surface normal
-            TARGET,            //forward = toward target, up = perpendicular component of vessel heading
-            RELATIVE_VELOCITY, //forward = toward relative velocity direction, up = tbd
-            TARGET_ORIENTATION,//forward = direction target is facing, up = target up
-            MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
-        }
-
 
         public bool attitudeKILLROT = false;
 

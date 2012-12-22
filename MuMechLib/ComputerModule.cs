@@ -67,21 +67,7 @@ namespace MuMech
         public virtual void drive(FlightCtrlState s)
         {
         }
-
-        /*
-                public virtual void onLoadGlobalSettings(SettingsManager settings)
-                {
-                    windowPos = new Rect(settings["windowPos_" + GetType().Name].value_vector.x, settings["windowPos_" + GetType().Name].value_vector.y, 10, 10);
-                    enabled = settings["windowStat_" + GetType().Name].value_bool;
-                }
-
-                public virtual void onSaveGlobalSettings(SettingsManager settings)
-                {
-                    settings["windowPos_" + GetType().Name].value_vector = new Vector4(windowPos.x, windowPos.y);
-                    settings["windowStat_" + GetType().Name].value_bool = enabled;
-                }
-         */
-
+        
         public virtual void OnStart(PartModule.StartState state)
         {
         }

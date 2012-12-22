@@ -7,6 +7,13 @@ namespace MuMech
 {
     public static class MuUtils
     {
+        //since there doesn't seem to be a Math.Clamp?
+        public static double Clamp(double x, double min, double max)
+        {
+            if (x < min) return min;
+            if (x > max) return max;
+            return x;
+        }
 
         //keeps angles in the range 0 to 360
         public static double ClampDegrees360(double angle)
@@ -24,6 +31,32 @@ namespace MuMech
             return angle;
         }
 
+        public static double ClampRadiansTwoPi(double angle)
+        {
+            angle = angle % (2 * Math.PI);
+            if (angle < 0) return angle + 2 * Math.PI;
+            else return angle;
+        }
+
+        public static double ClampRadiansPi(double angle)
+        {
+            angle = ClampRadiansTwoPi(angle);
+            if (angle > Math.PI) angle -= 2 * Math.PI;
+            return angle;
+        }
+
+        public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
+        {
+            Orbit ret = new Orbit();
+            //do pos and vel need to be swapped?
+            ret.UpdateFromStateVectors(pos - body.position, vel, body, UT);
+            return ret;
+        }
+
+        public static bool PhysicsRunning()
+        {
+            return (TimeWarp.WarpMode == TimeWarp.Modes.LOW) || (TimeWarp.CurrentRateIndex == 0);
+        }
     }
 
 
