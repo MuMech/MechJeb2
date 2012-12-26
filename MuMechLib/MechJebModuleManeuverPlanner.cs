@@ -14,6 +14,9 @@ namespace MuMech
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
         Operation operation = Operation.CIRCULARIZE;
 
+        enum Node { ASCENDING, DESCENDING };
+        Node planeMatchNode;
+
         EditableDouble pe = new EditableDouble(0, 1000);
         EditableDouble ap = new EditableDouble(0, 1000);
         EditableDouble inc = new EditableDouble(0);
@@ -52,6 +55,10 @@ namespace MuMech
                 case Operation.INCLINATION:
                     GuiUtils.SimpleTextBox("Inc (deg)", inc, 1000);
                     break;
+
+                case Operation.PLANE:
+                    if (GUILayout.Button(planeMatchNode.ToString())) planeMatchNode = (Node)(((int)planeMatchNode + 1) % 2);
+                    break;
             }
 
             GuiUtils.SimpleTextBox("In (seconds): ", lead, 1);
@@ -59,20 +66,10 @@ namespace MuMech
 
             if (GUILayout.Button("Go"))
             {
-/*                Orbit test1 = MuUtils.OrbitFromStateVectors(part.vessel.orbit.SwappedRelativePositionAtUT(vesselState.time), part.vessel.orbit.SwappedOrbitalVelocityAtUT(vesselState.time), part.vessel.orbit.referenceBody, vesselState.time);
-                Orbit test2 = MuUtils.OrbitFromStateVectors(vesselState.CoM - vesselState.mainBody.position, vesselState.velocityVesselOrbit, vesselState.mainBody, vesselState.time);
-                Orbit test3 = MuUtils.OrbitFromStateVectors(part.vessel.orbit.getRelativePositionAtUT(vesselState.time), part.vessel.orbit.getOrbitalVelocityAtUT(vesselState.time), vesselState.mainBody, vesselState.time);
-                Orbit test4 = MuUtils.OrbitFromStateVectors(part.vessel.orbit.getPositionAtUT(vesselState.time), part.vessel.orbit.getOrbitalVelocityAtUT(vesselState.time), vesselState.mainBody, vesselState.time);
-
-                MonoBehaviour.print("test1.apa = " + test1.ApA);
-                MonoBehaviour.print("test2.apa = " + test2.ApA);
-                MonoBehaviour.print("test3.apa = " + test3.ApA);
-                MonoBehaviour.print("test4.apa = " + test4.ApA);*/
-
-
-
                 Vector3d dV = Vector3d.zero;
                 double rad = part.vessel.mainBody.Radius;
+
+
                 switch (operation)
                 {
                     case Operation.CIRCULARIZE:
@@ -94,6 +91,17 @@ namespace MuMech
                     case Operation.INCLINATION:
                         dV = OrbitalManeuverCalculator.DeltaVToChangeInclination(part.vessel.orbit, UT, inc);
                         break;
+
+                    case Operation.PLANE:
+                        if (planeMatchNode == Node.ASCENDING)
+                        {
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                        }
+                        else
+                        {
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                        }
+                        break;
                 }
                 PlaceManeuverNode(part.vessel.orbit, dV, UT);
             }
@@ -112,9 +120,9 @@ namespace MuMech
         public void PlaceManeuverNode(Orbit o, Vector3d dV, double UT)
         {
             //convert a dV in world coordinates into the coordinate system of the maneuver node,
-            //where (x, y, z) are (radial+, normal+, prograde)
+            //which uses (x, y, z) = (radial+, normal-, prograde)
             Vector3d nodeDV = new Vector3d(Vector3d.Dot(o.RadialPlus(UT), dV),
-                                           Vector3d.Dot(o.NormalPlus(UT), dV),
+                                           Vector3d.Dot(-o.NormalPlus(UT), dV),
                                            Vector3d.Dot(o.Prograde(UT), dV));
             ManeuverNode mn = part.vessel.patchedConicSolver.AddManeuverNode(UT);
             mn.OnGizmoUpdated(nodeDV, UT);
@@ -122,7 +130,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(300) };
+            return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }
 
     }

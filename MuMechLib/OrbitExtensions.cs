@@ -35,9 +35,10 @@ namespace MuMech
             return o.referenceBody.position + o.SwappedRelativePositionAtUT(UT);
         }
 
+        //convention: as you look down along the orbit normal, the satellite revolves counterclockwise
         public static Vector3d SwappedOrbitNormal(this Orbit o)
         {
-            return SwapYZ(o.GetOrbitNormal());
+            return -SwapYZ(o.GetOrbitNormal()).normalized;
         }
 
         public static Vector3d Prograde(this Orbit o, double UT)
@@ -67,12 +68,12 @@ namespace MuMech
 
         public static Vector3d North(this Orbit o, double UT)
         {
-            return Vector3d.Exclude(o.Up(UT), o.referenceBody.angularVelocity).normalized;
+            return Vector3d.Exclude(o.Up(UT), (o.referenceBody.transform.up * (float)o.referenceBody.Radius) - o.SwappedRelativePositionAtUT(UT)).normalized;
         }
 
         public static Vector3d East(this Orbit o, double UT)
         {
-            return Vector3d.Cross(o.North(UT), o.Up(UT));
+            return Vector3d.Cross(o.Up(UT), o.North(UT)); //I think this is the opposite of what it should be, but it gives the right answer
         }
 
         public static double Radius(this Orbit o, double UT)
@@ -87,7 +88,7 @@ namespace MuMech
             return MuUtils.OrbitFromStateVectors(o.SwappedAbsolutePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
         }
 
-        //mean motion is rate of increase of mean anomaly
+        //mean motion is rate of increase of the mean anomaly
         public static double MeanMotion(this Orbit o) 
         {
             return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
@@ -143,6 +144,15 @@ namespace MuMech
             return ret;
         }
 
+        public static double UTAtMeanAnomaly(this Orbit o, double meanAnomaly, double UT)
+        {
+            if (double.IsNaN(meanAnomaly)) return double.NaN;
+            double currentMeanAnomaly = o.MeanAnomalyAtUT(UT);
+            double meanDifference = meanAnomaly - currentMeanAnomaly;
+            if (o.eccentricity < 1) meanDifference = MuUtils.ClampRadiansTwoPi(meanDifference);
+            return UT + meanDifference / o.MeanMotion();
+        }
+
         public static double NextPeriapsisTime(this Orbit o, double UT)
         {
             if (o.eccentricity < 1)
@@ -173,14 +183,14 @@ namespace MuMech
             Vector3d targetNormal = b.SwappedOrbitNormal();
             Vector3d vectorToAN = Vector3d.Cross(normal, targetNormal);
             Vector3d vectorToPe = SwapYZ(a.eccVec);
-            double angleFromPe = Vector3d.Angle(vectorToPe, vectorToAN);
+            double angleFromPe = Math.Abs(Vector3d.Angle(vectorToPe, vectorToAN));
 
-            //If the AN is actually during the infalling part of the orbit then we need to add 180 to
+            //If the AN is actually during the infalling part of the orbit then we need to do 360 minus the
             //angle from Pe to get the true anomaly. Test this by taking the the cross product of the
             //orbit normal and vector to the periapsis. This gives a vector that points to center of the 
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
-            if (Math.Abs(Vector3d.Angle(vectorToAN, Vector3d.Cross(vectorToPe, normal))) < 90)
+            if (Math.Abs(Vector3d.Angle(vectorToAN, Vector3d.Cross(normal, vectorToPe))) < 90)
             {
                 return angleFromPe;
             }
@@ -195,6 +205,90 @@ namespace MuMech
             return MuUtils.ClampDegrees360(a.AscendingNodeTrueAnomaly(b) + 180);
         }
 
+        /// <summary>
+        /// Takes a true anomaly(degrees from Periapsis), and computes Eccentric Anomaly at that target
+        /// </summary>
+        /// <returns>
+        /// Returns Eccentric Anomaly (0-2pi). If the given trueAnomaly is never attained, returns NaN (can happen
+        /// for abs(trueAnomaly) > 90 and o hyperbolic).
+        /// </returns>
+        /// <param name='o'>Orbit</param>">
+        /// <param name='trueAnomaly'>
+        /// True anomaly (0-360 for elliptical orbits, -something to +something for hyperbolic orbits)
+        /// </param>
+        /// 
+        public static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
+        {
+            double e = o.eccentricity;
+            trueAnomaly = trueAnomaly * (Math.PI / 180);
+            
+            if (e < 1) //elliptical orbits
+            {
+                double cosE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
+                double sinE = Math.Sqrt(1 - (cosE * cosE));
+                if (trueAnomaly > Math.PI)
+                {
+                    sinE *= -1;
+                }
+                return MuUtils.ClampRadiansTwoPi(Math.Atan2(sinE, cosE));
+            }
+            else  //hyperbolic orbits
+            {
+                double coshE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
+                if (coshE < 1) return double.NaN; //this true anomaly is not attained on this hyperbolic orbit
+                double E = MuUtils.Acosh(coshE);
+                E *= Math.Sign(trueAnomaly);
+                return E;
+            }
+        }
 
+        /// <summary>
+        /// You provide the eccentric anomaly, this method will bring the mean.
+        /// </summary>
+        /// <returns>
+        /// Mean anomaly (0-2pi)
+        /// </returns>
+        /// <param name='E'>
+        /// orbit.eccentricAnomaly (0-2pi)
+        /// </param>
+        public static double GetMeanAnomalyAtEccentricAnomaly(this Orbit o, double E)
+        {
+            if (double.IsNaN(E)) return double.NaN;
+            double e = o.eccentricity;
+            if (e < 1) //elliptical orbits
+            {
+                return MuUtils.ClampRadiansTwoPi(E - (e * Math.Sin(E)));
+            }
+            else //hyperbolic orbits
+            {
+                return (e * Math.Sinh(E)) - E;
+            }
+        }
+
+        public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
+        {
+            return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
+        }
+
+        //NOTE: this function can return NaN, if a is a hyperbolic orbit with an eccentricity
+        //large enough that it never attains the given true anomaly
+        public static double TimeOfTrueAnomaly(this Orbit o, double trueAnomaly, double UT)
+        {
+            return o.UTAtMeanAnomaly(o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly)), UT);
+        }
+
+        //NOTE: this function can return NaN, if a is a hyperbolic orbit and the "ascending node"
+        //occurs at a true anomaly that a does not actually ever attain
+        public static double TimeOfAscendingNode(this Orbit a, Orbit b, double UT)
+        {
+            return a.TimeOfTrueAnomaly(a.AscendingNodeTrueAnomaly(b), UT);
+        }
+
+        //NOTE: this function can return NaN, if a is a hyperbolic orbit and the "descending node"
+        //occurs at a true anomaly that a does not actually ever attain
+        public static double TimeOfDescendingNode(this Orbit a, Orbit b, double UT)
+        {
+            return a.TimeOfTrueAnomaly(a.DescendingNodeTrueAnomaly(b), UT);
+        }
     }
 }

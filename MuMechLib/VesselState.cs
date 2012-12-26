@@ -110,7 +110,7 @@ namespace MuMech
             if (FlightGlobals.fetch.VesselTarget != null)
             {
                 vectorToTarget = FlightGlobals.fetch.VesselTarget.GetTransform().position - vessel.transform.position;
-                relativeVelocityToTarget = velocityVesselOrbit - FlightGlobals.fetch.VesselTarget.GetObtVelocity();
+                relativeVelocityToTarget = velocityVesselOrbit - FlightGlobals.fetch.VesselTarget.GetOrbit().GetVel(); //don't use GetObtVelocity, it's broken for CelestialBody's
                 distanceToTarget = vectorToTarget.magnitude;
             }
             else

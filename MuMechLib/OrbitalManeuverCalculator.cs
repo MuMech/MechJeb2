@@ -183,8 +183,8 @@ namespace MuMech
             if (Math.Abs(cosDesiredSurfaceAngle) > 1.0)
             {
                 //If inclination < latitude, we get this case: the desired inclination is impossible
-                if (Math.Abs(MuUtils.ClampDegrees180(desiredInclination)) < 90) return 0;
-                else return 180;
+                if (Math.Abs(MuUtils.ClampDegrees180(desiredInclination)) < 90) return 90;
+                else return 270;
             }
             else
             {
@@ -196,17 +196,41 @@ namespace MuMech
             }
         }
 
+        //inclination convention: 
+        //   - first, clamp newInclination to the range -180, 180
+        //   - if newInclination > 0, do the cheaper burn to set that inclination
+        //   - if newInclination < 0, do the more expensive burn to set that inclination
         public static Vector3d DeltaVToChangeInclination(Orbit o, double UT, double newInclination)
         {
-            Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
             double latitude = o.referenceBody.GetLatitude(o.SwappedAbsolutePositionAtUT(UT));
             double desiredHeading = HeadingForInclination(newInclination, latitude);
-            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Cos(Math.PI / 180 * desiredHeading) * o.East(UT);
-            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Sin(Math.PI / 180 * desiredHeading) * o.North(UT);
-            if (Vector3d.Dot(actualHorizontalVelocity, o.North(UT)) < 0) northComponent *= -1;
+            Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
+            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(Math.PI / 180 * desiredHeading) * o.East(UT);
+            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(Math.PI / 180 * desiredHeading) * o.North(UT);
+            if (Vector3d.Dot(actualHorizontalVelocity, northComponent) < 0) northComponent *= -1;
+            if (MuUtils.ClampDegrees180(newInclination) < 0) northComponent *= -1;
             Vector3d desiredHorizontalVelocity = eastComponent + northComponent;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
+
+        public static Vector3d DeltaVAndTimeToMatchPlanesAscending(Orbit o, Orbit target, double UT, out double burnUT)
+        {
+            burnUT = o.TimeOfAscendingNode(target, UT);
+            Vector3d desiredHorizontal = Vector3d.Cross(target.SwappedOrbitNormal(), o.Up(burnUT));
+            Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT));
+            Vector3d desiredHorizontalVelocity = actualHorizontalVelocity.magnitude * desiredHorizontal;
+            return desiredHorizontalVelocity - actualHorizontalVelocity;
+        }
+
+        public static Vector3d DeltaVAndTimeToMatchPlanesDescending(Orbit o, Orbit target, double UT, out double burnUT)
+        {
+            burnUT = o.TimeOfDescendingNode(target, UT);
+            Vector3d desiredHorizontal = Vector3d.Cross(target.SwappedOrbitNormal(), o.Up(burnUT));
+            Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT));
+            Vector3d desiredHorizontalVelocity = actualHorizontalVelocity.magnitude * desiredHorizontal;
+            return desiredHorizontalVelocity - actualHorizontalVelocity;
+        }
+
 
 /*        public static Vector3d DeltaVForCourseCorrection(Orbit o, double UT, Orbit target)
         {
