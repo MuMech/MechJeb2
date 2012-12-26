@@ -83,10 +83,12 @@ namespace MuMech
         public double atmosphericDensity;
         public double angleToPrograde;
 
-        CelestialBody mainBody;
+        public CelestialBody mainBody;
 
         public void Update(Vessel vessel)
         {
+            if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
+
             time = Planetarium.GetUniversalTime();
             deltaT = TimeWarp.fixedDeltaTime;
 
@@ -204,7 +206,6 @@ namespace MuMech
                     mass += partMass;
                     massDrag += partMass * p.maximum_drag;
                 }
-
                 MoI += p.Rigidbody.inertiaTensor;
                 if (((p.State == PartStates.ACTIVE) || ((Staging.CurrentStage > Staging.lastStage) && (p.inverseStage == Staging.lastStage))) && ((p is LiquidEngine) || (p is LiquidFuelEngine) || (p is SolidRocket) || (p is AtmosphericEngine) || p.Modules.Contains("ModuleEngines")))
                 {
@@ -241,7 +242,7 @@ namespace MuMech
                         if (((AtmosphericEngine)p).thrustVectoringCapable)
                         {
                             torqueThrustPYAvailable += Math.Sin(Math.Abs(((AtmosphericEngine)p).gimbalRange) * Math.PI / 180) * ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-                        }
+                        } 
                     }
                     else if (p.Modules.Contains("ModuleEngines"))
                     {
@@ -284,14 +285,17 @@ namespace MuMech
                 }
             }
 
+
             angularMomentum = new Vector3d(angularVelocity.x * MoI.x, angularVelocity.y * MoI.y, angularVelocity.z * MoI.z);
 
             maxThrustAccel = thrustAvailable / mass;
             minThrustAccel = thrustMinimum / mass;
 
             mainBody = vessel.mainBody;
+
         }
 
+        //probably this should call a more general terminal velocity method
         public double TerminalVelocity()
         {
             if (altitudeASL > mainBody.maxAtmosphereAltitude) return Double.MaxValue;

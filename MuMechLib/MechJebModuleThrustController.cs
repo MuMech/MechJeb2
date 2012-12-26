@@ -67,7 +67,7 @@ namespace MuMech
 
 
 
-        public override void drive(FlightCtrlState s)
+        public override void Drive(FlightCtrlState s)
         {
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {

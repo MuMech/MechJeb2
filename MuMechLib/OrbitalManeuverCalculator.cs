@@ -27,8 +27,12 @@ namespace MuMech
         public static Vector3d DeltaVToEllipticize(Orbit o, double UT, double newPeR, double newApR)
         {
             double radius = o.Radius(UT);
-            if (radius < newPeR || radius > newApR || newPeR < 0) return Vector3d.zero;
-
+            print("ellipticize: radius = " + radius + ", newPeR = " + newPeR + ", newApR = " + newApR);
+            if (radius < newPeR || radius > newApR || newPeR < 0)
+            {
+                print("giving up");
+                return Vector3d.zero;
+            }
             double GM = o.referenceBody.gravParameter;
             double E = -GM / (newPeR + newApR); //total energy per unit mass of new orbit
             double L = Math.Sqrt(Math.Abs((Math.Pow(E * (newApR - newPeR), 2) - GM * GM) / (2 * E))); //angular momentum per unit mass of new orbit
@@ -51,11 +55,14 @@ namespace MuMech
         {
             double radius = o.Radius(UT);
 
+            print("dV to change pe: radius = " + radius + ", newPeR = " + newPeR);
+
             //don't bother with impossible maneuvers:
             if (newPeR > radius || newPeR < 0) return Vector3d.zero;
 
             //are we raising or lowering the periapsis?
             bool raising = (newPeR > o.PeR);
+            print("raising = " + raising);
 
             Vector3d burnDirection = (raising ? 1 : -1) * o.Horizontal(UT);
 
@@ -77,11 +84,15 @@ namespace MuMech
                 maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
             }
 
+            print("maxDV = " + maxDeltaV);
+
             //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.1)
+            while (maxDeltaV - minDeltaV > 0.01)
             {
                 double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
                 double testPeriapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR;
+
+                print("testPe = " + testPeriapsis);
 
                 if ((testPeriapsis > newPeR && raising) || (testPeriapsis < newPeR && !raising))
                 {
@@ -101,11 +112,15 @@ namespace MuMech
         {
             double radius = o.Radius(UT);
 
+            print("change apoapsis: radius = " + radius + ", newApR = " + newApR);
+
             //don't bother with impossible maneuvers:
             if (newApR < radius) return Vector3d.zero;
 
             //are we raising or lowering the periapsis?
             bool raising = (o.ApR > 0 && newApR > o.ApR);
+
+            print("raising = " + raising);
 
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
 
@@ -121,6 +136,7 @@ namespace MuMech
                 {
                     maxDeltaV *= 2;
                     ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
+                    print("maxDeltaV = " + maxDeltaV + "; perturbed ap = " + ap);
                     if (maxDeltaV > 100000) break; //a safety precaution
                 }
             }
@@ -130,11 +146,15 @@ namespace MuMech
                 maxDeltaV = o.SwappedOrbitalVelocityAtUT(UT).magnitude;
             }
 
+            print("maxDeltaV = " + maxDeltaV);
+
             //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.1)
+            while (maxDeltaV - minDeltaV > 0.01)
             {
                 double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
                 double testApoapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR;
+
+                print("testApoapsis = " + testApoapsis);
 
                 if((raising && (testApoapsis < 0 || testApoapsis > newApR)) ||
                     (!raising && (testApoapsis > 0 && testApoapsis < newApR)))

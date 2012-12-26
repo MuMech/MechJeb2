@@ -103,6 +103,10 @@ namespace MuMech
 
             attitude.enabled = true; //for testing
 
+            displayModules.Add(new MechJebModuleManeuverPlanner(this));
+
+            displayModules[0].enabled = true; //for testing maneuver planner
+
             part.vessel.OnFlyByWire += drive;
             controlledVessel = part.vessel;
         }
@@ -261,7 +265,7 @@ namespace MuMech
             //do we need to do something to prevent conflicts here?
             foreach (ComputerModule module in computerModules)
             {
-                if (module.enabled) module.drive(s);
+                if (module.enabled) module.Drive(s);
             }
         }
 
@@ -272,7 +276,7 @@ namespace MuMech
                 int wid = 0;
                 foreach (DisplayModule module in displayModules)
                 {
-                    if (module.enabled) module.drawGUI(windowIDbase + wid);
+                    if (module.enabled) module.DrawGUI(windowIDbase + wid);
                     wid++;
                 }
             }

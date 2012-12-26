@@ -10,6 +10,7 @@ namespace MuMech
     {
         public Part part = null;
         public MechJebCore core = null;
+        public VesselState vesselState = null;
 
         protected bool _enabled = false;
         public bool enabled
@@ -26,11 +27,11 @@ namespace MuMech
                     _enabled = value;
                     if (_enabled)
                     {
-                        onModuleEnabled();
+                        OnModuleEnabled();
                     }
                     else
                     {
-                        onModuleDisabled();
+                        OnModuleDisabled();
                     }
                 }
             }
@@ -58,13 +59,14 @@ namespace MuMech
         {
             this.core = core;
             part = core.part;
+            vesselState = core.vesselState;
         }
 
-        public virtual void onModuleEnabled()
+        public virtual void OnModuleEnabled()
         {
         }
 
-        public virtual void onModuleDisabled()
+        public virtual void OnModuleDisabled()
         {
         }
 
@@ -81,18 +83,18 @@ namespace MuMech
             GUI.DragWindow();
         }
 
-        public virtual void drawGUI(int baseWindowID)
+        public virtual void DrawGUI(int baseWindowID)
         {
-            windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, getName(), windowOptions());
+            windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, GetName(), WindowOptions());
         }
 
-        public virtual GUILayoutOption[] windowOptions()
+        public virtual GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[0];
         }
 
 
-        public virtual string getName()
+        public virtual string GetName()
         {
             return "Display Module";
         }

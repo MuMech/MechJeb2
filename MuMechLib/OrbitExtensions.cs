@@ -12,7 +12,7 @@ namespace MuMech
     {
         public static Vector3d SwapYZ(Vector3d v)
         {
-            return new Vector3d(v.x, v.z, v.y);
+            return v.Reorder(132);
         }
 
         //
@@ -32,7 +32,7 @@ namespace MuMech
 
         public static Vector3d SwappedAbsolutePositionAtUT(this Orbit o, double UT)
         {
-            return o.referenceBody.position + o.SwappedAbsolutePositionAtUT(UT);
+            return o.referenceBody.position + o.SwappedRelativePositionAtUT(UT);
         }
 
         public static Vector3d SwappedOrbitNormal(this Orbit o)
@@ -84,7 +84,7 @@ namespace MuMech
         public static Orbit PerturbedOrbit(this Orbit o, double UT, Vector3d dV)
         {
             //should these in fact be swapped?
-            return MuUtils.OrbitFromStateVectors(o.SwappedRelativePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
+            return MuUtils.OrbitFromStateVectors(o.SwappedAbsolutePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
         }
 
         //mean motion is rate of increase of mean anomaly

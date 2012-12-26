@@ -54,7 +54,7 @@ namespace MuMech
         ///////////////////////////////////////
 
         //called every frame or so; this is where we manipulate the flight controls
-        public override void drive(FlightCtrlState s)
+        public override void Drive(FlightCtrlState s)
         {
             if (mode == AscentMode.DISENGAGED) return;
 

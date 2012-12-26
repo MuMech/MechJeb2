@@ -35,11 +35,11 @@ namespace MuMech
                     _enabled = value;
                     if (_enabled)
                     {
-                        onModuleEnabled();
+                        OnModuleEnabled();
                     }
                     else
                     {
-                        onModuleDisabled();
+                        OnModuleDisabled();
                     }
                 }
             }
@@ -52,19 +52,19 @@ namespace MuMech
             vesselState = core.vesselState;
         }
 
-        public virtual void onModuleEnabled()
+        public virtual void OnModuleEnabled()
         {
         }
 
-        public virtual void onModuleDisabled()
+        public virtual void OnModuleDisabled()
         {
         }
 
-        public virtual void onControlLost()
+        public virtual void OnControlLost()
         {
         }
 
-        public virtual void drive(FlightCtrlState s)
+        public virtual void Drive(FlightCtrlState s)
         {
         }
         
