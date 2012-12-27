@@ -10,7 +10,7 @@ namespace MuMech
     {
         public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }
 
-        enum Operation { CIRCULARIZE, ELLIPTICIZE, PERIAPSIS, APOAPSIS, INCLINATION, PLANE };
+        enum Operation { CIRCULARIZE, ELLIPTICIZE, PERIAPSIS, APOAPSIS, INCLINATION, PLANE, TRANSFER, COURSE_CORRECTION, INTERPLANETARY_TRANSFER };
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
         Operation operation = Operation.CIRCULARIZE;
 
@@ -59,10 +59,39 @@ namespace MuMech
                 case Operation.PLANE:
                     if (GUILayout.Button(planeMatchNode.ToString())) planeMatchNode = (Node)(((int)planeMatchNode + 1) % 2);
                     break;
+
+                case Operation.TRANSFER:
+                    break;
+
+                case Operation.COURSE_CORRECTION:
+                    break;
+
+                case Operation.INTERPLANETARY_TRANSFER:
+                    break;
             }
 
             GuiUtils.SimpleTextBox("In (seconds): ", lead, 1);
             double UT = vesselState.time + lead;
+
+
+            if (Input.GetKeyDown(KeyCode.Alpha0))
+            {
+                double initialT = vesselState.time;
+                double finalT = vesselState.time + 100;
+                Vector3d initalRelPos = part.vessel.orbit.SwappedRelativePositionAtUT(initialT);
+                Vector3d finalRelPos = part.vessel.orbit.SwappedRelativePositionAtUT(finalT);
+                Vector3d knownInitialVel = part.vessel.orbit.SwappedOrbitalVelocityAtUT(initialT);
+                Vector3d knownFinalVel = part.vessel.orbit.SwappedOrbitalVelocityAtUT(finalT);
+
+                Vector3d computedInitialVel, computedFinalVel;
+                LambertSolver.Solve(initalRelPos, initialT, finalRelPos, finalT, part.vessel.orbit.referenceBody, 0.01,
+                    out computedInitialVel, out computedFinalVel);
+                Debug.Log("--");
+                Debug.Log("known initial velocity = " + knownInitialVel);
+                Debug.Log("known final velocity = " + knownFinalVel);
+            }
+
+
 
             if (GUILayout.Button("Go"))
             {
@@ -102,7 +131,20 @@ namespace MuMech
                             dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
                         }
                         break;
+
+                    case Operation.TRANSFER:
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                        break;
+
+                    case Operation.COURSE_CORRECTION:
+                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(part.vessel.orbit, UT, FlightGlobals.fetch.VesselTarget.GetOrbit());
+                        break;
+
+                    case Operation.INTERPLANETARY_TRANSFER:
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(part.vessel.orbit, vesselState.time, FlightGlobals.fetch.VesselTarget.GetOrbit(), out UT);
+                        break;
                 }
+
                 PlaceManeuverNode(part.vessel.orbit, dV, UT);
             }
 

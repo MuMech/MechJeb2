@@ -179,18 +179,23 @@ namespace MuMech
 
         public static double AscendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
-            Vector3d normal = a.SwappedOrbitNormal();
-            Vector3d targetNormal = b.SwappedOrbitNormal();
-            Vector3d vectorToAN = Vector3d.Cross(normal, targetNormal);
-            Vector3d vectorToPe = SwapYZ(a.eccVec);
-            double angleFromPe = Math.Abs(Vector3d.Angle(vectorToPe, vectorToAN));
+            Vector3d vectorToAN = Vector3d.Cross(a.SwappedOrbitNormal(), b.SwappedOrbitNormal());
+            return a.TrueAnomalyFromVector(vectorToAN);
+        }
 
-            //If the AN is actually during the infalling part of the orbit then we need to do 360 minus the
+        //Converts a direction, specified by a Vector3d, into a true anomaly
+        public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec) 
+        {
+            Vector3d projected = Vector3d.Exclude(o.SwappedOrbitNormal(), vec);
+            Vector3d vectorToPe = SwapYZ(o.eccVec);
+            double angleFromPe = Math.Abs(Vector3d.Angle(vectorToPe, projected));
+
+            //If the vector points to the infalling part of the orbit then we need to do 360 minus the
             //angle from Pe to get the true anomaly. Test this by taking the the cross product of the
             //orbit normal and vector to the periapsis. This gives a vector that points to center of the 
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
-            if (Math.Abs(Vector3d.Angle(vectorToAN, Vector3d.Cross(normal, vectorToPe))) < 90)
+            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(o.SwappedOrbitNormal(), vectorToPe))) < 90)
             {
                 return angleFromPe;
             }
@@ -289,6 +294,11 @@ namespace MuMech
         public static double TimeOfDescendingNode(this Orbit a, Orbit b, double UT)
         {
             return a.TimeOfTrueAnomaly(a.DescendingNodeTrueAnomaly(b), UT);
+        }
+
+        public static double SynodicPeriod(this Orbit a, Orbit b)
+        {
+            return Math.Abs(1.0 / (1.0 / a.period - 1.0 / b.period)); //period after which the phase angle repeats
         }
     }
 }
