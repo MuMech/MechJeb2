@@ -23,6 +23,9 @@ namespace MuMech
 
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to 
 
+        DirectionTarget testTarget;
+        IAscentPath testAscentPath = new DefaultAscentPath();
+
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
@@ -95,7 +98,8 @@ namespace MuMech
             AddComputerModule(warp = new MechJebModuleWarpController(this));
 
             AddComputerModule(new MechJebModuleAscentComputer(this));
-            
+            AddComputerModule(new MechJebModuleAscentGuidance(this));
+
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
@@ -156,6 +160,25 @@ namespace MuMech
             {
                 module.OnFixedUpdate();
             }
+
+            if (Input.GetKeyDown(KeyCode.Alpha9))
+            {
+/*                print("fwd: " + testTarget.GetFwdVector());
+                print("name: " + testTarget.GetName());
+                //print("obtvel: " + testTarget.GetObtVelocity());
+                print("obt: " + testTarget.GetOrbit());
+                print("obtdriver: " + testTarget.GetOrbitDriver());
+                print("srfvel: " + testTarget.GetSrfVelocity());
+                print("transform: " + testTarget.GetTransform());
+                print("vessel: " + testTarget.GetVessel());*/
+                testTarget = new DirectionTarget("Ascent Path Guidance");
+                FlightGlobals.fetch.SetVesselTarget(testTarget);//FlightGlobals.fetch.vesselTargetDelta = FlightGlobals.fetch.vesselTargetDelta = (part.vessel.transform.position + 200 * part.vessel.transform.up);
+            }
+
+            if (testTarget != null)
+            {
+            }
+
         }
 
         public void Update()

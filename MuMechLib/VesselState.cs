@@ -107,7 +107,7 @@ namespace MuMech
             velocityVesselSurfaceUnit = velocityVesselSurface.normalized;
             velocityMainBodySurface = rotationSurface * velocityVesselSurface;
 
-            if (FlightGlobals.fetch.VesselTarget != null)
+            if (Target.Exists())
             {
                 vectorToTarget = FlightGlobals.fetch.VesselTarget.GetTransform().position - vessel.transform.position;
                 relativeVelocityToTarget = velocityVesselOrbit - FlightGlobals.fetch.VesselTarget.GetOrbit().GetVel(); //don't use GetObtVelocity, it's broken for CelestialBody's

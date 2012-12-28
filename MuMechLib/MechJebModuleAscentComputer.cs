@@ -6,6 +6,41 @@ using UnityEngine;
 
 namespace MuMech
 {
+
+    //An IAscentPath provides a single function, which returns the flight path angle at a given altitude
+    public interface IAscentPath
+    {
+        //altitude at which to stop going straight up
+        double VerticalAscentEnd();
+
+        //controls the ascent path
+        double FlightPathAngle(double altitude);
+    }
+
+
+    public class DefaultAscentPath : IAscentPath
+    {
+        public double turnStartAltitude = 5000;
+        public double turnEndAltitude = 70000;
+        public double turnEndAngle = 0;
+        public double turnShapeExponent = 0.4;
+
+        public double VerticalAscentEnd()
+        {
+            return turnEndAltitude;
+        }
+
+        public double FlightPathAngle(double altitude)
+        {
+            if (altitude < turnStartAltitude) return 90.0;
+
+            if (altitude > turnEndAltitude) return turnEndAngle;
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
+        }
+    }
+
+
     //Todo: reimplement measurement of LPA and launch to rendezvous
     //      implement launch-to-plane
     public class MechJebModuleAscentComputer : ComputerModule
@@ -23,29 +58,11 @@ namespace MuMech
         public AscentMode mode = AscentMode.DISENGAGED;
 
         //input parameters:
-        double gravityTurnStartAltitude = 10000.0;
-        double gravityTurnEndAltitude = 70000.0;
-        double gravityTurnEndPitch = 0.0;
-        double gravityTurnShapeExponent = 0.4;
+        IAscentPath ascentPath = new DefaultAscentPath();
         double desiredOrbitAltitude = 100000.0;
         double desiredInclination = 0.0;
         bool autoWarpToApoapsis = true;
         bool seizeThrottle = true;
-
-
-        ////////////////////////////////////////
-        // ASCENT PATH /////////////////////////
-        ////////////////////////////////////////
-
-        //controls the ascent path
-        private double FlightPathAngle(double altitude)
-        {
-            if (altitude < gravityTurnStartAltitude) return 90.0;
-
-            if (altitude > gravityTurnEndAltitude) return gravityTurnEndPitch;
-
-            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - gravityTurnStartAltitude) / (gravityTurnEndAltitude - gravityTurnStartAltitude), gravityTurnShapeExponent) * (90.0 - gravityTurnEndPitch)), 0.01F, 89.99F);
-        }
 
 
 
@@ -98,7 +115,7 @@ namespace MuMech
         {
             //during the vertical ascent we just thrust straight up at max throttle
             if (seizeThrottle) s.mainThrottle = 1.0F;
-            if (vesselState.altitudeASL > gravityTurnStartAltitude) mode = AscentMode.GRAVITY_TURN;
+            if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
             if (seizeThrottle && part.vessel.orbit.ApA > desiredOrbitAltitude)
             {
                 //lastAccelerationTime = vesselState.time;
@@ -141,7 +158,7 @@ namespace MuMech
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (vesselState.altitudeASL < gravityTurnStartAltitude)
+            if (vesselState.altitudeASL < ascentPath.VerticalAscentEnd())
             {
                 mode = AscentMode.VERTICAL_ASCENT;
                 return;
@@ -173,7 +190,7 @@ namespace MuMech
 
             double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
-            double desiredFlightPathAngle = FlightPathAngle(vesselState.altitudeASL);
+            double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL);
 
             Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
                                          + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;

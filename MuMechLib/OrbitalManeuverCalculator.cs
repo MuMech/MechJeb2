@@ -330,13 +330,37 @@ namespace MuMech
             //and SOI exit (approximated as radius = infinity)
             double soiExitEnergy = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
             double ejectionRadius = o.semiMajorAxis; //a guess, good for nearly circular orbits
-            double hyperbolaSemiMajorAxis = -o.referenceBody.gravParameter / (2 * soiExitEnergy);
+
+            double ejectionKineticEnergy = soiExitEnergy + o.referenceBody.gravParameter / ejectionRadius;
+            double ejectionSpeed = Math.Sqrt(2 * ejectionKineticEnergy);
+
+            Debug.Log("soiExitEnergy = " + soiExitEnergy);
+            Debug.Log("ejectionRadius = " + ejectionRadius);
+            Debug.Log("ejectionKineticEnergy = " + ejectionKineticEnergy);
+            Debug.Log("ejectionSpeed = " + ejectionSpeed);
+
+            //construct a sample ejection orbit
+            Vector3d ejectionOrbitInitialVelocity = ejectionSpeed * (Vector3d)o.referenceBody.transform.right;
+            Orbit sampleEjectionOrbit = MuUtils.OrbitFromStateVectors(o.referenceBody.position + ejectionRadius * (Vector3d)o.referenceBody.transform.up, ejectionOrbitInitialVelocity, o.referenceBody, 0);
+            double ejectionOrbitFinalTrueAnomaly = 180 / Math.PI * sampleEjectionOrbit.TrueAnomalyAtRadius(o.referenceBody.sphereOfInfluence);
+            double ejectionOrbitDuration = sampleEjectionOrbit.TimeOfTrueAnomaly(ejectionOrbitFinalTrueAnomaly, 0);
+            Vector3d ejectionOrbitFinalVelocity = sampleEjectionOrbit.SwappedOrbitalVelocityAtUT(ejectionOrbitDuration);
+
+            double turningAngle = Math.Abs(Vector3d.Angle(ejectionOrbitInitialVelocity, ejectionOrbitFinalVelocity));
+
+            Debug.Log("ejectionOrbitInitialVElocity = " + ejectionOrbitInitialVelocity);
+            Debug.Log("ejectionOrbitFinalTrueAnomaly = " + ejectionOrbitFinalTrueAnomaly);
+            Debug.Log("ejectionOrbitDuration = " + ejectionOrbitDuration);
+            Debug.Log("ejectionOrbitFinalVelocity = " + ejectionOrbitFinalVelocity);
+            Debug.Log("turningAngle = " + turningAngle);
+
+/*            double hyperbolaSemiMajorAxis = -o.referenceBody.gravParameter / (2 * soiExitEnergy);
             double hyperbolaEccentricity = 1 - ejectionRadius / hyperbolaSemiMajorAxis;
             double turningAngle = 180 / Math.PI * Math.Asin(1 / hyperbolaEccentricity);
 
             Debug.Log("ejectionRadius = " + ejectionRadius);
             Debug.Log("hyperbolaEccentricity = " + hyperbolaEccentricity);
-            Debug.Log("turningAngle = " + turningAngle);
+            Debug.Log("turningAngle = " + turningAngle);*/
 
             //rotate the exit direction by 90 + the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn. Then convert this to a true anomaly and compute the time closest
@@ -356,8 +380,6 @@ namespace MuMech
             Debug.Log("ejectionTrueAnomaly = " + ejectionTrueAnomaly);
             Debug.Log("(burnUT - UT) = " + (burnUT - UT));
 
-            double ejectionKineticEnergy = soiExitEnergy + o.referenceBody.gravParameter / ejectionRadius;
-            double ejectionSpeed = Math.Sqrt(2 * ejectionKineticEnergy);
 
             Debug.Log("ejectionSpeed = " + ejectionSpeed);
 

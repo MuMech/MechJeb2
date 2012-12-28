@@ -92,60 +92,72 @@ namespace MuMech
             }
 
 
+            if (Input.GetKeyDown(KeyCode.Alpha8))
+            {
+                Debug.Log("Maneuver nodes:");
+                foreach (ManeuverNode mn in part.vessel.patchedConicSolver.maneuverNodes)
+                {
+                    Debug.Log(mn.ToString() + " at " + mn.UT + " - patch PeA = " + mn.patch.PeA + "; nextPatch PeA = " + (mn.nextPatch == null ? -66 : mn.nextPatch.PeA));
+                }
+            }
+
 
             if (GUILayout.Button("Go"))
             {
                 Vector3d dV = Vector3d.zero;
-                double rad = part.vessel.mainBody.Radius;
 
+                Orbit o = GetPatchAtUT(UT);
+                double rad = o.referenceBody.Radius;
+
+                Debug.Log("o.PeA = " + o.PeA);
 
                 switch (operation)
                 {
                     case Operation.CIRCULARIZE:
-                        dV = OrbitalManeuverCalculator.DeltaVToCircularize(part.vessel.orbit, UT);
+                        dV = OrbitalManeuverCalculator.DeltaVToCircularize(o, UT);
                         break;
 
                     case Operation.ELLIPTICIZE:
-                        dV = OrbitalManeuverCalculator.DeltaVToEllipticize(part.vessel.orbit, UT, pe + rad, ap + rad);
+                        dV = OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, pe + rad, ap + rad);
                         break;
 
                     case Operation.PERIAPSIS:
-                        dV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(part.vessel.orbit, UT, pe + rad);
+                        dV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, pe + rad);
                         break;
 
                     case Operation.APOAPSIS:
-                        dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(part.vessel.orbit, UT, ap + rad);
+                        dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, ap + rad);
                         break;
 
                     case Operation.INCLINATION:
-                        dV = OrbitalManeuverCalculator.DeltaVToChangeInclination(part.vessel.orbit, UT, inc);
+                        dV = OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, inc);
                         break;
 
                     case Operation.PLANE:
                         if (planeMatchNode == Node.ASCENDING)
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
                         }
                         else
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
                         }
                         break;
 
                     case Operation.TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(part.vessel.orbit, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
                         break;
 
                     case Operation.COURSE_CORRECTION:
-                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(part.vessel.orbit, UT, FlightGlobals.fetch.VesselTarget.GetOrbit());
+                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, FlightGlobals.fetch.VesselTarget.GetOrbit());
                         break;
 
                     case Operation.INTERPLANETARY_TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(part.vessel.orbit, vesselState.time, FlightGlobals.fetch.VesselTarget.GetOrbit(), out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, vesselState.time, FlightGlobals.fetch.VesselTarget.GetOrbit(), out UT);
                         break;
                 }
 
-                PlaceManeuverNode(part.vessel.orbit, dV, UT);
+                PlaceManeuverNode(o, dV, UT);
             }
 
             GUILayout.EndVertical();
@@ -156,16 +168,34 @@ namespace MuMech
         }
 
 
+        public Orbit GetPatchAtUT(double UT)
+        {
+            IEnumerable<ManeuverNode> earlierNodes = part.vessel.patchedConicSolver.maneuverNodes.Where(n => n.UT < UT);
+            Debug.Log("earlierNodes.Count() = " + earlierNodes.Count());
+            Orbit o = part.vessel.orbit;
+            if (earlierNodes.Count() > 0)
+            {
+                o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
+            }
+            Debug.Log("o.PeA = " + o.PeA);
+            while (o.nextPatch != null && o.nextPatch.activePatch && o.nextPatch.StartUT < UT)
+            {
+                Debug.Log("next startUT = " + o.nextPatch.StartUT);
+                o = o.nextPatch;
+                Debug.Log("new PeA = " + o.PeA);
+            }
+            return o;
+        }
 
 
         //input dV should be in world coordinates
-        public void PlaceManeuverNode(Orbit o, Vector3d dV, double UT)
+        public void PlaceManeuverNode(Orbit patch, Vector3d dV, double UT)
         {
             //convert a dV in world coordinates into the coordinate system of the maneuver node,
             //which uses (x, y, z) = (radial+, normal-, prograde)
-            Vector3d nodeDV = new Vector3d(Vector3d.Dot(o.RadialPlus(UT), dV),
-                                           Vector3d.Dot(-o.NormalPlus(UT), dV),
-                                           Vector3d.Dot(o.Prograde(UT), dV));
+            Vector3d nodeDV = new Vector3d(Vector3d.Dot(patch.RadialPlus(UT), dV),
+                                           Vector3d.Dot(-patch.NormalPlus(UT), dV),
+                                           Vector3d.Dot(patch.Prograde(UT), dV));
             ManeuverNode mn = part.vessel.patchedConicSolver.AddManeuverNode(UT);
             mn.OnGizmoUpdated(nodeDV, UT);
         }
@@ -175,5 +205,10 @@ namespace MuMech
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }
 
+
+        public override string GetName()
+        {
+            return "Maneuver Planner";
+        }
     }
 }
