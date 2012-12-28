@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using UnityEngine;
 using System.Reflection;
@@ -13,6 +14,8 @@ namespace MuMech
 
         private List<ComputerModule> computerModules = new List<ComputerModule>();
         private bool modulesUpdated = false;
+
+        private static List<Type> moduleRegistry;
 
         public MechJebModuleAttitudeController attitude;
         public MechJebModuleStagingController staging;
@@ -27,6 +30,9 @@ namespace MuMech
 
         DirectionTarget testTarget;
         IAscentPath testAscentPath = new DefaultAscentPath();
+
+        [KSPField(isPersistant = false)]
+        public string blacklist = "";
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
@@ -83,22 +89,26 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (moduleRegistry == null)
+            {
+                moduleRegistry = (from ass in AppDomain.CurrentDomain.GetAssemblies() from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList();
+            }
+
             Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
             version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
 
-            AddComputerModule(attitude = new MechJebModuleAttitudeController(this));
-            AddComputerModule(thrust = new MechJebModuleThrustController(this));
-            AddComputerModule(staging = new MechJebModuleStagingController(this));
-            AddComputerModule(warp = new MechJebModuleWarpController(this));
+            foreach (Type t in moduleRegistry)
+            {
+                if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule)) && !blacklist.Contains(t.Name))
+                {
+                    AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
+                }
+            }
 
-            AddComputerModule(new MechJebModuleMenu(this));
-
-            AddComputerModule(new MechJebModuleAscentComputer(this));
-            AddComputerModule(new MechJebModuleAscentGuidance(this));
-
-            AddComputerModule(new MechJebModuleManeuverPlanner(this));
-
-            AddComputerModule(new MechJebModuleSmarterASS(this));
+            attitude = GetComputerModule<MechJebModuleAttitudeController>();
+            thrust = GetComputerModule<MechJebModuleThrustController>();
+            staging = GetComputerModule<MechJebModuleStagingController>();
+            warp = GetComputerModule<MechJebModuleWarpController>();
 
             foreach (ComputerModule module in computerModules)
             {
