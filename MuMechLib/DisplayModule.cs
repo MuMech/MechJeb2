@@ -6,98 +6,90 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class DisplayModule
+    public class DisplayModule : ComputerModule
     {
-        public Part part = null;
-        public MechJebCore core = null;
-        public VesselState vesselState = null;
+        public bool hidden = false;
 
-        protected bool _enabled = false;
-        public bool enabled
+        protected Rect _editorWindowPos;
+        public Rect editorWindowPos
         {
             get
             {
-                return _enabled;
+                return _editorWindowPos;
             }
             set
             {
-                if (value != _enabled)
+                if (_editorWindowPos.x != value.x || _editorWindowPos.y != value.y)
                 {
                     //core.settingsChanged = true;
-                    _enabled = value;
-                    if (_enabled)
-                    {
-                        OnModuleEnabled();
-                    }
-                    else
-                    {
-                        OnModuleDisabled();
-                    }
                 }
+                _editorWindowPos = value;
             }
         }
 
-        protected Rect _windowPos;
-        public Rect windowPos
+        protected Rect _flightWindowPos;
+        public Rect flightWindowPos
         {
             get
             {
-                return _windowPos;
+                return _flightWindowPos;
             }
             set
             {
-                if (_windowPos.x != value.x || _windowPos.y != value.y)
+                if (_flightWindowPos.x != value.x || _flightWindowPos.y != value.y)
                 {
                     //core.settingsChanged = true;
                 }
-                _windowPos = value;
+                _flightWindowPos = value;
             }
         }
 
+        public bool showInFlight = true;
+        public bool showInEditor = false;
 
-        public DisplayModule(MechJebCore core)
-        {
-            this.core = core;
-            part = core.part;
-            vesselState = core.vesselState;
-        }
+        public DisplayModule(MechJebCore core) : base(core) {}
 
-        public virtual void OnModuleEnabled()
-        {
-        }
-
-        public virtual void OnModuleDisabled()
-        {
-        }
-
-        public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
-        {
-        }
-
-        public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
-        {
-        }
-
-        protected virtual void WindowGUI(int windowID)
-        {
-            GUI.DragWindow();
-        }
-
-        public virtual void DrawGUI(int baseWindowID)
-        {
-            windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, GetName(), WindowOptions());
-        }
-
-        public virtual GUILayoutOption[] WindowOptions()
+        public virtual GUILayoutOption[] FlightWindowOptions()
         {
             return new GUILayoutOption[0];
         }
 
+        protected virtual void FlightWindowGUI(int windowID)
+        {
+            GUI.DragWindow();
+        }
+
+        public virtual GUILayoutOption[] EditorWindowOptions()
+        {
+            return new GUILayoutOption[0];
+        }
+
+        protected virtual void EditorWindowGUI(int windowID)
+        {
+            GUI.DragWindow();
+        }
+
+        public virtual void DrawGUI(int baseWindowID, bool inEditor)
+        {
+            if (inEditor)
+            {
+                if (showInEditor)
+                {
+                    editorWindowPos = GUILayout.Window(baseWindowID, editorWindowPos, EditorWindowGUI, GetName(), EditorWindowOptions());
+                }
+            }
+            else
+            {
+                if (showInFlight)
+                {
+                    flightWindowPos = GUILayout.Window(baseWindowID, flightWindowPos, FlightWindowGUI, GetName(), FlightWindowOptions());
+                }
+            }
+        }
 
         public virtual string GetName()
         {
             return "Display Module";
         }
-
     }
 }

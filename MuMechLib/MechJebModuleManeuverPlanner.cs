@@ -22,7 +22,7 @@ namespace MuMech
         EditableDouble inc = new EditableDouble(0);
         EditableDouble lead = new EditableDouble(0);
 
-        protected override void WindowGUI(int windowID)
+        protected override void FlightWindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
@@ -164,7 +164,7 @@ namespace MuMech
 
 
 
-            base.WindowGUI(windowID);
+            base.FlightWindowGUI(windowID);
         }
 
 
@@ -200,11 +200,10 @@ namespace MuMech
             mn.OnGizmoUpdated(nodeDV, UT);
         }
 
-        public override GUILayoutOption[] WindowOptions()
+        public override GUILayoutOption[] FlightWindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }
-
 
         public override string GetName()
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using System.Reflection;
 
 namespace MuMech
 {
@@ -11,7 +12,6 @@ namespace MuMech
         private const int windowIDbase = 60606;
 
         private List<ComputerModule> computerModules = new List<ComputerModule>();
-        private List<DisplayModule> displayModules = new List<DisplayModule>();
         private bool modulesUpdated = false;
 
         public MechJebModuleAttitudeController attitude;
@@ -21,7 +21,9 @@ namespace MuMech
 
         public VesselState vesselState = new VesselState();
 
-        private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to 
+        private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
+
+        public string version = "";
 
         DirectionTarget testTarget;
         IAscentPath testAscentPath = new DefaultAscentPath();
@@ -60,22 +62,17 @@ namespace MuMech
 
         public T GetComputerModule<T>() where T : ComputerModule
         {
-            return (T)computerModules.First(a => a.GetType() == typeof(T));
+            return (T)computerModules.First(a => a is T);
         }
 
-        public T GetDisplayModule<T>() where T : DisplayModule
+        public List<T> GetComputerModules<T>() where T : ComputerModule
         {
-            return (T)displayModules.First(a => a.GetType() == typeof(T));
+            return computerModules.FindAll(a => a is T).Cast<T>().ToList();
         }
 
         public ComputerModule GetComputerModule(string type)
         {
             return computerModules.First(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
-        }
-
-        public DisplayModule GetDisplayModule(string type)
-        {
-            return displayModules.First(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
         }
 
         public void AddComputerModule(ComputerModule module)
@@ -84,32 +81,29 @@ namespace MuMech
             modulesUpdated = true;
         }
 
-        public void AddDisplayModule(DisplayModule module)
-        {
-            displayModules.Add(module);
-            modulesUpdated = true;
-        }
-
         public override void OnStart(PartModule.StartState state)
         {
+            Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
+            version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
+
             AddComputerModule(attitude = new MechJebModuleAttitudeController(this));
             AddComputerModule(thrust = new MechJebModuleThrustController(this));
             AddComputerModule(staging = new MechJebModuleStagingController(this));
             AddComputerModule(warp = new MechJebModuleWarpController(this));
 
+            AddComputerModule(new MechJebModuleMenu(this));
+
             AddComputerModule(new MechJebModuleAscentComputer(this));
             AddComputerModule(new MechJebModuleAscentGuidance(this));
+
+            AddComputerModule(new MechJebModuleManeuverPlanner(this));
+
+            AddComputerModule(new MechJebModuleSmarterASS(this));
 
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
             }
-
-            attitude.enabled = true; //for testing
-
-            displayModules.Add(new MechJebModuleManeuverPlanner(this));
-
-            displayModules[0].enabled = true; //for testing maneuver planner
 
             part.vessel.OnFlyByWire += drive;
             controlledVessel = part.vessel;
@@ -210,7 +204,6 @@ namespace MuMech
                 attitude.attitudeTo(Vector3.left, AttitudeReference.ORBIT, null);
             }
 
-
             foreach (ComputerModule module in computerModules)
             {
                 module.OnUpdate();
@@ -229,10 +222,6 @@ namespace MuMech
             {
                 module.OnLoad(node, type, global);
             }
-            foreach (DisplayModule module in displayModules)
-            {
-                module.OnLoad(node, type, global);
-            }
         }
 
         public override void OnSave(ConfigNode node)
@@ -244,10 +233,6 @@ namespace MuMech
             ConfigNode global = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg") ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg") : "");
 
             foreach (ComputerModule module in computerModules)
-            {
-                module.OnSave(node, type, global);
-            }
-            foreach (DisplayModule module in displayModules)
             {
                 module.OnSave(node, type, global);
             }
@@ -285,21 +270,23 @@ namespace MuMech
 
         private void drive(FlightCtrlState s)
         {
-            //do we need to do something to prevent conflicts here?
-            foreach (ComputerModule module in computerModules)
+            if (this == vessel.GetMasterMechJeb())
             {
-                if (module.enabled) module.Drive(s);
+                foreach (ComputerModule module in computerModules)
+                {
+                    if (module.enabled) module.Drive(s);
+                }
             }
         }
 
         private void OnGUI()
         {
-            if ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD) && (this == vessel.GetMasterMechJeb()))
+            if ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD) && (this == vessel.GetMasterMechJeb())))
             {
                 int wid = 0;
-                foreach (DisplayModule module in displayModules)
+                foreach (DisplayModule module in GetComputerModules<DisplayModule>())
                 {
-                    if (module.enabled) module.DrawGUI(windowIDbase + wid);
+                    if (module.enabled) module.DrawGUI(windowIDbase + wid, HighLogic.LoadedSceneIsEditor);
                     wid++;
                 }
             }

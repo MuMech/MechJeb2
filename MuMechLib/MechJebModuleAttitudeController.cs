@@ -20,7 +20,6 @@ namespace MuMech
         TARGET_ORIENTATION,//forward = direction target is facing, up = target up
         MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
     }
-
     
     public class MechJebModuleAttitudeController : ComputerModule
     {

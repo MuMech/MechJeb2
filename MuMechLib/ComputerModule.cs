@@ -104,10 +104,6 @@ namespace MuMech
         {
         }
 
-        /*        public virtual void registerLuaMembers(LuaTable index)
-                {
-                }*/
-
         protected void print(String s)
         {
             MonoBehaviour.print(s);
