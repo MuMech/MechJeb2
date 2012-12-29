@@ -35,6 +35,12 @@ namespace MuMech
             return (v.orbit.GetVel() - Orbit().GetVel());
         }
 
+        public static Vector3d RelativePosition(Vessel v)
+        {
+            return (v.GetTransform().position - Position());
+        }
+
+
         public static Transform Transform()
         {
             return FlightGlobals.fetch.VesselTarget.GetTransform();
