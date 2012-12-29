@@ -21,6 +21,7 @@ namespace MuMech
         public MechJebModuleStagingController staging;
         public MechJebModuleThrustController thrust;
         public MechJebModuleWarpController warp;
+        public MechJebModuleRCSController rcs;
 
         public VesselState vesselState = new VesselState();
 
@@ -106,6 +107,7 @@ namespace MuMech
             thrust = GetComputerModule<MechJebModuleThrustController>();
             staging = GetComputerModule<MechJebModuleStagingController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
+            rcs = GetComputerModule<MechJebModuleRCSController>();
 
             foreach (ComputerModule module in computerModules)
             {

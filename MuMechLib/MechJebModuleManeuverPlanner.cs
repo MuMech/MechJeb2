@@ -11,8 +11,12 @@ namespace MuMech
         public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }
 
         enum Operation { CIRCULARIZE, ELLIPTICIZE, PERIAPSIS, APOAPSIS, INCLINATION, PLANE, TRANSFER, COURSE_CORRECTION, INTERPLANETARY_TRANSFER };
-        static int numOperations = Enum.GetNames(typeof(Operation)).Length;
+        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, ASCENDING_NODE, DESCENDING_NODE };
+
         Operation operation = Operation.CIRCULARIZE;
+        TimeReference timeReference = TimeReference.NOW;
+        bool timeReferenceSinceLast = true;
+        bool createNode = true;
 
         enum Node { ASCENDING, DESCENDING };
         Node planeMatchNode;
@@ -26,12 +30,25 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GUILayout.Label("Insert a maneuver node to:");
+            bool anyNodeExists = (part.vessel.patchedConicSolver.maneuverNodes.Count > 0);
+
+            if (anyNodeExists)
+            {
+                if (GUILayout.Button(createNode ? "Create a new" : "Change the last"))
+                {
+                    createNode = !createNode;
+                }
+                GUILayout.Label("maneuver node to:");
+            }
+            else
+            {
+                GUILayout.Label("Create a new maneuver node to:");
+            }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◅")) operation = (Operation)(((int)operation - 1 + numOperations) % numOperations);
+            if (GUILayout.Button("◅")) operation = (Operation)(((int)operation - 1 + Enum.GetNames(typeof(Operation)).Length) % Enum.GetNames(typeof(Operation)).Length);
             GUILayout.Label(operation.ToString());
-            if (GUILayout.Button("▻")) operation = (Operation)(((int)operation + 1 + numOperations) % numOperations);
+            if (GUILayout.Button("▻")) operation = (Operation)(((int)operation + 1 + Enum.GetNames(typeof(Operation)).Length) % Enum.GetNames(typeof(Operation)).Length);
             GUILayout.EndHorizontal();
 
             switch (operation)
@@ -70,9 +87,64 @@ namespace MuMech
                     break;
             }
 
-            GuiUtils.SimpleTextBox("In (seconds): ", lead, 1);
-            double UT = vesselState.time + lead;
+            double UT = vesselState.time;
 
+            if (!anyNodeExists || createNode)
+            {
+                GuiUtils.SimpleTextBox("In (seconds): ", lead, 1);
+
+                GUILayout.BeginHorizontal();
+                if (anyNodeExists)
+                {
+                    if (GUILayout.Button(timeReferenceSinceLast ? "After the last node" : "Now"))
+                    {
+                        timeReferenceSinceLast = !timeReferenceSinceLast;
+                    }
+                    GUILayout.Label(", after the next:");
+                }
+                else
+                {
+                    GUILayout.Label("After the next:");
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("◅")) timeReference = (TimeReference)(((int)timeReference - 1 + Enum.GetNames(typeof(TimeReference)).Length) % Enum.GetNames(typeof(TimeReference)).Length);
+                GUILayout.Label(timeReference.ToString());
+                if (GUILayout.Button("▻")) timeReference = (TimeReference)(((int)timeReference + 1 + Enum.GetNames(typeof(TimeReference)).Length) % Enum.GetNames(typeof(TimeReference)).Length);
+                GUILayout.EndHorizontal();
+
+                if (anyNodeExists && timeReferenceSinceLast)
+                {
+                    UT = part.vessel.patchedConicSolver.maneuverNodes.Last().UT;
+                }
+
+                switch (timeReference)
+                {
+                    case TimeReference.NOW:
+                        break;
+                    case TimeReference.APOAPSIS:
+                        UT = part.vessel.orbit.NextApoapsisTime(UT);
+                        break;
+                    case TimeReference.PERIAPSIS:
+                        UT = part.vessel.orbit.NextPeriapsisTime(UT);
+                        break;
+                    case TimeReference.ASCENDING_NODE:
+                        if (Target.Exists())
+                        {
+                            UT = part.vessel.orbit.TimeOfAscendingNode(Target.Orbit(), UT);
+                        }
+                        break;
+                    case TimeReference.DESCENDING_NODE:
+                        if (Target.Exists())
+                        {
+                            UT = part.vessel.orbit.TimeOfDescendingNode(Target.Orbit(), UT);
+                        }
+                        break;
+                }
+
+                UT += lead;
+            }
 
             if (Input.GetKeyDown(KeyCode.Alpha0))
             {
@@ -160,6 +232,13 @@ namespace MuMech
                 PlaceManeuverNode(o, dV, UT);
             }
 
+            if (GUILayout.Button("Remove ALL nodes"))
+            {
+                while (part.vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                {
+                    part.vessel.patchedConicSolver.RemoveManeuverNode(part.vessel.patchedConicSolver.maneuverNodes.Last());
+                }
+            }
             GUILayout.EndVertical();
 
 

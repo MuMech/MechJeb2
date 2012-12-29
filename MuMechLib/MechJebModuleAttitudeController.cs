@@ -20,7 +20,7 @@ namespace MuMech
         TARGET_ORIENTATION,//forward = direction target is facing, up = target up
         MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
     }
-    
+
     public class MechJebModuleAttitudeController : ComputerModule
     {
 
@@ -159,29 +159,29 @@ namespace MuMech
                 case AttitudeReference.SURFACE_VELOCITY:
                     rotRef = Quaternion.LookRotation(vesselState.velocityVesselSurfaceUnit, vesselState.up);
                     break;
-                /*                case AttitudeReference.TARGET:
-                                    fwd = (targetPosition() - part.vessel.GetTransform().position).normalized;
-                                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
-                                    Vector3.OrthoNormalize(ref fwd, ref up);
-                                    rotRef = Quaternion.LookRotation(fwd, up);
-                                    break;
-                                case AttitudeReference.RELATIVE_VELOCITY:
-                                    fwd = relativeVelocityToTarget().normalized;
-                                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
-                                    Vector3.OrthoNormalize(ref fwd, ref up);
-                                    rotRef = Quaternion.LookRotation(fwd, up);
-                                    break;
-                                case AttitudeReference.TARGET_ORIENTATION:
-                                    Transform targetTransform = FlightGlobals.fetch.VesselTarget.GetTransform();
-                                    if (FlightGlobals.fetch.VesselTarget is ModuleDockingNode)
-                                    {
-                                        rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
-                                    }
-                                    else
-                                    {
-                                        rotRef = Quaternion.LookRotation(targetTransform.up, targetTransform.right);
-                                    }
-                                    break;*/
+                case AttitudeReference.TARGET:
+                    fwd = (Target.Position() - part.vessel.GetTransform().position).normalized;
+                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                    Vector3.OrthoNormalize(ref fwd, ref up);
+                    rotRef = Quaternion.LookRotation(fwd, up);
+                    break;
+                case AttitudeReference.RELATIVE_VELOCITY:
+                    fwd = Target.RelativeVelocity(part.vessel).normalized;
+                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                    Vector3.OrthoNormalize(ref fwd, ref up);
+                    rotRef = Quaternion.LookRotation(fwd, up);
+                    break;
+                case AttitudeReference.TARGET_ORIENTATION:
+                    Transform targetTransform = Target.Transform();
+                    if (FlightGlobals.fetch.VesselTarget is ModuleDockingNode)
+                    {
+                        rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
+                    }
+                    else
+                    {
+                        rotRef = Quaternion.LookRotation(targetTransform.up, targetTransform.right);
+                    }
+                    break;
                 case AttitudeReference.MANEUVER_NODE:
                     fwd = part.vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(part.vessel.orbit);
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
