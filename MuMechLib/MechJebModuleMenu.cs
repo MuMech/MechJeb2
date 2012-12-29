@@ -67,7 +67,6 @@ namespace MuMech
 
         public override void DrawGUI(int baseWindowID, bool inEditor)
         {
-            print("DrawGUI - Menu - inEditor = " + inEditor);
             if (!inEditor)
             {
                 switch (windowStat)

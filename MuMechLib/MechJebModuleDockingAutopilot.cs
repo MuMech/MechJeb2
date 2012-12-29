@@ -14,12 +14,12 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            core.attitude.enabled = true;
+            core.rcs.enabled = core.attitude.enabled = true;
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.enabled = false;
+            core.rcs.enabled = core.attitude.enabled = false;
         }
 
 

@@ -83,6 +83,9 @@ namespace MuMech
         public double atmosphericDensity;
         public double angleToPrograde;
 
+        public Vector6 rcsThrustAvailable;
+        public Vector6 rcsTorqueAvailable;
+
         public CelestialBody mainBody;
 
         public void Update(Vessel vessel)
@@ -197,6 +200,8 @@ namespace MuMech
             radius = (CoM - vessel.mainBody.position).magnitude;
 
             mass = thrustAvailable = thrustMinimum = massDrag = torqueRAvailable = torquePYAvailable = torqueThrustPYAvailable = 0;
+            rcsThrustAvailable = new Vector6();
+            rcsTorqueAvailable = new Vector6();
             MoI = vessel.findLocalMOI(CoM);
             foreach (Part p in vessel.parts)
             {
@@ -265,18 +270,42 @@ namespace MuMech
                         }
                     }
                 }
-                if ((!FlightInputHandler.RCSLock) && (p is RCSModule))
+
+                if (vessel.ActionGroups[KSPActionGroup.RCS])
                 {
-                    double maxT = 0;
-                    for (int i = 0; i < 6; i++)
+                    if (p is RCSModule)
                     {
-                        if (((RCSModule)p).thrustVectors[i] != Vector3.zero)
+                        double maxT = 0;
+                        for (int i = 0; i < 6; i++)
                         {
-                            maxT = Math.Max(maxT, ((RCSModule)p).thrusterPowers[i]);
+                            if (((RCSModule)p).thrustVectors[i] != Vector3.zero)
+                            {
+                                maxT = Math.Max(maxT, ((RCSModule)p).thrusterPowers[i]);
+                                rcsThrustAvailable.Add(((RCSModule)p).thrustVectors[i] * ((RCSModule)p).thrusterPowers[i]);
+                            }
+                        }
+                        torqueRAvailable += maxT;
+                        torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
+                    }
+
+                    if (p.Modules.Contains("ModuleRCS"))
+                    {
+                        foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                        {
+                            double maxT = pm.thrustForces.Max();
+
+                            if ((pm.isEnabled) && (!pm.isJustForShow))
+                            {
+                                torqueRAvailable += maxT;
+                                torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
+
+                                foreach (Transform t in pm.thrusterTransforms)
+                                {
+                                    rcsThrustAvailable.Add(t.forward * pm.thrusterPower);
+                                }
+                            }
                         }
                     }
-                    // torqueRAvailable += maxT;
-                    torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
                 }
                 if (p is CommandPod)
                 {

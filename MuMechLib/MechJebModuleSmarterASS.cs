@@ -6,25 +6,12 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleSmarterASS : DisplayModule
+    public class MechJebModuleSmarterASS : DisplayModule
     {
-        enum Direction { FORWARD, BACK, UP, DOWN, LEFT, RIGHT };
-        Dictionary<Direction, Vector3d> directions;
-
         AttitudeReference reference = AttitudeReference.INERTIAL;
-        Direction direction = Direction.FORWARD;
+        Vector6.Direction direction = Vector6.Direction.FORWARD;
 
-        public MechJebModuleSmarterASS(MechJebCore core)
-            : base(core)
-        {
-            directions = new Dictionary<Direction, Vector3d>();
-            directions.Add(Direction.FORWARD, Vector3d.forward);
-            directions.Add(Direction.BACK, Vector3d.back);
-            directions.Add(Direction.UP, Vector3d.up);
-            directions.Add(Direction.DOWN, Vector3d.down);
-            directions.Add(Direction.LEFT, Vector3d.left);
-            directions.Add(Direction.RIGHT, Vector3d.right);
-        }
+        public MechJebModuleSmarterASS(MechJebCore core) : base(core) { }
 
         protected override void FlightWindowGUI(int windowID)
         {
@@ -54,13 +41,13 @@ namespace MuMech
             if (GUILayout.Button("◅"))
             {
                 changed = true;
-                direction = (Direction)(((int)direction - 1 + Enum.GetValues(typeof(Direction)).Length) % Enum.GetValues(typeof(Direction)).Length);
+                direction = (Vector6.Direction)(((int)direction - 1 + Enum.GetValues(typeof(Vector6.Direction)).Length) % Enum.GetValues(typeof(Vector6.Direction)).Length);
             }
             GUILayout.Label(direction.ToString());
             if (GUILayout.Button("▻"))
             {
                 changed = true;
-                direction = (Direction)(((int)direction + 1 + Enum.GetValues(typeof(Direction)).Length) % Enum.GetValues(typeof(Direction)).Length);
+                direction = (Vector6.Direction)(((int)direction + 1 + Enum.GetValues(typeof(Vector6.Direction)).Length) % Enum.GetValues(typeof(Vector6.Direction)).Length);
             }
             GUILayout.EndHorizontal();
 
@@ -74,7 +61,7 @@ namespace MuMech
 
             if (changed)
             {
-                core.attitude.attitudeTo(directions[direction], reference, this);
+                core.attitude.attitudeTo(Vector6.directions[direction], reference, this);
             }
 
             GUILayout.EndVertical();
