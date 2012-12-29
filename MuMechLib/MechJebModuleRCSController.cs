@@ -10,7 +10,24 @@ namespace MuMech
     {
         public Vector3d targetVelocity = Vector3d.zero;
 
-        public MechJebModuleRCSController(MechJebCore core) : base(core) { }
+        public PIDController xPID, yPID, zPID;
+
+        public double Kp = 0.3, Ki = 0.08, Kd = 0.02;
+
+        public MechJebModuleRCSController(MechJebCore core) : base(core)
+        {
+            xPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            yPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            zPID = new PIDController(Kp, Ki, Kd, 1, -1);
+        }
+
+        public override void OnModuleEnabled()
+        {
+            xPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            yPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            zPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            base.OnModuleEnabled();
+        }
 
         public void SetTargetWorldVelocity(Vector3d vel)
         {
@@ -31,17 +48,19 @@ namespace MuMech
             {
                 if (vesselState.rcsThrustAvailable[dir] > 0)
                 {
-                    double dV = Vector3d.Dot(velocityDelta, Vector6.directions[dir]) / (vesselState.rcsThrustAvailable[dir] / vesselState.mass);
+                    double dV = Vector3d.Dot(velocityDelta, Vector6.directions[dir]) / (vesselState.rcsThrustAvailable[dir] * TimeWarp.fixedDeltaTime / vesselState.mass);
                     if (dV > 0)
                     {
-                        rcs += Vector6.directions[dir] * Math.Min(1, dV);
+                        rcs += Vector6.directions[dir] * dV;
                     }
                 }
             }
 
-            s.X = (float)rcs.x;
-            s.Y = (float)rcs.z;
-            s.Z = (float)rcs.y;
+            rcs = new Vector3d(xPID.Compute(rcs.x), yPID.Compute(rcs.y), zPID.Compute(rcs.z));
+
+            s.X = Mathf.Clamp((float)rcs.x, -1, 1);
+            s.Y = Mathf.Clamp((float)rcs.z, -1, 1);
+            s.Z = Mathf.Clamp((float)rcs.y, -1, 1);
 
             base.Drive(s);
         }

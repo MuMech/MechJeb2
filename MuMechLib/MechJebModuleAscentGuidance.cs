@@ -9,7 +9,7 @@ namespace MuMech
     //When enabled, the ascent guidance module makes the purple navball target point
     //along the ascent path. The ascent path can be set via SetPath. The ascent guidance
     //module disables itself if the player selects a different target.
-    class MechJebModuleAscentGuidance : DisplayModule
+    public class MechJebModuleAscentGuidance : DisplayModule
     {
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 

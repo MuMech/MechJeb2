@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleRendezvousGuidance : DisplayModule
+    public class MechJebModuleRendezvousGuidance : DisplayModule
     {
         public MechJebModuleRendezvousGuidance(MechJebCore core) : base(core) { }
 

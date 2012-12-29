@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleDockingGuidance : DisplayModule
+    public class MechJebModuleDockingGuidance : DisplayModule
     {
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
@@ -39,9 +39,9 @@ namespace MuMech
             GUILayout.Label("Z: " + relVel_z.ToString("F2") + " m/s  [H/N]");
 
             GUILayout.Label("Separation:");
-            GUILayout.Label("X: " + sep_x.ToString("F2") + " m/s  [L/J]");
-            GUILayout.Label("Y: " + sep_y.ToString("F2") + " m/s  [I/K]");
-            GUILayout.Label("Z: " + sep_z.ToString("F2") + " m/s  [H/N]");
+            GUILayout.Label("X: " + sep_x.ToString("F2") + " m  [L/J]");
+            GUILayout.Label("Y: " + sep_y.ToString("F2") + " m  [I/K]");
+            GUILayout.Label("Z: " + sep_z.ToString("F2") + " m  [H/N]");
 
             MechJebModuleDockingAutopilot autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();
             autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled.");
