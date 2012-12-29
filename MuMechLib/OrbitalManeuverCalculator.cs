@@ -268,15 +268,13 @@ namespace MuMech
             return burnDV;
         }
 
-
-        public static Vector3d DeltaVForCourseCorrection(Orbit o, double UT, Orbit target)
+        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT)
         {
             if (o.eccentricity > 1) throw new ArgumentException("o must not be hyperbolic");
 
-            double closestApproachTime = o.NextClosestApproachTime(target, UT);
             double initialT = UT;
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialT);
-            double finalT = closestApproachTime;
+            double finalT = interceptUT;
             Vector3d finalRelPos = target.SwappedRelativePositionAtUT(finalT);
 
             double targetOrbitalSpeed = o.SwappedOrbitalVelocityAtUT(finalT).magnitude;
@@ -291,6 +289,12 @@ namespace MuMech
 
             Vector3d currentInitialVelocity = o.SwappedOrbitalVelocityAtUT(initialT);
             return initialVelocity - currentInitialVelocity;
+        }
+
+        public static Vector3d DeltaVForCourseCorrection(Orbit o, double UT, Orbit target)
+        {
+            double closestApproachTime = o.NextClosestApproachTime(target, UT);
+            return DeltaVToInterceptAtTime(o, UT, target, closestApproachTime);
         }
 
         public static Vector3d DeltaVAndTimeForInterplanetaryTransferEjection(Orbit o, double UT, Orbit target, out double burnUT)
@@ -342,14 +346,15 @@ namespace MuMech
             //construct a sample ejection orbit
             Vector3d ejectionOrbitInitialVelocity = ejectionSpeed * (Vector3d)o.referenceBody.transform.right;
             Orbit sampleEjectionOrbit = MuUtils.OrbitFromStateVectors(o.referenceBody.position + ejectionRadius * (Vector3d)o.referenceBody.transform.up, ejectionOrbitInitialVelocity, o.referenceBody, 0);
-            double ejectionOrbitFinalTrueAnomaly = 180 / Math.PI * sampleEjectionOrbit.TrueAnomalyAtRadius(o.referenceBody.sphereOfInfluence);
-            double ejectionOrbitDuration = sampleEjectionOrbit.TimeOfTrueAnomaly(ejectionOrbitFinalTrueAnomaly, 0);
+            //double ejectionOrbitFinalTrueAnomaly = 180 / Math.PI * sampleEjectionOrbit.TrueAnomalyAtRadius(o.referenceBody.sphereOfInfluence);
+            //double ejectionOrbitDuration = sampleEjectionOrbit.TimeOfTrueAnomaly(ejectionOrbitFinalTrueAnomaly, 0);
+            double ejectionOrbitDuration = sampleEjectionOrbit.NextTimeOfRadius(0, o.referenceBody.sphereOfInfluence);
             Vector3d ejectionOrbitFinalVelocity = sampleEjectionOrbit.SwappedOrbitalVelocityAtUT(ejectionOrbitDuration);
 
             double turningAngle = Math.Abs(Vector3d.Angle(ejectionOrbitInitialVelocity, ejectionOrbitFinalVelocity));
 
             Debug.Log("ejectionOrbitInitialVElocity = " + ejectionOrbitInitialVelocity);
-            Debug.Log("ejectionOrbitFinalTrueAnomaly = " + ejectionOrbitFinalTrueAnomaly);
+            //Debug.Log("ejectionOrbitFinalTrueAnomaly = " + ejectionOrbitFinalTrueAnomaly);
             Debug.Log("ejectionOrbitDuration = " + ejectionOrbitDuration);
             Debug.Log("ejectionOrbitFinalVelocity = " + ejectionOrbitFinalVelocity);
             Debug.Log("turningAngle = " + turningAngle);
@@ -368,6 +373,7 @@ namespace MuMech
             Vector3d ejectionPointDirection = Quaternion.AngleAxis(-(float)(90+turningAngle), o.SwappedOrbitNormal()) * inPlaneSoiExitDirection;
             double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
             burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
+            
             if (idealBurnUT - burnUT > o.period / 2)
             {
                 Debug.Log("upping burnUT by one period");
@@ -396,6 +402,11 @@ namespace MuMech
             return ejectionVelocity - preEjectionVelocity;
         }
 
+
+        public static Vector3d DeltaVToMatchVelocities(Orbit o, double UT, Orbit target)
+        {
+            return target.SwappedOrbitalVelocityAtUT(UT) - o.SwappedOrbitalVelocityAtUT(UT);
+        }
     }
 
 

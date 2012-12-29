@@ -136,11 +136,11 @@ namespace MuMech
                     case Operation.PLANE:
                         if (planeMatchNode == Node.ASCENDING)
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), UT, out UT);
                         }
                         else
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), UT, out UT);
                         }
                         break;
 

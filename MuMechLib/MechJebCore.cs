@@ -28,9 +28,6 @@ namespace MuMech
 
         public string version = "";
 
-        DirectionTarget testTarget;
-        IAscentPath testAscentPath = new DefaultAscentPath();
-
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
@@ -165,23 +162,6 @@ namespace MuMech
                 module.OnFixedUpdate();
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha9))
-            {
-/*                print("fwd: " + testTarget.GetFwdVector());
-                print("name: " + testTarget.GetName());
-                //print("obtvel: " + testTarget.GetObtVelocity());
-                print("obt: " + testTarget.GetOrbit());
-                print("obtdriver: " + testTarget.GetOrbitDriver());
-                print("srfvel: " + testTarget.GetSrfVelocity());
-                print("transform: " + testTarget.GetTransform());
-                print("vessel: " + testTarget.GetVessel());*/
-                testTarget = new DirectionTarget("Ascent Path Guidance");
-                FlightGlobals.fetch.SetVesselTarget(testTarget);//FlightGlobals.fetch.vesselTargetDelta = FlightGlobals.fetch.vesselTargetDelta = (part.vessel.transform.position + 200 * part.vessel.transform.up);
-            }
-
-            if (testTarget != null)
-            {
-            }
 
         }
 
@@ -196,22 +176,6 @@ namespace MuMech
             {
                 computerModules.Sort();
                 modulesUpdated = false;
-            }
-
-            if (Input.GetKey(KeyCode.Y))
-            {
-                print("prograde");
-                attitude.attitudeTo(Vector3.forward, AttitudeReference.ORBIT, null);
-            }
-            if (Input.GetKey(KeyCode.U))
-            {
-                print("rad+");
-                attitude.attitudeTo(Vector3.up, AttitudeReference.ORBIT, null);
-            }
-            if (Input.GetKey(KeyCode.B)) 
-            {
-                print("nml+");
-                attitude.attitudeTo(Vector3.left, AttitudeReference.ORBIT, null);
             }
 
             foreach (ComputerModule module in computerModules)

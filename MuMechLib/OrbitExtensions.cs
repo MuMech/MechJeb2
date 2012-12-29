@@ -300,5 +300,20 @@ namespace MuMech
         {
             return Math.Abs(1.0 / (1.0 / a.period - 1.0 / b.period)); //period after which the phase angle repeats
         }
+
+        public static double RelativeInclination(this Orbit a, Orbit b)
+        {
+            return Math.Abs(Vector3d.Angle(a.SwappedOrbitNormal(), b.SwappedOrbitNormal()));
+        }
+
+        public static double NextTimeOfRadius(this Orbit o, double UT, double radius)
+        {
+            double trueAnomaly1 = 180 / Math.PI * o.TrueAnomalyAtRadius(radius);
+            double trueAnomaly2 = 360 - trueAnomaly1;
+            double time1 = o.TimeOfTrueAnomaly(trueAnomaly1, UT);
+            double time2 = o.TimeOfTrueAnomaly(trueAnomaly2, UT);
+            if (time2 < time1 && time2 > UT) return time2;
+            else return time1;
+        }
     }
 }
