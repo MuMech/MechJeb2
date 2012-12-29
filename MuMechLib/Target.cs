@@ -35,6 +35,11 @@ namespace MuMech
             return (v.orbit.GetVel() - Orbit().GetVel());
         }
 
+        public static Transform Transform()
+        {
+            return FlightGlobals.fetch.VesselTarget.GetTransform();
+        }
+
         public static string Name()
         {
             return FlightGlobals.fetch.VesselTarget.GetName();
