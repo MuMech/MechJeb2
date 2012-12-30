@@ -12,10 +12,11 @@ namespace MuMech
 
         public PIDController xPID, yPID, zPID;
 
-        public double Kp = 0.3, Ki = 0.08, Kd = 0.02;
+        public double Kp = 0.5, Ki = 0, Kd = 0;
 
         public MechJebModuleRCSController(MechJebCore core) : base(core)
         {
+            priority = 600;
             xPID = new PIDController(Kp, Ki, Kd, 1, -1);
             yPID = new PIDController(Kp, Ki, Kd, 1, -1);
             zPID = new PIDController(Kp, Ki, Kd, 1, -1);
@@ -41,7 +42,9 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            Vector3d velocityDelta = Quaternion.Inverse(part.vessel.GetTransform().rotation) * (vesselState.velocityVesselOrbit - targetVelocity);
+            Vector3d worldVelocityDelta = vesselState.velocityVesselOrbit - targetVelocity;
+            worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
+            Vector3d velocityDelta = Quaternion.Inverse(part.vessel.GetTransform().rotation) * worldVelocityDelta;
             Vector3d rcs = new Vector3d();
 
             foreach (Vector6.Direction dir in Enum.GetValues(typeof(Vector6.Direction)))

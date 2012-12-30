@@ -10,6 +10,9 @@ namespace MuMech
     {
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
+        MechJebModuleDockingAutopilot autopilot;
+            
+
         protected override void FlightWindowGUI(int windowID)
         {
             if (!Target.Exists())
@@ -43,7 +46,8 @@ namespace MuMech
             GUILayout.Label("Y: " + sep_y.ToString("F2") + " m  [I/K]");
             GUILayout.Label("Z: " + sep_z.ToString("F2") + " m  [H/N]");
 
-            MechJebModuleDockingAutopilot autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();
+            if(autopilot == null) autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();            
+
             autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled.");
 
             if (autopilot.enabled)
@@ -56,9 +60,7 @@ namespace MuMech
                 GUILayout.Label("Error X: " + error_x.ToString("F2") + " m/s  [L/J]");
                 GUILayout.Label("Error Y: " + error_y.ToString("F2") + " m/s  [I/K]");
                 GUILayout.Label("Error Z: " + error_z.ToString("F2") + " m/s  [H/N]");
-
             }
-
 
             GUILayout.EndVertical();
 
@@ -68,6 +70,11 @@ namespace MuMech
         public override GUILayoutOption[] FlightWindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(50) };
+        }
+
+        public override void OnModuleDisabled()
+        {
+            autopilot.enabled = false;
         }
 
         public override string GetName()

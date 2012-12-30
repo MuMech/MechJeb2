@@ -12,7 +12,7 @@ namespace MuMech
 
         public double approachSpeedMult = 1; // Approach speed will be approachSpeedMult * available thrust/mass on each axis.
 
-        public double Kp = 0.3, Ki = 0.08, Kd = 0.02;
+        public double Kp = 0.2, Ki = 0, Kd = 0.02;
 
         public PIDController lateralPID;
 
@@ -51,15 +51,12 @@ namespace MuMech
 
             Vector3d separation = Target.RelativePosition(part.vessel);
 
-            Vector3d zAxis = -Target.Transform().forward; //the docking axis
+            Vector3d zAxis = (FlightGlobals.fetch.VesselTarget is ModuleDockingNode ? -Target.Transform().forward : Target.Transform().up); //the docking axis
             double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             Vector3d lateralSep = Vector3d.Exclude(zAxis, separation);
 
             double zApproachSpeed = vesselState.rcsThrustAvailable.GetMagnitude(-zAxis) * approachSpeedMult / vesselState.mass;
             double latApproachSpeed = vesselState.rcsThrustAvailable.GetMagnitude(-lateralSep) * approachSpeedMult / vesselState.mass;
-
-            Debug.Log("zSep = " + zSep);
-            Debug.Log("lateralSep = " + lateralSep.magnitude);
 
             if (zSep < 0)  //we're behind the target
             {

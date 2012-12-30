@@ -77,6 +77,19 @@ DONE * Add a check that will throttle down to prevent overheats during any sort 
 
 * Have a "factory restore" button for all settings? (that just deletes the settings file?)
 
-* Split ascent AP path into a separate class & a separate display module to edit ascent paths
+DONE * Split ascent AP path into a separate class & a separate display module to edit ascent paths
         - Then add a type of ascent path that evalutes a user-entered C# or Lua expression
 		- Add a Computer/DisplayModule to provide ascent path guidance on the navball, but no autopilot
+
+* Add a guidance version of the docking autopilot that just gives suggested velocities
+        - I'm thinking: a Texture2D velocity gauge for each coordinate, with mark for the desired and actual velocities
+		- Maybe also a 2D graphical display of the lateral position & velocity
+		- Implementation: A switch in the docking autopilot that determines whether it actually sends commands to the RCSController?
+
+* Automatic orbital rendezvous and docking
+        - Automatic orbital rendezvous can just auto-execute the steps from the Rendezvous Guidance module
+
+* DisplayModule interface to the RCSController 
+
+
+
