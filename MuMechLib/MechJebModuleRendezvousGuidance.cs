@@ -107,6 +107,11 @@ namespace MuMech
             GUILayout.Label("Then kill your relative velocity again at closest approach");
 
 
+            MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
+            if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+
+
             GUILayout.EndVertical();
 
             base.FlightWindowGUI(windowID);

@@ -24,7 +24,7 @@ namespace MuMech
         EditableDouble pe = new EditableDouble(0, 1000);
         EditableDouble ap = new EditableDouble(0, 1000);
         EditableDouble inc = new EditableDouble(0);
-        EditableDouble lead = new EditableDouble(0);
+        EditableTime lead = new EditableTime(0);
 
         protected override void FlightWindowGUI(int windowID)
         {
