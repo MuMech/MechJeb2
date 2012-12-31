@@ -52,26 +52,37 @@ namespace MuMech
         }
     }
 
-
-    class DirectionTarget : ITargetable
+    public class PositionTarget : ITargetable
     {
         GameObject g = new GameObject();
         string name;
-        Vector3d direction;
+        Vector3d position;
 
-        public DirectionTarget(string name)
+        public PositionTarget(string name)
         {
             this.name = name;
         }
 
-        //Call this every frame to make sure the target transform stays up to dat
-        public void Update(Vector3d direction)
+        public void Update(CelestialBody body, double latitude, double longitude)
         {
-            this.direction = direction;
-            g.transform.position = FlightGlobals.ActiveVessel.transform.position + 10000 * direction;
+            double altitude = MuUtils.TerrainAltitude(body, latitude, longitude);
+            Update(body, latitude, longitude, altitude);
         }
 
-        public Vector3 GetFwdVector() { return direction; }
+
+        public void Update(CelestialBody body, double latitude, double longitude, double altitude)
+        {
+            Update(body.position + (body.Radius + altitude) * body.GetSurfaceNVector(latitude, longitude));
+        }
+
+        //Call this every frame to make sure the target transform stays up to date
+        public void Update(Vector3d position)
+        {
+            this.position = position;
+            g.transform.position = position;
+        }
+
+        public Vector3 GetFwdVector() { return Vector3d.up; }
         public string GetName() { return name; }
         public Vector3 GetObtVelocity() { return Vector3.zero; }
         public Orbit GetOrbit() { return null; }
@@ -79,6 +90,20 @@ namespace MuMech
         public Vector3 GetSrfVelocity() { return Vector3.zero; }
         public Transform GetTransform() { return g.transform; }
         public Vessel GetVessel() { return null; }
+    }
+
+    public class DirectionTarget : PositionTarget
+    {
+        Vector3d direction;
+
+        public DirectionTarget(string name) : base(name) { }
+
+        //Call this every frame to make sure the target transform stays up to date
+        public new void Update(Vector3d direction)
+        {
+            this.direction = direction;
+            base.Update(FlightGlobals.ActiveVessel.transform.position + 10000 * direction);
+        }
     }
 
 }

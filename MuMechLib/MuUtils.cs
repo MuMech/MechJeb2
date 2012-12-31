@@ -2,11 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
     public static class MuUtils
     {
+        public static double TerrainAltitude(CelestialBody body, double latitude, double longitude)
+        {
+            if (body.pqsController != null)
+            {
+                Vector3d pqsRadialVector = QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right;
+                double ret = body.pqsController.GetSurfaceHeight(pqsRadialVector) - body.pqsController.radius;
+                if (ret < 0) ret = 0;
+                return ret;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+
         //For some reason, Math doesn't have the inverse hyperbolic trigonometric functions:
         //asinh(x) = log(x + sqrt(x^2 + 1))
         public static double Asinh(double x)
