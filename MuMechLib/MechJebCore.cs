@@ -40,8 +40,8 @@ namespace MuMech
 
             //else we have an onFlyByWire callback registered with the wrong vessel:
             //handle vessel changes due to docking/undocking
-            if (controlledVessel != null) controlledVessel.OnFlyByWire -= onFlyByWire;
-            vessel.OnFlyByWire += onFlyByWire;
+            if (controlledVessel != null) controlledVessel.OnFlyByWire -= OnFlyByWire;
+            vessel.OnFlyByWire += OnFlyByWire;
             controlledVessel = vessel;
             return false;
         }
@@ -114,7 +114,7 @@ namespace MuMech
                 module.OnStart(state);
             }
 
-            vessel.OnFlyByWire += drive;
+            vessel.OnFlyByWire += Drive;
             controlledVessel = vessel;
         }
 
@@ -188,7 +188,6 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode node)
         {
-            print("MechJebCore.OnLoad");
             base.OnLoad(node); //is this necessary?
 
             ConfigNode type = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg", vessel) ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg", vessel) : "");
@@ -202,7 +201,6 @@ namespace MuMech
 
         public override void OnSave(ConfigNode node)
         {
-            print("MechJebCore.OnSave");
             base.OnSave(node); //is this necessary?
 
             ConfigNode type = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg", vessel) ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg", vessel) : "");
@@ -219,24 +217,23 @@ namespace MuMech
 
         public void OnDestroy()
         {
-            print("MechJebCore.OnDestroy");
             foreach (ComputerModule module in computerModules)
             {
                 module.OnDestroy();
             }
 
-            vessel.OnFlyByWire -= onFlyByWire;
+            vessel.OnFlyByWire -= OnFlyByWire;
             controlledVessel = null;
         }
 
-        private void onFlyByWire(FlightCtrlState s)
+        private void OnFlyByWire(FlightCtrlState s)
         {
             if (!CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
                 return;
             }
 
-            drive(s);
+            Drive(s);
 
             if (vessel == FlightGlobals.ActiveVessel)
             {
@@ -244,7 +241,7 @@ namespace MuMech
             }
         }
 
-        private void drive(FlightCtrlState s)
+        private void Drive(FlightCtrlState s)
         {
             if (this == vessel.GetMasterMechJeb())
             {

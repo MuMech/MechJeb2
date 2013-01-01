@@ -29,10 +29,6 @@ namespace MuMech
         public Vector3d velocityVesselOrbit;
         public Vector3d velocityVesselOrbitUnit;
 
-        public Vector3d vectorToTarget;
-        public Vector3d relativeVelocityToTarget;
-        public double distanceToTarget;
-
         public Vector3d angularVelocity;
         public Vector3d angularMomentum;
 
@@ -109,19 +105,6 @@ namespace MuMech
             velocityVesselSurface = velocityVesselOrbit - vessel.mainBody.getRFrmVel(CoM);
             velocityVesselSurfaceUnit = velocityVesselSurface.normalized;
             velocityMainBodySurface = rotationSurface * velocityVesselSurface;
-
-            if (Target.Exists())
-            {
-                vectorToTarget = FlightGlobals.fetch.VesselTarget.GetTransform().position - vessel.transform.position;
-                relativeVelocityToTarget = velocityVesselOrbit - FlightGlobals.fetch.VesselTarget.GetOrbit().GetVel(); //don't use GetObtVelocity, it's broken for CelestialBody's
-                distanceToTarget = vectorToTarget.magnitude;
-            }
-            else
-            {
-                vectorToTarget = Vector3d.zero;
-                relativeVelocityToTarget = Vector3d.zero;
-                distanceToTarget = 0;
-            }
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
 

@@ -133,7 +133,7 @@ namespace MuMech
         {
             Vector3 fwd, up;
             Quaternion rotRef = Quaternion.identity;
-            if (FlightGlobals.fetch.VesselTarget == null &&
+            if (Target.Get() == null &&
                 (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION || reference == AttitudeReference.RELATIVE_VELOCITY))
             {
                 //in target-relative mode, but there's no target:
@@ -173,7 +173,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
                     Transform targetTransform = Target.Transform();
-                    if (FlightGlobals.fetch.VesselTarget is ModuleDockingNode)
+                    if (Target.Get() is ModuleDockingNode)
                     {
                         rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
                     }

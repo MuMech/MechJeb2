@@ -10,8 +10,9 @@ namespace MuMech
     {
         public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }
 
-        enum Operation { CIRCULARIZE, ELLIPTICIZE, PERIAPSIS, APOAPSIS, INCLINATION, PLANE, TRANSFER, COURSE_CORRECTION, INTERPLANETARY_TRANSFER };
-        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, ASCENDING_NODE, DESCENDING_NODE };
+        enum Operation { CIRCULARIZE, ELLIPTICIZE, PERIAPSIS, APOAPSIS, INCLINATION, PLANE, TRANSFER, COURSE_CORRECTION, 
+            INTERPLANETARY_TRANSFER, LAMBERT};
+        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, ASCENDING_NODE, DESCENDING_NODE, NINETY_BEFORE_AP };
 
         Operation operation = Operation.CIRCULARIZE;
         TimeReference timeReference = TimeReference.NOW;
@@ -25,6 +26,7 @@ namespace MuMech
         EditableDouble ap = new EditableDouble(0, 1000);
         EditableDouble inc = new EditableDouble(0);
         EditableTime lead = new EditableTime(0);
+        EditableTime interceptInterval = new EditableTime(3600);
 
         protected override void FlightWindowGUI(int windowID)
         {
@@ -57,20 +59,20 @@ namespace MuMech
                     break;
 
                 case Operation.ELLIPTICIZE:
-                    GuiUtils.SimpleTextBox("Pe (km)", pe, 1000);
-                    GuiUtils.SimpleTextBox("Ap (km)", ap, 1000);
+                    GuiUtils.SimpleTextBox("Pe (km)", pe);
+                    GuiUtils.SimpleTextBox("Ap (km)", ap);
                     break;
 
                 case Operation.PERIAPSIS:
-                    GuiUtils.SimpleTextBox("Pe (km)", pe, 1000);
+                    GuiUtils.SimpleTextBox("Pe (km)", pe);
                     break;
 
                 case Operation.APOAPSIS:
-                    GuiUtils.SimpleTextBox("Ap (km)", ap, 1000);
+                    GuiUtils.SimpleTextBox("Ap (km)", ap);
                     break;
 
                 case Operation.INCLINATION:
-                    GuiUtils.SimpleTextBox("Inc (deg)", inc, 1000);
+                    GuiUtils.SimpleTextBox("Inc (deg)", inc);
                     break;
 
                 case Operation.PLANE:
@@ -85,13 +87,18 @@ namespace MuMech
 
                 case Operation.INTERPLANETARY_TRANSFER:
                     break;
+
+                case Operation.LAMBERT:
+                    GuiUtils.SimpleTextBox("Transfer time of flight: ", interceptInterval);
+                    break;
+
             }
 
             double UT = vesselState.time;
 
             if (!anyNodeExists || createNode)
             {
-                GuiUtils.SimpleTextBox("In (seconds): ", lead, 1);
+                GuiUtils.SimpleTextBox("In (seconds): ", lead);
 
                 GUILayout.BeginHorizontal();
                 if (anyNodeExists)
@@ -114,9 +121,12 @@ namespace MuMech
                 if (GUILayout.Button("▻")) timeReference = (TimeReference)(((int)timeReference + 1 + Enum.GetNames(typeof(TimeReference)).Length) % Enum.GetNames(typeof(TimeReference)).Length);
                 GUILayout.EndHorizontal();
 
+                Orbit o = orbit;
+
                 if (anyNodeExists && timeReferenceSinceLast)
                 {
                     UT = vessel.patchedConicSolver.maneuverNodes.Last().UT;
+                    o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
                 }
 
                 switch (timeReference)
@@ -124,55 +134,30 @@ namespace MuMech
                     case TimeReference.NOW:
                         break;
                     case TimeReference.APOAPSIS:
-                        UT = orbit.NextApoapsisTime(UT);
+                        UT = o.NextApoapsisTime(UT);
                         break;
                     case TimeReference.PERIAPSIS:
-                        UT = orbit.NextPeriapsisTime(UT);
+                        UT = o.NextPeriapsisTime(UT);
                         break;
                     case TimeReference.ASCENDING_NODE:
                         if (Target.Exists())
                         {
-                            UT = orbit.TimeOfAscendingNode(Target.Orbit(), UT);
+                            UT = o.TimeOfAscendingNode(Target.Orbit(), UT);
                         }
                         break;
                     case TimeReference.DESCENDING_NODE:
                         if (Target.Exists())
                         {
-                            UT = orbit.TimeOfDescendingNode(Target.Orbit(), UT);
+                            UT = o.TimeOfDescendingNode(Target.Orbit(), UT);
                         }
+                        break;
+                    case TimeReference.NINETY_BEFORE_AP:
+                        UT = o.TimeOfTrueAnomaly(90, UT);
                         break;
                 }
 
                 UT += lead;
             }
-
-            if (Input.GetKeyDown(KeyCode.Alpha0))
-            {
-                double initialT = vesselState.time;
-                double finalT = vesselState.time + 100;
-                Vector3d initalRelPos = orbit.SwappedRelativePositionAtUT(initialT);
-                Vector3d finalRelPos = orbit.SwappedRelativePositionAtUT(finalT);
-                Vector3d knownInitialVel = orbit.SwappedOrbitalVelocityAtUT(initialT);
-                Vector3d knownFinalVel = orbit.SwappedOrbitalVelocityAtUT(finalT);
-
-                Vector3d computedInitialVel, computedFinalVel;
-                LambertSolver.Solve(initalRelPos, initialT, finalRelPos, finalT, orbit.referenceBody, 0.01,
-                    out computedInitialVel, out computedFinalVel);
-                Debug.Log("--");
-                Debug.Log("known initial velocity = " + knownInitialVel);
-                Debug.Log("known final velocity = " + knownFinalVel);
-            }
-
-
-            if (Input.GetKeyDown(KeyCode.Alpha8))
-            {
-                Debug.Log("Maneuver nodes:");
-                foreach (ManeuverNode mn in vessel.patchedConicSolver.maneuverNodes)
-                {
-                    Debug.Log(mn.ToString() + " at " + mn.UT + " - patch PeA = " + mn.patch.PeA + "; nextPatch PeA = " + (mn.nextPatch == null ? -66 : mn.nextPatch.PeA));
-                }
-            }
-
 
             if (GUILayout.Button("Go"))
             {
@@ -180,8 +165,6 @@ namespace MuMech
 
                 Orbit o = vessel.GetPatchAtUT(UT);
                 double rad = o.referenceBody.Radius;
-
-                Debug.Log("o.PeA = " + o.PeA);
 
                 switch (operation)
                 {
@@ -208,24 +191,28 @@ namespace MuMech
                     case Operation.PLANE:
                         if (planeMatchNode == Node.ASCENDING)
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), UT, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, Target.Orbit(), UT, out UT);
                         }
                         else
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), UT, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, Target.Orbit(), UT, out UT);
                         }
                         break;
 
                     case Operation.TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, FlightGlobals.fetch.VesselTarget.GetOrbit(), vesselState.time, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, Target.Orbit(), vesselState.time, out UT);
                         break;
 
                     case Operation.COURSE_CORRECTION:
-                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, FlightGlobals.fetch.VesselTarget.GetOrbit());
+                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, Target.Orbit());
                         break;
 
                     case Operation.INTERPLANETARY_TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, vesselState.time, FlightGlobals.fetch.VesselTarget.GetOrbit(), out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, Target.Orbit(), out UT);
+                        break;
+
+                    case Operation.LAMBERT:
+                        dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, Target.Orbit(), UT + interceptInterval);
                         break;
                 }
 

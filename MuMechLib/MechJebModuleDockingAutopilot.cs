@@ -51,7 +51,7 @@ namespace MuMech
 
             Vector3d separation = Target.RelativePosition(vessel);
 
-            Vector3d zAxis = (FlightGlobals.fetch.VesselTarget is ModuleDockingNode ? -Target.Transform().forward : Target.Transform().up); //the docking axis
+            Vector3d zAxis = Target.DockingAxis();
             double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             Vector3d lateralSep = Vector3d.Exclude(zAxis, separation);
 
@@ -67,7 +67,7 @@ namespace MuMech
                 }
                 else
                 {
-                    core.rcs.SetTargetWorldVelocity(targetVel + Math.Max(-zApproachSpeed, zApproachSpeed * zSep / 50) * zAxis); //back up
+                    core.rcs.SetTargetWorldVelocity(targetVel - zApproachSpeed * Math.Max(1, -zSep / 50) * zAxis); //back up
                     status = "Backing up at " + Math.Max(-zApproachSpeed, zApproachSpeed * zSep / 50).ToString("F2") + " m/s to get on the correct side of the target to dock.";
                 }
                 lateralPID.Reset();

@@ -68,7 +68,7 @@ namespace MuMech
             set
             {
                 _text = value;
-                _text = Regex.Replace(_text, @"[^\d+-.dhms]", ""); //throw away junk characters
+                _text = Regex.Replace(_text, @"[^\d+-.dhms ,]", ""); //throw away junk characters
 
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
@@ -85,7 +85,7 @@ namespace MuMech
 
     public static class GuiUtils
     {
-        public static void SimpleTextBox(string label, EditableDouble ed, double multiplier)
+        public static void SimpleTextBox(string label, EditableDouble ed)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(label);

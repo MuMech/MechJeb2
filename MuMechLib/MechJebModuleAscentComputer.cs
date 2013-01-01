@@ -12,8 +12,7 @@ namespace MuMech
     public class MechJebModuleAscentComputer : ComputerModule
     {
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
-
-
+        
         //input parameters:
         IAscentPath ascentPath = new DefaultAscentPath();
         double desiredOrbitAltitude = 100000.0;

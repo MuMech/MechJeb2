@@ -107,7 +107,6 @@ namespace MuMech
             double interval = a.period;
             if(a.eccentricity > 1) {
                 interval = 100 / a.MeanMotion(); //this should be an interval of time that covers a large chunk of the hyperbolic arc
-                MonoBehaviour.print("TimeOfNextClosestApproach: hyperbolic interval = " + interval);
             }
             double maxTime = UT + interval;
             int numDivisions = 20;

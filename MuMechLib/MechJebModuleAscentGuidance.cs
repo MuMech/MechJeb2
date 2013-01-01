@@ -20,19 +20,19 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             ascentPath = new DefaultAscentPath();
-            FlightGlobals.fetch.SetVesselTarget(target);
+            Target.Set(target);
         }
 
         public override void OnModuleDisabled()
         {
-            if (FlightGlobals.fetch.VesselTarget == target) FlightGlobals.fetch.SetVesselTarget(null);
+            if (Target.Get() == target) Target.Set(null);
         }
 
         public override void OnFixedUpdate()
         {
             if (!enabled) return;
 
-            if (FlightGlobals.fetch.VesselTarget != target)
+            if (Target.Get() != target)
             {
                 enabled = false;
                 return;

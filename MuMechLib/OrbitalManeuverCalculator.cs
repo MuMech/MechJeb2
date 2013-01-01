@@ -270,8 +270,6 @@ namespace MuMech
 
         public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT)
         {
-            if (o.eccentricity > 1) throw new ArgumentException("o must not be hyperbolic");
-
             double initialT = UT;
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialT);
             double finalT = interceptUT;
@@ -285,7 +283,7 @@ namespace MuMech
             Debug.Log("deltaTPrecision = " + deltaTPrecision);
 
             Vector3d initialVelocity, finalVelocity;
-            LambertSolver.Solve(initialRelPos, initialT, finalRelPos, finalT, o.referenceBody, deltaTPrecision, out initialVelocity, out finalVelocity);
+            LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, true, out initialVelocity, out finalVelocity);
 
             Vector3d currentInitialVelocity = o.SwappedOrbitalVelocityAtUT(initialT);
             return initialVelocity - currentInitialVelocity;
@@ -409,7 +407,7 @@ namespace MuMech
         }
     }
 
-
+/*
     //Solves Lambert's problem, namely:
     //  "What orbit takes you from position r0_vec at time t0 to position rf_vec at time tf?"
     //Algorithm from http://ccar.colorado.edu/asen5519/imd/documents/Lambert.pdf
@@ -503,5 +501,6 @@ namespace MuMech
             Debug.Log("finalVelocity = " + finalVelocity);
         }
 
-    }
+    }*/
 }
+    

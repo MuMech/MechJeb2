@@ -11,13 +11,23 @@ namespace MuMech
     {
         public static bool Exists()
         {
-            ITargetable t = FlightGlobals.fetch.VesselTarget;
+            ITargetable t = Get();
             return (t != null && (t is Vessel || t is CelestialBody || t is ModuleDockingNode));
+        }
+
+        public static ITargetable Get() 
+        { 
+            return FlightGlobals.fetch.VesselTarget; 
+        }
+
+        public static void Set(ITargetable t)
+        {
+            FlightGlobals.fetch.SetVesselTarget(t);
         }
 
         public static Orbit Orbit()
         {
-            return FlightGlobals.fetch.VesselTarget.GetOrbit();
+            return Get().GetOrbit();
         }
 
         public static Vector3 Position()
@@ -40,10 +50,16 @@ namespace MuMech
             return (v.GetTransform().position - Position());
         }
 
-
         public static Transform Transform()
         {
-            return FlightGlobals.fetch.VesselTarget.GetTransform();
+            return Get().GetTransform();
+        }
+
+        //which way your vessel should be pointing to dock with the target
+        public static Vector3 DockingAxis()
+        {
+            if (Get() is ModuleDockingNode) return -Transform().forward;
+            return -Transform().up;
         }
 
         public static string Name()
