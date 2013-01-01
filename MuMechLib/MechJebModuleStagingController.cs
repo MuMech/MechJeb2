@@ -13,57 +13,30 @@ namespace MuMech
             priority = 1000;
         }
 
-        private bool _AutoStage = false;
-        public bool AutoStage
-        {
-            get { return _AutoStage; }
-            set
-            {
-                _AutoStage = value;
-                //add settings saving
-            }
-        }
+        //adjustable parameters:
+        public double AutoStageDelay = 1.0;
+        public int AutoStageLimit = 0;
 
-        private double _AutoStageDelay = 1.0;
-        public double AutoStageDelay
-        {
-            get { return _AutoStageDelay; }
-            set
-            {
-                _AutoStageDelay = value;
-                //add settings saving
-            }
-        }
-
-        private int _AutoStageLimit = 0;
-        public int AutoStageLimit
-        {
-            get { return _AutoStageLimit; }
-            set
-            {
-                _AutoStageLimit = value;
-                //add settings saving
-            }
-        }
-
+        //internal state:
         double lastStageTime = 0;
+
 
         public override void OnFixedUpdate()
         {
-            if (!part.vessel.isActiveVessel) return;
+            if (!vessel.isActiveVessel || !this.enabled) return;
 
             //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (AutoStage && part.vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > AutoStageLimit
+            if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > AutoStageLimit
                 && vesselState.time - lastStageTime > AutoStageDelay)
             {
                 //don't decouple active or idle engines or tanks
-                if (!inverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, part.vessel))
+                if (!inverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel))
                 {
                     //only fire decouplers to drop deactivated engines or tanks
-                    bool firesDecoupler = inverseStageFiresDecoupler(Staging.CurrentStage - 1, part.vessel);
+                    bool firesDecoupler = inverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
                     if (!firesDecoupler
-                        || inverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, part.vessel))
+                        || inverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
                     {
                         if (firesDecoupler)
                         {

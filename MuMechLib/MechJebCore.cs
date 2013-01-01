@@ -36,13 +36,13 @@ namespace MuMech
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
         {
-            if (controlledVessel == part.vessel) return true;
+            if (controlledVessel == vessel) return true;
 
             //else we have an onFlyByWire callback registered with the wrong vessel:
             //handle vessel changes due to docking/undocking
             if (controlledVessel != null) controlledVessel.OnFlyByWire -= onFlyByWire;
-            part.vessel.OnFlyByWire += onFlyByWire;
-            controlledVessel = part.vessel;
+            vessel.OnFlyByWire += onFlyByWire;
+            controlledVessel = vessel;
             return false;
         }
 
@@ -114,8 +114,8 @@ namespace MuMech
                 module.OnStart(state);
             }
 
-            part.vessel.OnFlyByWire += drive;
-            controlledVessel = part.vessel;
+            vessel.OnFlyByWire += drive;
+            controlledVessel = vessel;
         }
 
         public override void OnActive()
@@ -151,7 +151,7 @@ namespace MuMech
                 return;
             }
 
-            vesselState.Update(part.vessel);
+            vesselState.Update(vessel);
 
             if (modulesUpdated)
             {

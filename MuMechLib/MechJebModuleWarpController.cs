@@ -23,8 +23,8 @@ namespace MuMech
             double desiredRate = 1.0 * (UT - vesselState.time);
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
-            if (!part.vessel.LandedOrSplashed &&
-               vesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, part.vessel.mainBody))
+            if (!vessel.LandedOrSplashed &&
+               vesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, mainBody))
             {
                 //too low to use any regular warp rates. Use physics warp at a max of x2:
                 WarpPhysicsAtRate((float)Math.Min(desiredRate, 2));
@@ -98,10 +98,10 @@ namespace MuMech
 
             //do a bunch of checks to see if we can increase the warp rate:
             if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.warpRates.Length) return false; //already at max warp
-            if (!part.vessel.LandedOrSplashed)
+            if (!vessel.LandedOrSplashed)
             {
-                double instantAltitudeASL = (vesselState.CoM - part.vessel.mainBody.position).magnitude - part.vessel.mainBody.Radius;
-                if (TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, part.vessel.mainBody) > instantAltitudeASL) return false;
+                double instantAltitudeASL = (vesselState.CoM - mainBody.position).magnitude - mainBody.Radius;
+                if (TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, mainBody) > instantAltitudeASL) return false;
                 //altitude too low to increase warp
             }
             if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate) return false; //most recent warp change is not yet complete

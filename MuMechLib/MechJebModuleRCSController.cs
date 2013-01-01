@@ -37,14 +37,14 @@ namespace MuMech
 
         public void SetTargetLocalVelocity(Vector3d vel)
         {
-            targetVelocity = part.vessel.GetTransform().rotation * vel;
+            targetVelocity = vessel.GetTransform().rotation * vel;
         }
 
         public override void Drive(FlightCtrlState s)
         {
             Vector3d worldVelocityDelta = vesselState.velocityVesselOrbit - targetVelocity;
             worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
-            Vector3d velocityDelta = Quaternion.Inverse(part.vessel.GetTransform().rotation) * worldVelocityDelta;
+            Vector3d velocityDelta = Quaternion.Inverse(vessel.GetTransform().rotation) * worldVelocityDelta;
             Vector3d rcs = new Vector3d();
 
             foreach (Vector6.Direction dir in Enum.GetValues(typeof(Vector6.Direction)))

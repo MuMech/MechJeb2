@@ -6,78 +6,43 @@ using UnityEngine;
 
 namespace MuMech
 {
-
-    //An IAscentPath provides a single function, which returns the flight path angle at a given altitude
-    public interface IAscentPath
-    {
-        //altitude at which to stop going straight up
-        double VerticalAscentEnd();
-
-        //controls the ascent path
-        double FlightPathAngle(double altitude);
-    }
-
-
-    public class DefaultAscentPath : IAscentPath
-    {
-        public double turnStartAltitude = 5000;
-        public double turnEndAltitude = 70000;
-        public double turnEndAngle = 0;
-        public double turnShapeExponent = 0.4;
-
-        public double VerticalAscentEnd()
-        {
-            return turnEndAltitude;
-        }
-
-        public double FlightPathAngle(double altitude)
-        {
-            if (altitude < turnStartAltitude) return 90.0;
-
-            if (altitude > turnEndAltitude) return turnEndAngle;
-
-            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
-        }
-    }
-
-
-    //Todo: reimplement measurement of LPA and launch to rendezvous
-    //      implement launch-to-plane
+    //Todo: -reimplement measurement of LPA
+    //      -Figure out exactly how throttle-limiting should work and interact
+    //       with the global throttle-limit option
     public class MechJebModuleAscentComputer : ComputerModule
     {
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
 
 
-        ////////////////////////////////////
-        // GLOBAL DATA /////////////////////
-        ////////////////////////////////////
-
-        //autopilot modes
-        public enum AscentMode { PRELAUNCH, COUNTING_DOWN, VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE, DISENGAGED };
-        String[] modeStrings = new String[] { "Awaiting liftoff", "Counting down", "Vertical ascent", "Gravity turn", "Coasting to apoapsis", "Circularizing", "Disengaged" };
-        public AscentMode mode = AscentMode.DISENGAGED;
-
         //input parameters:
         IAscentPath ascentPath = new DefaultAscentPath();
         double desiredOrbitAltitude = 100000.0;
         double desiredInclination = 0.0;
-        bool autoWarpToApoapsis = true;
-        bool seizeThrottle = true;
+        bool autoThrottle = true;
+
+        //internal state:
+        public enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
+        public AscentMode mode;
+        bool placedCircularizeNode = false;
 
 
+        public override void OnModuleEnabled()
+        {
+            mode = AscentMode.VERTICAL_ASCENT;
+            placedCircularizeNode = false;
 
-        ///////////////////////////////////////
-        // FLYING THE ROCKET //////////////////
-        ///////////////////////////////////////
+            core.attitude.enabled = true;
+        }
 
-        //called every frame or so; this is where we manipulate the flight controls
+        public override void OnModuleDisabled()
+        {
+            core.attitude.enabled = false;
+            FlightInputHandler.SetNeutralControls();
+        }
+
+
         public override void Drive(FlightCtrlState s)
         {
-            if (mode == AscentMode.DISENGAGED) return;
-
-            //detect liftoff:
-            if (mode == AscentMode.PRELAUNCH && Staging.CurrentStage <= Staging.lastStage) mode = AscentMode.VERTICAL_ASCENT;
-
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -96,49 +61,31 @@ namespace MuMech
                     driveCircularizationBurn(s);
                     break;
             }
-
-            if (seizeThrottle)
-            {
-                core.thrust.limitToPreventOverheats = true;
-                core.thrust.limitToTerminalVelocity = true;
-            }
         }
 
 
-
-
-        ///////////////////////////////////////
-        // VERTICAL ASCENT ////////////////////
-        ///////////////////////////////////////
-
+ 
         void driveVerticalAscent(FlightCtrlState s)
         {
-            //during the vertical ascent we just thrust straight up at max throttle
-            if (seizeThrottle) s.mainThrottle = 1.0F;
             if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
-            if (seizeThrottle && part.vessel.orbit.ApA > desiredOrbitAltitude)
-            {
-                //lastAccelerationTime = vesselState.time;
-                mode = AscentMode.COAST_TO_APOAPSIS;
-            }
+            if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
+            //during the vertical ascent we just thrust straight up at max throttle
             core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+            if (autoThrottle) s.mainThrottle = 1.0F;
         }
 
-        ///////////////////////////////////////
-        // GRAVITY TURN ///////////////////////
-        ///////////////////////////////////////
 
         //gives a throttle setting that reduces as we approach the desired apoapsis
         //so that we can precisely match the desired apoapsis instead of overshooting it
-        float throttleToRaiseApoapsis(double currentApoapsisRadius, double finalApoapsisRadius)
+        float throttleToRaiseApoapsis(double currentApR, double finalApR)
         {
-            if (currentApoapsisRadius > finalApoapsisRadius + 5.0) return 0.0F;
-            else if (part.vessel.orbit.ApA < part.vessel.mainBody.maxAtmosphereAltitude) return 1.0F; //throttle hard to escape atmosphere
+            if (currentApR > finalApR + 5.0) return 0.0F;
+            else if (orbit.ApA < mainBody.maxAtmosphereAltitude) return 1.0F; //throttle hard to escape atmosphere
 
-            double GM = part.vessel.mainBody.gravParameter;
+            double GM = mainBody.gravParameter;
 
-            double potentialDifference = GM / currentApoapsisRadius - GM / finalApoapsisRadius;
+            double potentialDifference = GM / currentApR - GM / finalApR;
             double finalKineticEnergy = 0.5 * vesselState.speedOrbital * vesselState.speedOrbital + potentialDifference;
             double speedDifference = Math.Sqrt(2 * finalKineticEnergy) - vesselState.speedOrbital;
 
@@ -151,7 +98,7 @@ namespace MuMech
         void driveGravityTurn(FlightCtrlState s)
         {
             //stop the gravity turn when our apoapsis reaches the desired altitude
-            if (seizeThrottle && part.vessel.orbit.ApA > desiredOrbitAltitude)
+            if (autoThrottle && orbit.ApA > desiredOrbitAltitude)
             {
                 mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
@@ -164,9 +111,9 @@ namespace MuMech
                 return;
             }
 
-            if (seizeThrottle)
+            if (autoThrottle)
             {
-                s.mainThrottle = throttleToRaiseApoapsis(part.vessel.orbit.ApR, desiredOrbitAltitude + part.vessel.mainBody.Radius);
+                s.mainThrottle = throttleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
                 if (s.mainThrottle < 1.0F)
                 {
                     //when we are bringing down the throttle to make the apoapsis accurate, we're liable to point in weird
@@ -176,19 +123,18 @@ namespace MuMech
                 }
             }
 
-
             //transition gradually from the rotating to the non-rotating reference frame. this calculation ensures that
             //when our maximum possible apoapsis, given our orbital energy, is desiredOrbitalRadius, then we are
             //fully in the non-rotating reference frame and thus doing the correct calculations to get the right inclination
-            double GM = part.vessel.mainBody.gravParameter;
-            double potentialDifferenceWithApoapsis = GM / vesselState.radius - GM / (part.vessel.mainBody.Radius + desiredOrbitAltitude);
+            double GM = mainBody.gravParameter;
+            double potentialDifferenceWithApoapsis = GM / vesselState.radius - GM / (mainBody.Radius + desiredOrbitAltitude);
             double verticalSpeedForDesiredApoapsis = Math.Sqrt(2 * potentialDifferenceWithApoapsis);
             double referenceFrameBlend = Mathf.Clamp((float)(vesselState.speedOrbital / verticalSpeedForDesiredApoapsis), 0.0F, 1.0F);
 
             Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.velocityVesselSurfaceUnit
                                                + referenceFrameBlend * vesselState.velocityVesselOrbitUnit).normalized;
 
-            double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL);
 
@@ -219,54 +165,12 @@ namespace MuMech
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
         }
 
-        ///////////////////////////////////////
-        // COAST AND CIRCULARIZATION //////////
-        ///////////////////////////////////////
-
-        //move to a CelestialBody extensions class?
-        double gAtRadius(double radius)
-        {
-            return FlightGlobals.getGeeForceAtPosition(part.vessel.mainBody.position + radius * vesselState.up).magnitude;
-        }
-
-        double thrustPitchForZeroVerticalAcc(double orbitRadius, double currentHorizontalSpeed, double thrustAcceleration, double currentVerticalSpeed)
-        {
-            double centrifugalAcceleration = currentHorizontalSpeed * currentHorizontalSpeed / orbitRadius;
-            double gravityAcceleration = gAtRadius(orbitRadius);
-            double downwardAcceleration = gravityAcceleration - centrifugalAcceleration;
-            downwardAcceleration -= currentVerticalSpeed / 1.0; //1.0 = 1 second time constant for killing existing vertical speed
-            if (Math.Abs(downwardAcceleration) > thrustAcceleration) return 0; //we're screwed, just burn horizontal
-            return Math.Asin(downwardAcceleration / thrustAcceleration);
-        }
-
-        double expectedSpeedAtApoapsis()
-        {
-            // (1/2)(orbitSpeed)^2 - g(r)*r = constant
-            double currentTotalEnergy = 0.5 * vesselState.speedOrbital * vesselState.speedOrbital - vesselState.localg * vesselState.radius;
-            double gAtApoapsis = gAtRadius(part.vessel.orbit.ApR);
-            double potentialEnergyAtApoapsis = -gAtApoapsis * part.vessel.orbit.ApR;
-            double kineticEnergyAtApoapsis = currentTotalEnergy - potentialEnergyAtApoapsis;
-            return Math.Sqrt(2 * kineticEnergyAtApoapsis);
-        }
-
-        double circularizationBurnThrottle(double currentSpeed, double finalSpeed)
-        {
-            if (vesselState.maxThrustAccel == 0)
-            {
-                //then we are powerless
-                return 0;
-            }
-            double desiredThrustAccel = (finalSpeed - currentSpeed) / 1.0; //1 second time constant for throttling down
-            float throttleCommand = (float)((desiredThrustAccel - vesselState.minThrustAccel) / (vesselState.maxThrustAccel - vesselState.minThrustAccel));
-            return Mathf.Clamp(throttleCommand, 0.01F, 1.0F);
-        }
-
         void driveCoastToApoapsis(FlightCtrlState s)
         {
             s.mainThrottle = 0.0F;
 
-            //if we have started to descend, i.e. reached apoapsis, circularize
-            if (Vector3d.Dot(vesselState.velocityVesselOrbit, vesselState.up) < 0)
+            //once we get above the atmosphere, plan and execute the circularization maneuver
+            if (vesselState.altitudeASL > mainBody.maxAtmosphereAltitude)
             {
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
@@ -274,122 +178,158 @@ namespace MuMech
             }
 
             //if our apoapsis has fallen too far, resume the gravity turn
-            if (part.vessel.orbit.ApA < desiredOrbitAltitude - 1000.0)
+            if (orbit.ApA < desiredOrbitAltitude - 1000.0)
             {
                 mode = AscentMode.GRAVITY_TURN;
                 core.warp.MinimumWarp();
                 return;
             }
 
-            //if our apoapsis has fallen below the target, raise it back up
-            if (part.vessel.orbit.ApA < desiredOrbitAltitude - 10)
+            //point prograde and thrust gently if our apoapsis falls below the target
+            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+            s.mainThrottle = 0;
+            if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
-                if (MuUtils.PhysicsRunning())
-                {
-                    //if physics is running, steer prograde and throttle up
-                    core.attitude.attitudeTo(Vector3.forward, AttitudeReference.ORBIT, this);
-
-                    if (core.attitude.attitudeAngleFromTarget() < 15)
-                    {
-                        s.mainThrottle = throttleToRaiseApoapsis(part.vessel.orbit.ApR, desiredOrbitAltitude + part.vessel.mainBody.Radius);
-                    }
-                    else
-                    {
-                        s.mainThrottle = 0.0F;
-                    }
-                }
-                else
-                {
-                    //if physics is not running, switch to physics warp x2 so we can throttle up
-                    if (autoWarpToApoapsis) core.warp.WarpPhysicsAtRate(2);
-                    else core.warp.MinimumWarp();
-                }
-                return;
-            }
-            
-            //apoapsis is high enough
-
-            if (autoWarpToApoapsis)
-            {
-                //If we're allowed to autowarp, do so
-                //This if statement tries to squash a bug where the AP increases warp just as it passes Ap,
-                //which slightly messes up the start of the circularization burn
-                if (part.vessel.orbit.timeToAp > 10 && (part.vessel.orbit.period - part.vessel.orbit.timeToAp) > 10)
-                {
-                    core.warp.WarpToUT(vesselState.time + part.vessel.orbit.timeToAp - 30);
-                }
+                s.mainThrottle = throttleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
-            //If we are out of the atmosphere and have a high enough apoapsis and aren't near apoapsis, play dead to 
-            //prevent acceleration from interfering with time warp. Otherwise point in the direction that we will
-            //want to point at the start of the circularization burn
-            if (autoWarpToApoapsis
-                && vesselState.altitudeASL > part.vessel.mainBody.maxAtmosphereAltitude
-                && part.vessel.orbit.timeToAp > 30)
-            {
-                //don't steer
-                core.attitude.attitudeDeactivate(this);
-            }
-            else
-            {
-                double expectedApoapsisThrottle = circularizationBurnThrottle(expectedSpeedAtApoapsis(), OrbitalManeuverCalculator.CircularOrbitSpeed(part.vessel.mainBody, part.vessel.orbit.ApR));
-                double desiredThrustPitch = thrustPitchForZeroVerticalAcc(part.vessel.orbit.ApR, expectedSpeedAtApoapsis(),
-                                                                          vesselState.ThrustAccel(expectedApoapsisThrottle), 0);
-                Vector3d groundHeading = Vector3d.Exclude(vesselState.up, part.vessel.orbit.GetVel()).normalized;
-                Vector3d desiredThrustVector = (Math.Cos(desiredThrustPitch) * groundHeading + Math.Sin(desiredThrustPitch) * vesselState.up);
-                core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
-                return;
-            }
+            //warp at x2 physical warp:
+            core.warp.WarpPhysicsAtRate(2);
         }
-
-
 
         void driveCircularizationBurn(FlightCtrlState s)
         {
-            if (part.vessel.orbit.ApA < desiredOrbitAltitude - 1000.0)
+            if (placedCircularizeNode)
             {
-                mode = AscentMode.GRAVITY_TURN;
-                core.attitude.attitudeTo(Vector3.forward, AttitudeReference.ORBIT, this);
+                //auto-execute node
+                this.enabled = false;
                 return;
             }
 
-            double orbitalRadius = (vesselState.CoM - part.vessel.mainBody.position).magnitude;
-            double circularSpeed = Math.Sqrt(orbitalRadius * vesselState.localg);
-
-            //we start the circularization burn at apoapsis, and the orbit is about as circular as it is going to get when the 
-            //periapsis has moved closer to us than the apoapsis
-            if (Math.Min(part.vessel.orbit.timeToPe, part.vessel.orbit.period - part.vessel.orbit.timeToPe) <
-                Math.Min(part.vessel.orbit.timeToAp, part.vessel.orbit.period - part.vessel.orbit.timeToAp)
-                || vesselState.speedOrbital > circularSpeed + 1.0) //makes sure we don't keep burning forever if we are somehow way off course
-            {
-                s.mainThrottle = 0.0F;
-                mode = AscentMode.DISENGAGED;
-                return;
-            }
-
-            //During circularization we think in the *non-rotating* frame, but allow ourselves to discuss centrifugal acceleration
-            //as the tendency for the altitude to rise because of our large horizontal velocity.
-            //To get a circular orbit we need to reach orbital horizontal speed while simultaneously getting zero vertical speed.
-            //We compute the thrust vector needed to get zero vertical acceleration, taking into account gravity and centrifugal
-            //acceleration. If we currently have a nonzero vertical velocity we then adjust the thrust vector to bring that to zero
-
-            s.mainThrottle = (float)circularizationBurnThrottle(vesselState.speedOrbital, circularSpeed);
-
-            double thrustAcceleration = vesselState.ThrustAccel(s.mainThrottle);
-
-            Vector3d groundHeading = Vector3d.Exclude(vesselState.up, vesselState.velocityVesselOrbit).normalized;
-            double horizontalSpeed = Vector3d.Dot(groundHeading, vesselState.velocityVesselOrbit);
-            double verticalSpeed = Vector3d.Dot(vesselState.up, vesselState.velocityVesselOrbit);
-
-            //test the following modification: pitch = 0 if throttle < 1
-            double desiredThrustPitch = thrustPitchForZeroVerticalAcc(orbitalRadius, horizontalSpeed, thrustAcceleration, verticalSpeed);
+            //place circularization node
+            double UT = orbit.NextApoapsisTime(vesselState.time);
+            Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+            vessel.PlaceManeuverNode(orbit, dV, UT);
+            placedCircularizeNode = true;
+        }
+    }
 
 
 
-            //Vector3d desiredThrustVector = Math.Cos(desiredThrustPitch) * groundHeading + Math.Sin(desiredThrustPitch) * vesselState.up;
-            Vector3d desiredThrustVector = Math.Cos(desiredThrustPitch) * Vector3d.forward + Math.Sin(desiredThrustPitch) * Vector3d.up;
-            core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.ORBIT_HORIZONTAL, this);
+
+    //An IAscentPath describes the desired gravity turn path
+    public interface IAscentPath
+    {
+        //altitude at which to stop going straight up
+        double VerticalAscentEnd();
+
+        //controls the ascent path
+        double FlightPathAngle(double altitude);
+    }
+
+
+    public class DefaultAscentPath : IAscentPath, IConfigNode
+    {
+        public double turnStartAltitude = 5000;
+        public double turnEndAltitude = 70000;
+        public double turnEndAngle = 0;
+        public double turnShapeExponent = 0.4;
+
+        public double VerticalAscentEnd()
+        {
+            return turnStartAltitude;
         }
 
+        public double FlightPathAngle(double altitude)
+        {
+            if (altitude < turnStartAltitude) return 90.0;
+
+            if (altitude > turnEndAltitude) return turnEndAngle;
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
+        }
+
+        void IConfigNode.Load(ConfigNode node)
+        {
+            if (node.HasValue("turnStartAltitude")) turnStartAltitude = double.Parse(node.GetValue("turnStartAltitude"));
+            if (node.HasValue("turnEndAltitude")) turnEndAltitude = double.Parse(node.GetValue("turnEndAltitude"));
+            if (node.HasValue("turnEndAngle")) turnEndAngle = double.Parse(node.GetValue("turnEndAngle"));
+            if (node.HasValue("turnShapeExponent")) turnShapeExponent = double.Parse(node.GetValue("turnShapeExponent"));
+        }
+
+        void IConfigNode.Save(ConfigNode node)
+        {
+            node.SetValue("turnStartAltitude", turnStartAltitude.ToString());
+            node.SetValue("turnEndAltitude", turnEndAltitude.ToString());
+            node.SetValue("turnEndAngle", turnEndAngle.ToString());
+            node.SetValue("turnShapeExponent", turnShapeExponent.ToString());
+        }
+    }
+
+
+
+    public static class LaunchTiming
+    {
+        //Computes the time until the phase angle between the launchpad and the target equals the given angle.
+        //The convention used is that phase angle is the angle measured starting at the target and going east until
+        //you get to the launchpad. 
+        //The time returned will not be exactly accurate unless the target is in an exactly circular orbit. However,
+        //the time returned will go to exactly zero when the desired phase angle is reached.
+        public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target) 
+        {
+            double launchpadAngularRate = 360 / launchBody.rotationPeriod;
+            double targetAngularRate = 360.0 / target.period;
+            if(Vector3d.Dot(target.SwappedOrbitNormal(), launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
+
+            Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
+            Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
+            currentTargetDirection = Vector3d.Exclude(launchBody.angularVelocity, currentTargetDirection);
+
+            double currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));
+            if(Vector3d.Dot(Vector3d.Cross(currentTargetDirection, currentLaunchpadDirection), launchBody.angularVelocity) < 0) {
+                currentPhaseAngle = 360 - currentPhaseAngle;
+            }
+
+            double phaseAngleRate = launchpadAngularRate - targetAngularRate;
+
+            double phaseAngleDifference = MuUtils.ClampDegrees360(phaseAngle - currentPhaseAngle);
+
+            if (phaseAngleRate < 0)
+            {
+                phaseAngleRate *= -1;
+                phaseAngleDifference = 360 - phaseAngleDifference;
+            }
+
+
+            return phaseAngleDifference / phaseAngleRate;
+        }
+
+
+        //Computes the time required for the given launch location to rotate under the target orbital plane. 
+        //If the latitude is too high for the launch location to ever actually rotate under the target plane,
+        //returns the time of closest approach to the target plane.
+        //I have a wonderful proof of this formula which this comment is too short to contain.
+        public static double TimeToPlane(CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
+        {
+            double inc = Math.Abs(Vector3d.Angle(target.SwappedOrbitNormal(), launchBody.angularVelocity));
+            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.SwappedOrbitNormal()).normalized;
+            b *= launchBody.Radius * Math.Sin(Math.PI / 180 * launchLatitude) / Math.Tan(Math.PI / 180 * inc);
+            Vector3d c = Vector3d.Cross(target.SwappedOrbitNormal(), launchBody.angularVelocity).normalized;
+            double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(Math.PI / 180 * launchLatitude), 2) - b.sqrMagnitude;
+            if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
+            c *= cMagnitudeSquared;
+            Vector3d a1 = b + c;
+            Vector3d a2 = b - c;
+
+            Vector3d longitudeVector = launchBody.GetSurfaceNVector(0, launchLongitude);
+
+            double angle1 = Math.Abs(Vector3d.Angle(longitudeVector, a1));
+            if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a1), launchBody.angularVelocity) < 0) angle1 = 360 - angle1;
+            double angle2 = Math.Abs(Vector3d.Angle(longitudeVector, a2));
+            if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a2), launchBody.angularVelocity) < 0) angle2 = 360 - angle2;
+
+            double angle = Math.Min(angle1, angle2);
+            return (angle / 360) * launchBody.rotationPeriod;
+        }
     }
 }

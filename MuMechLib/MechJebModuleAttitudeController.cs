@@ -140,7 +140,7 @@ namespace MuMech
                 attitudeDeactivate(null);
                 return rotRef;
             }
-            if ((reference == AttitudeReference.MANEUVER_NODE) && (part.vessel.patchedConicSolver.maneuverNodes.Count == 0))
+            if ((reference == AttitudeReference.MANEUVER_NODE) && (vessel.patchedConicSolver.maneuverNodes.Count == 0))
             {
                 attitudeDeactivate(null);
                 return rotRef;
@@ -160,13 +160,13 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(vesselState.velocityVesselSurfaceUnit, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
-                    fwd = (Target.Position() - part.vessel.GetTransform().position).normalized;
+                    fwd = (Target.Position() - vessel.GetTransform().position).normalized;
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.RELATIVE_VELOCITY:
-                    fwd = Target.RelativeVelocity(part.vessel).normalized;
+                    fwd = Target.RelativeVelocity(vessel).normalized;
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
@@ -183,7 +183,7 @@ namespace MuMech
                     }
                     break;
                 case AttitudeReference.MANEUVER_NODE:
-                    fwd = part.vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(part.vessel.orbit);
+                    fwd = vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit);
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
@@ -224,7 +224,7 @@ namespace MuMech
             Vector3 up, dir = direction;
             if (!attitudeActive || (ang_diff > 45))
             {
-                up = attitudeWorldToReference(-part.vessel.GetTransform().forward, reference);
+                up = attitudeWorldToReference(-vessel.GetTransform().forward, reference);
             }
             else
             {
@@ -306,7 +306,7 @@ namespace MuMech
 
                 // Direction we want to be facing
                 Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
-                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(part.vessel.GetTransform().rotation) * target);
+                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
 
                 Vector3d deltaEuler = new Vector3d(
                                                       (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
@@ -355,7 +355,7 @@ namespace MuMech
                 act.z = Mathf.Clamp((float)act.z, drive_limit * -1, drive_limit);
 
                 // Met is the time in seconds from take off
-                double met = vesselState.time - part.vessel.launchTime;
+                double met = vesselState.time - vessel.launchTime;
 
                 // Reduce effects of controls after launch and returns them gradually
                 // This helps to reduce large wobbles experienced in the first few seconds
@@ -398,7 +398,7 @@ namespace MuMech
                 s.killRot = false;
                 if (attitudeKILLROT)
                 {
-                    attitudeTo(Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
+                    attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
                 }
             }
             else
@@ -417,7 +417,7 @@ namespace MuMech
                 if (!attitudeRollMatters)
                 {
                     //human and computer roll
-                    attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-part.vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
+                    attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
                     _attitudeRollMatters = false;
                 }
             }

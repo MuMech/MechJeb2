@@ -40,16 +40,16 @@ namespace MuMech
                 return;
             }
 
-            if (!part.vessel.ActionGroups[KSPActionGroup.RCS])
+            if (!vessel.ActionGroups[KSPActionGroup.RCS])
             {
-                part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
             }
 
             core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             Vector3d targetVel = Target.Orbit().GetVel();
 
-            Vector3d separation = Target.RelativePosition(part.vessel);
+            Vector3d separation = Target.RelativePosition(vessel);
 
             Vector3d zAxis = (FlightGlobals.fetch.VesselTarget is ModuleDockingNode ? -Target.Transform().forward : Target.Transform().up); //the docking axis
             double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind

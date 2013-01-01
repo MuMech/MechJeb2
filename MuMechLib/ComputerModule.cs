@@ -12,6 +12,11 @@ namespace MuMech
         public MechJebCore core = null;
         public VesselState vesselState = null;
 
+        //conveniences:
+        public Vessel vessel { get { return part.vessel; } }
+        public CelestialBody mainBody { get { return part.vessel.mainBody; } }
+        public Orbit orbit { get { return part.vessel.orbit; } }
+
         public int priority = 0;
 
         public int CompareTo(ComputerModule other)

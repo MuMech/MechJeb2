@@ -30,7 +30,7 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            bool anyNodeExists = (part.vessel.patchedConicSolver.maneuverNodes.Count > 0);
+            bool anyNodeExists = (vessel.patchedConicSolver.maneuverNodes.Count > 0);
 
             if (anyNodeExists)
             {
@@ -116,7 +116,7 @@ namespace MuMech
 
                 if (anyNodeExists && timeReferenceSinceLast)
                 {
-                    UT = part.vessel.patchedConicSolver.maneuverNodes.Last().UT;
+                    UT = vessel.patchedConicSolver.maneuverNodes.Last().UT;
                 }
 
                 switch (timeReference)
@@ -124,21 +124,21 @@ namespace MuMech
                     case TimeReference.NOW:
                         break;
                     case TimeReference.APOAPSIS:
-                        UT = part.vessel.orbit.NextApoapsisTime(UT);
+                        UT = orbit.NextApoapsisTime(UT);
                         break;
                     case TimeReference.PERIAPSIS:
-                        UT = part.vessel.orbit.NextPeriapsisTime(UT);
+                        UT = orbit.NextPeriapsisTime(UT);
                         break;
                     case TimeReference.ASCENDING_NODE:
                         if (Target.Exists())
                         {
-                            UT = part.vessel.orbit.TimeOfAscendingNode(Target.Orbit(), UT);
+                            UT = orbit.TimeOfAscendingNode(Target.Orbit(), UT);
                         }
                         break;
                     case TimeReference.DESCENDING_NODE:
                         if (Target.Exists())
                         {
-                            UT = part.vessel.orbit.TimeOfDescendingNode(Target.Orbit(), UT);
+                            UT = orbit.TimeOfDescendingNode(Target.Orbit(), UT);
                         }
                         break;
                 }
@@ -150,13 +150,13 @@ namespace MuMech
             {
                 double initialT = vesselState.time;
                 double finalT = vesselState.time + 100;
-                Vector3d initalRelPos = part.vessel.orbit.SwappedRelativePositionAtUT(initialT);
-                Vector3d finalRelPos = part.vessel.orbit.SwappedRelativePositionAtUT(finalT);
-                Vector3d knownInitialVel = part.vessel.orbit.SwappedOrbitalVelocityAtUT(initialT);
-                Vector3d knownFinalVel = part.vessel.orbit.SwappedOrbitalVelocityAtUT(finalT);
+                Vector3d initalRelPos = orbit.SwappedRelativePositionAtUT(initialT);
+                Vector3d finalRelPos = orbit.SwappedRelativePositionAtUT(finalT);
+                Vector3d knownInitialVel = orbit.SwappedOrbitalVelocityAtUT(initialT);
+                Vector3d knownFinalVel = orbit.SwappedOrbitalVelocityAtUT(finalT);
 
                 Vector3d computedInitialVel, computedFinalVel;
-                LambertSolver.Solve(initalRelPos, initialT, finalRelPos, finalT, part.vessel.orbit.referenceBody, 0.01,
+                LambertSolver.Solve(initalRelPos, initialT, finalRelPos, finalT, orbit.referenceBody, 0.01,
                     out computedInitialVel, out computedFinalVel);
                 Debug.Log("--");
                 Debug.Log("known initial velocity = " + knownInitialVel);
@@ -167,7 +167,7 @@ namespace MuMech
             if (Input.GetKeyDown(KeyCode.Alpha8))
             {
                 Debug.Log("Maneuver nodes:");
-                foreach (ManeuverNode mn in part.vessel.patchedConicSolver.maneuverNodes)
+                foreach (ManeuverNode mn in vessel.patchedConicSolver.maneuverNodes)
                 {
                     Debug.Log(mn.ToString() + " at " + mn.UT + " - patch PeA = " + mn.patch.PeA + "; nextPatch PeA = " + (mn.nextPatch == null ? -66 : mn.nextPatch.PeA));
                 }
@@ -178,7 +178,7 @@ namespace MuMech
             {
                 Vector3d dV = Vector3d.zero;
 
-                Orbit o = GetPatchAtUT(UT);
+                Orbit o = vessel.GetPatchAtUT(UT);
                 double rad = o.referenceBody.Radius;
 
                 Debug.Log("o.PeA = " + o.PeA);
@@ -229,14 +229,14 @@ namespace MuMech
                         break;
                 }
 
-                PlaceManeuverNode(o, dV, UT);
+                vessel.PlaceManeuverNode(o, dV, UT);
             }
 
             if (GUILayout.Button("Remove ALL nodes"))
             {
-                while (part.vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
                 {
-                    part.vessel.patchedConicSolver.RemoveManeuverNode(part.vessel.patchedConicSolver.maneuverNodes.Last());
+                    vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
                 }
             }
             GUILayout.EndVertical();
@@ -247,37 +247,7 @@ namespace MuMech
         }
 
 
-        public Orbit GetPatchAtUT(double UT)
-        {
-            IEnumerable<ManeuverNode> earlierNodes = part.vessel.patchedConicSolver.maneuverNodes.Where(n => n.UT < UT);
-            Debug.Log("earlierNodes.Count() = " + earlierNodes.Count());
-            Orbit o = part.vessel.orbit;
-            if (earlierNodes.Count() > 0)
-            {
-                o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
-            }
-            Debug.Log("o.PeA = " + o.PeA);
-            while (o.nextPatch != null && o.nextPatch.activePatch && o.nextPatch.StartUT < UT)
-            {
-                Debug.Log("next startUT = " + o.nextPatch.StartUT);
-                o = o.nextPatch;
-                Debug.Log("new PeA = " + o.PeA);
-            }
-            return o;
-        }
 
-
-        //input dV should be in world coordinates
-        public void PlaceManeuverNode(Orbit patch, Vector3d dV, double UT)
-        {
-            //convert a dV in world coordinates into the coordinate system of the maneuver node,
-            //which uses (x, y, z) = (radial+, normal-, prograde)
-            Vector3d nodeDV = new Vector3d(Vector3d.Dot(patch.RadialPlus(UT), dV),
-                                           Vector3d.Dot(-patch.NormalPlus(UT), dV),
-                                           Vector3d.Dot(patch.Prograde(UT), dV));
-            ManeuverNode mn = part.vessel.patchedConicSolver.AddManeuverNode(UT);
-            mn.OnGizmoUpdated(nodeDV, UT);
-        }
 
         public override GUILayoutOption[] FlightWindowOptions()
         {

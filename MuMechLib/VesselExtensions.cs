@@ -26,5 +26,34 @@ namespace MuMech
         {
             return vessel.situation != Vessel.Situations.PRELAUNCH;
         }
+
+
+        public static Orbit GetPatchAtUT(this Vessel vessel, double UT)
+        {
+            IEnumerable<ManeuverNode> earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => n.UT < UT);
+            Orbit o = vessel.orbit;
+            if (earlierNodes.Count() > 0)
+            {
+                o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
+            }
+            while (o.nextPatch != null && o.nextPatch.activePatch && o.nextPatch.StartUT < UT)
+            {
+                o = o.nextPatch;
+            }
+            return o;
+        }
+
+
+        //input dV should be in world coordinates
+        public static void PlaceManeuverNode(this Vessel vessel, Orbit patch, Vector3d dV, double UT)
+        {
+            //convert a dV in world coordinates into the coordinate system of the maneuver node,
+            //which uses (x, y, z) = (radial+, normal-, prograde)
+            Vector3d nodeDV = new Vector3d(Vector3d.Dot(patch.RadialPlus(UT), dV),
+                                           Vector3d.Dot(-patch.NormalPlus(UT), dV),
+                                           Vector3d.Dot(patch.Prograde(UT), dV));
+            ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(UT);
+            mn.OnGizmoUpdated(nodeDV, UT);
+        }
     }
 }

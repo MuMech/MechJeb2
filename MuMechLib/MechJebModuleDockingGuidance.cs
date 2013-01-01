@@ -22,17 +22,17 @@ namespace MuMech
                 return;
             }
 
-            Vector3d relVel = Target.RelativeVelocity(part.vessel);
+            Vector3d relVel = Target.RelativeVelocity(vessel);
 
-            double relVel_x = Vector3d.Dot(relVel, part.vessel.GetTransform().right);
-            double relVel_y = Vector3d.Dot(relVel, part.vessel.GetTransform().forward);
-            double relVel_z = Vector3d.Dot(relVel, part.vessel.GetTransform().up);
+            double relVel_x = Vector3d.Dot(relVel, vessel.GetTransform().right);
+            double relVel_y = Vector3d.Dot(relVel, vessel.GetTransform().forward);
+            double relVel_z = Vector3d.Dot(relVel, vessel.GetTransform().up);
 
-            Vector3d sep = Target.RelativePosition(part.vessel);
+            Vector3d sep = Target.RelativePosition(vessel);
 
-            double sep_x = Vector3d.Dot(sep, part.vessel.GetTransform().right);
-            double sep_y = Vector3d.Dot(sep, part.vessel.GetTransform().forward);
-            double sep_z = Vector3d.Dot(sep, part.vessel.GetTransform().up);
+            double sep_x = Vector3d.Dot(sep, vessel.GetTransform().right);
+            double sep_y = Vector3d.Dot(sep, vessel.GetTransform().forward);
+            double sep_z = Vector3d.Dot(sep, vessel.GetTransform().up);
 
             GUILayout.BeginVertical();
 
@@ -54,9 +54,9 @@ namespace MuMech
             {
                 GUILayout.Label("Status: " + autopilot.status);
                 Vector3d error = core.rcs.targetVelocity - vesselState.velocityVesselOrbit;
-                double error_x = Vector3d.Dot(error, part.vessel.GetTransform().right);
-                double error_y = Vector3d.Dot(error, part.vessel.GetTransform().forward);
-                double error_z = Vector3d.Dot(error, part.vessel.GetTransform().up);
+                double error_x = Vector3d.Dot(error, vessel.GetTransform().right);
+                double error_y = Vector3d.Dot(error, vessel.GetTransform().forward);
+                double error_z = Vector3d.Dot(error, vessel.GetTransform().up);
                 GUILayout.Label("Error X: " + error_x.ToString("F2") + " m/s  [L/J]");
                 GUILayout.Label("Error Y: " + error_y.ToString("F2") + " m/s  [I/K]");
                 GUILayout.Label("Error Z: " + error_z.ToString("F2") + " m/s  [H/N]");

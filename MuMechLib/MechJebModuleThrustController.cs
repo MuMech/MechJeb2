@@ -75,7 +75,7 @@ namespace MuMech
 
                 if (trans_land)
                 {
-                    if (part.vessel.LandedOrSplashed)
+                    if (vessel.LandedOrSplashed)
                     {
                         tmode = TMode.OFF;
                         trans_land = false;
@@ -143,8 +143,8 @@ namespace MuMech
                         //deploy landing gears:
                         if (!trans_land_gears && (minalt < 1000))
                         {
-                            part.vessel.rootPart.SendEvent("LowerLeg");
-                            foreach (Part p in part.vessel.parts)
+                            vessel.rootPart.SendEvent("LowerLeg");
+                            foreach (Part p in vessel.parts)
                             {
                                 if (p is LandingLeg)
                                 {
@@ -174,9 +174,9 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
-                            Vector3 hsdir = Vector3.Exclude(vesselState.up, part.vessel.orbit.GetVel() - part.vessel.mainBody.getRFrmVel(vesselState.CoM));
-                            Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * part.vessel.mainBody.GeeASL);
-                            if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * part.vessel.mainBody.GeeASL) * 2))
+                            Vector3 hsdir = Vector3.Exclude(vesselState.up, orbit.GetVel() - mainBody.getRFrmVel(vesselState.CoM));
+                            Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
+                            if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
                                 tmode = TMode.DIRECT;
                                 trans_spd_act = 100;
@@ -251,7 +251,7 @@ namespace MuMech
 
         float terminalVelocityThrottle()
         {
-            if (vesselState.altitudeASL > part.vessel.mainBody.maxAtmosphereAltitude) return 1.0F;
+            if (vesselState.altitudeASL > mainBody.maxAtmosphereAltitude) return 1.0F;
 
             double velocityRatio = Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) / vesselState.TerminalVelocity();
 
@@ -266,7 +266,7 @@ namespace MuMech
         //limit the throttle if something is close to overheating
         float temperatureSafetyThrottle()
         {
-            float maxTempRatio = part.vessel.parts.Max(p => p.temperature / p.maxTemp);
+            float maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
 
             //reduce throttle as the max temp. ratio approaches 1 within the safety margin
             float tempSafetyMargin = 0.05f;

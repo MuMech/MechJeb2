@@ -53,6 +53,19 @@ namespace MuMech
 
             if (GUILayout.Button("Turn off guidance")) enabled = false;
 
+            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Limit throttle to avoid overheats");
+            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit throttle so as not to exceed terminal velocity");
+            core.thrust.enabled = (core.thrust.limitToPreventOverheats || core.thrust.limitToTerminalVelocity);
+
+            core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
+
+            MechJebModuleAscentComputer autopilot = core.GetComputerModule<MechJebModuleAscentComputer>();
+            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
+            if (autopilot.enabled)
+            {
+                GUILayout.Label("State: " + autopilot.mode.ToString());
+            }
+
             GUILayout.EndVertical();
 
             base.FlightWindowGUI(windowID);
