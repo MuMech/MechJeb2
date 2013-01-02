@@ -314,5 +314,22 @@ namespace MuMech
             if (time2 < time1 && time2 > UT) return time2;
             else return time1;
         }
+
+        //This is a convenience function used by the reentry simulation. It does a binary search for the first UT
+        //in the interval (lowerUT, upperUT) for which condition(UT, relative position, orbital velocity) is true
+        public static double ConditionStartTimeBinarySearch(this Orbit o, double lowerUT, double upperUT, Func<double, Vector3d, Vector3d, bool> condition)
+        {
+            const double PRECISION = 1.0;
+            while (upperUT - lowerUT > PRECISION)
+            {
+                double testUT = (lowerUT + upperUT) / 2;
+                Vector3d relPos = o.SwappedRelativePositionAtUT(testUT);
+                Vector3d vel = o.SwappedOrbitalVelocityAtUT(testUT);
+                
+                if (condition(testUT, relPos, vel)) upperUT = testUT;
+                else lowerUT = testUT;
+            }
+            return (upperUT + lowerUT) / 2;
+        }
     }
 }
