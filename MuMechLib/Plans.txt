@@ -79,7 +79,7 @@ DONE * Add a check that will throttle down to prevent overheats during any sort 
 
 DONE * Split ascent AP path into a separate class & a separate display module to edit ascent paths
         - Then add a type of ascent path that evalutes a user-entered C# or Lua expression
-		- Add a Computer/DisplayModule to provide ascent path guidance on the navball, but no autopilot
+DONE		- Add a Computer/DisplayModule to provide ascent path guidance on the navball, but no autopilot
 
 * Add a guidance version of the docking autopilot that just gives suggested velocities
         - I'm thinking: a Texture2D velocity gauge for each coordinate, with mark for the desired and actual velocities
@@ -89,7 +89,7 @@ DONE * Split ascent AP path into a separate class & a separate display module to
 * Automatic orbital rendezvous and docking
         - Automatic orbital rendezvous can just auto-execute the steps from the Rendezvous Guidance module
 
-* DisplayModule interface to the RCSController 
+* DisplayModule interface to the RCSController
 
 
 

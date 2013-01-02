@@ -1,0 +1,120 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+using System.Threading;
+
+namespace MuMech
+{
+    //When enabled, this ComputerModule periodically runs a FuelFlowSimulation in a separate thread.
+    //It stores the results of the most recent simulation for use by other modules
+    class MechJebModuleStageStats : ComputerModule
+    {
+        public MechJebModuleStageStats(MechJebCore core) : base(core) { }
+
+        public FuelFlowSimulation.Stats[] atmoStats = {};
+        public FuelFlowSimulation.Stats[] vacStats = {};
+
+        protected bool simulationRunning = false;
+        protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+
+        long millisecondsBetweenSimulations;
+
+        public override void OnModuleEnabled() 
+        {
+            millisecondsBetweenSimulations = 0;
+            stopwatch.Start();
+        }
+
+        public override void OnModuleDisabled()
+        {
+            stopwatch.Stop();
+            stopwatch.Reset();
+        }
+
+        public override void OnFixedUpdate()
+        {
+            if (enabled && vessel.isActiveVessel && !simulationRunning)
+            {
+                //We should be running simulations periodically, but one is not running right now. 
+                //Check if enough time has passed since the last one to start a new one:
+                if (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                {
+                    stopwatch.Stop();
+                    stopwatch.Reset();
+
+                    StartSimulation();
+                }
+            }
+        }
+
+        protected void StartSimulation()
+        {
+            simulationRunning = true;
+
+            stopwatch.Start(); //starts a timer that times how long the simulation takes
+
+            //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            FuelFlowSimulation[] sims = {new FuelFlowSimulation(parts), new FuelFlowSimulation(parts)};
+
+            //Run the simulation in a separate thread
+            ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+        }
+
+        protected void RunSimulation(object o)
+        {
+            //Run the simulation
+            FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;
+            FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, 1.0f);
+            FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0f);
+            atmoStats = newAtmoStats;
+            vacStats = newVacStats;
+
+            //see how long the simulation took
+            stopwatch.Stop();
+            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+            stopwatch.Reset();
+
+            //set the delay before the next simulation
+            millisecondsBetweenSimulations = 2 * stopwatch.ElapsedMilliseconds;
+
+            //start the stopwatch that will count off this delay
+            stopwatch.Start();
+
+            simulationRunning = false;
+        }
+
+
+        public override void OnUpdate()
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha9))
+            {
+                Debug.Log("millisecondsBetweenSimulations = " + millisecondsBetweenSimulations);
+                Debug.Log("vacStats.Length = " + vacStats.Length);
+                Debug.Log("atmoStats.Length = " + atmoStats.Length);
+                for (int stage = vacStats.Length - 1; stage >= 0; stage--)
+                {
+                    Debug.Log("---------- Stage " + stage + " ------------");
+                    Debug.Log("VACUUM:");
+                    Debug.Log("initial thrust = " + vacStats[stage].startThrust + ", final thrust = " + vacStats[stage].endThrust);
+                    Debug.Log("initial mass = " + vacStats[stage].startMass + ", final mass = " + vacStats[stage].endMass);
+                    Debug.Log("time = " + vacStats[stage].deltaTime + ", deltaV = " + vacStats[stage].deltaV);
+                    Debug.Log("ATMOSPHERE:");
+                    Debug.Log("initial thrust = " + atmoStats[stage].startThrust + ", final thrust = " + atmoStats[stage].endThrust);
+                    Debug.Log("initial mass = " + atmoStats[stage].startMass + ", final mass = " + atmoStats[stage].endMass);
+                    Debug.Log("time = " + atmoStats[stage].deltaTime + ", deltaV = " + atmoStats[stage].deltaV);
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha7))
+            {
+                List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+                FuelFlowSimulation sim = new FuelFlowSimulation(parts);
+                vacStats = sim.SimulateAllStages(1.0f, 0.0f);
+            }
+        }
+
+    }
+}

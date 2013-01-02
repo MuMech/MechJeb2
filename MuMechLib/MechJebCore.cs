@@ -174,6 +174,13 @@ namespace MuMech
                 return;
             }
 
+            if (Input.GetKeyDown(KeyCode.Alpha8))
+            {
+                MechJebModuleStageStats ss = GetComputerModule<MechJebModuleStageStats>();
+                ss.enabled = !ss.enabled;
+                Debug.Log("set ss.enabled = " + ss.enabled);
+            }
+
             if (modulesUpdated)
             {
                 computerModules.Sort();
