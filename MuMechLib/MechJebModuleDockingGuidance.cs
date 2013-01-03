@@ -15,20 +15,20 @@ namespace MuMech
 
         protected override void FlightWindowGUI(int windowID)
         {
-            if (!Target.Exists())
+            if (!core.target.Exists)
             {
                 GUILayout.Label("Choose a target to dock with");
                 base.FlightWindowGUI(windowID);
                 return;
             }
 
-            Vector3d relVel = Target.RelativeVelocity(vessel);
+            Vector3d relVel = core.target.RelativeVelocity;
 
             double relVel_x = Vector3d.Dot(relVel, vessel.GetTransform().right);
             double relVel_y = Vector3d.Dot(relVel, vessel.GetTransform().forward);
             double relVel_z = Vector3d.Dot(relVel, vessel.GetTransform().up);
 
-            Vector3d sep = Target.RelativePosition(vessel);
+            Vector3d sep = core.target.RelativePosition;
 
             double sep_x = Vector3d.Dot(sep, vessel.GetTransform().right);
             double sep_y = Vector3d.Dot(sep, vessel.GetTransform().forward);

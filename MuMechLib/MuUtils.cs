@@ -23,6 +23,17 @@ namespace MuMech
             }
         }
 
+        //formula for drag seems to be drag force = (1/2) * DragMultiplier * (air density) * (mass * max_drag) * (airspeed)^2
+        //so drag acceleration is (1/2) * DragMultiplier * (air density) * (average max_drag) * (airspeed)^2
+        //where the max_drag average over parts is weighted by the part mass
+        public static Vector3d DragAccel(Vector3d pos, Vector3d orbitVel, double dragCoeffOverMass, CelestialBody body)
+        {
+            double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body));
+            Vector3d airVel = orbitVel - body.getRFrmVel(pos);
+            return -0.5 * FlightGlobals.DragMultiplier * airDensity * dragCoeffOverMass * airVel.magnitude * airVel;
+        }
+
+
         public static float ResourceDensity(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).density;

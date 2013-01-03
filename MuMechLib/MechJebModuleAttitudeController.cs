@@ -133,7 +133,7 @@ namespace MuMech
         {
             Vector3 fwd, up;
             Quaternion rotRef = Quaternion.identity;
-            if (Target.Get() == null &&
+            if (core.target.Target == null &&
                 (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION || reference == AttitudeReference.RELATIVE_VELOCITY))
             {
                 //in target-relative mode, but there's no target:
@@ -160,20 +160,20 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(vesselState.velocityVesselSurfaceUnit, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
-                    fwd = (Target.Position() - vessel.GetTransform().position).normalized;
+                    fwd = (core.target.Position - vessel.GetTransform().position).normalized;
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.RELATIVE_VELOCITY:
-                    fwd = Target.RelativeVelocity(vessel).normalized;
+                    fwd = core.target.RelativeVelocity.normalized;
                     up = Vector3d.Cross(fwd, vesselState.leftOrbit);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
-                    Transform targetTransform = Target.Transform();
-                    if (Target.Get() is ModuleDockingNode)
+                    Transform targetTransform = core.target.Transform;
+                    if (core.target.Target is ModuleDockingNode)
                     {
                         rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
                     }

@@ -20,6 +20,7 @@ namespace MuMech
         public MechJebModuleAttitudeController attitude;
         public MechJebModuleStagingController staging;
         public MechJebModuleThrustController thrust;
+        public MechJebModuleTargetController target;
         public MechJebModuleWarpController warp;
         public MechJebModuleRCSController rcs;
 
@@ -104,8 +105,9 @@ namespace MuMech
             }
 
             attitude = GetComputerModule<MechJebModuleAttitudeController>();
-            thrust = GetComputerModule<MechJebModuleThrustController>();
             staging = GetComputerModule<MechJebModuleStagingController>();
+            thrust = GetComputerModule<MechJebModuleThrustController>();
+            target = GetComputerModule<MechJebModuleTargetController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
             rcs = GetComputerModule<MechJebModuleRCSController>();
 

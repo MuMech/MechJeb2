@@ -13,26 +13,26 @@ namespace MuMech
     {
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 
+        const string TARGET_NAME = "Ascent Path Guidance";
 
         public IAscentPath ascentPath; //other modules can edit this to control what path the guidance uses
-        DirectionTarget target = new DirectionTarget("Ascent Path Guidance");
 
         public override void OnModuleEnabled()
         {
             ascentPath = new DefaultAscentPath();
-            Target.Set(target);
+            core.target.SetDirectionTarget(TARGET_NAME);
         }
 
         public override void OnModuleDisabled()
         {
-            if (Target.Get() == target) Target.Set(null);
+            if (core.target.Name == TARGET_NAME) core.target.Unset();
         }
 
         public override void OnFixedUpdate()
         {
             if (!enabled) return;
 
-            if (Target.Get() != target)
+            if (core.target.Name != TARGET_NAME)
             {
                 enabled = false;
                 return;
@@ -42,7 +42,7 @@ namespace MuMech
 
             double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL);
             Vector3d dir = Math.Cos(angle) * vesselState.east + Math.Sin(angle) * vesselState.up;
-            target.Update(dir);
+            core.target.UpdateDirectionTarget(dir);
         }
 
         protected override void FlightWindowGUI(int windowID)

@@ -9,6 +9,7 @@ namespace MuMech
     class ReentrySimulation
     {
         //parameters of the problem:
+        Orbit initialOrbit;
         double seaLevelAtmospheres;
         double scaleHeight;
         double bodyRadius;
@@ -16,14 +17,14 @@ namespace MuMech
         double dragCoefficient; //massDrag / mass
         Vector3d bodyAngularVelocity;
         IDescentSpeedPolicy descentSpeedPolicy;
-        double radiusLowerBound;
-        double radiusUpperBound;
+        double landedRadius;
+        double aerobrakedRadius;
         double startUT;
 
         Vector3d lat0lon0AtStart;
         Vector3d lat0lon90AtStart;
         Vector3d lat90AtStart;
-        double bodyRotationPeriod;        
+        double bodyRotationPeriod;
 
         const double baseDt = 0.2;
         double dt;
@@ -39,10 +40,11 @@ namespace MuMech
         double maxDragGees;
         double deltaVExpended;
 
-
-        public ReentrySimulation(Vector3d position, Vector3d velocity, double UT, CelestialBody body, double dragCoefficient, 
-            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double coarseness) 
+        public ReentrySimulation(Vector3d position, Vector3d velocity, double UT, CelestialBody body, double dragCoefficient,
+            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double coarseness)
         {
+            initialOrbit = MuUtils.OrbitFromStateVectors(position, velocity, body, UT);
+
             seaLevelAtmospheres = body.atmosphereMultiplier;
             scaleHeight = 1000 * body.atmosphereScaleHeight;
             bodyRadius = body.Radius;
@@ -50,8 +52,8 @@ namespace MuMech
             this.dragCoefficient = dragCoefficient;
             bodyAngularVelocity = body.angularVelocity;
             this.descentSpeedPolicy = descentSpeedPolicy;
-            radiusLowerBound = bodyRadius + endAltitudeASL;
-            radiusUpperBound = bodyRadius + body.maxAtmosphereAltitude;
+            landedRadius = bodyRadius + endAltitudeASL;
+            aerobrakedRadius = bodyRadius + body.maxAtmosphereAltitude;
 
             lat0lon0AtStart = body.GetSurfaceNVector(0, 0);
             lat0lon90AtStart = body.GetSurfaceNVector(0, 90);
@@ -69,16 +71,21 @@ namespace MuMech
         }
 
 
-        void RunSimulation()
+        public Result RunSimulation()
         {
             Result result = new Result();
 
+            if (!OrbitReenters()) { result.outcome = Outcome.NO_REENTRY; return result; }
+
             t = startUT;
+
+            AdvanceToFreefallEnd();
+
             double maxT = t + maxSimulatedTime;
-            while(true)
+            while (true)
             {
-                if (x.magnitude < radiusLowerBound) { result.outcome = Outcome.LANDED; break; }
-                if (x.magnitude > radiusUpperBound) { result.outcome = Outcome.AEROBRAKED; break; }
+                if (Landed()) { result.outcome = Outcome.LANDED; break; }
+                if (Aerobraked()) { result.outcome = Outcome.AEROBRAKED; break; }
                 if (t > maxT) { result.outcome = Outcome.TIMED_OUT; break; }
 
                 RK4Step();
@@ -90,8 +97,65 @@ namespace MuMech
             result.deltaVExpended = deltaVExpended;
             result.endLatitude = Latitude(x, t);
             result.endLongitude = Longitude(x, t);
+
+            return result;
         }
 
+        bool OrbitReenters()
+        {
+            return (initialOrbit.PeR < landedRadius || initialOrbit.PeR < aerobrakedRadius);
+        }
+
+        bool Landed()
+        {
+            return x.magnitude < landedRadius;
+        }
+
+        bool Aerobraked()
+        {
+            return (x.magnitude > aerobrakedRadius) && (Vector3d.Dot(x, v) > 0);
+        }
+
+        void AdvanceToFreefallEnd()
+        {
+            t = FindFreefallEndTime();
+            x = initialOrbit.SwappedRelativePositionAtUT(t);
+            v = initialOrbit.SwappedOrbitalVelocityAtUT(t);
+        }
+
+        //This is a convenience function used by the reentry simulation. It does a binary search for the first UT
+        //in the interval (lowerUT, upperUT) for which condition(UT, relative position, orbital velocity) is true
+        double FindFreefallEndTime()
+        {
+            double lowerUT = t;
+            double upperUT = initialOrbit.NextPeriapsisTime(t);
+
+            const double PRECISION = 1.0;
+            while (upperUT - lowerUT > PRECISION)
+            {
+                double testUT = (upperUT + lowerUT) / 2;
+                if (FreefallEnded(testUT)) upperUT = testUT;
+                else lowerUT = testUT;
+            }
+            return (upperUT + lowerUT) / 2;
+        }
+
+        //Freefall orbit ends when either
+        // - we enter the atmosphere, or
+        // - our vertical velocity is negative and either
+        //    - we've landed or
+        //    - the descent speed policy says to start braking
+        bool FreefallEnded(double UT)
+        {
+            Vector3d pos = initialOrbit.SwappedRelativePositionAtUT(UT);
+            Vector3d surfaceVelocity = SurfaceVelocity(pos, initialOrbit.SwappedOrbitalVelocityAtUT(UT));
+
+            if (pos.magnitude < aerobrakedRadius) return true;
+            if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;
+            if (pos.magnitude < landedRadius) return true;
+            if (surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
+            return false;
+        }
 
         //one time step of RK4:
         void RK4Step()
@@ -131,7 +195,7 @@ namespace MuMech
             }
         }
 
-        Vector3d TotalAccel(Vector3d pos, Vector3d vel) 
+        Vector3d TotalAccel(Vector3d pos, Vector3d vel)
         {
             return GravAccel(pos) + DragAccel(pos, vel);
         }
@@ -143,9 +207,13 @@ namespace MuMech
 
         Vector3d DragAccel(Vector3d pos, Vector3d vel)
         {
-            Vector3d airRotationVelocity = Vector3d.Cross(bodyAngularVelocity, pos);
-            Vector3d airVel = vel - airRotationVelocity;
+            Vector3d airVel = SurfaceVelocity(pos, vel);
             return -0.5 * FlightGlobals.DragMultiplier * dragCoefficient * AirDensity(pos) * airVel.sqrMagnitude * airVel.normalized;
+        }
+
+        Vector3d SurfaceVelocity(Vector3d pos, Vector3d vel)
+        {
+            return vel - Vector3d.Cross(bodyAngularVelocity, pos);
         }
 
         double AirDensity(Vector3d pos)
@@ -168,20 +236,20 @@ namespace MuMech
         }
 
 
-        //An IDescentSpeedPolicy describes a strategy for reducing your speed as a function of altitude
+        //An IDescentSpeedPolicy describes a strategy for doing the brakinb burn.
         //while landing. The function MaxAllowedSpeed is supposed to compute the maximum allowed speed
-        //as a function of (body-relative) position and velocity. This lets the ReentrySimulator simulate
-        //the descent of a vessel following this policy.
+        //as a function of body-relative position and rotating frame, surface-relative velocity. 
+        //This lets the ReentrySimulator simulate the descent of a vessel following this policy.
         //
         //Note: the IDescentSpeedPolicy object passed into the simulation will be used in the separate simulation
         //thread. It must not point to mutable objects that may change over the course of the simulation. Similarly,
         //you must be sure not to modify the IDescentSpeedPolicy object itself after passing it to the simulation.
         public interface IDescentSpeedPolicy
         {
-            double MaxAllowedSpeed(Vector3d pos, Vector3d vel);
+            double MaxAllowedSpeed(Vector3d pos, Vector3d surfaceVel);
         }
 
-        public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT }
+        public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY }
 
         public struct Result
         {

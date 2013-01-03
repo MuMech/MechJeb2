@@ -25,6 +25,8 @@ namespace MuMech
         public double trans_land_touchdown_speed = 0.5;
         public bool limitToTerminalVelocity = false;
         public bool limitToPreventOverheats = false;
+        public bool limitAcceleration = false;
+        public double maxAcceleration = double.MaxValue;
 
 
         private bool tmode_changed = false;
@@ -240,16 +242,22 @@ namespace MuMech
 
             if (limitToTerminalVelocity)
             {
-                s.mainThrottle = Mathf.Min(s.mainThrottle, terminalVelocityThrottle());
+                s.mainThrottle = Mathf.Min(s.mainThrottle, TerminalVelocityThrottle());
             }
 
             if (limitToPreventOverheats)
             {
-                s.mainThrottle = Mathf.Min(s.mainThrottle, temperatureSafetyThrottle());
+                s.mainThrottle = Mathf.Min(s.mainThrottle, TemperatureSafetyThrottle());
+            }
+
+            if (limitAcceleration)
+            {
+                s.mainThrottle = Mathf.Min(s.mainThrottle, AccelerationLimitedThrottle());
             }
         }
 
-        float terminalVelocityThrottle()
+        //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
+        float TerminalVelocityThrottle()
         {
             if (vesselState.altitudeASL > mainBody.maxAtmosphereAltitude) return 1.0F;
 
@@ -263,8 +271,8 @@ namespace MuMech
         }
 
 
-        //limit the throttle if something is close to overheating
-        float temperatureSafetyThrottle()
+        //a throttle setting that throttles down if something is close to overheating
+        float TemperatureSafetyThrottle()
         {
             float maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
 
@@ -272,6 +280,13 @@ namespace MuMech
             float tempSafetyMargin = 0.05f;
             if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
             else return (1 - maxTempRatio) / tempSafetyMargin;
+        }
+        
+        //The throttle setting that will give an acceleration of maxAcceleration
+        float AccelerationLimitedThrottle()
+        {
+            double throttleForMaxAccel = (maxAcceleration - vesselState.minThrustAccel) / (vesselState.maxThrustAccel - vesselState.minThrustAccel);
+            return Mathf.Clamp((float)throttleForMaxAccel, 0, 1);
         }
 
         public override void OnUpdate()

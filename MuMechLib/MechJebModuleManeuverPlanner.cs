@@ -140,15 +140,15 @@ namespace MuMech
                         UT = o.NextPeriapsisTime(UT);
                         break;
                     case TimeReference.ASCENDING_NODE:
-                        if (Target.Exists())
+                        if (core.target.Exists)
                         {
-                            UT = o.TimeOfAscendingNode(Target.Orbit(), UT);
+                            UT = o.TimeOfAscendingNode(core.target.Orbit, UT);
                         }
                         break;
                     case TimeReference.DESCENDING_NODE:
-                        if (Target.Exists())
+                        if (core.target.Exists)
                         {
-                            UT = o.TimeOfDescendingNode(Target.Orbit(), UT);
+                            UT = o.TimeOfDescendingNode(core.target.Orbit, UT);
                         }
                         break;
                     case TimeReference.NINETY_BEFORE_AP:
@@ -191,28 +191,28 @@ namespace MuMech
                     case Operation.PLANE:
                         if (planeMatchNode == Node.ASCENDING)
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, Target.Orbit(), UT, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, core.target.Orbit, UT, out UT);
                         }
                         else
                         {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, Target.Orbit(), UT, out UT);
+                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, core.target.Orbit, UT, out UT);
                         }
                         break;
 
                     case Operation.TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, Target.Orbit(), vesselState.time, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, vesselState.time, out UT);
                         break;
 
                     case Operation.COURSE_CORRECTION:
-                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, Target.Orbit());
+                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, core.target.Orbit);
                         break;
 
                     case Operation.INTERPLANETARY_TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, Target.Orbit(), out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.Orbit, out UT);
                         break;
 
                     case Operation.LAMBERT:
-                        dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, Target.Orbit(), UT + interceptInterval);
+                        dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.Orbit, UT + interceptInterval);
                         break;
                 }
 

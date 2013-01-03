@@ -12,7 +12,7 @@ namespace MuMech
 
         protected override void FlightWindowGUI(int windowID)
         {
-            if (!Target.Exists())
+            if (!core.target.Exists)
             {
                 GUILayout.Label("Select a target to rendezvous with.");
                 base.FlightWindowGUI(windowID);
@@ -26,19 +26,19 @@ namespace MuMech
             double leadTime = 30;
 
             GUILayout.Label("First, bring your relative inclination to zero by aligning your orbital plane with the target's orbital plane:");
-            GUILayout.Label("Relative inclination: " + orbit.RelativeInclination(Target.Orbit()).ToString("F2") + " degrees");
+            GUILayout.Label("Relative inclination: " + orbit.RelativeInclination(core.target.Orbit).ToString("F2") + " degrees");
 
             if (GUILayout.Button("Align Planes"))
             {
                 double UT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, Target.Orbit(), vesselState.time, out UT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.Orbit, vesselState.time, out UT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
-            double phasingOrbitRadius = 0.9 * Target.Orbit().PeR;
+            double phasingOrbitRadius = 0.9 * core.target.Orbit.PeR;
             double phasingOrbitAltitudeKm = (phasingOrbitRadius - mainBody.Radius) / 1000.0;
             GUILayout.Label("Next, establish a circular phasing orbit just beneath the target orbit.");
-            GUILayout.Label("Target orbit: " + (Target.Orbit().PeA / 1000).ToString("F0") + "km x " + (Target.Orbit().ApA / 1000).ToString("F0") + "km");
+            GUILayout.Label("Target orbit: " + (core.target.Orbit.PeA / 1000).ToString("F0") + "km x " + (core.target.Orbit.ApA / 1000).ToString("F0") + "km");
             GUILayout.Label("Suggested phasing orbit: " + phasingOrbitAltitudeKm.ToString("F0") + "km x " + phasingOrbitAltitudeKm.ToString("F0") + "km");
             GUILayout.Label("Current orbit: " + (orbit.PeA / 1000).ToString("F0") + "km x " + (orbit.ApA / 1000).ToString("F0") + "km");
 
@@ -77,20 +77,20 @@ namespace MuMech
             if (GUILayout.Button("Intercept with Hohmann transfer"))
             {
                 double UT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, Target.Orbit(), vesselState.time, out UT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.Orbit, vesselState.time, out UT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
-            double closestApproachTime =  orbit.NextClosestApproachTime(Target.Orbit(), vesselState.time);
+            double closestApproachTime = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
 
             GUILayout.Label("Once on a transfer trajectory, match orbits by zeroing out your relative velocity at closest approach:");
             GUILayout.Label("Time until closest approach: " + (closestApproachTime - vesselState.time).ToString("F0") + "s");
-            GUILayout.Label("Separation at closest approach: " + orbit.Separation(Target.Orbit(), closestApproachTime).ToString("F0") + "m");
+            GUILayout.Label("Separation at closest approach: " + orbit.Separation(core.target.Orbit, closestApproachTime).ToString("F0") + "m");
 
             if (GUILayout.Button("Kill relvel at closest approach"))
             {
                 double UT = closestApproachTime;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, Target.Orbit());
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
@@ -100,7 +100,7 @@ namespace MuMech
             {
                 double UT = vesselState.time;
                 double interceptUT = UT + 100;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, Target.Orbit(), interceptUT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.Orbit, interceptUT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 

@@ -34,7 +34,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!Target.Exists())
+            if (!core.target.Exists)
             {
                 enabled = false;
                 return;
@@ -47,11 +47,11 @@ namespace MuMech
 
             core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
-            Vector3d targetVel = Target.Orbit().GetVel();
+            Vector3d targetVel = core.target.Orbit.GetVel();
 
-            Vector3d separation = Target.RelativePosition(vessel);
+            Vector3d separation = core.target.RelativePosition;
 
-            Vector3d zAxis = Target.DockingAxis();
+            Vector3d zAxis = core.target.DockingAxis;
             double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             Vector3d lateralSep = Vector3d.Exclude(zAxis, separation);
 

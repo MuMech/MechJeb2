@@ -216,7 +216,6 @@ namespace MuMech
         float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
         HashSet<FuelNode> sourceNodes = new HashSet<FuelNode>();  //a set of FuelNodes that this node could draw fuel or resources from (for resources that use the ResourceFlowMode STACK_PRIORITY_SEARCH).
-        Dictionary<FuelNode, bool> drainSourceBeforeSelf = new Dictionary<FuelNode, bool>(); //for each source node, whether to drain from it before this node
 
         public float maxThrust = 0;     //max thrust of this part
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
@@ -292,7 +291,6 @@ namespace MuMech
                 if (p is FuelLine && ((FuelLine)p).target == part)
                 {
                     sourceNodes.Add(nodeLookup[p]);
-                    drainSourceBeforeSelf[nodeLookup[p]] = DrainFromSourceBeforeSelf(part, p);
                 }
             }
 
@@ -302,47 +300,23 @@ namespace MuMech
                 //decide if it's possible to draw fuel through this node:
                 if (attachNode.attachedPart != null                            //if there is a part attached here            
                     && attachNode.nodeType == AttachNode.NodeType.Stack        //and the attached part is stacked (rather than surface mounted)
-                    && (attachNode.attachedPart.fuelCrossFeed                  //and the attached part allows fuel flow
-                        || attachNode.attachedPart is FuelTank)                //    or the attached part is a fuel tank
+                    && attachNode.attachedPart.fuelCrossFeed                   //and the attached part allows fuel flow
                     && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
                          && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
                 {
                     sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
-                    drainSourceBeforeSelf[nodeLookup[attachNode.attachedPart]] = DrainFromSourceBeforeSelf(part, attachNode.attachedPart);
                 }
             }
 
 
-            //engines and fuel lines are always allowed to draw fuel from their parents
-            if ((part is FuelLine || part.HasModule<ModuleEngines>()) && part.parent != null)
+            bool isFuelTank = false;
+            foreach (PartResource r in part.Resources)
             {
-                sourceNodes.Add(nodeLookup[part.parent]);
-                drainSourceBeforeSelf[nodeLookup[part.parent]] = DrainFromSourceBeforeSelf(part, part.parent);
-            }
-        }
-
-        //If we still have fuel, don't drain through the parent unless the parent node is a stack node.
-        //For example, a fuel tank radial mounted to a parent fuel tank will drain itself before starting to drain its parent.
-        //This is in contrast to the stacked case, where a fuel tank will drain the parent it is stacked under before draining itself.
-        //This just seems to be an idiosyncracy of the KSP fuel flow system, which we faithfully simulate.
-        bool DrainFromSourceBeforeSelf(Part part, Part source)
-        {
-            if (part.parent != source) return true; //we have no qualms about draining non-parents before ourselves
-            if (part.parent == null) return true; //so that the next line doesn't cause an error
-
-            foreach (AttachNode attachNode in part.parent.attachNodes)
-            {
-                //if we are attached to the parent by a non-stack node, it's not cool to draw fuel from them
-                //(unless we have no fuel of our own. that case was handled above.) 
-                if (attachNode.attachedPart == part && attachNode.nodeType != AttachNode.NodeType.Stack) return false;
+                if (r.maxAmount > 0 && r.info.name != "ElectricCharge") isFuelTank = true;
             }
 
-            //we only reach here if we have fuel, and source == parent, and parent != null, and we are not attached to the parent by a non-stack node
-            //that is, we only reach here if we have fuel, and source == parent, and we are attached to the parent by a stack node
-            //In this case it's OK to draw fuel from the parent.
-            return true;
+            if (!isFuelTank && part.parent != null) sourceNodes.Add(nodeLookup[part.parent]);
         }
-
 
         //call this when a node no longer exists, so that this node knows that it's no longer a valid source
         public void RemoveSourceNode(FuelNode n)
@@ -505,12 +479,8 @@ namespace MuMech
             {
                 if (!visited.Contains(n) && n.CanSupplyResourceRecursive(type, newVisited))
                 {
-                    //only drain from n if we're allowed to drain n before ourself, or if we ourself are already drained
-                    if (resources[type] < DRAINED || drainSourceBeforeSelf[n])
-                    {
-                        n.AssignFuelDrainRateRecursive(type, amount, newVisited);
-                        return;
-                    }
+                    n.AssignFuelDrainRateRecursive(type, amount, newVisited);
+                    return;
                 }
             }
 
