@@ -176,11 +176,16 @@ namespace MuMech
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha8))
+            if (Input.GetKeyDown(KeyCode.Alpha0))
             {
-                MechJebModuleStageStats ss = GetComputerModule<MechJebModuleStageStats>();
-                ss.enabled = !ss.enabled;
-                Debug.Log("set ss.enabled = " + ss.enabled);
+                MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
+                p.enabled = !p.enabled;
+                Debug.Log("landing predictions enabled = " + p.enabled);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha9))
+            {
+                target.PickPositionTargetOnMap();
             }
 
             if (modulesUpdated)
@@ -271,6 +276,12 @@ namespace MuMech
                     if (module.enabled) module.DrawGUI(windowIDbase + wid, HighLogic.LoadedSceneIsEditor);
                     wid++;
                 }
+            }
+
+            MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
+            if (p.result.trajectory != null)
+            {
+                p.result.trajectory.DrawOnMap(1, Color.cyan, false, true, Color.blue);
             }
         }
 

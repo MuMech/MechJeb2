@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using UnityEngine;
 
 namespace MuMech
@@ -103,6 +104,17 @@ namespace MuMech
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            Type thisType = this.GetType();
+            foreach (FieldInfo f in thisType.GetFields())
+            {
+                foreach(MechJebField attr in f.GetCustomAttributes(typeof(MechJebField), true))
+                {
+                    string settingsName = thisType.Name + "." + f.Name;
+                    if ((attr.type & PersistenceType.GLOBAL) != 0) global.AddValue(settingsName, f.GetValue(this));
+                    if ((attr.type & PersistenceType.LOCAL) != 0) local.AddValue(settingsName, f.GetValue(this));
+                    if ((attr.type & PersistenceType.TYPE) != 0) type.AddValue(settingsName, f.GetValue(this));
+                }
+            }
         }
 
         public virtual void OnDestroy()
@@ -113,5 +125,15 @@ namespace MuMech
         {
             MonoBehaviour.print(s);
         }
+    }
+
+    public enum PersistenceType { LOCAL = 1, TYPE = 2, GLOBAL = 4 }
+    
+    [AttributeUsage(AttributeTargets.Field)]
+    public class MechJebField : Attribute
+    {
+        public PersistenceType type;
+
+        public MechJebField(PersistenceType type) { this.type = type; }
     }
 }

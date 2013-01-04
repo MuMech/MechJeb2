@@ -2,26 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 using System.Threading;
+using UnityEngine;
 
 namespace MuMech
 {
-    //When enabled, this ComputerModule periodically runs a FuelFlowSimulation in a separate thread.
-    //It stores the results of the most recent simulation for use by other modules
-    class MechJebModuleStageStats : ComputerModule
-    {
-        public MechJebModuleStageStats(MechJebCore core) : base(core) { }
+    class MechJebModuleLandingPredictions : ComputerModule
+    {    
+        public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
 
-        public FuelFlowSimulation.Stats[] atmoStats = {};
-        public FuelFlowSimulation.Stats[] vacStats = {};
+        public ReentrySimulation.Result result;
+
 
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-
         long millisecondsBetweenSimulations;
 
-        public override void OnModuleEnabled() 
+        public override void OnModuleEnabled()
         {
             millisecondsBetweenSimulations = 0;
             stopwatch.Start();
@@ -55,22 +52,21 @@ namespace MuMech
 
             stopwatch.Start(); //starts a timer that times how long the simulation takes
 
-            //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
-            FuelFlowSimulation[] sims = {new FuelFlowSimulation(parts), new FuelFlowSimulation(parts)};
+            Orbit o = vessel.orbit;
+            if (vessel.patchedConicSolver.maneuverNodes.Count() > 0) o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
+            ReentrySimulation sim = new ReentrySimulation(o, vesselState.time, vesselState.massDrag / vesselState.mass, null, 0, 1);
 
             //Run the simulation in a separate thread
-            ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+            ThreadPool.QueueUserWorkItem(RunSimulation, sim);
         }
 
         protected void RunSimulation(object o)
         {
-            //Run the simulation
-            FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;
-            FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, 1.0f);
-            FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0f);
-            atmoStats = newAtmoStats;
-            vacStats = newVacStats;
+            ReentrySimulation sim = (ReentrySimulation)o;
+
+            ReentrySimulation.Result newResult = sim.RunSimulation();
+
+            result = newResult;
 
             //see how long the simulation took
             stopwatch.Stop();

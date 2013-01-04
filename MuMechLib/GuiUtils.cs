@@ -140,5 +140,83 @@ namespace MuMech
             return parsedSomething;
         }
 
+
+        public static bool MouseIsOverWindow(MechJebCore core)
+        {
+            //try to check if the mouse is over any active displaymodule
+            foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
+            {
+                if (m.enabled && m.flightWindowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static Coordinates GetMouseCoordinates(CelestialBody body)
+        {
+            Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
+            mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
+            Vector3d relOrigin = mouseRay.origin - body.position;
+            Vector3d relSurfacePosition;
+            if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, body.Radius, out relSurfacePosition))
+            {
+                Vector3d surfacePoint = body.position + relSurfacePosition;
+                return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+            }
+            else
+            {
+                return null;
+            }
+        }
+
     }
+
+    public class Coordinates
+    {
+        public double latitude;
+        public double longitude;
+
+        public Coordinates(double latitude, double longitude)
+        {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
+        {
+            double clampedLongitude = MuUtils.ClampDegrees180(longitude);
+            return latitude.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
+                + clampedLongitude.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
+        }
+
+        public string ToStringDecimal(bool newline = false, int precision = 3)
+        {
+            return ToStringDecimal(latitude, longitude, newline, precision);
+        }
+
+        public static string ToStringDMS(double latitude, double longitude, bool newline = false)
+        {
+            double clampedLongitude = MuUtils.ClampDegrees180(longitude);
+            return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
+                 + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
+        }
+
+        public string ToStringDMS(bool newline = false)
+        {
+            return ToStringDMS(latitude, longitude, newline);
+        }
+
+        public static string AngleToDMS(double angle)
+        {
+            int degrees = (int)Math.Floor(Math.Abs(angle));
+            int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
+            int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
+
+            return String.Format("{0:0}° {1:0}' {2:0}\"", degrees, minutes, seconds);
+        }
+    }
+
 }

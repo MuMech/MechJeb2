@@ -32,6 +32,8 @@ namespace MuMech
 
         bool wasActiveVessel = false;
 
+        public bool pickingPositionTarget = false;
+
         ////////////////////////
         // EXTERNAL INTERFACE //
         ////////////////////////
@@ -56,6 +58,19 @@ namespace MuMech
             Set(new DirectionTarget(name));
         }
 
+        public void PickPositionTargetOnMap()
+        {
+            pickingPositionTarget = true;
+            MapView.EnterMapView();
+            ScreenMessages.PostScreenMessage("Click to select a target on " + mainBody.name + "'s surface", 3.0f, ScreenMessageStyle.UPPER_CENTER);
+        }
+
+        public void StopPickPositionTargetOnMap()
+        {
+            pickingPositionTarget = false;
+        }
+
+
         public void Unset()
         {
             Set(null);
@@ -75,7 +90,7 @@ namespace MuMech
             }
         }
 
-        public ITargetable Target 
+        public ITargetable Target
         {
             get { return target; }
         }
@@ -126,12 +141,13 @@ namespace MuMech
         }
 
 
-
-        //Internal functions:
+        ////////////////////////
+        // Internal functions //
+        ////////////////////////
 
         public override void OnStart(PartModule.StartState state)
-        {           
-            RenderingManager.AddToPostDrawQueue(1, DrawMapViewTarget);
+        {
+            RenderingManager.AddToPostDrawQueue(1, DoMapView);
         }
 
         public override void OnFixedUpdate()
@@ -146,23 +162,68 @@ namespace MuMech
             if (target != FlightGlobals.fetch.VesselTarget) target = FlightGlobals.fetch.VesselTarget;
 
             //Update targets that need updating:
-            if(target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
-            else if(target is PositionTarget) ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
+            if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
+            else if (target is PositionTarget) ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
 
             wasActiveVessel = vessel.isActiveVessel;
+        }
+
+        public override void OnUpdate()
+        {
+            if (pickingPositionTarget && !GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null) Screen.showCursor = false;
+            else Screen.showCursor = true;
+        }
+
+        void DoMapView()
+        {
+            DoCoordinatePicking();
+
+            DrawMapViewTarget();
+        }
+
+        void DoCoordinatePicking()
+        {
+            if (pickingPositionTarget && !MapView.MapIsEnabled) pickingPositionTarget = false;
+
+            if (!pickingPositionTarget) return;
+
+            if (MapView.MapIsEnabled && vessel.isActiveVessel)
+            {
+                if (!GuiUtils.MouseIsOverWindow(core))
+                {
+                    Coordinates mouseCoords = GuiUtils.GetMouseCoordinates(mainBody);
+
+                    if (mouseCoords != null)
+                    {
+                        GLUtils.DrawMapViewGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f));
+                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal());
+
+                        if (Input.GetMouseButtonDown(0))
+                        {
+                            SetPositionTarget(mainBody, mouseCoords.latitude, mouseCoords.longitude);
+                            pickingPositionTarget = false;
+                        }
+                    }
+                }
+            }
         }
 
         void DrawMapViewTarget()
         {
             if (!MapView.MapIsEnabled) return;
             if (!vessel.isActiveVessel || vessel.GetMasterMechJeb() != core) return;
+
             if (target == null) return;
             if (!(target is PositionTarget)) return;
             if (target is DirectionTarget) return;
 
             GLUtils.DrawMapViewGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red);
         }
+
+
     }
+
+
 
 
     public class PositionTarget : ITargetable

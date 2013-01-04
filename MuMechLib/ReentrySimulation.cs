@@ -20,6 +20,7 @@ namespace MuMech
         double landedRadius;
         double aerobrakedRadius;
         double startUT;
+        CelestialBody mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
 
         Vector3d lat0lon0AtStart;
         Vector3d lat0lon90AtStart;
@@ -39,12 +40,15 @@ namespace MuMech
         //Accumulated results
         double maxDragGees;
         double deltaVExpended;
+        Trajectory trajectory;
 
-        public ReentrySimulation(Vector3d position, Vector3d velocity, double UT, CelestialBody body, double dragCoefficient,
+        public ReentrySimulation(Orbit orbit, double UT, double dragCoefficient,
             IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double coarseness)
         {
-            initialOrbit = MuUtils.OrbitFromStateVectors(position, velocity, body, UT);
+            //make a separate Orbit instance for ourselves:
+            initialOrbit = MuUtils.OrbitFromStateVectors(orbit.SwappedAbsolutePositionAtUT(UT), orbit.SwappedOrbitalVelocityAtUT(UT), orbit.referenceBody, UT);
 
+            CelestialBody body = orbit.referenceBody;
             seaLevelAtmospheres = body.atmosphereMultiplier;
             scaleHeight = 1000 * body.atmosphereScaleHeight;
             bodyRadius = body.Radius;
@@ -54,20 +58,22 @@ namespace MuMech
             this.descentSpeedPolicy = descentSpeedPolicy;
             landedRadius = bodyRadius + endAltitudeASL;
             aerobrakedRadius = bodyRadius + body.maxAtmosphereAltitude;
-
+            mainBody = body;
+            
             lat0lon0AtStart = body.GetSurfaceNVector(0, 0);
             lat0lon90AtStart = body.GetSurfaceNVector(0, 90);
             lat90AtStart = body.GetSurfaceNVector(90, 0);
             bodyRotationPeriod = body.rotationPeriod;
-
+            
             dt = baseDt * coarseness;
-
-            x = position - body.position;
-            v = velocity;
+            
+            x = initialOrbit.SwappedRelativePositionAtUT(UT);
+            v = initialOrbit.SwappedOrbitalVelocityAtUT(UT);
             startUT = UT;
-
+            
             maxDragGees = 0;
             deltaVExpended = 0;
+            trajectory = new Trajectory();
         }
 
 
@@ -90,6 +96,7 @@ namespace MuMech
 
                 RK4Step();
                 LimitSpeed();
+                RecordTrajectory();
             }
 
             result.endUT = t;
@@ -97,7 +104,7 @@ namespace MuMech
             result.deltaVExpended = deltaVExpended;
             result.endLatitude = Latitude(x, t);
             result.endLongitude = Longitude(x, t);
-
+            result.trajectory = trajectory;
             return result;
         }
 
@@ -153,14 +160,14 @@ namespace MuMech
             if (pos.magnitude < aerobrakedRadius) return true;
             if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;
             if (pos.magnitude < landedRadius) return true;
-            if (surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
+            if (descentSpeedPolicy != null && surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
             return false;
         }
 
         //one time step of RK4:
         void RK4Step()
         {
-            maxDragGees = Math.Max(maxDragGees, DragAccel(x, v).magnitude) / 9.81f;
+            maxDragGees = Math.Max(maxDragGees, DragAccel(x, v).magnitude / 9.81f);
 
             Vector3d dv1 = dt * TotalAccel(x, v);
             Vector3d dx1 = dt * v;
@@ -194,6 +201,19 @@ namespace MuMech
                 v *= maxAllowedSpeed / v.magnitude;
             }
         }
+
+        void RecordTrajectory()
+        {
+            trajectory.Add(new Trajectory.Point
+                {
+                    body = mainBody,
+                    latitude = Latitude(x, t),
+                    longitude = Longitude(x, t),
+                    radius = x.magnitude,
+                    UT = t
+                });
+        }
+
 
         Vector3d TotalAccel(Vector3d pos, Vector3d vel)
         {
@@ -230,11 +250,10 @@ namespace MuMech
 
         double Longitude(Vector3d pos, double UT)
         {
-            double ret = 180 / Math.PI * Math.Atan2(Vector3d.Dot(pos.normalized, lat90AtStart), Vector3d.Dot(pos.normalized, lat0lon90AtStart));
+            double ret = 180 / Math.PI * Math.Atan2(Vector3d.Dot(pos.normalized, lat0lon90AtStart), Vector3d.Dot(pos.normalized, lat0lon0AtStart));
             ret -= 360 * (UT - startUT) / bodyRotationPeriod;
             return MuUtils.ClampDegrees180(ret);
         }
-
 
         //An IDescentSpeedPolicy describes a strategy for doing the brakinb burn.
         //while landing. The function MaxAllowedSpeed is supposed to compute the maximum allowed speed
@@ -259,6 +278,61 @@ namespace MuMech
             public double endLongitude;
             public double maxDragGees;
             public double deltaVExpended;
+            public Trajectory trajectory;
+        }
+
+        //A trajectory is a set of position vs. time data points, where the positions are 
+        //stored as latitudes, longitudes, and altitudes.
+        public class Trajectory
+        {
+            public struct Point
+            {
+                public CelestialBody body;
+                public double UT;
+                public double latitude;
+                public double longitude;
+                public double radius;
+
+                public Vector3d AsVector()
+                {
+                    return body.position + radius * body.GetSurfaceNVector(latitude, longitude);
+                }
+
+                public Vector3d AsVectorWithoutRotation(double now)
+                {
+                    double unrotatedLongitude = MuUtils.ClampDegrees360(longitude + 360 * (UT - now) / body.rotationPeriod);
+                    return body.position + radius * body.GetSurfaceNVector(latitude, unrotatedLongitude);
+                }
+            }
+
+            public List<Point> points = new List<Point>();
+
+            public void Add(Point p) { points.Add(p); }
+
+            public void DrawOnMap(double timeStep, Color c, bool dashed, bool drawLandingMark, Color landingMarkColor)
+            {
+                if (points.Count() == 0) return;
+
+                if (drawLandingMark)
+                {
+                    Point last = points.Last();
+                    GLUtils.DrawMapViewGroundMarker(last.body, last.latitude, last.longitude, landingMarkColor, 60);
+                }
+
+                List<Vector3d> drawnPoints = new List<Vector3d>();
+                double now = Planetarium.GetUniversalTime();
+                double lastUT = Double.MinValue;
+                foreach (Point p in points)
+                {
+                    if (p.UT > lastUT + timeStep)
+                    {
+                        drawnPoints.Add(p.AsVectorWithoutRotation(now));
+                        lastUT = p.UT;
+                    }
+                }
+
+                GLUtils.DrawPath(points[0].body, drawnPoints.ToArray(), c, dashed);
+            }
         }
     }
 }
