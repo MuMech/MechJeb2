@@ -9,7 +9,7 @@ namespace MuMech
     class ReentrySimulation
     {
         //parameters of the problem:
-        Orbit initialOrbit;
+        bool bodyHasAtmosphere;
         double seaLevelAtmospheres;
         double scaleHeight;
         double bodyRadius;
@@ -22,10 +22,9 @@ namespace MuMech
         double startUT;
         CelestialBody mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
 
-        Vector3d lat0lon0AtStart;
-        Vector3d lat0lon90AtStart;
-        Vector3d lat90AtStart;
-        double bodyRotationPeriod;
+        bool orbitReenters;
+
+        ReferenceFrame referenceFrame;
 
         const double baseDt = 0.2;
         double dt;
@@ -40,15 +39,13 @@ namespace MuMech
         //Accumulated results
         double maxDragGees;
         double deltaVExpended;
-        Trajectory trajectory;
+        List<AbsoluteVector> trajectory;
 
-        public ReentrySimulation(Orbit orbit, double UT, double dragCoefficient,
+        public ReentrySimulation(Orbit initialOrbit, double UT, double dragCoefficient,
             IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double coarseness)
         {
-            //make a separate Orbit instance for ourselves:
-            initialOrbit = MuUtils.OrbitFromStateVectors(orbit.SwappedAbsolutePositionAtUT(UT), orbit.SwappedOrbitalVelocityAtUT(UT), orbit.referenceBody, UT);
-
-            CelestialBody body = orbit.referenceBody;
+            CelestialBody body = initialOrbit.referenceBody;
+            bodyHasAtmosphere = body.atmosphere;
             seaLevelAtmospheres = body.atmosphereMultiplier;
             scaleHeight = 1000 * body.atmosphereScaleHeight;
             bodyRadius = body.Radius;
@@ -58,22 +55,24 @@ namespace MuMech
             this.descentSpeedPolicy = descentSpeedPolicy;
             landedRadius = bodyRadius + endAltitudeASL;
             aerobrakedRadius = bodyRadius + body.maxAtmosphereAltitude;
-            mainBody = body;
-            
-            lat0lon0AtStart = body.GetSurfaceNVector(0, 0);
-            lat0lon90AtStart = body.GetSurfaceNVector(0, 90);
-            lat90AtStart = body.GetSurfaceNVector(90, 0);
-            bodyRotationPeriod = body.rotationPeriod;
+            mainBody = body;            
             
             dt = baseDt * coarseness;
-            
-            x = initialOrbit.SwappedRelativePositionAtUT(UT);
-            v = initialOrbit.SwappedOrbitalVelocityAtUT(UT);
-            startUT = UT;
+
+            referenceFrame = ReferenceFrame.CreateAtCurrentTime(initialOrbit.referenceBody);
+
+            orbitReenters = OrbitReenters(initialOrbit);
+
+            if (orbitReenters)
+            {
+                startUT = UT;
+                t = startUT;
+                AdvanceToFreefallEnd(initialOrbit);
+            }
             
             maxDragGees = 0;
             deltaVExpended = 0;
-            trajectory = new Trajectory();
+            trajectory = new List<AbsoluteVector>();
         }
 
 
@@ -81,11 +80,7 @@ namespace MuMech
         {
             Result result = new Result();
 
-            if (!OrbitReenters()) { result.outcome = Outcome.NO_REENTRY; return result; }
-
-            t = startUT;
-
-            AdvanceToFreefallEnd();
+            if (!orbitReenters) { result.outcome = Outcome.NO_REENTRY; return result; }
 
             double maxT = t + maxSimulatedTime;
             while (true)
@@ -99,16 +94,18 @@ namespace MuMech
                 RecordTrajectory();
             }
 
+            result.body = mainBody;
+            result.referenceFrame = referenceFrame;
             result.endUT = t;
             result.maxDragGees = maxDragGees;
             result.deltaVExpended = deltaVExpended;
-            result.endLatitude = Latitude(x, t);
-            result.endLongitude = Longitude(x, t);
+            result.endPosition = referenceFrame.ToAbsolute(x, t);
+            result.endVelocity = referenceFrame.ToAbsolute(v, t);
             result.trajectory = trajectory;
             return result;
         }
 
-        bool OrbitReenters()
+        bool OrbitReenters(Orbit initialOrbit)
         {
             return (initialOrbit.PeR < landedRadius || initialOrbit.PeR < aerobrakedRadius);
         }
@@ -123,17 +120,19 @@ namespace MuMech
             return (x.magnitude > aerobrakedRadius) && (Vector3d.Dot(x, v) > 0);
         }
 
-        void AdvanceToFreefallEnd()
+        void AdvanceToFreefallEnd(Orbit initialOrbit)
         {
-            t = FindFreefallEndTime();
+            t = FindFreefallEndTime(initialOrbit);
             x = initialOrbit.SwappedRelativePositionAtUT(t);
             v = initialOrbit.SwappedOrbitalVelocityAtUT(t);
         }
 
         //This is a convenience function used by the reentry simulation. It does a binary search for the first UT
         //in the interval (lowerUT, upperUT) for which condition(UT, relative position, orbital velocity) is true
-        double FindFreefallEndTime()
+        double FindFreefallEndTime(Orbit initialOrbit)
         {
+            if (FreefallEnded(initialOrbit, t)) return t;
+
             double lowerUT = t;
             double upperUT = initialOrbit.NextPeriapsisTime(t);
 
@@ -141,7 +140,7 @@ namespace MuMech
             while (upperUT - lowerUT > PRECISION)
             {
                 double testUT = (upperUT + lowerUT) / 2;
-                if (FreefallEnded(testUT)) upperUT = testUT;
+                if (FreefallEnded(initialOrbit, testUT)) upperUT = testUT;
                 else lowerUT = testUT;
             }
             return (upperUT + lowerUT) / 2;
@@ -152,7 +151,7 @@ namespace MuMech
         // - our vertical velocity is negative and either
         //    - we've landed or
         //    - the descent speed policy says to start braking
-        bool FreefallEnded(double UT)
+        bool FreefallEnded(Orbit initialOrbit, double UT)
         {
             Vector3d pos = initialOrbit.SwappedRelativePositionAtUT(UT);
             Vector3d surfaceVelocity = SurfaceVelocity(pos, initialOrbit.SwappedOrbitalVelocityAtUT(UT));
@@ -194,24 +193,18 @@ namespace MuMech
         {
             if (descentSpeedPolicy == null) return;
 
-            double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(x, v);
-            if (v.magnitude > maxAllowedSpeed)
-            {
-                deltaVExpended += v.magnitude - maxAllowedSpeed;
-                v *= maxAllowedSpeed / v.magnitude;
+            Vector3d surfaceVel = SurfaceVelocity(x, v); 
+            double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(x, surfaceVel);            
+            if(surfaceVel.magnitude > maxAllowedSpeed) {
+                surfaceVel = maxAllowedSpeed * surfaceVel.normalized;
+                deltaVExpended += surfaceVel.magnitude - maxAllowedSpeed;
+                v = surfaceVel + Vector3d.Cross(bodyAngularVelocity, x);
             }
         }
 
         void RecordTrajectory()
         {
-            trajectory.Add(new Trajectory.Point
-                {
-                    body = mainBody,
-                    latitude = Latitude(x, t),
-                    longitude = Longitude(x, t),
-                    radius = x.magnitude,
-                    UT = t
-                });
+            trajectory.Add(referenceFrame.ToAbsolute(x, t));
         }
 
 
@@ -227,6 +220,7 @@ namespace MuMech
 
         Vector3d DragAccel(Vector3d pos, Vector3d vel)
         {
+            if (!bodyHasAtmosphere) return Vector3d.zero;
             Vector3d airVel = SurfaceVelocity(pos, vel);
             return -0.5 * FlightGlobals.DragMultiplier * dragCoefficient * AirDensity(pos) * airVel.sqrMagnitude * airVel.normalized;
         }
@@ -242,97 +236,154 @@ namespace MuMech
             return FlightGlobals.getAtmDensity(pressure);
         }
 
-
-        double Latitude(Vector3d pos, double UT)
-        {
-            return 180 / Math.PI * Math.Asin(Vector3d.Dot(pos.normalized, lat90AtStart));
-        }
-
-        double Longitude(Vector3d pos, double UT)
-        {
-            double ret = 180 / Math.PI * Math.Atan2(Vector3d.Dot(pos.normalized, lat0lon90AtStart), Vector3d.Dot(pos.normalized, lat0lon0AtStart));
-            ret -= 360 * (UT - startUT) / bodyRotationPeriod;
-            return MuUtils.ClampDegrees180(ret);
-        }
-
-        //An IDescentSpeedPolicy describes a strategy for doing the brakinb burn.
-        //while landing. The function MaxAllowedSpeed is supposed to compute the maximum allowed speed
-        //as a function of body-relative position and rotating frame, surface-relative velocity. 
-        //This lets the ReentrySimulator simulate the descent of a vessel following this policy.
-        //
-        //Note: the IDescentSpeedPolicy object passed into the simulation will be used in the separate simulation
-        //thread. It must not point to mutable objects that may change over the course of the simulation. Similarly,
-        //you must be sure not to modify the IDescentSpeedPolicy object itself after passing it to the simulation.
-        public interface IDescentSpeedPolicy
-        {
-            double MaxAllowedSpeed(Vector3d pos, Vector3d surfaceVel);
-        }
-
         public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY }
 
-        public struct Result
+        public class Result
         {
             public Outcome outcome;
+
+            public CelestialBody body;
+            public ReferenceFrame referenceFrame;
             public double endUT;
-            public double endLatitude;
-            public double endLongitude;
+            public AbsoluteVector endPosition;
+            public AbsoluteVector endVelocity;
+            public List<AbsoluteVector> trajectory;
+
             public double maxDragGees;
             public double deltaVExpended;
-            public Trajectory trajectory;
-        }
 
-        //A trajectory is a set of position vs. time data points, where the positions are 
-        //stored as latitudes, longitudes, and altitudes.
-        public class Trajectory
-        {
-            public struct Point
+            public Vector3d RelativeEndPosition()
             {
-                public CelestialBody body;
-                public double UT;
-                public double latitude;
-                public double longitude;
-                public double radius;
-
-                public Vector3d AsVector()
-                {
-                    return body.position + radius * body.GetSurfaceNVector(latitude, longitude);
-                }
-
-                public Vector3d AsVectorWithoutRotation(double now)
-                {
-                    double unrotatedLongitude = MuUtils.ClampDegrees360(longitude + 360 * (UT - now) / body.rotationPeriod);
-                    return body.position + radius * body.GetSurfaceNVector(latitude, unrotatedLongitude);
-                }
+                return WorldEndPosition() - body.position;
             }
 
-            public List<Point> points = new List<Point>();
-
-            public void Add(Point p) { points.Add(p); }
-
-            public void DrawOnMap(double timeStep, Color c, bool dashed, bool drawLandingMark, Color landingMarkColor)
+            public Vector3d WorldEndPosition()
             {
-                if (points.Count() == 0) return;
+                return referenceFrame.WorldPositionAtCurrentTime(endPosition);
+            }
 
-                if (drawLandingMark)
-                {
-                    Point last = points.Last();
-                    GLUtils.DrawMapViewGroundMarker(last.body, last.latitude, last.longitude, landingMarkColor, 60);
-                }
+            public Vector3d WorldEndVelocity()
+            {
+                return referenceFrame.WorldVelocityAtCurrentTime(endVelocity);
+            }
 
-                List<Vector3d> drawnPoints = new List<Vector3d>();
-                double now = Planetarium.GetUniversalTime();
-                double lastUT = Double.MinValue;
-                foreach (Point p in points)
-                {
-                    if (p.UT > lastUT + timeStep)
-                    {
-                        drawnPoints.Add(p.AsVectorWithoutRotation(now));
-                        lastUT = p.UT;
-                    }
-                }
+            public Orbit EndOrbit()
+            {
+                return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
+            }
 
-                GLUtils.DrawPath(points[0].body, drawnPoints.ToArray(), c, dashed);
+            public List<Vector3d> WorldTrajectory()
+            {
+                return trajectory.Select(absolute => referenceFrame.WorldPositionAtCurrentTime(absolute)).ToList();
             }
         }
     }
+
+
+    //An IDescentSpeedPolicy describes a strategy for doing the brakinb burn.
+    //while landing. The function MaxAllowedSpeed is supposed to compute the maximum allowed speed
+    //as a function of body-relative position and rotating frame, surface-relative velocity. 
+    //This lets the ReentrySimulator simulate the descent of a vessel following this policy.
+    //
+    //Note: the IDescentSpeedPolicy object passed into the simulation will be used in the separate simulation
+    //thread. It must not point to mutable objects that may change over the course of the simulation. Similarly,
+    //you must be sure not to modify the IDescentSpeedPolicy object itself after passing it to the simulation.
+    public interface IDescentSpeedPolicy
+    {
+        double MaxAllowedSpeed(Vector3d pos, Vector3d surfaceVel);
+    }
+
+    //Why do AbsoluteVector and ReferenceFrame exist? What problem are they trying to solve? Here is the problem.
+    //
+    //The reentry simulation runs in a separate thread from the rest of the game. In principle, the reentry simulation
+    //could take quite a while to complete. Meanwhile, some time has elapsed in the game. One annoying that that happens
+    //as time progresses is that the origin of the world coordinate system shifts (due to the floating origin feature).
+    //Furthermore, the axes of the world coordinate system rotate when you are near the surface of a rotating celestial body.
+    //
+    //So, one thing we do in the reentry simulation is be careful not to refer to external objects that may change
+    //with time. Once the constructor finishes, the ReentrySimulation stores no reference to any CelestialBody, or Vessel,
+    //or Orbit. It just stores the numbers that it needs to crunch. Then it crunches them, and comes out with a deterministic answer
+    //that will never be affected by what happened in the game while it was crunching.
+    //
+    //However, this is not enough. What does the answer that the simulation produces mean? Suppose the reentry
+    //simulation chugs through its calculations and determines that the vessel is going to land at the position
+    //(400, 500, 600). That's fine, but where is that, exactly? The origin of the world coordinate system may have shifted,
+    //and its axes may have rotated, since the simulation began. So (400, 500, 600) now refers to a different place
+    //than it did when the simulation started.
+    //
+    //To deal with this, any vectors (that is, positions and velocities) that the reentry simulation produces as output need to
+    //be provided in some unambiguous format, so that we can interpret these positions and velocities correctly at a later
+    //time, regardless of what sort of origin shifts and axis rotations have occurred.
+    //
+    //Now, it doesn't particularly matter what unambiguous format we use, as long as it is in fact unambiguous. We choose to 
+    //represent positions unambiguously via a latitude, a longitude, a radius, and a time. If we record these four data points
+    //for an event, we can unambiguously reconstruct the position of the event at a later time. We just have to account for the
+    //fact that the rotation of the planet means that the same position will have a different longitude.
+
+    //An AbsoluteVector stores the information needed to unambiguously reconstruct a position or velocity at a later time.
+    public struct AbsoluteVector
+    {
+        public double latitude;
+        public double longitude;
+        public double radius;
+        public double UT;
+    }
+
+    //A ReferenceFrame is a scheme for converting Vector3d positions and velocities into AbosluteVectors, and vice versa
+    public class ReferenceFrame
+    {
+        private double epoch;
+        private Vector3d lat0lon0AtStart;
+        private Vector3d lat0lon90AtStart;
+        private Vector3d lat90AtStart;
+        private CelestialBody referenceBody;
+
+        private ReferenceFrame() { }
+
+        public static ReferenceFrame CreateAtCurrentTime(CelestialBody referenceBody)
+        {
+            ReferenceFrame ret = new ReferenceFrame();
+            ret.lat0lon0AtStart = referenceBody.GetSurfaceNVector(0, 0);
+            ret.lat0lon90AtStart = referenceBody.GetSurfaceNVector(0, 90);
+            ret.lat90AtStart = referenceBody.GetSurfaceNVector(90, 0);
+            ret.epoch = Planetarium.GetUniversalTime();
+            ret.referenceBody = referenceBody;
+            return ret;
+        }
+
+        //Vector3d must be either a position RELATIVE to referenceBody, or a velocity
+        public AbsoluteVector ToAbsolute(Vector3d vector3d, double UT) 
+        {
+            AbsoluteVector absolute = new AbsoluteVector();
+
+            absolute.latitude = 180 / Math.PI * Math.Asin(Vector3d.Dot(vector3d.normalized, lat90AtStart));
+
+            double longitude = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vector3d.normalized, lat0lon90AtStart), Vector3d.Dot(vector3d.normalized, lat0lon0AtStart));
+            longitude -= 360 * (UT - epoch) / referenceBody.rotationPeriod;
+            absolute.longitude = MuUtils.ClampDegrees180(longitude);
+
+            absolute.radius = vector3d.magnitude;
+
+            absolute.UT = UT;
+
+            return absolute;
+        }
+
+        //Interprets a given AbsoluteVector as a position, and returns the corresponding Vector3d position
+        //in world coordinates.
+        public Vector3d WorldPositionAtCurrentTime(AbsoluteVector absolute)
+        {
+            return referenceBody.position + WorldVelocityAtCurrentTime(absolute);
+        }
+
+        //Interprests a given AbsoluteVector as a velocity, and returns the corresponding Vector3d velocity
+        //in world coordinates.
+        public Vector3d WorldVelocityAtCurrentTime(AbsoluteVector absolute)
+        {
+            double now = Planetarium.GetUniversalTime();
+            double unrotatedLongitude = MuUtils.ClampDegrees360(absolute.longitude - 360 * (now - absolute.UT) / referenceBody.rotationPeriod);
+            return absolute.radius * referenceBody.GetSurfaceNVector(absolute.latitude, unrotatedLongitude);
+        }
+    }
+
 }

@@ -161,13 +161,13 @@ namespace MuMech
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (core.target.Position - vessel.GetTransform().position).normalized;
-                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                    up = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.RELATIVE_VELOCITY:
                     fwd = core.target.RelativeVelocity.normalized;
-                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                    up = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
@@ -184,7 +184,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.MANEUVER_NODE:
                     fwd = vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit);
-                    up = Vector3d.Cross(fwd, vesselState.leftOrbit);
+                    up = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;

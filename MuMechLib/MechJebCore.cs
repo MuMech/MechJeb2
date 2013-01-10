@@ -176,16 +176,11 @@ namespace MuMech
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha0))
+            if (Input.GetKeyDown(KeyCode.Alpha7))
             {
-                MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
-                p.enabled = !p.enabled;
-                Debug.Log("landing predictions enabled = " + p.enabled);
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha9))
-            {
-                target.PickPositionTargetOnMap();
+                MechJebModuleLandingAutopilot lander = GetComputerModule<MechJebModuleLandingAutopilot>();
+                lander.enabled = !lander.enabled;
+                Debug.Log("lander.enabled = " + lander.enabled);
             }
 
             if (modulesUpdated)
@@ -279,9 +274,10 @@ namespace MuMech
             }
 
             MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
-            if (p.result.trajectory != null)
+            if (p.enabled && p.result != null && p.result.trajectory != null)
             {
-                p.result.trajectory.DrawOnMap(1, Color.cyan, false, true, Color.blue);
+                //GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(), Color.cyan, false);
+                GLUtils.DrawMapViewGroundMarker(p.result.body, p.result.endPosition.latitude, p.result.endPosition.longitude, Color.blue, 60);
             }
         }
 

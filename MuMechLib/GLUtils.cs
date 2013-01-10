@@ -84,7 +84,7 @@ namespace MuMech
 
         //If dashed = false, draws 0-1-2-3-4-5...
         //If dashed = true, draws 0-1 2-3 4-5...
-        public static void DrawPath(CelestialBody mainBody, Vector3d[] points, Color c, bool dashed = false)
+        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool dashed = false)
         {
             GL.PushMatrix();
             material.SetPass(0);
@@ -93,7 +93,7 @@ namespace MuMech
             GL.Color(c);
 
             int step = (dashed ? 2 : 1);
-            for (int i = 0; i < points.Length-1; i += step)
+            for (int i = 0; i < points.Count()-1; i += step)
             {
                 if (!IsOccluded(points[i], mainBody) && !IsOccluded(points[i + 1], mainBody))
                 {
@@ -104,6 +104,20 @@ namespace MuMech
 
             GL.End();
             GL.PopMatrix();
+        }
+
+        public static void DrawOrbit(Orbit o, Color c)
+        {
+            double step = 1;
+
+            List<Vector3d> points = new List<Vector3d>();
+            for (double trueAnomaly = 0; trueAnomaly < 360; trueAnomaly += step)
+            {
+                points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(trueAnomaly, 0)));
+            }
+            points.Add(points[0]); //close the loop
+
+            DrawPath(o.referenceBody, points, c, false);
         }
     }
 }

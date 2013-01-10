@@ -24,9 +24,9 @@ namespace MuMech
 
         ITargetable target;
 
-        CelestialBody targetBody;
-        double targetLatitude;
-        double targetLongitude;
+        public CelestialBody targetBody;
+        public double targetLatitude;
+        public double targetLongitude;
 
         Vector3d targetDirection;
 
@@ -183,7 +183,7 @@ namespace MuMech
 
         void DoCoordinatePicking()
         {
-            if (pickingPositionTarget && !MapView.MapIsEnabled) pickingPositionTarget = false;
+            if (pickingPositionTarget && !MapView.MapIsEnabled) pickingPositionTarget = false; //stop picking on leaving map view
 
             if (!pickingPositionTarget) return;
 
@@ -246,7 +246,7 @@ namespace MuMech
 
         public void Update(CelestialBody body, double latitude, double longitude, double altitude)
         {
-            Update(body.position + (body.Radius + altitude) * body.GetSurfaceNVector(latitude, longitude));
+            Update(body.GetWorldSurfacePosition(latitude, longitude, altitude));
         }
 
         //Call this every frame to make sure the target transform stays up to date

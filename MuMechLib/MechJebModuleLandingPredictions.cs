@@ -13,6 +13,8 @@ namespace MuMech
 
         public ReentrySimulation.Result result;
 
+        public double perturbationSize = 10;
+        public IDescentSpeedPolicy descentSpeedPolicy = null;
 
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
@@ -52,9 +54,15 @@ namespace MuMech
 
             stopwatch.Start(); //starts a timer that times how long the simulation takes
 
+            double endAltitudeASL = 0;
+            if (result != null && result.outcome == ReentrySimulation.Outcome.LANDED)
+            {
+                endAltitudeASL = MuUtils.TerrainAltitude(mainBody, result.endPosition.latitude, result.endPosition.longitude);
+            }
+
             Orbit o = vessel.orbit;
             if (vessel.patchedConicSolver.maneuverNodes.Count() > 0) o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
-            ReentrySimulation sim = new ReentrySimulation(o, vesselState.time, vesselState.massDrag / vesselState.mass, null, 0, 1);
+            ReentrySimulation sim = new ReentrySimulation(o, vesselState.time, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL, 1);
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);

@@ -32,11 +32,11 @@ namespace MuMech
         public Vector3d angularVelocity;
         public Vector3d angularMomentum;
 
-        public Vector3d upNormalToVelSurface; //unit vector in the plane of up and velocityVesselSurface and perpendicular to velocityVesselSurface
-        public Vector3d upNormalToVelOrbit;   //unit vector in the plane of up and velocityVesselOrbit and perpendicular to velocityVesselOrbit 
-        public Vector3d leftSurface;  //unit vector perpendicular to up and velocityVesselSurface
-        public Vector3d leftOrbit;    //unit vector perpendicular to up and velocityVesselOrbit
-
+        public Vector3d radialPlus;   //unit vector in the plane of up and velocityVesselOrbit and perpendicular to velocityVesselOrbit 
+        public Vector3d radialPlusSurface; //unit vector in the plane of up and velocityVesselSurface and perpendicular to velocityVesselSurface
+        public Vector3d normalPlus;    //unit vector perpendicular to up and velocityVesselOrbit
+        public Vector3d normalPlusSurface;  //unit vector perpendicular to up and velocityVesselSurface
+        
         public Vector3d gravityForce;
         public double localg;             //magnitude of gravityForce
 
@@ -108,10 +108,10 @@ namespace MuMech
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
 
-            upNormalToVelSurface = Vector3d.Exclude(velocityVesselSurfaceUnit, up).normalized;
-            upNormalToVelOrbit = Vector3d.Exclude(velocityVesselOrbit, up).normalized;
-            leftSurface = -Vector3d.Cross(upNormalToVelSurface, velocityVesselSurfaceUnit);
-            leftOrbit = -Vector3d.Cross(upNormalToVelOrbit, velocityVesselOrbitUnit); ;
+            radialPlusSurface = Vector3d.Exclude(velocityVesselSurfaceUnit, up).normalized;
+            radialPlus = Vector3d.Exclude(velocityVesselOrbit, up).normalized;
+            normalPlusSurface = -Vector3d.Cross(radialPlusSurface, velocityVesselSurfaceUnit);
+            normalPlus = -Vector3d.Cross(radialPlus, velocityVesselOrbitUnit); ;
 
             gravityForce = FlightGlobals.getGeeForceAtPosition(CoM);
             localg = gravityForce.magnitude;
