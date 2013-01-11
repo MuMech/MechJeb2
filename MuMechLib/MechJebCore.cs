@@ -244,6 +244,8 @@ namespace MuMech
 
             Drive(s);
 
+            CheckFlightCtrlState(s);
+
             if (vessel == FlightGlobals.ActiveVessel)
             {
                 FlightInputHandler.state.mainThrottle = s.mainThrottle; //so that the on-screen throttle gauge reflects the autopilot throttle
@@ -261,6 +263,27 @@ namespace MuMech
             }
         }
 
+        //Setting FlightCtrlState fields to bad values can really mess up the game.
+        //Here we do some error checking.
+        public void CheckFlightCtrlState(FlightCtrlState s)
+        {
+            if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
+            if (float.IsNaN(s.yaw)) s.yaw = 0;
+            if (float.IsNaN(s.pitch)) s.pitch = 0;
+            if (float.IsNaN(s.roll)) s.roll = 0;
+            if (float.IsNaN(s.X)) s.X = 0;
+            if (float.IsNaN(s.Y)) s.Y = 0;
+            if (float.IsNaN(s.Z)) s.Z = 0;
+            
+            s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
+            s.yaw = Mathf.Clamp(s.yaw, -1, 1);
+            s.pitch = Mathf.Clamp(s.pitch, -1, 1);
+            s.roll = Mathf.Clamp(s.roll, -1, 1);
+            s.X = Mathf.Clamp(s.X, -1, 1);
+            s.Y = Mathf.Clamp(s.Y, -1, 1);
+            s.Z = Mathf.Clamp(s.Z, -1, 1);            
+        }
+
         private void OnGUI()
         {
             if ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD) && (this == vessel.GetMasterMechJeb())))
@@ -273,11 +296,22 @@ namespace MuMech
                 }
             }
 
+            //Todo: move this to the post-render queue since as it is it draws on top of windows
             MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
-            if (p.enabled && p.result != null && p.result.trajectory != null)
+            if (MapView.MapIsEnabled && p.enabled && p.result != null)
             {
                 //GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(), Color.cyan, false);
-                GLUtils.DrawMapViewGroundMarker(p.result.body, p.result.endPosition.latitude, p.result.endPosition.longitude, Color.blue, 60);
+                if(p.result.outcome == ReentrySimulation.Outcome.LANDED) 
+                {
+                    GLUtils.DrawMapViewGroundMarker(p.result.body, p.result.endPosition.latitude, p.result.endPosition.longitude, Color.blue, 60);
+                }
+                else if (p.result.outcome == ReentrySimulation.Outcome.AEROBRAKED)
+                {
+                    Debug.Log("Drawing post-aerobrake orbit");
+                    GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(5), Color.blue);
+                    Orbit o = MuUtils.OrbitFromStateVectors(p.result.WorldEndPosition(), p.result.WorldEndVelocity(), p.result.body, p.result.endUT);
+                    GLUtils.DrawOrbit(o, Color.blue);
+                }
             }
         }
 

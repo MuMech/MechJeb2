@@ -9,21 +9,22 @@ namespace MuMech
 {
     class MechJebModuleLandingPredictions : ComputerModule
     {    
-        public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
-
+        //publicly available output
         public ReentrySimulation.Result result;
 
-        public double perturbationSize = 10;
-        public IDescentSpeedPolicy descentSpeedPolicy = null;
+        //input parameters:
+        public double endAltitudeASL = 0; //end simulations when they reach this altitude above sea level
+        public IDescentSpeedPolicy descentSpeedPolicy = null; //simulate this descent speed policy
 
+        //data for deciding when to run simulations:
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        long millisecondsBetweenSimulations;
+        protected long millisecondsBetweenSimulations;
+
 
         public override void OnModuleEnabled()
         {
-            millisecondsBetweenSimulations = 0;
-            stopwatch.Start();
+            StartSimulation();
         }
 
         public override void OnModuleDisabled()
@@ -54,15 +55,9 @@ namespace MuMech
 
             stopwatch.Start(); //starts a timer that times how long the simulation takes
 
-            double endAltitudeASL = 0;
-            if (result != null && result.outcome == ReentrySimulation.Outcome.LANDED)
-            {
-                endAltitudeASL = MuUtils.TerrainAltitude(mainBody, result.endPosition.latitude, result.endPosition.longitude);
-            }
-
             Orbit o = vessel.orbit;
             if (vessel.patchedConicSolver.maneuverNodes.Count() > 0) o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
-            ReentrySimulation sim = new ReentrySimulation(o, vesselState.time, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL, 1);
+            ReentrySimulation sim = new ReentrySimulation(o, vesselState.time, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL);
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
@@ -89,5 +84,7 @@ namespace MuMech
 
             simulationRunning = false;
         }
+
+        public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
     }
 }

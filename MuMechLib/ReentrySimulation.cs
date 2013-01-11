@@ -26,8 +26,7 @@ namespace MuMech
 
         ReferenceFrame referenceFrame;
 
-        const double baseDt = 0.2;
-        double dt;
+        double dt = 0.2; //in seconds
         const double maxSimulatedTime = 2000; //in seconds
 
 
@@ -42,7 +41,7 @@ namespace MuMech
         List<AbsoluteVector> trajectory;
 
         public ReentrySimulation(Orbit initialOrbit, double UT, double dragCoefficient,
-            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double coarseness)
+            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL)
         {
             CelestialBody body = initialOrbit.referenceBody;
             bodyHasAtmosphere = body.atmosphere;
@@ -55,9 +54,7 @@ namespace MuMech
             this.descentSpeedPolicy = descentSpeedPolicy;
             landedRadius = bodyRadius + endAltitudeASL;
             aerobrakedRadius = bodyRadius + body.maxAtmosphereAltitude;
-            mainBody = body;            
-            
-            dt = baseDt * coarseness;
+            mainBody = body;
 
             referenceFrame = ReferenceFrame.CreateAtCurrentTime(initialOrbit.referenceBody);
 
@@ -69,7 +66,7 @@ namespace MuMech
                 t = startUT;
                 AdvanceToFreefallEnd(initialOrbit);
             }
-            
+
             maxDragGees = 0;
             deltaVExpended = 0;
             trajectory = new List<AbsoluteVector>();
@@ -193,9 +190,10 @@ namespace MuMech
         {
             if (descentSpeedPolicy == null) return;
 
-            Vector3d surfaceVel = SurfaceVelocity(x, v); 
-            double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(x, surfaceVel);            
-            if(surfaceVel.magnitude > maxAllowedSpeed) {
+            Vector3d surfaceVel = SurfaceVelocity(x, v);
+            double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(x, surfaceVel);
+            if (surfaceVel.magnitude > maxAllowedSpeed)
+            {
                 surfaceVel = maxAllowedSpeed * surfaceVel.normalized;
                 deltaVExpended += surfaceVel.magnitude - maxAllowedSpeed;
                 v = surfaceVel + Vector3d.Cross(bodyAngularVelocity, x);
@@ -272,9 +270,22 @@ namespace MuMech
                 return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
             }
 
-            public List<Vector3d> WorldTrajectory()
+            public List<Vector3d> WorldTrajectory(double timeStep)
             {
-                return trajectory.Select(absolute => referenceFrame.WorldPositionAtCurrentTime(absolute)).ToList();
+                if (trajectory.Count() == 0) return new List<Vector3d>();
+
+                List<Vector3d> ret = new List<Vector3d>();
+                ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
+                double lastTime = trajectory[0].UT;
+                foreach (AbsoluteVector absolute in trajectory)
+                {
+                    if (absolute.UT > lastTime + timeStep)
+                    {
+                        ret.Add(referenceFrame.WorldPositionAtCurrentTime(absolute));
+                        lastTime = absolute.UT;
+                    }
+                }
+                return ret;
             }
         }
     }
@@ -352,7 +363,7 @@ namespace MuMech
         }
 
         //Vector3d must be either a position RELATIVE to referenceBody, or a velocity
-        public AbsoluteVector ToAbsolute(Vector3d vector3d, double UT) 
+        public AbsoluteVector ToAbsolute(Vector3d vector3d, double UT)
         {
             AbsoluteVector absolute = new AbsoluteVector();
 

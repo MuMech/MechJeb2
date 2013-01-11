@@ -53,6 +53,11 @@ namespace MuMech
             Set(new PositionTarget(String.Format("{0:0.000} N, {1:0.000} E", latitude, longitude)));
         }
 
+        public Vector3d GetPositionTargetPosition()
+        {
+            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude));
+        }
+
         public void SetDirectionTarget(string name)
         {
             Set(new DirectionTarget(name));
@@ -239,7 +244,7 @@ namespace MuMech
 
         public void Update(CelestialBody body, double latitude, double longitude)
         {
-            double altitude = MuUtils.TerrainAltitude(body, latitude, longitude);
+            double altitude = body.TerrainAltitude(latitude, longitude);
             Update(body, latitude, longitude, altitude);
         }
 
