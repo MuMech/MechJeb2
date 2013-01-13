@@ -43,17 +43,45 @@ namespace MuMech
             return o;
         }
 
+        //If there is a maneuver node on this patch, returns the patch that follows that maneuver node
+        //Otherwise, if this patch ends in an SOI transition, returns the patch that follows that transition
+        //Otherwise, returns null
+        public static Orbit GetNextPatch(this Vessel vessel, Orbit patch, ManeuverNode ignoreNode = null)
+        {
+            //Determine whether this patch ends in an SOI transition or if it's the final one:
+            bool finalPatch = (patch.patchEndTransition == Orbit.PatchTransitionType.FINAL);
+
+            //See if any maneuver nodes occur during this patch. If so return the
+            //patch that comes after the first maneuver node:
+            var nodes = from node in vessel.patchedConicSolver.maneuverNodes
+                        where (node.UT > patch.StartUT && (finalPatch || node.UT < patch.EndUT) && node != ignoreNode)
+                        orderby node.UT ascending
+                        select node;
+            if (nodes.Count() > 0) return nodes.First().nextPatch;
+
+            //return the next patch, or null if there isn't one:
+            if (!finalPatch) return patch.nextPatch;
+            else return null;
+        }
+
 
         //input dV should be in world coordinates
-        public static void PlaceManeuverNode(this Vessel vessel, Orbit patch, Vector3d dV, double UT)
+        public static ManeuverNode PlaceManeuverNode(this Vessel vessel, Orbit patch, Vector3d dV, double UT)
         {
             //convert a dV in world coordinates into the coordinate system of the maneuver node,
             //which uses (x, y, z) = (radial+, normal-, prograde)
-            Vector3d nodeDV = new Vector3d(Vector3d.Dot(patch.RadialPlus(UT), dV),
-                                           Vector3d.Dot(-patch.NormalPlus(UT), dV),
-                                           Vector3d.Dot(patch.Prograde(UT), dV));
+            Vector3d nodeDV = patch.DeltaVToManeuverNodeCoordinates(UT, dV);
             ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(UT);
             mn.OnGizmoUpdated(nodeDV, UT);
+            return mn;
+        }
+
+        public static void RemoveAllManeuverNodes(this Vessel vessel)
+        {
+            while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
+            {
+                vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
+            }
         }
     }
 }

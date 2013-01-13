@@ -12,6 +12,7 @@ namespace MuMech
         bool bodyHasAtmosphere;
         double seaLevelAtmospheres;
         double scaleHeight;
+        double inverseRotThresholdAltitude;
         double bodyRadius;
         double gravParameter;
         double dragCoefficient; //massDrag / mass
@@ -47,6 +48,7 @@ namespace MuMech
             bodyHasAtmosphere = body.atmosphere;
             seaLevelAtmospheres = body.atmosphereMultiplier;
             scaleHeight = 1000 * body.atmosphereScaleHeight;
+            inverseRotThresholdAltitude = body.inverseRotThresholdAltitude;
             bodyRadius = body.Radius;
             gravParameter = body.gravParameter;
             this.dragCoefficient = dragCoefficient;
@@ -225,12 +227,19 @@ namespace MuMech
 
         Vector3d SurfaceVelocity(Vector3d pos, Vector3d vel)
         {
+            //correct for a bug in KSP where it uses your orbital velocity as your airspeed if your altitude is too high:
+            if (pos.magnitude - bodyRadius > inverseRotThresholdAltitude) return vel;
+            
+            //if we're low enough, calculate the airspeed properly:
             return vel - Vector3d.Cross(bodyAngularVelocity, pos);
         }
 
         double AirDensity(Vector3d pos)
         {
-            double pressure = seaLevelAtmospheres * Math.Exp(-(pos.magnitude - bodyRadius) / scaleHeight);
+            double ratio = Math.Exp(-(pos.magnitude - bodyRadius) / scaleHeight);
+            if(ratio < 1e-6) return 0; //this is not a fudge, this is faithfully simulating the game, which
+                                       //pretends the pressure is zero if it is less than 1e-6 times the sea level pressure
+            double pressure = seaLevelAtmospheres * ratio;
             return FlightGlobals.getAtmDensity(pressure);
         }
 

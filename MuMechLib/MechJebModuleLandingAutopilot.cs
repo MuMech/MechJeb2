@@ -6,19 +6,38 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleLandingAutopilot : DisplayModule
+    class MechJebModuleLandingAutopilot : ComputerModule
     {
-        public MechJebModuleLandingAutopilot(MechJebCore core) : base(core) { }
+        //public interface:
+        public void LandAtPositionTarget()
+        {
+            predictor.enabled = true;
+            vessel.RemoveAllManeuverNodes();
+            landStep = LandStep.COURSE_CORRECTIONS;
+        }
+
+        public void StopLanding()
+        {
+            FlightInputHandler.SetNeutralControls();
+            landStep = LandStep.OFF;
+            status = "Off";
+        }
 
         public double touchdownSpeed = 0.5;
 
-        bool deployedGears = false;
+        public string status = "";       
 
-        enum LandStep { COURSE_CORRECTIONS, COAST_TO_DECELERATION, DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, OFF }
+
+        //Internal state:
+        enum LandStep { MOVE_TO_DEORBIT, DEORBIT_BURN, COURSE_CORRECTIONS, COAST_TO_DECELERATION, 
+            DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, OFF }
         LandStep landStep = LandStep.OFF;
 
         IDescentSpeedPolicy descentSpeedPolicy;
 
+        bool deployedGears = false;
+
+        //Landing prediction data:
         MechJebModuleLandingPredictions predictor;
         ReentrySimulation.Result prediction;
         bool PredictionReady //We shouldn't do any autopilot stuff until this is true
@@ -53,7 +72,7 @@ namespace MuMech
             predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
             predictor.endAltitudeASL = DecelerationEndAltitude();
             
-            prediction = predictor.result; //grab a reference to the current result, in case a new one comes in while we're doing stuff
+            prediction = predictor.GetResult(); //grab a reference to the current result, in case a new one comes in while we're doing stuff
 
 
             if (!PredictionReady) return;
@@ -86,30 +105,106 @@ namespace MuMech
         
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        public override void OnFixedUpdate()
         {
-            GUILayout.BeginVertical();
-
-            if (GUILayout.Button("Pick target")) core.target.PickPositionTargetOnMap();
-
-            predictor.enabled = GUILayout.Toggle(predictor.enabled, "Predictor enabled");
-
-            if (GUILayout.Button("Land at target")) landStep = LandStep.COURSE_CORRECTIONS;
-            if (GUILayout.Button("Stop landing")) { FlightInputHandler.SetNeutralControls(); landStep = LandStep.OFF; }
-
-            GUILayout.Label("Land step: " + landStep.ToString());
-
-            if (PredictionReady)
+            switch (landStep)
             {
-                double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(prediction.endPosition.latitude, prediction.endPosition.longitude, 0),
-                                                 mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
-                GUILayout.Label("Landing position error = " + error.ToString("F0") + "m");
-            }
-            
-            GUILayout.EndVertical();
+                case LandStep.COAST_TO_DECELERATION:
+                    FixedUpdateCoastToDeceleration();
+                    break;
 
-            GUI.DragWindow();
+                default:
+                    break;
+            }
         }
+
+
+        void FixedUpdateMoveToDeorbitBurn()
+        {
+            //if we don't want to deorbit but we're already on a reentry trajectory, we can't wait until the ideal point 
+            //in the orbit to deorbt; we already have deorbited.
+            if (part.vessel.orbit.ApA < part.vessel.mainBody.maxAtmosphereAltitude)
+            {
+                landStep = LandStep.COURSE_CORRECTIONS;
+                return;
+            }
+
+            //compute the desired velocity after deorbiting. we aim for a trajectory that 
+            // a) has the same vertical speed as our current trajectory
+            // b) has a horizontal speed that will give it a periapsis of -10% of the body's radius
+            // c) has a heading that points toward where the target will be at the end of free-fall, accounting for planetary rotation
+            Vector3d horizontalDV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, vesselState.time, 0.9 * mainBody.Radius);
+            Orbit forwardDeorbitTrajectory = orbit.PerturbedOrbit(vesselState.time, horizontalDV);
+            double freefallTime = forwardDeorbitTrajectory.NextTimeOfRadius(vesselState.time, mainBody.Radius);
+            double planetRotationDuringFreefall = 360 * freefallTime / mainBody.rotationPeriod;
+            Vector3d currentTargetRadialVector = mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+            Quaternion freefallPlanetRotation = Quaternion.AngleAxis((float)planetRotationDuringFreefall, mainBody.angularVelocity);
+            Vector3d freefallEndTargetRadialVector = freefallPlanetRotation * currentTargetRadialVector;
+            Vector3d currentTargetPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+            Vector3d freefallEndTargetPosition = mainBody.position + freefallEndTargetRadialVector;
+            Vector3d freefallEndHorizontalToTarget = Vector3d.Exclude(vesselState.up, freefallEndTargetPosition - vesselState.CoM).normalized;
+            Vector3d currentHorizontalVelocity = Vector3d.Exclude(vesselState.up, vesselState.velocityVesselOrbit);
+            Vector3d currentHorizontal = currentHorizontalVelocity.normalized;
+            
+            Vector3d currentRadialVector = vesselState.CoM - part.vessel.mainBody.position;
+            double targetAngleToOrbitNormal = Vector3d.Angle(orbit.SwappedOrbitNormal(), freefallEndTargetRadialVector);
+            targetAngleToOrbitNormal = Math.Min(targetAngleToOrbitNormal, 180 - targetAngleToOrbitNormal);
+
+            double targetAheadAngle = Vector3d.Angle(currentRadialVector, freefallEndTargetRadialVector);
+            double planeChangeAngle = Vector3d.Angle(currentHorizontal, freefallEndHorizontalToTarget);
+
+
+            if (targetAngleToOrbitNormal < 10
+                || (targetAheadAngle < 90 && targetAheadAngle > 60 && planeChangeAngle < 90))
+            {
+                landStep = LandStep.DEORBIT_BURN;
+            }
+
+            status = "Moving to deorbit burn point";
+        }
+
+        void DriveMoveToDeorbit(FlightCtrlState s)
+        {
+            s.mainThrottle = 0.0F;
+            core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, this);
+            core.warp.WarpRegularAtRate((float)(orbit.period / 60), false, true);
+        }
+
+        void driveDeorbitBurn(FlightCtrlState s)
+        {
+            //compute the desired velocity after deorbiting. we aim for a trajectory that 
+            // a) has the same vertical speed as our current trajectory
+            // b) has a horizontal speed that will give it a periapsis of -10% of the body's radius
+            // c) has a heading that points toward where the target will be at the end of free-fall, accounting for planetary rotation
+            Vector3d horizontalDV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, vesselState.time, 0.9 * mainBody.Radius);
+            Orbit forwardDeorbitTrajectory = orbit.PerturbedOrbit(vesselState.time, horizontalDV); 
+            double freefallTime = forwardDeorbitTrajectory.NextTimeOfRadius(vesselState.time, mainBody.Radius);
+            double planetRotationDuringFreefall = 360 * freefallTime / mainBody.rotationPeriod;
+            Vector3d currentTargetRadialVector = mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+            Quaternion freefallPlanetRotation = Quaternion.AngleAxis((float)planetRotationDuringFreefall, mainBody.angularVelocity);
+            Vector3d freefallEndTargetRadialVector = freefallPlanetRotation * currentTargetRadialVector;
+            Vector3d currentTargetPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+            Vector3d freefallEndTargetPosition = mainBody.position + freefallEndTargetRadialVector;
+            Vector3d freefallEndHorizontalToTarget = Vector3d.Exclude(vesselState.up, freefallEndTargetPosition - vesselState.CoM).normalized;
+            Vector3d currentHorizontalVelocity = Vector3d.Exclude(vesselState.up, vesselState.velocityVesselOrbit);
+            Vector3d currentHorizontal = currentHorizontalVelocity.normalized;
+            double finalHorizontalSpeed = (vesselState.velocityVesselOrbit + horizontalDV).magnitude;
+            Vector3d finalHorizontalVelocity = finalHorizontalSpeed * freefallEndHorizontalToTarget;
+
+
+
+            if ((TimeWarp.WarpMode == TimeWarp.Modes.HIGH) && (TimeWarp.CurrentRate > TimeWarp.MaxPhysicsRate)) core.warp.MinimumWarp();
+
+            Vector3d deltaV = finalHorizontalVelocity - currentHorizontalVelocity;
+
+            core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, this);
+            if (core.attitude.attitudeAngleFromTarget() < 5) s.mainThrottle = 1.0F;
+            else s.mainThrottle = 0.0F;
+
+            if (deltaV.magnitude < 2.0) landStep = LandStep.COURSE_CORRECTIONS;
+
+            status = "Executing deorbit burn";
+       }
 
 
         //Estimate the delta-V of the correction burn that would be required to put us on
@@ -202,28 +297,24 @@ namespace MuMech
 
         void DriveCourseCorrections(FlightCtrlState s)
         {
-            Vector3d deltaV = ComputeCourseCorrection(true);
-
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
 
-            Debug.Log("deltaV.magnitude = " + deltaV.magnitude + "; error = " + currentError);
-
-            if (deltaV.magnitude < 0.2 || currentError < 300)
+            if (currentError < 300)
             {
                 s.mainThrottle = 0;
                 landStep = LandStep.COAST_TO_DECELERATION;
                 return;
             }
 
+            Vector3d deltaV = ComputeCourseCorrection(true);
+
             core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, this);
             s.mainThrottle = (float)(deltaV.magnitude / (10.0 * vesselState.maxThrustAccel));
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
         }
 
-        void DriveCoastToDeceleration(FlightCtrlState s)
+        void FixedUpdateCoastToDeceleration()
         {
-            s.mainThrottle = 0;
-
             double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface);
             Debug.Log("maxAllowedSpeed = " + maxAllowedSpeed);
             if (vesselState.speedSurface > 0.9 * maxAllowedSpeed)
@@ -236,6 +327,12 @@ namespace MuMech
             //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
             Debug.Log("Trying to warp at x" + (float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))));
             core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))), false, true);
+        }
+
+        void DriveCoastToDeceleration(FlightCtrlState s)
+        {
+            s.mainThrottle = 0;
+
             core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, this);
         }
 
@@ -250,7 +347,8 @@ namespace MuMech
             Vector3d desiredThrustVector = -vesselState.velocityVesselSurfaceUnit;
 
             Vector3d courseCorrection = ComputeCourseCorrection(false);
-            double correctionAngle = courseCorrection.magnitude / (5.0 * vesselState.maxThrustAccel);
+            Debug.Log("course correction dv = " + courseCorrection.magnitude);
+            double correctionAngle = courseCorrection.magnitude / (2.0 * vesselState.maxThrustAccel);
             correctionAngle = Math.Min(0.1, correctionAngle);
             desiredThrustVector = (desiredThrustVector + correctionAngle * courseCorrection.normalized).normalized;
 
@@ -463,6 +561,8 @@ namespace MuMech
             core.attitude.enabled = false;
             core.thrust.enabled = false;
         }
+
+        public MechJebModuleLandingAutopilot(MechJebCore core) : base(core) { }
     }
 
 

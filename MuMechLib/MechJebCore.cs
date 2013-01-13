@@ -298,18 +298,18 @@ namespace MuMech
 
             //Todo: move this to the post-render queue since as it is it draws on top of windows
             MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
-            if (MapView.MapIsEnabled && p.enabled && p.result != null)
+            ReentrySimulation.Result result = p.GetResult();
+            if (MapView.MapIsEnabled && p.enabled && result != null)
             {
                 //GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(), Color.cyan, false);
-                if(p.result.outcome == ReentrySimulation.Outcome.LANDED) 
+                if(result.outcome == ReentrySimulation.Outcome.LANDED) 
                 {
-                    GLUtils.DrawMapViewGroundMarker(p.result.body, p.result.endPosition.latitude, p.result.endPosition.longitude, Color.blue, 60);
+                    GLUtils.DrawMapViewGroundMarker(result.body, result.endPosition.latitude, result.endPosition.longitude, Color.blue, 60);
                 }
-                else if (p.result.outcome == ReentrySimulation.Outcome.AEROBRAKED)
+                else if (result.outcome == ReentrySimulation.Outcome.AEROBRAKED)
                 {
                     Debug.Log("Drawing post-aerobrake orbit");
-                    GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(5), Color.blue);
-                    Orbit o = MuUtils.OrbitFromStateVectors(p.result.WorldEndPosition(), p.result.WorldEndVelocity(), p.result.body, p.result.endUT);
+                    Orbit o = MuUtils.OrbitFromStateVectors(result.WorldEndPosition(), result.WorldEndVelocity(), result.body, result.endUT);
                     GLUtils.DrawOrbit(o, Color.blue);
                 }
             }

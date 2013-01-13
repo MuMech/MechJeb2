@@ -221,10 +221,7 @@ namespace MuMech
 
             if (GUILayout.Button("Remove ALL nodes"))
             {
-                while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
-                {
-                    vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
-                }
+                vessel.RemoveAllManeuverNodes();
             }
             GUILayout.EndVertical();
 

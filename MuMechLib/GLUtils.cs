@@ -76,7 +76,7 @@ namespace MuMech
 
             if (Vector3d.Angle(camPos - worldPosition, byBody.position - worldPosition) > 90) return false;
 
-            double bodyDistance = Vector3d.Distance(camPos, worldPosition);
+            double bodyDistance = Vector3d.Distance(camPos, byBody.position);
             double separationAngle = Vector3d.Angle(worldPosition - camPos, byBody.position - camPos);
             double altitude = bodyDistance * Math.Sin(Math.PI / 180 * separationAngle);
             return (altitude < byBody.Radius);
@@ -108,14 +108,24 @@ namespace MuMech
 
         public static void DrawOrbit(Orbit o, Color c)
         {
-            double step = 1;
-
             List<Vector3d> points = new List<Vector3d>();
-            for (double trueAnomaly = 0; trueAnomaly < 360; trueAnomaly += step)
+            if (o.eccentricity < 1)
             {
-                points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(trueAnomaly, 0)));
+                //elliptical orbits:
+                for (int trueAnomaly = 0; trueAnomaly < 360; trueAnomaly += 1)
+                {
+                    points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(trueAnomaly, 0)));
+                }
+                points.Add(points[0]); //close the loop
             }
-            points.Add(points[0]); //close the loop
+            else
+            {
+                //hyperbolic orbits:
+                for (int meanAnomaly = -1000; meanAnomaly <= 1000; meanAnomaly += 5)
+                {
+                    points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * Math.PI / 180, 0)));
+                }
+            }
 
             DrawPath(o.referenceBody, points, c, false);
         }
