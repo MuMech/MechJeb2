@@ -116,7 +116,7 @@ namespace MuMech
 
         bool Aerobraked()
         {
-            return (x.magnitude > aerobrakedRadius) && (Vector3d.Dot(x, v) > 0);
+            return bodyHasAtmosphere && (x.magnitude > aerobrakedRadius) && (Vector3d.Dot(x, v) > 0);
         }
 
         void AdvanceToFreefallEnd(Orbit initialOrbit)

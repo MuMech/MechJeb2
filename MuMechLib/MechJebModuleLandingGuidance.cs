@@ -27,10 +27,12 @@ namespace MuMech
 
             if (GUILayout.Button("Land at target"))
             {
+                autopilot.enabled = true;
                 autopilot.LandAtPositionTarget();
             }
             if (GUILayout.Button("Stop landing"))
             {
+                autopilot.enabled = false;
                 autopilot.StopLanding();
             }
 

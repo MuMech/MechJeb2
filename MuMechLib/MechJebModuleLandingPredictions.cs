@@ -161,7 +161,7 @@ namespace MuMech
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
                     if (preAerobrakeOrbit == orbit &&
-                        vesselState.altitudeASL < mainBody.maxAtmosphereAltitude && vesselState.speedVertical > 0)
+                        vesselState.altitudeASL < mainBody.maxAtmosphereAltitude && vesselState.speedSurfaceVertical > 0)
                     {
                         UT = vesselState.time;
                     }

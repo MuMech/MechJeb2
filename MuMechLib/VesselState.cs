@@ -19,6 +19,8 @@ namespace MuMech
         public Vector3d north;
         public Vector3d east;
         public Vector3d forward;      //the direction the vessel is pointing
+        public Vector3d horizontalOrbit;   //unit vector in the direction of horizontal component of orbit velocity
+        public Vector3d horizontalSurface; //unit vector in the direction of horizontal component of surface velocity
 
         public Quaternion rotationSurface;
         public Quaternion rotationVesselSurface;
@@ -44,8 +46,10 @@ namespace MuMech
         //the smoothed MovingAverages? Sometimes we need the instantaneous value.
         public MovingAverage speedOrbital = new MovingAverage();
         public MovingAverage speedSurface = new MovingAverage();
-        public MovingAverage speedVertical = new MovingAverage();
-        public MovingAverage speedHorizontal = new MovingAverage();
+        public MovingAverage speedSurfaceVertical = new MovingAverage();
+        public MovingAverage speedSurfaceHorizontal = new MovingAverage();
+        public double speedOrbitVertical;
+        public double speedOrbitHorizontal;
         public MovingAverage vesselHeading = new MovingAverage();
         public MovingAverage vesselPitch = new MovingAverage();
         public MovingAverage vesselRoll = new MovingAverage();
@@ -106,6 +110,9 @@ namespace MuMech
             velocityVesselSurfaceUnit = velocityVesselSurface.normalized;
             velocityMainBodySurface = rotationSurface * velocityVesselSurface;
 
+            horizontalOrbit = Vector3d.Exclude(up, velocityVesselOrbit).normalized;
+            horizontalSurface = Vector3d.Exclude(up, velocityVesselSurface).normalized;
+
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
 
             radialPlusSurface = Vector3d.Exclude(velocityVesselSurfaceUnit, up).normalized;
@@ -118,8 +125,10 @@ namespace MuMech
 
             speedOrbital.value = velocityVesselOrbit.magnitude;
             speedSurface.value = velocityVesselSurface.magnitude;
-            speedVertical.value = Vector3d.Dot(velocityVesselSurface, up);
-            speedHorizontal.value = (velocityVesselSurface - (speedVertical * up)).magnitude;
+            speedSurfaceVertical.value = Vector3d.Dot(velocityVesselSurface, up);
+            speedSurfaceHorizontal.value = (velocityVesselSurface - (speedSurfaceVertical * up)).magnitude;
+            speedOrbitVertical = Vector3d.Dot(velocityVesselOrbit, up);
+            speedOrbitHorizontal = (velocityVesselOrbit - (speedOrbitVertical * up)).magnitude;
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;

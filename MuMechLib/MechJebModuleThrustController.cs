@@ -83,7 +83,7 @@ namespace MuMech
                         spd = vesselState.speedSurface;
                         break;
                     case TMode.KEEP_VERTICAL:
-                        spd = vesselState.speedVertical;
+                        spd = vesselState.speedSurfaceVertical;
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {

@@ -260,6 +260,7 @@ namespace MuMech
         public static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             double e = o.eccentricity;
+            trueAnomaly = MuUtils.ClampDegrees360(trueAnomaly);
             trueAnomaly = trueAnomaly * (Math.PI / 180);
             
             if (e < 1) //elliptical orbits
