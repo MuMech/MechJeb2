@@ -25,16 +25,16 @@ namespace MuMech
 
             predictor.enabled = GUILayout.Toggle(predictor.enabled, "Predictor enabled");
 
-            if (GUILayout.Button("Land at target"))
+            if (!autopilot.enabled)
             {
-                autopilot.enabled = true;
-                autopilot.LandAtPositionTarget();
+                if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
+                if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
             }
-            if (GUILayout.Button("Stop landing"))
+            else
             {
-                autopilot.enabled = false;
-                autopilot.StopLanding();
+                if (GUILayout.Button("Stop landing")) autopilot.StopLanding();
             }
+
 
             GUILayout.Label("Autopilot status: " + autopilot.status);
 

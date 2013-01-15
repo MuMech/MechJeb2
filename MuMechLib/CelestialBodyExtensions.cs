@@ -9,6 +9,11 @@ namespace MuMech
     //We'll see if this class gets enough members to be worthwhile
     public static class CelestialBodyExtensions
     {
+        public static double TerrainAltitude(this CelestialBody body, Vector3d worldPosition)
+        {
+            return body.TerrainAltitude(body.GetLatitude(worldPosition), body.GetLongitude(worldPosition));
+        }
+
         public static double TerrainAltitude(this CelestialBody body, double latitude, double longitude)
         {
             if (body.pqsController == null) return 0;
