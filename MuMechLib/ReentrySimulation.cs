@@ -22,6 +22,7 @@ namespace MuMech
         double aerobrakedRadius;
         double startUT;
         CelestialBody mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
+        double maxThrustAccel;
 
         bool orbitReenters;
 
@@ -42,7 +43,7 @@ namespace MuMech
         List<AbsoluteVector> trajectory;
 
         public ReentrySimulation(Orbit initialOrbit, double UT, double dragCoefficient,
-            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL)
+            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double maxThrustAccel)
         {
             CelestialBody body = initialOrbit.referenceBody;
             bodyHasAtmosphere = body.atmosphere;
@@ -57,6 +58,7 @@ namespace MuMech
             landedRadius = bodyRadius + endAltitudeASL;
             aerobrakedRadius = bodyRadius + body.maxAtmosphereAltitude;
             mainBody = body;
+            this.maxThrustAccel = maxThrustAccel;
 
             referenceFrame = ReferenceFrame.CreateAtCurrentTime(initialOrbit.referenceBody);
 
@@ -196,8 +198,9 @@ namespace MuMech
             double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(x, surfaceVel);
             if (surfaceVel.magnitude > maxAllowedSpeed)
             {
-                surfaceVel = maxAllowedSpeed * surfaceVel.normalized;
-                deltaVExpended += surfaceVel.magnitude - maxAllowedSpeed;
+                double dV = Math.Min(surfaceVel.magnitude - maxAllowedSpeed, dt * maxThrustAccel);
+                surfaceVel -= dV * surfaceVel.normalized;
+                deltaVExpended += dV;
                 v = surfaceVel + Vector3d.Cross(bodyAngularVelocity, x);
             }
         }

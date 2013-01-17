@@ -74,7 +74,7 @@ namespace MuMech
 
             Orbit patch = GetReenteringPatch() ?? orbit;
 
-            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL);
+            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL, vesselState.maxThrustAccel);
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
@@ -161,7 +161,7 @@ namespace MuMech
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
                     if (preAerobrakeOrbit == orbit &&
-                        vesselState.altitudeASL < mainBody.maxAtmosphereAltitude && vesselState.speedSurfaceVertical > 0)
+                        vesselState.altitudeASL < mainBody.maxAtmosphereAltitude && vesselState.speedVertical > 0)
                     {
                         UT = vesselState.time;
                     }

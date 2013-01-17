@@ -10,6 +10,7 @@ namespace MuMech
 
     public class VesselState
     {
+        [InfoItem(name = "Universal Time", units = "s")]
         public double time;            //planetarium time
         public double deltaT;          //TimeWarp.fixedDeltaTime
 
@@ -40,47 +41,78 @@ namespace MuMech
         public Vector3d normalPlusSurface;  //unit vector perpendicular to up and velocityVesselSurface
         
         public Vector3d gravityForce;
+        [InfoItem(name = "Local gravity", units = "m/s²")]
         public double localg;             //magnitude of gravityForce
 
         //How about changing these so we store the instantaneous values and *also*
         //the smoothed MovingAverages? Sometimes we need the instantaneous value.
+        [InfoItem(name = "Orbital speed", units = "m/s")]
         public MovingAverage speedOrbital = new MovingAverage();
+        [InfoItem(name = "Surface speed", units = "m/s")]
         public MovingAverage speedSurface = new MovingAverage();
-        public MovingAverage speedSurfaceVertical = new MovingAverage();
+        [InfoItem(name = "Vertical speed", units = "m/s")]
+        public MovingAverage speedVertical = new MovingAverage();
+        [InfoItem(name = "Horizontal speed", units = "m/s")]
         public MovingAverage speedSurfaceHorizontal = new MovingAverage();
-        public double speedOrbitVertical;
+        [InfoItem(name = "Horizontal speed", units = "m/s")]
         public double speedOrbitHorizontal;
+        [InfoItem(name = "Heading", units = "º")]
         public MovingAverage vesselHeading = new MovingAverage();
+        [InfoItem(name = "Pitch", units = "º")]
         public MovingAverage vesselPitch = new MovingAverage();
+        [InfoItem(name = "Roll", units = "º")]
         public MovingAverage vesselRoll = new MovingAverage();
+        [InfoItem(name = "Altitude (ASL)", units = "m")]
         public MovingAverage altitudeASL = new MovingAverage();
+        [InfoItem(name = "Altitude (true)", units = "m")]
         public MovingAverage altitudeTrue = new MovingAverage();
+        [InfoItem(name = "Altitude (bottom)", units = "m")]
         public double altitudeBottom = 0;
+        [InfoItem(name = "Apoapsis", units = "m")]
         public MovingAverage orbitApA = new MovingAverage();
+        [InfoItem(name = "Periapsis", units = "m")]
         public MovingAverage orbitPeA = new MovingAverage();
+        [InfoItem(name = "Orbital period", units = "s")]
         public MovingAverage orbitPeriod = new MovingAverage();
+        [InfoItem(name = "Time to apoapsis", units = "s")]
         public MovingAverage orbitTimeToAp = new MovingAverage();
+        [InfoItem(name = "Time to periapsis", units = "s")]
         public MovingAverage orbitTimeToPe = new MovingAverage();
+        [InfoItem(name = "LAN", units = "º")]
         public MovingAverage orbitLAN = new MovingAverage();
+        [InfoItem(name = "Argument of periapsis", units = "º")]
         public MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
+        [InfoItem(name = "Inclination", units = "º")]
         public MovingAverage orbitInclination = new MovingAverage();
+        [InfoItem(name="Eccentricity", units="")] 
         public MovingAverage orbitEccentricity = new MovingAverage();
+        [InfoItem(name="Semi-major axis", units="m")] 
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
+        [InfoItem(name="Latitude", units="º")] 
         public MovingAverage latitude = new MovingAverage();
+        [InfoItem(name = "Longitude", units = "º")]
         public MovingAverage longitude = new MovingAverage();
 
         public double radius;  //distance from planet center
 
+        [InfoItem(name="Vessel mass", units="t")] 
         public double mass;
+        [InfoItem(name = "Max thrust", units = "kN")]
         public double thrustAvailable;
+        [InfoItem(name = "Min thrust", units = "kN")]
         public double thrustMinimum;
+        [InfoItem(name = "Max acceleration", units = "m/s²")]
         public double maxThrustAccel;      //thrustAvailable / mass
+        [InfoItem(name = "Min acceleration", units = "m/s²")]
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
         public double torqueRAvailable;
         public double torquePYAvailable;
         public double torqueThrustPYAvailable;
+        [InfoItem(name = "Drag coefficient", units = "")]
         public double massDrag;
+        [InfoItem(name = "Atmosphere density", units = "")]
         public double atmosphericDensity;
+        [InfoItem(name = "Angle to prograde", units = "º")]
         public double angleToPrograde;
 
         public Vector6 rcsThrustAvailable;
@@ -125,10 +157,9 @@ namespace MuMech
 
             speedOrbital.value = velocityVesselOrbit.magnitude;
             speedSurface.value = velocityVesselSurface.magnitude;
-            speedSurfaceVertical.value = Vector3d.Dot(velocityVesselSurface, up);
-            speedSurfaceHorizontal.value = (velocityVesselSurface - (speedSurfaceVertical * up)).magnitude;
-            speedOrbitVertical = Vector3d.Dot(velocityVesselOrbit, up);
-            speedOrbitHorizontal = (velocityVesselOrbit - (speedOrbitVertical * up)).magnitude;
+            speedVertical.value = Vector3d.Dot(velocityVesselSurface, up);
+            speedSurfaceHorizontal.value = (velocityVesselSurface - (speedVertical * up)).magnitude;
+            speedOrbitHorizontal = (velocityVesselOrbit - (speedVertical * up)).magnitude;
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
@@ -317,6 +348,7 @@ namespace MuMech
         }
 
         //probably this should call a more general terminal velocity method
+        [InfoItem(name="Terminal velocity", units="m/s")]
         public double TerminalVelocity()
         {
             if (altitudeASL > mainBody.maxAtmosphereAltitude) return Double.MaxValue;

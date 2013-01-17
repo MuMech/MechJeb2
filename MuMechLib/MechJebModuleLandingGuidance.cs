@@ -53,6 +53,11 @@ namespace MuMech
             GUI.DragWindow();
         }
 
+        public override string GetName()
+        {
+            return "Landing Guidance";
+        }
+
         public MechJebModuleLandingGuidance(MechJebCore core) : base(core) { }
     }
 }
