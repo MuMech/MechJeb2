@@ -10,7 +10,7 @@ namespace MuMech
 
     public class VesselState
     {
-        [InfoItem(name = "Universal Time", units = "s")]
+        [ValueInfoItem(name = "Universal Time", units = "s")]
         public double time;            //planetarium time
         public double deltaT;          //TimeWarp.fixedDeltaTime
 
@@ -39,80 +39,80 @@ namespace MuMech
         public Vector3d radialPlusSurface; //unit vector in the plane of up and velocityVesselSurface and perpendicular to velocityVesselSurface
         public Vector3d normalPlus;    //unit vector perpendicular to up and velocityVesselOrbit
         public Vector3d normalPlusSurface;  //unit vector perpendicular to up and velocityVesselSurface
-        
+
         public Vector3d gravityForce;
-        [InfoItem(name = "Local gravity", units = "m/s²")]
+        [ValueInfoItem(name = "Local gravity", units = "m/s²")]
         public double localg;             //magnitude of gravityForce
 
         //How about changing these so we store the instantaneous values and *also*
         //the smoothed MovingAverages? Sometimes we need the instantaneous value.
-        [InfoItem(name = "Orbital speed", units = "m/s")]
+        [ValueInfoItem(name = "Orbital speed", units = "m/s")]
         public MovingAverage speedOrbital = new MovingAverage();
-        [InfoItem(name = "Surface speed", units = "m/s")]
+        [ValueInfoItem(name = "Surface speed", units = "m/s")]
         public MovingAverage speedSurface = new MovingAverage();
-        [InfoItem(name = "Vertical speed", units = "m/s")]
+        [ValueInfoItem(name = "Vertical speed", units = "m/s")]
         public MovingAverage speedVertical = new MovingAverage();
-        [InfoItem(name = "Horizontal speed", units = "m/s")]
+        [ValueInfoItem(name = "Horizontal speed", units = "m/s")]
         public MovingAverage speedSurfaceHorizontal = new MovingAverage();
-        [InfoItem(name = "Horizontal speed", units = "m/s")]
+        [ValueInfoItem(name = "Horizontal speed", units = "m/s")]
         public double speedOrbitHorizontal;
-        [InfoItem(name = "Heading", units = "º")]
+        [ValueInfoItem(name = "Heading", units = "º")]
         public MovingAverage vesselHeading = new MovingAverage();
-        [InfoItem(name = "Pitch", units = "º")]
+        [ValueInfoItem(name = "Pitch", units = "º")]
         public MovingAverage vesselPitch = new MovingAverage();
-        [InfoItem(name = "Roll", units = "º")]
+        [ValueInfoItem(name = "Roll", units = "º")]
         public MovingAverage vesselRoll = new MovingAverage();
-        [InfoItem(name = "Altitude (ASL)", units = "m")]
+        [ValueInfoItem(name = "Altitude (ASL)", units = "m")]
         public MovingAverage altitudeASL = new MovingAverage();
-        [InfoItem(name = "Altitude (true)", units = "m")]
+        [ValueInfoItem(name = "Altitude (true)", units = "m")]
         public MovingAverage altitudeTrue = new MovingAverage();
-        [InfoItem(name = "Altitude (bottom)", units = "m")]
+        [ValueInfoItem(name = "Altitude (bottom)", units = "m")]
         public double altitudeBottom = 0;
-        [InfoItem(name = "Apoapsis", units = "m")]
+        [ValueInfoItem(name = "Apoapsis", units = "m")]
         public MovingAverage orbitApA = new MovingAverage();
-        [InfoItem(name = "Periapsis", units = "m")]
+        [ValueInfoItem(name = "Periapsis", units = "m")]
         public MovingAverage orbitPeA = new MovingAverage();
-        [InfoItem(name = "Orbital period", units = "s")]
+        [ValueInfoItem(name = "Orbital period", units = "s")]
         public MovingAverage orbitPeriod = new MovingAverage();
-        [InfoItem(name = "Time to apoapsis", units = "s")]
+        [ValueInfoItem(name = "Time to apoapsis", units = "s")]
         public MovingAverage orbitTimeToAp = new MovingAverage();
-        [InfoItem(name = "Time to periapsis", units = "s")]
+        [ValueInfoItem(name = "Time to periapsis", units = "s")]
         public MovingAverage orbitTimeToPe = new MovingAverage();
-        [InfoItem(name = "LAN", units = "º")]
+        [ValueInfoItem(name = "LAN", units = "º")]
         public MovingAverage orbitLAN = new MovingAverage();
-        [InfoItem(name = "Argument of periapsis", units = "º")]
+        [ValueInfoItem(name = "Argument of periapsis", units = "º")]
         public MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
-        [InfoItem(name = "Inclination", units = "º")]
+        [ValueInfoItem(name = "Inclination", units = "º")]
         public MovingAverage orbitInclination = new MovingAverage();
-        [InfoItem(name="Eccentricity", units="")] 
+        [ValueInfoItem(name = "Eccentricity", units = "")]
         public MovingAverage orbitEccentricity = new MovingAverage();
-        [InfoItem(name="Semi-major axis", units="m")] 
+        [ValueInfoItem(name = "Semi-major axis", units = "m")]
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
-        [InfoItem(name="Latitude", units="º")] 
+        [ValueInfoItem(name = "Latitude", units = "º")]
         public MovingAverage latitude = new MovingAverage();
-        [InfoItem(name = "Longitude", units = "º")]
+        [ValueInfoItem(name = "Longitude", units = "º")]
         public MovingAverage longitude = new MovingAverage();
 
         public double radius;  //distance from planet center
 
-        [InfoItem(name="Vessel mass", units="t")] 
+        [ValueInfoItem(name = "Vessel mass", units = "t")]
         public double mass;
-        [InfoItem(name = "Max thrust", units = "kN")]
+        [ValueInfoItem(name = "Max thrust", units = "kN")]
         public double thrustAvailable;
-        [InfoItem(name = "Min thrust", units = "kN")]
+        [ValueInfoItem(name = "Min thrust", units = "kN")]
         public double thrustMinimum;
-        [InfoItem(name = "Max acceleration", units = "m/s²")]
+        [ValueInfoItem(name = "Max acceleration", units = "m/s²")]
         public double maxThrustAccel;      //thrustAvailable / mass
-        [InfoItem(name = "Min acceleration", units = "m/s²")]
+        [ValueInfoItem(name = "Min acceleration", units = "m/s²")]
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
         public double torqueRAvailable;
         public double torquePYAvailable;
         public double torqueThrustPYAvailable;
-        [InfoItem(name = "Drag coefficient", units = "")]
+        [ValueInfoItem(name = "Drag coefficient", units = "")]
         public double massDrag;
-        [InfoItem(name = "Atmosphere density", units = "")]
+        [ValueInfoItem(name = "Atmosphere density", units = "kg/m³")]
         public double atmosphericDensity;
-        [InfoItem(name = "Angle to prograde", units = "º")]
+        [ValueInfoItem(name = "Angle to prograde", units = "º")]
         public double angleToPrograde;
 
         public Vector6 rcsThrustAvailable;
@@ -270,7 +270,7 @@ namespace MuMech
                         if (((AtmosphericEngine)p).thrustVectoringCapable)
                         {
                             torqueThrustPYAvailable += Math.Sin(Math.Abs(((AtmosphericEngine)p).gimbalRange) * Math.PI / 180) * ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-                        } 
+                        }
                     }
                     else if (p.Modules.Contains("ModuleEngines"))
                     {
@@ -348,10 +348,10 @@ namespace MuMech
         }
 
         //probably this should call a more general terminal velocity method
-        [InfoItem(name="Terminal velocity", units="m/s")]
+        [ValueInfoItem(name = "Terminal velocity", units = "m/s")]
         public double TerminalVelocity()
         {
-            if (altitudeASL > mainBody.maxAtmosphereAltitude) return Double.MaxValue;
+            if (altitudeASL > mainBody.maxAtmosphereAltitude) return double.PositiveInfinity;
 
             double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(CoM, mainBody));
             return Math.Sqrt(2 * localg * mass / (massDrag * FlightGlobals.DragMultiplier * airDensity));
@@ -362,5 +362,22 @@ namespace MuMech
             return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
         }
 
+        [ValueInfoItem(name="TWR", units="")]
+        public double TWR()
+        {
+            return thrustAvailable / (mass * mainBody.GeeASL * 9.81);
+        }
+
+        [ValueInfoItem(name="Atmospheric pressure", units="atm")]
+        public double AtmosphericPressure()
+        {
+            return FlightGlobals.getStaticPressure(CoM);
+        }
+
+        [ValueInfoItem(name = "Coordinates")]
+        public string GetCoordinateString()
+        {
+            return Coordinates.ToStringDMS(latitude, longitude);
+        }
     }
 }

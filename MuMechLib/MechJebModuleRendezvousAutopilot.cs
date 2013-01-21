@@ -14,7 +14,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!core.target.Exists)
+            if (!core.target.NormalTargetExists)
             {
                 this.enabled = false;
                 return;

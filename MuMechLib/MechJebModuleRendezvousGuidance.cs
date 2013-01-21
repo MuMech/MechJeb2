@@ -12,7 +12,7 @@ namespace MuMech
 
         protected override void FlightWindowGUI(int windowID)
         {
-            if (!core.target.Exists)
+            if (!core.target.NormalTargetExists)
             {
                 GUILayout.Label("Select a target to rendezvous with.");
                 base.FlightWindowGUI(windowID);

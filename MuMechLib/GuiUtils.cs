@@ -95,8 +95,8 @@ namespace MuMech
 
         public static string TimeToDHMS(double seconds)
         {
-            int[] intervals = { 24 * 3600, 3600, 60 , 1};
-            string[] units = { "d", "h", "m", "s" };
+            string[] units = { "y", "d", "h", "m", "s" };
+            int[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
 
             string ret = "";
 
@@ -106,10 +106,10 @@ namespace MuMech
                 seconds *= -1;
             }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < units.Length; i++)
             {
                 int n = (int)(seconds / intervals[i]);
-                if (n != 0 || (i == 3 && ret == "")) ret += n.ToString() + units[i];
+                if (n != 0 || (i == units.Length-1 && ret == "")) ret += n.ToString() + units[i];
                 seconds -= n * intervals[i];
             }
 
@@ -118,12 +118,12 @@ namespace MuMech
 
         public static bool TryParseDHMS(string s, out double seconds)
         {
-            string[] units = { "d", "h", "m", "s" };
-            double[] intervals = { 24 * 3600, 3600, 60, 1 };
+            string[] units = { "y", "d", "h", "m", "s" };
+            int[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
 
             seconds = 0;
             bool parsedSomething = false;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < units.Length; i++)
             {
                 s = s.Trim(' ', ',');
                 int unitPos = s.IndexOf(units[i]);

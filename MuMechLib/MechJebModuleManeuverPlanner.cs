@@ -140,13 +140,13 @@ namespace MuMech
                         UT = o.NextPeriapsisTime(UT);
                         break;
                     case TimeReference.ASCENDING_NODE:
-                        if (core.target.Exists)
+                        if (core.target.NormalTargetExists)
                         {
                             UT = o.TimeOfAscendingNode(core.target.Orbit, UT);
                         }
                         break;
                     case TimeReference.DESCENDING_NODE:
-                        if (core.target.Exists)
+                        if (core.target.NormalTargetExists)
                         {
                             UT = o.TimeOfDescendingNode(core.target.Orbit, UT);
                         }

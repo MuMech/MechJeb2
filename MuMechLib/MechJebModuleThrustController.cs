@@ -22,7 +22,9 @@ namespace MuMech
         public bool trans_kill_h = false;
         public bool trans_land = false;
         public bool trans_land_gears = false;
+        [ToggleInfoItem(name="Limit throttle to keep below terminal velocity")]
         public bool limitToTerminalVelocity = false;
+        [ToggleInfoItem(name="Limit throttle to prevent overheats")]
         public bool limitToPreventOverheats = false;
         public bool limitAcceleration = false;
         public double maxAcceleration = double.MaxValue;

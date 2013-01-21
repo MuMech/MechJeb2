@@ -86,6 +86,13 @@ namespace MuMech
             modulesUpdated = true;
         }
 
+        public void RemoveComputerModule(ComputerModule module)
+        {
+            computerModules.Remove(module);
+            modulesUpdated = true;
+        }
+
+
         public override void OnStart(PartModule.StartState state)
         {
             if (moduleRegistry == null)

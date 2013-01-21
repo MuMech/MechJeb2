@@ -50,7 +50,7 @@ namespace MuMech
             targetLatitude = latitude;
             targetLongitude = longitude;
 
-            Set(new PositionTarget(String.Format("{0:0.000} N, {1:0.000} E", latitude, longitude)));
+            Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
         }
 
         public Vector3d GetPositionTargetPosition()
@@ -58,16 +58,30 @@ namespace MuMech
             return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude));
         }
 
+        [ValueInfoItem(name="Target coordinates")]
+        public string GetPositionTargetString()
+        {
+            if (target is PositionTarget && !(target is DirectionTarget))
+            {
+                return Coordinates.ToStringDMS(targetLatitude, targetLongitude);
+            }
+            else
+            {
+                return "none";
+            }
+        }
+
         public void SetDirectionTarget(string name)
         {
             Set(new DirectionTarget(name));
         }
 
+        [ActionInfoItem(name="Pick position target")]
         public void PickPositionTargetOnMap()
         {
             pickingPositionTarget = true;
             MapView.EnterMapView();
-            ScreenMessages.PostScreenMessage("Click to select a target on " + mainBody.name + "'s surface", 3.0f, ScreenMessageStyle.UPPER_CENTER);
+            ScreenMessages.PostScreenMessage("Click to select a target on " + mainBody.theName + "'s surface", 3.0f, ScreenMessageStyle.UPPER_CENTER);
         }
 
         public void StopPickPositionTargetOnMap()
@@ -87,7 +101,7 @@ namespace MuMech
         }
 
 
-        public bool Exists
+        public bool NormalTargetExists
         {
             get
             {
