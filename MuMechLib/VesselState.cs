@@ -324,7 +324,7 @@ namespace MuMech
 
                                 foreach (Transform t in pm.thrusterTransforms)
                                 {
-                                    rcsThrustAvailable.Add(t.forward * pm.thrusterPower);
+                                    rcsThrustAvailable.Add(-t.up * pm.thrusterPower);
                                 }
                             }
                         }

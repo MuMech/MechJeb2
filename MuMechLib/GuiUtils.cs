@@ -85,11 +85,12 @@ namespace MuMech
 
     public static class GuiUtils
     {
-        public static void SimpleTextBox(string label, EditableDouble ed)
+        public static void SimpleTextBox(string leftLabel, EditableDouble ed, string rightLabel = "")
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(label);
-            ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true));
+            GUILayout.Label(leftLabel);
+            ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
         }
 
@@ -121,11 +122,14 @@ namespace MuMech
             string[] units = { "y", "d", "h", "m", "s" };
             int[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
 
+            s = s.Trim(' ');
+            bool minus = (s.StartsWith("-"));
+
             seconds = 0;
             bool parsedSomething = false;
             for (int i = 0; i < units.Length; i++)
             {
-                s = s.Trim(' ', ',');
+                s = s.Trim(' ', ',', '-');
                 int unitPos = s.IndexOf(units[i]);
                 if (unitPos != -1)
                 {
@@ -136,6 +140,8 @@ namespace MuMech
                     parsedSomething = true;
                 }
             }
+
+            if (minus) seconds = -seconds;
 
             return parsedSomething;
         }

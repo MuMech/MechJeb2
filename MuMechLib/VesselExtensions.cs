@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -68,6 +69,16 @@ namespace MuMech
         //input dV should be in world coordinates
         public static ManeuverNode PlaceManeuverNode(this Vessel vessel, Orbit patch, Vector3d dV, double UT)
         {
+            //placing a maneuver node with bad dV values can really mess up the game, so try to protect against that
+            //and log an exception if we get a bad dV vector:
+            for (int i = 0; i < 3; i++)
+            {
+                if (double.IsNaN(dV[i]) || double.IsInfinity(dV[i]))
+                {
+                    throw new Exception("MechJeb VesselExtensions.PlaceManeuverNode: bad dV: " + dV);
+                }
+            }
+
             //convert a dV in world coordinates into the coordinate system of the maneuver node,
             //which uses (x, y, z) = (radial+, normal-, prograde)
             Vector3d nodeDV = patch.DeltaVToManeuverNodeCoordinates(UT, dV);

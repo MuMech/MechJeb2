@@ -10,9 +10,19 @@ namespace MuMech
     {
         public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }
 
-        enum Operation { CIRCULARIZE, ELLIPTICIZE, PERIAPSIS, APOAPSIS, INCLINATION, PLANE, TRANSFER, COURSE_CORRECTION, 
-            INTERPLANETARY_TRANSFER, LAMBERT};
-        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, ASCENDING_NODE, DESCENDING_NODE, NINETY_BEFORE_AP };
+        enum Operation
+        {
+            CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER,
+            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT
+        };
+        static int numOperations = Enum.GetNames(typeof(Operation)).Length;
+        string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap",
+                  "change inclination", "match planes with target", "Hohmann transfer to target", 
+                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time"};
+
+        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, ASCENDING_NODE, DESCENDING_NODE };
+        static int numTimeReferences = Enum.GetNames(typeof(TimeReference)).Length;
+        string[] timeReferenceStrings = new string[] { "", "the next apoapsis after", "the next periapsis after", "the next AN with the target after", "the next DN with the target after" };
 
         Operation operation = Operation.CIRCULARIZE;
         TimeReference timeReference = TimeReference.NOW;
@@ -20,13 +30,16 @@ namespace MuMech
         bool createNode = true;
 
         enum Node { ASCENDING, DESCENDING };
+        string[] nodeStrings = new string[] { "at the next ascending node after", "at the next descending node after" };
         Node planeMatchNode;
 
-        EditableDouble pe = new EditableDouble(0, 1000);
-        EditableDouble ap = new EditableDouble(0, 1000);
-        EditableDouble inc = new EditableDouble(0);
-        EditableTime lead = new EditableTime(0);
+        EditableDouble newPeA = new EditableDouble(0, 1000);
+        EditableDouble newApA = new EditableDouble(0, 1000);
+        EditableDouble newInc = new EditableDouble(0);
+        EditableTime leadTime = new EditableTime(0);
         EditableTime interceptInterval = new EditableTime(3600);
+
+        string errorMessage = "";
 
         protected override void FlightWindowGUI(int windowID)
         {
@@ -48,175 +61,34 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◅")) operation = (Operation)(((int)operation - 1 + Enum.GetNames(typeof(Operation)).Length) % Enum.GetNames(typeof(Operation)).Length);
-            GUILayout.Label(operation.ToString());
-            if (GUILayout.Button("▻")) operation = (Operation)(((int)operation + 1 + Enum.GetNames(typeof(Operation)).Length) % Enum.GetNames(typeof(Operation)).Length);
+            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) operation = (Operation)(((int)operation - 1 + numOperations) % numOperations);
+            GUILayout.Label(operationStrings[(int)operation]);
+            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) operation = (Operation)(((int)operation + 1 + numOperations) % numOperations);
             GUILayout.EndHorizontal();
 
-            switch (operation)
-            {
-                case Operation.CIRCULARIZE:
-                    break;
+            DoOperationParametersGUI();
 
-                case Operation.ELLIPTICIZE:
-                    GuiUtils.SimpleTextBox("Pe (km)", pe);
-                    GuiUtils.SimpleTextBox("Ap (km)", ap);
-                    break;
-
-                case Operation.PERIAPSIS:
-                    GuiUtils.SimpleTextBox("Pe (km)", pe);
-                    break;
-
-                case Operation.APOAPSIS:
-                    GuiUtils.SimpleTextBox("Ap (km)", ap);
-                    break;
-
-                case Operation.INCLINATION:
-                    GuiUtils.SimpleTextBox("Inc (deg)", inc);
-                    break;
-
-                case Operation.PLANE:
-                    if (GUILayout.Button(planeMatchNode.ToString())) planeMatchNode = (Node)(((int)planeMatchNode + 1) % 2);
-                    break;
-
-                case Operation.TRANSFER:
-                    break;
-
-                case Operation.COURSE_CORRECTION:
-                    break;
-
-                case Operation.INTERPLANETARY_TRANSFER:
-                    break;
-
-                case Operation.LAMBERT:
-                    GuiUtils.SimpleTextBox("Transfer time of flight: ", interceptInterval);
-                    break;
-
-            }
-
-            double UT = vesselState.time;
+            double UT = vesselState.time; ;
 
             if (!anyNodeExists || createNode)
             {
-                GuiUtils.SimpleTextBox("In (seconds): ", lead);
-
-                GUILayout.BeginHorizontal();
-                if (anyNodeExists)
-                {
-                    if (GUILayout.Button(timeReferenceSinceLast ? "After the last node" : "Now"))
-                    {
-                        timeReferenceSinceLast = !timeReferenceSinceLast;
-                    }
-                    GUILayout.Label(", after the next:");
-                }
-                else
-                {
-                    GUILayout.Label("After the next:");
-                }
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("◅")) timeReference = (TimeReference)(((int)timeReference - 1 + Enum.GetNames(typeof(TimeReference)).Length) % Enum.GetNames(typeof(TimeReference)).Length);
-                GUILayout.Label(timeReference.ToString());
-                if (GUILayout.Button("▻")) timeReference = (TimeReference)(((int)timeReference + 1 + Enum.GetNames(typeof(TimeReference)).Length) % Enum.GetNames(typeof(TimeReference)).Length);
-                GUILayout.EndHorizontal();
-
-                Orbit o = orbit;
-
-                if (anyNodeExists && timeReferenceSinceLast)
-                {
-                    UT = vessel.patchedConicSolver.maneuverNodes.Last().UT;
-                    o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
-                }
-
-                switch (timeReference)
-                {
-                    case TimeReference.NOW:
-                        break;
-                    case TimeReference.APOAPSIS:
-                        UT = o.NextApoapsisTime(UT);
-                        break;
-                    case TimeReference.PERIAPSIS:
-                        UT = o.NextPeriapsisTime(UT);
-                        break;
-                    case TimeReference.ASCENDING_NODE:
-                        if (core.target.NormalTargetExists)
-                        {
-                            UT = o.TimeOfAscendingNode(core.target.Orbit, UT);
-                        }
-                        break;
-                    case TimeReference.DESCENDING_NODE:
-                        if (core.target.NormalTargetExists)
-                        {
-                            UT = o.TimeOfDescendingNode(core.target.Orbit, UT);
-                        }
-                        break;
-                    case TimeReference.NINETY_BEFORE_AP:
-                        UT = o.TimeOfTrueAnomaly(90, UT);
-                        break;
-                }
-
-                UT += lead;
+                UT = DoChooseTimeGUI();
             }
 
             if (GUILayout.Button("Go"))
             {
-                Vector3d dV = Vector3d.zero;
-
                 Orbit o = vessel.GetPatchAtUT(UT);
-                double rad = o.referenceBody.Radius;
-
-                switch (operation)
+                if (CheckPreconditions(o, UT))
                 {
-                    case Operation.CIRCULARIZE:
-                        dV = OrbitalManeuverCalculator.DeltaVToCircularize(o, UT);
-                        break;
-
-                    case Operation.ELLIPTICIZE:
-                        dV = OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, pe + rad, ap + rad);
-                        break;
-
-                    case Operation.PERIAPSIS:
-                        dV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, pe + rad);
-                        break;
-
-                    case Operation.APOAPSIS:
-                        dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, ap + rad);
-                        break;
-
-                    case Operation.INCLINATION:
-                        dV = OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, inc);
-                        break;
-
-                    case Operation.PLANE:
-                        if (planeMatchNode == Node.ASCENDING)
-                        {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, core.target.Orbit, UT, out UT);
-                        }
-                        else
-                        {
-                            dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, core.target.Orbit, UT, out UT);
-                        }
-                        break;
-
-                    case Operation.TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, vesselState.time, out UT);
-                        break;
-
-                    case Operation.COURSE_CORRECTION:
-                        dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, core.target.Orbit);
-                        break;
-
-                    case Operation.INTERPLANETARY_TRANSFER:
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.Orbit, out UT);
-                        break;
-
-                    case Operation.LAMBERT:
-                        dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.Orbit, UT + interceptInterval);
-                        break;
+                    MakeNodeForOperation(o, UT);
                 }
+            }
 
-                vessel.PlaceManeuverNode(o, dV, UT);
+            if (errorMessage.Length > 0)
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label(errorMessage, s);
             }
 
             if (GUILayout.Button("Remove ALL nodes"))
@@ -230,8 +102,372 @@ namespace MuMech
             base.FlightWindowGUI(windowID);
         }
 
+        void DoOperationParametersGUI()
+        {
+            switch (operation)
+            {
+                case Operation.CIRCULARIZE:
+                    GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.ELLIPTICIZE:
+                    GuiUtils.SimpleTextBox("New periapsis:", newPeA, "km");
+                    GuiUtils.SimpleTextBox("New apoapsis:", newApA, "km");
+                    GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.PERIAPSIS:
+                    GuiUtils.SimpleTextBox("New periapsis:", newPeA, "km");
+                    GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.APOAPSIS:
+                    GuiUtils.SimpleTextBox("New apoapsis:", newApA, "km");
+                    GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.INCLINATION:
+                    GuiUtils.SimpleTextBox("New inclination:", newInc, "º");
+                    GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.PLANE:
+                    GUILayout.Label("Schedule the burn");
+                    if (GUILayout.Button(nodeStrings[(int)planeMatchNode])) planeMatchNode = (Node)(((int)planeMatchNode + 1) % 2);
+                    break;
+
+                case Operation.TRANSFER:
+                    GUILayout.Label("Schedule the burn at the next transfer window starting");
+                    break;
+
+                case Operation.INTERPLANETARY_TRANSFER:
+                    GUILayout.Label("Schedule the burn at the next transfer window starting");
+                    break;
+
+                case Operation.COURSE_CORRECTION:
+                    GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.LAMBERT:
+                    GuiUtils.SimpleTextBox("Time after burn to intercept target:", interceptInterval);
+                    GUILayout.Label("Schedule the burn");
+                    break;
+            }
+        }
+
+        double DoChooseTimeGUI()
+        {
+            double UT = vesselState.time;
+
+            bool anyNodeExists = (vessel.patchedConicSolver.maneuverNodes.Count > 0);
+
+            GuiUtils.SimpleTextBox("", leadTime, "after");
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) timeReference = (TimeReference)(((int)timeReference - 1 + numTimeReferences) % numTimeReferences);
+            GUILayout.Label(timeReferenceStrings[(int)timeReference]);
+            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) timeReference = (TimeReference)(((int)timeReference + 1 + numTimeReferences) % numTimeReferences);
+            GUILayout.EndHorizontal();
+
+            if (anyNodeExists)
+            {
+                if (GUILayout.Button(timeReferenceSinceLast ? "the last maneuver node." : "now."))
+                {
+                    timeReferenceSinceLast = !timeReferenceSinceLast;
+                }
+            }
+            else
+            {
+                GUILayout.Label("now.");
+            }
+
+            Orbit o = orbit;
+
+            if (anyNodeExists && timeReferenceSinceLast)
+            {
+                UT = vessel.patchedConicSolver.maneuverNodes.Last().UT;
+                o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
+            }
+
+            switch (timeReference)
+            {
+                case TimeReference.NOW:
+                    break;
+                case TimeReference.APOAPSIS:
+                    UT = o.NextApoapsisTime(UT);
+                    break;
+                case TimeReference.PERIAPSIS:
+                    UT = o.NextPeriapsisTime(UT);
+                    break;
+                case TimeReference.ASCENDING_NODE:
+                    if (core.target.NormalTargetExists)
+                    {
+                        UT = o.TimeOfAscendingNode(core.target.Orbit, UT);
+                    }
+                    break;
+                case TimeReference.DESCENDING_NODE:
+                    if (core.target.NormalTargetExists)
+                    {
+                        UT = o.TimeOfDescendingNode(core.target.Orbit, UT);
+                    }
+                    break;
+            }
+
+            UT += leadTime;
+
+            return UT;
+        }
 
 
+        bool CheckPreconditions(Orbit o, double UT)
+        {
+            errorMessage = "";
+            bool error = false;
+            
+            string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius, 1) + "m";
+
+            switch (operation)
+            {
+                case Operation.CIRCULARIZE:
+                    break;
+
+                case Operation.ELLIPTICIZE:
+                    if (o.referenceBody.Radius + newPeA > o.Radius(UT))
+                    {
+                        error = true;
+                        errorMessage = "new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")";
+                    }
+                    else if (o.referenceBody.Radius + newApA < o.Radius(UT))
+                    {
+                        error = true;
+                        errorMessage = "new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")";
+                    }
+                    else if (newPeA < -o.referenceBody.Radius)
+                    {
+                        error = true;
+                        errorMessage = "new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + o.referenceBody.Radius.ToString("F0") + ")";
+                    }
+                    break;
+
+                case Operation.PERIAPSIS:
+                    if (o.referenceBody.Radius + newPeA > o.Radius(UT))
+                    {
+                        error = true;
+                        errorMessage = "new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")";
+                    }
+                    else if (newPeA < -o.referenceBody.Radius)
+                    {
+                        error = true;
+                        errorMessage = "new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + o.referenceBody.Radius.ToString("F0") + ")";
+                    }
+                    break;
+
+                case Operation.APOAPSIS:
+                    if (o.referenceBody.Radius + newApA < o.Radius(UT))
+                    {
+                        error = true;
+                        errorMessage = "new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")";
+                    }
+                    break;
+
+                case Operation.INCLINATION:
+                    break;
+
+                case Operation.PLANE:
+                    if (!core.target.NormalTargetExists)
+                    {
+                        error = true;
+                        errorMessage = "must select a target to match planes with.";
+                    }
+                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    {
+                        error = true;
+                        errorMessage = "can only match planes with an object in the same sphere of influence.";
+                    }
+                    else if (planeMatchNode == Node.ASCENDING)
+                    {
+                        if (!o.AscendingNodeExists(core.target.Orbit))
+                        {
+                            error = true;
+                            errorMessage = "ascending node with target doesn't exist.";
+                        }
+                    }
+                    else
+                    {
+                        if (!o.DescendingNodeExists(core.target.Orbit))
+                        {
+                            error = true;
+                            errorMessage = "descending node with target doesn't exist.";
+                        }
+                    }
+                    break;
+
+                case Operation.TRANSFER:
+                    if (!core.target.NormalTargetExists)
+                    {
+                        error = true;
+                        errorMessage = "must select a target for the Hohmann transfer.";
+                    }
+                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    {
+                        error = true;
+                        errorMessage = "target for Hohmann transfer must be in the same sphere of influence.";
+                    }
+                    else if (o.eccentricity > 1)
+                    {
+                        error = true;
+                        errorMessage = "starting orbit for Hohmann transfer must not be hyperbolic.";
+                    }
+                    else if (core.target.Orbit.eccentricity > 1)
+                    {
+                        error = true;
+                        errorMessage = "target orbit for Hohmann transfer must not be hyperbolic.";
+                    }
+                    else if (o.RelativeInclination(core.target.Orbit) > 30 && o.RelativeInclination(core.target.Orbit) < 150)
+                    {
+                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.Orbit).ToString("F0") + "º angle to starting orbit's plane (recommend at most 30º). Planned transfer may not intercept target properly.";
+                    }
+                    else if (o.eccentricity > 0.2)
+                    {
+                        errorMessage = "Warning: Recommend starting Hohmann transfers from a near-circular orbit (eccentricity < 0.2). Planned transfer is starting from an orbit with eccentricity " + o.eccentricity.ToString("F2") + " and so may not intercept target properly.";
+                    }
+                    break;
+
+                case Operation.COURSE_CORRECTION:
+                    if (!core.target.NormalTargetExists)
+                    {
+                        error = true;
+                        errorMessage = "must select a target for the course correction.";
+                    }
+                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    {
+                        error = true;
+                        errorMessage = "target for course correction must be in the same sphere of influence";
+                    }
+                    else if (o.NextClosestApproachTime(core.target.Orbit, UT) < UT + 1 ||
+                        o.NextClosestApproachDistance(core.target.Orbit, UT) > core.target.Orbit.semiMajorAxis * 0.2)
+                    {
+                        errorMessage = "Warning: orbit before course correction doesn't seem to approach target very closely. Planned course correction may be extreme. Recommend plotting an approximate intercept orbit and then plotting a course correction.";
+                    }
+                    break;
+
+                case Operation.INTERPLANETARY_TRANSFER:
+                    if (!core.target.NormalTargetExists)
+                    {
+                        error = true;
+                        errorMessage = "must select a target for the interplanetary transfer.";
+                    }
+                    else if (o.referenceBody.referenceBody == null)
+                    {
+                        error = true;
+                        errorMessage = "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".";
+                    }
+                    else if (o.referenceBody.referenceBody != core.target.Orbit.referenceBody)
+                    {
+                        error = true;
+                        if (o.referenceBody == core.target.Orbit.referenceBody) errorMessage = "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
+                        else errorMessage = "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
+                    }
+                    else if(o.referenceBody.orbit.RelativeInclination(core.target.Orbit) > 30) 
+                    {
+                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.Orbit).ToString("F0") + "º angle to " + o.referenceBody.theName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly."; 
+                    }
+                    else
+                    {
+                        double relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
+                        if (relativeInclination > 10)
+                        {
+                            errorMessage = "Warning: Recommend starting interplanetary transfers from " + o.referenceBody.theName + " from an orbit in the same plane as " + o.referenceBody.theName + "'s orbit around " + o.referenceBody.referenceBody.theName + ". Starting orbit around " + o.referenceBody.theName + " is inclined " + relativeInclination.ToString("F1") + "º with respect to " + o.referenceBody.theName + "'s orbit around " + o.referenceBody.referenceBody.theName + " (recommend < 10º). Planned transfer may not intercept target properly.";
+                        }
+                        else if (o.eccentricity > 0.2)
+                        {
+                            errorMessage = "Warning: Recommend starting interplanetary transfers from a near-circular orbit (eccentricity < 0.2). Planned transfer is starting from an orbit with eccentricity " + o.eccentricity.ToString("F2") + " and so may not intercept target properly.";
+                        }
+                    }
+                    break;
+
+                case Operation.LAMBERT:
+                    if (!core.target.NormalTargetExists)
+                    {
+                        error = true;
+                        errorMessage = "must select a target to intercept.";
+                    }
+                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    {
+                        error = true;
+                        errorMessage = "target must be in the same sphere of influence.";
+                    }
+                    break;
+            }
+
+            if (error) errorMessage = "Couldn't plot maneuver: " + errorMessage;
+
+            return !error;
+        }
+
+
+        void MakeNodeForOperation(Orbit o, double UT)
+        {
+            Vector3d dV = Vector3d.zero;
+
+            double bodyRadius = o.referenceBody.Radius;
+
+            switch (operation)
+            {
+                case Operation.CIRCULARIZE:
+                    dV = OrbitalManeuverCalculator.DeltaVToCircularize(o, UT);
+                    break;
+
+                case Operation.ELLIPTICIZE:
+                    dV = OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, newPeA + bodyRadius, newApA + bodyRadius);
+                    break;
+
+                case Operation.PERIAPSIS:
+                    dV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, newPeA + bodyRadius);
+                    break;
+
+                case Operation.APOAPSIS:
+                    dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + bodyRadius);
+                    break;
+
+                case Operation.INCLINATION:
+                    dV = OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, newInc);
+                    break;
+
+                case Operation.PLANE:
+                    if (planeMatchNode == Node.ASCENDING)
+                    {
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, core.target.Orbit, UT, out UT);
+                    }
+                    else
+                    {
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, core.target.Orbit, UT, out UT);
+                    }
+                    break;
+
+                case Operation.TRANSFER:
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, vesselState.time, out UT);
+                    break;
+
+                case Operation.COURSE_CORRECTION:
+                    dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, core.target.Orbit);
+                    break;
+
+                case Operation.INTERPLANETARY_TRANSFER:
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.Orbit, out UT);
+                    break;
+
+                case Operation.LAMBERT:
+                    dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.Orbit, UT + interceptInterval);
+                    break;
+            }
+
+
+            //handle updating an existing node by removing it and then re-creating it
+            if (!createNode) vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
+
+            vessel.PlaceManeuverNode(o, dV, UT);
+        }
 
         public override GUILayoutOption[] FlightWindowOptions()
         {

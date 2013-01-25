@@ -7,13 +7,15 @@ using UnityEngine;
 namespace MuMech
 {
     /////////////////////////////////////////
-    // Lambert solver written by Arrowstar //
+    // LambertSolver written by Arrowstar  //
     /////////////////////////////////////////
 
     //Solves Lambert's problem, namely:
     //  "What orbit around primary takes you from position R1 to position R2 in a time interval dt?" 
     //Output is in the form of two velocity vectors V1 and V2, which respectively give the initial and final velocity
     //of the required orbit segment
+    //There are always two solutions to Lambert's problem, a "short way," which traverses < 180 degrees, 
+    //and a "long way," which traverses > 180 degrees. The shortway input says which of these solutions to find.
     public class LambertSolver
     {
         public static void Solve(Vector3d R1, Vector3d R2, double dt, CelestialBody primary, bool shortway, out Vector3d V1, out Vector3d V2)
@@ -85,8 +87,8 @@ namespace MuMech
                 //const double absoluteAccuracy = 1.0e-12;
                 //BracketingNthOrderBrentSolver solver = new BracketingNthOrderBrentSolver(relativeAccuracy, absoluteAccuracy, 10);
                 //y = solver.solve(10000, yEqnPoly, -10000, 10000, 0.0, AllowedSolution.ANY_SIDE);
-                
-                //replaced above four commented lines with this solver:
+
+                //replaced Arrowstar's above four commented lines with this solver:  -The_Duck 
                 //Use an initial guess of 10; NewtonSolver will get stuck with an initial guess of zero.
                 y = NewtonSolver.Solve(yEqnPoly, 10, 1.0e-12, 50); 
 
@@ -98,7 +100,6 @@ namespace MuMech
             } while (x_change > Math.Pow(10, -6) && loops < 30);
 
             double a = (muCB * Math.Pow(dt, 2)) / (16 * Math.Pow(rop, 2) * x * Math.Pow(y, 2));
-            //        System.out.println("Lambert SMA= " + a);
 
             double f = 0;
             double g = 0;
@@ -135,7 +136,7 @@ namespace MuMech
                 //Asinh asinh=new Asinh();
                 //double alphaH = 2*asinh.value(Math.Sqrt(s/(-2*a)));
                 //double betaH = 2*asinh.value(Math.Sqrt((s-c)/(-2*a)));
-                //Porting the above three lines to:
+                //Porting Arrowstar's above three lines to: -The_Duck
                 double alphaH = 2 * MuUtils.Asinh(Math.Sqrt(s / (-2 * a)));
                 double betaH = 2 * MuUtils.Asinh(Math.Sqrt((s - c) / (-2 * a)));
 
@@ -148,9 +149,8 @@ namespace MuMech
             else
             {
                 //List<Vector3d> VArr = null;
-                //commented out the above line in the original, since it seems to do nothing and throws a compiler error
+                //commented out the above line from Arrowstar's original, since it seems to do nothing and throws a compiler error -The_Duck
             }
-            //        System.out.println("Universal Vars: " + f + " " + g + " " + g_dot);
 
             V1 = (R2 - f * R1) / g;
             V2 = (g_dot * R2 - R1) / g;
@@ -174,7 +174,7 @@ namespace MuMech
     }
 
     //A simple root-finder. We really ought to use some existing root-finder that someone else has put a 
-    //lot of time and effort into, but hopefully this one works.
+    //lot of time and effort into, but this one seems to work
     public static class NewtonSolver
     {
         public static double Solve(PolynomialFunction p, double guess, double tolerance, int maxIterations)
@@ -189,7 +189,7 @@ namespace MuMech
             }
             if (iter == maxIterations)
             {
-                throw new Exception("Newton solver reached iteration limit of " + maxIterations + " on polynomial " + p.ToString());
+                throw new Exception("NewtonSolver reached iteration limit of " + maxIterations + " on polynomial " + p.ToString());
             }
             return x;
         }
@@ -199,14 +199,14 @@ namespace MuMech
     //derivative exactly. 
     public class PolynomialFunction
     {
-        double[] coeffs;
+        double[] coeffs; //coeffs[i] is the coefficient of x^i
 
-        //coeffs[i] is the coefficient of x^i
         public PolynomialFunction(double[] coeffs)
         {
             this.coeffs = coeffs;
         }
 
+        //Evaluate the polynomial at x
         public double Evaluate(double x)
         {
             double ret = 0;
@@ -219,6 +219,7 @@ namespace MuMech
             return ret;
         }
 
+        //Evaluate the derivative of the polynomial at x
         public double Derivative(double x)
         {
             double ret = 0;

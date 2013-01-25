@@ -15,7 +15,7 @@ namespace MuMech
 
         protected override void FlightWindowGUI(int windowID)
         {
-            if (!core.target.Exists)
+            if (!core.target.NormalTargetExists)
             {
                 GUILayout.Label("Choose a target to dock with");
                 base.FlightWindowGUI(windowID);

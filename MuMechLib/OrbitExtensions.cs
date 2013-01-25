@@ -170,7 +170,6 @@ namespace MuMech
         //the given mean anomaly occured in the past
         public static double UTAtMeanAnomaly(this Orbit o, double meanAnomaly, double UT)
         {
-            if (double.IsNaN(meanAnomaly)) return double.NaN;
             double currentMeanAnomaly = o.MeanAnomalyAtUT(UT);
             double meanDifference = meanAnomaly - currentMeanAnomaly;
             if (o.eccentricity < 1) meanDifference = MuUtils.ClampRadiansTwoPi(meanDifference);
@@ -225,6 +224,23 @@ namespace MuMech
             return MuUtils.ClampDegrees360(a.AscendingNodeTrueAnomaly(b) + 180);
         }
 
+        //For hyperbolic orbits, the true anomaly only takes on values in the range
+        // -M < true anomaly < +M for some M. This function computes M.
+        public static double MaximumTrueAnomaly(this Orbit o)
+        {
+            if (o.eccentricity < 1) return 180;
+            else return 180 / Math.PI * Math.Acos(-1 / o.eccentricity);
+        }
+
+        public static bool AscendingNodeExists(this Orbit a, Orbit b)
+        {
+            return Math.Abs(MuUtils.ClampDegrees180(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+        }
+
+        public static bool DescendingNodeExists(this Orbit a, Orbit b)
+        {
+            return Math.Abs(MuUtils.ClampDegrees180(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+        }
 
         //Converts a direction, specified by a Vector3d, into a true anomaly.
         //The vector is projected into the orbital plane and then the true anomaly is
@@ -256,7 +272,7 @@ namespace MuMech
         //For elliptical orbits this returns a value between 0 and 2pi
         //For hyperbolic orbits the returned value can be any number.
         //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
-        //past the true anomaly of the asympote) then double.NaN is returned
+        //past the true anomaly of the asympote) then an ArgumentException is thrown
         public static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             double e = o.eccentricity;
@@ -276,7 +292,7 @@ namespace MuMech
             else  //hyperbolic orbits
             {
                 double coshE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
-                if (coshE < 1) return double.NaN; //this true anomaly is not attained on this hyperbolic orbit
+                if (coshE < 1) throw new ArgumentException("OrbitExtensions.GetEccentricAnomalyAtTrueAnomaly: True anomaly of " + trueAnomaly + " radians is not attained by orbit with eccentricity " + o.eccentricity);
                 double E = MuUtils.Acosh(coshE);
                 E *= Math.Sign(trueAnomaly);
                 return E;
@@ -287,11 +303,8 @@ namespace MuMech
         //Converts an eccentric anomaly into a mean anomaly.
         //For an elliptical orbit, the returned value is between 0 and 2pi
         //For a hyperbolic orbit, the returned value is any number
-        //NOTE: If the input eccentric anomaly is double.NaN, the output is also double.NaN.
-        //(GetEccentricAnomalyAtTrueAnomaly can output NaN for invalid input parameters.)
         public static double GetMeanAnomalyAtEccentricAnomaly(this Orbit o, double E)
         {
-            if (double.IsNaN(E)) return double.NaN;
             double e = o.eccentricity;
             if (e < 1) //elliptical orbits
             {
@@ -307,13 +320,13 @@ namespace MuMech
         //For elliptical orbits, the output is between 0 and 2pi
         //For hyperbolic orbits, the output can be any number
         //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
-        //past the true anomaly of the asympote) then double.NaN is returned
+        //past the true anomaly of the asympote) then an ArgumentException is thrown
         public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
         }
 
-        //NOTE: this function can return NaN, if a is a hyperbolic orbit with an eccentricity
+        //NOTE: this function can throw an ArgumentException, if o is a hyperbolic orbit with an eccentricity
         //large enough that it never attains the given true anomaly
         public static double TimeOfTrueAnomaly(this Orbit o, double trueAnomaly, double UT)
         {
@@ -324,7 +337,7 @@ namespace MuMech
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if 
         //the ascending node is in the past.
-        //NOTE: this function will return double.NaN, if a is a hyperbolic orbit and the "ascending node"
+        //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "ascending node"
         //occurs at a true anomaly that a does not actually ever attain
         public static double TimeOfAscendingNode(this Orbit a, Orbit b, double UT)
         {
@@ -335,7 +348,7 @@ namespace MuMech
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if 
         //the descending node is in the past.
-        //NOTE: this function will return NaN, if a is a hyperbolic orbit and the "descending node"
+        //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "descending node"
         //occurs at a true anomaly that a does not actually ever attain
         public static double TimeOfDescendingNode(this Orbit a, Orbit b, double UT)
         {
