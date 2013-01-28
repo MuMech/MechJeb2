@@ -235,7 +235,7 @@ namespace MuMech
                     massDrag += partMass * p.maximum_drag;
                 }
                 MoI += p.Rigidbody.inertiaTensor;
-                if (((p.State == PartStates.ACTIVE) || ((Staging.CurrentStage > Staging.lastStage) && (p.inverseStage == Staging.lastStage))) && ((p is LiquidEngine) || (p is LiquidFuelEngine) || (p is SolidRocket) || (p is AtmosphericEngine) || p.Modules.Contains("ModuleEngines")))
+                if (((p.State == PartStates.ACTIVE) || ((Staging.CurrentStage > Staging.lastStage) && (p.inverseStage == Staging.lastStage))) && ((p is LiquidEngine) || (p is LiquidFuelEngine) || (p is SolidRocket) || (p is AtmosphericEngine)))
                 {
                     if (p is LiquidEngine && p.EngineHasFuel())
                     {
@@ -272,24 +272,21 @@ namespace MuMech
                             torqueThrustPYAvailable += Math.Sin(Math.Abs(((AtmosphericEngine)p).gimbalRange) * Math.PI / 180) * ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
                         }
                     }
-                    else if (p.Modules.Contains("ModuleEngines"))
+                }
+
+                foreach (ModuleEngines e in p.Modules.OfType<ModuleEngines>())
+                {
+                    if ((e.isEnabled) && p.EngineHasFuel())
                     {
-                        foreach (PartModule pm in p.Modules)
+                        double usableFraction = 1; // Vector3d.Dot((p.transform.rotation * e.thrustTransform.forward).normalized, forward); // TODO: Fix usableFraction
+                        thrustAvailable += e.maxThrust * usableFraction;
+
+                        if (e.throttleLocked) thrustMinimum += e.maxThrust * usableFraction;
+                        else thrustMinimum += e.minThrust * usableFraction;
+
+                        if (p.Modules.OfType<ModuleGimbal>().Count() > 0)
                         {
-                            if ((pm is ModuleEngines) && (pm.isEnabled) && p.EngineHasFuel())
-                            {
-                                ModuleEngines e = (ModuleEngines)pm;
-                                double usableFraction = 1; // Vector3d.Dot((p.transform.rotation * e.thrustTransform.forward).normalized, forward); // TODO: Fix usableFraction
-                                thrustAvailable += e.maxThrust * usableFraction;
-
-                                if (e.throttleLocked) thrustMinimum += e.maxThrust * usableFraction;
-                                else thrustMinimum += e.minThrust * usableFraction;
-
-                                if (p.Modules.OfType<ModuleGimbal>().Count() > 0)
-                                {
-                                    torqueThrustPYAvailable += Math.Sin(Math.Abs(p.Modules.OfType<ModuleGimbal>().First().gimbalRange) * Math.PI / 180) * e.maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
-                                }
-                            }
+                            torqueThrustPYAvailable += Math.Sin(Math.Abs(p.Modules.OfType<ModuleGimbal>().First().gimbalRange) * Math.PI / 180) * e.maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
                         }
                     }
                 }
@@ -362,13 +359,13 @@ namespace MuMech
             return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
         }
 
-        [ValueInfoItem(name="TWR", units="")]
+        [ValueInfoItem(name = "TWR", units = "")]
         public double TWR()
         {
             return thrustAvailable / (mass * mainBody.GeeASL * 9.81);
         }
 
-        [ValueInfoItem(name="Atmospheric pressure", units="atm")]
+        [ValueInfoItem(name = "Atmospheric pressure", units = "atm")]
         public double AtmosphericPressure()
         {
             return FlightGlobals.getStaticPressure(CoM);
@@ -379,5 +376,19 @@ namespace MuMech
         {
             return Coordinates.ToStringDMS(latitude, longitude);
         }
+
+        [ValueInfoItem(name = "Orbit shape")]
+        public string OrbitSummary()
+        {
+            if (orbitEccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(orbitPeA, 2) + "m";
+            else return MuUtils.ToSI(orbitPeA, 2) + "m x " + MuUtils.ToSI(orbitApA, 2) + "m";
+        }
+
+        [ValueInfoItem(name = "Orbit shape 2")]
+        public string OrbitSummaryWithInclination()
+        {
+            return OrbitSummary() + ", inc. " + orbitInclination.ToString("F1") + "º";
+        }
+
     }
 }

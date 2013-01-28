@@ -6,8 +6,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //put this enum at namespace scope so we can reference as just AttitudeReference
-    //and not the very long MechJebModuleAttitudeController.AttitudeReference
     public enum AttitudeReference
     {
         INERTIAL,          //world coordinate system.
@@ -21,6 +19,7 @@ namespace MuMech
         MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
     }
 
+    //Todo: remove attitudeActive and just use enabled?
     public class MechJebModuleAttitudeController : ComputerModule
     {
 
@@ -266,14 +265,14 @@ namespace MuMech
         //angle in degrees between the vessel's current pointing direction and the attitude target, ignoring roll
         public double attitudeAngleFromTarget()
         {
-            return attitudeError;
+            return attitudeActive ? Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, vesselState.forward)) : 0;
         }
 
 
 
         public override void OnFixedUpdate()
         {
-            attitudeError = attitudeActive ? Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, vesselState.forward)) : 0;
+            attitudeError = attitudeAngleFromTarget();
         }
 
         public override void OnUpdate()

@@ -213,6 +213,12 @@ namespace MuMech
         //Throws an ArgumentException if o is hyperbolic and doesn't have an ascending node relative to the target.
         public static Vector3d DeltaVAndTimeToMatchPlanesAscending(Orbit o, Orbit target, double UT, out double burnUT)
         {
+            Debug.Log("DV and time to match planes ascending: ");
+            Debug.Log("max true anomaly = " + o.MaximumTrueAnomaly());
+            Debug.Log("true anomamly of AN = " + o.AscendingNodeTrueAnomaly(target));
+            Debug.Log("time of AN = " + o.TimeOfAscendingNode(target, UT));
+            Debug.Log("time to AN = " + (o.TimeOfAscendingNode(target, UT) - UT));
+
             burnUT = o.TimeOfAscendingNode(target, UT);
             Vector3d desiredHorizontal = Vector3d.Cross(target.SwappedOrbitNormal(), o.Up(burnUT));
             Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT));
@@ -288,12 +294,13 @@ namespace MuMech
 
         //Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
         //course to intercept a target at a specific interceptUT.
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT)
+        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT, double leadDistance = 0)
         {
             double initialT = UT;
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialT);
             double finalT = interceptUT;
             Vector3d finalRelPos = target.SwappedRelativePositionAtUT(finalT);
+            finalRelPos += leadDistance * target.SwappedOrbitalVelocityAtUT(finalT).normalized;
 
             double targetOrbitalSpeed = o.SwappedOrbitalVelocityAtUT(finalT).magnitude;
             double deltaTPrecision = 20.0 / targetOrbitalSpeed;

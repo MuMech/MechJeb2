@@ -23,6 +23,7 @@ namespace MuMech
         public MechJebModuleTargetController target;
         public MechJebModuleWarpController warp;
         public MechJebModuleRCSController rcs;
+        public MechJebModuleNodeExecutor node;
 
         public VesselState vesselState = new VesselState();
 
@@ -42,6 +43,7 @@ namespace MuMech
             //else we have an onFlyByWire callback registered with the wrong vessel:
             //handle vessel changes due to docking/undocking
             if (controlledVessel != null) controlledVessel.OnFlyByWire -= OnFlyByWire;
+            vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
             vessel.OnFlyByWire += OnFlyByWire;
             controlledVessel = vessel;
             return false;
@@ -117,13 +119,17 @@ namespace MuMech
             target = GetComputerModule<MechJebModuleTargetController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
             rcs = GetComputerModule<MechJebModuleRCSController>();
+            node = GetComputerModule<MechJebModuleNodeExecutor>();
+
+            target.enabled = true;
 
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
             }
 
-            vessel.OnFlyByWire += Drive;
+            vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
+            vessel.OnFlyByWire += OnFlyByWire;
             controlledVessel = vessel;
         }
 
@@ -170,7 +176,7 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                module.OnFixedUpdate();
+                if(module.enabled) module.OnFixedUpdate();
             }
 
 
@@ -183,13 +189,6 @@ namespace MuMech
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha7))
-            {
-                MechJebModuleLandingAutopilot lander = GetComputerModule<MechJebModuleLandingAutopilot>();
-                lander.enabled = !lander.enabled;
-                Debug.Log("lander.enabled = " + lander.enabled);
-            }
-
             if (modulesUpdated)
             {
                 computerModules.Sort();
@@ -198,7 +197,7 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                module.OnUpdate();
+                if(module.enabled) module.OnUpdate();
             }
         }
 
@@ -303,6 +302,7 @@ namespace MuMech
                 }
             }
 
+            //Todo: move this out of the core
             //Todo: move this to the post-render queue since as it is it draws on top of windows
             MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
             ReentrySimulation.Result result = p.GetResult();
@@ -315,7 +315,6 @@ namespace MuMech
                 }
                 else if (result.outcome == ReentrySimulation.Outcome.AEROBRAKED)
                 {
-                    Debug.Log("Drawing post-aerobrake orbit");
                     Orbit o = MuUtils.OrbitFromStateVectors(result.WorldEndPosition(), result.WorldEndVelocity(), result.body, result.endUT);
                     GLUtils.DrawOrbit(o, Color.blue);
                 }

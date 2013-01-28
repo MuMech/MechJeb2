@@ -13,16 +13,16 @@ namespace MuMech
         enum Operation
         {
             CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER,
-            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT
+            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL
         };
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
         string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap",
                   "change inclination", "match planes with target", "Hohmann transfer to target", 
-                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time"};
+                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target"};
 
-        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, ASCENDING_NODE, DESCENDING_NODE };
+        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, CLOSEST_APPROACH };
         static int numTimeReferences = Enum.GetNames(typeof(TimeReference)).Length;
-        string[] timeReferenceStrings = new string[] { "", "the next apoapsis after", "the next periapsis after", "the next AN with the target after", "the next DN with the target after" };
+        string[] timeReferenceStrings = new string[] { "", "the next apoapsis after", "the next periapsis after", "the closest approach to the target after"};
 
         Operation operation = Operation.CIRCULARIZE;
         TimeReference timeReference = TimeReference.NOW;
@@ -152,6 +152,10 @@ namespace MuMech
                     GuiUtils.SimpleTextBox("Time after burn to intercept target:", interceptInterval);
                     GUILayout.Label("Schedule the burn");
                     break;
+
+                case Operation.KILL_RELVEL:
+                    GUILayout.Label("Schedule the burn");
+                    break;
             }
         }
 
@@ -168,6 +172,9 @@ namespace MuMech
             GUILayout.Label(timeReferenceStrings[(int)timeReference]);
             if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) timeReference = (TimeReference)(((int)timeReference + 1 + numTimeReferences) % numTimeReferences);
             GUILayout.EndHorizontal();
+
+            bool error = false;
+            string timeErrorMessage = "";
 
             if (anyNodeExists)
             {
@@ -194,26 +201,40 @@ namespace MuMech
                 case TimeReference.NOW:
                     break;
                 case TimeReference.APOAPSIS:
-                    UT = o.NextApoapsisTime(UT);
+                    if (o.eccentricity < 1)
+                    {
+                        UT = o.NextApoapsisTime(UT);
+                    }
+                    else
+                    {
+                        error = true;
+                        timeErrorMessage = "Warning: orbit is hyperbolic, so apoapsis doesn't exist.";
+                    }
                     break;
                 case TimeReference.PERIAPSIS:
                     UT = o.NextPeriapsisTime(UT);
                     break;
-                case TimeReference.ASCENDING_NODE:
+                case TimeReference.CLOSEST_APPROACH:
                     if (core.target.NormalTargetExists)
                     {
-                        UT = o.TimeOfAscendingNode(core.target.Orbit, UT);
+                        UT = o.NextClosestApproachTime(core.target.Orbit, UT);
                     }
-                    break;
-                case TimeReference.DESCENDING_NODE:
-                    if (core.target.NormalTargetExists)
+                    else
                     {
-                        UT = o.TimeOfDescendingNode(core.target.Orbit, UT);
+                        error = true;
+                        timeErrorMessage = "Warning: no target selected.";
                     }
                     break;
             }
 
             UT += leadTime;
+
+            if (error)
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label(timeErrorMessage, s);
+            }
 
             return UT;
         }
@@ -224,7 +245,7 @@ namespace MuMech
             errorMessage = "";
             bool error = false;
             
-            string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius, 1) + "m";
+            string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
 
             switch (operation)
             {
@@ -245,7 +266,7 @@ namespace MuMech
                     else if (newPeA < -o.referenceBody.Radius)
                     {
                         error = true;
-                        errorMessage = "new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + o.referenceBody.Radius.ToString("F0") + ")";
+                        errorMessage = "new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)";
                     }
                     break;
 
@@ -258,7 +279,7 @@ namespace MuMech
                     else if (newPeA < -o.referenceBody.Radius)
                     {
                         error = true;
-                        errorMessage = "new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + o.referenceBody.Radius.ToString("F0") + ")";
+                        errorMessage = "new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)";
                     }
                     break;
 
@@ -398,6 +419,19 @@ namespace MuMech
                         errorMessage = "target must be in the same sphere of influence.";
                     }
                     break;
+
+                case Operation.KILL_RELVEL:
+                    if (!core.target.NormalTargetExists)
+                    {
+                        error = true;
+                        errorMessage = "must select a target to match velocities with.";
+                    }
+                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    {
+                        error = true;
+                        errorMessage = "target must be in the same sphere of influence.";
+                    }
+                    break;
             }
 
             if (error) errorMessage = "Couldn't plot maneuver: " + errorMessage;
@@ -459,6 +493,10 @@ namespace MuMech
 
                 case Operation.LAMBERT:
                     dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.Orbit, UT + interceptInterval);
+                    break;
+                    
+                case Operation.KILL_RELVEL:
+                    dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, UT, core.target.Orbit);
                     break;
             }
 

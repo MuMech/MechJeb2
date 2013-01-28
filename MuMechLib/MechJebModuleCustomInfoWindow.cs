@@ -199,7 +199,7 @@ namespace MuMech
             else if (value is Vector3) doubleValue = ((Vector3)value).magnitude;
             else if (value is EditableDouble) doubleValue = (EditableDouble)value;
 
-            return (MuUtils.ToSI(doubleValue) + " " + units);
+            return (MuUtils.ToSI(doubleValue) + units);
         }
 
         public void DrawItem()

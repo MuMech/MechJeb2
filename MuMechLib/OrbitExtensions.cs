@@ -6,10 +6,9 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //Todo: bring over the functions that are used to compute time from true anomaly. These
-    //      are needed for the AN/DN predictions.
     public static class OrbitExtensions
     {
+        //can probably be replaced with Vector3d.xzy?
         public static Vector3d SwapYZ(Vector3d v)
         {
             return v.Reorder(132);
@@ -184,7 +183,7 @@ namespace MuMech
         {
             if (o.eccentricity < 1)
             {
-                return UT + (2 * Math.PI - o.MeanAnomalyAtUT(UT)) / o.MeanMotion();
+                return o.TimeOfTrueAnomaly(0, UT);
             }
             else
             {
@@ -199,7 +198,7 @@ namespace MuMech
         {
             if (o.eccentricity < 1)
             {
-                return UT + (Math.PI - MuUtils.ClampRadiansPi(o.MeanAnomalyAtUT(UT))) / o.MeanMotion();
+                return o.TimeOfTrueAnomaly(180, UT);
             }
             else
             {
@@ -283,18 +282,18 @@ namespace MuMech
             {
                 double cosE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
                 double sinE = Math.Sqrt(1 - (cosE * cosE));
-                if (trueAnomaly > Math.PI)
-                {
-                    sinE *= -1;
-                }
+                if (trueAnomaly > Math.PI) sinE *= -1;
+
                 return MuUtils.ClampRadiansTwoPi(Math.Atan2(sinE, cosE));
             }
             else  //hyperbolic orbits
             {
                 double coshE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
                 if (coshE < 1) throw new ArgumentException("OrbitExtensions.GetEccentricAnomalyAtTrueAnomaly: True anomaly of " + trueAnomaly + " radians is not attained by orbit with eccentricity " + o.eccentricity);
+
                 double E = MuUtils.Acosh(coshE);
-                E *= Math.Sign(trueAnomaly);
+                if (trueAnomaly > Math.PI) E *= -1;
+                
                 return E;
             }
         }

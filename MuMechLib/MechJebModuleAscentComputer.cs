@@ -12,7 +12,7 @@ namespace MuMech
     public class MechJebModuleAscentComputer : ComputerModule
     {
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
-        
+
         //input parameters:
         IAscentPath ascentPath = new DefaultAscentPath();
         double desiredOrbitAltitude = 100000.0;
@@ -63,7 +63,7 @@ namespace MuMech
         }
 
 
- 
+
         void driveVerticalAscent(FlightCtrlState s)
         {
             if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
@@ -200,16 +200,26 @@ namespace MuMech
         {
             if (placedCircularizeNode)
             {
-                //auto-execute node
-                this.enabled = false;
-                return;
+                if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                {
+                    //finished circularize
+                    this.enabled = false;
+                    return;
+                }
             }
+            else
+            {
+                Debug.Log("placing circularization node");
 
-            //place circularization node
-            double UT = orbit.NextApoapsisTime(vesselState.time);
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
-            vessel.PlaceManeuverNode(orbit, dV, UT);
-            placedCircularizeNode = true;
+                //place circularization node
+                vessel.RemoveAllManeuverNodes();
+                double UT = orbit.NextApoapsisTime(vesselState.time);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                vessel.PlaceManeuverNode(orbit, dV, UT);
+                placedCircularizeNode = true;
+
+                core.node.ExecuteOneNode();
+            }
         }
     }
 
@@ -274,18 +284,19 @@ namespace MuMech
         //you get to the launchpad. 
         //The time returned will not be exactly accurate unless the target is in an exactly circular orbit. However,
         //the time returned will go to exactly zero when the desired phase angle is reached.
-        public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target) 
+        public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target)
         {
             double launchpadAngularRate = 360 / launchBody.rotationPeriod;
             double targetAngularRate = 360.0 / target.period;
-            if(Vector3d.Dot(target.SwappedOrbitNormal(), launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
+            if (Vector3d.Dot(target.SwappedOrbitNormal(), launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
 
             Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
             Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
             currentTargetDirection = Vector3d.Exclude(launchBody.angularVelocity, currentTargetDirection);
 
             double currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));
-            if(Vector3d.Dot(Vector3d.Cross(currentTargetDirection, currentLaunchpadDirection), launchBody.angularVelocity) < 0) {
+            if (Vector3d.Dot(Vector3d.Cross(currentTargetDirection, currentLaunchpadDirection), launchBody.angularVelocity) < 0)
+            {
                 currentPhaseAngle = 360 - currentPhaseAngle;
             }
 

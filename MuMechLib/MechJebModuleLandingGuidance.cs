@@ -43,7 +43,7 @@ namespace MuMech
             {
                 double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(prediction.endPosition.latitude, prediction.endPosition.longitude, 0),
                                                  mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
-                GUILayout.Label("Landing position error = " + error.ToString("F0") + "m");
+                GUILayout.Label("Landing position error = " + MuUtils.ToSI(error, 0) + "m");
             }
 
             predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
