@@ -95,6 +95,30 @@ namespace MuMech
             {
                 vessel.RemoveAllManeuverNodes();
             }
+
+            if (anyNodeExists && !core.node.enabled)
+            {
+                if (GUILayout.Button("Execute next node"))
+                {
+                    core.node.ExecuteOneNode();
+                }
+
+                if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                {
+                    if (GUILayout.Button("Execute all nodes"))
+                    {
+                        core.node.ExecuteAllNodes();
+                    }
+                }
+            }
+            else if (core.node.enabled)
+            {
+                if (GUILayout.Button("ABORT"))
+                {
+                    core.node.enabled = false;
+                }
+            }
+
             GUILayout.EndVertical();
 
 
