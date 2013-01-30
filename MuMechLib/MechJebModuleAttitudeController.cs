@@ -19,6 +19,7 @@ namespace MuMech
         MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
     }
 
+    //AttitudeController should be enabled/disabled through .users, not .enabled.
     //Todo: remove attitudeActive and just use enabled?
     public class MechJebModuleAttitudeController : ComputerModule
     {
@@ -27,6 +28,7 @@ namespace MuMech
             : base(core)
         {
             priority = 800;
+            users = new UserPool(this);
         }
 
         public float stress;

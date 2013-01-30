@@ -30,13 +30,15 @@ namespace MuMech
             mode = AscentMode.VERTICAL_ASCENT;
             placedCircularizeNode = false;
 
-            core.attitude.enabled = true;
+            core.attitude.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.enabled = false;
+            core.attitude.users.Remove(this);
             FlightInputHandler.SetNeutralControls();
+
+            if (placedCircularizeNode) core.node.enabled = false;
         }
 
 
@@ -45,26 +47,26 @@ namespace MuMech
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
-                    driveVerticalAscent(s);
+                    DriveVerticalAscent(s);
                     break;
 
                 case AscentMode.GRAVITY_TURN:
-                    driveGravityTurn(s);
+                    DriveGravityTurn(s);
                     break;
 
                 case AscentMode.COAST_TO_APOAPSIS:
-                    driveCoastToApoapsis(s);
+                    DriveCoastToApoapsis(s);
                     break;
 
                 case AscentMode.CIRCULARIZE:
-                    driveCircularizationBurn(s);
+                    DriveCircularizationBurn(s);
                     break;
             }
         }
 
 
 
-        void driveVerticalAscent(FlightCtrlState s)
+        void DriveVerticalAscent(FlightCtrlState s)
         {
             if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
@@ -77,7 +79,7 @@ namespace MuMech
 
         //gives a throttle setting that reduces as we approach the desired apoapsis
         //so that we can precisely match the desired apoapsis instead of overshooting it
-        float throttleToRaiseApoapsis(double currentApR, double finalApR)
+        float ThrottleToRaiseApoapsis(double currentApR, double finalApR)
         {
             if (currentApR > finalApR + 5.0) return 0.0F;
             else if (orbit.ApA < mainBody.maxAtmosphereAltitude) return 1.0F; //throttle hard to escape atmosphere
@@ -94,7 +96,7 @@ namespace MuMech
         }
 
 
-        void driveGravityTurn(FlightCtrlState s)
+        void DriveGravityTurn(FlightCtrlState s)
         {
             //stop the gravity turn when our apoapsis reaches the desired altitude
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude)
@@ -112,7 +114,7 @@ namespace MuMech
 
             if (autoThrottle)
             {
-                s.mainThrottle = throttleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
+                s.mainThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
                 if (s.mainThrottle < 1.0F)
                 {
                     //when we are bringing down the throttle to make the apoapsis accurate, we're liable to point in weird
@@ -164,7 +166,7 @@ namespace MuMech
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
         }
 
-        void driveCoastToApoapsis(FlightCtrlState s)
+        void DriveCoastToApoapsis(FlightCtrlState s)
         {
             s.mainThrottle = 0.0F;
 
@@ -189,14 +191,14 @@ namespace MuMech
             s.mainThrottle = 0;
             if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
-                s.mainThrottle = throttleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
+                s.mainThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
             //warp at x2 physical warp:
             core.warp.WarpPhysicsAtRate(2);
         }
 
-        void driveCircularizationBurn(FlightCtrlState s)
+        void DriveCircularizationBurn(FlightCtrlState s)
         {
             if (placedCircularizeNode)
             {

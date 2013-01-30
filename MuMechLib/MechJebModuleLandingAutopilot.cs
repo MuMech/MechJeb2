@@ -8,14 +8,15 @@ namespace MuMech
 {
     class MechJebModuleLandingAutopilot : ComputerModule
     {
+
         //public interface:
         public void LandAtPositionTarget()
         {
             this.enabled = true;
-            predictor.enabled = true;
-            core.attitude.enabled = true;
-            core.thrust.enabled = true;
-            vessel.RemoveAllManeuverNodes();
+
+            predictor.users.Add(this);
+            vessel.RemoveAllManeuverNodes(); //for the benefit of the landing predictions module
+
             deployedGears = false;
             deorbitBurnTriggered = false;
             lowDeorbitEndConditionSet = false;
@@ -29,20 +30,15 @@ namespace MuMech
         public void LandUntargeted()
         {
             this.enabled = true;
-            core.attitude.enabled = true;
-            core.thrust.enabled = true;
+
             deployedGears = false;
+
             landStep = LandStep.UNTARGETED_DEORBIT;
         }
 
         public void StopLanding()
         {
             this.enabled = false;
-            core.attitude.enabled = false;
-            core.thrust.enabled = false;
-            FlightInputHandler.SetNeutralControls();
-            landStep = LandStep.OFF;
-            status = "Off";
         }
 
         public double touchdownSpeed = 0.5;
@@ -93,7 +89,23 @@ namespace MuMech
         {
             get { return prediction.WorldEndPosition(); }
         }
-        
+
+
+        public override void OnModuleEnabled()
+        {
+            core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
+        }
+
+        public override void OnModuleDisabled()
+        {
+            core.attitude.users.Remove(this);
+            core.thrust.users.Remove(this);
+            predictor.users.Remove(this);
+            landStep = LandStep.OFF;
+            status = "Off";
+        }
+
 
 
         public override void Drive(FlightCtrlState s)

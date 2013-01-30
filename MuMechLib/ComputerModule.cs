@@ -51,11 +51,20 @@ namespace MuMech
             }
         }
 
+        //The UserPool is an alternative way to handle enabling/disabling of a ComputerModule. 
+        //Users can add and remove themselves from the user pool and the ComputerModule will be
+        //enabled if and only if there is at least one user. For consistency, it's probably
+        //best that a given ComputerModule be controlled either entirely through enabled, or
+        //entirely through users, and that the two not be mixed.
+        public UserPool users;
+
         public ComputerModule(MechJebCore core)
         {
             this.core = core;
             part = core.part;
             vesselState = core.vesselState;
+
+            users = new UserPool(this);
         }
 
         public virtual void OnModuleEnabled()
@@ -104,17 +113,6 @@ namespace MuMech
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            Type thisType = this.GetType();
-            foreach (FieldInfo f in thisType.GetFields())
-            {
-                foreach(MechJebField attr in f.GetCustomAttributes(typeof(MechJebField), true))
-                {
-                    string settingsName = thisType.Name + "." + f.Name;
-                    if ((attr.type & PersistenceType.GLOBAL) != 0) global.AddValue(settingsName, f.GetValue(this));
-                    if ((attr.type & PersistenceType.LOCAL) != 0) local.AddValue(settingsName, f.GetValue(this));
-                    if ((attr.type & PersistenceType.TYPE) != 0) type.AddValue(settingsName, f.GetValue(this));
-                }
-            }
         }
 
         public virtual void OnDestroy()
@@ -127,13 +125,29 @@ namespace MuMech
         }
     }
 
-    public enum PersistenceType { LOCAL = 1, TYPE = 2, GLOBAL = 4 }
-    
-    [AttributeUsage(AttributeTargets.Field)]
-    public class MechJebField : Attribute
+    //Lets multiple users enable and disable a computer module, such that the 
+    //module only gets disabled when all of its users have disabled it.
+    public class UserPool
     {
-        public PersistenceType type;
+        ComputerModule controlledModule;
+        List<object> users = new List<object>();
 
-        public MechJebField(PersistenceType type) { this.type = type; }
+        public UserPool(ComputerModule controlledModule)
+        {
+            this.controlledModule = controlledModule;
+        }
+
+        public void Add(object user)
+        {
+            users.Add(user);
+            controlledModule.enabled = true;
+        }
+
+        public void Remove(object user)
+        {
+            users.Remove(user);
+            if (users.Count == 0) controlledModule.enabled = false;
+        }
     }
+
 }

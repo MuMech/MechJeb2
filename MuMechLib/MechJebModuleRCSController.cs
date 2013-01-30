@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
+    //RCSController should be enabled/disabled through .users, not .enabled.
     public class MechJebModuleRCSController : ComputerModule
     {
         public Vector3d targetVelocity = Vector3d.zero;

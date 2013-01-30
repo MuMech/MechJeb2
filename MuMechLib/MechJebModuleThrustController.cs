@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace MuMech
 {
+    //ThrustController should be enabled/disabled through .users, not .enabled.
     public class MechJebModuleThrustController : ComputerModule
     {
         public MechJebModuleThrustController(MechJebCore core)

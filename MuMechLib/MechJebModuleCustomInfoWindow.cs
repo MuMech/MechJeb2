@@ -45,6 +45,7 @@ namespace MuMech
     {
         List<IInfoItem> registry = new List<IInfoItem>();
         MechJebModuleCustomInfoWindow window;
+        IInfoItem selectedItem;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -61,7 +62,7 @@ namespace MuMech
         {
             foreach (MemberInfo member in obj.GetType().GetMembers())
             {
-                foreach(Attribute attribute in member.GetCustomAttributes(true)) 
+                foreach (Attribute attribute in member.GetCustomAttributes(true))
                 {
                     if (attribute is ValueInfoItemAttribute) registry.Add(new ValueInfoItem(obj, member, (ValueInfoItemAttribute)attribute));
                     else if (attribute is ActionInfoItemAttribute) registry.Add(new ActionInfoItem(obj, (MethodInfo)member, (ActionInfoItemAttribute)attribute));
@@ -86,50 +87,111 @@ namespace MuMech
 
 
 
-        GUIStyle _buttonStyle;
-        GUIStyle buttonStyle
+        GUIStyle _yellowOnHover;
+        GUIStyle yellowOnHover
         {
             get
             {
-                if (_buttonStyle == null)
+                if (_yellowOnHover == null)
                 {
-                    _buttonStyle = new GUIStyle(GUI.skin.label);
-                    _buttonStyle.hover.textColor = Color.yellow;
+                    _yellowOnHover = new GUIStyle(GUI.skin.label);
+                    _yellowOnHover.hover.textColor = Color.yellow;
                     Texture2D t = new Texture2D(1, 1);
                     t.SetPixel(0, 0, new Color(0, 0, 0, 0));
                     t.Apply();
-                    _buttonStyle.hover.background = t;
+                    _yellowOnHover.hover.background = t;
                 }
-                return _buttonStyle;
+                return _yellowOnHover;
             }
         }
 
-        Vector2 scrollPos;
+
+        Vector2 scrollPos, scrollPos2;
         protected override void FlightWindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
-            if (GUILayout.Button("Add new window")) AddNewWindow();
+            if (GUILayout.Button("Add new custom window")) AddNewWindow();
 
-            if (GUILayout.Button("Delete this window")) RemoveCurrentWindow();
+            if (window == null)
+            {
+                GUILayout.EndVertical();
+                GUI.DragWindow();
+                return;
+            }
+
+            List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
+
+            if (GUILayout.Button("Delete this custom window")) RemoveCurrentWindow();
+
+
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Name: ");
-            window.title = GUILayout.TextField(window.title, GUILayout.Width(100));
+
+            if (allWindows.Count > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false)))
+            {
+                window = allWindows[(allWindows.IndexOf(window) - 1 + allWindows.Count) % allWindows.Count];
+            }
+
+            window.title = GUILayout.TextField(window.title, GUILayout.ExpandWidth(true));
+
+            if (allWindows.Count > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false)))
+            {
+                window = allWindows[(allWindows.IndexOf(window) + 1) % allWindows.Count];
+            }
+
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("Click an item to add it to the info window");
+
+
+            GUILayout.Label("Window contents (click to edit):");
 
             scrollPos = GUILayout.BeginScrollView(scrollPos);
+            foreach (IInfoItem item in window.items)
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                if (item == selectedItem) s.normal.textColor = Color.yellow;
 
+                if (GUILayout.Button(item.GetDescription(), s)) selectedItem = item;
+            }
+            GUILayout.EndScrollView();
+            
+            GUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Remove") && selectedItem != null) window.items.Remove(selectedItem);
+            if (GUILayout.Button("Move up") && selectedItem != null)
+            {
+                int index = window.items.IndexOf(selectedItem);
+                if (index > 0)
+                {
+                    window.items.Remove(selectedItem);
+                    window.items.Insert(index - 1, selectedItem);
+                }
+            }
+            if (GUILayout.Button("Move down") && selectedItem != null)
+            {
+                int index = window.items.IndexOf(selectedItem);
+                if (index < window.items.Count - 1)
+                {
+                    window.items.Remove(selectedItem);
+                    window.items.Insert(index + 1, selectedItem);
+                }
+            }
+
+            GUILayout.EndHorizontal();
+
+
+
+            GUILayout.Label("Click an item to add it to the info window:");
+
+            scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
             foreach (IInfoItem item in registry)
             {
-                if (GUILayout.Button(item.GetDescription(), buttonStyle))
+                if (GUILayout.Button(item.GetDescription(), yellowOnHover))
                 {
                     window.items.Add(item);
                 }
             }
-
             GUILayout.EndScrollView();
 
             GUILayout.EndVertical();
@@ -258,7 +320,7 @@ namespace MuMech
         {
             bool currentValue = false;
             if (member is FieldInfo) currentValue = (bool)(((FieldInfo)member).GetValue(obj));
-            else if (member is PropertyInfo) currentValue = (bool)(((PropertyInfo)member).GetValue(obj, new object[]{}));
+            else if (member is PropertyInfo) currentValue = (bool)(((PropertyInfo)member).GetValue(obj, new object[] { }));
 
             bool newValue = GUILayout.Toggle(currentValue, name);
 

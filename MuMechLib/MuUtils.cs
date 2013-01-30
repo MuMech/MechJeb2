@@ -118,6 +118,8 @@ namespace MuMech
     }
 
 
+
+
     public class MovingAverage
     {
         private double[] store;

@@ -52,12 +52,16 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             bool wasEnabled = core.attitude.enabled;
-            core.attitude.enabled = GUILayout.Toggle(core.attitude.enabled, "Enable");
+            bool newEnabled = GUILayout.Toggle(core.attitude.enabled, "Enable");
 
-            if (wasEnabled != core.attitude.enabled)
+            if (newEnabled && !wasEnabled)
             {
+                core.attitude.users.Add(this); 
                 changed = true;
             }
+
+            if (!newEnabled && wasEnabled) core.attitude.users.Remove(this);
+
 
             if (changed)
             {

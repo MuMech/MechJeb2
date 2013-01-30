@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class ReentrySimulation
+    public class ReentrySimulation
     {
         //parameters of the problem:
         bool bodyHasAtmosphere;

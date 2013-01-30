@@ -12,6 +12,11 @@ namespace MuMech
 
         public string status = "";
 
+        public override void OnModuleDisabled()
+        {
+            core.node.enabled = false; //make sure we turn off node executor if we get disabled suddenly
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             if (!core.target.NormalTargetExists)
@@ -22,7 +27,7 @@ namespace MuMech
 
             core.node.autowarp = core.target.Distance > 1000; //don't warp when close to target, because warping introduces small perturbations
 
-            if (vessel.patchedConicSolver.maneuverNodes.Any())
+            if (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
                 if (!core.node.enabled) core.node.ExecuteAllNodes();
             }
@@ -116,8 +121,35 @@ namespace MuMech
             else
             {
                 //We're not on an intercept course, and we're not in the right plane. Match planes
+                bool ascending;
+                if (orbit.eccentricity < 1)
+                {
+                    if (orbit.TimeOfAscendingNode(core.target.Orbit, vesselState.time) < orbit.TimeOfDescendingNode(core.target.Orbit, vesselState.time))
+                    {
+                        ascending = true;
+                    }
+                    else
+                    {
+                        ascending = false;
+                    }
+                }
+                else
+                {
+                    if (orbit.AscendingNodeExists(core.target.Orbit))
+                    {
+                        ascending = true;
+                    }
+                    else
+                    {
+                        ascending = false;
+                    }
+                }
+
                 double UT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.Orbit, vesselState.time, out UT);
+                Vector3d dV;
+                if (ascending) dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.Orbit, vesselState.time, out UT);
+                else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.target.Orbit, vesselState.time, out UT);
+
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
                 core.node.leadFraction = 0.5;

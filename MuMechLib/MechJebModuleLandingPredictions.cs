@@ -7,7 +7,8 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleLandingPredictions : ComputerModule
+    //LandingPredctions should be enabled/disabled through .users, not .enabled.
+    public class MechJebModuleLandingPredictions : ComputerModule
     {
         //publicly available output:
         //Call this function and use the returned object in case this.result changes while you
@@ -31,6 +32,7 @@ namespace MuMech
 
         protected ManeuverNode aerobrakeNode = null;
 
+
         public override void OnModuleEnabled()
         {
             StartSimulation();
@@ -44,7 +46,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (enabled && vessel.isActiveVessel)
+            if (vessel.isActiveVessel)
             {
                 //We should be running simulations periodically. If one is not running right now,
                 //check if enough time has passed since the last one to start a new one:
@@ -60,7 +62,7 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (enabled && vessel.isActiveVessel)
+            if (vessel.isActiveVessel)
             {
                 MaintainAerobrakeNode();
             }

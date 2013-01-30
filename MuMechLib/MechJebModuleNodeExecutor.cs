@@ -8,21 +8,15 @@ namespace MuMech
 {
     public class MechJebModuleNodeExecutor : ComputerModule
     {
-        public bool autowarp = true;
-        public double leadTime = 3;
-        public bool removeNodes = true;
-        public double leadFraction = 1.0;
-        public double precision = 0.1;
-
-        enum Mode { ONE_NODE, ALL_NODES };
-        Mode mode = Mode.ONE_NODE;
-
-        bool burnTriggered = false;
+        //public interface:
+        public bool autowarp = true;      //whether to auto-warp to nodes
+        public double leadTime = 3;       //how many seconds before a burn to end warp (note that we align with the node before warping)
+        public double leadFraction = 1.0; //how early to start the burn, given as a fraction of the burn time
+        public double precision = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
         public void ExecuteOneNode()
         {
             mode = Mode.ONE_NODE;
-            core.attitude.enabled = true;
             enabled = true;
             burnTriggered = false;
         }
@@ -30,10 +24,24 @@ namespace MuMech
         public void ExecuteAllNodes()
         {
             mode = Mode.ALL_NODES;
-            core.attitude.enabled = true;
             enabled = true;
             burnTriggered = false;
         }
+
+        public override void OnModuleEnabled()
+        {
+            core.attitude.users.Add(this);
+        }
+
+        public override void OnModuleDisabled()
+        {
+            core.attitude.users.Remove(this);
+        }
+
+        protected enum Mode { ONE_NODE, ALL_NODES };
+        protected Mode mode = Mode.ONE_NODE;
+
+        protected bool burnTriggered = false;
 
         public override void OnFixedUpdate()
         {
@@ -51,7 +59,7 @@ namespace MuMech
             {
                 burnTriggered = false;
 
-                if(removeNodes) vessel.patchedConicSolver.RemoveManeuverNode(node);
+                vessel.patchedConicSolver.RemoveManeuverNode(node);
 
                 if (mode == Mode.ONE_NODE)
                 {
@@ -137,6 +145,8 @@ namespace MuMech
 
 
         public MechJebModuleNodeExecutor(MechJebCore core) : base(core) { }
+
+
 
         [ValueInfoItem(name="Node burn time")]
         public string NextManeuverNodeBurnTime()

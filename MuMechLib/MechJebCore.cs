@@ -121,7 +121,7 @@ namespace MuMech
             rcs = GetComputerModule<MechJebModuleRCSController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
 
-            target.enabled = true;
+            target.enabled = true; //TargetController should always be running
 
             foreach (ComputerModule module in computerModules)
             {
