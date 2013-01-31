@@ -148,14 +148,5 @@ namespace MuMech
 
 
 
-        [ValueInfoItem(name="Node burn time")]
-        public string NextManeuverNodeBurnTime()
-        {
-            if(!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
-            
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            double time = node.GetBurnVector(node.patch).magnitude / vesselState.maxThrustAccel;
-            return MuUtils.ToSI(time, -1) + "s";
-        }
     }
 }

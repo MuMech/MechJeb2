@@ -111,19 +111,21 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            if (GUILayout.Button("Add new custom window")) AddNewWindow();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("New window")) AddNewWindow();
 
             if (window == null)
             {
+                GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
                 GUI.DragWindow();
                 return;
             }
 
+            if (GUILayout.Button("Delete window")) RemoveCurrentWindow();
+            GUILayout.EndHorizontal();
+
             List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
-
-            if (GUILayout.Button("Delete this custom window")) RemoveCurrentWindow();
-
 
 
             GUILayout.BeginHorizontal();
@@ -146,6 +148,7 @@ namespace MuMech
 
             GUILayout.Label("Window contents (click to edit):");
 
+            GUILayout.BeginVertical(GUILayout.Height(100));
             scrollPos = GUILayout.BeginScrollView(scrollPos);
             foreach (IInfoItem item in window.items)
             {
@@ -155,6 +158,7 @@ namespace MuMech
                 if (GUILayout.Button(item.GetDescription(), s)) selectedItem = item;
             }
             GUILayout.EndScrollView();
+            GUILayout.EndVertical();
             
             GUILayout.BeginHorizontal();
 
@@ -201,7 +205,7 @@ namespace MuMech
 
         public override GUILayoutOption[] FlightWindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(400) };
+            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(500) };
         }
 
         public override string GetName()

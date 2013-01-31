@@ -87,25 +87,6 @@ namespace MuMech
         }
 
 
-        [ValueInfoItem(name="Part count")]
-        public int PartCount()
-        {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count;
-            else return vessel.parts.Count;
-        }
 
-        [ValueInfoItem(name="Strut count")]
-        public int StrutCount() 
-        {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count(p => p is StrutConnector);
-            else return vessel.parts.Count(p => p is StrutConnector);
-        }
-
-        [ValueInfoItem(name="Vessel cost", units="k$")]
-        public int VesselCost()
-        {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost);
-            else return vessel.parts.Sum(p => p.partInfo.cost);
-        }
     }
 }

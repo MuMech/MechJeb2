@@ -53,12 +53,7 @@ namespace MuMech
             Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
         }
 
-        public Vector3d GetPositionTargetPosition()
-        {
-            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude));
-        }
-
-        [ValueInfoItem(name="Target coordinates")]
+        [ValueInfoItem(name = "Target coordinates")]
         public string GetPositionTargetString()
         {
             if (target is PositionTarget && !(target is DirectionTarget))
@@ -69,6 +64,11 @@ namespace MuMech
             {
                 return "none";
             }
+        }
+
+        public Vector3d GetPositionTargetPosition()
+        {
+            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude));
         }
 
         public void SetDirectionTarget(string name)

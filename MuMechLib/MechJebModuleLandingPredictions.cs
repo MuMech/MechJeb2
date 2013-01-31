@@ -216,22 +216,5 @@ namespace MuMech
         public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
 
 
-        //Todo: consider turning this into a binary search
-        [ValueInfoItem(name = "Time to impact")]
-        public string TimeToImpact()
-        {
-            if (orbit.PeA > 0) return "N/A";
-
-            double impactTime = vesselState.time;
-
-            for (int iter = 0; iter < 10; iter++)
-            {   
-                Vector3d impactPosition = orbit.SwappedAbsolutePositionAtUT(impactTime);
-                double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
-                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
-            }
-
-            return MuUtils.ToSI(impactTime - vesselState.time, -1) + "s";
-        }
     }
 }

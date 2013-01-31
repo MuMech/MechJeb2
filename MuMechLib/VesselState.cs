@@ -359,36 +359,7 @@ namespace MuMech
             return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
         }
 
-        [ValueInfoItem(name = "TWR", units = "")]
-        public double TWR()
-        {
-            return thrustAvailable / (mass * mainBody.GeeASL * 9.81);
-        }
 
-        [ValueInfoItem(name = "Atmospheric pressure", units = "atm")]
-        public double AtmosphericPressure()
-        {
-            return FlightGlobals.getStaticPressure(CoM);
-        }
-
-        [ValueInfoItem(name = "Coordinates")]
-        public string GetCoordinateString()
-        {
-            return Coordinates.ToStringDMS(latitude, longitude);
-        }
-
-        [ValueInfoItem(name = "Orbit shape")]
-        public string OrbitSummary()
-        {
-            if (orbitEccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(orbitPeA, 2) + "m";
-            else return MuUtils.ToSI(orbitPeA, 2) + "m x " + MuUtils.ToSI(orbitApA, 2) + "m";
-        }
-
-        [ValueInfoItem(name = "Orbit shape 2")]
-        public string OrbitSummaryWithInclination()
-        {
-            return OrbitSummary() + ", inc. " + orbitInclination.ToString("F1") + "º";
-        }
 
     }
 }
