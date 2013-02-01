@@ -14,10 +14,10 @@ namespace MuMech
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
 
         //input parameters:
-        IAscentPath ascentPath = new DefaultAscentPath();
-        double desiredOrbitAltitude = 100000.0;
-        double desiredInclination = 0.0;
-        bool autoThrottle = true;
+        public IAscentPath ascentPath = new DefaultAscentPath();
+        public double desiredOrbitAltitude = 100000.0;
+        public double desiredInclination = 0.0;
+        public bool autoThrottle = true;
 
         //internal state:
         public enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
