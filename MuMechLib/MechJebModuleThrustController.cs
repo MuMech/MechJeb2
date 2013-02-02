@@ -28,7 +28,7 @@ namespace MuMech
         [ToggleInfoItem(name="Limit throttle to prevent overheats")]
         public bool limitToPreventOverheats = false;
         public bool limitAcceleration = false;
-        public EditableDouble maxAcceleration = double.MaxValue;
+        public EditableDouble maxAcceleration = 40;
 
 
         private bool tmode_changed = false;

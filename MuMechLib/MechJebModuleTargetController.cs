@@ -41,7 +41,11 @@ namespace MuMech
         public void Set(ITargetable t)
         {
             target = t;
-            FlightGlobals.fetch.SetVesselTarget(target);
+            if (vessel.isActiveVessel)
+            {
+                Debug.Log("Setting target: my surface speed is " + vesselState.speedSurface);
+                FlightGlobals.fetch.SetVesselTarget(target);
+            }
         }
 
         public void SetPositionTarget(CelestialBody body, double latitude, double longitude)
@@ -156,7 +160,7 @@ namespace MuMech
 
         public string Name
         {
-            get { return FlightGlobals.fetch.VesselTarget.GetName(); }
+            get { return target.GetName(); }
         }
 
 
@@ -174,11 +178,15 @@ namespace MuMech
             //Restore the saved target when we are made active vessel
             if (!wasActiveVessel && vessel.isActiveVessel)
             {
-                if (target != null) FlightGlobals.fetch.SetVesselTarget(target);
+                if (target != null)
+                {
+                    Debug.Log("Setting vessel target: my surface speed is " + vesselState.speedSurface);
+                    FlightGlobals.fetch.SetVesselTarget(target);
+                }
             }
 
             //notice when the user switches targets
-            if (target != FlightGlobals.fetch.VesselTarget) target = FlightGlobals.fetch.VesselTarget;
+            if (vessel.isActiveVessel && target != FlightGlobals.fetch.VesselTarget) target = FlightGlobals.fetch.VesselTarget;
 
             //Update targets that need updating:
             if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
