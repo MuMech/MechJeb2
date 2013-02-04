@@ -95,7 +95,6 @@ namespace MuMech
             }
             else
             {
-                Debug.Log("not landed");
                 launchingToPlane = launchingToRendezvous = false;
             }
 

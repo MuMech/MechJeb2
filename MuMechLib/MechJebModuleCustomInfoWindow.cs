@@ -230,6 +230,7 @@ namespace MuMech
         MemberInfo member;
         object obj;
         string units;
+        bool time;
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
         {
@@ -237,6 +238,7 @@ namespace MuMech
             this.member = member;
             name = attribute.name;
             units = attribute.units;
+            time = attribute.time;
         }
 
         public string GetDescription() { return name; }
@@ -265,7 +267,8 @@ namespace MuMech
             else if (value is Vector3) doubleValue = ((Vector3)value).magnitude;
             else if (value is EditableDouble) doubleValue = (EditableDouble)value;
 
-            return (MuUtils.ToSI(doubleValue) + units);
+            if (time) return GuiUtils.TimeToDHMS(doubleValue);
+            else return (MuUtils.ToSI(doubleValue) + units);
         }
 
         public void DrawItem()
@@ -340,6 +343,7 @@ namespace MuMech
     {
         public string name;
         public string units = "";
+        public bool time = false;
     }
 
     //Apply this attribute to a method to make the method callable via an ActionInfoItem

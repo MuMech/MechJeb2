@@ -102,6 +102,7 @@ namespace MuMech
             core.attitude.users.Remove(this);
             core.thrust.users.Remove(this);
             predictor.users.Remove(this);
+            core.KillThrottle();
             landStep = LandStep.OFF;
             status = "Off";
         }

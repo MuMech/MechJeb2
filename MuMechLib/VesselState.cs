@@ -10,7 +10,7 @@ namespace MuMech
 
     public class VesselState
     {
-        [ValueInfoItem(name = "Universal Time", units = "s")]
+        [ValueInfoItem(name = "Universal Time", time=true)]
         public double time;            //planetarium time
         public double deltaT;          //TimeWarp.fixedDeltaTime
 
@@ -52,9 +52,9 @@ namespace MuMech
         public MovingAverage speedSurface = new MovingAverage();
         [ValueInfoItem(name = "Vertical speed", units = "m/s")]
         public MovingAverage speedVertical = new MovingAverage();
-        [ValueInfoItem(name = "Horizontal speed", units = "m/s")]
+        [ValueInfoItem(name = "Surface horizontal speed", units = "m/s")]
         public MovingAverage speedSurfaceHorizontal = new MovingAverage();
-        [ValueInfoItem(name = "Horizontal speed", units = "m/s")]
+        [ValueInfoItem(name = "Orbit horizontal speed", units = "m/s")]
         public double speedOrbitHorizontal;
         [ValueInfoItem(name = "Heading", units = "º")]
         public MovingAverage vesselHeading = new MovingAverage();
@@ -72,11 +72,11 @@ namespace MuMech
         public MovingAverage orbitApA = new MovingAverage();
         [ValueInfoItem(name = "Periapsis", units = "m")]
         public MovingAverage orbitPeA = new MovingAverage();
-        [ValueInfoItem(name = "Orbital period", units = "s")]
+        [ValueInfoItem(name = "Orbital period", time=true)]
         public MovingAverage orbitPeriod = new MovingAverage();
-        [ValueInfoItem(name = "Time to apoapsis", units = "s")]
+        [ValueInfoItem(name = "Time to apoapsis", time=true)]
         public MovingAverage orbitTimeToAp = new MovingAverage();
-        [ValueInfoItem(name = "Time to periapsis", units = "s")]
+        [ValueInfoItem(name = "Time to periapsis", time=true)]
         public MovingAverage orbitTimeToPe = new MovingAverage();
         [ValueInfoItem(name = "LAN", units = "º")]
         public MovingAverage orbitLAN = new MovingAverage();
@@ -110,8 +110,9 @@ namespace MuMech
         public double torqueThrustPYAvailable;
         [ValueInfoItem(name = "Drag coefficient", units = "")]
         public double massDrag;
-        [ValueInfoItem(name = "Atmosphere density", units = "kg/m³")]
         public double atmosphericDensity;
+        [ValueInfoItem(name = "Atmosphere density", units = "g/m³")]
+        public double atmosphericDensityGrams;
         [ValueInfoItem(name = "Angle to prograde", units = "º")]
         public double angleToPrograde;
 
@@ -193,7 +194,10 @@ namespace MuMech
                 }
             }
 
-            atmosphericDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(altitudeASL, vessel.mainBody));
+            double atmosphericPressure = FlightGlobals.getStaticPressure(altitudeASL, vessel.mainBody);
+            if (atmosphericPressure < vessel.mainBody.atmosphereMultiplier * 1e-6) atmosphericPressure = 0;
+            atmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure);
+            atmosphericDensityGrams = atmosphericDensity * 1000;
 
             orbitApA.value = vessel.orbit.ApA;
             orbitPeA.value = vessel.orbit.PeA;

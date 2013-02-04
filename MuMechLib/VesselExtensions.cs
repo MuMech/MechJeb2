@@ -31,13 +31,13 @@ namespace MuMech
 
         public static Orbit GetPatchAtUT(this Vessel vessel, double UT)
         {
-            IEnumerable<ManeuverNode> earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => n.UT < UT);
+            IEnumerable<ManeuverNode> earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.UT <= UT));
             Orbit o = vessel.orbit;
             if (earlierNodes.Count() > 0)
             {
                 o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
             }
-            while (o.nextPatch != null && o.nextPatch.activePatch && o.nextPatch.StartUT < UT)
+            while (o.patchEndTransition != Orbit.PatchTransitionType.FINAL && o.nextPatch.StartUT <= UT)
             {
                 o = o.nextPatch;
             }
@@ -52,12 +52,9 @@ namespace MuMech
             //Determine whether this patch ends in an SOI transition or if it's the final one:
             bool finalPatch = (patch.patchEndTransition == Orbit.PatchTransitionType.FINAL);
 
-            //See if any maneuver nodes occur during this patch. If so return the
-            //patch that comes after the first maneuver node:
-            var nodes = from node in vessel.patchedConicSolver.maneuverNodes
-                        where (node.UT > patch.StartUT && (finalPatch || node.UT < patch.EndUT) && node != ignoreNode)
-                        orderby node.UT ascending
-                        select node;
+            //See if any maneuver nodes occur during this patch. If there is one
+            //return the patch that follows it
+            var nodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.patch == patch && n != ignoreNode));
             if (nodes.Count() > 0) return nodes.First().nextPatch;
 
             //return the next patch, or null if there isn't one:
@@ -78,6 +75,10 @@ namespace MuMech
                     throw new Exception("MechJeb VesselExtensions.PlaceManeuverNode: bad dV: " + dV);
                 }
             }
+
+            //It seems that sometimes the game can freak out if you place a maneuver node in the past, so this
+            //protects against that.
+            UT = Math.Max(UT, Planetarium.GetUniversalTime());
 
             //convert a dV in world coordinates into the coordinate system of the maneuver node,
             //which uses (x, y, z) = (radial+, normal-, prograde)

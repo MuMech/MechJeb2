@@ -44,8 +44,6 @@ namespace MuMech
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 status = "Within 100m: matching velocities.";
-
-                core.node.leadFraction = 0.5;
             }
             else if (core.target.Distance < vesselState.radius / 50)
             {
@@ -56,7 +54,6 @@ namespace MuMech
                     double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
-                    core.node.leadFraction = 0.5;
 
                     status = "Planning to match velocities at closest approach.";
                 }
@@ -83,8 +80,6 @@ namespace MuMech
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                core.node.leadFraction = 0.5;
-
                 status = "On intercept course. Planning to match velocities at closest approach.";
             }
             else if (orbit.RelativeInclination(core.target.Orbit) < 0.05 && orbit.eccentricity < 0.05)
@@ -94,8 +89,6 @@ namespace MuMech
                 double UT;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.Orbit, vesselState.time, out UT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
-
-                core.node.leadFraction = 1;
 
                 status = "Planning Hohmann transfer for intercept.";
             }
@@ -113,8 +106,6 @@ namespace MuMech
 
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
-
-                core.node.leadFraction = 1;
 
                 status = "Circularizing.";
             }
@@ -151,8 +142,6 @@ namespace MuMech
                 else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.target.Orbit, vesselState.time, out UT);
 
                 vessel.PlaceManeuverNode(orbit, dV, UT);
-
-                core.node.leadFraction = 0.5;
 
                 status = "Matching planes.";
             }

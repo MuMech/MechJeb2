@@ -213,12 +213,6 @@ namespace MuMech
         //Throws an ArgumentException if o is hyperbolic and doesn't have an ascending node relative to the target.
         public static Vector3d DeltaVAndTimeToMatchPlanesAscending(Orbit o, Orbit target, double UT, out double burnUT)
         {
-            Debug.Log("DV and time to match planes ascending: ");
-            Debug.Log("max true anomaly = " + o.MaximumTrueAnomaly());
-            Debug.Log("true anomamly of AN = " + o.AscendingNodeTrueAnomaly(target));
-            Debug.Log("time of AN = " + o.TimeOfAscendingNode(target, UT));
-            Debug.Log("time to AN = " + (o.TimeOfAscendingNode(target, UT) - UT));
-
             burnUT = o.TimeOfAscendingNode(target, UT);
             Vector3d desiredHorizontal = Vector3d.Cross(target.SwappedOrbitNormal(), o.Up(burnUT));
             Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT));
@@ -251,7 +245,7 @@ namespace MuMech
             burnUT = UT;
             double bestApproachDistance = Double.MaxValue;
             double minTime = UT;
-            double maxTime = UT + synodicPeriod;
+            double maxTime = UT + 1.1 * synodicPeriod;
             int numDivisions = 20;
 
             for (int iter = 0; iter < 8; iter++)
@@ -321,6 +315,35 @@ namespace MuMech
         {
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 1); //+1 so that closestApproachTime is definitely > UT
             Vector3d dV = DeltaVToInterceptAtTime(o, UT, target, closestApproachTime);
+            return dV;
+        }
+
+        public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, out double burnUT)
+        {
+            double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
+
+            Debug.Log("cheapest course correction: o.ApA = " + o.ApA + "; UT = " + UT + "; closestApproach = " + closestApproachTime);
+
+            burnUT = UT;
+            Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime);
+
+            Debug.Log("initial: UT = " + UT + ", dV = " + dV.magnitude);
+
+            int fineness = 20;
+            for (double step = 0.5; step < fineness; step += 1.0)
+            {
+                double testUT = UT + (closestApproachTime - UT) * step / fineness;
+                Vector3d testDV = DeltaVToInterceptAtTime(o, testUT, target, closestApproachTime);
+
+                Debug.Log("UT = " + testUT + ", dV = " + testDV.magnitude);
+
+                if (testDV.magnitude < dV.magnitude)
+                {
+                    dV = testDV;
+                    burnUT = testUT;
+                }
+            }
+
             return dV;
         }
 

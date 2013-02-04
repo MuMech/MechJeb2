@@ -18,7 +18,7 @@ namespace MuMech
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double time = node.GetBurnVector(node.patch).magnitude / vesselState.maxThrustAccel;
-            return MuUtils.ToSI(time, -1) + "s";
+            return GuiUtils.TimeToDHMS(time);
         }
 
         [ValueInfoItem(name = "Surface TWR")]
@@ -68,7 +68,7 @@ namespace MuMech
                 impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
             }
 
-            return MuUtils.ToSI(impactTime - vesselState.time, -1) + "s";
+            return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
         }
 
         [ValueInfoItem(name = "Current acceleration", units = "m/s²")]
@@ -82,7 +82,7 @@ namespace MuMech
         {
             if (orbit.patchEndTransition == Orbit.PatchTransitionType.FINAL) return "N/A";
 
-            return MuUtils.ToSI(orbit.EndUT - vesselState.time, 0) + "s";
+            return GuiUtils.TimeToDHMS(orbit.EndUT - vesselState.time);
         }
 
         [ValueInfoItem(name = "Surface gravity", units="m/s²")]
@@ -143,7 +143,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
-            return MuUtils.ToSI(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time, -1) + "s";
+            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem(name = "Closest approach distance")]
@@ -152,6 +152,40 @@ namespace MuMech
             if (!core.target.NormalTargetExists) return "N/A";
             if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
             return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
+        }
+
+        [ValueInfoItem(name = "Atmospheric drag", units = "m/s²")]
+        public double AtmosphericDrag()
+        {
+            return mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude;
+        }
+
+        [ValueInfoItem(name = "Synodic period")]
+        public string SynodicPeriod()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.Orbit));
+        }
+
+        [ValueInfoItem(name = "Phase angle to target")]
+        public string PhaseAngle()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            Vector3d projectedTarget = Vector3d.Exclude(orbit.SwappedOrbitNormal(), core.target.Position - mainBody.position);
+            double angle = Vector3d.Angle(vesselState.CoM - mainBody.position, projectedTarget);
+            if (Vector3d.Dot(Vector3d.Cross(orbit.SwappedOrbitNormal(), vesselState.CoM - mainBody.position), projectedTarget) < 0)
+            {
+                angle = 360 - angle;
+            }
+            return angle.ToString("F2") + "º";
+        }
+
+        [ValueInfoItem(name = "Circular orbit speed", units = "m/s")]
+        public double CircularOrbitSpeed()
+        {
+            return OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
         }
     }
 }

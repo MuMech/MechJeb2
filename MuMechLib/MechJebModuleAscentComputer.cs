@@ -36,7 +36,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
-            FlightInputHandler.SetNeutralControls();
+            core.KillThrottle();
 
             if (placedCircularizeNode) core.node.enabled = false;
         }

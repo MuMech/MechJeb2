@@ -11,7 +11,7 @@ namespace MuMech
         //public interface:
         public bool autowarp = true;      //whether to auto-warp to nodes
         public double leadTime = 3;       //how many seconds before a burn to end warp (note that we align with the node before warping)
-        public double leadFraction = 1.0; //how early to start the burn, given as a fraction of the burn time
+        public double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
         public double precision = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
         public void ExecuteOneNode()
@@ -36,6 +36,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
+            core.KillThrottle();
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
@@ -63,7 +64,6 @@ namespace MuMech
 
                 if (mode == Mode.ONE_NODE)
                 {
-                    Debug.Log("Node executor turning off after executing one node");
                     this.enabled = false;
                     vessel.ctrlState.mainThrottle = 0;
                     return;
@@ -72,14 +72,12 @@ namespace MuMech
                 {
                     if (!vessel.patchedConicSolver.maneuverNodes.Any())
                     {
-                        Debug.Log("Node executor turning off after executing all nodes");
                         this.enabled = false;
                         vessel.ctrlState.mainThrottle = 0;
                         return;
                     }
                     else
                     {
-                        Debug.Log("Node executor moving on to next node");
                         node = vessel.patchedConicSolver.maneuverNodes.First();
                     }
                 }
@@ -88,17 +86,12 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            Debug.Log("maxThrustAccel = " + vesselState.maxThrustAccel);
-            Debug.Log("thrustAvailable = " + vesselState.thrustAvailable);
             double burnTime = burnVector.magnitude / vesselState.maxThrustAccel;
-            Debug.Log("burnTime = " + burnTime);
 
             double timeToNode = node.UT - vesselState.time;
-            Debug.Log("time to node = " + timeToNode);
 
             if (timeToNode < burnTime * leadFraction)
             {
-                Debug.Log("triggering burn");
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
             }
@@ -109,12 +102,10 @@ namespace MuMech
                 if (core.attitude.attitudeAngleFromTarget() < 1 || 
                     (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
-                    Debug.Log("Warping to node");
                     core.warp.WarpToUT(node.UT - burnTime*leadFraction - leadTime);
                 }
                 else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10)
                 {
-                    Debug.Log("Turning off warp");
                     core.warp.MinimumWarp();
                 }
             }
@@ -126,16 +117,14 @@ namespace MuMech
         {
             if (burnTriggered && core.attitude.attitudeAngleFromTarget() < 5)
             {
-                Debug.Log("burning");
                 ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
                 double dVLeft = node.GetBurnVector(orbit).magnitude;
 
                 double timeConstant = (dVLeft > 10 ? 0.5 : 2);
+                double desiredAcceleration = dVLeft / timeConstant;
+                desiredAcceleration = Math.Max(precision, desiredAcceleration);
 
-                Debug.Log("dVLeft = " + dVLeft);
-                Debug.Log("throttle = " + dVLeft / (timeConstant * vesselState.maxThrustAccel));
-
-                s.mainThrottle = Mathf.Clamp((float)(dVLeft / (0.5 * vesselState.maxThrustAccel)), 0.05F, 1);
+                s.mainThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
             }
             else
             {

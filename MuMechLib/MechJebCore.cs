@@ -34,6 +34,8 @@ namespace MuMech
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
+        private bool killThrottle = false;
+
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
@@ -121,8 +123,6 @@ namespace MuMech
             rcs = GetComputerModule<MechJebModuleRCSController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
 
-            target.enabled = true; //TargetController should always be running
-
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
@@ -140,7 +140,7 @@ namespace MuMech
                 module.OnActive();
             }
         }
-        
+
         public override void OnInactive()
         {
             foreach (ComputerModule module in computerModules)
@@ -176,7 +176,7 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                if(module.enabled) module.OnFixedUpdate();
+                if (module.enabled) module.OnFixedUpdate();
             }
 
 
@@ -197,7 +197,7 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                if(module.enabled) module.OnUpdate();
+                if (module.enabled) module.OnUpdate();
             }
         }
 
@@ -248,6 +248,12 @@ namespace MuMech
                 return;
             }
 
+            if (killThrottle)
+            {
+                s.mainThrottle = 0; 
+                killThrottle = false;
+            }
+
             Drive(s);
 
             CheckFlightCtrlState(s);
@@ -280,15 +286,24 @@ namespace MuMech
             if (float.IsNaN(s.X)) s.X = 0;
             if (float.IsNaN(s.Y)) s.Y = 0;
             if (float.IsNaN(s.Z)) s.Z = 0;
-            
+
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
             s.yaw = Mathf.Clamp(s.yaw, -1, 1);
             s.pitch = Mathf.Clamp(s.pitch, -1, 1);
             s.roll = Mathf.Clamp(s.roll, -1, 1);
             s.X = Mathf.Clamp(s.X, -1, 1);
             s.Y = Mathf.Clamp(s.Y, -1, 1);
-            s.Z = Mathf.Clamp(s.Z, -1, 1);            
+            s.Z = Mathf.Clamp(s.Z, -1, 1);
         }
+
+        //A function that modules can call in order to kill the throttle on the next frame.
+        //This is useful when disabling an autopilot from FixedUpdate instead of Drive, since
+        //FixedUpdate doesn't have access to the FlightCtrlState.
+        public void KillThrottle()
+        {
+            killThrottle = true;
+        }
+
 
         private void OnGUI()
         {
@@ -309,7 +324,7 @@ namespace MuMech
             if (MapView.MapIsEnabled && p.enabled && result != null)
             {
                 //GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(), Color.cyan, false);
-                if(result.outcome == ReentrySimulation.Outcome.LANDED) 
+                if (result.outcome == ReentrySimulation.Outcome.LANDED)
                 {
                     GLUtils.DrawMapViewGroundMarker(result.body, result.endPosition.latitude, result.endPosition.longitude, Color.blue, 60);
                 }

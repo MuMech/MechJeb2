@@ -223,6 +223,23 @@ namespace MuMech
             return MuUtils.ClampDegrees360(a.AscendingNodeTrueAnomaly(b) + 180);
         }
 
+        //Gives the true anomaly at which o crosses the equator going northwards, if o is east-moving,
+        //or southwards, if o is west-moving.
+        //The returned value is always between 0 and 360.
+        public static double AscendingNodeEquatorialTrueAnomaly(this Orbit o)
+        {
+            Vector3d vectorToAN = Vector3d.Cross(o.referenceBody.transform.up, o.SwappedOrbitNormal());
+            return o.TrueAnomalyFromVector(vectorToAN);
+        }
+
+        //Gives the true anomaly at which o crosses the equator going southwards, if o is east-moving,
+        //or northwards, if o is west-moving.
+        //The returned value is always between 0 and 360.
+        public static double DescendingNodeEquatorialTrueAnomaly(this Orbit o)
+        {
+            return MuUtils.ClampDegrees360(o.AscendingNodeEquatorialTrueAnomaly() + 180);
+        }
+
         //For hyperbolic orbits, the true anomaly only takes on values in the range
         // -M < true anomaly < +M for some M. This function computes M.
         public static double MaximumTrueAnomaly(this Orbit o)
@@ -231,14 +248,36 @@ namespace MuMech
             else return 180 / Math.PI * Math.Acos(-1 / o.eccentricity);
         }
 
+        //Returns whether a has an ascending node with b. This can be false
+        //if a is hyperbolic and the would-be ascending node is within the opening
+        //angle of the hyperbola.
         public static bool AscendingNodeExists(this Orbit a, Orbit b)
         {
             return Math.Abs(MuUtils.ClampDegrees180(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
         }
 
+        //Returns whether a has a descending node with b. This can be false
+        //if a is hyperbolic and the would-be descending node is within the opening
+        //angle of the hyperbola.
         public static bool DescendingNodeExists(this Orbit a, Orbit b)
         {
             return Math.Abs(MuUtils.ClampDegrees180(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+        }
+
+        //Returns whether o has an ascending node with the equator. This can be false
+        //if o is hyperbolic and the would-be ascending node is within the opening
+        //angle of the hyperbola.
+        public static bool AscendingNodeEquatorialExists(this Orbit o)
+        {
+            return Math.Abs(MuUtils.ClampDegrees180(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+        }
+
+        //Returns whether o has a descending node with the equator. This can be false
+        //if o is hyperbolic and the would-be descending node is within the opening
+        //angle of the hyperbola.
+        public static bool DescendingNodeEquatorialExists(this Orbit o)
+        {
+            return Math.Abs(MuUtils.ClampDegrees180(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
         //Converts a direction, specified by a Vector3d, into a true anomaly.
@@ -352,6 +391,30 @@ namespace MuMech
         public static double TimeOfDescendingNode(this Orbit a, Orbit b, double UT)
         {
             return a.TimeOfTrueAnomaly(a.DescendingNodeTrueAnomaly(b), UT);
+        }
+
+        //Returns the next time at which the orbiting object will cross the equator
+        //moving northward, if o is east-moving, or southward, if o is west-moving. 
+        //For elliptical orbits this is a time between UT and UT + o.period.
+        //For hyperbolic orbits this can by any time, including a time in the past if the 
+        //ascending node is in the past.
+        //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
+        //"ascending node" occurs at a true anomaly that o does not actually ever attain.
+        public static double TimeOfAscendingNodeEquatorial(this Orbit o, double UT)
+        {
+            return o.TimeOfTrueAnomaly(o.AscendingNodeEquatorialTrueAnomaly(), UT);
+        }
+
+        //Returns the next time at which the orbiting object will cross the equator
+        //moving southward, if o is east-moving, or northward, if o is west-moving. 
+        //For elliptical orbits this is a time between UT and UT + o.period.
+        //For hyperbolic orbits this can by any time, including a time in the past if the 
+        //descending node is in the past.
+        //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
+        //"descending node" occurs at a true anomaly that o does not actually ever attain.
+        public static double TimeOfDescendingNodeEquatorial(this Orbit o, double UT)
+        {
+            return o.TimeOfTrueAnomaly(o.DescendingNodeEquatorialTrueAnomaly(), UT);
         }
 
         //Computes the period of the phase angle between orbiting objects a and b.

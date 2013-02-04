@@ -28,7 +28,12 @@ namespace MuMech
         //where the max_drag average over parts is weighted by the part mass
         public static Vector3d DragAccel(this CelestialBody body, Vector3d pos, Vector3d orbitVel, double dragCoeffOverMass)
         {
-            double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body));
+            double airPressure = FlightGlobals.getStaticPressure(pos, body);
+
+            //Atmosphere cuts out abruptly when pressure falls below 1e-6 * sea level pressure.
+            if (airPressure < body.atmosphereMultiplier * 1e-6) return Vector3d.zero;
+
+            double airDensity = FlightGlobals.getAtmDensity(airPressure);
             Vector3d airVel = orbitVel - body.getRFrmVel(pos);
             return -0.5 * FlightGlobals.DragMultiplier * airDensity * dragCoeffOverMass * airVel.magnitude * airVel;
         }

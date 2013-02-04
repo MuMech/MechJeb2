@@ -171,6 +171,8 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             RenderingManager.AddToPostDrawQueue(1, DoMapView);
+
+            this.enabled = true; //TargetController should always be running
         }
 
         public override void OnFixedUpdate()

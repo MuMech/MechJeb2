@@ -81,16 +81,21 @@ namespace MuMech
                 }
             }
         }
+
+        public static implicit operator EditableTime(double x)
+        {
+            return new EditableTime(x);
+        }
     }
 
     public static class GuiUtils
     {
-        public static void SimpleTextBox(string leftLabel, EditableDouble ed, string rightLabel = "")
+        public static void SimpleTextBox(string leftLabel, EditableDouble ed, string rightLabel = "", float width = 100)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(leftLabel);
-            ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));
+            ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(width));
+            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
 
@@ -110,7 +115,7 @@ namespace MuMech
             for (int i = 0; i < units.Length; i++)
             {
                 int n = (int)(seconds / intervals[i]);
-                if (n != 0 || (i == units.Length-1 && ret == "")) ret += n.ToString() + units[i];
+                if (n != 0 || (i == units.Length-1 && ret == "")) ret += (ret.Length >= 2 ? ", " : "") + n.ToString() + units[i];
                 seconds -= n * intervals[i];
             }
 
