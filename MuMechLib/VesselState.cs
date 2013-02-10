@@ -352,7 +352,7 @@ namespace MuMech
         [ValueInfoItem(name = "Terminal velocity", units = "m/s")]
         public double TerminalVelocity()
         {
-            if (altitudeASL > mainBody.maxAtmosphereAltitude) return double.PositiveInfinity;
+            if (altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
             double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(CoM, mainBody));
             return Math.Sqrt(2 * localg * mass / (massDrag * FlightGlobals.DragMultiplier * airDensity));

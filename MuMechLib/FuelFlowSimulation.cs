@@ -54,6 +54,8 @@ namespace MuMech
         public Stats SimulateStage(float throttle, float atmospheres)
         {
             Stats stats = new Stats();
+            stats.startMass = VesselMass();
+            stats.startThrust = VesselThrust(throttle);
 
             const int maxSteps = 100;
             int step;
@@ -80,18 +82,24 @@ namespace MuMech
             stats.startMass = VesselMass();
             stats.startThrust = VesselThrust(throttle);
 
-            foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres);
-            foreach (FuelNode n in nodes) n.AssignResourceDrainRates(nodes);
+            foreach (FuelNode n in nodes) n.ResetDrainRates();
+            
+            List<FuelNode> engines = FindActiveEngines();
+            foreach (FuelNode n in engines) n.SetConsumptionRates(throttle, atmospheres);
+            foreach (FuelNode n in engines) n.AssignResourceDrainRates(nodes);
             foreach (FuelNode n in nodes) n.DebugDrainRates();
 
             float maxDt = nodes.Min(n => n.MaxTimeStep());
             dt = Mathf.Min(desiredDt, maxDt);
-            
+
+            Debug.Log("Simulating time step of " + dt);
+
             foreach (FuelNode n in nodes) n.DrainResources(dt);
 
             stats.deltaTime = dt;
             stats.endMass = VesselMass();
-            stats.endThrust = VesselThrust(throttle);
+            //stats.endThrust = VesselThrust(throttle);
+            stats.maxAccel = stats.startThrust / stats.endMass;
             stats.ComputeTimeStepDeltaV();
 
             t += dt;
@@ -122,7 +130,11 @@ namespace MuMech
             List<FuelNode> activeEngines = FindActiveEngines();
 
             //if no engines are active, we can always stage
-            if (activeEngines.Count == 0) return true;
+            if (activeEngines.Count == 0)
+            {
+                Debug.Log("Allowed to stage because no active engines");
+                return true;
+            }
 
             //if staging would decouple an active engine or non-empty fuel tank, we're not allowed to stage
             foreach (FuelNode n in nodes)
@@ -131,13 +143,20 @@ namespace MuMech
                 {
                     if (n.ContainsResources() || (activeEngines.Contains(n) && !n.isSepratron))
                     {
+                        Debug.Log("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
                         return false;
                     }
                 }
             }
 
             //if this isn't the last stage, we're allowed to stage because doing so wouldn't drop anything important
-            if (simStage > 0) return true;
+            if (simStage > 0)
+            {
+                Debug.Log("Allowed to stage because this isn't the last stage");
+                return true;
+            }
+
+            Debug.Log("Not allowed to stage because there are active engines and this is the last stage");
 
             //if this is the last stage, we're not allowed to stage while there are still active engines
             return false;
@@ -168,12 +187,12 @@ namespace MuMech
             public float startMass;
             public float endMass;
             public float startThrust;
-            public float endThrust;
+            public float maxAccel;
             public float deltaTime;
             public float deltaV;
 
-            public double StartTWR(CelestialBody body) { return startThrust / (body.GeeASL * startMass); }
-            public double EndTWR(CelestialBody body) { return endThrust / (body.GeeASL * endMass); }
+            public double StartTWR(CelestialBody body) { return startThrust / (9.81 * body.GeeASL * startMass); }
+            public double MaxTWR(CelestialBody body) { return maxAccel / (9.81 * body.GeeASL); }
 
             //Computes the deltaV from the other fields. Only valid when the thrust is constant over the time interval represented.
             public void ComputeTimeStepDeltaV()
@@ -194,7 +213,8 @@ namespace MuMech
                 return new Stats 
                 { 
                     startMass = this.startMass, endMass = s.endMass, 
-                    startThrust = this.startThrust, endThrust = s.endThrust,
+                    startThrust = this.startThrust,
+                    maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
                     deltaTime = this.deltaTime + s.deltaTime, deltaV = this.deltaV + s.deltaV
                 };
             }
@@ -216,6 +236,9 @@ namespace MuMech
         float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
         HashSet<FuelNode> sourceNodes = new HashSet<FuelNode>();  //a set of FuelNodes that this node could draw fuel or resources from (for resources that use the ResourceFlowMode STACK_PRIORITY_SEARCH).
+        FuelNode parent;
+        List<int> resourcesUnobtainableFromParent = new List<int>();
+        bool surfaceMounted;
 
         public float maxThrust = 0;     //max thrust of this part
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
@@ -227,7 +250,7 @@ namespace MuMech
 
         float dryMass = 0; //the mass of this part, not counting resource mass
 
-        string partName; //for debugging
+        public string partName; //for debugging
 
         public FuelNode(Part part)
         {
@@ -235,10 +258,14 @@ namespace MuMech
             inverseStage = part.inverseStage;
             isFuelLine = (part is FuelLine);
             isSepratron = part.IsSepratron();
-            partName = part.partName;
+            partName = part.partInfo.name;
 
             //note which resources this part has stored
-            foreach (PartResource r in part.Resources) resources[r.info.id] = (float)r.amount;
+            foreach (PartResource r in part.Resources)
+            {
+                if(r.info.name != "ElectricCharge") resources[r.info.id] = (float)r.amount;
+                resourcesUnobtainableFromParent.Add(r.info.id);
+            }
 
             //record relevant engine stats
             if(part.HasModule<ModuleEngines>()) 
@@ -294,6 +321,9 @@ namespace MuMech
                 }
             }
 
+            surfaceMounted = true;
+            if (part.parent != null) this.parent = nodeLookup[part.parent];
+
             //we can (sometimes) draw fuel from stacked parts
             foreach (AttachNode attachNode in part.attachNodes)
             {
@@ -305,17 +335,13 @@ namespace MuMech
                          && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
                 {
                     sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
+                    if (attachNode.attachedPart == part.parent) surfaceMounted = false;
                 }
             }
 
-
-            bool isFuelTank = false;
-            foreach (PartResource r in part.Resources)
-            {
-                if (r.maxAmount > 0 && r.info.name != "ElectricCharge") isFuelTank = true;
-            }
-
-            if (!isFuelTank && part.parent != null) sourceNodes.Add(nodeLookup[part.parent]);
+            //Parts can draw resources from their parents
+            //(exception: surface mounted fuel tanks cannot)
+            if (part.parent != null && part.parent.fuelCrossFeed) sourceNodes.Add(nodeLookup[part.parent]);
         }
 
         //call this when a node no longer exists, so that this node knows that it's no longer a valid source
@@ -355,6 +381,7 @@ namespace MuMech
 
         public bool ContainsResources()
         {
+            //Todo: need to fix this to ignore unimportant resources like monopropellant
             return resources.Values.Any(amount => amount > DRAINED);
         }
 
@@ -411,6 +438,7 @@ namespace MuMech
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                        Debug.Log(partName + " starting to assign drain of " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name);
                         AssignFuelDrainRateRecursive(type, amount, new List<FuelNode>());
                         break;
 
@@ -445,6 +473,8 @@ namespace MuMech
         //and drain it from some subset of the sources of this node.
         void AssignFuelDrainRateRecursive(int type, float amount, List<FuelNode> visited)
         {
+            Debug.Log(partName + ".AssignFuelDrainRateRecursive(" + (PartResourceLibrary.Instance.GetDefinition(type).name) + ", " + amount + ") (visited.Count = " + visited.Count + ")");
+
             //if we drain from our sources, newVisted is the set of nodes that those sources
             //aren't allowed to drain from. We add this node to that list to prevent loops.
             List<FuelNode> newVisited = new List<FuelNode>(visited);
@@ -461,10 +491,15 @@ namespace MuMech
                     {
                         fuelLines.Add(n);
                     }
+                    else
+                    {
+                        Debug.Log("--fuel line can't supply me");
+                    }
                 }
             }
             if (fuelLines.Count > 0)
             {
+                Debug.Log("--draining from " + fuelLines.Count + " fuel lines");
                 foreach (FuelNode fuelLine in fuelLines)
                 {
                     fuelLine.AssignFuelDrainRateRecursive(type, amount / fuelLines.Count, newVisited);
@@ -477,16 +512,33 @@ namespace MuMech
             //For instance, can't a fuel tank drain fuel simultaneously from its top and bottom stack nodes?
             foreach (FuelNode n in sourceNodes)
             {
-                if (!visited.Contains(n) && n.CanSupplyResourceRecursive(type, newVisited))
+                if (!visited.Contains(n))
                 {
-                    n.AssignFuelDrainRateRecursive(type, amount, newVisited);
-                    return;
+                    //Fuel tanks cannot draw from their parents if they are surface mounted:
+                    if (!(surfaceMounted && n == parent && resourcesUnobtainableFromParent.Contains(type)))
+                    {
+                        if (n.CanSupplyResourceRecursive(type, newVisited))
+                        {
+                            Debug.Log("--passing the recursive buck to " + n.partName);
+                            n.AssignFuelDrainRateRecursive(type, amount, newVisited);
+                            return;
+                        }
+                        else
+                        {
+                            Debug.Log("--" + n.partName + " can't supply me");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("--can't drain from " + n.partName + " because I'm a surface mount fuel tank");
+                    }
                 }
             }
 
             //in the final extremity, drain the resource from this part
             if (this.resources[type] > DRAINED)
             {
+                Debug.Log("--draining from self");
                 this.resourceDrains[type] += amount;
             }
         }
@@ -508,7 +560,11 @@ namespace MuMech
             {
                 if (!visited.Contains(n))
                 {
-                    if (n.CanSupplyResourceRecursive(type, newVisited)) return true;
+                    //Fuel tanks cannot draw from their parents if they are surface mounted:
+                    if (!(surfaceMounted && n == parent && resourcesUnobtainableFromParent.Contains(type)))
+                    {
+                        if (n.CanSupplyResourceRecursive(type, newVisited)) return true;
+                    }
                 }
             }
 

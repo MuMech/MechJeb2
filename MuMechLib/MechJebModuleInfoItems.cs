@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -69,6 +70,27 @@ namespace MuMech
             }
 
             return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
+        }
+
+        [ValueInfoItem(name = "Suicide burn countdown")]
+        public string SuicideBurnCountdown()
+        {
+            if (orbit.PeA > 0) return "N/A";
+            
+            double angleFromHorizontal = 90 - Vector3d.Angle(-vesselState.velocityVesselSurface, vesselState.up);
+            angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
+            double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
+            double g = vesselState.localg;
+            double T = vesselState.maxThrustAccel;
+
+            double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
+            double decelTime = vesselState.speedSurface / effectiveDecel;
+
+            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vesselState.velocityVesselSurface;
+            double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingSite);
+            double impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+
+            return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 
         [ValueInfoItem(name = "Current acceleration", units = "m/s²")]
@@ -186,6 +208,85 @@ namespace MuMech
         public double CircularOrbitSpeed()
         {
             return OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
+        }
+
+
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showInitialMass = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showFinalMass = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showInitialTWR = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showMaxTWR = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showVacDeltaV = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showVacTime = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showAtmoDeltaV = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showAtmoTime = true;
+
+        [GeneralInfoItem(name = "Stage stats (all)")]
+        public void AllStageStats()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+
+            stats.RequestUpdate();
+
+            int numStages = stats.atmoStats.Length;
+            var stages = Enumerable.Range(0, numStages);
+
+            GUILayout.BeginVertical();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
+            {
+                showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
+            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => stats.vacStats[s].startMass.ToString("F1") + " t"));
+            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
+            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(mainBody).ToString("F2")));
+            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(mainBody).ToString("F2")));
+            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
+            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
+        }
+
+        bool DrawStageStatsColumn(string header, IEnumerable<string> data)
+        {
+            GUILayout.BeginVertical();
+            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover);
+            s.wordWrap = false;
+            bool ret = GUILayout.Button(header, s);
+
+            s = new GUIStyle(GUI.skin.label);
+            s.alignment = TextAnchor.MiddleRight;
+            s.wordWrap = false;
+            foreach (string datum in data) GUILayout.Label(datum, s);
+
+            GUILayout.EndVertical();
+
+            return ret;
+        }
+
+        [ActionInfoItem(name = "Update stage stats")]
+        public void UpdateStageStats()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+
+            stats.RequestUpdate();
         }
     }
 }

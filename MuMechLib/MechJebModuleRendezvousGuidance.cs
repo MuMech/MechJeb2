@@ -52,7 +52,7 @@ namespace MuMech
             }
 
             double phasingOrbitRadius = 0.9 * core.target.Orbit.PeR;
-            if (phasingOrbitRadius < orbit.referenceBody.Radius + orbit.referenceBody.maxAtmosphereAltitude)
+            if (phasingOrbitRadius < orbit.referenceBody.Radius + orbit.referenceBody.RealMaxAtmosphereAltitude())
             {
                 phasingOrbitRadius = 1.1 * core.target.Orbit.ApR;
             }

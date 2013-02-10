@@ -56,7 +56,7 @@ namespace MuMech
             bodyAngularVelocity = body.angularVelocity;
             this.descentSpeedPolicy = descentSpeedPolicy;
             landedRadius = bodyRadius + endAltitudeASL;
-            aerobrakedRadius = bodyRadius + body.maxAtmosphereAltitude;
+            aerobrakedRadius = bodyRadius + body.RealMaxAtmosphereAltitude();
             mainBody = body;
             this.maxThrustAccel = maxThrustAccel;
 

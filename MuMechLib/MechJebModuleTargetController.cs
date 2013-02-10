@@ -41,10 +41,10 @@ namespace MuMech
         public void Set(ITargetable t)
         {
             target = t;
-            if (vessel.isActiveVessel)
+            if (vessel != null && vessel.isActiveVessel)
             {
                 Debug.Log("Setting target: my surface speed is " + vesselState.speedSurface);
-                FlightGlobals.fetch.SetVesselTarget(target);
+                if(FlightGlobals.fetch != null) FlightGlobals.fetch.SetVesselTarget(target);
             }
         }
 

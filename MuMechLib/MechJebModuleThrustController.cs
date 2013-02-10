@@ -173,7 +173,7 @@ namespace MuMech
         //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
         float TerminalVelocityThrottle()
         {
-            if (vesselState.altitudeASL > mainBody.maxAtmosphereAltitude) return 1.0F;
+            if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return 1.0F;
 
             double velocityRatio = Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) / vesselState.TerminalVelocity();
 

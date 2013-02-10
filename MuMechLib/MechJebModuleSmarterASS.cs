@@ -8,7 +8,9 @@ namespace MuMech
 {
     public class MechJebModuleSmarterASS : DisplayModule
     {
+        [Persistent(pass = (int)Pass.Local)]
         AttitudeReference reference = AttitudeReference.INERTIAL;
+        [Persistent(pass = (int)Pass.Local)]
         Vector6.Direction direction = Vector6.Direction.FORWARD;
 
         public MechJebModuleSmarterASS(MechJebCore core) : base(core) { }

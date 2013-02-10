@@ -10,41 +10,26 @@ namespace MuMech
     {
         public bool hidden = false;
 
-        protected Rect _editorWindowPos;
         public Rect editorWindowPos
         {
-            get
-            {
-                return _editorWindowPos;
-            }
-            set
-            {
-                if (_editorWindowPos.x != value.x || _editorWindowPos.y != value.y)
-                {
-                    //core.settingsChanged = true;
-                }
-                _editorWindowPos = value;
-            }
+            get { return new Rect(editorWindowVector.x, editorWindowVector.y, editorWindowVector.z, editorWindowVector.w); }
+            set { editorWindowVector = new Vector4(value.x, value.y, value.width, value.height); }
         }
+        [Persistent(pass = (int)Pass.Global)]
+        public Vector4 editorWindowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
-        protected Rect _flightWindowPos;
-        public Rect flightWindowPos
+        public Rect flightWindowPos 
         {
-            get
-            {
-                return _flightWindowPos;
-            }
-            set
-            {
-                if (_flightWindowPos.x != value.x || _flightWindowPos.y != value.y)
-                {
-                    //core.settingsChanged = true;
-                }
-                _flightWindowPos = value;
-            }
+            get { return new Rect(flightWindowVector.x, flightWindowVector.y, flightWindowVector.z, flightWindowVector.w); }
+            set { flightWindowVector = new Vector4(value.x, value.y, value.width, value.height); }
         }
+        [Persistent(pass = (int)Pass.Global)]
+        public Vector4 flightWindowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
+        [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
+
+        [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
 
         public DisplayModule(MechJebCore core) : base(core) {}
@@ -87,9 +72,28 @@ namespace MuMech
             }
         }
 
+        public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnSave(local, type, global);
+
+            if(global != null) global.AddValue("enabled", enabled);
+        }
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+
+            if (global != null && global.HasValue("enabled"))
+            {
+                bool loadedEnabled;
+                if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled)) enabled = loadedEnabled;
+            }
+        }
+
         public virtual string GetName()
         {
             return "Display Module";
         }
     }
 }
+

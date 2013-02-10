@@ -9,8 +9,15 @@ namespace MuMech
 {
     class MechJebModuleCustomInfoWindow : DisplayModule
     {
+        [Persistent(pass = (int)Pass.Global)]
         public string title = "Custom Info Window";
+        [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
         public List<IInfoItem> items = new List<IInfoItem>();
+
+        public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
+        }
 
         protected override void FlightWindowGUI(int windowID)
         {
@@ -43,19 +50,66 @@ namespace MuMech
 
     public class MechJebModuleCustomWindowEditor : DisplayModule
     {
-        List<IInfoItem> registry = new List<IInfoItem>();
-        MechJebModuleCustomInfoWindow window;
+        public List<IInfoItem> registry = new List<IInfoItem>();
+        MechJebModuleCustomInfoWindow editedWindow;
         IInfoItem selectedItem;
 
-        public override void OnStart(PartModule.StartState state)
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            window = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+            base.OnLoad(local, type, global);
 
             RegisterInfoItems(vesselState);
             foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
             {
                 RegisterInfoItems(m);
             }
+
+            if (global == null) return;
+
+            Debug.Log("Loading custom windows from config node:" + global.ToString());
+
+            //Load custom info windows, which are stored in our ConfigNode:
+
+            ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
+            Debug.Log("windowNodes.Length = " + windowNodes.Length);
+            foreach (ConfigNode windowNode in windowNodes)
+            {                
+                MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
+
+                window.title = windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window";
+
+                if (windowNode.HasNode("items"))
+                {
+                    ConfigNode itemCollection = windowNode.GetNode("items");
+                    ConfigNode[] itemNodes = itemCollection.GetNodes("InfoItem");
+                    foreach (ConfigNode itemNode in itemNodes)
+                    {
+                        string id = itemNode.GetValue("id");
+                        var matches = registry.Where(item => item.ID == id);
+                        if (matches.Count() > 0) window.items.Add(matches.First());
+                    }
+                }
+
+                core.AddComputerModuleLater(window);
+            }
+        }
+
+        public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnSave(local, type, global);
+
+            //Save custom info windows within our ConfigNode:
+
+            foreach (MechJebModuleCustomInfoWindow window in core.GetComputerModules<MechJebModuleCustomInfoWindow>())
+            {
+                string name = typeof(MechJebModuleCustomInfoWindow).Name;
+                ConfigNode.CreateConfigFromObject(window, (int)Pass.Global).CopyTo(global.AddNode(name));
+            }
+        }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();            
         }
 
         void RegisterInfoItems(object obj)
@@ -67,42 +121,23 @@ namespace MuMech
                     if (attribute is ValueInfoItemAttribute) registry.Add(new ValueInfoItem(obj, member, (ValueInfoItemAttribute)attribute));
                     else if (attribute is ActionInfoItemAttribute) registry.Add(new ActionInfoItem(obj, (MethodInfo)member, (ActionInfoItemAttribute)attribute));
                     else if (attribute is ToggleInfoItemAttribute) registry.Add(new ToggleInfoItem(obj, member, (ToggleInfoItemAttribute)attribute));
+                    else if (attribute is GeneralInfoItemAttribute) registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, (GeneralInfoItemAttribute)attribute));
                 }
             }
         }
 
         void AddNewWindow()
         {
-            window = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(window);
+            editedWindow = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(editedWindow);
         }
 
         void RemoveCurrentWindow()
         {
-            if (window == null) return;
+            if (editedWindow == null) return;
 
-            core.RemoveComputerModule(window);
-            window = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
-        }
-
-
-
-        GUIStyle _yellowOnHover;
-        GUIStyle yellowOnHover
-        {
-            get
-            {
-                if (_yellowOnHover == null)
-                {
-                    _yellowOnHover = new GUIStyle(GUI.skin.label);
-                    _yellowOnHover.hover.textColor = Color.yellow;
-                    Texture2D t = new Texture2D(1, 1);
-                    t.SetPixel(0, 0, new Color(0, 0, 0, 0));
-                    t.Apply();
-                    _yellowOnHover.hover.background = t;
-                }
-                return _yellowOnHover;
-            }
+            core.RemoveComputerModule(editedWindow);
+            editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
 
 
@@ -114,7 +149,9 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("New window")) AddNewWindow();
 
-            if (window == null)
+            if (editedWindow == null) editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+
+            if (editedWindow == null)
             {
                 GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
@@ -132,14 +169,14 @@ namespace MuMech
 
             if (allWindows.Count > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false)))
             {
-                window = allWindows[(allWindows.IndexOf(window) - 1 + allWindows.Count) % allWindows.Count];
+                editedWindow = allWindows[(allWindows.IndexOf(editedWindow) - 1 + allWindows.Count) % allWindows.Count];
             }
 
-            window.title = GUILayout.TextField(window.title, GUILayout.ExpandWidth(true));
+            editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
 
             if (allWindows.Count > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false)))
             {
-                window = allWindows[(allWindows.IndexOf(window) + 1) % allWindows.Count];
+                editedWindow = allWindows[(allWindows.IndexOf(editedWindow) + 1) % allWindows.Count];
             }
 
             GUILayout.EndHorizontal();
@@ -150,7 +187,7 @@ namespace MuMech
 
             GUILayout.BeginVertical(GUILayout.Height(100));
             scrollPos = GUILayout.BeginScrollView(scrollPos);
-            foreach (IInfoItem item in window.items)
+            foreach (IInfoItem item in editedWindow.items)
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 if (item == selectedItem) s.normal.textColor = Color.yellow;
@@ -162,23 +199,23 @@ namespace MuMech
             
             GUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Remove") && selectedItem != null) window.items.Remove(selectedItem);
+            if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
             if (GUILayout.Button("Move up") && selectedItem != null)
             {
-                int index = window.items.IndexOf(selectedItem);
+                int index = editedWindow.items.IndexOf(selectedItem);
                 if (index > 0)
                 {
-                    window.items.Remove(selectedItem);
-                    window.items.Insert(index - 1, selectedItem);
+                    editedWindow.items.Remove(selectedItem);
+                    editedWindow.items.Insert(index - 1, selectedItem);
                 }
             }
             if (GUILayout.Button("Move down") && selectedItem != null)
             {
-                int index = window.items.IndexOf(selectedItem);
-                if (index < window.items.Count - 1)
+                int index = editedWindow.items.IndexOf(selectedItem);
+                if (index < editedWindow.items.Count - 1)
                 {
-                    window.items.Remove(selectedItem);
-                    window.items.Insert(index + 1, selectedItem);
+                    editedWindow.items.Remove(selectedItem);
+                    editedWindow.items.Insert(index + 1, selectedItem);
                 }
             }
 
@@ -191,9 +228,9 @@ namespace MuMech
             scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
             foreach (IInfoItem item in registry)
             {
-                if (GUILayout.Button(item.GetDescription(), yellowOnHover))
+                if (GUILayout.Button(item.GetDescription(), GuiUtils.yellowOnHover))
                 {
-                    window.items.Add(item);
+                    editedWindow.items.Add(item);
                 }
             }
             GUILayout.EndScrollView();
@@ -221,6 +258,7 @@ namespace MuMech
     {
         string GetDescription();
         void DrawItem();
+        string ID { get; }
     }
 
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
@@ -231,6 +269,9 @@ namespace MuMech
         object obj;
         string units;
         bool time;
+        [Persistent]
+        string id;
+        public string ID { get { return id; } }
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
         {
@@ -239,6 +280,7 @@ namespace MuMech
             name = attribute.name;
             units = attribute.units;
             time = attribute.time;
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
         }
 
         public string GetDescription() { return name; }
@@ -291,12 +333,16 @@ namespace MuMech
         string name;
         object obj;
         MethodInfo method;
+        [Persistent]
+        string id;
+        public string ID { get { return id; } }
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
         {
             this.obj = obj;
             this.method = method;
             name = attribute.name;
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
         }
 
         public string GetDescription() { return name; }
@@ -313,12 +359,16 @@ namespace MuMech
         string name;
         object obj;
         MemberInfo member;
+        [Persistent]
+        string id;
+        public string ID { get { return id; } }
 
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
         {
             this.obj = obj;
             this.member = member;
             name = attribute.name;
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
         }
 
         public string GetDescription() { return name; }
@@ -333,6 +383,31 @@ namespace MuMech
 
             if (member is FieldInfo) ((FieldInfo)member).SetValue(obj, newValue);
             else if (member is PropertyInfo) ((PropertyInfo)member).SetValue(obj, newValue, new object[] { });
+        }
+    }
+
+    public class GeneralInfoItem : IInfoItem
+    {
+        string name;
+        object obj;
+        MethodInfo method;
+        [Persistent]
+        string id;
+        public string ID { get { return id; } }
+
+        public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
+        {
+            this.obj = obj;
+            this.method = method;
+            name = attribute.name;
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+        }
+
+        public string GetDescription() { return name; }
+
+        public void DrawItem()
+        {
+            method.Invoke(obj, new object[] { });
         }
     }
 
@@ -352,9 +427,18 @@ namespace MuMech
     {
         public string name;
     }
-
+    
+    //Apply this attribute to a boolean to make the boolean toggleable via a ToggleInfoItem
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class ToggleInfoItemAttribute : Attribute
+    {
+        public string name;
+    }
+
+    //Apply this attribute to a method to indicate that it is a method that will draw 
+    //an InfoItem
+    [AttributeUsage(AttributeTargets.Method)]
+    public class GeneralInfoItemAttribute : Attribute
     {
         public string name;
     }

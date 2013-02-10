@@ -11,9 +11,13 @@ namespace MuMech
         EditableDouble prograde = 0;
         EditableDouble radialPlus = 0;
         EditableDouble normalPlus = 0;
+        [Persistent(pass = (int)Pass.Global)]
         EditableDouble progradeDelta = 0;
+        [Persistent(pass = (int)Pass.Global)]
         EditableDouble radialPlusDelta = 0;
+        [Persistent(pass = (int)Pass.Global)]
         EditableDouble normalPlusDelta = 0;
+        [Persistent(pass = (int)Pass.Global)]
         EditableTime timeOffset = 0;
 
         ManeuverNode node;

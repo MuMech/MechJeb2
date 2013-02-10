@@ -14,7 +14,9 @@ namespace MuMech
         }
 
         //adjustable parameters:
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public double AutoStageDelay = 1.0;
+        [Persistent(pass = (int)Pass.Type)]
         public int AutoStageLimit = 0;
 
         //internal state:

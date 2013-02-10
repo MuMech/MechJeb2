@@ -15,11 +15,13 @@ namespace MuMech
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
     public class EditableDouble
     {
-        protected double val;
+        [Persistent]
+        public double val;
         public readonly double multiplier;
 
         public bool parsed;
-        protected string _text;
+        [Persistent]
+        public string _text;
         public virtual string text
         {
             get { return _text; }
@@ -39,7 +41,7 @@ namespace MuMech
         {
             this.val = val;
             this.multiplier = multiplier;
-            _text = val.ToString();
+            _text = (val / multiplier).ToString();
         }
 
         public static implicit operator double(EditableDouble x)
@@ -90,6 +92,24 @@ namespace MuMech
 
     public static class GuiUtils
     {
+        static GUIStyle _yellowOnHover;
+        public static GUIStyle yellowOnHover
+        {
+            get
+            {
+                if (_yellowOnHover == null)
+                {
+                    _yellowOnHover = new GUIStyle(GUI.skin.label);
+                    _yellowOnHover.hover.textColor = Color.yellow;
+                    Texture2D t = new Texture2D(1, 1);
+                    t.SetPixel(0, 0, new Color(0, 0, 0, 0));
+                    t.Apply();
+                    _yellowOnHover.hover.background = t;
+                }
+                return _yellowOnHover;
+            }
+        }
+
         public static void SimpleTextBox(string leftLabel, EditableDouble ed, string rightLabel = "", float width = 100)
         {
             GUILayout.BeginHorizontal();

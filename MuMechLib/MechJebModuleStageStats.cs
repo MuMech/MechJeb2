@@ -7,8 +7,10 @@ using System.Threading;
 
 namespace MuMech
 {
-    //When enabled, this ComputerModule periodically runs a FuelFlowSimulation in a separate thread.
-    //It stores the results of the most recent simulation for use by other modules
+    //Other modules can request that the stage stats be computed by calling RequestUpdate
+    //This module will then run the stage stats computation in a separate thread, update
+    //the publicly available atmoStats and vacStats. Then it will disable itself unless
+    //it got another RequestUpdate in the meantime.
     class MechJebModuleStageStats : ComputerModule
     {
         public MechJebModuleStageStats(MechJebCore core) : base(core) { }
@@ -16,6 +18,13 @@ namespace MuMech
         public FuelFlowSimulation.Stats[] atmoStats = {};
         public FuelFlowSimulation.Stats[] vacStats = {};
 
+        public void RequestUpdate()
+        {
+            this.enabled = true;
+            updateRequested = true;
+        }
+
+        protected bool updateRequested = false;
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
@@ -35,16 +44,25 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (enabled && vessel.isActiveVessel && !simulationRunning)
+            if (vessel.isActiveVessel && !simulationRunning)
             {
                 //We should be running simulations periodically, but one is not running right now. 
                 //Check if enough time has passed since the last one to start a new one:
                 if (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
                 {
-                    stopwatch.Stop();
-                    stopwatch.Reset();
+                    if (updateRequested)
+                    {
+                        updateRequested = false;
 
-                    StartSimulation();
+                        stopwatch.Stop();
+                        stopwatch.Reset();
+
+                        StartSimulation();
+                    }
+                    else
+                    {
+                        this.enabled = false;
+                    }
                 }
             }
         }
@@ -61,6 +79,7 @@ namespace MuMech
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+            //RunSimulation(sims);
         }
 
         protected void RunSimulation(object o)

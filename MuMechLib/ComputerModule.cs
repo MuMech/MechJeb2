@@ -37,7 +37,6 @@ namespace MuMech
             {
                 if (value != _enabled)
                 {
-                    //core.settingsChanged = true;
                     _enabled = value;
                     if (_enabled)
                     {
@@ -109,10 +108,16 @@ namespace MuMech
 
         public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.Global);
+            if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.Type);
+            if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.Local);
         }
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global).CopyTo(global);
+            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type).CopyTo(type);
+            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local).CopyTo(local);
         }
 
         public virtual void OnDestroy()
@@ -123,6 +128,14 @@ namespace MuMech
         {
             MonoBehaviour.print(s);
         }
+    }
+
+    [Flags]
+    public enum Pass
+    {
+        Local = 1,
+        Type = 2,
+        Global = 4
     }
 
     //Lets multiple users enable and disable a computer module, such that the 

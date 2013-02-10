@@ -20,24 +20,26 @@ namespace MuMech
                   "change inclination", "match planes with target", "Hohmann transfer to target", 
                   "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target"};
 
-        enum TimeReference { NOW, APOAPSIS, PERIAPSIS, CLOSEST_APPROACH };
+        enum TimeReference { COMPUTED, X_FROM_NOW, APOAPSIS, PERIAPSIS, ALTITUDE, EQ_ASCENDING, EQ_DESCENDING, 
+            REL_ASCENDING, REL_DESCENDING, CLOSEST_APPROACH };
         static int numTimeReferences = Enum.GetNames(typeof(TimeReference)).Length;
-        string[] timeReferenceStrings = new string[] { "", "the next apoapsis after", "the next periapsis after", "the closest approach to the target after"};
 
         Operation operation = Operation.CIRCULARIZE;
-        TimeReference timeReference = TimeReference.NOW;
-        bool timeReferenceSinceLast = true;
+        TimeReference timeReference = TimeReference.X_FROM_NOW;
         bool createNode = true;
 
-        enum Node { ASCENDING, DESCENDING };
-        string[] nodeStrings = new string[] { "at the next ascending node after", "at the next descending node after" };
-        Node planeMatchNode;
-
-        EditableDouble newPeA = new EditableDouble(0, 1000);
-        EditableDouble newApA = new EditableDouble(0, 1000);
-        EditableDouble newInc = new EditableDouble(0);
-        EditableTime leadTime = new EditableTime(0);
-        EditableTime interceptInterval = new EditableTime(3600);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble newPeA = new EditableDouble(100000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble newApA = new EditableDouble(200000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble newInc = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableTime leadTime = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble circularizeAltitude = new EditableDouble(150000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableTime interceptInterval = 3600;
 
         string errorMessage = "";
 
@@ -49,15 +51,18 @@ namespace MuMech
 
             if (anyNodeExists)
             {
+                GUILayout.BeginHorizontal();
                 if (GUILayout.Button(createNode ? "Create a new" : "Change the last"))
                 {
                     createNode = !createNode;
                 }
                 GUILayout.Label("maneuver node to:");
+                GUILayout.EndHorizontal();
             }
             else
             {
                 GUILayout.Label("Create a new maneuver node to:");
+                createNode = true;
             }
 
             GUILayout.BeginHorizontal();
@@ -68,12 +73,7 @@ namespace MuMech
 
             DoOperationParametersGUI();
 
-            double UT = vesselState.time; ;
-
-            if (!anyNodeExists || createNode)
-            {
-                UT = DoChooseTimeGUI();
-            }
+            double UT = DoChooseTimeGUI();
 
             if (GUILayout.Button("Go"))
             {
@@ -119,6 +119,7 @@ namespace MuMech
                 }
             }
 
+
             GUILayout.EndVertical();
 
 
@@ -157,19 +158,18 @@ namespace MuMech
 
                 case Operation.PLANE:
                     GUILayout.Label("Schedule the burn");
-                    if (GUILayout.Button(nodeStrings[(int)planeMatchNode])) planeMatchNode = (Node)(((int)planeMatchNode + 1) % 2);
                     break;
 
                 case Operation.TRANSFER:
-                    GUILayout.Label("Schedule the burn at the next transfer window starting");
+                    GUILayout.Label("Schedule the burn at the next transfer window.");
                     break;
 
                 case Operation.INTERPLANETARY_TRANSFER:
-                    GUILayout.Label("Schedule the burn at the next transfer window starting");
+                    GUILayout.Label("Schedule the burn at the next transfer window.");
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    GUILayout.Label("Schedule the burn");
+                    GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 
                 case Operation.LAMBERT:
@@ -185,45 +185,78 @@ namespace MuMech
 
         double DoChooseTimeGUI()
         {
-            double UT = vesselState.time;
+            Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
+            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE };
+            references[Operation.PERIAPSIS] = new TimeReference[] {TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS};
+            references[Operation.APOAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
+            references[Operation.ELLIPTICIZE] = new TimeReference[] { TimeReference.X_FROM_NOW };
+            references[Operation.INCLINATION] = new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW };
+            references[Operation.PLANE] = new TimeReference[] { TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
+            references[Operation.TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.INTERPLANETARY_TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.COURSE_CORRECTION] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
+            references[Operation.KILL_RELVEL] = new TimeReference[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
 
-            bool anyNodeExists = (vessel.patchedConicSolver.maneuverNodes.Count > 0);
+            TimeReference[] allowedReferences = references[operation];
 
-            GuiUtils.SimpleTextBox("", leadTime, "after");
+            int referenceIndex = 0;
+            if (allowedReferences.Contains(timeReference)) referenceIndex = Array.IndexOf(allowedReferences, timeReference);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) timeReference = (TimeReference)(((int)timeReference - 1 + numTimeReferences) % numTimeReferences);
-            GUILayout.Label(timeReferenceStrings[(int)timeReference]);
-            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) timeReference = (TimeReference)(((int)timeReference + 1 + numTimeReferences) % numTimeReferences);
+            if (allowedReferences.Length > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false)))
+            {
+                referenceIndex = (referenceIndex - 1 + allowedReferences.Length) % allowedReferences.Length;
+            }
+
+            switch (timeReference)
+            {
+                case TimeReference.APOAPSIS: GUILayout.Label("at the next apoapsis"); break;
+                case TimeReference.CLOSEST_APPROACH: GUILayout.Label("at closest approach to target"); break;
+                case TimeReference.EQ_ASCENDING: GUILayout.Label("at the equatorial AN"); break;
+                case TimeReference.EQ_DESCENDING: GUILayout.Label("at the equatorial DN"); break;
+                case TimeReference.PERIAPSIS: GUILayout.Label("at the next periapsis"); break;
+                case TimeReference.REL_ASCENDING: GUILayout.Label("at the next AN with the target."); break;
+                case TimeReference.REL_DESCENDING: GUILayout.Label("at the next DN with the target."); break;
+
+                case TimeReference.X_FROM_NOW: 
+                    leadTime.text = GUILayout.TextField(leadTime.text, GUILayout.Width(50));
+                    GUILayout.Label(" from now");
+                    break;
+
+                case TimeReference.ALTITUDE:
+                    GuiUtils.SimpleTextBox("at an altitude of", circularizeAltitude, "km");
+                    break;
+            }
+
+            if (allowedReferences.Length > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false)))
+            {
+                referenceIndex = (referenceIndex + 1) % allowedReferences.Length;
+            }
+            timeReference = allowedReferences[referenceIndex];
             GUILayout.EndHorizontal();
 
             bool error = false;
             string timeErrorMessage = "";
 
-            if (anyNodeExists)
-            {
-                if (GUILayout.Button(timeReferenceSinceLast ? "the last maneuver node." : "now."))
-                {
-                    timeReferenceSinceLast = !timeReferenceSinceLast;
-                }
-            }
-            else
-            {
-                GUILayout.Label("now.");
-            }
+            double UT = vesselState.time;
 
             Orbit o = orbit;
 
-            if (anyNodeExists && timeReferenceSinceLast)
+            if (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
-                UT = vessel.patchedConicSolver.maneuverNodes.Last().UT;
-                o = vessel.patchedConicSolver.maneuverNodes.Last().nextPatch;
+                GUILayout.Label("after the last maneuver node.");
+                ManeuverNode last = vessel.patchedConicSolver.maneuverNodes.Last();
+                UT = last.UT;
+                o = last.nextPatch;
             }
 
             switch (timeReference)
             {
-                case TimeReference.NOW:
+                case TimeReference.X_FROM_NOW:
+                    UT += leadTime;
                     break;
+
                 case TimeReference.APOAPSIS:
                     if (o.eccentricity < 1)
                     {
@@ -235,9 +268,11 @@ namespace MuMech
                         timeErrorMessage = "Warning: orbit is hyperbolic, so apoapsis doesn't exist.";
                     }
                     break;
+
                 case TimeReference.PERIAPSIS:
                     UT = o.NextPeriapsisTime(UT);
                     break;
+
                 case TimeReference.CLOSEST_APPROACH:
                     if (core.target.NormalTargetExists)
                     {
@@ -249,9 +284,59 @@ namespace MuMech
                         timeErrorMessage = "Warning: no target selected.";
                     }
                     break;
+
+                case TimeReference.ALTITUDE:
+                    if (circularizeAltitude > o.PeA && circularizeAltitude < o.ApA)
+                    {
+                        UT = o.NextTimeOfRadius(UT, o.referenceBody.Radius + circularizeAltitude);
+                    }
+                    else
+                    {
+                        error = true;
+                        timeErrorMessage = "Warning: can't circularize at this altitude, since current orbit does not reach it.";
+                    }
+                    break;
+
+                case TimeReference.EQ_ASCENDING:
+                    if (o.AscendingNodeEquatorialExists())
+                    {
+                        UT = o.TimeOfAscendingNodeEquatorial(UT);
+                    }
+                    else
+                    {
+                        error = true;
+                        timeErrorMessage = "Warning: equatorial ascending node doesn't exist.";
+                    }
+                    break;
+
+                case TimeReference.EQ_DESCENDING:
+                    if (o.DescendingNodeEquatorialExists())
+                    {
+                        UT = o.TimeOfDescendingNodeEquatorial(UT);
+                    }
+                    else
+                    {
+                        error = true;
+                        timeErrorMessage = "Warning: equatorial descending node doesn't exist.";
+                    }
+                    break;
+
             }
 
-            UT += leadTime;
+            if (operation == Operation.COURSE_CORRECTION && core.target.NormalTargetExists)
+            {
+                Orbit correctionPatch = o;
+                while (correctionPatch != null)
+                {
+                    if (correctionPatch.referenceBody == core.target.Orbit.referenceBody)
+                    {
+                        o = correctionPatch;
+                        UT = correctionPatch.StartUT;
+                        break;
+                    }
+                    correctionPatch = vessel.GetNextPatch(correctionPatch);
+                }
+            }
 
             if (error)
             {
@@ -329,7 +414,7 @@ namespace MuMech
                         error = true;
                         errorMessage = "can only match planes with an object in the same sphere of influence.";
                     }
-                    else if (planeMatchNode == Node.ASCENDING)
+                    else if (timeReference == TimeReference.REL_ASCENDING)
                     {
                         if (!o.AscendingNodeExists(core.target.Orbit))
                         {
@@ -493,7 +578,7 @@ namespace MuMech
                     break;
 
                 case Operation.PLANE:
-                    if (planeMatchNode == Node.ASCENDING)
+                    if (timeReference == TimeReference.REL_ASCENDING)
                     {
                         dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, core.target.Orbit, UT, out UT);
                     }
@@ -504,11 +589,11 @@ namespace MuMech
                     break;
 
                 case Operation.TRANSFER:
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, vesselState.time, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, UT, out UT);
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    dV = OrbitalManeuverCalculator.DeltaVForCourseCorrection(o, UT, core.target.Orbit);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
                     break;
 
                 case Operation.INTERPLANETARY_TRANSFER:

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using UnityEngine;
 using System.Reflection;
+using KSP.IO;
 
 namespace MuMech
 {
@@ -13,6 +14,7 @@ namespace MuMech
         private const int windowIDbase = 60606;
 
         private List<ComputerModule> computerModules = new List<ComputerModule>();
+        private List<ComputerModule> modulesToLoad = new List<ComputerModule>();
         private bool modulesUpdated = false;
 
         private static List<Type> moduleRegistry;
@@ -71,7 +73,9 @@ namespace MuMech
 
         public T GetComputerModule<T>() where T : ComputerModule
         {
-            return (T)computerModules.First(a => a is T);
+            var matches = computerModules.FindAll(a => a is T).Cast<T>();
+            if (matches.Count() > 0) return matches.First();
+            else return null;
         }
 
         public List<T> GetComputerModules<T>() where T : ComputerModule
@@ -81,13 +85,23 @@ namespace MuMech
 
         public ComputerModule GetComputerModule(string type)
         {
-            return computerModules.First(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
+            var matches = computerModules.FindAll(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
+            if (matches.Count() > 0) return matches.First();
+            else return null;
         }
 
         public void AddComputerModule(ComputerModule module)
         {
             computerModules.Add(module);
             modulesUpdated = true;
+        }
+
+        public void AddComputerModuleLater(ComputerModule module)
+        {
+            //The actual loading is delayed to FixedUpdate because AddComputerModule can get called inside a foreach loop
+            //over the modules, and modifying the list during the loop will cause an exception. Maybe there is a better
+            //way to deal with this?
+            modulesToLoad.Add(module);
         }
 
         public void RemoveComputerModule(ComputerModule module)
@@ -99,38 +113,21 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            if (moduleRegistry == null)
-            {
-                moduleRegistry = (from ass in AppDomain.CurrentDomain.GetAssemblies() from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList();
-            }
+            Debug.Log("============ONSTART====================");
 
-            Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
-            version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
-
-            foreach (Type t in moduleRegistry)
-            {
-                if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule)) && !blacklist.Contains(t.Name))
-                {
-                    AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
-                }
-            }
-
-            attitude = GetComputerModule<MechJebModuleAttitudeController>();
-            staging = GetComputerModule<MechJebModuleStagingController>();
-            thrust = GetComputerModule<MechJebModuleThrustController>();
-            target = GetComputerModule<MechJebModuleTargetController>();
-            warp = GetComputerModule<MechJebModuleWarpController>();
-            rcs = GetComputerModule<MechJebModuleRCSController>();
-            node = GetComputerModule<MechJebModuleNodeExecutor>();
+            if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
 
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
             }
 
-            vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
-            vessel.OnFlyByWire += OnFlyByWire;
-            controlledVessel = vessel;
+            if (vessel != null)
+            {
+                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
+                vessel.OnFlyByWire += OnFlyByWire;
+                controlledVessel = vessel;
+            }
         }
 
         public override void OnActive()
@@ -159,6 +156,13 @@ namespace MuMech
 
         public void FixedUpdate()
         {
+            if (modulesToLoad.Count > 0)
+            {
+                computerModules.AddRange(modulesToLoad);
+                modulesUpdated = true;
+                modulesToLoad.Clear();
+            }
+
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
 
             if (this != vessel.GetMasterMechJeb())
@@ -201,33 +205,125 @@ namespace MuMech
             }
         }
 
-        public override void OnLoad(ConfigNode node)
+        public override void OnLoad(ConfigNode configNode)
         {
-            base.OnLoad(node); //is this necessary?
+            base.OnLoad(configNode); //is this necessary?
 
-            ConfigNode type = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg", vessel) ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg", vessel) : "");
-            ConfigNode global = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg") ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg") : "");
+            //Don't do anything when this gets called during the loading screen:
+            if (configNode == null)
+            {
+                Debug.Log("Cutting out of OnLoad because configNode == null"); 
+                return;
+            }
+
+            if (moduleRegistry == null)
+            {
+                moduleRegistry = (from ass in AppDomain.CurrentDomain.GetAssemblies() from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList();
+            }
+
+            Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
+            version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
+
+            foreach (Type t in moduleRegistry)
+            {
+                if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
+                    && !blacklist.Contains(t.Name))
+                {
+                    Debug.Log("adding new computer module of type " + t.Name);
+                    AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
+                }
+            }
+
+            Debug.Log("About to set attitude");
+            attitude = GetComputerModule<MechJebModuleAttitudeController>();
+            Debug.Log("set attitude");
+            staging = GetComputerModule<MechJebModuleStagingController>();
+            thrust = GetComputerModule<MechJebModuleThrustController>();
+            target = GetComputerModule<MechJebModuleTargetController>();
+            warp = GetComputerModule<MechJebModuleWarpController>();
+            rcs = GetComputerModule<MechJebModuleRCSController>();
+            node = GetComputerModule<MechJebModuleNodeExecutor>();
+
+            ConfigNode local = new ConfigNode("MechJebLocalSettings");
+            if (configNode.HasNode("MechJebLocalSettings"))
+            {
+                local = configNode.GetNode("MechJebLocalSettings");
+            }
+
+            //Todo: load a different file for each vessel type
+            ConfigNode type = new ConfigNode("MechJebTypeSettings");
+            Debug.Log("type path: " + IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
+            if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg"))
+            {
+                try
+                {
+                    type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
+                }
+                catch (Exception e)
+                {
+                    Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
+                }
+            }
+
+            ConfigNode global = new ConfigNode("MechJebGlobalSettings");
+            if (File.Exists<MechJebCore>("mechjeb_settings_global.cfg"))
+            {
+                try
+                {
+                    global = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                }
+                catch (Exception e)
+                {
+                    Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
+                }
+            }
+
+            Debug.Log("OnLoad: loading from");
+            Debug.Log("Local:");
+            Debug.Log(local.ToString());
+            Debug.Log("Type:");
+            Debug.Log(type.ToString());
+            Debug.Log("Global:");
+            Debug.Log(global.ToString());
 
             foreach (ComputerModule module in computerModules)
             {
-                module.OnLoad(node, type, global);
+                string name = module.GetType().Name;
+                ConfigNode moduleLocal = local.HasNode(name) ? local.GetNode(name) : null;
+                ConfigNode moduleType = type.HasNode(name) ? type.GetNode(name) : null;
+                ConfigNode moduleGlobal = global.HasNode(name) ? global.GetNode(name) : null;
+                module.OnLoad(moduleLocal, moduleType, moduleGlobal);
             }
         }
 
+        //Todo: periodically save global and type settings so that e.g. window positions are saved on quitting
+        //even if the player doesn't explicitly quicksave.
         public override void OnSave(ConfigNode node)
         {
             base.OnSave(node); //is this necessary?
 
-            ConfigNode type = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg", vessel) ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg", vessel) : "");
-            ConfigNode global = new ConfigNode(KSP.IO.File.Exists<MechJebCore>("mechjeb_settings.cfg") ? KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_settings.cfg") : "");
+            ConfigNode local = new ConfigNode("MechJebLocalSettings");
+            ConfigNode type = new ConfigNode("MechJebTypeSettings");
+            ConfigNode global = new ConfigNode("MechJebGlobalSettings");
 
             foreach (ComputerModule module in computerModules)
             {
-                module.OnSave(node, type, global);
+                string name = module.GetType().Name;
+                module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
             }
 
-            KSP.IO.File.WriteAllText<MechJebCore>(type.ToString(), "mechjeb_settings.cfg", vessel);
-            KSP.IO.File.WriteAllText<MechJebCore>(global.ToString(), "mechjeb_settings.cfg");
+            Debug.Log("OnSave:");
+            Debug.Log("Local:");
+            Debug.Log(local.ToString());
+            Debug.Log("Type:");
+            Debug.Log(type.ToString());
+            Debug.Log("Global:");
+            Debug.Log(global.ToString());
+
+            node.nodes.Add(local);
+
+            type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg")); //Todo: save a different file for each vessel type.
+            global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
         }
 
         public void OnDestroy()
@@ -250,7 +346,7 @@ namespace MuMech
 
             if (killThrottle)
             {
-                s.mainThrottle = 0; 
+                s.mainThrottle = 0;
                 killThrottle = false;
             }
 

@@ -14,9 +14,13 @@ namespace MuMech
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
 
         //input parameters:
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public IAscentPath ascentPath = new DefaultAscentPath();
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public double desiredOrbitAltitude = 100000.0;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public double desiredInclination = 0.0;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
 
         //internal state:
@@ -82,7 +86,7 @@ namespace MuMech
         float ThrottleToRaiseApoapsis(double currentApR, double finalApR)
         {
             if (currentApR > finalApR + 5.0) return 0.0F;
-            else if (orbit.ApA < mainBody.maxAtmosphereAltitude) return 1.0F; //throttle hard to escape atmosphere
+            else if (orbit.ApA < mainBody.RealMaxAtmosphereAltitude()) return 1.0F; //throttle hard to escape atmosphere
 
             double GM = mainBody.gravParameter;
 
@@ -171,7 +175,7 @@ namespace MuMech
             s.mainThrottle = 0.0F;
 
             //once we get above the atmosphere, plan and execute the circularization maneuver
-            if (vesselState.altitudeASL > mainBody.maxAtmosphereAltitude)
+            if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
@@ -239,11 +243,15 @@ namespace MuMech
     }
 
 
-    public class DefaultAscentPath : IAscentPath, IConfigNode
+    public class DefaultAscentPath : IAscentPath
     {
+        [Persistent]
         public double turnStartAltitude = 5000;
+        [Persistent]
         public double turnEndAltitude = 70000;
+        [Persistent]
         public double turnEndAngle = 0;
+        [Persistent]
         public double turnShapeExponent = 0.4;
 
         public double VerticalAscentEnd()
@@ -258,22 +266,6 @@ namespace MuMech
             if (altitude > turnEndAltitude) return turnEndAngle;
 
             return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
-        }
-
-        void IConfigNode.Load(ConfigNode node)
-        {
-            if (node.HasValue("turnStartAltitude")) turnStartAltitude = double.Parse(node.GetValue("turnStartAltitude"));
-            if (node.HasValue("turnEndAltitude")) turnEndAltitude = double.Parse(node.GetValue("turnEndAltitude"));
-            if (node.HasValue("turnEndAngle")) turnEndAngle = double.Parse(node.GetValue("turnEndAngle"));
-            if (node.HasValue("turnShapeExponent")) turnShapeExponent = double.Parse(node.GetValue("turnShapeExponent"));
-        }
-
-        void IConfigNode.Save(ConfigNode node)
-        {
-            node.SetValue("turnStartAltitude", turnStartAltitude.ToString());
-            node.SetValue("turnEndAltitude", turnEndAltitude.ToString());
-            node.SetValue("turnEndAngle", turnEndAngle.ToString());
-            node.SetValue("turnShapeExponent", turnShapeExponent.ToString());
         }
     }
 

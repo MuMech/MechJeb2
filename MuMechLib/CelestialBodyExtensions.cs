@@ -53,5 +53,11 @@ namespace MuMech
         {
             return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeffOverMass);
         }
+
+        public static double RealMaxAtmosphereAltitude(this CelestialBody body)
+        {
+            //Atmosphere actually cuts out when exp(-altitude / scale height) = 1e-6
+            return -body.atmosphereScaleHeight * 1000 * Math.Log(1e-6);
+        }
     }
 }

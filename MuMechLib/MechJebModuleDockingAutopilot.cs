@@ -23,13 +23,15 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            core.rcs.enabled = core.attitude.enabled = true;
+            core.rcs.users.Add(this);
+            core.attitude.users.Add(this);
             lateralPID = new PIDController(Kp, Ki, Kd);
         }
 
         public override void OnModuleDisabled()
         {
-            core.rcs.enabled = core.attitude.enabled = false;
+            core.rcs.users.Remove(this);
+            core.attitude.users.Remove(this);
         }
 
         public override void Drive(FlightCtrlState s)

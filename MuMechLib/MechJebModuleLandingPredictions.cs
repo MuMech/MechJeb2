@@ -16,6 +16,7 @@ namespace MuMech
         public ReentrySimulation.Result GetResult() { return result; }
 
         //inputs:
+        [Persistent(pass = (int)Pass.Global)]
         public bool makeAerobrakeNodes = false;
 
         //simulation inputs:
@@ -114,7 +115,7 @@ namespace MuMech
             {
                 i++;
 //                Debug.Log("looking at patch #" + i + "; start = " + patch.patchStartTransition + "; PeR = " + patch.PeR);
-                double reentryRadius = patch.referenceBody.Radius + patch.referenceBody.maxAtmosphereAltitude;
+                double reentryRadius = patch.referenceBody.Radius + patch.referenceBody.RealMaxAtmosphereAltitude();
                 Orbit nextPatch = vessel.GetNextPatch(patch, aerobrakeNode);
                 if (patch.PeR < reentryRadius)
                 {
@@ -145,7 +146,7 @@ namespace MuMech
                 //Remove node after finishing aerobraking:
                 if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
-                    if (aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.maxAtmosphereAltitude)
+                    if (aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
                     {
                         vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
                         aerobrakeNode = null;
@@ -163,7 +164,7 @@ namespace MuMech
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
                     if (preAerobrakeOrbit == orbit &&
-                        vesselState.altitudeASL < mainBody.maxAtmosphereAltitude && vesselState.speedVertical > 0)
+                        vesselState.altitudeASL < mainBody.RealMaxAtmosphereAltitude() && vesselState.speedVertical > 0)
                     {
                         UT = vesselState.time;
                     }

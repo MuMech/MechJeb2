@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -14,20 +15,33 @@ namespace MuMech
     {
         public MechJebModuleFlightRecorder(MechJebCore core) : base(core) { priority = 2000; }
 
+        [Persistent(pass=(int)Pass.Local)]
         [ValueInfoItem(name="Mark UT", time=true)]
         public double markUT;
+
         [ValueInfoItem(name="Time since mark", time=true)]
         public double timeSinceMark;
-        [ValueInfoItem(name="ΔV expended", units= "m/s")]
+        
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem(name = "ΔV expended", units = "m/s")]
         public double deltaVExpended;
-        [ValueInfoItem(name="Drag losses", units = "m/s")]
+
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem(name = "Drag losses", units = "m/s")]
         public double dragLosses;
-        [ValueInfoItem(name="Gravity losses", units = "m/s")]
+
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem(name = "Gravity losses", units = "m/s")]
         public double gravityLosses;
-        [ValueInfoItem(name="Steering losses", units="m/s")]
+
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem(name = "Steering losses", units = "m/s")]
         public double steeringLosses;
+        
         [ValueInfoItem(name="Phase angle from mark", units="º")]
         public double phaseAngleFromMark;
+
+        [Persistent(pass = (int)Pass.Local)]
         double markLongitude;
 
         [ActionInfoItem(name="MARK")]
@@ -41,10 +55,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            Mark();
             this.enabled = true; //flight recorder should always run.
         }
-
+        
         public override void OnFixedUpdate()
         {
             timeSinceMark = vesselState.time - markUT;

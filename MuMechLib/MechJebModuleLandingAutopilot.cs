@@ -41,7 +41,9 @@ namespace MuMech
             this.enabled = false;
         }
 
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public double touchdownSpeed = 0.5;
+        [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;
 
         public string status = "";       
@@ -102,6 +104,7 @@ namespace MuMech
             core.attitude.users.Remove(this);
             core.thrust.users.Remove(this);
             predictor.users.Remove(this);
+            predictor.descentSpeedPolicy = null;
             core.KillThrottle();
             landStep = LandStep.OFF;
             status = "Off";
@@ -397,7 +400,7 @@ namespace MuMech
         {
             //if we don't want to deorbit but we're already on a reentry trajectory, we can't wait until the ideal point 
             //in the orbit to deorbt; we already have deorbited.
-            if (part.vessel.orbit.ApA < part.vessel.mainBody.maxAtmosphereAltitude)
+            if (part.vessel.orbit.ApA < part.vessel.mainBody.RealMaxAtmosphereAltitude())
             {
                 landStep = LandStep.COURSE_CORRECTIONS;
                 return;
