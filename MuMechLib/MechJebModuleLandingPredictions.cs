@@ -33,6 +33,22 @@ namespace MuMech
 
         protected ManeuverNode aerobrakeNode = null;
 
+        GameObject aerobrakeOrbitObject;
+        OrbitRenderer aerobrakeOrbitRenderer;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            aerobrakeOrbitObject = new GameObject("MJ Aerobrake Orbit");
+            aerobrakeOrbitObject.layer = 9;
+            aerobrakeOrbitRenderer = aerobrakeOrbitObject.AddComponent<OrbitRenderer>();
+            aerobrakeOrbitRenderer.forceDraw = true;
+//            aerobrakeOrbitRenderer.drawIcons = OrbitRenderer.DrawIcons.OBJ_PE_AP;
+            aerobrakeOrbitRenderer.drawIcons = OrbitRenderer.DrawIcons.ALL;
+            aerobrakeOrbitRenderer.orbitColor = new Color(1, 0, 0, 0.5F);
+            aerobrakeOrbitRenderer.currentColor = new Color(1, 0, 0, 0.5F);
+            aerobrakeOrbitRenderer.lineOpacity = 0.5f;
+            aerobrakeOrbitRenderer.drawMode = OrbitRenderer.DrawMode.REDRAW_AND_RECALCULATE;
+        }
 
         public override void OnModuleEnabled()
         {
@@ -150,6 +166,7 @@ namespace MuMech
                     {
                         vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
                         aerobrakeNode = null;
+                        aerobrakeOrbitRenderer.drawMode = OrbitRenderer.DrawMode.OFF;
                     }
                 }
 
@@ -174,6 +191,10 @@ namespace MuMech
                     }
 
                     Orbit postAerobrakeOrbit = MuUtils.OrbitFromStateVectors(r.WorldEndPosition(), r.WorldEndVelocity(), r.body, r.endUT);
+
+                    aerobrakeOrbitRenderer.orbit.UpdateFromStateVectors(OrbitExtensions.SwapYZ(r.WorldEndPosition() - r.body.position), OrbitExtensions.SwapYZ(r.WorldEndVelocity()), r.body, r.endUT);
+                    aerobrakeOrbitRenderer.orbit.UpdateFromUT(vesselState.time);
+
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(preAerobrakeOrbit, UT, postAerobrakeOrbit.ApR);
 
                     if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
@@ -201,6 +222,7 @@ namespace MuMech
                     {
 //                        Debug.Log("no node to remove");
                     }
+                    aerobrakeOrbitRenderer.drawMode = OrbitRenderer.DrawMode.OFF;
                 }
             }
             else
@@ -210,6 +232,7 @@ namespace MuMech
                 {
                     vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
                 }
+                aerobrakeOrbitRenderer.drawMode = OrbitRenderer.DrawMode.OFF;
             }
         }
 

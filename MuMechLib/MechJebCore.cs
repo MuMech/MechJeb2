@@ -427,7 +427,7 @@ namespace MuMech
                 else if (result.outcome == ReentrySimulation.Outcome.AEROBRAKED)
                 {
                     Orbit o = MuUtils.OrbitFromStateVectors(result.WorldEndPosition(), result.WorldEndVelocity(), result.body, result.endUT);
-                    GLUtils.DrawOrbit(o, Color.blue);
+                    //GLUtils.DrawOrbit(o, Color.blue);
                 }
             }
         }

@@ -21,36 +21,70 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            if (GUILayout.Button("Pick target")) core.target.PickPositionTargetOnMap();
+            GUILayout.Label("Target coordinates:");
 
-            predictor.enabled = GUILayout.Toggle(predictor.enabled, "Predictor enabled");
+            core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
+            core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
 
-            if (!autopilot.enabled)
+            if (GUILayout.Button("Pick target on map")) core.target.PickPositionTargetOnMap();
+
+            predictor.enabled = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
+
+            if (predictor.enabled)
             {
-                if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
-                if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
-            }
-            else
-            {
-                if (GUILayout.Button("Stop landing")) autopilot.StopLanding();
-            }
-
-
-            GUILayout.Label("Autopilot status: " + autopilot.status);
-
-            ReentrySimulation.Result prediction = predictor.GetResult();
-            if (prediction != null && prediction.outcome == ReentrySimulation.Outcome.LANDED)
-            {
-                double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(prediction.endPosition.latitude, prediction.endPosition.longitude, 0),
-                                                 mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
-                GUILayout.Label("Landing position error = " + MuUtils.ToSI(error, 0) + "m");
+                predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
+                DrawGUIPrediction();
             }
 
-            predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
+            GUILayout.Label("Autopilot:");
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
+            if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
+            GUILayout.EndHorizontal();
+
+            GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s");
+
+            if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
 
             GUILayout.EndVertical();
 
             GUI.DragWindow();
+        }
+
+        void DrawGUIPrediction()
+        {
+            ReentrySimulation.Result result = predictor.GetResult();
+            if (result != null)
+            {
+                switch (result.outcome)
+                {
+                    case ReentrySimulation.Outcome.LANDED:
+                        GUILayout.Label("Predicted landing site:");
+                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude));
+                        double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0),
+                                                         mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
+                        GUILayout.Label("Difference from target = " + MuUtils.ToSI(error, 0) + "m");
+                        if (result.maxDragGees > 0) GUILayout.Label("Predicted max drag gees: " + result.maxDragGees.ToString("F1"));
+                        break;
+
+                    case ReentrySimulation.Outcome.AEROBRAKED:
+                        GUILayout.Label("Predicted orbit after aerobraking:");
+                        Orbit o = result.EndOrbit();
+                        if (o.eccentricity > 1) GUILayout.Label("Hyperbolic, eccentricity = " + o.eccentricity.ToString("F2"));
+                        else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + " km x " + MuUtils.ToSI(o.ApA, 3) + " km");
+                        break;
+
+                    case ReentrySimulation.Outcome.NO_REENTRY:
+                        GUILayout.Label("Orbit does not reenter:");
+                        GUILayout.Label(MuUtils.ToSI(orbit.PeA, 3) + " km Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + " atmosphere height");
+                        break;
+
+                    case ReentrySimulation.Outcome.TIMED_OUT:
+                        GUILayout.Label("Reentry simulation timed out.");
+                        break;
+                }
+            }
         }
 
         public override string GetName()

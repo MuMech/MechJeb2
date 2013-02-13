@@ -106,7 +106,6 @@ namespace MuMech
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
         {
             Orbit ret = new Orbit();
-            //do pos and vel need to be yz-swapped?
             ret.UpdateFromStateVectors(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
             return ret;
         }

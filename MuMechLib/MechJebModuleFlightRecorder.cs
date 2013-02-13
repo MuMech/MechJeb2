@@ -17,32 +17,36 @@ namespace MuMech
 
         [Persistent(pass=(int)Pass.Local)]
         [ValueInfoItem(name="Mark UT", time=true)]
-        public double markUT;
+        public double markUT = 0;
 
         [ValueInfoItem(name="Time since mark", time=true)]
-        public double timeSinceMark;
+        public double timeSinceMark = 0;
         
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem(name = "ΔV expended", units = "m/s")]
-        public double deltaVExpended;
+        public double deltaVExpended = 0;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem(name = "Drag losses", units = "m/s")]
-        public double dragLosses;
+        public double dragLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem(name = "Gravity losses", units = "m/s")]
-        public double gravityLosses;
+        public double gravityLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem(name = "Steering losses", units = "m/s")]
-        public double steeringLosses;
+        public double steeringLosses = 0;
         
         [ValueInfoItem(name="Phase angle from mark", units="º")]
-        public double phaseAngleFromMark;
+        public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        double markLongitude;
+        double markLongitude = 0;
+
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem(name = "Max drag gees")]
+        public double maxDragGees = 0;
 
         [ActionInfoItem(name="MARK")]
         public void Mark()
@@ -51,6 +55,7 @@ namespace MuMech
             deltaVExpended = dragLosses = gravityLosses = steeringLosses = 0;
             phaseAngleFromMark = 0;
             markLongitude = vesselState.longitude;
+            maxDragGees = 0;
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -60,6 +65,8 @@ namespace MuMech
         
         public override void OnFixedUpdate()
         {
+            if (markUT == 0) Mark();
+
             timeSinceMark = vesselState.time - markUT;
 
             if (vessel.situation == Vessel.Situations.PRELAUNCH)
@@ -70,7 +77,10 @@ namespace MuMech
 
             gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.velocityVesselSurfaceUnit, vesselState.gravityForce);
             gravityLosses -= vesselState.deltaT * Vector3d.Dot(vesselState.velocityVesselSurfaceUnit, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
-            dragLosses += vesselState.deltaT * mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude;
+            double dragAccel = mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude;
+            dragLosses += vesselState.deltaT * dragAccel;
+
+            maxDragGees = Math.Max(maxDragGees, dragAccel / 9.81);
 
             double circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
             double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;

@@ -13,19 +13,21 @@ namespace MuMech
     {
         public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
 
+        public string status = "";
+
         //input parameters:
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public IAscentPath ascentPath = new DefaultAscentPath();
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public double desiredOrbitAltitude = 100000.0;
+        public EditableDouble desiredOrbitAltitude = new EditableDouble(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public double desiredInclination = 0.0;
+        public EditableDouble desiredInclination = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
 
         //internal state:
-        public enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
-        public AscentMode mode;
+        enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
+        AscentMode mode;
         bool placedCircularizeNode = false;
 
 
@@ -43,6 +45,8 @@ namespace MuMech
             core.KillThrottle();
 
             if (placedCircularizeNode) core.node.enabled = false;
+
+            status = "Off";
         }
 
 
@@ -78,6 +82,8 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             if (autoThrottle) s.mainThrottle = 1.0F;
+
+            status = "Vertical ascent";
         }
 
 
@@ -124,6 +130,7 @@ namespace MuMech
                     //when we are bringing down the throttle to make the apoapsis accurate, we're liable to point in weird
                     //directions because thrust goes down and so "difficulty" goes up. so just burn prograde
                     core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+                    status = "Fine tuning apoapsis";
                     return;
                 }
             }
@@ -168,6 +175,8 @@ namespace MuMech
             desiredThrustVector = desiredThrustVector.normalized;
 
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
+
+            status = "Gravity turn";
         }
 
         void DriveCoastToApoapsis(FlightCtrlState s)
@@ -200,10 +209,13 @@ namespace MuMech
 
             //warp at x2 physical warp:
             core.warp.WarpPhysicsAtRate(2);
+
+            status = "Coasting to edge of atmosphere";
         }
 
         void DriveCircularizationBurn(FlightCtrlState s)
         {
+
             if (placedCircularizeNode)
             {
                 if (!vessel.patchedConicSolver.maneuverNodes.Any())
@@ -226,6 +238,9 @@ namespace MuMech
 
                 core.node.ExecuteOneNode();
             }
+
+            if (core.node.burnTriggered) status = "Circularizing";
+            else status = "Coasting to circularization burn";
         }
     }
 
@@ -246,11 +261,11 @@ namespace MuMech
     public class DefaultAscentPath : IAscentPath
     {
         [Persistent]
-        public double turnStartAltitude = 5000;
+        public EditableDouble turnStartAltitude = new EditableDouble(5000, 1000);
         [Persistent]
-        public double turnEndAltitude = 70000;
+        public EditableDouble turnEndAltitude = new EditableDouble(70000, 1000);
         [Persistent]
-        public double turnEndAngle = 0;
+        public EditableDouble turnEndAngle = 0;
         [Persistent]
         public double turnShapeExponent = 0.4;
 

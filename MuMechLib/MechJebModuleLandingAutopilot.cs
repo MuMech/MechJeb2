@@ -42,7 +42,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public double touchdownSpeed = 0.5;
+        public EditableDouble touchdownSpeed = 0.5;
         [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;
 

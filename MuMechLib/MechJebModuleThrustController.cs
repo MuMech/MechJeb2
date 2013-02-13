@@ -8,13 +8,53 @@ using UnityEngine;
 namespace MuMech
 {
     //ThrustController should be enabled/disabled through .users, not .enabled.
-    public class MechJebModuleThrustController : ComputerModule
+    public class MechJebModuleThrustController : DisplayModule
     {
         public MechJebModuleThrustController(MechJebCore core)
             : base(core)
         {
             priority = 200;
         }
+
+        // UI stuff
+        protected override void FlightWindowGUI(int windowID)
+        {
+            GUILayout.BeginVertical();
+
+            enabled = GUILayout.Toggle(enabled, "Control throttle");
+
+            targetThrottle = GUILayout.HorizontalSlider(targetThrottle, 0, 1);
+            limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit To Terminal Velocity");
+            limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, "Prevent Overheat");
+            limitToPreventFlameout  = GUILayout.Toggle(limitToPreventFlameout,  "Prevent Jet Flameout");
+            manageIntakes           = GUILayout.Toggle(manageIntakes,           "Manage Air Intakes");
+            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+            try {
+                GUILayout.Label ("Jet Safety Margin");
+                flameoutSafetyPctString = GUILayout.TextField(flameoutSafetyPctString, 5);
+                Double.TryParse(flameoutSafetyPctString, out flameoutSafetyPct); // no change if parse fails
+                GUILayout.Label("%");
+            } finally {
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+
+            base.FlightWindowGUI(windowID);
+        }
+        public override GUILayoutOption[] FlightWindowOptions()
+        {
+            return new GUILayoutOption[]{
+                GUILayout.Width(200), GUILayout.Height(30)
+            };
+        }
+
+        public override string GetName()
+        {
+            return "Throttle Control";
+        }
+
+
 
 
         //turn these into properties? implement settings saving
@@ -24,12 +64,21 @@ namespace MuMech
         public bool trans_land = false;
         public bool trans_land_gears = false;
         [ToggleInfoItem(name="Limit throttle to keep below terminal velocity")]
-        public bool limitToTerminalVelocity = false;
+        public bool limitToTerminalVelocity = true;
         [ToggleInfoItem(name="Limit throttle to prevent overheats")]
-        public bool limitToPreventOverheats = false;
+        public bool limitToPreventOverheats = true;
+        [ToggleInfoItem(name="Limit throttle to prevent jet flameout")]
+        public bool limitToPreventFlameout = true;
+        [ToggleInfoItem(name="Manage air intakes")]
+        public bool manageIntakes = true;
         public bool limitAcceleration = false;
         public EditableDouble maxAcceleration = 40;
 
+        public float targetThrottle = 0;
+
+        // 5% safety margin on flameouts
+        private double flameoutSafetyPct = 5;
+        private string flameoutSafetyPctString = "5";
 
         private bool tmode_changed = false;
 
@@ -40,6 +89,7 @@ namespace MuMech
         public float t_Ki = 0.000001F;
         public float t_Kd = 0.05F;
 
+        float lastThrottle = 0;
 
         public enum TMode
         {
@@ -73,6 +123,8 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            targetThrottle = Mathf.Clamp01((s.mainThrottle - lastThrottle) + targetThrottle);
+
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
                 double spd = 0;
@@ -153,6 +205,9 @@ namespace MuMech
                 }
             }
 
+            // TODO: ideally, if the user sets the throttle via shift/ctrl, or an autopilot sets the throttle, we automagically update targetThrottle.
+            // Most important is the 'X' cutoff command.
+            s.mainThrottle = targetThrottle;
 
             if (limitToTerminalVelocity)
             {
@@ -168,6 +223,15 @@ namespace MuMech
             {
                 s.mainThrottle = Mathf.Min(s.mainThrottle, AccelerationLimitedThrottle());
             }
+
+            if (limitToPreventFlameout)
+            {
+                // This clause benefits being last: if we don't need much air
+                // due to prior limits, we can close some intakes.
+                s.mainThrottle = Mathf.Min(s.mainThrottle, FlameoutSafetyThrottle());
+            }
+
+            lastThrottle = s.mainThrottle;
         }
 
         //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
@@ -195,7 +259,124 @@ namespace MuMech
             if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
             else return (1 - maxTempRatio) / tempSafetyMargin;
         }
-        
+
+        float FlameoutSafetyThrottle()
+        {
+            float throttle = 1;
+
+            // For every resource that is provided by intakes, find how
+            // much we need at full throttle, add a safety margin, and
+            // that's the max throttle for that resource.  Take the min of
+            // the max throttles.
+            foreach(var resource in vesselState.resources.Values)
+            {
+                if (resource.intakes.Length == 0) {
+                    // No intakes provide this resource; not our problem.
+                    continue;
+                }
+
+                // Compute the amount of air we will need, plus a safety
+                // margin.  Make sure it's at least enough for last frame's
+                // requirement, since it takes time for engines to spin down.
+                // Note: this could be zero, e.g. if we have intakes but no
+                // jets.
+
+                double margin = (1 + 0.01 * flameoutSafetyPct);
+                double safeRequirement = margin * resource.requiredAtMaxThrottle;
+                safeRequirement = Math.Max (safeRequirement, resource.required);
+
+                // Open the right number of intakes.
+                if (manageIntakes) {
+                    OptimizeIntakes(resource, safeRequirement);
+                }
+
+                double provided = resource.intakeProvided;
+                if (resource.required >= provided) {
+                    // We must cut throttle immediately, otherwise we are
+                    // flaming out immediately.  Continue doing the rest of the
+                    // loop anyway, but we'll be at zero throttle.
+                    throttle = 0;
+                } else {
+                    double maxthrottle = provided / safeRequirement;
+                    throttle = Mathf.Min (throttle, (float)maxthrottle);
+                }
+            }
+            return throttle;
+        }
+
+        // Open and close intakes so that they provide the required flow but no
+        // more.
+        void OptimizeIntakes(VesselState.ResourceInfo info, double requiredFlow)
+        {
+            // The highly imperfect algorithm here is:
+            // - group intakes by symmetry
+            // - sort the groups by their size
+            // - open a group at a time until we have enough airflow
+            // - close the remaining groups
+
+            // TODO: improve the algorithm:
+            // 1. Take cost-benefit into account.  We want to open ram intakes
+            //    before any others, and we probably never want to open
+            //    nacelles.  We need more info to know how much thrust we lose
+            //    for losing airflow, versus how much drag we gain for opening
+            //    an intake.
+            // 2. Take the center of drag into account.  We don't need to open
+            //    symmetry groups all at once; we just need the center of drag
+            //    to be in a good place.  Symmetry in the SPH also doesn't
+            //    guarantee anything; we could be opening all pairs that are
+            //    above the plane through the center of mass and none below,
+            //    which makes control harder.
+            // Even just point (1) means we want to solve knapsack.
+
+            // Group intakes by symmetry, and collect the information by intake.
+            var groups = new List<List<ModuleResourceIntake>>();
+            var groupIds = new Dictionary<ModuleResourceIntake, int>();
+            var data = new Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData>();
+            foreach(var intakeData in info.intakes) {
+                ModuleResourceIntake intake = intakeData.intake;
+                data[intake] = intakeData;
+                if (groupIds.ContainsKey(intake)) { continue; }
+
+                var intakes = new List<ModuleResourceIntake>();
+                intakes.Add(intake);
+                foreach(var part in intake.part.symmetryCounterparts) {
+                    foreach(var symintake in part.Modules.OfType<ModuleResourceIntake>()) {
+                        intakes.Add (symintake);
+                    }
+                }
+
+                int grpId = groups.Count;
+                groups.Add (intakes);
+                foreach(var member in intakes) {
+                    groupIds[member] = grpId;
+                }
+            }
+
+            // For each group in sorted order, if we need more air, open any
+            // closed intakes.  If we have enough air, close any open intakes.
+            // OrderBy is stable, so we'll always be opening the same intakes.
+            double airFlowSoFar = 0;
+            KSPActionParam param = new KSPActionParam(KSPActionGroup.None, 
+                    KSPActionType.Activate);
+            foreach(var grp in groups.OrderBy(grp => grp.Count)) {
+                if (airFlowSoFar < requiredFlow) {
+                    foreach(var intake in grp) {
+                        double airFlowThisIntake = data[intake].predictedMassFlow;
+                        if (!intake.intakeEnabled) {
+                            intake.ToggleAction(param);
+                        }
+                        airFlowSoFar += airFlowThisIntake;
+                    }
+                } else {
+                    foreach(var intake in grp) {
+                        if (intake.intakeEnabled) {
+                            intake.ToggleAction(param);
+                        }
+                    }
+                }
+            }
+        }
+
         //The throttle setting that will give an acceleration of maxAcceleration
         float AccelerationLimitedThrottle()
         {

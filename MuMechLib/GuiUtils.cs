@@ -90,6 +90,55 @@ namespace MuMech
         }
     }
 
+    public class EditableAngle
+    {
+        [Persistent]
+        public EditableDouble degrees = 0;
+        [Persistent]
+        public EditableDouble minutes = 0;
+        [Persistent]
+        public EditableDouble seconds = 0;
+        [Persistent]
+        public bool negative;
+
+        public EditableAngle(double angle)
+        {
+            negative = (angle < 0);
+            angle = Math.Abs(angle);
+            degrees = (int)angle;
+            angle -= degrees;
+            minutes = (int)(60 * angle);
+            angle -= minutes / 60;
+            seconds = 3600 * angle;
+        }
+
+        public static implicit operator double(EditableAngle x)
+        {
+            return (x.negative ? -1 : 1) * (x.degrees + 60 * x.minutes + 3600 * x.seconds);
+        }
+
+        public static implicit operator EditableAngle(double x)
+        {
+            return new EditableAngle(x);
+        }
+
+        public enum Direction { NS, EW }
+
+        public void DrawEditGUI(Direction direction) 
+        {
+            GUILayout.BeginHorizontal();
+            degrees.text = GUILayout.TextField(degrees.text, GUILayout.Width(35));
+            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            minutes.text = GUILayout.TextField(minutes.text, GUILayout.Width(35));
+            GUILayout.Label("'", GUILayout.ExpandWidth(false));
+            seconds.text = GUILayout.TextField(seconds.text, GUILayout.Width(35));
+            GUILayout.Label("\"", GUILayout.ExpandWidth(false));
+            String dirString = (direction == Direction.NS ? (negative ? "S" : "N") : (negative ? "W" : "E"));
+            if (GUILayout.Button(dirString, GUILayout.Width(25))) negative = !negative;
+            GUILayout.EndHorizontal();
+        }
+    }
+
     public static class GuiUtils
     {
         static GUIStyle _yellowOnHover;

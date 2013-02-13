@@ -22,33 +22,36 @@ namespace MuMech
                 return;
             }
 
-            Vector3d relVel = core.target.RelativeVelocity;
-
-            double relVel_x = Vector3d.Dot(relVel, vessel.GetTransform().right);
-            double relVel_y = Vector3d.Dot(relVel, vessel.GetTransform().forward);
-            double relVel_z = Vector3d.Dot(relVel, vessel.GetTransform().up);
-
-            Vector3d sep = core.target.RelativePosition;
-
-            double sep_x = Vector3d.Dot(sep, vessel.GetTransform().right);
-            double sep_y = Vector3d.Dot(sep, vessel.GetTransform().forward);
-            double sep_z = Vector3d.Dot(sep, vessel.GetTransform().up);
-
             GUILayout.BeginVertical();
 
-            GUILayout.Label("Relative velocity:");
-            GUILayout.Label("X : " + relVel_x.ToString("F2") + " m/s  [L/J]");
-            GUILayout.Label("Y: " + relVel_y.ToString("F2") + " m/s  [I/K]");
-            GUILayout.Label("Z: " + relVel_z.ToString("F2") + " m/s  [H/N]");
+            if(autopilot == null) autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();
 
-            GUILayout.Label("Separation:");
-            GUILayout.Label("X: " + sep_x.ToString("F2") + " m  [L/J]");
-            GUILayout.Label("Y: " + sep_y.ToString("F2") + " m  [I/K]");
-            GUILayout.Label("Z: " + sep_z.ToString("F2") + " m  [H/N]");
+            if (!(core.target.Target is ModuleDockingNode))
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label("Warning: target is not a docking node. Target a docking node by right clicking it.", s);
+            }
 
-            if(autopilot == null) autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();            
+            bool onAxisNodeExists = false;
+            foreach(ModuleDockingNode node in vessel.GetModules<ModuleDockingNode>()) 
+            {
+                if (Vector3d.Angle(node.GetTransform().forward, vessel.GetTransform().forward) < 2)
+                {
+                    onAxisNodeExists = true;
+                    break;
+                }
+            }
 
-            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled.");
+            if (!onAxisNodeExists)
+            {
+
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label("Warning: this vessel not controlled from a docking node. Right click the desired docking node on this vessel and select \"Control from here.\"", s);
+            }
+
+            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
 
             if (autopilot.enabled)
             {
@@ -79,7 +82,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Docking Guidance";
+            return "Docking Autopilot";
         }
     }
 }

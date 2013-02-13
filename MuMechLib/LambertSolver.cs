@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace MuMech
 {
-    /////////////////////////////////////////
-    // LambertSolver written by Arrowstar  //
-    /////////////////////////////////////////
+    ///////////////////////////////////////////////////////////
+    // LambertSolver kindly provided by Arrowstar - Thanks!  //
+    ///////////////////////////////////////////////////////////
 
     //Solves Lambert's problem, namely:
     //  "What orbit around primary takes you from position R1 to position R2 in a time interval dt?" 

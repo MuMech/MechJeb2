@@ -46,7 +46,7 @@ namespace MuMech
         protected enum Mode { ONE_NODE, ALL_NODES };
         protected Mode mode = Mode.ONE_NODE;
 
-        protected bool burnTriggered = false;
+        public bool burnTriggered = false;
 
         public override void OnFixedUpdate()
         {

@@ -288,5 +288,47 @@ namespace MuMech
 
             stats.RequestUpdate();
         }
+
+        [GeneralInfoItem(name = "Docking guidance: velocity")]
+        public void DockingGuidanceVelocity()
+        {
+            if (!core.target.NormalTargetExists)
+            {
+                GUILayout.Label("Target-relative velocity: (N/A)");
+                return;
+            }
+
+            Vector3d relVel = core.target.RelativeVelocity;
+            double relVel_x = Vector3d.Dot(relVel, vessel.GetTransform().right);
+            double relVel_y = Vector3d.Dot(relVel, vessel.GetTransform().forward);
+            double relVel_z = Vector3d.Dot(relVel, vessel.GetTransform().up);
+            GUILayout.BeginVertical();
+            GUILayout.Label("Target-relative velocity:");
+            GUILayout.Label("X: " + relVel_x.ToString("F2") + " m/s  [L/J]");
+            GUILayout.Label("Y: " + relVel_y.ToString("F2") + " m/s  [I/K]");
+            GUILayout.Label("Z: " + relVel_z.ToString("F2") + " m/s  [H/N]");
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem(name = "Docking guidance: velocity")]
+        public void DockingGuidancePosition()
+        {
+            if (!core.target.NormalTargetExists)
+            {
+                GUILayout.Label("Separation from target: (N/A)");
+                return;
+            }
+
+            Vector3d sep = core.target.RelativePosition;
+            double sep_x = Vector3d.Dot(sep, vessel.GetTransform().right);
+            double sep_y = Vector3d.Dot(sep, vessel.GetTransform().forward);
+            double sep_z = Vector3d.Dot(sep, vessel.GetTransform().up);
+            GUILayout.BeginVertical();
+            GUILayout.Label("Separation from target:");
+            GUILayout.Label("X: " + sep_x.ToString("F2") + " m  [L/J]");
+            GUILayout.Label("Y: " + sep_y.ToString("F2") + " m  [I/K]");
+            GUILayout.Label("Z: " + sep_z.ToString("F2") + " m  [H/N]");
+            GUILayout.EndVertical();
+        }
     }
 }

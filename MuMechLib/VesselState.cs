@@ -113,11 +113,20 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem(name = "Atmosphere density", units = "g/m³")]
         public double atmosphericDensityGrams;
+        [ValueInfoItem(name = "Intake air", units = "kg/s")]
+        public double intakeAir;
+        [ValueInfoItem(name = "Intake air needed", units = "kg/s")]
+        public double intakeAirNeeded;
+        [ValueInfoItem(name = "Intake air needed (max)", units = "kg/s")]
+        public double intakeAirAtMax;
         [ValueInfoItem(name = "Angle to prograde", units = "º")]
         public double angleToPrograde;
 
         public Vector6 rcsThrustAvailable;
         public Vector6 rcsTorqueAvailable;
+
+        // Resource information keyed by resource Id.
+        public Dictionary<int,ResourceInfo> resources;
 
         public CelestialBody mainBody;
 
@@ -230,6 +239,10 @@ namespace MuMech
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
             MoI = vessel.findLocalMOI(CoM);
+
+            EngineInfo einfo = new EngineInfo(forward, CoM);
+            IntakeInfo iinfo = new IntakeInfo();
+
             foreach (Part p in vessel.parts)
             {
                 if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
@@ -239,62 +252,7 @@ namespace MuMech
                     massDrag += partMass * p.maximum_drag;
                 }
                 MoI += p.Rigidbody.inertiaTensor;
-                if (((p.State == PartStates.ACTIVE) || ((Staging.CurrentStage > Staging.lastStage) && (p.inverseStage == Staging.lastStage))) && ((p is LiquidEngine) || (p is LiquidFuelEngine) || (p is SolidRocket) || (p is AtmosphericEngine)))
-                {
-                    if (p is LiquidEngine && p.EngineHasFuel())
-                    {
-                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((LiquidEngine)p).thrustVector).normalized, forward);
-                        thrustAvailable += ((LiquidEngine)p).maxThrust * usableFraction;
-                        thrustMinimum += ((LiquidEngine)p).minThrust * usableFraction;
-                        if (((LiquidEngine)p).thrustVectoringCapable)
-                        {
-                            torqueThrustPYAvailable += Math.Sin(Math.Abs(((LiquidEngine)p).gimbalRange) * Math.PI / 180) * ((LiquidEngine)p).maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-                        }
-                    }
-                    else if (p is LiquidFuelEngine && p.EngineHasFuel())
-                    {
-                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((LiquidFuelEngine)p).thrustVector).normalized, forward);
-                        thrustAvailable += ((LiquidFuelEngine)p).maxThrust * usableFraction;
-                        thrustMinimum += ((LiquidFuelEngine)p).minThrust * usableFraction;
-                        if (((LiquidFuelEngine)p).thrustVectoringCapable)
-                        {
-                            torqueThrustPYAvailable += Math.Sin(Math.Abs(((LiquidFuelEngine)p).gimbalRange) * Math.PI / 180) * ((LiquidFuelEngine)p).maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-                        }
-                    }
-                    else if (p is SolidRocket && !p.ActivatesEvenIfDisconnected)
-                    {
-                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((SolidRocket)p).thrustVector).normalized, forward);
-                        thrustAvailable += ((SolidRocket)p).thrust * usableFraction;
-                        thrustMinimum += ((SolidRocket)p).thrust * usableFraction;
-                    }
-                    else if (p is AtmosphericEngine && p.EngineHasFuel())
-                    {
-                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((AtmosphericEngine)p).thrustVector).normalized, forward);
-                        thrustAvailable += ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * usableFraction;
-                        if (((AtmosphericEngine)p).thrustVectoringCapable)
-                        {
-                            torqueThrustPYAvailable += Math.Sin(Math.Abs(((AtmosphericEngine)p).gimbalRange) * Math.PI / 180) * ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-                        }
-                    }
-                }
-
-                foreach (ModuleEngines e in p.Modules.OfType<ModuleEngines>())
-                {
-                    if ((e.isEnabled) && p.EngineHasFuel())
-                    {
-                        double usableFraction = 1; // Vector3d.Dot((p.transform.rotation * e.thrustTransform.forward).normalized, forward); // TODO: Fix usableFraction
-                        thrustAvailable += e.maxThrust * usableFraction;
-
-                        if (e.throttleLocked) thrustMinimum += e.maxThrust * usableFraction;
-                        else thrustMinimum += e.minThrust * usableFraction;
-
-                        if (p.Modules.OfType<ModuleGimbal>().Count() > 0)
-                        {
-                            torqueThrustPYAvailable += Math.Sin(Math.Abs(p.Modules.OfType<ModuleGimbal>().First().gimbalRange) * Math.PI / 180) * e.maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
-                        }
-                    }
-                }
-
+                
                 if (vessel.ActionGroups[KSPActionGroup.RCS])
                 {
                     if (p is RCSModule)
@@ -336,8 +294,47 @@ namespace MuMech
                     torqueRAvailable += Math.Abs(((CommandPod)p).rotPower);
                     torquePYAvailable += Math.Abs(((CommandPod)p).rotPower);
                 }
+
+                foreach (PartModule pm in p.Modules)
+                {
+                    if (!pm.isEnabled) {
+                        continue;
+                    }
+
+                    if (pm is ModuleEngines) {
+                        einfo.addNewEngine(pm as ModuleEngines);
+                    } else if (pm is ModuleResourceIntake) {
+                        iinfo.addIntake(pm as ModuleResourceIntake);
+                    }
+                }
             }
 
+            thrustAvailable         += einfo.thrustAvailable;
+            thrustMinimum           += einfo.thrustMinimum;
+            torqueThrustPYAvailable += einfo.torqueThrustPYAvailable;
+
+            // Convert the resource information from the einfo and iinfo format
+            // to the more useful ResourceInfo format.
+            resources = new Dictionary<int, ResourceInfo>();
+            foreach(var info in einfo.resourceRequired) {
+                int id = info.Key;
+                var req = info.Value;
+                resources[id] = new ResourceInfo(
+                        PartResourceLibrary.Instance.GetDefinition(id),
+                        req.requiredLastFrame,
+                        req.requiredAtMaxThrottle,
+                        iinfo.getIntakes(id));
+            }
+
+            int intakeAirId = PartResourceLibrary.Instance.GetDefinition("IntakeAir").id;
+            intakeAir = 0;
+            intakeAirNeeded = 0;
+			intakeAirAtMax = 0;
+            if (resources.ContainsKey(intakeAirId)) {
+                intakeAir = resources[intakeAirId].intakeProvided;
+                intakeAirNeeded = resources[intakeAirId].required;
+				intakeAirAtMax = resources[intakeAirId].requiredAtMaxThrottle;
+            }
 
             angularMomentum = new Vector3d(angularVelocity.x * MoI.x, angularVelocity.y * MoI.y, angularVelocity.z * MoI.z);
 
@@ -345,8 +342,8 @@ namespace MuMech
             minThrustAccel = thrustMinimum / mass;
 
             mainBody = vessel.mainBody;
-
         }
+
 
         //probably this should call a more general terminal velocity method
         [ValueInfoItem(name = "Terminal velocity", units = "m/s")]
@@ -363,6 +360,307 @@ namespace MuMech
             return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
         }
 
+        // Used during the vesselState constructor; distilled to other
+        // variables later.
+        class EngineInfo
+        {
+            public double thrustAvailable = 0;
+            public double thrustMinimum = 0;
+            public double torqueThrustPYAvailable = 0;
+
+            public class FuelRequirement {
+                public double requiredLastFrame = 0;
+                public double requiredAtMaxThrottle = 0;
+            }
+            public Dictionary<int, FuelRequirement> resourceRequired
+                = new Dictionary<int, FuelRequirement>();
+
+            Vector3d forward;
+            Vector3d CoM;
+            float atmP0; // pressure now
+            float atmP1; // pressure after one timestep
+
+            public EngineInfo(Vector3d fwd, Vector3d c)
+            {
+                forward = fwd;
+                CoM = c;
+                atmP0 = (float)FlightGlobals.getStaticPressure();
+                float alt1 = (float) (FlightGlobals.ship_altitude 
+                        + TimeWarp.fixedDeltaTime * FlightGlobals.ship_verticalSpeed);
+                atmP1 = (float)FlightGlobals.getStaticPressure(alt1);
+            }
+
+            public void TryAddOldEngine(Part p)
+            {
+                // TODO: add into the resourceRequired/resourceAtMax?
+                // It's not clear how critical that is.
+                if (((p.State == PartStates.ACTIVE) || ((Staging.CurrentStage > Staging.lastStage) && (p.inverseStage == Staging.lastStage))))
+                {
+                    if (p is LiquidEngine && p.EngineHasFuel())
+                    {
+                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((LiquidEngine)p).thrustVector).normalized, forward);
+                        thrustAvailable += ((LiquidEngine)p).maxThrust * usableFraction;
+                        thrustMinimum += ((LiquidEngine)p).minThrust * usableFraction;
+                        if (((LiquidEngine)p).thrustVectoringCapable)
+                        {
+                            torqueThrustPYAvailable += Math.Sin(Math.Abs(((LiquidEngine)p).gimbalRange) * Math.PI / 180) * ((LiquidEngine)p).maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
+                        }
+                    }
+                    else if (p is LiquidFuelEngine && p.EngineHasFuel())
+                    {
+                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((LiquidFuelEngine)p).thrustVector).normalized, forward);
+                        thrustAvailable += ((LiquidFuelEngine)p).maxThrust * usableFraction;
+                        thrustMinimum += ((LiquidFuelEngine)p).minThrust * usableFraction;
+                        if (((LiquidFuelEngine)p).thrustVectoringCapable)
+                        {
+                            torqueThrustPYAvailable += Math.Sin(Math.Abs(((LiquidFuelEngine)p).gimbalRange) * Math.PI / 180) * ((LiquidFuelEngine)p).maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
+                        }
+                    }
+                    else if (p is SolidRocket && !p.ActivatesEvenIfDisconnected)
+                    {
+                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((SolidRocket)p).thrustVector).normalized, forward);
+                        thrustAvailable += ((SolidRocket)p).thrust * usableFraction;
+                        thrustMinimum += ((SolidRocket)p).thrust * usableFraction;
+                    }
+                    else if (p is AtmosphericEngine && p.EngineHasFuel())
+                    {
+                        double usableFraction = Vector3d.Dot((p.transform.rotation * ((AtmosphericEngine)p).thrustVector).normalized, forward);
+                        thrustAvailable += ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * usableFraction;
+                        if (((AtmosphericEngine)p).thrustVectoringCapable)
+                        {
+                            torqueThrustPYAvailable += Math.Sin(Math.Abs(((AtmosphericEngine)p).gimbalRange) * Math.PI / 180) * ((AtmosphericEngine)p).maximumEnginePower * ((AtmosphericEngine)p).totalEfficiency * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
+                        }
+                    }
+                }
+            }
+
+            public void addNewEngine(ModuleEngines e)
+            {
+                if ( (!e.EngineIgnited) || (!e.isEnabled) )
+                {
+                    return;
+                }
+
+                // Compute the resource requirement at full thrust.
+                //   mdot = maxthrust / (Isp * g0) in tonnes per second
+                //   udot = mdot / mixdensity in units per second of propellant per ratio unit
+                //   udot * ratio_i : units per second of propellant i
+                // Choose the worse Isp between now and after one timestep.
+                // TODO: actually, pressure should be for the engine part, not for the spacecraft.
+                // The pressure can easily vary by 1% from top to bottom of a spacecraft.
+                // We'd need to compute the position of the part, which seems like a pain.
+                float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
+                float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
+                double Isp = Math.Min (Isp0, Isp1);
+                double udot = e.maxThrust / (Isp * 9.81 * e.mixtureDensity);
+                foreach (var propellant in e.propellants)
+                {
+                    double maxreq = udot * propellant.ratio;
+                    addResource(propellant.id, propellant.currentRequirement, maxreq);
+                }
+
+                if (!e.getFlameoutState)
+                {
+                    double usableFraction = 1; // Vector3d.Dot((p.transform.rotation * e.thrustTransform.forward).normalized, forward); // TODO: Fix usableFraction
+                    thrustAvailable += e.maxThrust * usableFraction;
+
+                    if (e.throttleLocked) thrustMinimum += e.maxThrust * usableFraction;
+                    else thrustMinimum += e.minThrust * usableFraction;
+
+                    Part p = e.part;
+                    var gimbals = p.Modules.OfType<ModuleGimbal>();
+                    if (gimbals.Count() > 0)
+                    {
+                        double gimbalRange = gimbals.First().gimbalRange;
+                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * e.maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
+                    }
+                }
+            }
+
+            private void addResource(int id, double current /* u/sec */, double max /* u/sec */)
+            {
+                FuelRequirement req;
+                if (resourceRequired.ContainsKey(id)) {
+                    req = resourceRequired[id];
+                } else {
+                    req = new FuelRequirement();
+                    resourceRequired[id] = req;
+                }
+                req.requiredLastFrame += current;
+                req.requiredAtMaxThrottle += max;
+            }
+        }
+
+        // Used during the vesselState constructor; distilled to other variables later.
+        class IntakeInfo
+        {
+            public Dictionary<int, List<ModuleResourceIntake>> allIntakes = new Dictionary<int, List<ModuleResourceIntake>>();
+
+            public void addIntake(ModuleResourceIntake intake)
+            {
+                // TODO: figure out how much airflow we have, how much we could have,
+                // drag, etc etc.
+                List<ModuleResourceIntake> thelist;
+                int id = PartResourceLibrary.Instance.GetDefinition(intake.resourceName).id;
+                if(allIntakes.ContainsKey(id)) {
+                    thelist = allIntakes[id];
+                } else {
+                    thelist = new List<ModuleResourceIntake>();
+                    allIntakes[id] = thelist;
+                }
+                thelist.Add(intake);
+            }
+
+            static List<ModuleResourceIntake> empty = new List<ModuleResourceIntake>();
+            public List<ModuleResourceIntake> getIntakes(int id)
+            {
+                if (allIntakes.ContainsKey(id)) {
+                    return allIntakes[id];
+                } else {
+                    return empty;
+                }
+            }
+        }
+
+        // Stored.
+        public class ResourceInfo
+        {
+            public PartResourceDefinition definition;
+
+            // We use kg/s rather than the more common T/s because these numbers tend to be small.
+            // One debate I've had is whether to use mass/s or unit/s.  Dunno...
+
+            public double required = 0;              // kg/s
+            public double requiredAtMaxThrottle = 0; // kg/s
+            public double intakeProvided {           // kg/s for currently-open intakes
+                get {
+                    double sum = 0;
+                    foreach(var intakeData in intakes) {
+                        if (intakeData.intake.intakeEnabled) {
+                            sum += intakeData.predictedMassFlow;
+                        }
+                    }
+                    return sum;
+                }
+            }
+            public IntakeData [] intakes;
+
+            public struct IntakeData {
+                public ModuleResourceIntake intake;
+                public double predictedMassFlow; // min kg/s this timestep or next
+            }
+
+            // Return the number of kg of resource provided per second under certain conditions.
+            // We use kg since the numbers are typically small.
+            private double massProvided(double vesselSpeed, Vector3d vesselFwd, double atmDensity,
+                    ModuleResourceIntake intake, Vector3d intakeFwd)
+            {
+                if (intake.checkForOxygen && !FlightGlobals.currentMainBody.atmosphereContainsOxygen) {
+                    return 0;
+                }
+
+                // This is adapted from code shared by Amram at:
+                // http://forum.kerbalspaceprogram.com/showthread.php?34288-Maching-Bird-Challeng?p=440505
+                // Seems to be accurate for 0.18.2 anyway.
+                double intakeSpeed = intake.maxIntakeSpeed; // airspeed when the intake isn't moving
+
+                double aoa = Vector3d.Dot(vesselFwd, intakeFwd);
+                if (aoa < 0) { aoa = 0; }
+                else if (aoa > 1) { aoa = 1; }
+
+                double finalSpeed;
+                if (aoa <= intake.aoaThreshold) {
+                    finalSpeed = intakeSpeed;
+                } else {
+                    // This is labeled as a bug for double-counting intakeSpeed.
+                    // It also double-counts unitScalar...
+                    double airSpeedGUI = vesselSpeed + intakeSpeed;
+                    double airSpeed = airSpeedGUI * intake.unitScalar;
+                    finalSpeed = aoa * (airSpeed + intakeSpeed);
+                }
+                double airVolume = finalSpeed * intake.area * intake.unitScalar;
+                double airmass = atmDensity * airVolume; // tonnes per second
+
+                // TODO: limit by the amount the intake can store
+                return airmass * 1000;
+            }
+
+            public ResourceInfo(PartResourceDefinition r, double req /* u per deltaT */, double atMax /* u per s */, List<ModuleResourceIntake> modules)
+            {
+                definition = r;
+                double density = definition.density * 1000; // kg per unit (density is in T per unit)
+                double dT = TimeWarp.fixedDeltaTime;
+                required = req * density / dT;
+                requiredAtMaxThrottle = atMax * density;
+
+                // For each intake, we want to know the min of what will (or can) be provided either now or at the end of the timestep.
+                // 0 means now, 1 means next timestep
+                Vector3d v0 = FlightGlobals.ship_srfVelocity;
+                Vector3d v1 = v0 + dT * FlightGlobals.ship_acceleration;
+                Vector3d v0norm = v0.normalized;
+                Vector3d v1norm = v1.normalized;
+                double v0mag = v0.magnitude;
+                double v1mag = v1.magnitude;
+
+                // As with thrust, here too we should get the static pressure at the intake, not at the center of mass.
+                double atmDensity0 = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure());
+                float alt1 = (float) (FlightGlobals.ship_altitude 
+                        + dT * FlightGlobals.ship_verticalSpeed);
+                double atmDensity1 = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt1));
+
+                intakes = new IntakeData[modules.Count];
+                int idx = 0;                
+                foreach(var intake in modules) {
+                    Vector3d intakeFwd0 = intake.part.FindModelTransform (intake.intakeTransformName).forward;
+                    Vector3d intakeFwd1;
+                    {
+                        // Rotate the intake by the angular velocity for one timestep, in case the ship is spinning.
+                        // Going through the Unity vector classes is about as many lines as hammering it out by hand.
+                        Vector3d rot = dT * FlightGlobals.ship_angularVelocity;
+                        intakeFwd1 = Quaternion.AngleAxis((float)(Math.PI / 180 * rot.magnitude), rot) * intakeFwd0;
+                        /*Vector3d cos;
+                        Vector3d sin;
+                        for(int i = 0; i < 3; ++i) {
+                            cos[i] = Math.Cos (rot[i]);
+                            sin[i] = Math.Sin (rot[i]);
+                        }
+                        intakeFwd1[0]
+                            = intakeFwd0[0] * cos[1] * cos[2]
+                            + intakeFwd0[1] * (sin[0]*sin[1]*cos[2] - cos[0]*sin[2])
+                            + intakeFwd0[2] * (sin[0]*sin[2] + cos[0]*sin[1]);
+
+                        intakeFwd1[1]
+                            = intakeFwd0[0] * cos[1] * sin[2]
+                            + intakeFwd0[1] * (cos[0]*cos[1] + sin[0]*sin[1]*sin[2])
+                            + intakeFwd0[2] * (cos[0]*sin[1]*sin[2] - sin[0]*cos[2]);
+
+                        intakeFwd1[2]
+                            = intakeFwd0[0] * (-sin[1])
+                            + intakeFwd0[1] * sin[0] * cos[1]
+                            + intakeFwd0[2] * cos[0] * cos[1];*/
+                    }
+
+                    double mass0 = massProvided(v0mag, v0norm, atmDensity0, intake, intakeFwd0);
+                    double mass1 = massProvided(v1mag, v1norm, atmDensity1, intake, intakeFwd1);
+                    double mass = Math.Min (mass0, mass1);
+
+                    // Also, we can't have more airflow than what fits in the resource tank of the intake part.
+                    double capacity = 0;
+                    foreach(PartResource tank in intake.part.Resources) {
+                        if (tank.info.id == definition.id) {
+                            capacity += tank.maxAmount; // units per timestep
+                        }
+                    }
+                    capacity = capacity * density / dT; // convert to kg/s
+                    mass = Math.Min (mass, capacity);
+
+                    intakes[idx].intake = intake;
+                    intakes[idx].predictedMassFlow = mass;
+                    idx++;
+                }
+            }
+
+        }
 
 
     }

@@ -25,8 +25,8 @@ namespace MuMech
         ITargetable target;
 
         public CelestialBody targetBody;
-        public double targetLatitude;
-        public double targetLongitude;
+        public EditableAngle targetLatitude;
+        public EditableAngle targetLongitude;
 
         Vector3d targetDirection;
 

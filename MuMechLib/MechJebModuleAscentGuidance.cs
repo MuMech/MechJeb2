@@ -15,7 +15,7 @@ namespace MuMech
 
         const string TARGET_NAME = "Ascent Path Guidance";
 
-        public IAscentPath ascentPath; //other modules can edit this to control what path the guidance uses
+        public IAscentPath ascentPath = new DefaultAscentPath();
 
         bool launchingToPlane = false;
         bool launchingToRendezvous = false;
@@ -23,8 +23,6 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            ascentPath = new DefaultAscentPath();
-            core.target.SetDirectionTarget(TARGET_NAME);
             core.thrust.users.Add(this);
         }
 
@@ -34,19 +32,14 @@ namespace MuMech
             core.thrust.users.Remove(this);
             launchingToPlane = false;
             launchingToRendezvous = false;
+            core.GetComputerModule<MechJebModuleAscentPathEditor>().enabled = false;
         }
 
         public override void OnFixedUpdate()
         {
-            /*if (core.target.Name != TARGET_NAME)
-            {
-                enabled = false;
-                return;
-            }*/
-
             if (ascentPath == null) return;
 
-            if (core.target.Name == TARGET_NAME)
+            if (core.target.Target != null && core.target.Name == TARGET_NAME)
             {
                 double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL);
                 Vector3d dir = Math.Cos(angle) * vesselState.east + Math.Sin(angle) * vesselState.up;
@@ -58,9 +51,32 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GUILayout.Label("The purple circle on the navball points along the ascent path.");
+            bool showingGuidance = (core.target.Target != null && core.target.Name == TARGET_NAME);
 
-            if (GUILayout.Button("Turn off guidance")) enabled = false;
+            if (showingGuidance)
+            {
+                GUILayout.Label("The purple circle on the navball points along the ascent path.");
+                if (GUILayout.Button("Stop showing navball guidance")) core.target.Unset();
+            }
+            else if (GUILayout.Button("Show navball ascent path guidance"))
+            {
+                core.target.SetDirectionTarget(TARGET_NAME);
+            }
+
+            MechJebModuleAscentComputer autopilot = core.GetComputerModule<MechJebModuleAscentComputer>();
+
+            //autopilot.enabled = GUILayout.Toggle(autopilot.enabled, (autopilot.enabled ? "Disengage autopilot" : "Engage autopilot"), GUI.skin.button);
+            if (autopilot.enabled)
+            {
+                if (GUILayout.Button("Disengage autopilot")) autopilot.enabled = false;
+            }
+            else
+            {
+                if (GUILayout.Button("Engage autopilot")) autopilot.enabled = true;
+            }
+
+            GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
+            GuiUtils.SimpleTextBox("Orbit inclination", autopilot.desiredInclination, "º");
 
             core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Limit throttle to avoid overheats");
             core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit throttle so as not to exceed terminal velocity");
@@ -71,9 +87,6 @@ namespace MuMech
             GUILayout.EndHorizontal();
             
             core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
-
-
-            MechJebModuleAscentComputer autopilot = core.GetComputerModule<MechJebModuleAscentComputer>();
 
             if (core.target.NormalTargetExists && vessel.Landed)
             {
@@ -109,24 +122,29 @@ namespace MuMech
                 desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                 autopilot.desiredInclination = desiredInclination;
 
-                core.warp.WarpToUT(launchTime);
+                if (autopilot.enabled) core.warp.WarpToUT(launchTime);
 
                 GUILayout.Label("Launching to " + (launchingToPlane ? "target plane" : "rendezvous") + ": T-" + MuUtils.ToSI(tMinus, 0) + "s");
                 if (tMinus < 3 * vesselState.deltaT)
                 {
-                    Staging.ActivateNextStage();
+                    if(autopilot.enabled) Staging.ActivateNextStage();
                     launchingToPlane = launchingToRendezvous = false;
                 }
 
                 if (GUILayout.Button("Abort")) launchingToPlane = launchingToRendezvous = false;
-            } 
-            
+            }
 
-            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
+
+            
+            
+            
             if (autopilot.enabled)
             {
-                GUILayout.Label("State: " + autopilot.mode.ToString());
+                GUILayout.Label("Autopilot status: " + autopilot.status);
             }
+
+            MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
+            editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
 
