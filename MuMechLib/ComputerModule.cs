@@ -123,11 +123,6 @@ namespace MuMech
         public virtual void OnDestroy()
         {
         }
-
-        protected void print(String s)
-        {
-            MonoBehaviour.print(s);
-        }
     }
 
     [Flags]

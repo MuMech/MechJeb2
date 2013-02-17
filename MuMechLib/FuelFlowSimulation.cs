@@ -191,8 +191,8 @@ namespace MuMech
             public float deltaTime;
             public float deltaV;
 
-            public double StartTWR(CelestialBody body) { return startThrust / (9.81 * body.GeeASL * startMass); }
-            public double MaxTWR(CelestialBody body) { return maxAccel / (9.81 * body.GeeASL); }
+            public double StartTWR(double geeASL) { return startThrust / (9.81 * geeASL * startMass); }
+            public double MaxTWR(double geeASL) { return maxAccel / (9.81 * geeASL); }
 
             //Computes the deltaV from the other fields. Only valid when the thrust is constant over the time interval represented.
             public void ComputeTimeStepDeltaV()

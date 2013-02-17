@@ -128,11 +128,11 @@ namespace MuMech
                 double desiredAcceleration = dVLeft / timeConstant;
                 desiredAcceleration = Math.Max(precision, desiredAcceleration);
 
-                s.mainThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
+                core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
             }
             else
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
             }
         }
 

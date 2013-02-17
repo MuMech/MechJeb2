@@ -10,21 +10,13 @@ namespace MuMech
     {
         public bool hidden = false;
 
-        public Rect editorWindowPos
+        public Rect windowPos 
         {
-            get { return new Rect(editorWindowVector.x, editorWindowVector.y, editorWindowVector.z, editorWindowVector.w); }
-            set { editorWindowVector = new Vector4(value.x, value.y, value.width, value.height); }
+            get { return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w); }
+            set { windowVector = new Vector4(value.x, value.y, value.width, value.height); }
         }
         [Persistent(pass = (int)Pass.Global)]
-        public Vector4 editorWindowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-
-        public Rect flightWindowPos 
-        {
-            get { return new Rect(flightWindowVector.x, flightWindowVector.y, flightWindowVector.z, flightWindowVector.w); }
-            set { flightWindowVector = new Vector4(value.x, value.y, value.width, value.height); }
-        }
-        [Persistent(pass = (int)Pass.Global)]
-        public Vector4 flightWindowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        public Vector4 windowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
@@ -34,41 +26,22 @@ namespace MuMech
 
         public DisplayModule(MechJebCore core) : base(core) {}
 
-        public virtual GUILayoutOption[] FlightWindowOptions()
+        public virtual GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[0];
         }
 
-        protected virtual void FlightWindowGUI(int windowID)
+        protected virtual void WindowGUI(int windowID)
         {
             GUI.DragWindow();
         }
 
-        public virtual GUILayoutOption[] EditorWindowOptions()
-        {
-            return new GUILayoutOption[0];
-        }
-
-        protected virtual void EditorWindowGUI(int windowID)
-        {
-            GUI.DragWindow();
-        }
 
         public virtual void DrawGUI(int baseWindowID, bool inEditor)
         {
-            if (inEditor)
+            if (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight)
             {
-                if (showInEditor)
-                {
-                    editorWindowPos = GUILayout.Window(baseWindowID, editorWindowPos, EditorWindowGUI, GetName(), EditorWindowOptions());
-                }
-            }
-            else
-            {
-                if (showInFlight)
-                {
-                    flightWindowPos = GUILayout.Window(baseWindowID, flightWindowPos, FlightWindowGUI, GetName(), FlightWindowOptions());
-                }
+                windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, GetName(), WindowOptions());                
             }
         }
 

@@ -8,11 +8,14 @@ namespace MuMech
 {
     public class MechJebModuleMenu : DisplayModule
     {
-        public MechJebModuleMenu(MechJebCore core) : base(core)
+        public MechJebModuleMenu(MechJebCore core)
+            : base(core)
         {
             priority = -1000;
             enabled = true;
             hidden = true;
+            showInFlight = true;
+            showInEditor = true;
         }
 
         public enum WindowStat
@@ -42,13 +45,13 @@ namespace MuMech
 
         public bool firstDraw = true;
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
             foreach (DisplayModule module in core.GetComputerModules<DisplayModule>())
             {
-                if (!module.hidden)
+                if (!module.hidden && (HighLogic.LoadedSceneIsEditor ? module.showInEditor : module.showInFlight))
                 {
                     bool on = module.enabled;
                     if (on != GUILayout.Toggle(on, module.GetName()))
@@ -67,61 +70,58 @@ namespace MuMech
 
         public override void DrawGUI(int baseWindowID, bool inEditor)
         {
-            if (!inEditor)
+            switch (windowStat)
             {
-                switch (windowStat)
-                {
-                    case WindowStat.OPENING:
-                        windowProgr += Time.deltaTime;
-                        if (windowProgr >= 1)
-                        {
-                            windowProgr = 1;
-                            windowStat = WindowStat.NORMAL;
-                        }
-                        break;
-                    case WindowStat.CLOSING:
-                        windowProgr -= Time.deltaTime;
-                        if (windowProgr <= 0)
-                        {
-                            windowProgr = 0;
-                            windowStat = WindowStat.HIDDEN;
-                        }
-                        break;
-                }
-
-                GUI.depth = -100;
-                GUI.SetNextControlName("MechJebOpen");
-                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-                if (GUI.Button(new Rect((-Screen.height - 100) / 2, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
-                {
-                    if (windowStat == WindowStat.HIDDEN)
+                case WindowStat.OPENING:
+                    windowProgr += Time.deltaTime;
+                    if (windowProgr >= 1)
                     {
-                        windowStat = WindowStat.OPENING;
-                        windowProgr = 0;
-                        firstDraw = true;
-                    }
-                    else if (windowStat == WindowStat.NORMAL)
-                    {
-                        windowStat = WindowStat.CLOSING;
                         windowProgr = 1;
+                        windowStat = WindowStat.NORMAL;
                     }
-                }
-                GUI.matrix = Matrix4x4.identity;
+                    break;
+                case WindowStat.CLOSING:
+                    windowProgr -= Time.deltaTime;
+                    if (windowProgr <= 0)
+                    {
+                        windowProgr = 0;
+                        windowStat = WindowStat.HIDDEN;
+                    }
+                    break;
+            }
 
-                GUI.depth = -99;
-
-                if (windowStat != WindowStat.HIDDEN)
+            GUI.depth = -100;
+            GUI.SetNextControlName("MechJebOpen");
+            GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
+            if (GUI.Button(new Rect((-Screen.height - 100) / 2, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            {
+                if (windowStat == WindowStat.HIDDEN)
                 {
-                    GUILayout.Window(baseWindowID, new Rect(Screen.width - windowProgr * 200, (Screen.height - 200) / 2, 200, 200), FlightWindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(200));
+                    windowStat = WindowStat.OPENING;
+                    windowProgr = 0;
+                    firstDraw = true;
                 }
-
-                GUI.depth = -98;
-
-                if (firstDraw)
+                else if (windowStat == WindowStat.NORMAL)
                 {
-                    GUI.FocusControl("MechJebOpen");
-                    firstDraw = false;
+                    windowStat = WindowStat.CLOSING;
+                    windowProgr = 1;
                 }
+            }
+            GUI.matrix = Matrix4x4.identity;
+
+            GUI.depth = -99;
+
+            if (windowStat != WindowStat.HIDDEN)
+            {
+                GUILayout.Window(baseWindowID, new Rect(Screen.width - windowProgr * 200, (Screen.height - 200) / 2, 200, 200), WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(200));
+            }
+
+            GUI.depth = -98;
+
+            if (firstDraw)
+            {
+                GUI.FocusControl("MechJebOpen");
+                firstDraw = false;
             }
         }
     }

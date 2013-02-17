@@ -16,39 +16,39 @@ namespace MuMech
         public MechJebModuleFlightRecorder(MechJebCore core) : base(core) { priority = 2000; }
 
         [Persistent(pass=(int)Pass.Local)]
-        [ValueInfoItem(name="Mark UT", time=true)]
+        [ValueInfoItem("Mark UT", time=true)]
         public double markUT = 0;
 
-        [ValueInfoItem(name="Time since mark", time=true)]
+        [ValueInfoItem("Time since mark", time=true)]
         public double timeSinceMark = 0;
         
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem(name = "ΔV expended", units = "m/s")]
+        [ValueInfoItem("ΔV expended", units = "m/s")]
         public double deltaVExpended = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem(name = "Drag losses", units = "m/s")]
+        [ValueInfoItem("Drag losses", units = "m/s")]
         public double dragLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem(name = "Gravity losses", units = "m/s")]
+        [ValueInfoItem("Gravity losses", units = "m/s")]
         public double gravityLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem(name = "Steering losses", units = "m/s")]
+        [ValueInfoItem("Steering losses", units = "m/s")]
         public double steeringLosses = 0;
         
-        [ValueInfoItem(name="Phase angle from mark", units="º")]
+        [ValueInfoItem("Phase angle from mark", units="º")]
         public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
         double markLongitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem(name = "Max drag gees")]
+        [ValueInfoItem("Max drag gees")]
         public double maxDragGees = 0;
 
-        [ActionInfoItem(name="MARK")]
+        [ActionInfoItem("MARK")]
         public void Mark()
         {
             markUT = vesselState.time;

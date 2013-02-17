@@ -47,7 +47,7 @@ namespace MuMech
             }
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
@@ -72,7 +72,11 @@ namespace MuMech
             }
             else
             {
-                if (GUILayout.Button("Engage autopilot")) autopilot.enabled = true;
+                if (GUILayout.Button("Engage autopilot"))
+                {
+                    autopilot.enabled = true;
+                    autopilot.ascentPath = this.ascentPath;
+                }
             }
 
             GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
@@ -148,10 +152,10 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[]{ GUILayout.Width(200), GUILayout.Height(30) };
         }

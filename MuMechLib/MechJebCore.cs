@@ -114,8 +114,13 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             Debug.Log("============ONSTART====================");
+            Debug.Log("start = " + state);
 
             if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
+
+            //OnLoad doesn't get called for parts created in editor, so do that manually so 
+            //that we can load global settings:
+            if(state == StartState.Editor) OnLoad(null);
 
             foreach (ComputerModule module in computerModules)
             {
@@ -205,17 +210,8 @@ namespace MuMech
             }
         }
 
-        public override void OnLoad(ConfigNode configNode)
+        void LoadComputerModules()
         {
-            base.OnLoad(configNode); //is this necessary?
-
-            //Don't do anything when this gets called during the loading screen:
-            if (configNode == null)
-            {
-                Debug.Log("Cutting out of OnLoad because configNode == null"); 
-                return;
-            }
-
             if (moduleRegistry == null)
             {
                 moduleRegistry = (from ass in AppDomain.CurrentDomain.GetAssemblies() from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList();
@@ -234,18 +230,27 @@ namespace MuMech
                 }
             }
 
-            Debug.Log("About to set attitude");
             attitude = GetComputerModule<MechJebModuleAttitudeController>();
-            Debug.Log("set attitude");
             staging = GetComputerModule<MechJebModuleStagingController>();
             thrust = GetComputerModule<MechJebModuleThrustController>();
             target = GetComputerModule<MechJebModuleTargetController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
             rcs = GetComputerModule<MechJebModuleRCSController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
+        }
+
+        public override void OnLoad(ConfigNode configNode)
+        {
+            Debug.Log("OnLoad called !!!!!!!!!!!!!!!!!");
+
+            base.OnLoad(configNode); //is this necessary?
+
+            LoadComputerModules();
+
+            Debug.Log("LOADED " + computerModules.Count + " MODULES");
 
             ConfigNode local = new ConfigNode("MechJebLocalSettings");
-            if (configNode.HasNode("MechJebLocalSettings"))
+            if (configNode != null && configNode.HasNode("MechJebLocalSettings"))
             {
                 local = configNode.GetNode("MechJebLocalSettings");
             }

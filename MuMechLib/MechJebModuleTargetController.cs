@@ -57,7 +57,7 @@ namespace MuMech
             Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
         }
 
-        [ValueInfoItem(name = "Target coordinates")]
+        [ValueInfoItem("Target coordinates")]
         public string GetPositionTargetString()
         {
             if (target is PositionTarget && !(target is DirectionTarget))
@@ -80,7 +80,7 @@ namespace MuMech
             Set(new DirectionTarget(name));
         }
 
-        [ActionInfoItem(name="Pick position target")]
+        [ActionInfoItem("Pick position target")]
         public void PickPositionTargetOnMap()
         {
             pickingPositionTarget = true;

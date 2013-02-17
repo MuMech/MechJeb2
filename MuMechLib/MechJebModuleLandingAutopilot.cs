@@ -202,14 +202,14 @@ namespace MuMech
         {
             if (orbit.PeA < -0.1 * mainBody.Radius)
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
                 landStep = LandStep.FINAL_DESCENT;
                 return;
             }
 
             core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, this);
-            if (core.attitude.attitudeAngleFromTarget() < 5) s.mainThrottle = 1;
-            else s.mainThrottle = 0;
+            if (core.attitude.attitudeAngleFromTarget() < 5) core.thrust.targetThrottle = 1;
+            else core.thrust.targetThrottle = 0;
 
             status = "Doing deorbit burn.";
         }
@@ -276,11 +276,11 @@ namespace MuMech
         {
             if (planeChangeTriggered && core.attitude.attitudeAngleFromTarget() < 2)
             {
-                s.mainThrottle = Mathf.Clamp01((float)(planeChangeDVLeft / (2 * vesselState.maxThrustAccel)));
+                core.thrust.targetThrottle = Mathf.Clamp01((float)(planeChangeDVLeft / (2 * vesselState.maxThrustAccel)));
             }
             else
             {
-                s.mainThrottle = 0.0F;
+                core.thrust.targetThrottle = 0.0F;
             }
         }
 
@@ -386,13 +386,13 @@ namespace MuMech
         {
             if (deorbitBurnTriggered && core.attitude.attitudeAngleFromTarget() < 5)
             {
-                s.mainThrottle = Mathf.Clamp01((float)lowDeorbitBurnMaxThrottle);
+                core.thrust.targetThrottle = Mathf.Clamp01((float)lowDeorbitBurnMaxThrottle);
             }
             else
             {
-                s.mainThrottle = 0.0F;
+                core.thrust.targetThrottle = 0.0F;
             }
-            Debug.Log("low deorbit applying throttle " + s.mainThrottle);
+            Debug.Log("low deorbit applying throttle " + core.thrust.targetThrottle);
         }
 
 
@@ -462,8 +462,8 @@ namespace MuMech
 
         void DriveDeorbitBurn(FlightCtrlState s)
         {
-            if (deorbitBurnTriggered && core.attitude.attitudeAngleFromTarget() < 5) s.mainThrottle = 1.0F;
-            else s.mainThrottle = 0.0F;
+            if (deorbitBurnTriggered && core.attitude.attitudeAngleFromTarget() < 5) core.thrust.targetThrottle = 1.0F;
+            else core.thrust.targetThrottle = 0.0F;
         }
 
 
@@ -562,7 +562,7 @@ namespace MuMech
 
             if (currentError < 300)
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
                 landStep = LandStep.COAST_TO_DECELERATION;
                 return;
             }
@@ -575,11 +575,11 @@ namespace MuMech
 
             if (core.attitude.attitudeAngleFromTarget() < 5)
             {
-                s.mainThrottle = Mathf.Clamp01((float)(deltaV.magnitude / (10.0 * vesselState.maxThrustAccel)));
+                core.thrust.targetThrottle = Mathf.Clamp01((float)(deltaV.magnitude / (10.0 * vesselState.maxThrustAccel)));
             }
             else
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
             }
         }
 
@@ -621,7 +621,7 @@ namespace MuMech
 
         void DriveCoastToDeceleration(FlightCtrlState s)
         {
-            s.mainThrottle = 0;
+            core.thrust.targetThrottle = 0;
         }
 
         void DriveDecelerationBurn(FlightCtrlState s)
@@ -643,7 +643,7 @@ namespace MuMech
             if (Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) > 0
                      || Vector3d.Dot(vesselState.forward, desiredThrustVector) < 0.75)
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
                 status = "Braking";
             }
             else
@@ -656,8 +656,8 @@ namespace MuMech
                 double speedCorrectionTimeConstant = 0.3;
                 double speedError = desiredSpeed - controlledSpeed;
                 double desiredAccel = speedError / speedCorrectionTimeConstant + (desiredSpeedAfterDt - desiredSpeed) / vesselState.deltaT;
-                if (maxAccel - minAccel > 0) s.mainThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
-                else s.mainThrottle = 0;
+                if (maxAccel - minAccel > 0) core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
+                else core.thrust.targetThrottle = 0;
                 status = "Braking: target speed = " + Math.Abs(desiredSpeed).ToString("F1") + " m/s";
             }
 
@@ -670,7 +670,7 @@ namespace MuMech
             Vector3d horizontalPointingDirection = Vector3d.Exclude(vesselState.up, vesselState.forward).normalized;
             if (Vector3d.Dot(horizontalPointingDirection, vesselState.velocityVesselSurface) > 0)
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
                 core.attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, this);
                 landStep = LandStep.FINAL_DESCENT;
                 return;
@@ -686,11 +686,11 @@ namespace MuMech
             double maxAccel = -vesselState.localg + Vector3d.Dot(vesselState.forward, vesselState.up) * vesselState.maxThrustAccel;
             if (maxAccel - minAccel > 0)
             {
-                s.mainThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
+                core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
             }
             else
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
             }
 
             //angle up and slightly away from vertical:
@@ -705,7 +705,7 @@ namespace MuMech
         {
             if (vessel.LandedOrSplashed)
             {
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
                 StopLanding();
                 return;
             }

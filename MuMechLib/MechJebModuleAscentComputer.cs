@@ -81,7 +81,7 @@ namespace MuMech
 
             //during the vertical ascent we just thrust straight up at max throttle
             core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
-            if (autoThrottle) s.mainThrottle = 1.0F;
+            if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             status = "Vertical ascent";
         }
@@ -124,8 +124,8 @@ namespace MuMech
 
             if (autoThrottle)
             {
-                s.mainThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
-                if (s.mainThrottle < 1.0F)
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
+                if (core.thrust.targetThrottle < 1.0F)
                 {
                     //when we are bringing down the throttle to make the apoapsis accurate, we're liable to point in weird
                     //directions because thrust goes down and so "difficulty" goes up. so just burn prograde
@@ -158,7 +158,7 @@ namespace MuMech
             const double Kp = 5.0; //control gain
 
             //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-            double difficulty = vesselState.velocityVesselSurface.magnitude / (50 + 10 * vesselState.ThrustAccel(s.mainThrottle));
+            double difficulty = vesselState.velocityVesselSurface.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
             if (difficulty > 5) difficulty = 5;
 
             if (vesselState.maxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
@@ -181,7 +181,7 @@ namespace MuMech
 
         void DriveCoastToApoapsis(FlightCtrlState s)
         {
-            s.mainThrottle = 0.0F;
+            core.thrust.targetThrottle = 0.0F;
 
             //once we get above the atmosphere, plan and execute the circularization maneuver
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
@@ -201,10 +201,10 @@ namespace MuMech
 
             //point prograde and thrust gently if our apoapsis falls below the target
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
-            s.mainThrottle = 0;
+            core.thrust.targetThrottle = 0;
             if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
-                s.mainThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
             //warp at x2 physical warp:

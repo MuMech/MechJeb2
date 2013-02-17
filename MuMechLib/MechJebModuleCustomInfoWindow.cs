@@ -12,27 +12,30 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public string title = "Custom Info Window";
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
-        public List<IInfoItem> items = new List<IInfoItem>();
+        public List<InfoItem> items = new List<InfoItem>();
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-            foreach (IInfoItem item in items)
+            foreach (InfoItem item in items)
             {
-                item.DrawItem();
+                if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
+                {
+                    item.DrawItem();
+                }
             }
             if (items.Count == 0) GUILayout.Label("Add items to this window with the custom window editor.");
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(250), GUILayout.Height(30) };
         }
@@ -50,17 +53,20 @@ namespace MuMech
 
     public class MechJebModuleCustomWindowEditor : DisplayModule
     {
-        public List<IInfoItem> registry = new List<IInfoItem>();
+        public List<InfoItem> registry = new List<InfoItem>();
         MechJebModuleCustomInfoWindow editedWindow;
-        IInfoItem selectedItem;
+        InfoItem selectedItem;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
 
+            Debug.Log("custom info window OnLoad--registering info items!");
+            Debug.Log("vesselState = " + vesselState);
             RegisterInfoItems(vesselState);
             foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
             {
+                Debug.Log("Registering from " + m.GetType().Name);
                 RegisterInfoItems(m);
             }
 
@@ -73,10 +79,11 @@ namespace MuMech
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
             Debug.Log("windowNodes.Length = " + windowNodes.Length);
             foreach (ConfigNode windowNode in windowNodes)
-            {                
+            {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
 
-                window.title = windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window";
+                //window.title = windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window";
+                ConfigNode.LoadObjectFromConfig(window, windowNode);
 
                 if (windowNode.HasNode("items"))
                 {
@@ -85,7 +92,7 @@ namespace MuMech
                     foreach (ConfigNode itemNode in itemNodes)
                     {
                         string id = itemNode.GetValue("id");
-                        var matches = registry.Where(item => item.ID == id);
+                        var matches = registry.Where(item => item.id == id);
                         if (matches.Count() > 0) window.items.Add(matches.First());
                     }
                 }
@@ -109,7 +116,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();            
+            editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
 
         void RegisterInfoItems(object obj)
@@ -142,7 +149,7 @@ namespace MuMech
 
 
         Vector2 scrollPos, scrollPos2;
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
@@ -181,22 +188,26 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
-
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Show in:");
+            editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight");
+            editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
+            GUILayout.EndHorizontal();
 
             GUILayout.Label("Window contents (click to edit):");
 
             GUILayout.BeginVertical(GUILayout.Height(100));
             scrollPos = GUILayout.BeginScrollView(scrollPos);
-            foreach (IInfoItem item in editedWindow.items)
+            foreach (InfoItem item in editedWindow.items)
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 if (item == selectedItem) s.normal.textColor = Color.yellow;
 
-                if (GUILayout.Button(item.GetDescription(), s)) selectedItem = item;
+                if (GUILayout.Button(item.description, s)) selectedItem = item;
             }
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
-            
+
             GUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
@@ -226,9 +237,9 @@ namespace MuMech
             GUILayout.Label("Click an item to add it to the info window:");
 
             scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
-            foreach (IInfoItem item in registry)
+            foreach (InfoItem item in registry)
             {
-                if (GUILayout.Button(item.GetDescription(), GuiUtils.yellowOnHover))
+                if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
                 {
                     editedWindow.items.Add(item);
                 }
@@ -237,10 +248,10 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(500) };
         }
@@ -250,40 +261,54 @@ namespace MuMech
             return "Custom Window Editor";
         }
 
-        public MechJebModuleCustomWindowEditor(MechJebCore core) : base(core) { }
+        public MechJebModuleCustomWindowEditor(MechJebCore core)
+            : base(core)
+        {
+            showInFlight = true;
+            showInEditor = true;
+        }
     }
 
 
-    public interface IInfoItem
+    public abstract class InfoItem
     {
-        string GetDescription();
-        void DrawItem();
-        string ID { get; }
+        public string name;
+        public string description;
+        public bool showInEditor;
+        public bool showInFlight;
+        
+        [Persistent]
+        public string id;
+
+        public InfoItem(InfoItemAttribute attribute)
+        {
+            name = attribute.name;
+            description = attribute.description;
+            showInEditor = attribute.showInEditor;
+            showInFlight = attribute.showInFlight;
+            this.id = id;
+        }
+
+        public abstract void DrawItem();
     }
 
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
-    public class ValueInfoItem : IInfoItem
+    public class ValueInfoItem : InfoItem
     {
-        string name;
-        MemberInfo member;
         object obj;
+        MemberInfo member;
         string units;
         bool time;
-        [Persistent]
-        string id;
-        public string ID { get { return id; } }
 
-        public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
+        public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute) : base(attribute)
         {
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+
             this.obj = obj;
             this.member = member;
-            name = attribute.name;
             units = attribute.units;
             time = attribute.time;
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
         }
-
-        public string GetDescription() { return name; }
 
         object GetValue()
         {
@@ -313,7 +338,7 @@ namespace MuMech
             else return (MuUtils.ToSI(doubleValue) + units);
         }
 
-        public void DrawItem()
+        public override void DrawItem()
         {
             object value = GetValue();
 
@@ -328,52 +353,40 @@ namespace MuMech
 
 
 
-    public class ActionInfoItem : IInfoItem
+    public class ActionInfoItem : InfoItem
     {
-        string name;
         object obj;
         MethodInfo method;
-        [Persistent]
-        string id;
-        public string ID { get { return id; } }
 
-        public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
+        public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute) : base(attribute)
         {
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+
             this.obj = obj;
             this.method = method;
-            name = attribute.name;
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
         }
 
-        public string GetDescription() { return name; }
-
-        public void DrawItem()
+        public override void DrawItem()
         {
             if (GUILayout.Button(name)) method.Invoke(obj, new object[] { });
         }
     }
 
 
-    public class ToggleInfoItem : IInfoItem
+    public class ToggleInfoItem : InfoItem
     {
-        string name;
         object obj;
         MemberInfo member;
-        [Persistent]
-        string id;
-        public string ID { get { return id; } }
-
-        public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
+        
+        public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute) : base(attribute)
         {
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+
             this.obj = obj;
             this.member = member;
-            name = attribute.name;
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
         }
 
-        public string GetDescription() { return name; }
-
-        public void DrawItem()
+        public override void DrawItem()
         {
             bool currentValue = false;
             if (member is FieldInfo) currentValue = (bool)(((FieldInfo)member).GetValue(obj));
@@ -386,60 +399,68 @@ namespace MuMech
         }
     }
 
-    public class GeneralInfoItem : IInfoItem
+    public class GeneralInfoItem : InfoItem
     {
-        string name;
         object obj;
         MethodInfo method;
-        [Persistent]
-        string id;
-        public string ID { get { return id; } }
 
-        public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
+        public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute) : base(attribute)
         {
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+
             this.obj = obj;
             this.method = method;
-            name = attribute.name;
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
         }
 
-        public string GetDescription() { return name; }
-
-        public void DrawItem()
+        public override void DrawItem()
         {
             method.Invoke(obj, new object[] { });
         }
     }
 
+    public abstract class InfoItemAttribute : Attribute
+    {
+        public string name; //the name displayed in the info window
+        public string description = ""; //the description shown in the window editor list
+        public bool showInEditor = false;
+        public bool showInFlight = true;
+
+        public InfoItemAttribute(string name)
+        {
+            this.name = name;
+            description = name; //description defaults to name, but can be set to be something different
+        }
+    }
 
     //Apply this attribute to a field or method to make the field or method eligible to be made into a ValueInfoItem
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
-    public class ValueInfoItemAttribute : Attribute
+    public class ValueInfoItemAttribute : InfoItemAttribute
     {
-        public string name;
         public string units = "";
         public bool time = false;
+
+        public ValueInfoItemAttribute(string name) : base(name) { }
     }
 
     //Apply this attribute to a method to make the method callable via an ActionInfoItem
     [AttributeUsage(AttributeTargets.Method)]
-    public class ActionInfoItemAttribute : Attribute
+    public class ActionInfoItemAttribute : InfoItemAttribute
     {
-        public string name;
+        public ActionInfoItemAttribute(string name) : base(name) { }
     }
-    
+
     //Apply this attribute to a boolean to make the boolean toggleable via a ToggleInfoItem
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class ToggleInfoItemAttribute : Attribute
+    public class ToggleInfoItemAttribute : InfoItemAttribute
     {
-        public string name;
+        public ToggleInfoItemAttribute(string name) : base(name) { }
     }
 
     //Apply this attribute to a method to indicate that it is a method that will draw 
     //an InfoItem
     [AttributeUsage(AttributeTargets.Method)]
-    public class GeneralInfoItemAttribute : Attribute
+    public class GeneralInfoItemAttribute : InfoItemAttribute
     {
-        public string name;
+        public GeneralInfoItemAttribute(string name) : base(name) { }
     }
 }

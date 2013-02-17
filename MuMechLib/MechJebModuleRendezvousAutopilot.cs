@@ -35,7 +35,7 @@ namespace MuMech
             {
                 //finished
                 this.enabled = false;
-                s.mainThrottle = 0;
+                core.thrust.targetThrottle = 0;
                 status = "Successful rendezvous";
             }
             else if (core.target.Distance < 100)

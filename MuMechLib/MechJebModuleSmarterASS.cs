@@ -15,7 +15,7 @@ namespace MuMech
 
         public MechJebModuleSmarterASS(MechJebCore core) : base(core) { }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             bool changed = false;
 
@@ -72,10 +72,10 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }

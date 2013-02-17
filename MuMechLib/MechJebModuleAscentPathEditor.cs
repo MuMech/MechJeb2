@@ -22,12 +22,12 @@ namespace MuMech
             path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentGuidance>().ascentPath;
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(100) };
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             if (path == null)
             {
@@ -102,5 +102,9 @@ namespace MuMech
             pathTexture.Apply();
         }
 
+        public override string GetName()
+        {
+            return "Ascent Path Editor";
+        }
     }
 }

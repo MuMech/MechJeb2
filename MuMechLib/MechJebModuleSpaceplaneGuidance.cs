@@ -10,12 +10,12 @@ namespace MuMech
     {
         MechJebModuleSpaceplaneAutopilot autopilot;
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(350), GUILayout.Height(200) };
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 

@@ -17,7 +17,7 @@ namespace MuMech
             autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 

@@ -19,7 +19,7 @@ namespace MuMech
         //while 56789 will be formated as "56.789 k"
         public static string ToSI(double d, int maxPrecision = -99, int sigFigs = 4)
         {
-            if (d == 0) return "0 ";
+            if (d == 0 || double.IsInfinity(d) || double.IsNaN(d)) return d.ToString() + " ";
 
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
 

@@ -17,7 +17,7 @@ namespace MuMech
         }
 
         // UI stuff
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
@@ -40,9 +40,9 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[]{
                 GUILayout.Width(200), GUILayout.Height(30)
@@ -63,13 +63,13 @@ namespace MuMech
         public bool trans_kill_h = false;
         public bool trans_land = false;
         public bool trans_land_gears = false;
-        [ToggleInfoItem(name="Limit throttle to keep below terminal velocity")]
+        [ToggleInfoItem("Limit throttle to keep below terminal velocity")]
         public bool limitToTerminalVelocity = true;
-        [ToggleInfoItem(name="Limit throttle to prevent overheats")]
+        [ToggleInfoItem("Limit throttle to prevent overheats")]
         public bool limitToPreventOverheats = true;
-        [ToggleInfoItem(name="Limit throttle to prevent jet flameout")]
+        [ToggleInfoItem("Limit throttle to prevent jet flameout")]
         public bool limitToPreventFlameout = true;
-        [ToggleInfoItem(name="Manage air intakes")]
+        [ToggleInfoItem("Manage air intakes")]
         public bool manageIntakes = true;
         public bool limitAcceleration = false;
         public EditableDouble maxAcceleration = 40;
@@ -123,6 +123,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            //detect user input:
             targetThrottle = Mathf.Clamp01((s.mainThrottle - lastThrottle) + targetThrottle);
 
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
@@ -189,7 +190,7 @@ namespace MuMech
                     }
                     else
                     {
-                        trans_prev_thrust = s.mainThrottle = Mathf.Clamp(trans_prev_thrust + (float)t_act, 0, 1.0F);
+                        trans_prev_thrust = s.mainThrottle = Mathf.Clamp01(trans_prev_thrust + (float)t_act);
                     }
                 }
                 else
@@ -230,6 +231,9 @@ namespace MuMech
                 // due to prior limits, we can close some intakes.
                 s.mainThrottle = Mathf.Min(s.mainThrottle, FlameoutSafetyThrottle());
             }
+
+            if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
+            s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
 
             lastThrottle = s.mainThrottle;
         }

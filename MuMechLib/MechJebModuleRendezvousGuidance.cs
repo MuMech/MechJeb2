@@ -10,19 +10,19 @@ namespace MuMech
     {
         public MechJebModuleRendezvousGuidance(MechJebCore core) : base(core) { }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             if (!core.target.NormalTargetExists)
             {
                 GUILayout.Label("Select a target to rendezvous with.");
-                base.FlightWindowGUI(windowID);
+                base.WindowGUI(windowID);
                 return;
             }
 
             if (core.target.Orbit.referenceBody != orbit.referenceBody) 
             {
                 GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
-                base.FlightWindowGUI(windowID);
+                base.WindowGUI(windowID);
                 return;
             }
 
@@ -134,10 +134,10 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }

@@ -22,6 +22,8 @@ namespace MuMech
         {
             this.enabled = true;
             updateRequested = true;
+
+            if(HighLogic.LoadedSceneIsEditor) TryStartSimulation();
         }
 
         protected bool updateRequested = false;
@@ -44,7 +46,12 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (vessel.isActiveVessel && !simulationRunning)
+            TryStartSimulation();
+        }
+
+        public void TryStartSimulation()
+        {
+            if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && !simulationRunning)
             {
                 //We should be running simulations periodically, but one is not running right now. 
                 //Check if enough time has passed since the last one to start a new one:

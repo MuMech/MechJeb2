@@ -35,7 +35,7 @@ namespace MuMech
             normalPlus = dV.y;
         }
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
@@ -176,7 +176,7 @@ namespace MuMech
             GUI.DragWindow();
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }

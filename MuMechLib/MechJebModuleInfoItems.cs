@@ -12,7 +12,7 @@ namespace MuMech
     {
         public MechJebModuleInfoItems(MechJebCore core) : base(core) { }
 
-        [ValueInfoItem(name = "Node burn time")]
+        [ValueInfoItem("Node burn time")]
         public string NextManeuverNodeBurnTime()
         {
             if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
@@ -22,32 +22,32 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(time);
         }
 
-        [ValueInfoItem(name = "Surface TWR")]
+        [ValueInfoItem("Surface TWR")]
         public string SurfaceTWR()
         {
             return (vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81)).ToString("F2");
         }
 
-        [ValueInfoItem(name = "Atmospheric pressure", units = "atm")]
+        [ValueInfoItem("Atmospheric pressure", units = "atm")]
         public double AtmosphericPressure()
         {
             return FlightGlobals.getStaticPressure(vesselState.CoM);
         }
 
-        [ValueInfoItem(name = "Coordinates")]
+        [ValueInfoItem("Coordinates")]
         public string GetCoordinateString()
         {
             return Coordinates.ToStringDMS(vesselState.latitude, vesselState.longitude);
         }
 
-        [ValueInfoItem(name = "Orbit shape")]
+        [ValueInfoItem("Orbit shape")]
         public string OrbitSummary()
         {
             if (orbit.eccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(orbit.PeA, 2) + "m";
             else return MuUtils.ToSI(orbit.PeA, 2) + "m x " + MuUtils.ToSI(orbit.ApA, 2) + "m";
         }
 
-        [ValueInfoItem(name = "Orbit shape 2")]
+        [ValueInfoItem("Orbit shape", description = "Orbit shape w/ inc.")]
         public string OrbitSummaryWithInclination()
         {
             return OrbitSummary() + ", inc. " + orbit.inclination.ToString("F1") + "º";
@@ -55,7 +55,7 @@ namespace MuMech
 
 
         //Todo: consider turning this into a binary search
-        [ValueInfoItem(name = "Time to impact")]
+        [ValueInfoItem("Time to impact")]
         public string TimeToImpact()
         {
             if (orbit.PeA > 0) return "N/A";
@@ -72,11 +72,11 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
         }
 
-        [ValueInfoItem(name = "Suicide burn countdown")]
+        [ValueInfoItem("Suicide burn countdown")]
         public string SuicideBurnCountdown()
         {
             if (orbit.PeA > 0) return "N/A";
-            
+
             double angleFromHorizontal = 90 - Vector3d.Angle(-vesselState.velocityVesselSurface, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
             double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
@@ -93,13 +93,13 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 
-        [ValueInfoItem(name = "Current acceleration", units = "m/s²")]
+        [ValueInfoItem("Current acceleration", units = "m/s²")]
         public double CurrentAcceleration()
         {
             return vesselState.ThrustAccel(FlightInputHandler.state.mainThrottle);
         }
 
-        [ValueInfoItem(name="Time to SoI switch")]
+        [ValueInfoItem("Time to SoI switch")]
         public string TimeToSOITransition()
         {
             if (orbit.patchEndTransition == Orbit.PatchTransitionType.FINAL) return "N/A";
@@ -107,60 +107,61 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(orbit.EndUT - vesselState.time);
         }
 
-        [ValueInfoItem(name = "Surface gravity", units="m/s²")]
+        [ValueInfoItem("Surface gravity", units = "m/s²")]
         public double SurfaceGravity()
         {
             return mainBody.GeeASL * 9.81;
         }
 
-        [ValueInfoItem(name = "Part count")]
+        [ValueInfoItem("Part count", showInEditor = true)]
         public int PartCount()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count;
             else return vessel.parts.Count;
         }
 
-        [ValueInfoItem(name = "Strut count")]
+        [ValueInfoItem("Strut count", showInEditor = true)]
         public int StrutCount()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count(p => p is StrutConnector);
             else return vessel.parts.Count(p => p is StrutConnector);
         }
 
-        [ValueInfoItem(name = "Vessel cost", units = "k$")]
+        [ValueInfoItem("Vessel cost", showInEditor = true, units = "k$")]
         public int VesselCost()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost);
             else return vessel.parts.Sum(p => p.partInfo.cost);
         }
 
-        [ValueInfoItem(name = "Crew count")]
+        [ValueInfoItem("Crew count")]
         public int CrewCount()
         {
             return vessel.GetCrewCount();
         }
 
-        [ValueInfoItem(name = "Crew capacity")]
+        [ValueInfoItem("Crew capacity", showInEditor = true)]
         public int CrewCapacity()
         {
-            return vessel.GetCrewCapacity();
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.CrewCapacity);
+            else return vessel.GetCrewCapacity();
         }
 
-        [ValueInfoItem(name = "Distance to target")]
+        [ValueInfoItem("Distance to target")]
         public string TargetDistance()
         {
             if (core.target.Target == null) return "N/A";
             return MuUtils.ToSI(core.target.Distance, -1) + "m";
         }
 
-        [ValueInfoItem(name = "Relative velocity")]
+        [ValueInfoItem("Relative velocity")]
         public string TargetRelativeVelocity()
         {
             if (!core.target.NormalTargetExists) return "N/A";
             return MuUtils.ToSI(core.target.RelativeVelocity.magnitude) + "m/s";
         }
 
-        [ValueInfoItem(name = "Time to closest approach")]
+        [ValueInfoItem("Time to closest approach")]
         public string TargetTimeToClosestApproach()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -168,7 +169,7 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
         }
 
-        [ValueInfoItem(name = "Closest approach distance")]
+        [ValueInfoItem("Closest approach distance")]
         public string TargetClosestApproachDistance()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -176,13 +177,13 @@ namespace MuMech
             return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
-        [ValueInfoItem(name = "Atmospheric drag", units = "m/s²")]
+        [ValueInfoItem("Atmospheric drag", units = "m/s²")]
         public double AtmosphericDrag()
         {
             return mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude;
         }
 
-        [ValueInfoItem(name = "Synodic period")]
+        [ValueInfoItem("Synodic period")]
         public string SynodicPeriod()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -190,7 +191,7 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.Orbit));
         }
 
-        [ValueInfoItem(name = "Phase angle to target")]
+        [ValueInfoItem("Phase angle to target")]
         public string PhaseAngle()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -204,7 +205,7 @@ namespace MuMech
             return angle.ToString("F2") + "º";
         }
 
-        [ValueInfoItem(name = "Circular orbit speed", units = "m/s")]
+        [ValueInfoItem("Circular orbit speed", units = "m/s")]
         public double CircularOrbitSpeed()
         {
             return OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
@@ -229,51 +230,59 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoTime = true;
 
-        [GeneralInfoItem(name = "Stage stats (all)")]
+        [GeneralInfoItem("Stage stats (all)", showInEditor = true)]
         public void AllStageStats()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-
-            stats.RequestUpdate();
-
-            int numStages = stats.atmoStats.Length;
-            var stages = Enumerable.Range(0, numStages);
-
-            GUILayout.BeginVertical();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
-            if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
+            try
             {
-                showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+                MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+
+                Debug.Log("stats = " + stats);
+
+                stats.RequestUpdate();
+
+                int numStages = stats.atmoStats.Length;
+                var stages = Enumerable.Range(0, numStages);
+
+                GUILayout.BeginVertical();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
+                {
+                    showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+                }
+                GUILayout.EndHorizontal();
+
+                double geeASL = (HighLogic.LoadedSceneIsEditor ? 1 : mainBody.GeeASL);
+
+                GUILayout.BeginHorizontal();
+                DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
+                if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => stats.vacStats[s].startMass.ToString("F1") + " t"));
+                if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
+                if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(geeASL).ToString("F2")));
+                if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(geeASL).ToString("F2")));
+                if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
+                if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
+                if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
+                if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndVertical();
             }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => stats.vacStats[s].startMass.ToString("F1") + " t"));
-            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
-            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(mainBody).ToString("F2")));
-            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(mainBody).ToString("F2")));
-            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
-            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
+            catch (Exception e)
+            {
+                Debug.Log("Stage stats info item caught exception: " + e);
+            }
         }
 
         bool DrawStageStatsColumn(string header, IEnumerable<string> data)
         {
             GUILayout.BeginVertical();
-            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover);
-            s.wordWrap = false;
+            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { wordWrap = false };
             bool ret = GUILayout.Button(header, s);
 
-            s = new GUIStyle(GUI.skin.label);
-            s.alignment = TextAnchor.MiddleRight;
-            s.wordWrap = false;
+            s = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight, wordWrap = false };
             foreach (string datum in data) GUILayout.Label(datum, s);
 
             GUILayout.EndVertical();
@@ -281,7 +290,7 @@ namespace MuMech
             return ret;
         }
 
-        [ActionInfoItem(name = "Update stage stats")]
+        [ActionInfoItem("Update stage stats")]
         public void UpdateStageStats()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
@@ -289,7 +298,7 @@ namespace MuMech
             stats.RequestUpdate();
         }
 
-        [GeneralInfoItem(name = "Docking guidance: velocity")]
+        [GeneralInfoItem("Docking guidance: velocity")]
         public void DockingGuidanceVelocity()
         {
             if (!core.target.NormalTargetExists)
@@ -299,18 +308,18 @@ namespace MuMech
             }
 
             Vector3d relVel = core.target.RelativeVelocity;
-            double relVel_x = Vector3d.Dot(relVel, vessel.GetTransform().right);
-            double relVel_y = Vector3d.Dot(relVel, vessel.GetTransform().forward);
-            double relVel_z = Vector3d.Dot(relVel, vessel.GetTransform().up);
+            double relVelX = Vector3d.Dot(relVel, vessel.GetTransform().right);
+            double relVelY = Vector3d.Dot(relVel, vessel.GetTransform().forward);
+            double relVelZ = Vector3d.Dot(relVel, vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative velocity:");
-            GUILayout.Label("X: " + relVel_x.ToString("F2") + " m/s  [L/J]");
-            GUILayout.Label("Y: " + relVel_y.ToString("F2") + " m/s  [I/K]");
-            GUILayout.Label("Z: " + relVel_z.ToString("F2") + " m/s  [H/N]");
+            GUILayout.Label("X: " + relVelX.ToString("F2") + " m/s  [L/J]");
+            GUILayout.Label("Y: " + relVelY.ToString("F2") + " m/s  [I/K]");
+            GUILayout.Label("Z: " + relVelZ.ToString("F2") + " m/s  [H/N]");
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem(name = "Docking guidance: velocity")]
+        [GeneralInfoItem("Docking guidance: position")]
         public void DockingGuidancePosition()
         {
             if (!core.target.NormalTargetExists)
@@ -320,14 +329,14 @@ namespace MuMech
             }
 
             Vector3d sep = core.target.RelativePosition;
-            double sep_x = Vector3d.Dot(sep, vessel.GetTransform().right);
-            double sep_y = Vector3d.Dot(sep, vessel.GetTransform().forward);
-            double sep_z = Vector3d.Dot(sep, vessel.GetTransform().up);
+            double sepX = Vector3d.Dot(sep, vessel.GetTransform().right);
+            double sepY = Vector3d.Dot(sep, vessel.GetTransform().forward);
+            double sepZ = Vector3d.Dot(sep, vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label("Separation from target:");
-            GUILayout.Label("X: " + sep_x.ToString("F2") + " m  [L/J]");
-            GUILayout.Label("Y: " + sep_y.ToString("F2") + " m  [I/K]");
-            GUILayout.Label("Z: " + sep_z.ToString("F2") + " m  [H/N]");
+            GUILayout.Label("X: " + sepX.ToString("F2") + " m  [L/J]");
+            GUILayout.Label("Y: " + sepY.ToString("F2") + " m  [I/K]");
+            GUILayout.Label("Z: " + sepZ.ToString("F2") + " m  [H/N]");
             GUILayout.EndVertical();
         }
     }

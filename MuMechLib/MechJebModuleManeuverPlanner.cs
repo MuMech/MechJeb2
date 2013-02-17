@@ -43,7 +43,7 @@ namespace MuMech
 
         string errorMessage = "";
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
@@ -124,7 +124,7 @@ namespace MuMech
 
 
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
         void DoOperationParametersGUI()
@@ -616,7 +616,7 @@ namespace MuMech
             vessel.PlaceManeuverNode(o, dV, UT);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
         }

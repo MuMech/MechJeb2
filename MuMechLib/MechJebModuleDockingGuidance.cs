@@ -13,12 +13,12 @@ namespace MuMech
         MechJebModuleDockingAutopilot autopilot;
             
 
-        protected override void FlightWindowGUI(int windowID)
+        protected override void WindowGUI(int windowID)
         {
             if (!core.target.NormalTargetExists)
             {
                 GUILayout.Label("Choose a target to dock with");
-                base.FlightWindowGUI(windowID);
+                base.WindowGUI(windowID);
                 return;
             }
 
@@ -67,10 +67,10 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.FlightWindowGUI(windowID);
+            base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] FlightWindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(50) };
         }
