@@ -28,7 +28,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            if (core.target.Name == TARGET_NAME) core.target.Unset();
+            if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
             core.thrust.users.Remove(this);
             launchingToPlane = false;
             launchingToRendezvous = false;

@@ -25,8 +25,8 @@ namespace MuMech
         ITargetable target;
 
         public CelestialBody targetBody;
-        public EditableAngle targetLatitude;
-        public EditableAngle targetLongitude;
+        public EditableAngle targetLatitude = new EditableAngle(0);
+        public EditableAngle targetLongitude = new EditableAngle(0);
 
         Vector3d targetDirection;
 

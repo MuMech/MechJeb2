@@ -8,54 +8,13 @@ using UnityEngine;
 namespace MuMech
 {
     //ThrustController should be enabled/disabled through .users, not .enabled.
-    public class MechJebModuleThrustController : DisplayModule
+    public class MechJebModuleThrustController : ComputerModule
     {
         public MechJebModuleThrustController(MechJebCore core)
             : base(core)
         {
             priority = 200;
         }
-
-        // UI stuff
-        protected override void WindowGUI(int windowID)
-        {
-            GUILayout.BeginVertical();
-
-            enabled = GUILayout.Toggle(enabled, "Control throttle");
-
-            targetThrottle = GUILayout.HorizontalSlider(targetThrottle, 0, 1);
-            limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit To Terminal Velocity");
-            limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, "Prevent Overheat");
-            limitToPreventFlameout  = GUILayout.Toggle(limitToPreventFlameout,  "Prevent Jet Flameout");
-            manageIntakes           = GUILayout.Toggle(manageIntakes,           "Manage Air Intakes");
-            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-            try {
-                GUILayout.Label ("Jet Safety Margin");
-                flameoutSafetyPctString = GUILayout.TextField(flameoutSafetyPctString, 5);
-                Double.TryParse(flameoutSafetyPctString, out flameoutSafetyPct); // no change if parse fails
-                GUILayout.Label("%");
-            } finally {
-                GUILayout.EndHorizontal();
-            }
-
-            GUILayout.EndVertical();
-
-            base.WindowGUI(windowID);
-        }
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new GUILayoutOption[]{
-                GUILayout.Width(200), GUILayout.Height(30)
-            };
-        }
-
-        public override string GetName()
-        {
-            return "Throttle Control";
-        }
-
-
-
 
         //turn these into properties? implement settings saving
         public float trans_spd_act = 0;
@@ -77,8 +36,8 @@ namespace MuMech
         public float targetThrottle = 0;
 
         // 5% safety margin on flameouts
-        private double flameoutSafetyPct = 5;
-        private string flameoutSafetyPctString = "5";
+        public double flameoutSafetyPct = 5;
+        public string flameoutSafetyPctString = "5";
 
         private bool tmode_changed = false;
 

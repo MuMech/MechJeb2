@@ -337,8 +337,10 @@ namespace MuMech
             {
                 module.OnDestroy();
             }
-
-            vessel.OnFlyByWire -= OnFlyByWire;
+            if (vessel != null)
+            {
+                vessel.OnFlyByWire -= OnFlyByWire;
+            }
             controlledVessel = null;
         }
 

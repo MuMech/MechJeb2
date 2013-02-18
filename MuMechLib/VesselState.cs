@@ -133,6 +133,7 @@ namespace MuMech
         public void Update(Vessel vessel)
         {
             if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
+            if (vessel.packed) return;
 
             time = Planetarium.GetUniversalTime();
             deltaT = TimeWarp.fixedDeltaTime;

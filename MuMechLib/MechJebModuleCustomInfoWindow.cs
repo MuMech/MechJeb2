@@ -286,7 +286,7 @@ namespace MuMech
             description = attribute.description;
             showInEditor = attribute.showInEditor;
             showInFlight = attribute.showInFlight;
-            this.id = id;
+            id = name;
         }
 
         public abstract void DrawItem();
