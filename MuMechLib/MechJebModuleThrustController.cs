@@ -16,7 +16,6 @@ namespace MuMech
             priority = 200;
         }
 
-        //turn these into properties? implement settings saving
         public float trans_spd_act = 0;
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
@@ -42,6 +41,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public bool limitToPreventFlameout = false;
 
+        // 5% safety margin on flameouts
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble flameoutSafetyPct = 5;
+
         [ToggleInfoItem("Manage air intakes", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Local)]
         public bool manageIntakes = false;
@@ -54,8 +57,6 @@ namespace MuMech
 
         public float targetThrottle = 0;
 
-        // 5% safety margin on flameouts
-        private double flameoutSafetyPct = 5;
 
         private bool tmode_changed = false;
 
