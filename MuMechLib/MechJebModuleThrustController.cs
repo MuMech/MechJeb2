@@ -228,8 +228,6 @@ namespace MuMech
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
 
-            Debug.Log("leaving drive with s.mainThrottle = " + s.mainThrottle);
-
             lastThrottle = s.mainThrottle;
         }
 

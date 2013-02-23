@@ -38,6 +38,8 @@ namespace MuMech
 
         private bool killThrottle = false;
 
+        private bool weLockedEditor = false;
+
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
@@ -241,63 +243,70 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode configNode)
         {
-            Debug.Log("OnLoad called !!!!!!!!!!!!!!!!!");
-
-            base.OnLoad(configNode); //is this necessary?
-
-            LoadComputerModules();
-
-            Debug.Log("LOADED " + computerModules.Count + " MODULES");
-
-            ConfigNode local = new ConfigNode("MechJebLocalSettings");
-            if (configNode != null && configNode.HasNode("MechJebLocalSettings"))
+            try
             {
-                local = configNode.GetNode("MechJebLocalSettings");
+                Debug.Log("OnLoad called !!!!!!!!!!!!!!!!!");
+
+                base.OnLoad(configNode); //is this necessary?
+
+                LoadComputerModules();
+
+                Debug.Log("LOADED " + computerModules.Count + " MODULES");
+
+                ConfigNode local = new ConfigNode("MechJebLocalSettings");
+                if (configNode != null && configNode.HasNode("MechJebLocalSettings"))
+                {
+                    local = configNode.GetNode("MechJebLocalSettings");
+                }
+
+                //Todo: load a different file for each vessel type
+                ConfigNode type = new ConfigNode("MechJebTypeSettings");
+                Debug.Log("type path: " + IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
+                if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg"))
+                {
+                    try
+                    {
+                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
+                    }
+                }
+
+                ConfigNode global = new ConfigNode("MechJebGlobalSettings");
+                if (File.Exists<MechJebCore>("mechjeb_settings_global.cfg"))
+                {
+                    try
+                    {
+                        global = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
+                    }
+                }
+
+                Debug.Log("OnLoad: loading from");
+                Debug.Log("Local:");
+                Debug.Log(local.ToString());
+                Debug.Log("Type:");
+                Debug.Log(type.ToString());
+                Debug.Log("Global:");
+                Debug.Log(global.ToString());
+
+                foreach (ComputerModule module in computerModules)
+                {
+                    string name = module.GetType().Name;
+                    ConfigNode moduleLocal = local.HasNode(name) ? local.GetNode(name) : null;
+                    ConfigNode moduleType = type.HasNode(name) ? type.GetNode(name) : null;
+                    ConfigNode moduleGlobal = global.HasNode(name) ? global.GetNode(name) : null;
+                    module.OnLoad(moduleLocal, moduleType, moduleGlobal);
+                }
             }
-
-            //Todo: load a different file for each vessel type
-            ConfigNode type = new ConfigNode("MechJebTypeSettings");
-            Debug.Log("type path: " + IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
-            if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg"))
+            catch (Exception e)
             {
-                try
-                {
-                    type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
-                }
-                catch (Exception e)
-                {
-                    Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
-                }
-            }
-
-            ConfigNode global = new ConfigNode("MechJebGlobalSettings");
-            if (File.Exists<MechJebCore>("mechjeb_settings_global.cfg"))
-            {
-                try
-                {
-                    global = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
-                }
-                catch (Exception e)
-                {
-                    Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
-                }
-            }
-
-            Debug.Log("OnLoad: loading from");
-            Debug.Log("Local:");
-            Debug.Log(local.ToString());
-            Debug.Log("Type:");
-            Debug.Log(type.ToString());
-            Debug.Log("Global:");
-            Debug.Log(global.ToString());
-
-            foreach (ComputerModule module in computerModules)
-            {
-                string name = module.GetType().Name;
-                ConfigNode moduleLocal = local.HasNode(name) ? local.GetNode(name) : null;
-                ConfigNode moduleType = type.HasNode(name) ? type.GetNode(name) : null;
-                ConfigNode moduleGlobal = global.HasNode(name) ? global.GetNode(name) : null;
-                module.OnLoad(moduleLocal, moduleType, moduleGlobal);
+                Debug.Log("MechJeb caught exception in core OnLoad: " + e);
             }
         }
 
@@ -305,30 +314,37 @@ namespace MuMech
         //even if the player doesn't explicitly quicksave.
         public override void OnSave(ConfigNode node)
         {
-            base.OnSave(node); //is this necessary?
-
-            ConfigNode local = new ConfigNode("MechJebLocalSettings");
-            ConfigNode type = new ConfigNode("MechJebTypeSettings");
-            ConfigNode global = new ConfigNode("MechJebGlobalSettings");
-
-            foreach (ComputerModule module in computerModules)
+            try
             {
-                string name = module.GetType().Name;
-                module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
+                base.OnSave(node); //is this necessary?
+
+                ConfigNode local = new ConfigNode("MechJebLocalSettings");
+                ConfigNode type = new ConfigNode("MechJebTypeSettings");
+                ConfigNode global = new ConfigNode("MechJebGlobalSettings");
+
+                foreach (ComputerModule module in computerModules)
+                {
+                    string name = module.GetType().Name;
+                    module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
+                }
+
+                Debug.Log("OnSave:");
+                Debug.Log("Local:");
+                Debug.Log(local.ToString());
+                Debug.Log("Type:");
+                Debug.Log(type.ToString());
+                Debug.Log("Global:");
+                Debug.Log(global.ToString());
+
+                node.nodes.Add(local);
+
+                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg")); //Todo: save a different file for each vessel type.
+                global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
             }
-
-            Debug.Log("OnSave:");
-            Debug.Log("Local:");
-            Debug.Log(local.ToString());
-            Debug.Log("Type:");
-            Debug.Log(type.ToString());
-            Debug.Log("Global:");
-            Debug.Log(global.ToString());
-
-            node.nodes.Add(local);
-
-            type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg")); //Todo: save a different file for each vessel type.
-            global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+            catch (Exception e)
+            {
+                Debug.Log("MechJeb caught exception in core OnSave: " + e);
+            }
         }
 
         public void OnDestroy()
@@ -410,6 +426,8 @@ namespace MuMech
 
         private void OnGUI()
         {
+            if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
+
             if ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD) && (this == vessel.GetMasterMechJeb())))
             {
                 int wid = 0;
@@ -443,6 +461,23 @@ namespace MuMech
         public override string GetInfo()
         {
             return "Attitude control by MechJeb™";
+        }
+
+
+        //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
+        void PreventEditorClickthrough()
+        {
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
+            if(mouseOverWindow && !EditorLogic.editorLocked)
+            {
+                EditorLogic.fetch.Lock(true, true, true);
+                weLockedEditor = true;
+            }
+            if (weLockedEditor && !mouseOverWindow && EditorLogic.editorLocked)
+            {
+                EditorLogic.fetch.Unlock();
+            }
+            if (!EditorLogic.editorLocked) weLockedEditor = false;
         }
     }
 }

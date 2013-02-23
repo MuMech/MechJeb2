@@ -108,16 +108,30 @@ namespace MuMech
 
         public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.Global);
-            if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.Type);
-            if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.Local);
+            try
+            {
+                if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.Global);
+                if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.Type);
+                if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.Local);
+            }
+            catch (Exception e)
+            {
+                Debug.Log("MechJeb caught exception in OnLoad for " + this.GetType().Name + ": " + e);
+            }
         }
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global).CopyTo(global);
-            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type).CopyTo(type);
-            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local).CopyTo(local);
+            try
+            {
+                if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global).CopyTo(global);
+                if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type).CopyTo(type);
+                if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local).CopyTo(local);
+            }
+            catch (Exception e)
+            {
+                Debug.Log("MechJeb caught exception in OnSave for " + this.GetType().Name + ": " + e);
+            }
         }
 
         public virtual void OnDestroy()
