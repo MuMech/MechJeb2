@@ -16,39 +16,39 @@ namespace MuMech
         public MechJebModuleFlightRecorder(MechJebCore core) : base(core) { priority = 2000; }
 
         [Persistent(pass=(int)Pass.Local)]
-        [ValueInfoItem("Mark UT", time=true)]
+        [ValueInfoItem("Mark UT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         public double markUT = 0;
 
-        [ValueInfoItem("Time since mark", time=true)]
+        [ValueInfoItem("Time since mark", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         public double timeSinceMark = 0;
         
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("ΔV expended", units = "m/s")]
+        [ValueInfoItem("ΔV expended", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
         public double deltaVExpended = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Drag losses", units = "m/s")]
+        [ValueInfoItem("Drag losses", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
         public double dragLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Gravity losses", units = "m/s")]
+        [ValueInfoItem("Gravity losses", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
         public double gravityLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Steering losses", units = "m/s")]
+        [ValueInfoItem("Steering losses", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
         public double steeringLosses = 0;
-        
-        [ValueInfoItem("Phase angle from mark", units="º")]
+
+        [ValueInfoItem("Phase angle from mark", InfoItem.Category.Recorder, format = "F2", units = "º")]
         public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
         double markLongitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Max drag gees")]
+        [ValueInfoItem("Max drag gees", InfoItem.Category.Recorder, format = "F2")]
         public double maxDragGees = 0;
 
-        [ActionInfoItem("MARK")]
+        [ActionInfoItem("MARK", InfoItem.Category.Recorder)]
         public void Mark()
         {
             markUT = vesselState.time;

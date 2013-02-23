@@ -10,19 +10,23 @@ namespace MuMech
     {
         public static List<T> GetParts<T>(this Vessel vessel) where T : Part
         {
-            if (vessel == null) return new List<T>();
-            return vessel.Parts.FindAll(a => a.GetType() == typeof(T)).Cast<T>().ToList<T>();
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.OfType<T>().ToList();
+            if(vessel == null) return new List<T>();
+            return vessel.Parts.OfType<T>().ToList();
         }
 
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
-            if (vessel == null) return new List<T>();
-            return (from modules in vessel.Parts from module in modules.Modules.OfType<T>() select module).Cast<T>().ToList<T>();
+            List<Part> parts;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            else if (vessel == null) return new List<T>();
+            else parts = vessel.Parts;
+
+            return (from part in parts from module in part.Modules.OfType<T>() select module).ToList();
         }
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
-            if (vessel == null) return null;
             return vessel.GetModules<MechJebCore>().Max();
         }
 

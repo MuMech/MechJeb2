@@ -28,6 +28,10 @@ namespace MuMech
                 {
                     item.DrawItem();
                 }
+                else
+                {
+                    GUILayout.Label(item.name);
+                }
             }
             if (items.Count == 0) GUILayout.Label("Add items to this window with the custom window editor.");
             GUILayout.EndVertical();
@@ -56,6 +60,9 @@ namespace MuMech
         public List<InfoItem> registry = new List<InfoItem>();
         MechJebModuleCustomInfoWindow editedWindow;
         InfoItem selectedItem;
+        [Persistent(pass = (int)Pass.Global)]
+        InfoItem.Category itemCategory = InfoItem.Category.Orbit;
+        static int numCategories = Enum.GetNames(typeof(InfoItem.Category)).Length;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -82,8 +89,13 @@ namespace MuMech
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
 
-                //window.title = windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window";
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
+
+                if (windowNode.HasValue("enabled"))
+                {
+                    bool loadedEnabled;
+                    if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled)) window.enabled = loadedEnabled;
+                }
 
                 if (windowNode.HasNode("items"))
                 {
@@ -92,8 +104,8 @@ namespace MuMech
                     foreach (ConfigNode itemNode in itemNodes)
                     {
                         string id = itemNode.GetValue("id");
-                        var matches = registry.Where(item => item.id == id);
-                        if (matches.Count() > 0) window.items.Add(matches.First());
+                        InfoItem match = registry.FirstOrDefault(item => item.id == id);
+                        if (match != null) window.items.Add(match);
                     }
                 }
 
@@ -110,7 +122,9 @@ namespace MuMech
             foreach (MechJebModuleCustomInfoWindow window in core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
                 string name = typeof(MechJebModuleCustomInfoWindow).Name;
-                ConfigNode.CreateConfigFromObject(window, (int)Pass.Global).CopyTo(global.AddNode(name));
+                ConfigNode windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.Global);
+                windowNode.AddValue("enabled", window.enabled);
+                windowNode.CopyTo(global.AddNode(name));
             }
         }
 
@@ -137,6 +151,7 @@ namespace MuMech
         {
             editedWindow = new MechJebModuleCustomInfoWindow(core);
             core.AddComputerModule(editedWindow);
+            editedWindow.enabled = true;
         }
 
         void RemoveCurrentWindow()
@@ -236,8 +251,14 @@ namespace MuMech
 
             GUILayout.Label("Click an item to add it to the info window:");
 
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) itemCategory = (InfoItem.Category)(((int)itemCategory - 1 + numCategories) % numCategories);
+            GUILayout.Label(itemCategory.ToString(), new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) itemCategory = (InfoItem.Category)(((int)itemCategory + 1) % numCategories);
+            GUILayout.EndHorizontal();
+
             scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
-            foreach (InfoItem item in registry)
+            foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
             {
                 if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
                 {
@@ -270,23 +291,37 @@ namespace MuMech
     }
 
 
+
     public abstract class InfoItem
     {
         public string name;
         public string description;
         public bool showInEditor;
         public bool showInFlight;
-        
+
+        public enum Category
+        {
+            Orbit,
+            Surface,
+            Vessel,
+            Target,
+            Recorder,
+            Thrust,
+            Misc
+        }
+        public Category category;
+
+
         [Persistent]
         public string id;
 
         public InfoItem(InfoItemAttribute attribute)
         {
             name = attribute.name;
+            category = attribute.category;
             description = attribute.description;
             showInEditor = attribute.showInEditor;
             showInFlight = attribute.showInFlight;
-            id = name;
         }
 
         public abstract void DrawItem();
@@ -298,9 +333,14 @@ namespace MuMech
         object obj;
         MemberInfo member;
         string units;
+        string format;
+        public const string SI = "SI";
+        public const string TIME = "TIME";
+        public const string ANGLE = "ANGLE";
         bool time;
 
-        public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute) : base(attribute)
+        public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
+            : base(attribute)
         {
             id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
 
@@ -308,6 +348,7 @@ namespace MuMech
             this.member = member;
             units = attribute.units;
             time = attribute.time;
+            format = attribute.format;
         }
 
         object GetValue()
@@ -334,8 +375,10 @@ namespace MuMech
             else if (value is Vector3) doubleValue = ((Vector3)value).magnitude;
             else if (value is EditableDouble) doubleValue = (EditableDouble)value;
 
-            if (time) return GuiUtils.TimeToDHMS(doubleValue);
-            else return (MuUtils.ToSI(doubleValue) + units);
+            if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue);
+            else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
+            else if (format == SI) return (MuUtils.ToSI(doubleValue) + units);
+            else return doubleValue.ToString(format) + " " + units;
         }
 
         public override void DrawItem()
@@ -358,7 +401,8 @@ namespace MuMech
         object obj;
         MethodInfo method;
 
-        public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute) : base(attribute)
+        public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
+            : base(attribute)
         {
             id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
 
@@ -377,8 +421,9 @@ namespace MuMech
     {
         object obj;
         MemberInfo member;
-        
-        public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute) : base(attribute)
+
+        public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
+            : base(attribute)
         {
             id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
 
@@ -404,7 +449,8 @@ namespace MuMech
         object obj;
         MethodInfo method;
 
-        public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute) : base(attribute)
+        public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
+            : base(attribute)
         {
             id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
 
@@ -421,13 +467,15 @@ namespace MuMech
     public abstract class InfoItemAttribute : Attribute
     {
         public string name; //the name displayed in the info window
+        public InfoItem.Category category;
         public string description = ""; //the description shown in the window editor list
         public bool showInEditor = false;
         public bool showInFlight = true;
 
-        public InfoItemAttribute(string name)
+        public InfoItemAttribute(string name, InfoItem.Category category)
         {
             this.name = name;
+            this.category = category;
             description = name; //description defaults to name, but can be set to be something different
         }
     }
@@ -438,22 +486,23 @@ namespace MuMech
     {
         public string units = "";
         public bool time = false;
+        public string format = "";
 
-        public ValueInfoItemAttribute(string name) : base(name) { }
+        public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 
     //Apply this attribute to a method to make the method callable via an ActionInfoItem
     [AttributeUsage(AttributeTargets.Method)]
     public class ActionInfoItemAttribute : InfoItemAttribute
     {
-        public ActionInfoItemAttribute(string name) : base(name) { }
+        public ActionInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 
     //Apply this attribute to a boolean to make the boolean toggleable via a ToggleInfoItem
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class ToggleInfoItemAttribute : InfoItemAttribute
     {
-        public ToggleInfoItemAttribute(string name) : base(name) { }
+        public ToggleInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 
     //Apply this attribute to a method to indicate that it is a method that will draw 
@@ -461,6 +510,6 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Method)]
     public class GeneralInfoItemAttribute : InfoItemAttribute
     {
-        public GeneralInfoItemAttribute(string name) : base(name) { }
+        public GeneralInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 }

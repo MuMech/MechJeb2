@@ -103,6 +103,8 @@ namespace MuMech
 
         public EditableAngle(double angle)
         {
+            angle = MuUtils.ClampDegrees180(angle);
+
             negative = (angle < 0);
             angle = Math.Abs(angle);
             degrees = (int)angle;
@@ -114,7 +116,7 @@ namespace MuMech
 
         public static implicit operator double(EditableAngle x)
         {
-            return (x.negative ? -1 : 1) * (x.degrees + 60 * x.minutes + 3600 * x.seconds);
+            return (x.negative ? -1 : 1) * (x.degrees + x.minutes/60.0 + x.seconds/3600.0);
         }
 
         public static implicit operator EditableAngle(double x)
@@ -170,6 +172,8 @@ namespace MuMech
 
         public static string TimeToDHMS(double seconds)
         {
+            if(double.IsInfinity(seconds) || double.IsNaN(seconds)) return seconds.ToString();
+
             string[] units = { "y", "d", "h", "m", "s" };
             int[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
 
@@ -184,7 +188,11 @@ namespace MuMech
             for (int i = 0; i < units.Length; i++)
             {
                 int n = (int)(seconds / intervals[i]);
-                if (n != 0 || (i == units.Length-1 && ret == "")) ret += (ret.Length >= 2 ? ", " : "") + n.ToString() + units[i];
+                bool first = ret.Length < 2;
+                if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
+                {
+                    ret += (first ? "" : ", ") + (first ? n.ToString() : n.ToString("00")) + units[i];
+                }
                 seconds -= n * intervals[i];
             }
 

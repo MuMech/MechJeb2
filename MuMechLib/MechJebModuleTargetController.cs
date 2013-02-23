@@ -43,7 +43,6 @@ namespace MuMech
             target = t;
             if (vessel != null && vessel.isActiveVessel)
             {
-                Debug.Log("Setting target: my surface speed is " + vesselState.speedSurface);
                 if(FlightGlobals.fetch != null) FlightGlobals.fetch.SetVesselTarget(target);
             }
         }
@@ -57,12 +56,12 @@ namespace MuMech
             Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
         }
 
-        [ValueInfoItem("Target coordinates")]
+        [ValueInfoItem("Target coordinates", InfoItem.Category.Target)]
         public string GetPositionTargetString()
         {
             if (target is PositionTarget && !(target is DirectionTarget))
             {
-                return Coordinates.ToStringDMS(targetLatitude, targetLongitude);
+                return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
             }
             else
             {
@@ -80,12 +79,13 @@ namespace MuMech
             Set(new DirectionTarget(name));
         }
 
-        [ActionInfoItem("Pick position target")]
+        [ActionInfoItem("Pick position target", InfoItem.Category.Target)]
         public void PickPositionTargetOnMap()
         {
             pickingPositionTarget = true;
             MapView.EnterMapView();
-            ScreenMessages.PostScreenMessage("Click to select a target on " + mainBody.theName + "'s surface", 3.0f, ScreenMessageStyle.UPPER_CENTER);
+            string message = "Click to select a target on " + mainBody.theName + "'s surface.\n(Leave map view to cancel.)";
+            ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
         }
 
         public void StopPickPositionTargetOnMap()

@@ -12,7 +12,7 @@ namespace MuMech
     {
         public MechJebModuleInfoItems(MechJebCore core) : base(core) { }
 
-        [ValueInfoItem("Node burn time")]
+        [ValueInfoItem("Node burn time", InfoItem.Category.Misc)]
         public string NextManeuverNodeBurnTime()
         {
             if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
@@ -22,32 +22,33 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(time);
         }
 
-        [ValueInfoItem("Surface TWR")]
-        public string SurfaceTWR()
+        [ValueInfoItem("Surface TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)]
+        public double SurfaceTWR()
         {
-            return (vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81)).ToString("F2");
+            if (HighLogic.LoadedSceneIsEditor) return MaxAcceleration() / 9.81;
+            else return vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
         }
 
-        [ValueInfoItem("Atmospheric pressure", units = "atm")]
+        [ValueInfoItem("Atmospheric pressure", InfoItem.Category.Misc, format = "F3", units = "atm")]
         public double AtmosphericPressure()
         {
             return FlightGlobals.getStaticPressure(vesselState.CoM);
         }
 
-        [ValueInfoItem("Coordinates")]
+        [ValueInfoItem("Coordinates", InfoItem.Category.Surface)]
         public string GetCoordinateString()
         {
-            return Coordinates.ToStringDMS(vesselState.latitude, vesselState.longitude);
+            return Coordinates.ToStringDMS(vesselState.latitude, vesselState.longitude, true);
         }
 
-        [ValueInfoItem("Orbit shape")]
+        [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
         public string OrbitSummary()
         {
             if (orbit.eccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(orbit.PeA, 2) + "m";
             else return MuUtils.ToSI(orbit.PeA, 2) + "m x " + MuUtils.ToSI(orbit.ApA, 2) + "m";
         }
 
-        [ValueInfoItem("Orbit shape", description = "Orbit shape w/ inc.")]
+        [ValueInfoItem("Orbit", InfoItem.Category.Orbit, description = "Orbit shape w/ inc.")]
         public string OrbitSummaryWithInclination()
         {
             return OrbitSummary() + ", inc. " + orbit.inclination.ToString("F1") + "º";
@@ -55,7 +56,7 @@ namespace MuMech
 
 
         //Todo: consider turning this into a binary search
-        [ValueInfoItem("Time to impact")]
+        [ValueInfoItem("Time to impact", InfoItem.Category.Misc)]
         public string TimeToImpact()
         {
             if (orbit.PeA > 0) return "N/A";
@@ -72,7 +73,7 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
         }
 
-        [ValueInfoItem("Suicide burn countdown")]
+        [ValueInfoItem("Suicide burn countdown", InfoItem.Category.Misc)]
         public string SuicideBurnCountdown()
         {
             if (orbit.PeA > 0) return "N/A";
@@ -93,13 +94,13 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 
-        [ValueInfoItem("Current acceleration", units = "m/s²")]
+        [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {
             return vesselState.ThrustAccel(FlightInputHandler.state.mainThrottle);
         }
 
-        [ValueInfoItem("Time to SoI switch")]
+        [ValueInfoItem("Time to SoI switch", InfoItem.Category.Orbit)]
         public string TimeToSOITransition()
         {
             if (orbit.patchEndTransition == Orbit.PatchTransitionType.FINAL) return "N/A";
@@ -107,61 +108,129 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(orbit.EndUT - vesselState.time);
         }
 
-        [ValueInfoItem("Surface gravity", units = "m/s²")]
+        [ValueInfoItem("Surface gravity", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s²")]
         public double SurfaceGravity()
         {
             return mainBody.GeeASL * 9.81;
         }
 
-        [ValueInfoItem("Part count", showInEditor = true)]
+        [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F2", units = "t", showInEditor = true)]
+        public double VesselMass()
+        {
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList
+                                  .Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass());
+            else return vesselState.mass;
+        }
+
+        [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = "F0", units = "kN", showInEditor = true)]
+        public double MaxThrust()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                var engines = (from part in EditorLogic.SortedShipList
+                               where part.inverseStage == Staging.lastStage
+                               from engine in part.Modules.OfType<ModuleEngines>()
+                               select engine);
+                return engines.Sum(e => e.maxThrust);
+            }
+            else
+            {
+                return vesselState.thrustAvailable;
+            }
+        }
+
+        [ValueInfoItem("Min thrust", InfoItem.Category.Vessel, format = "F0", units = "kN", showInEditor = true)]
+        public double MinThrust()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                var engines = (from part in EditorLogic.SortedShipList
+                               where part.inverseStage == Staging.lastStage
+                               from engine in part.Modules.OfType<ModuleEngines>()
+                               select engine);
+                return engines.Sum(e => (e.throttleLocked ? e.maxThrust : e.minThrust));
+            }
+            else
+            {
+                return vesselState.thrustMinimum;
+            }
+        }
+
+        [ValueInfoItem("Max acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²", showInEditor = true)]
+        public double MaxAcceleration()
+        {
+            return MaxThrust() / VesselMass();
+        }
+
+        [ValueInfoItem("Min acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²", showInEditor = true)]
+        public double MinAcceleration()
+        {
+            return MinThrust() / VesselMass();
+        }
+
+        [ValueInfoItem("Drag coefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]
+        public double DragCoefficient()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                return EditorLogic.SortedShipList.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE)
+                                  .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
+            }
+            else
+            {
+                return vesselState.massDrag / vesselState.mass;
+            }
+        }
+
+        [ValueInfoItem("Part count", InfoItem.Category.Vessel, showInEditor = true)]
         public int PartCount()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count;
             else return vessel.parts.Count;
         }
 
-        [ValueInfoItem("Strut count", showInEditor = true)]
+        [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
         public int StrutCount()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count(p => p is StrutConnector);
             else return vessel.parts.Count(p => p is StrutConnector);
         }
 
-        [ValueInfoItem("Vessel cost", showInEditor = true, units = "k$")]
-        public int VesselCost()
+        [ValueInfoItem("Vessel cost", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "$")]
+        public double VesselCost()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost);
-            else return vessel.parts.Sum(p => p.partInfo.cost);
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost)*1000;
+            else return vessel.parts.Sum(p => p.partInfo.cost)*1000;
         }
 
-        [ValueInfoItem("Crew count")]
+        [ValueInfoItem("Crew count", InfoItem.Category.Vessel)]
         public int CrewCount()
         {
             return vessel.GetCrewCount();
         }
 
-        [ValueInfoItem("Crew capacity", showInEditor = true)]
+        [ValueInfoItem("Crew capacity", InfoItem.Category.Vessel, showInEditor = true)]
         public int CrewCapacity()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.CrewCapacity);
             else return vessel.GetCrewCapacity();
         }
 
-        [ValueInfoItem("Distance to target")]
+        [ValueInfoItem("Distance to target", InfoItem.Category.Target)]
         public string TargetDistance()
         {
             if (core.target.Target == null) return "N/A";
             return MuUtils.ToSI(core.target.Distance, -1) + "m";
         }
 
-        [ValueInfoItem("Relative velocity")]
+        [ValueInfoItem("Relative velocity", InfoItem.Category.Target)]
         public string TargetRelativeVelocity()
         {
             if (!core.target.NormalTargetExists) return "N/A";
             return MuUtils.ToSI(core.target.RelativeVelocity.magnitude) + "m/s";
         }
 
-        [ValueInfoItem("Time to closest approach")]
+        [ValueInfoItem("Time to closest approach", InfoItem.Category.Target)]
         public string TargetTimeToClosestApproach()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -169,7 +238,7 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
         }
 
-        [ValueInfoItem("Closest approach distance")]
+        [ValueInfoItem("Closest approach distance", InfoItem.Category.Target)]
         public string TargetClosestApproachDistance()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -177,13 +246,13 @@ namespace MuMech
             return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
-        [ValueInfoItem("Atmospheric drag", units = "m/s²")]
+        [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {
             return mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude;
         }
 
-        [ValueInfoItem("Synodic period")]
+        [ValueInfoItem("Synodic period", InfoItem.Category.Target)]
         public string SynodicPeriod()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -191,7 +260,7 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.Orbit));
         }
 
-        [ValueInfoItem("Phase angle to target")]
+        [ValueInfoItem("Phase angle to target", InfoItem.Category.Target)]
         public string PhaseAngle()
         {
             if (!core.target.NormalTargetExists) return "N/A";
@@ -205,7 +274,7 @@ namespace MuMech
             return angle.ToString("F2") + "º";
         }
 
-        [ValueInfoItem("Circular orbit speed", units = "m/s")]
+        [ValueInfoItem("Circular orbit speed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]
         public double CircularOrbitSpeed()
         {
             return OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
@@ -230,7 +299,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoTime = true;
 
-        [GeneralInfoItem("Stage stats (all)", showInEditor = true)]
+        [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
             try
@@ -290,7 +359,7 @@ namespace MuMech
             return ret;
         }
 
-        [ActionInfoItem("Update stage stats")]
+        [ActionInfoItem("Update stage stats", InfoItem.Category.Vessel)]
         public void UpdateStageStats()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
@@ -298,7 +367,7 @@ namespace MuMech
             stats.RequestUpdate();
         }
 
-        [GeneralInfoItem("Docking guidance: velocity")]
+        [GeneralInfoItem("Docking guidance: velocity", InfoItem.Category.Target)]
         public void DockingGuidanceVelocity()
         {
             if (!core.target.NormalTargetExists)
@@ -319,7 +388,7 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("Docking guidance: position")]
+        [GeneralInfoItem("Docking guidance: position", InfoItem.Category.Target)]
         public void DockingGuidancePosition()
         {
             if (!core.target.NormalTargetExists)

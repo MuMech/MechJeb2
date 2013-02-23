@@ -47,8 +47,11 @@ namespace MuMech
             //else we have an onFlyByWire callback registered with the wrong vessel:
             //handle vessel changes due to docking/undocking
             if (controlledVessel != null) controlledVessel.OnFlyByWire -= OnFlyByWire;
-            vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
-            vessel.OnFlyByWire += OnFlyByWire;
+            if (vessel != null)
+            {
+                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
+                vessel.OnFlyByWire += OnFlyByWire;
+            }
             controlledVessel = vessel;
             return false;
         }
@@ -73,9 +76,7 @@ namespace MuMech
 
         public T GetComputerModule<T>() where T : ComputerModule
         {
-            var matches = computerModules.FindAll(a => a is T).Cast<T>();
-            if (matches.Count() > 0) return matches.First();
-            else return null;
+            return (T)computerModules.FirstOrDefault(m => m is T); //returns null if no matches
         }
 
         public List<T> GetComputerModules<T>() where T : ComputerModule
@@ -85,9 +86,7 @@ namespace MuMech
 
         public ComputerModule GetComputerModule(string type)
         {
-            var matches = computerModules.FindAll(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant());
-            if (matches.Count() > 0) return matches.First();
-            else return null;
+            return computerModules.FirstOrDefault(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant()); //null if none
         }
 
         public void AddComputerModule(ComputerModule module)
@@ -120,7 +119,7 @@ namespace MuMech
 
             //OnLoad doesn't get called for parts created in editor, so do that manually so 
             //that we can load global settings:
-            if(state == StartState.Editor) OnLoad(null);
+            if (state == StartState.Editor) OnLoad(null);
 
             foreach (ComputerModule module in computerModules)
             {
@@ -175,20 +174,20 @@ namespace MuMech
                 return;
             }
 
-            vesselState.Update(vessel);
-
             if (modulesUpdated)
             {
                 computerModules.Sort();
                 modulesUpdated = false;
             }
 
+            if (vessel == null) return; //don't run ComputerModules' OnFixedUpdate in editor
+
+            vesselState.Update(vessel);
+
             foreach (ComputerModule module in computerModules)
             {
                 if (module.enabled) module.OnFixedUpdate();
             }
-
-
         }
 
         public void Update()
@@ -203,6 +202,8 @@ namespace MuMech
                 computerModules.Sort();
                 modulesUpdated = false;
             }
+
+            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
 
             foreach (ComputerModule module in computerModules)
             {
@@ -225,7 +226,6 @@ namespace MuMech
                 if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
                     && !blacklist.Contains(t.Name))
                 {
-                    Debug.Log("adding new computer module of type " + t.Name);
                     AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
                 }
             }

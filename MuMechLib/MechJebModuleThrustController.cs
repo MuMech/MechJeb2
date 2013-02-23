@@ -22,22 +22,40 @@ namespace MuMech
         public bool trans_kill_h = false;
         public bool trans_land = false;
         public bool trans_land_gears = false;
-        [ToggleInfoItem("Limit throttle to keep below terminal velocity")]
-        public bool limitToTerminalVelocity = true;
-        [ToggleInfoItem("Limit throttle to prevent overheats")]
-        public bool limitToPreventOverheats = true;
-        [ToggleInfoItem("Limit throttle to prevent jet flameout")]
-        public bool limitToPreventFlameout = true;
-        [ToggleInfoItem("Manage air intakes")]
-        public bool manageIntakes = true;
+
+        [ToggleInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
+        [Persistent(pass = (int)Pass.Local)]
+        public bool limitToTerminalVelocity = false;
+
+        [ToggleInfoItem("Prevent overheats", InfoItem.Category.Thrust)]
+        [Persistent(pass = (int)Pass.Local)]
+        public bool limitToPreventOverheats = false;
+
+        [ToggleInfoItem("Smooth throttle", InfoItem.Category.Thrust)]
+        [Persistent(pass = (int)Pass.Local)]
+        public bool smoothThrottle = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public double throttleSmoothingTime = 1.0;
+
+        [ToggleInfoItem("Prevent jet flameout", InfoItem.Category.Thrust)]
+        [Persistent(pass = (int)Pass.Local)]
+        public bool limitToPreventFlameout = false;
+
+        [ToggleInfoItem("Manage air intakes", InfoItem.Category.Thrust)]
+        [Persistent(pass = (int)Pass.Local)]
+        public bool manageIntakes = false;
+        
+        [Persistent(pass = (int)Pass.Local)]
         public bool limitAcceleration = false;
+        
+        [Persistent(pass = (int)Pass.Local)]
         public EditableDouble maxAcceleration = 40;
 
         public float targetThrottle = 0;
 
         // 5% safety margin on flameouts
-        public double flameoutSafetyPct = 5;
-        public string flameoutSafetyPctString = "5";
+        private double flameoutSafetyPct = 5;
 
         private bool tmode_changed = false;
 
@@ -78,12 +96,22 @@ namespace MuMech
             }
         }
 
-
+        public override void OnStart(PartModule.StartState state)
+        {
+            this.enabled = true;
+        }
 
         public override void Drive(FlightCtrlState s)
         {
             //detect user input:
-            targetThrottle = Mathf.Clamp01((s.mainThrottle - lastThrottle) + targetThrottle);
+            if (s.mainThrottle < 1e-4 && lastThrottle > 1e-4)
+            {
+                targetThrottle = 0; //detect player pressing 'x'
+            }
+            else if (Mathf.Abs(s.mainThrottle - lastThrottle) > 1e-4)
+            {
+                targetThrottle = Mathf.Clamp01((s.mainThrottle - lastThrottle) + targetThrottle);
+            }
 
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
@@ -191,8 +219,15 @@ namespace MuMech
                 s.mainThrottle = Mathf.Min(s.mainThrottle, FlameoutSafetyThrottle());
             }
 
+            if (smoothThrottle)
+            {
+                s.mainThrottle = SmoothThrottle(s.mainThrottle);
+            }
+
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
+
+            Debug.Log("leaving drive with s.mainThrottle = " + s.mainThrottle);
 
             lastThrottle = s.mainThrottle;
         }
@@ -221,6 +256,13 @@ namespace MuMech
             float tempSafetyMargin = 0.05f;
             if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
             else return (1 - maxTempRatio) / tempSafetyMargin;
+        }
+
+        float SmoothThrottle(float mainThrottle)
+        {
+            return Mathf.Clamp(mainThrottle, 
+                               (float)(lastThrottle - vesselState.deltaT / throttleSmoothingTime),
+                               (float)(lastThrottle + vesselState.deltaT / throttleSmoothingTime));
         }
 
         float FlameoutSafetyThrottle()

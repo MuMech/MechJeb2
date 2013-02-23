@@ -26,8 +26,7 @@ namespace MuMech
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             try {
                 GUILayout.Label ("Jet Safety Margin");
-                core.thrust.flameoutSafetyPctString = GUILayout.TextField(core.thrust.flameoutSafetyPctString, 5);
-                Double.TryParse(core.thrust.flameoutSafetyPctString, out core.thrust.flameoutSafetyPct); // no change if parse fails
+                core.thrust.flameoutSafetyPct.text = GUILayout.TextField(core.thrust.flameoutSafetyPct.text, 5);
                 GUILayout.Label("%");
             } finally {
                 GUILayout.EndHorizontal();
