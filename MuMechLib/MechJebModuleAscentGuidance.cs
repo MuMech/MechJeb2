@@ -30,7 +30,8 @@ namespace MuMech
             if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
             launchingToPlane = false;
             launchingToRendezvous = false;
-            core.GetComputerModule<MechJebModuleAscentPathEditor>().enabled = false;
+            MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
+            if(editor != null) editor.enabled = false;
         }
 
         public override void OnFixedUpdate()
@@ -61,24 +62,27 @@ namespace MuMech
                 core.target.SetDirectionTarget(TARGET_NAME);
             }
 
-            MechJebModuleAscentComputer autopilot = core.GetComputerModule<MechJebModuleAscentComputer>();
+            MechJebModuleAscentAutopilot autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
 
-            //autopilot.enabled = GUILayout.Toggle(autopilot.enabled, (autopilot.enabled ? "Disengage autopilot" : "Engage autopilot"), GUI.skin.button);
-            if (autopilot.enabled)
+            if (autopilot != null)
             {
-                if (GUILayout.Button("Disengage autopilot")) autopilot.enabled = false;
-            }
-            else
-            {
-                if (GUILayout.Button("Engage autopilot"))
+                //autopilot.enabled = GUILayout.Toggle(autopilot.enabled, (autopilot.enabled ? "Disengage autopilot" : "Engage autopilot"), GUI.skin.button);
+                if (autopilot.enabled)
                 {
-                    autopilot.enabled = true;
-                    autopilot.ascentPath = this.ascentPath;
+                    if (GUILayout.Button("Disengage autopilot")) autopilot.enabled = false;
                 }
-            }
+                else
+                {
+                    if (GUILayout.Button("Engage autopilot"))
+                    {
+                        autopilot.enabled = true;
+                        autopilot.ascentPath = this.ascentPath;
+                    }
+                }
 
-            GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
-            GuiUtils.SimpleTextBox("Orbit inclination", autopilot.desiredInclination, "º");
+                GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
+                GuiUtils.SimpleTextBox("Orbit inclination", autopilot.desiredInclination, "º");
+            }
 
             core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Limit throttle to avoid overheats");
             core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit throttle so as not to exceed terminal velocity");
@@ -90,63 +94,62 @@ namespace MuMech
             
             core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
 
-            if (core.target.NormalTargetExists && vessel.Landed)
+            if (autopilot != null)
             {
-                if (!launchingToPlane && !launchingToRendezvous && GUILayout.Button("Launch into plane of target"))
+                if (core.target.NormalTargetExists && vessel.Landed)
                 {
-                    launchingToPlane = true;
-                }
-                if (!launchingToPlane && !launchingToRendezvous)
-                {
-                    GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Launch at phase angle", GUILayout.ExpandWidth(false)))
+                    if (!launchingToPlane && !launchingToRendezvous && GUILayout.Button("Launch into plane of target"))
                     {
-                        launchingToRendezvous = true;
+                        launchingToPlane = true;
                     }
-                    phaseAngle.text = GUILayout.TextField(phaseAngle.text, GUILayout.ExpandWidth(true));
-                    GUILayout.Label("º", GUILayout.ExpandWidth(false));
-                    GUILayout.EndHorizontal();
+                    if (!launchingToPlane && !launchingToRendezvous)
+                    {
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button("Launch at phase angle", GUILayout.ExpandWidth(false)))
+                        {
+                            launchingToRendezvous = true;
+                        }
+                        phaseAngle.text = GUILayout.TextField(phaseAngle.text, GUILayout.ExpandWidth(true));
+                        GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+                    }
                 }
-            }
-            else
-            {
-                launchingToPlane = launchingToRendezvous = false;
-            }
-
-            if (launchingToPlane || launchingToRendezvous)
-            {
-                double tMinus;
-                if(launchingToPlane) tMinus = LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.Orbit);
-                else tMinus = LaunchTiming.TimeToPhaseAngle(phaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
-
-                double launchTime = vesselState.time + tMinus;
-                double desiredInclination = core.target.Orbit.inclination;
-                desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
-                autopilot.desiredInclination = desiredInclination;
-
-                if (autopilot.enabled) core.warp.WarpToUT(launchTime);
-
-                GUILayout.Label("Launching to " + (launchingToPlane ? "target plane" : "rendezvous") + ": T-" + MuUtils.ToSI(tMinus, 0) + "s");
-                if (tMinus < 3 * vesselState.deltaT)
+                else
                 {
-                    if(autopilot.enabled) Staging.ActivateNextStage();
                     launchingToPlane = launchingToRendezvous = false;
                 }
 
-                if (GUILayout.Button("Abort")) launchingToPlane = launchingToRendezvous = false;
-            }
+                if (launchingToPlane || launchingToRendezvous)
+                {
+                    double tMinus;
+                    if (launchingToPlane) tMinus = LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.Orbit);
+                    else tMinus = LaunchTiming.TimeToPhaseAngle(phaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
 
+                    double launchTime = vesselState.time + tMinus;
+                    double desiredInclination = core.target.Orbit.inclination;
+                    desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
+                    autopilot.desiredInclination = desiredInclination;
 
-            
-            
-            
-            if (autopilot.enabled)
-            {
-                GUILayout.Label("Autopilot status: " + autopilot.status);
+                    if (autopilot.enabled) core.warp.WarpToUT(launchTime);
+
+                    GUILayout.Label("Launching to " + (launchingToPlane ? "target plane" : "rendezvous") + ": T-" + MuUtils.ToSI(tMinus, 0) + "s");
+                    if (tMinus < 3 * vesselState.deltaT)
+                    {
+                        if (autopilot.enabled) Staging.ActivateNextStage();
+                        launchingToPlane = launchingToRendezvous = false;
+                    }
+
+                    if (GUILayout.Button("Abort")) launchingToPlane = launchingToRendezvous = false;
+                }
+
+                if (autopilot.enabled)
+                {
+                    GUILayout.Label("Autopilot status: " + autopilot.status);
+                }
             }
 
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
-            editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
+            if(editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
 

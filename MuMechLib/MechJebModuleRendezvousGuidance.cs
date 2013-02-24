@@ -154,8 +154,11 @@ namespace MuMech
             GUILayout.EndVertical();
 
             MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
-            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
-            if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+            if (autopilot != null)
+            {
+                autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
+                if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+            }
 
             base.WindowGUI(windowID);
         }

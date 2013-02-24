@@ -121,16 +121,34 @@ namespace MuMech
 
         void AdvanceToFreefallEnd(Orbit initialOrbit)
         {
+            
             t = FindFreefallEndTime(initialOrbit);
+            
             x = initialOrbit.SwappedRelativePositionAtUT(t);
             v = initialOrbit.SwappedOrbitalVelocityAtUT(t);
+            
+            if (double.IsNaN(v.magnitude))
+            {
+                //For eccentricities close to 1, the Orbit class functions are unreliable and
+                //v may come out as NaN. If that happens we estimate v from conservation
+                //of energy and the assumption that v is vertical (since ecc. is approximately 1).
+
+                //0.5 * v^2 - GM / r = E   =>    v = sqrt(2 * (E + GM / r))
+                double GM = initialOrbit.referenceBody.gravParameter;
+                double E = -GM / (2 * initialOrbit.semiMajorAxis);
+                v = Math.Sqrt(Math.Abs(2 * (E + GM / x.magnitude))) * x.normalized;
+                if (initialOrbit.MeanAnomalyAtUT(t) > Math.PI) v *= -1;
+            }
         }
 
         //This is a convenience function used by the reentry simulation. It does a binary search for the first UT
         //in the interval (lowerUT, upperUT) for which condition(UT, relative position, orbital velocity) is true
         double FindFreefallEndTime(Orbit initialOrbit)
         {
-            if (FreefallEnded(initialOrbit, t)) return t;
+            if (FreefallEnded(initialOrbit, t))
+            {
+                return t;
+            }
 
             double lowerUT = t;
             double upperUT = initialOrbit.NextPeriapsisTime(t);
@@ -235,8 +253,8 @@ namespace MuMech
         double AirDensity(Vector3d pos)
         {
             double ratio = Math.Exp(-(pos.magnitude - bodyRadius) / scaleHeight);
-            if(ratio < 1e-6) return 0; //this is not a fudge, this is faithfully simulating the game, which
-                                       //pretends the pressure is zero if it is less than 1e-6 times the sea level pressure
+            if (ratio < 1e-6) return 0; //this is not a fudge, this is faithfully simulating the game, which
+            //pretends the pressure is zero if it is less than 1e-6 times the sea level pressure
             double pressure = seaLevelAtmospheres * ratio;
             return FlightGlobals.getAtmDensity(pressure);
         }

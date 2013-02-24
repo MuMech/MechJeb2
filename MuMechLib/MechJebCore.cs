@@ -414,8 +414,7 @@ namespace MuMech
 
         private void OnGUI()
         {
-            if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
-
+            
             if (this == vessel.GetMasterMechJeb() &&
                 (HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD)))
             {
@@ -425,6 +424,8 @@ namespace MuMech
                     if (module.enabled) module.DrawGUI(windowIDbase + wid, HighLogic.LoadedSceneIsEditor);
                     wid++;
                 }
+
+                if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
             }
         }
 

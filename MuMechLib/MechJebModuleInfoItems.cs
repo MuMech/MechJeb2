@@ -309,39 +309,38 @@ namespace MuMech
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
-            
-                MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
 
-                stats.RequestUpdate();
+            stats.RequestUpdate();
 
-                int numStages = stats.atmoStats.Length;
-                var stages = Enumerable.Range(0, numStages);
+            int numStages = stats.atmoStats.Length;
+            var stages = Enumerable.Range(0, numStages);
 
-                GUILayout.BeginVertical();
+            GUILayout.BeginVertical();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
-                if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
-                {
-                    showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                }
-                GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
+            {
+                showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+            }
+            GUILayout.EndHorizontal();
 
-                double geeASL = (HighLogic.LoadedSceneIsEditor ? 1 : mainBody.GeeASL);
+            double geeASL = (HighLogic.LoadedSceneIsEditor ? 1 : mainBody.GeeASL);
 
-                GUILayout.BeginHorizontal();
-                DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-                if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => stats.vacStats[s].startMass.ToString("F1") + " t"));
-                if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
-                if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(geeASL).ToString("F2")));
-                if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(geeASL).ToString("F2")));
-                if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
-                if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
-                if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
-                if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
-                GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
+            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => stats.vacStats[s].startMass.ToString("F1") + " t"));
+            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
+            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(geeASL).ToString("F2")));
+            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
+            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
+            GUILayout.EndHorizontal();
 
-                GUILayout.EndVertical();
+            GUILayout.EndVertical();
         }
 
         bool DrawStageStatsColumn(string header, IEnumerable<string> data)

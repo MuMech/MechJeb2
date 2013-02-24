@@ -9,9 +9,9 @@ namespace MuMech
     //Todo: -reimplement measurement of LPA
     //      -Figure out exactly how throttle-limiting should work and interact
     //       with the global throttle-limit option
-    public class MechJebModuleAscentComputer : ComputerModule
+    public class MechJebModuleAscentAutopilot : ComputerModule
     {
-        public MechJebModuleAscentComputer(MechJebCore core) : base(core) { }
+        public MechJebModuleAscentAutopilot(MechJebCore core) : base(core) { }
 
         public string status = "";
 

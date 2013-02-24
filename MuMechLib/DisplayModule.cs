@@ -16,8 +16,8 @@ namespace MuMech
             set 
             { 
                 windowVector = new Vector4(value.x, value.y, value.width, value.height);
-                windowVector.x = Mathf.Clamp(windowVector.x, 0, Screen.width - 10);
-                windowVector.y = Mathf.Clamp(windowVector.y, 0, Screen.height - 10);
+                windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, Screen.width - 10);
+                windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, Screen.height - 10);
             }
         }
         [Persistent(pass = (int)Pass.Global)]

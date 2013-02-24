@@ -80,7 +80,6 @@ namespace MuMech
             stopwatch.Start(); //starts a timer that times how long the simulation takes
 
             Orbit patch = GetReenteringPatch() ?? orbit;
-
             ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL, vesselState.maxThrustAccel);
 
             //Run the simulation in a separate thread

@@ -107,26 +107,29 @@ namespace MuMech
                 vessel.RemoveAllManeuverNodes();
             }
 
-            if (anyNodeExists && !core.node.enabled)
+            if (core.node != null)
             {
-                if (GUILayout.Button("Execute next node"))
+                if (anyNodeExists && !core.node.enabled)
                 {
-                    core.node.ExecuteOneNode();
-                }
-
-                if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
-                {
-                    if (GUILayout.Button("Execute all nodes"))
+                    if (GUILayout.Button("Execute next node"))
                     {
-                        core.node.ExecuteAllNodes();
+                        core.node.ExecuteOneNode();
+                    }
+
+                    if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                    {
+                        if (GUILayout.Button("Execute all nodes"))
+                        {
+                            core.node.ExecuteAllNodes();
+                        }
                     }
                 }
-            }
-            else if (core.node.enabled)
-            {
-                if (GUILayout.Button("ABORT"))
+                else if (core.node.enabled)
                 {
-                    core.node.enabled = false;
+                    if (GUILayout.Button("ABORT"))
+                    {
+                        core.node.enabled = false;
+                    }
                 }
             }
 
@@ -141,7 +144,8 @@ namespace MuMech
         List<ManeuverNode> GetManeuverNodes()
         {
             MechJebModuleLandingPredictions predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
-            return vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
+            if (predictor == null) return vessel.patchedConicSolver.maneuverNodes;
+            else return vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
         }
 
         void DoOperationParametersGUI()

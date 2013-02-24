@@ -17,6 +17,11 @@ namespace MuMech
             autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
         }
 
+        public override GUILayoutOption[] WindowOptions()
+        {
+            return new GUILayoutOption[] { GUILayout.Width(150), GUILayout.Height(150) };
+        }
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
@@ -36,16 +41,19 @@ namespace MuMech
                 DrawGUIPrediction();
             }
 
-            GUILayout.Label("Autopilot:");
+            if (autopilot != null)
+            {
+                GUILayout.Label("Autopilot:");
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
-            if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
-            GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
+                if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
+                GUILayout.EndHorizontal();
 
-            GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s");
+                GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s");
 
-            if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+                if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+            }
 
             GUILayout.EndVertical();
 
