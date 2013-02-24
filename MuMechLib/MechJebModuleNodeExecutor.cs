@@ -40,7 +40,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
-            core.KillThrottle();
+            core.thrust.targetThrottle = 0;
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
@@ -58,9 +58,9 @@ namespace MuMech
 
             //check if we've finished a node:
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            Vector3d burnVector = node.GetBurnVector(orbit);
+            double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            if (burnVector.magnitude < precision)
+            if (dVLeft < precision)
             {
                 burnTriggered = false;
 
@@ -90,12 +90,15 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            double burnTime = burnVector.magnitude / vesselState.maxThrustAccel;
+            double burnTime = dVLeft / vesselState.maxThrustAccel;
 
             double timeToNode = node.UT - vesselState.time;
 
             if (timeToNode < burnTime * leadFraction)
             {
+                Debug.Log("triggering burn: timeToNode < " + burnTime * leadFraction);
+                Debug.Log("burnTime = " + burnTime + "; leadFraction = " + leadFraction);
+                Debug.Log("maxThrustAccel = " + vesselState.maxThrustAccel);
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
             }
@@ -114,16 +117,9 @@ namespace MuMech
                 }
             }
 
-            
-        }
-
-        public override void Drive(FlightCtrlState s)
-        {
             if (burnTriggered && core.attitude.attitudeAngleFromTarget() < 5)
             {
-                ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-                double dVLeft = node.GetBurnVector(orbit).magnitude;
-
+                Debug.Log("burn is triggered!");
                 double timeConstant = (dVLeft > 10 ? 0.5 : 2);
                 double desiredAcceleration = dVLeft / timeConstant;
                 desiredAcceleration = Math.Max(precision, desiredAcceleration);
@@ -132,6 +128,7 @@ namespace MuMech
             }
             else
             {
+                Debug.Log("don't burn(burnTriggered = " + burnTriggered);
                 core.thrust.targetThrottle = 0;
             }
         }

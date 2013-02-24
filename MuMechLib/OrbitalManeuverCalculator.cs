@@ -103,17 +103,19 @@ namespace MuMech
         }
 
         //Computes the delta-V of the burn at a given UT required to change an orbits apoapsis to a given value.
-        //Throws an ArgumentException if the provided apoapsis is impossible.
         //The computed burn is always prograde or retrograde, though this may not be strictly optimal.
+        //Note that you can pass in a negative apoapsis if the desired final orbit is hyperbolic
         public static Vector3d DeltaVToChangeApoapsis(Orbit o, double UT, double newApR)
         {
             double radius = o.Radius(UT);
 
             //sanitize input
-            newApR = Math.Max(newApR, radius + 1);
+            if(newApR > 0) newApR = Math.Max(newApR, radius + 1);
 
             //are we raising or lowering the periapsis?
-            bool raising = (o.ApR > 0 && newApR > o.ApR);
+            bool raising;
+            if (newApR > 0) raising = (o.ApR > 0 && newApR > o.ApR);
+            else raising = (o.ApR > 0 || o.ApR < newApR);
 
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
 
@@ -125,7 +127,7 @@ namespace MuMech
                 maxDeltaV = 0.25;
 
                 double ap = o.ApR;
-                while (ap > 0 && ap < newApR)
+                while (ap < newApR || (newApR < 0 && ap > 0))
                 {
                     maxDeltaV *= 2;
                     ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
@@ -144,8 +146,9 @@ namespace MuMech
                 double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
                 double testApoapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR;
 
-                if ((raising && (testApoapsis < 0 || testApoapsis > newApR)) ||
-                    (!raising && (testApoapsis > 0 && testApoapsis < newApR)))
+                bool above = (testApoapsis > newApR) && !(testApoapsis > 0 && newApR < 0);
+
+                if ((raising && above) || (!raising && !above))
                 {
                     maxDeltaV = testDeltaV;
                 }

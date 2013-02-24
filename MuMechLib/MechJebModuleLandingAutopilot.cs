@@ -96,16 +96,14 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             core.attitude.users.Add(this);
-            core.thrust.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
-            core.thrust.users.Remove(this);
             predictor.users.Remove(this);
             predictor.descentSpeedPolicy = null;
-            core.KillThrottle();
+            core.thrust.targetThrottle = 0;
             landStep = LandStep.OFF;
             status = "Off";
         }

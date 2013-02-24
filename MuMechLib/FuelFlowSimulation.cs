@@ -56,6 +56,8 @@ namespace MuMech
             Stats stats = new Stats();
             stats.startMass = VesselMass();
             stats.startThrust = VesselThrust(throttle);
+            stats.endMass = stats.startMass;
+            stats.maxAccel = stats.startThrust / stats.endMass;
 
             const int maxSteps = 100;
             int step;

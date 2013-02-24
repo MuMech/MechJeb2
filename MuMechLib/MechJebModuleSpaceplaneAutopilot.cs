@@ -128,7 +128,7 @@ namespace MuMech
                 }
 
                 Vector3d vectorToWaypoint = ILSAimDirection();
-                double headingToWaypoint = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vectorToWaypoint, vesselState.east), Vector3d.Dot(vectorToWaypoint, vesselState.north));
+                double headingToWaypoint = vesselState.HeadingFromDirection(vectorToWaypoint);
 
                 Vector3d vectorToRunway = runwayStart - vesselState.CoM;
                 double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
@@ -136,7 +136,6 @@ namespace MuMech
                 double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
                 double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 0.0F);
 
-                Debug.Log("autoland heading: " + headingToWaypoint);
                 AimVelocityVector(desiredFPA, headingToWaypoint);
             }
             else

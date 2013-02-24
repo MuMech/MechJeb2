@@ -47,7 +47,9 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            bool anyNodeExists = (vessel.patchedConicSolver.maneuverNodes.Count > 0);
+
+            List<ManeuverNode> maneuverNodes = GetManeuverNodes();
+            bool anyNodeExists = (maneuverNodes.Count() > 0);
 
             if (anyNodeExists)
             {
@@ -65,11 +67,7 @@ namespace MuMech
                 createNode = true;
             }
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) operation = (Operation)(((int)operation - 1 + numOperations) % numOperations);
-            GUILayout.Label(operationStrings[(int)operation]);
-            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) operation = (Operation)(((int)operation + 1 + numOperations) % numOperations);
-            GUILayout.EndHorizontal();
+            operation = (Operation)GuiUtils.ArrowSelector((int)operation, numOperations, operationStrings[(int)operation]);
 
             DoOperationParametersGUI();
 
@@ -77,10 +75,23 @@ namespace MuMech
 
             if (GUILayout.Button("Go"))
             {
+                //handle updating an existing node by removing it and then re-creating it
+                ManeuverNode removedNode = null;
+                if (!createNode)
+                {
+                    removedNode = maneuverNodes.Last();
+                    vessel.patchedConicSolver.RemoveManeuverNode(removedNode);
+                }
+
                 Orbit o = vessel.GetPatchAtUT(UT);
                 if (CheckPreconditions(o, UT))
                 {
                     MakeNodeForOperation(o, UT);
+                }
+                else if(!createNode)
+                {
+                    //Add removed node back in, since we decided not to create a new one.
+                    vessel.patchedConicSolver.AddManeuverNode(removedNode.UT).OnGizmoUpdated(removedNode.DeltaV, removedNode.UT);
                 }
             }
 
@@ -125,6 +136,12 @@ namespace MuMech
 
 
             base.WindowGUI(windowID);
+        }
+
+        List<ManeuverNode> GetManeuverNodes()
+        {
+            MechJebModuleLandingPredictions predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
+            return vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
         }
 
         void DoOperationParametersGUI()
@@ -186,7 +203,7 @@ namespace MuMech
         double DoChooseTimeGUI()
         {
             Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
-            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE };
+            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW};
             references[Operation.PERIAPSIS] = new TimeReference[] {TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS};
             references[Operation.APOAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
             references[Operation.ELLIPTICIZE] = new TimeReference[] { TimeReference.X_FROM_NOW };
@@ -203,38 +220,31 @@ namespace MuMech
             int referenceIndex = 0;
             if (allowedReferences.Contains(timeReference)) referenceIndex = Array.IndexOf(allowedReferences, timeReference);
 
-            GUILayout.BeginHorizontal();
-            if (allowedReferences.Length > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false)))
-            {
-                referenceIndex = (referenceIndex - 1 + allowedReferences.Length) % allowedReferences.Length;
-            }
+            referenceIndex = GuiUtils.ArrowSelector(referenceIndex, allowedReferences.Length, () =>
+                {
+                    switch (timeReference)
+                    {
+                        case TimeReference.APOAPSIS: GUILayout.Label("at the next apoapsis"); break;
+                        case TimeReference.CLOSEST_APPROACH: GUILayout.Label("at closest approach to target"); break;
+                        case TimeReference.EQ_ASCENDING: GUILayout.Label("at the equatorial AN"); break;
+                        case TimeReference.EQ_DESCENDING: GUILayout.Label("at the equatorial DN"); break;
+                        case TimeReference.PERIAPSIS: GUILayout.Label("at the next periapsis"); break;
+                        case TimeReference.REL_ASCENDING: GUILayout.Label("at the next AN with the target."); break;
+                        case TimeReference.REL_DESCENDING: GUILayout.Label("at the next DN with the target."); break;
 
-            switch (timeReference)
-            {
-                case TimeReference.APOAPSIS: GUILayout.Label("at the next apoapsis"); break;
-                case TimeReference.CLOSEST_APPROACH: GUILayout.Label("at closest approach to target"); break;
-                case TimeReference.EQ_ASCENDING: GUILayout.Label("at the equatorial AN"); break;
-                case TimeReference.EQ_DESCENDING: GUILayout.Label("at the equatorial DN"); break;
-                case TimeReference.PERIAPSIS: GUILayout.Label("at the next periapsis"); break;
-                case TimeReference.REL_ASCENDING: GUILayout.Label("at the next AN with the target."); break;
-                case TimeReference.REL_DESCENDING: GUILayout.Label("at the next DN with the target."); break;
+                        case TimeReference.X_FROM_NOW:
+                            leadTime.text = GUILayout.TextField(leadTime.text, GUILayout.Width(50));
+                            GUILayout.Label(" from now");
+                            break;
 
-                case TimeReference.X_FROM_NOW: 
-                    leadTime.text = GUILayout.TextField(leadTime.text, GUILayout.Width(50));
-                    GUILayout.Label(" from now");
-                    break;
+                        case TimeReference.ALTITUDE:
+                            GuiUtils.SimpleTextBox("at an altitude of", circularizeAltitude, "km");
+                            break;
+                    }
+                });
 
-                case TimeReference.ALTITUDE:
-                    GuiUtils.SimpleTextBox("at an altitude of", circularizeAltitude, "km");
-                    break;
-            }
-
-            if (allowedReferences.Length > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false)))
-            {
-                referenceIndex = (referenceIndex + 1) % allowedReferences.Length;
-            }
             timeReference = allowedReferences[referenceIndex];
-            GUILayout.EndHorizontal();
+
 
             bool error = false;
             string timeErrorMessage = "";
@@ -243,10 +253,11 @@ namespace MuMech
 
             Orbit o = orbit;
 
-            if (vessel.patchedConicSolver.maneuverNodes.Count > 0)
+            List<ManeuverNode> maneuverNodes = GetManeuverNodes();
+            if (maneuverNodes.Count() > 0)
             {
                 GUILayout.Label("after the last maneuver node.");
-                ManeuverNode last = vessel.patchedConicSolver.maneuverNodes.Last();
+                ManeuverNode last = maneuverNodes.Last();
                 UT = last.UT;
                 o = last.nextPatch;
             }
@@ -608,10 +619,6 @@ namespace MuMech
                     dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, UT, core.target.Orbit);
                     break;
             }
-
-
-            //handle updating an existing node by removing it and then re-creating it
-            if (!createNode) vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
 
             vessel.PlaceManeuverNode(o, dV, UT);
         }

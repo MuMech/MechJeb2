@@ -27,21 +27,11 @@ namespace MuMech
             CLOSING
         }
 
-        private WindowStat _windowStat = WindowStat.HIDDEN;
-        protected WindowStat windowStat
-        {
-            get { return _windowStat; }
-            set
-            {
-                if (_windowStat != value)
-                {
-                    _windowStat = value;
-                    // settingsChanged = true;
-                }
-            }
-        }
-
-        protected float windowProgr = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public WindowStat windowStat = WindowStat.HIDDEN;
+        
+        [Persistent(pass = (int)Pass.Global)]
+        public float windowProgr = 0;
 
         public bool firstDraw = true;
 

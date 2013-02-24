@@ -68,18 +68,18 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-            Debug.Log("custom info window OnLoad--registering info items!");
-            Debug.Log("vesselState = " + vesselState);
+//            Debug.Log("custom info window OnLoad--registering info items!");
+//            Debug.Log("vesselState = " + vesselState);
             RegisterInfoItems(vesselState);
             foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
             {
-                Debug.Log("Registering from " + m.GetType().Name);
+//                Debug.Log("Registering from " + m.GetType().Name);
                 RegisterInfoItems(m);
             }
 
             if (global == null) return;
 
-            Debug.Log("Loading custom windows from config node:" + global.ToString());
+//            Debug.Log("Loading custom windows from config node:" + global.ToString());
 
             //Load custom info windows, which are stored in our ConfigNode:
 
@@ -186,22 +186,12 @@ namespace MuMech
 
             List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
 
-
-            GUILayout.BeginHorizontal();
-
-            if (allWindows.Count > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false)))
-            {
-                editedWindow = allWindows[(allWindows.IndexOf(editedWindow) - 1 + allWindows.Count) % allWindows.Count];
-            }
-
-            editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
-
-            if (allWindows.Count > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false)))
-            {
-                editedWindow = allWindows[(allWindows.IndexOf(editedWindow) + 1) % allWindows.Count];
-            }
-
-            GUILayout.EndHorizontal();
+            int editedWindowIndex = allWindows.IndexOf(editedWindow);
+            editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
+                {
+                    editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
+                });
+            editedWindow = allWindows[editedWindowIndex];
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Show in:");
@@ -251,11 +241,7 @@ namespace MuMech
 
             GUILayout.Label("Click an item to add it to the info window:");
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) itemCategory = (InfoItem.Category)(((int)itemCategory - 1 + numCategories) % numCategories);
-            GUILayout.Label(itemCategory.ToString(), new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
-            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) itemCategory = (InfoItem.Category)(((int)itemCategory + 1) % numCategories);
-            GUILayout.EndHorizontal();
+            itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
 
             scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
             foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))

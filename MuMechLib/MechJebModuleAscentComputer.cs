@@ -42,7 +42,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
-            core.KillThrottle();
+            core.thrust.targetThrottle = 0;
 
             if (placedCircularizeNode) core.node.enabled = false;
 

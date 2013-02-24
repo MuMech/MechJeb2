@@ -31,7 +31,12 @@ namespace MuMech
 
         protected ReentrySimulation.Result result;
 
-        protected ManeuverNode aerobrakeNode = null;
+        public ManeuverNode aerobrakeNode = null;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            RenderingManager.AddToPostDrawQueue(1, DoMapView);
+        }
 
         public override void OnModuleEnabled()
         {
@@ -156,7 +161,6 @@ namespace MuMech
                 ReentrySimulation.Result r = GetResult();
                 if (r != null && r.outcome == ReentrySimulation.Outcome.AEROBRAKED)
                 {
-                    
                     //Compute the node dV:
                     Orbit preAerobrakeOrbit = GetReenteringPatch();
 
@@ -190,16 +194,10 @@ namespace MuMech
                 }
                 else
                 {
-//                    Debug.Log("No aerobraking");
                     //no aerobraking, remove the node:
                     if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                     {
-//                        Debug.Log("removing node");
                         vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
-                    }
-                    else
-                    {
-//                        Debug.Log("no node to remove");
                     }
                 }
             }
@@ -213,6 +211,17 @@ namespace MuMech
             }
         }
 
+        void DoMapView()
+        {
+            ReentrySimulation.Result drawnResult = GetResult();
+            if (MapView.MapIsEnabled && this.enabled && drawnResult != null)
+            {
+                if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
+                {
+                    GLUtils.DrawMapViewGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, 60);
+                }
+            }
+        }
 
         public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
 

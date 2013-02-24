@@ -210,7 +210,9 @@ namespace MuMech
 
             if (limitAcceleration)
             {
+                Debug.Log("limitAcceleration on: AccelerationLimitedThrottle = " + AccelerationLimitedThrottle());
                 s.mainThrottle = Mathf.Min(s.mainThrottle, AccelerationLimitedThrottle());
+                Debug.Log("resulting s.mainThrottle = " + s.mainThrottle);
             }
 
             if (limitToPreventFlameout)

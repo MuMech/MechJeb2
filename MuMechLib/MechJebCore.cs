@@ -36,8 +36,6 @@ namespace MuMech
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
-        private bool killThrottle = false;
-
         private bool weLockedEditor = false;
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
@@ -120,8 +118,11 @@ namespace MuMech
             if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
 
             //OnLoad doesn't get called for parts created in editor, so do that manually so 
-            //that we can load global settings:
-            if (state == StartState.Editor) OnLoad(null);
+            //that we can load global settings.
+            //However, if you press ctrl-Z, a new PartModule object gets created, on which the
+            //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
+            //check whether we have loaded any computer modules.
+            if (state == StartState.Editor && computerModules.Count == 0) OnLoad(null);
 
             foreach (ComputerModule module in computerModules)
             {
@@ -287,13 +288,13 @@ namespace MuMech
                     }
                 }
 
-                Debug.Log("OnLoad: loading from");
+                /*Debug.Log("OnLoad: loading from");
                 Debug.Log("Local:");
                 Debug.Log(local.ToString());
                 Debug.Log("Type:");
                 Debug.Log(type.ToString());
                 Debug.Log("Global:");
-                Debug.Log(global.ToString());
+                Debug.Log(global.ToString());*/
 
                 foreach (ComputerModule module in computerModules)
                 {
@@ -316,6 +317,8 @@ namespace MuMech
         {
             try
             {
+                Debug.Log("OnSave called");
+
                 base.OnSave(node); //is this necessary?
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
@@ -328,13 +331,13 @@ namespace MuMech
                     module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
                 }
 
-                Debug.Log("OnSave:");
+                /*Debug.Log("OnSave:");
                 Debug.Log("Local:");
                 Debug.Log(local.ToString());
                 Debug.Log("Type:");
                 Debug.Log(type.ToString());
                 Debug.Log("Global:");
-                Debug.Log(global.ToString());
+                Debug.Log(global.ToString());*/
 
                 node.nodes.Add(local);
 
@@ -365,12 +368,6 @@ namespace MuMech
             if (!CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
                 return;
-            }
-
-            if (killThrottle)
-            {
-                s.mainThrottle = 0;
-                killThrottle = false;
             }
 
             Drive(s);
@@ -415,15 +412,6 @@ namespace MuMech
             s.Z = Mathf.Clamp(s.Z, -1, 1);
         }
 
-        //A function that modules can call in order to kill the throttle on the next frame.
-        //This is useful when disabling an autopilot from FixedUpdate instead of Drive, since
-        //FixedUpdate doesn't have access to the FlightCtrlState.
-        public void KillThrottle()
-        {
-            killThrottle = true;
-        }
-
-
         private void OnGUI()
         {
             if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
@@ -435,24 +423,6 @@ namespace MuMech
                 {
                     if (module.enabled) module.DrawGUI(windowIDbase + wid, HighLogic.LoadedSceneIsEditor);
                     wid++;
-                }
-            }
-
-            //Todo: move this out of the core
-            //Todo: move this to the post-render queue since as it is it draws on top of windows
-            MechJebModuleLandingPredictions p = GetComputerModule<MechJebModuleLandingPredictions>();
-            ReentrySimulation.Result result = p.GetResult();
-            if (MapView.MapIsEnabled && p.enabled && result != null)
-            {
-                //GLUtils.DrawPath(p.result.body, p.result.WorldTrajectory(), Color.cyan, false);
-                if (result.outcome == ReentrySimulation.Outcome.LANDED)
-                {
-                    GLUtils.DrawMapViewGroundMarker(result.body, result.endPosition.latitude, result.endPosition.longitude, Color.blue, 60);
-                }
-                else if (result.outcome == ReentrySimulation.Outcome.AEROBRAKED)
-                {
-                    Orbit o = MuUtils.OrbitFromStateVectors(result.WorldEndPosition(), result.WorldEndVelocity(), result.body, result.endUT);
-                    //GLUtils.DrawOrbit(o, Color.blue);
                 }
             }
         }

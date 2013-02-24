@@ -199,8 +199,8 @@ namespace MuMech
         [ValueInfoItem("Vessel cost", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "$")]
         public double VesselCost()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost)*1000;
-            else return vessel.parts.Sum(p => p.partInfo.cost)*1000;
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost) * 1000;
+            else return vessel.parts.Sum(p => p.partInfo.cost) * 1000;
         }
 
         [ValueInfoItem("Crew count", InfoItem.Category.Vessel)]
@@ -221,6 +221,13 @@ namespace MuMech
         {
             if (core.target.Target == null) return "N/A";
             return MuUtils.ToSI(core.target.Distance, -1) + "m";
+        }
+
+        [ValueInfoItem("Heading to target", InfoItem.Category.Target)]
+        public string HeadingToTarget()
+        {
+            if (core.target.Target == null) return "N/A";
+            return vesselState.HeadingFromDirection(-core.target.RelativePosition).ToString("F1");
         }
 
         [ValueInfoItem("Relative velocity", InfoItem.Category.Target)]
@@ -302,11 +309,8 @@ namespace MuMech
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
-            try
-            {
+            
                 MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-
-                Debug.Log("stats = " + stats);
 
                 stats.RequestUpdate();
 
@@ -338,21 +342,15 @@ namespace MuMech
                 GUILayout.EndHorizontal();
 
                 GUILayout.EndVertical();
-            }
-            catch (Exception e)
-            {
-                Debug.Log("Stage stats info item caught exception: " + e);
-            }
         }
 
         bool DrawStageStatsColumn(string header, IEnumerable<string> data)
         {
             GUILayout.BeginVertical();
-            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { wordWrap = false };
-            bool ret = GUILayout.Button(header, s);
-
-            s = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight, wordWrap = false };
-            foreach (string datum in data) GUILayout.Label(datum, s);
+            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { alignment = TextAnchor.MiddleRight, wordWrap = false };
+            bool ret = GUILayout.Button(header + "   ", s);
+            
+            foreach (string datum in data) GUILayout.Label(datum + "   ", s);
 
             GUILayout.EndVertical();
 
@@ -365,6 +363,56 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
 
             stats.RequestUpdate();
+        }
+
+        [ValueInfoItem("Stage time (full throttle)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)]
+        public float StageTimeLeftFullThrottle()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+
+            if (stats.vacStats.Length == 0 || stats.atmoStats.Length == 0) return 0;
+
+            float vacTimeLeft = stats.vacStats[stats.vacStats.Length - 1].deltaTime;
+            float atmoTimeLeft = stats.atmoStats[stats.atmoStats.Length - 1].deltaTime;
+            float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
+
+            return timeLeft;
+        }
+
+        [ValueInfoItem("Stage time (current throttle)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)]
+        public float StageTimeLeftCurrentThrottle()
+        {
+            float fullThrottleTime = StageTimeLeftFullThrottle();
+            if (fullThrottleTime == 0) return 0;
+
+            return fullThrottleTime / FlightInputHandler.state.mainThrottle;
+        }
+
+        [ValueInfoItem("Stage time (hover)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)]
+        public float StageTimeLeftHover()
+        {
+            float fullThrottleTime = StageTimeLeftFullThrottle();
+            if (fullThrottleTime == 0) return 0;
+
+            double hoverThrottle = vesselState.localg / vesselState.maxThrustAccel;
+            return fullThrottleTime / (float)hoverThrottle;
+        }
+
+        [ValueInfoItem("Total ΔV (vacuum)", InfoItem.Category.Vessel, format = "F0", units = "m/s")]
+        public float TotalDeltaVVaccum()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+            return stats.vacStats.Sum(s => s.deltaV);
+        }
+
+        [ValueInfoItem("Total ΔV (atmo)", InfoItem.Category.Vessel, format = "F0", units = "m/s")]
+        public float TotalDeltaVAtmosphere()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+            return stats.atmoStats.Sum(s => s.deltaV);
         }
 
         [GeneralInfoItem("Docking guidance: velocity", InfoItem.Category.Target)]

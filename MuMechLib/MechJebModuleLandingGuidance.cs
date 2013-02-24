@@ -72,12 +72,12 @@ namespace MuMech
                         GUILayout.Label("Predicted orbit after aerobraking:");
                         Orbit o = result.EndOrbit();
                         if (o.eccentricity > 1) GUILayout.Label("Hyperbolic, eccentricity = " + o.eccentricity.ToString("F2"));
-                        else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + " km x " + MuUtils.ToSI(o.ApA, 3) + " km");
+                        else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + "m x " + MuUtils.ToSI(o.ApA, 3) + "m");
                         break;
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
                         GUILayout.Label("Orbit does not reenter:");
-                        GUILayout.Label(MuUtils.ToSI(orbit.PeA, 3) + " km Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + " atmosphere height");
+                        GUILayout.Label(MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + "m atmosphere height");
                         break;
 
                     case ReentrySimulation.Outcome.TIMED_OUT:

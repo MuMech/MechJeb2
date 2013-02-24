@@ -127,7 +127,7 @@ namespace MuMech
         public void Update(Vessel vessel)
         {
             if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
-            if (vessel.packed) return;
+            //if (vessel.packed) return;
 
             time = Planetarium.GetUniversalTime();
             deltaT = TimeWarp.fixedDeltaTime;
@@ -292,6 +292,10 @@ namespace MuMech
                 }
             }
 
+            thrustAvailable += einfo.thrustAvailable;
+            thrustMinimum += einfo.thrustMinimum;
+            torqueThrustPYAvailable += einfo.torqueThrustPYAvailable;
+
             // Convert the resource information from the einfo and iinfo format
             // to the more useful ResourceInfo format.
             resources = new Dictionary<int, ResourceInfo>();
@@ -337,6 +341,11 @@ namespace MuMech
         public double ThrustAccel(double throttle)
         {
             return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
+        }
+
+        public double HeadingFromDirection(Vector3d dir)
+        {
+            return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(dir, east), Vector3d.Dot(dir, north)));
         }
 
         // Used during the vesselState constructor; distilled to other

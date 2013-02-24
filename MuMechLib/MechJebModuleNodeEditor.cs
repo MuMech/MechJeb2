@@ -59,11 +59,7 @@ namespace MuMech
                 int nodeIndex = vessel.patchedConicSolver.maneuverNodes.IndexOf(node);
                 int numNodes = vessel.patchedConicSolver.maneuverNodes.Count;
 
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) nodeIndex = (nodeIndex - 1 + numNodes) % numNodes;
-                GUILayout.Label("Maneuver node #" + (nodeIndex + 1));
-                if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) nodeIndex = (nodeIndex + 1) % numNodes;
-                GUILayout.EndHorizontal();
+                nodeIndex = GuiUtils.ArrowSelector(nodeIndex, numNodes, "Maneuver node #" + (nodeIndex + 1));
 
                 node = vessel.patchedConicSolver.maneuverNodes[nodeIndex];
             }
@@ -165,9 +161,7 @@ namespace MuMech
                 node.OnGizmoUpdated(node.DeltaV, UT);
             }
 
-            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) snap = (Snap)(((int)snap - 1 + numSnaps) % numSnaps);
-            GUILayout.Label(snapStrings[(int)snap], GUILayout.Width(100));
-            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) snap = (Snap)(((int)snap + 1) % numSnaps);
+            snap = (Snap)GuiUtils.ArrowSelector((int)snap, numSnaps, snapStrings[(int)snap]);
 
             GUILayout.EndHorizontal();
 

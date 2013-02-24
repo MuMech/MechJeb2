@@ -25,12 +25,8 @@ namespace MuMech
 
             Runway[] runways = MechJebModuleSpaceplaneAutopilot.runways;
             int runwayIndex = Array.IndexOf(runways, autopilot.runway);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) runwayIndex = (runwayIndex - 1 + runways.Length) % runways.Length;
-            GUILayout.Label(autopilot.runway.name);
-            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) runwayIndex = (runwayIndex + 1) % runways.Length;
+            runwayIndex = GuiUtils.ArrowSelector(runwayIndex, runways.Length, autopilot.runway.name);
             autopilot.runway = runways[runwayIndex];
-            GUILayout.EndHorizontal();
 
             GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autopilot.runway.Start(vesselState.CoM)), 0) + "m");
 

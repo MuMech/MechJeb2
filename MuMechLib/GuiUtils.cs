@@ -170,6 +170,23 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
+        public static int ArrowSelector(int index, int modulo, Action centerGuiAction) 
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) index = (index - 1 + modulo) % modulo;
+            centerGuiAction();
+            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) index = (index + 1) % modulo;
+            GUILayout.EndHorizontal();
+
+            return index;
+        }
+
+        public static int ArrowSelector(int index, int modulo, string label)
+        {
+            Action drawLabel = () => GUILayout.Label(label, new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+            return ArrowSelector(index, modulo, drawLabel);
+        }
+
         public static string TimeToDHMS(double seconds)
         {
             if(double.IsInfinity(seconds) || double.IsNaN(seconds)) return seconds.ToString();

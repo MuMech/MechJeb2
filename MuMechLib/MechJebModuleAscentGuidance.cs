@@ -23,13 +23,11 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            core.thrust.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
             if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
-            core.thrust.users.Remove(this);
             launchingToPlane = false;
             launchingToRendezvous = false;
             core.GetComputerModule<MechJebModuleAscentPathEditor>().enabled = false;
