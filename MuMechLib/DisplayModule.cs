@@ -13,7 +13,12 @@ namespace MuMech
         public Rect windowPos 
         {
             get { return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w); }
-            set { windowVector = new Vector4(value.x, value.y, value.width, value.height); }
+            set 
+            { 
+                windowVector = new Vector4(value.x, value.y, value.width, value.height);
+                windowVector.x = Mathf.Clamp(windowVector.x, 0, Screen.width - 10);
+                windowVector.y = Mathf.Clamp(windowVector.y, 0, Screen.height - 10);
+            }
         }
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects

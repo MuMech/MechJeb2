@@ -89,8 +89,6 @@ namespace MuMech
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
 
-                //ConfigNode.LoadObjectFromConfig(window, windowNode);
-
                 window.title = (windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window");
 
                 if (windowNode.HasValue("enabled"))

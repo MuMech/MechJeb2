@@ -102,6 +102,13 @@ namespace MuMech
             return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
         }
 
+        public static bool ApoapsisIsHigher(double ApR, double than)
+        {
+            if (than > 0 && ApR < 0) return true;
+            if (than < 0 && ApR > 0) return false;
+            return ApR > than;
+        }
+
         //Computes the delta-V of the burn at a given UT required to change an orbits apoapsis to a given value.
         //The computed burn is always prograde or retrograde, though this may not be strictly optimal.
         //Note that you can pass in a negative apoapsis if the desired final orbit is hyperbolic
@@ -113,9 +120,9 @@ namespace MuMech
             if(newApR > 0) newApR = Math.Max(newApR, radius + 1);
 
             //are we raising or lowering the periapsis?
-            bool raising;
-            if (newApR > 0) raising = (o.ApR > 0 && newApR > o.ApR);
-            else raising = (o.ApR > 0 || o.ApR < newApR);
+            bool raising = ApoapsisIsHigher(newApR, o.ApR);
+
+            Debug.Log("raising = " + raising);
 
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
 
@@ -127,7 +134,7 @@ namespace MuMech
                 maxDeltaV = 0.25;
 
                 double ap = o.ApR;
-                while (ap < newApR || (newApR < 0 && ap > 0))
+                while (ApoapsisIsHigher(newApR, ap))
                 {
                     maxDeltaV *= 2;
                     ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
@@ -146,7 +153,7 @@ namespace MuMech
                 double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
                 double testApoapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR;
 
-                bool above = (testApoapsis > newApR) && !(testApoapsis > 0 && newApR < 0);
+                bool above = ApoapsisIsHigher(testApoapsis, newApR);
 
                 if ((raising && above) || (!raising && !above))
                 {

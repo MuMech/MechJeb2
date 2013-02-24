@@ -170,12 +170,14 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public static int ArrowSelector(int index, int modulo, Action centerGuiAction) 
+        public static int ArrowSelector(int index, int numIndices, Action centerGuiAction) 
         {
+            if (numIndices == 0) return index;
+
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◀", GUILayout.ExpandWidth(false))) index = (index - 1 + modulo) % modulo;
+            if (numIndices > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false))) index = (index - 1 + numIndices) % numIndices;
             centerGuiAction();
-            if (GUILayout.Button("▶", GUILayout.ExpandWidth(false))) index = (index + 1) % modulo;
+            if (numIndices > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false))) index = (index + 1) % numIndices;
             GUILayout.EndHorizontal();
 
             return index;

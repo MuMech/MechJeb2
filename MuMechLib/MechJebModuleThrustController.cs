@@ -225,6 +225,11 @@ namespace MuMech
             // Most important is the 'X' cutoff command.
             s.mainThrottle = targetThrottle;
 
+            if (limitThrottle)
+            {
+                s.mainThrottle = Mathf.Min(s.mainThrottle, (float)maxThrottle);
+            }
+
             if (limitToTerminalVelocity)
             {
                 s.mainThrottle = Mathf.Min(s.mainThrottle, TerminalVelocityThrottle());
