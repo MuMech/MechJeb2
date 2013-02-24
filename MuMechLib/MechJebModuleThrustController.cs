@@ -55,6 +55,33 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble maxAcceleration = 40;
 
+        [GeneralInfoItem("Limit acceleration", InfoItem.Category.Thrust)]
+        public void LimitAccelerationInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            limitAcceleration = GUILayout.Toggle(limitAcceleration, "Limit acceleration to", GUILayout.ExpandWidth(false));
+            maxAcceleration.text = GUILayout.TextField(maxAcceleration.text, GUILayout.Width(50));
+            GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        [Persistent(pass = (int)Pass.Local)]
+        public bool limitThrottle = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble maxThrottle = new EditableDouble(1, 0.01);
+
+        [GeneralInfoItem("Limit throttle", InfoItem.Category.Thrust)]
+        public void LimitThrottleInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            limitThrottle = GUILayout.Toggle(limitThrottle, "Limit throttle to", GUILayout.ExpandWidth(false));
+            maxThrottle.text = GUILayout.TextField(maxThrottle.text, GUILayout.Width(50));
+            GUILayout.Label("%", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+
         public float targetThrottle = 0;
 
 
@@ -210,9 +237,7 @@ namespace MuMech
 
             if (limitAcceleration)
             {
-                Debug.Log("limitAcceleration on: AccelerationLimitedThrottle = " + AccelerationLimitedThrottle());
                 s.mainThrottle = Mathf.Min(s.mainThrottle, AccelerationLimitedThrottle());
-                Debug.Log("resulting s.mainThrottle = " + s.mainThrottle);
             }
 
             if (limitToPreventFlameout)

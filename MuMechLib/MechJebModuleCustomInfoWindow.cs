@@ -89,7 +89,9 @@ namespace MuMech
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
 
-                ConfigNode.LoadObjectFromConfig(window, windowNode);
+                //ConfigNode.LoadObjectFromConfig(window, windowNode);
+
+                window.title = (windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window");
 
                 if (windowNode.HasValue("enabled"))
                 {
@@ -297,7 +299,6 @@ namespace MuMech
         }
         public Category category;
 
-
         [Persistent]
         public string id;
 
@@ -324,7 +325,7 @@ namespace MuMech
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
         bool time;
-
+        
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {

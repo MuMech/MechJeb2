@@ -290,13 +290,13 @@ namespace MuMech
 
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool showInitialMass = true;
+        public bool showInitialMass = false;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showFinalMass = true;
+        public bool showFinalMass = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool showInitialTWR = true;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showMaxTWR = true;
+        public bool showMaxTWR = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool showVacDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
@@ -357,15 +357,37 @@ namespace MuMech
             return ret;
         }
 
-        [ActionInfoItem("Update stage stats", InfoItem.Category.Vessel)]
+        /*[ActionInfoItem("Update stage stats", InfoItem.Category.Vessel)]
         public void UpdateStageStats()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
 
             stats.RequestUpdate();
+        }*/
+
+        [ValueInfoItem("Stage ΔV (vac)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
+        public float StageDeltaVVacuum()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+
+            if (stats.vacStats.Length == 0) return 0;
+
+            return stats.vacStats[stats.vacStats.Length - 1].deltaV;
         }
 
-        [ValueInfoItem("Stage time (full throttle)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("Stage ΔV (atmo)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
+        public float StageDeltaVAtmosphere()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+
+            if (stats.atmoStats.Length == 0) return 0;
+
+            return stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
+        }
+
+        [ValueInfoItem("Stage time (full throttle)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME, showInEditor = true)]
         public float StageTimeLeftFullThrottle()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
@@ -399,7 +421,7 @@ namespace MuMech
             return fullThrottleTime / (float)hoverThrottle;
         }
 
-        [ValueInfoItem("Total ΔV (vacuum)", InfoItem.Category.Vessel, format = "F0", units = "m/s")]
+        [ValueInfoItem("Total ΔV (vacuum)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
         public float TotalDeltaVVaccum()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
@@ -407,7 +429,7 @@ namespace MuMech
             return stats.vacStats.Sum(s => s.deltaV);
         }
 
-        [ValueInfoItem("Total ΔV (atmo)", InfoItem.Category.Vessel, format = "F0", units = "m/s")]
+        [ValueInfoItem("Total ΔV (atmo)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
         public float TotalDeltaVAtmosphere()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();

@@ -100,7 +100,6 @@ namespace MuMech
 
             stats.deltaTime = dt;
             stats.endMass = VesselMass();
-            //stats.endThrust = VesselThrust(throttle);
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.ComputeTimeStepDeltaV();
 
@@ -138,12 +137,14 @@ namespace MuMech
                 return true;
             }
 
+            var burnedResources = activeEngines.SelectMany(eng => eng.BurnedResources()).Distinct();
+
             //if staging would decouple an active engine or non-empty fuel tank, we're not allowed to stage
             foreach (FuelNode n in nodes)
             {
-                if (n.decoupledInStage == (simStage - 1))
+                if (n.decoupledInStage == (simStage - 1) && !n.isSepratron)
                 {
-                    if (n.ContainsResources() || (activeEngines.Contains(n) && !n.isSepratron))
+                    if (activeEngines.Contains(n) || n.ContainsResources(burnedResources))
                     {
                         //Debug.Log("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
                         return false;
@@ -381,10 +382,16 @@ namespace MuMech
             return resourceDrains.Keys.Where(id => resources[id] > DRAINED).Min(id => resources[id] / resourceDrains[id]);
         }
 
-        public bool ContainsResources()
+        //Returns an enumeration of the resources this part burns 
+        public IEnumerable<int> BurnedResources()
         {
-            //Todo: need to fix this to ignore unimportant resources like monopropellant
-            return resources.Values.Any(amount => amount > DRAINED);
+            return resourceConsumptions.Keys;
+        }
+
+        //returns whether this part contains any of the given resources
+        public bool ContainsResources(IEnumerable<int> whichResources)
+        {
+            return whichResources.Any(id => resources[id] > DRAINED);
         }
 
         public bool CanDrawNeededResources(List<FuelNode> vessel)
@@ -468,7 +475,7 @@ namespace MuMech
         }
 
 
-
+        
         //We need to drain <totalDrainRate> of resource <type> per second from somewhere.
         //We're not allowed to drain it through any of the nodes in <visited>.
         //Decide whether to drain it from this node, or pass the recursive buck
