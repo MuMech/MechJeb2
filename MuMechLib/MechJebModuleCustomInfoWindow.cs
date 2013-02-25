@@ -89,13 +89,17 @@ namespace MuMech
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
 
-                window.title = (windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window");
+                //window.title = (windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window");
+
+                ConfigNode.LoadObjectFromConfig(window, windowNode);
 
                 if (windowNode.HasValue("enabled"))
                 {
                     bool loadedEnabled;
                     if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled)) window.enabled = loadedEnabled;
                 }
+
+                window.items = new List<InfoItem>();
 
                 if (windowNode.HasNode("items"))
                 {
@@ -278,7 +282,7 @@ namespace MuMech
 
 
 
-    public abstract class InfoItem
+    public class InfoItem
     {
         public string name;
         public string description;
@@ -300,6 +304,8 @@ namespace MuMech
         [Persistent]
         public string id;
 
+        public InfoItem() { }
+
         public InfoItem(InfoItemAttribute attribute)
         {
             name = attribute.name;
@@ -309,7 +315,7 @@ namespace MuMech
             showInFlight = attribute.showInFlight;
         }
 
-        public abstract void DrawItem();
+        public virtual void DrawItem() { }
     }
 
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.

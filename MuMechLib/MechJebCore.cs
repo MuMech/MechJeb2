@@ -352,6 +352,11 @@ namespace MuMech
 
         public void OnDestroy()
         {
+            if (this == vessel.GetMasterMechJeb() && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
+            {
+                OnSave(null);
+            }
+
             foreach (ComputerModule module in computerModules)
             {
                 module.OnDestroy();

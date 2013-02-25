@@ -85,7 +85,7 @@ namespace MuMech
             stats.startThrust = VesselThrust(throttle);
 
             foreach (FuelNode n in nodes) n.ResetDrainRates();
-            
+
             List<FuelNode> engines = FindActiveEngines();
             foreach (FuelNode n in engines) n.SetConsumptionRates(throttle, atmospheres);
             foreach (FuelNode n in engines) n.AssignResourceDrainRates(nodes);
@@ -211,14 +211,16 @@ namespace MuMech
             }
 
             //Append joins two Stats describing adjacent intervals of time into one describing the combined interval
-            public Stats Append(Stats s) 
+            public Stats Append(Stats s)
             {
-                return new Stats 
-                { 
-                    startMass = this.startMass, endMass = s.endMass, 
+                return new Stats
+                {
+                    startMass = this.startMass,
+                    endMass = s.endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
-                    deltaTime = this.deltaTime + s.deltaTime, deltaV = this.deltaV + s.deltaV
+                    deltaTime = this.deltaTime + s.deltaTime,
+                    deltaV = this.deltaV + s.deltaV
                 };
             }
         }
@@ -257,7 +259,7 @@ namespace MuMech
 
         public FuelNode(Part part)
         {
-            if(part.physicalSignificance != Part.PhysicalSignificance.NONE) dryMass = part.mass;
+            if (part.physicalSignificance != Part.PhysicalSignificance.NONE) dryMass = part.mass;
             inverseStage = part.inverseStage;
             isFuelLine = (part is FuelLine);
             isSepratron = part.IsSepratron();
@@ -266,15 +268,15 @@ namespace MuMech
             //note which resources this part has stored
             foreach (PartResource r in part.Resources)
             {
-                if(r.info.name != "ElectricCharge") resources[r.info.id] = (float)r.amount;
+                if (r.info.name != "ElectricCharge") resources[r.info.id] = (float)r.amount;
                 resourcesUnobtainableFromParent.Add(r.info.id);
             }
 
             //record relevant engine stats
-            if(part.HasModule<ModuleEngines>()) 
+            ModuleEngines engine = part.Modules.OfType<ModuleEngines>().FirstOrDefault();
+            if (engine != null && engine.isEnabled)
             {
                 isEngine = true;
-                ModuleEngines engine = part.Modules.OfType<ModuleEngines>().First();
 
                 maxThrust = engine.maxThrust;
                 ispCurve = engine.atmosphereCurve;
@@ -374,7 +376,7 @@ namespace MuMech
         {
             foreach (int type in resourceDrains.Keys) resources[type] -= dt * resourceDrains[type];
         }
-        
+
         public float MaxTimeStep()
         {
             if (resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() == 0) return float.MaxValue;
@@ -475,7 +477,7 @@ namespace MuMech
         }
 
 
-        
+
         //We need to drain <totalDrainRate> of resource <type> per second from somewhere.
         //We're not allowed to drain it through any of the nodes in <visited>.
         //Decide whether to drain it from this node, or pass the recursive buck

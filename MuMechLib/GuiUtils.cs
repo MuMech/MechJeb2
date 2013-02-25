@@ -7,13 +7,18 @@ using UnityEngine;
 
 namespace MuMech
 {
+    public interface IEditable
+    {
+        string text { get; set;  }
+    }
+
     //An EditableDouble stores a double value and a text string. The user can edit the string. 
     //Whenever the text is edited, it is parsed and the parsed value is stored in val. As a 
     //convenience, a multiplier can be specified so that the stored value is actually 
     //(multiplier * parsed value). If the parsing fails, the parsed flag is set to false and
     //the stored value is unchanged. There are implicit conversions between EditableDouble and
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
-    public class EditableDouble
+    public class EditableDouble : IEditable
     {
         [Persistent]
         public double val;
@@ -141,6 +146,46 @@ namespace MuMech
         }
     }
 
+    public class EditableInt : IEditable
+    {
+        [Persistent]
+        public int val;
+
+        public bool parsed;
+        [Persistent]
+        public string _text;
+        public virtual string text
+        {
+            get { return _text; }
+            set
+            {
+                _text = value;
+                _text = Regex.Replace(_text, @"[^\d+-]", ""); //throw away junk characters
+                int parsedValue;
+                parsed = int.TryParse(_text, out parsedValue);
+                if (parsed) val = parsedValue;
+            }
+        }
+
+        public EditableInt() : this(0) { }
+
+        public EditableInt(int val)
+        {
+            this.val = val;
+            _text = val.ToString();
+        }
+
+        public static implicit operator int(EditableInt x)
+        {
+            return x.val;
+        }
+
+        public static implicit operator EditableInt(int x)
+        {
+            return new EditableInt(x);
+        }
+    }
+
     public static class GuiUtils
     {
         static GUIStyle _yellowOnHover;
@@ -161,7 +206,7 @@ namespace MuMech
             }
         }
 
-        public static void SimpleTextBox(string leftLabel, EditableDouble ed, string rightLabel = "", float width = 100)
+        public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));

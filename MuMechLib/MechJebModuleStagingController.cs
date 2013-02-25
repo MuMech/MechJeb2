@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -15,9 +16,19 @@ namespace MuMech
 
         //adjustable parameters:
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public double AutoStageDelay = 1.0;
+        public EditableDouble autoStageDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
-        public int AutoStageLimit = 0;
+        public EditableInt autoStageLimit = 0;
+
+        [GeneralInfoItem("Autostaging", InfoItem.Category.Misc)]
+        public void AutostageInfoItem()
+        {
+            GUILayout.BeginVertical();
+            enabled = GUILayout.Toggle(enabled, "Auto-stage");
+            GuiUtils.SimpleTextBox("Staging delay:", autoStageDelay, "s");
+            GuiUtils.SimpleTextBox("Stop at stage #", autoStageLimit, "");
+            GUILayout.EndVertical();
+        }
 
         //internal state:
         double lastStageTime = 0;
@@ -29,8 +40,8 @@ namespace MuMech
 
             //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > AutoStageLimit
-                && vesselState.time - lastStageTime > AutoStageDelay)
+            if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > autoStageLimit
+                && vesselState.time - lastStageTime > autoStageDelay)
             {
                 //don't decouple active or idle engines or tanks
                 if (!inverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel))
