@@ -38,6 +38,8 @@ namespace MuMech
 
         private bool weLockedEditor = false;
 
+        private float lastSettingsSaveTime;
+
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
@@ -124,6 +126,8 @@ namespace MuMech
             //check whether we have loaded any computer modules.
             if (state == StartState.Editor && computerModules.Count == 0) OnLoad(null);
 
+            lastSettingsSaveTime = Time.time;
+
             foreach (ComputerModule module in computerModules)
             {
                 module.OnStart(state);
@@ -181,6 +185,17 @@ namespace MuMech
             {
                 computerModules.Sort();
                 modulesUpdated = false;
+            }
+
+            //periodically save settings in case we quit unexpectedly
+            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+            {
+                if (Time.time > lastSettingsSaveTime + 30)
+                {
+                    Debug.Log("Doing periodic settings save");
+                    OnSave(null);
+                    lastSettingsSaveTime = Time.time;
+                }
             }
 
             if (vessel == null) return; //don't run ComputerModules' OnFixedUpdate in editor
@@ -242,22 +257,22 @@ namespace MuMech
             node = GetComputerModule<MechJebModuleNodeExecutor>();
         }
 
-        public override void OnLoad(ConfigNode configNode)
+        public override void OnLoad(ConfigNode sfsNode)
         {
             try
             {
                 Debug.Log("OnLoad called !!!!!!!!!!!!!!!!!");
 
-                base.OnLoad(configNode); //is this necessary?
+                base.OnLoad(sfsNode); //is this necessary?
 
                 LoadComputerModules();
 
                 Debug.Log("LOADED " + computerModules.Count + " MODULES");
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
-                if (configNode != null && configNode.HasNode("MechJebLocalSettings"))
+                if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
                 {
-                    local = configNode.GetNode("MechJebLocalSettings");
+                    local = sfsNode.GetNode("MechJebLocalSettings");
                 }
 
                 //Todo: load a different file for each vessel type
@@ -313,13 +328,13 @@ namespace MuMech
 
         //Todo: periodically save global and type settings so that e.g. window positions are saved on quitting
         //even if the player doesn't explicitly quicksave.
-        public override void OnSave(ConfigNode node)
+        public override void OnSave(ConfigNode sfsNode)
         {
             try
             {
                 Debug.Log("OnSave called");
 
-                base.OnSave(node); //is this necessary?
+                base.OnSave(sfsNode); //is this necessary?
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
@@ -339,7 +354,7 @@ namespace MuMech
                 Debug.Log("Global:");
                 Debug.Log(global.ToString());*/
 
-                node.nodes.Add(local);
+                if(sfsNode != null) sfsNode.nodes.Add(local);
 
                 type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg")); //Todo: save a different file for each vessel type.
                 global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));

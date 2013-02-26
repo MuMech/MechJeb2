@@ -134,6 +134,7 @@ namespace MuMech
             }
 
 
+
             GUILayout.EndVertical();
 
 
@@ -626,6 +627,7 @@ namespace MuMech
 
             vessel.PlaceManeuverNode(o, dV, UT);
         }
+
 
         public override GUILayoutOption[] WindowOptions()
         {

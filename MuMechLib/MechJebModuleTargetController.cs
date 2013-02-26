@@ -239,6 +239,7 @@ namespace MuMech
 
         void DrawMapViewTarget()
         {
+            if (HighLogic.LoadedSceneIsEditor) return;
             if (!MapView.MapIsEnabled) return;
             if (!vessel.isActiveVessel || vessel.GetMasterMechJeb() != core) return;
 
