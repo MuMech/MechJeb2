@@ -92,7 +92,7 @@ namespace MuMech
                 foreach (DisplayModule display in core.GetComputerModules<DisplayModule>())
                 {
                     if (display is MechJebModuleMenu) continue;
-                    if (display.enabled && (HighLogic.LoadedSceneIsEditor ? display.showInEditor : display.showInFlight))
+                    if (display.enabled && display.showInCurrentScene)
                     {
                         somethingEnabled = true;
                     }

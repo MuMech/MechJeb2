@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleCustomInfoWindow : DisplayModule
+    public class MechJebModuleCustomInfoWindow : DisplayModule
     {
         [Persistent(pass = (int)Pass.Global)]
         public string title = "Custom Info Window";
@@ -44,6 +44,24 @@ namespace MuMech
             return new GUILayoutOption[] { GUILayout.Width(250), GUILayout.Height(30) };
         }
 
+        public override void DrawGUI(int baseWindowID, bool inEditor)
+        {
+            base.DrawGUI(baseWindowID, inEditor);
+
+            if (showInCurrentScene)
+            {
+                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 50, 20), "Edit", GuiUtils.yellowOnHover))
+                {
+                    MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+                    if (editor != null)
+                    {
+                        editor.enabled = true;
+                        editor.editedWindow = this;
+                    }
+                }
+            }
+        }
+
 
         public override string GetName()
         {
@@ -58,7 +76,7 @@ namespace MuMech
     public class MechJebModuleCustomWindowEditor : DisplayModule
     {
         public List<InfoItem> registry = new List<InfoItem>();
-        MechJebModuleCustomInfoWindow editedWindow;
+        public MechJebModuleCustomInfoWindow editedWindow;
         InfoItem selectedItem;
         [Persistent(pass = (int)Pass.Global)]
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;

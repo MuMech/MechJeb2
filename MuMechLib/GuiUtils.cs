@@ -298,7 +298,7 @@ namespace MuMech
             //try to check if the mouse is over any active displaymodule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.enabled && (HighLogic.LoadedSceneIsEditor ? m.showInEditor : m.showInFlight)
+                if (m.enabled && m.showInCurrentScene
                     && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
                 {
                     return true;

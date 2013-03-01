@@ -41,7 +41,7 @@ namespace MuMech
 
             foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
             {
-                if (!module.hidden && (HighLogic.LoadedSceneIsEditor ? module.showInEditor : module.showInFlight))
+                if (!module.hidden && module.showInCurrentScene)
                 {
                     bool on = module.enabled;
                     if (on != GUILayout.Toggle(on, module.GetName()))

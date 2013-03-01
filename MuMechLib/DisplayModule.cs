@@ -29,6 +29,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
 
+        public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
+
         public DisplayModule(MechJebCore core) : base(core) {}
 
         public virtual GUILayoutOption[] WindowOptions()
@@ -44,7 +46,7 @@ namespace MuMech
 
         public virtual void DrawGUI(int baseWindowID, bool inEditor)
         {
-            if (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight)
+            if (showInCurrentScene)
             {
                 windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, GetName(), WindowOptions());
 
