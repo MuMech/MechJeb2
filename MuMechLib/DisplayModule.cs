@@ -46,7 +46,12 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight)
             {
-                windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, GetName(), WindowOptions());                
+                windowPos = GUILayout.Window(baseWindowID, windowPos, WindowGUI, GetName(), WindowOptions());
+
+                if (GUI.Button(new Rect(windowPos.x + windowPos.width - 18, windowPos.y + 2, 16, 16), ""))
+                {
+                    enabled = false;
+                }
             }
         }
 

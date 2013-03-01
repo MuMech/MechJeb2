@@ -43,7 +43,6 @@ namespace MuMech
             {
                 case Step.AlignPlanes:
 
-
                     GUILayout.Label("First, bring your relative inclination to zero by aligning your orbital plane with the target's orbital plane:");
                     GUILayout.Label("Relative inclination: " + orbit.RelativeInclination(core.target.Orbit).ToString("F2") + "º");
 
@@ -122,7 +121,7 @@ namespace MuMech
                     double closestApproachTime = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
 
                     GUILayout.Label("Once on a transfer trajectory, match velocities at closest approach:");
-                    GUILayout.Label("Time until closest approach: " + MuUtils.ToSI(closestApproachTime - vesselState.time, 0) + "s");
+                    GUILayout.Label("Time until closest approach: " + GuiUtils.TimeToDHMS(closestApproachTime - vesselState.time));
                     GUILayout.Label("Separation at closest approach: " + MuUtils.ToSI(orbit.Separation(core.target.Orbit, closestApproachTime), 0) + "m");
 
                     if (GUILayout.Button("Match velocities at closest approach"))

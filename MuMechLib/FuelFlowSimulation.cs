@@ -259,7 +259,15 @@ namespace MuMech
 
         public FuelNode(Part part)
         {
-            if (part.physicalSignificance != Part.PhysicalSignificance.NONE) dryMass = part.mass;
+            bool physicallySignificant = (part.physicalSignificance != Part.PhysicalSignificance.NONE);
+            if (part.HasModule<ModuleLandingGear>() || part.HasModule<LaunchClamp>())
+            {
+                //Landing gear set physicalSignificance = NONE when they enter the flight scene
+                //Launch clamp mass should be ignored.
+                physicallySignificant = false; 
+            }
+            if (physicallySignificant) dryMass = part.mass;
+
             inverseStage = part.inverseStage;
             isFuelLine = (part is FuelLine);
             isSepratron = part.IsSepratron();
@@ -274,15 +282,22 @@ namespace MuMech
 
             //record relevant engine stats
             ModuleEngines engine = part.Modules.OfType<ModuleEngines>().FirstOrDefault();
-            if (engine != null && engine.isEnabled)
+            if (engine != null)
             {
-                isEngine = true;
+                //Only count engines that either are ignited or will ignite in the future:
+                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState)
+                {
+                    //if an engine has been activated early, pretend it is in the current stage:
+                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
 
-                maxThrust = engine.maxThrust;
-                ispCurve = engine.atmosphereCurve;
+                    isEngine = true;
 
-                propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
-                propellantRatios = engine.propellants.Where(prop => prop.name != "ElectricCharge").ToDictionary(prop => prop.id, prop => prop.ratio);
+                    maxThrust = engine.maxThrust;
+                    ispCurve = engine.atmosphereCurve;
+
+                    propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
+                    propellantRatios = engine.propellants.Where(prop => prop.name != "ElectricCharge").ToDictionary(prop => prop.id, prop => prop.ratio);
+                }
             }
 
             //figure out when this part gets decoupled. We do this by looking through this part and all this part's ancestors

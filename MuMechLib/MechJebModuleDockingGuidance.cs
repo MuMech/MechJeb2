@@ -77,7 +77,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            autopilot.enabled = false;
+            if(autopilot != null) autopilot.enabled = false;
         }
 
         public override string GetName()

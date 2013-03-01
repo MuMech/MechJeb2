@@ -201,28 +201,26 @@ namespace MuMech
                 {
                     if (tmode == TMode.DIRECT)
                     {
-                        trans_prev_thrust = s.mainThrottle = trans_spd_act / 100.0F;
+                        trans_prev_thrust = targetThrottle = trans_spd_act / 100.0F;
                     }
                     else
                     {
-                        trans_prev_thrust = s.mainThrottle = Mathf.Clamp01(trans_prev_thrust + (float)t_act);
+                        trans_prev_thrust = targetThrottle = Mathf.Clamp01(trans_prev_thrust + (float)t_act);
                     }
                 }
                 else
                 {
                     if ((core.attitude.attitudeError >= 2) && (vesselState.torqueThrustPYAvailable > vesselState.torquePYAvailable * 10))
                     {
-                        trans_prev_thrust = s.mainThrottle = 0.1F;
+                        trans_prev_thrust = targetThrottle = 0.1F;
                     }
                     else
                     {
-                        trans_prev_thrust = s.mainThrottle = 0;
+                        trans_prev_thrust = targetThrottle = 0;
                     }
                 }
             }
 
-            // TODO: ideally, if the user sets the throttle via shift/ctrl, or an autopilot sets the throttle, we automagically update targetThrottle.
-            // Most important is the 'X' cutoff command.
             s.mainThrottle = targetThrottle;
 
             if (limitThrottle)

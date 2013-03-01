@@ -436,7 +436,7 @@ namespace MuMech
         {
             
             if (this == vessel.GetMasterMechJeb() &&
-                (HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD)))
+                ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD))))
             {
                 int wid = 0;
                 foreach (DisplayModule module in GetComputerModules<DisplayModule>())

@@ -253,6 +253,16 @@ namespace MuMech
             return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
+        [ValueInfoItem("Rel. vel. at closest approach", InfoItem.Category.Target)]
+        public string TargetClosestApproachRelativeVelocity()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
+            double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+            return MuUtils.ToSI(relVel, -1) + "m/s";
+        }
+
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {

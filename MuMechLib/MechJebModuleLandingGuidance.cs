@@ -33,6 +33,14 @@ namespace MuMech
 
             if (GUILayout.Button("Pick target on map")) core.target.PickPositionTargetOnMap();
 
+            if (mainBody.bodyName.ToLower().Contains("kerbin"))
+            {
+                if (GUILayout.Button("Target KSC"))
+                {
+                    core.target.SetPositionTarget(mainBody, -0.10267, 74.57538);
+                }
+            }
+
             predictor.enabled = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
 
             if (predictor.enabled)

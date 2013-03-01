@@ -42,7 +42,28 @@ namespace MuMech
         public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        double markLongitude = 0;
+        [ValueInfoItem("Mark latitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE)]
+        public double markLatitude = 0;
+        
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem("Mark longitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE)]
+        public double markLongitude = 0;
+        
+        [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem("Mark altitude ASL", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
+        public double markAltitude = 0;
+        
+        [Persistent(pass = (int)Pass.Local)]
+        public int markBodyIndex = 1;
+
+        [ValueInfoItem("Mark body", InfoItem.Category.Recorder)]
+        public string MarkBody() { return FlightGlobals.Bodies[markBodyIndex].bodyName; }
+
+        [ValueInfoItem("Distance from mark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
+        public double DistanceFromMark()
+        {
+            return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude));
+        }
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Max drag gees", InfoItem.Category.Recorder, format = "F2")]
@@ -54,7 +75,10 @@ namespace MuMech
             markUT = vesselState.time;
             deltaVExpended = dragLosses = gravityLosses = steeringLosses = 0;
             phaseAngleFromMark = 0;
+            markLatitude = vesselState.latitude;
             markLongitude = vesselState.longitude;
+            markAltitude = vesselState.altitudeASL;
+            markBodyIndex = FlightGlobals.Bodies.IndexOf(mainBody);
             maxDragGees = 0;
         }
 

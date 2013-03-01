@@ -7,7 +7,7 @@ namespace MuMech
 {
     public static class PartExtensions
     {
-        public static bool HasModule<T>(this Part p)
+        public static bool HasModule<T>(this Part p) where T : PartModule
         {
             return p.Modules.OfType<T>().Count() > 0;
         }
@@ -61,9 +61,8 @@ namespace MuMech
             return (p is SolidRocket || 
                 p is LiquidEngine || 
                 p is LiquidFuelEngine || 
-                p is AtmosphericEngine || 
-                p.HasModule<ModuleEngines>() || 
-                p.HasModule<AtmosphericEngine>());
+                p is AtmosphericEngine ||  
+                p.HasModule<ModuleEngines>());
         }
     }
 }
