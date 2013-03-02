@@ -391,8 +391,8 @@ namespace MuMech
         private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, double precision, float drive_limit)
         {
             // Is the user inputting pitch, yaw, roll
-            bool userCommandingPitchYaw = (Mathfx.Approx(s.pitch, 0, 0.1F) ? false : true) || (Mathfx.Approx(s.yaw, 0, 0.1F) ? false : true);
-            bool userCommandingRoll = (Mathfx.Approx(s.roll, 0, 0.1F) ? false : true);
+            bool userCommandingPitchYaw = (Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F) ? false : true) || (Mathfx.Approx(s.yaw, s.yawTrim, 0.1F) ? false : true);
+            bool userCommandingRoll = (Mathfx.Approx(s.roll, s.rollTrim, 0.1F) ? false : true);
 
             if (userCommandingPitchYaw || userCommandingRoll)
             {

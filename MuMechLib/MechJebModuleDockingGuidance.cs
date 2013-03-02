@@ -30,13 +30,12 @@ namespace MuMech
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;
-                GUILayout.Label("Warning: target is not a docking node. Target a docking node by right clicking it.", s);
             }
 
             bool onAxisNodeExists = false;
             foreach(ModuleDockingNode node in vessel.GetModules<ModuleDockingNode>()) 
             {
-                if (Vector3d.Angle(node.GetTransform().forward, vessel.GetTransform().forward) < 2)
+                if (Vector3d.Angle(node.GetTransform().forward, vessel.ReferenceTransform.up) < 2)
                 {
                     onAxisNodeExists = true;
                     break;
@@ -48,7 +47,7 @@ namespace MuMech
 
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;
-                GUILayout.Label("Warning: this vessel not controlled from a docking node. Right click the desired docking node on this vessel and select \"Control from here.\"", s);
+                GUILayout.Label("Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select \"Control from here.\"", s);
             }
 
             autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");

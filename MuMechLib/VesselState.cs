@@ -153,7 +153,7 @@ namespace MuMech
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
 
-            radialPlusSurface = Vector3d.Exclude(velocityVesselSurfaceUnit, up).normalized;
+            radialPlusSurface = Vector3d.Exclude(velocityVesselSurface, up).normalized;
             radialPlus = Vector3d.Exclude(velocityVesselOrbit, up).normalized;
             normalPlusSurface = -Vector3d.Cross(radialPlusSurface, velocityVesselSurfaceUnit);
             normalPlus = -Vector3d.Cross(radialPlus, velocityVesselOrbitUnit);

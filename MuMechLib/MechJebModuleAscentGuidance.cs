@@ -84,15 +84,16 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Orbit inclination", autopilot.desiredInclination, "º");
             }
 
-            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Limit throttle to avoid overheats");
-            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit throttle so as not to exceed terminal velocity");
+            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent overheats");
+            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit to terminal velocity");
             GUILayout.BeginHorizontal();
             core.thrust.limitAcceleration = GUILayout.Toggle(core.thrust.limitAcceleration, "Limit acceleration to", GUILayout.ExpandWidth(false));
             core.thrust.maxAcceleration.text = GUILayout.TextField(core.thrust.maxAcceleration.text, GUILayout.ExpandWidth(true));
             GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             
-            core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
+            //core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
+            core.staging.AutostageInfoItem();
 
             if (autopilot != null)
             {
@@ -126,9 +127,13 @@ namespace MuMech
                     else tMinus = LaunchTiming.TimeToPhaseAngle(phaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
 
                     double launchTime = vesselState.time + tMinus;
-                    double desiredInclination = core.target.Orbit.inclination;
-                    desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
-                    autopilot.desiredInclination = desiredInclination;
+
+                    if (launchingToRendezvous)
+                    {
+                        double desiredInclination = core.target.Orbit.inclination;
+                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
+                        autopilot.desiredInclination = desiredInclination;
+                    }
 
                     if (autopilot.enabled) core.warp.WarpToUT(launchTime);
 

@@ -183,8 +183,15 @@ namespace MuMech
         {
             core.thrust.targetThrottle = 0.0F;
 
-            //once we get above the atmosphere, plan and execute the circularization maneuver
-            if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+            double circularSpeed = OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, orbit.ApR);
+            double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
+            double circularizeBurnTime = (circularSpeed - apoapsisSpeed) / vesselState.maxThrustAccel;
+
+            //Once we get above the atmosphere, plan and execute the circularization maneuver.
+            //For orbits near the edge of the atmosphere, we can't wait until we break the atmosphere
+            //to start the burn, so we also compare the timeToAp with the expected circularization burn time.
+            if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                || (vesselState.maxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
             {
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();

@@ -37,7 +37,7 @@ namespace MuMech
             {
                 if (GUILayout.Button("Target KSC"))
                 {
-                    core.target.SetPositionTarget(mainBody, -0.10267, 74.57538);
+                    core.target.SetPositionTarget(mainBody, -0.10267, -74.57538);
                 }
             }
 
@@ -53,10 +53,17 @@ namespace MuMech
             {
                 GUILayout.Label("Autopilot:");
 
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
-                if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
-                GUILayout.EndHorizontal();
+                if (autopilot.enabled)
+                {
+                    if (GUILayout.Button("Abort autoland")) autopilot.StopLanding();
+                }
+                else
+                {
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
+                    if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
+                    GUILayout.EndHorizontal();
+                }
 
                 GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s");
 

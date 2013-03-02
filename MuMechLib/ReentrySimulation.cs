@@ -365,7 +365,7 @@ namespace MuMech
         public double UT;
     }
 
-    //A ReferenceFrame is a scheme for converting Vector3d positions and velocities into AbosluteVectors, and vice versa
+    //A ReferenceFrame is a scheme for converting Vector3d positions and velocities into AbsoluteVectors, and vice versa
     public class ReferenceFrame
     {
         private double epoch;
