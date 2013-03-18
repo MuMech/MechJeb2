@@ -255,7 +255,7 @@ namespace MuMech
                 bool first = ret.Length < 2;
                 if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
                 {
-                    ret += (first ? "" : ", ") + (first ? n.ToString() : n.ToString("00")) + units[i];
+                    ret += (first ? "" : " ") + (first ? n.ToString() : n.ToString("00")) + units[i];
                 }
                 seconds -= n * intervals[i];
             }

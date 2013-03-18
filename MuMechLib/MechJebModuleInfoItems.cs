@@ -332,7 +332,15 @@ namespace MuMech
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
-                showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+            	if (showInitialMass)
+            	{
+            		showInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+            		showInitialMass = showFinalMass = showMaxTWR = false;
+            	}
+            	else
+            	{
+	                showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+            	}
             }
             GUILayout.EndHorizontal();
 
@@ -344,10 +352,10 @@ namespace MuMech
             if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
             if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(geeASL).ToString("F2")));
             if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(geeASL).ToString("F2")));
-            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
             if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
+            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -356,7 +364,7 @@ namespace MuMech
         bool DrawStageStatsColumn(string header, IEnumerable<string> data)
         {
             GUILayout.BeginVertical();
-            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { alignment = TextAnchor.MiddleRight, wordWrap = false };
+            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { alignment = TextAnchor.MiddleRight, wordWrap = false, padding = new RectOffset(2,2,0,0) };
             bool ret = GUILayout.Button(header + "   ", s);
             
             foreach (string datum in data) GUILayout.Label(datum + "   ", s);

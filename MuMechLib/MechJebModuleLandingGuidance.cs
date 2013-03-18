@@ -65,7 +65,7 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                 }
 
-                GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s");
+                GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s", 35);
 
                 if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
             }
