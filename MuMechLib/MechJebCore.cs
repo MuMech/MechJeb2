@@ -261,6 +261,8 @@ namespace MuMech
         {
             try
             {
+            	bool generateWindows = false;
+            	
                 Debug.Log("OnLoad called !!!!!!!!!!!!!!!!!");
 
                 base.OnLoad(sfsNode); //is this necessary?
@@ -287,6 +289,7 @@ namespace MuMech
                     catch (Exception e)
                     {
                         Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
+                        generateWindows = true;
                     }
                 }
 
@@ -318,6 +321,48 @@ namespace MuMech
                     ConfigNode moduleType = type.HasNode(name) ? type.GetNode(name) : null;
                     ConfigNode moduleGlobal = global.HasNode(name) ? global.GetNode(name) : null;
                     module.OnLoad(moduleLocal, moduleType, moduleGlobal);
+                }
+                
+                if (generateWindows)
+                {
+                	MechJebModuleCustomWindowEditor editor = (MechJebModuleCustomWindowEditor)computerModules.Find(cm => cm.GetType() == typeof(MechJebModuleCustomWindowEditor));
+                	
+                	MechJebModuleCustomInfoWindow vesselWindow = new MechJebModuleCustomInfoWindow(this);
+                	AddComputerModule(vesselWindow);
+                	vesselWindow.enabled = true;
+                	vesselWindow.showInFlight = true;
+                	vesselWindow.showInEditor = true;
+                	vesselWindow.title = "Vessel";
+                	vesselWindow.items.Add(editor.registry.Find(i => i.name == "Vessel mass"));
+                	vesselWindow.items.Add(editor.registry.Find(i => i.name == "Max thrust"));
+                	vesselWindow.items.Add(editor.registry.Find(i => i.name == "Max acceleration"));
+                	vesselWindow.items.Add(editor.registry.Find(i => i.name == "Stage stats (all)"));
+                	
+					MechJebModuleCustomInfoWindow orbitWindow = new MechJebModuleCustomInfoWindow(this);
+                	AddComputerModule(orbitWindow);
+                	orbitWindow.enabled = true;
+                	orbitWindow.showInFlight = true;
+                	orbitWindow.title = "Orbit";
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Altitude (ASL)"));
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Altitude (true)"));
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Vertical speed"));
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Apoapsis"));
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Periapsis"));
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Inclination"));
+                	orbitWindow.items.Add(editor.registry.Find(i => i.name == "Coordinates"));
+                	
+                	MechJebModuleCustomInfoWindow targetWindow = new MechJebModuleCustomInfoWindow(this);
+                	AddComputerModule(targetWindow);
+                	targetWindow.enabled = true;
+                	targetWindow.showInFlight = true;
+                	targetWindow.title = "Target";
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Distance to target"));
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Relative velocity"));
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Closest approach distance"));
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Time to closest approach"));
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Rel. vel. at closest approach"));
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Docking guidance: position"));
+                	targetWindow.items.Add(editor.registry.Find(i => i.name == "Docking guidance: velocity"));
                 }
             }
             catch (Exception e)

@@ -236,31 +236,38 @@ namespace MuMech
 
         public static string TimeToDHMS(double seconds)
         {
-            if(double.IsInfinity(seconds) || double.IsNaN(seconds)) return seconds.ToString();
+        	if(double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
-            string[] units = { "y", "d", "h", "m", "s" };
-            int[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
+        	string ret = "";
 
-            string ret = "";
+        	try {
+        		string[] units = { "y", "d", "h", "m", "s" };
+        		long[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
 
-            if(seconds < 0) 
-            {
-                ret += "-";
-                seconds *= -1;
-            }
+        		if(seconds < 0)
+        		{
+        			ret += "-";
+        			seconds *= -1;
+        		}
 
-            for (int i = 0; i < units.Length; i++)
-            {
-                int n = (int)(seconds / intervals[i]);
-                bool first = ret.Length < 2;
-                if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
-                {
-                    ret += (first ? "" : " ") + (first ? n.ToString() : n.ToString("00")) + units[i];
-                }
-                seconds -= n * intervals[i];
-            }
+        		for (int i = 0; i < units.Length; i++)
+        		{
+        			long n = (long)(seconds / intervals[i]);
+        			bool first = ret.Length < 2;
+        			if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
+        			{
+        				ret += (first ? "" : " ") + (first ? n.ToString() : n.ToString("00")) + units[i];
+        			}
+        			seconds -= n * intervals[i];
+        		}
 
-            return ret;
+        	}
+        	catch (Exception ex) {
+//        		Debug.LogError(seconds.ToString());
+//        		Debug.LogError(ex.Message);
+        		return "NaN";
+        	}
+        	return ret;
         }
 
         public static bool TryParseDHMS(string s, out double seconds)
