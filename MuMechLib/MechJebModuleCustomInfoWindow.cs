@@ -44,9 +44,9 @@ namespace MuMech
             return new GUILayoutOption[] { GUILayout.Width(250), GUILayout.Height(30) };
         }
 
-        public override void DrawGUI(int baseWindowID, bool inEditor)
+        public override void DrawGUI(bool inEditor)
         {
-            base.DrawGUI(baseWindowID, inEditor);
+            base.DrawGUI(inEditor);
 
             if (showInCurrentScene)
             {

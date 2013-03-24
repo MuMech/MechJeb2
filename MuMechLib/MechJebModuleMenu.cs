@@ -58,7 +58,7 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        public override void DrawGUI(int baseWindowID, bool inEditor)
+        public override void DrawGUI(bool inEditor)
         {
             switch (windowStat)
             {
@@ -103,7 +103,7 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                GUILayout.Window(baseWindowID, new Rect(Screen.width - windowProgr * 200, (Screen.height - 200) / 2, 200, 200), WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(200));
+                GUILayout.Window(GetType().FullName.GetHashCode(), new Rect(Screen.width - windowProgr * 200, (Screen.height - 200) / 2, 200, 200), WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(200));
             }
 
             GUI.depth = -98;

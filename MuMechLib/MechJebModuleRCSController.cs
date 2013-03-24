@@ -11,23 +11,19 @@ namespace MuMech
     {
         public Vector3d targetVelocity = Vector3d.zero;
 
-        public PIDController xPID, yPID, zPID;
+        public PIDControllerV pid;
 
         public double Kp = 0.5, Ki = 0, Kd = 0;
 
         public MechJebModuleRCSController(MechJebCore core) : base(core)
         {
             priority = 600;
-            xPID = new PIDController(Kp, Ki, Kd, 1, -1);
-            yPID = new PIDController(Kp, Ki, Kd, 1, -1);
-            zPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
         }
 
         public override void OnModuleEnabled()
         {
-            xPID = new PIDController(Kp, Ki, Kd, 1, -1);
-            yPID = new PIDController(Kp, Ki, Kd, 1, -1);
-            zPID = new PIDController(Kp, Ki, Kd, 1, -1);
+            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
             base.OnModuleEnabled();
         }
 
@@ -60,7 +56,7 @@ namespace MuMech
                 }
             }
 
-            rcs = new Vector3d(xPID.Compute(rcs.x), yPID.Compute(rcs.y), zPID.Compute(rcs.z));
+            rcs = pid.Compute(rcs);
 
             s.X = Mathf.Clamp((float)rcs.x, -1, 1);
             s.Y = Mathf.Clamp((float)rcs.z, -1, 1);

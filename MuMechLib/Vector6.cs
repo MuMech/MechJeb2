@@ -46,7 +46,7 @@ namespace MuMech
                     case Direction.LEFT:
                         return left;
                 }
-                throw new IndexOutOfRangeException();
+                return 0;
             }
             set
             {
@@ -70,8 +70,6 @@ namespace MuMech
                     case Direction.LEFT:
                         left = value;
                         break;
-                    default:
-                        throw new IndexOutOfRangeException();
                 }
             }
         }
@@ -109,7 +107,7 @@ namespace MuMech
             return magnitude;
         }
 
-        void IConfigNode.Load(ConfigNode node)
+        public void Load(ConfigNode node)
         {
             if (node.HasValue("positive"))
             {
@@ -121,7 +119,7 @@ namespace MuMech
             }
         }
 
-        void IConfigNode.Save(ConfigNode node)
+        public void Save(ConfigNode node)
         {
             node.SetValue("positive", KSPUtil.WriteVector(positive));
             node.SetValue("negative", KSPUtil.WriteVector(negative));
