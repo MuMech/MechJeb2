@@ -24,6 +24,8 @@ namespace MuMech
         public EditableDouble desiredInclination = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool correctiveSteering = true;
 
         //internal state:
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
@@ -153,25 +155,30 @@ namespace MuMech
             Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
                                          + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
 
-            Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
-
-            const double Kp = 5.0; //control gain
-
-            //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-            double difficulty = vesselState.velocityVesselSurface.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
-            if (difficulty > 5) difficulty = 5;
-
-            if (vesselState.maxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
-
             Vector3d desiredThrustVector = desiredVelocityUnit;
-            Vector3d steerOffset = Kp * difficulty * velocityError;
 
-            //limit the amount of steering to 10 degrees. Furthemore, never steer to a FPA of > 90 (that is, never lean backward)
-            double maxOffset = 10 * Math.PI / 180;
-            if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * Math.PI / 180;
-            if (steerOffset.magnitude > maxOffset) steerOffset = maxOffset * steerOffset.normalized;
+            if (correctiveSteering)
+            {
+                Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
 
-            desiredThrustVector += steerOffset;
+                const double Kp = 5.0; //control gain
+
+                //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
+                double difficulty = vesselState.velocityVesselSurface.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
+                if (difficulty > 5) difficulty = 5;
+
+                if (vesselState.maxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
+
+                Vector3d steerOffset = Kp * difficulty * velocityError;
+
+                //limit the amount of steering to 10 degrees. Furthemore, never steer to a FPA of > 90 (that is, never lean backward)
+                double maxOffset = 10 * Math.PI / 180;
+                if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * Math.PI / 180;
+                if (steerOffset.magnitude > maxOffset) steerOffset = maxOffset * steerOffset.normalized;
+
+                desiredThrustVector += steerOffset;
+            }
+
             desiredThrustVector = desiredThrustVector.normalized;
 
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);

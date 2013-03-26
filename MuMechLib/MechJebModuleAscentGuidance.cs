@@ -91,6 +91,7 @@ namespace MuMech
             core.thrust.maxAcceleration.text = GUILayout.TextField(core.thrust.maxAcceleration.text, GUILayout.ExpandWidth(true));
             GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+            autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
             
             //core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
             core.staging.AutostageInfoItem();
