@@ -11,38 +11,57 @@ namespace MuMech
         public MechJebModuleJoke(MechJebCore core)
             : base(core)
         {
-            hidden = true;
+            priority = -10000;
             enabled = true;
+            hidden = true;
         }
 
-
-        static Texture2D _lightning;
-        static Texture2D lightning
+        static Texture2D _lightningTex;
+        static Texture2D lightningTex
         {
             get
             {
-                if (_lightning == null)
+                if (_lightningTex == null)
                 {
-                    _lightning = new Texture2D(1, 1);
-                    _lightning.SetPixel(0, 0, Color.white);
-                    _lightning.Apply();
+                    _lightningTex = new Texture2D(1, 1);
+                    _lightningTex.SetPixel(0, 0, Color.white);
+                    _lightningTex.Apply();
                 }
-                return _lightning;
+                return _lightningTex;
             }
         }
 
-        System.Random rand = new System.Random();
+        static AssetBundleCreateRequest lightningBundle = null;
 
-        bool newFlight = false;
+        static AudioSource _lightningSound;
+        AudioSource lightningSound
+        {
+            get
+            {
+                if (_lightningSound == null)
+                {
+                    _lightningSound = part.gameObject.AddComponent<AudioSource>();
+                    _lightningSound.playOnAwake = false;
+                    _lightningSound.clip = (AudioClip)lightningBundle.assetBundle.Load("lightning", typeof(AudioClip));
+                }
+                return _lightningSound;
+            }
+        }
 
-        bool doLightningJoke = false;
-        bool doRotationJoke = false;
+        SpeechBubble bubble = null;
 
-        MissionControlTutorial tutorial;
-        bool startedTutorial = false;
+        public System.Random rand = new System.Random();
 
-        bool lockedControls = false;
-        bool disabledSelf = false;
+        public bool newFlight = false;
+
+        public bool doLightningJoke = false;
+        public bool doRotationJoke = false;
+
+        public MissionControlTutorial tutorial;
+        public bool startedTutorial = false;
+
+        public bool lockedControls = false;
+        public bool disabledSelf = false;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -51,7 +70,8 @@ namespace MuMech
                 newFlight = true;
                 enabled = true;
 
-                doLightningJoke = rand.Next(10) == 0;
+                //doLightningJoke = rand.Next(10) == 0;
+                doLightningJoke = true;
                 if (doLightningJoke) tutorial = (MissionControlTutorial)ScenarioRunner.fetch.AddModule("MissionControlTutorial");
 
                 doRotationJoke = rand.Next(10) == 0;
@@ -61,6 +81,11 @@ namespace MuMech
                     double[] rotationPeriods = { 1600, 1554, 1500, 1400, 1300, 1200, 1100, 1000, 750, 500, 250, 100, 50, 25, 10, 5, 1 };
 
                     vessel.mainBody.rotationPeriod = rotationPeriods[rand.Next(rotationPeriods.Length)];
+                }
+
+                if (lightningBundle == null)
+                {
+                    lightningBundle = AssetBundle.CreateFromMemory(Properties.Resources.lightning);
                 }
             }
 
@@ -81,9 +106,6 @@ namespace MuMech
             UnlockControls(); //in case the lock somehow remains in place
         }
 
-
-
-
         public override void DrawGUI(bool inEditor)
         {
             if (inEditor) return;
@@ -95,10 +117,26 @@ namespace MuMech
         {
             if (newFlight)
             {
+                if (bubble == null)
+                {
+                    GUIStyle txt = new GUIStyle(GUI.skin.label);
+                    txt.normal.textColor = Color.black;
+                    txt.alignment = TextAnchor.MiddleCenter;
+                    bubble = new SpeechBubble(txt);
+                    bubble.bubbleHeight = 100;
+                    bubble.offsetY = 75;
+                    bubble.offsetX = 50;
+                    bubble.bubbleWidth = 250;
+                }
+
                 if (vessel.missionTime > 10 && vessel.missionTime < 13)
                 {
                     DrawLightning();
 
+                    if (!lightningSound.isPlaying)
+                    {
+                        lightningSound.Play();
+                    }
 
                     if (vessel.missionTime > 11 && !lockedControls)
                     {
@@ -114,22 +152,61 @@ namespace MuMech
                         startedTutorial = true;
                     }
 
+                    if ((vessel.GetCrewCount() > 0) && (vessel.missionTime > 18) && (vessel.missionTime < 22))
+                    {
+                        bubble.drawBubble(new Vector2(vessel.GetVesselCrew()[0].KerbalRef.screenPos.x + (vessel.GetVesselCrew()[0].KerbalRef.avatarSize / 2), vessel.GetVesselCrew()[0].KerbalRef.screenPos.y), "KSC, the controls are all locked up!\nThat lightning took them out!", Color.white);
+                    }
+
                     if (vessel.missionTime > 18 && !disabledSelf)
                     {
-                        hidden = false;
-                        enabled = false;
+                        core.GetComputerModule<MechJebModuleJokeObscurePanel>().enabled = false;
+                        core.GetComputerModule<MechJebModuleJokeObscurePanel>().hidden = false;
                         disabledSelf = true;
                     }
 
-                    if (disabledSelf && enabled)
+                    if ((vessel.GetCrewCount() > 0) && (!core.GetComputerModule<MechJebModuleJokeObscurePanel>().t4) && (vessel.missionTime > 24))
                     {
-                        windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, GetName(), WindowOptions());
+                        bubble.drawBubble(new Vector2(vessel.GetVesselCrew()[0].KerbalRef.screenPos.x + (vessel.GetVesselCrew()[0].KerbalRef.avatarSize / 2), vessel.GetVesselCrew()[0].KerbalRef.screenPos.y), "Set SCE to AUX on the Obscure Control Panel!", Color.white);
                     }
                 }
             }
         }
 
-        bool t1 = true, t2 = false, t3 = false, t4 = false, t5 = true;
+        string lockID = "MechJebJokeLock";
+        public void LockControls()
+        {
+            InputLockManager.SetControlLock(ControlTypes.ALL_SHIP_CONTROLS, lockID);
+        }
+
+        public void UnlockControls()
+        {
+            InputLockManager.RemoveControlLock(lockID);
+        }
+
+        public override void OnDestroy()
+        {
+            UnlockControls();
+        }
+
+        void DrawLightning()
+        {
+            if (rand.NextDouble() < 0.2)
+            {
+                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), lightningTex);
+            }
+        }
+    }
+
+    public class MechJebModuleJokeObscurePanel : DisplayModule
+    {
+        public MechJebModuleJokeObscurePanel(MechJebCore core)
+            : base(core)
+        {
+            hidden = true;
+            enabled = false;
+        }
+
+        public bool t1 = true, t2 = false, t3 = false, t4 = false, t5 = true;
         protected override void WindowGUI(int windowID)
         {
             bool prevT4 = t4;
@@ -160,12 +237,12 @@ namespace MuMech
 
             if (!prevT4 && t4)
             {
-                UnlockControls();
-                tutorial.FinishTutorial();
+                core.GetComputerModule<MechJebModuleJoke>().UnlockControls();
+                core.GetComputerModule<MechJebModuleJoke>().tutorial.FinishTutorial();
             }
             if (!t5)
             {
-                if (rand.NextDouble() < TimeWarp.fixedDeltaTime / 5) vessel.parts[rand.Next(vessel.parts.Count)].explode();
+                if (core.GetComputerModule<MechJebModuleJoke>().rand.NextDouble() < TimeWarp.fixedDeltaTime / 5) vessel.parts[core.GetComputerModule<MechJebModuleJoke>().rand.Next(vessel.parts.Count)].explode();
             }
 
             GUI.DragWindow();
@@ -176,35 +253,10 @@ namespace MuMech
             return new GUILayoutOption[] { GUILayout.Width(150), GUILayout.Height(50) };
         }
 
-        string lockID = "MechJebJokeLock";
-        void LockControls()
-        {
-            InputLockManager.SetControlLock(ControlTypes.ALL_SHIP_CONTROLS, lockID);
-        }
-
-        void UnlockControls()
-        {
-            InputLockManager.RemoveControlLock(lockID);
-        }
-
-        public override void OnDestroy()
-        {
-            UnlockControls();
-        }
-
-        void DrawLightning()
-        {
-            if (rand.NextDouble() < 0.2)
-            {
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), lightning);
-            }
-        }
-
         public override string GetName()
         {
             return "Obscure Control Panel";
         }
-
     }
 
     public class MissionControlTutorial : TutorialScenario
@@ -231,25 +283,33 @@ namespace MuMech
             page1.windowTitle = "Mission Control";
             page1.OnDrawContent = () =>
             {
-                GUILayout.Label("What the---? Did that lightning just score a direct hit on the " + FlightGlobals.ActiveVessel.vesselName + "? Oh no...");
+                GUILayout.Label("What the---?\nDid that lightning just score a direct hit on the " + FlightGlobals.ActiveVessel.vesselName + "?\nOh no...");
             };
-            page1.SetAdvanceCondition((KFSMState s) => FlightGlobals.ActiveVessel.missionTime > 16);
 
-            TutorialPage page2 = new TutorialPage("Page2");
-            Tutorial.AddPage(page2);
-            page2.windowTitle = "Mission Control";
-            page2.OnDrawContent = () =>
+            if (FlightGlobals.ActiveVessel.GetCrewCount() == 0)
             {
-                GUILayout.Label("KSC, the controls are all locked up! That lightning took them out!");
-            };
-            page2.SetAdvanceCondition((KFSMState s) => FlightGlobals.ActiveVessel.missionTime > 18);
+                page1.SetAdvanceCondition((KFSMState s) => FlightGlobals.ActiveVessel.missionTime > 18);
+
+                TutorialPage page2 = new TutorialPage("Page2");
+                Tutorial.AddPage(page2);
+                page2.windowTitle = "Mission Control";
+                page2.OnDrawContent = () =>
+                {
+                    GUILayout.Label("The controls are all locked up!\nThat lightning took them out!");
+                };
+                page2.SetAdvanceCondition((KFSMState s) => FlightGlobals.ActiveVessel.missionTime > 22);
+            }
+            else
+            {
+                page1.SetAdvanceCondition((KFSMState s) => FlightGlobals.ActiveVessel.missionTime > 22);
+            }
 
             TutorialPage page3 = new TutorialPage("Page3");
             Tutorial.AddPage(page3);
             page3.windowTitle = "Mission Control";
             page3.OnDrawContent = () =>
             {
-                GUILayout.Label(FlightGlobals.ActiveVessel.vesselName + ", try SCE to AUX.\nI think it's on the Obscure Control Panel");
+                GUILayout.Label(FlightGlobals.ActiveVessel.vesselName + ", try SCE to AUX.\nI think it's on the Obscure Control Panel.");
             };
 
             TutorialPage page4 = new TutorialPage("Page4");
@@ -258,7 +318,7 @@ namespace MuMech
             page4.OnDrawContent = () =>
             {
                 GUILayout.BeginVertical();
-                GUILayout.Label("That did it! The controls are back!");
+                GUILayout.Label("That did it!\nThe controls are back!");
                 if (GUILayout.Button("Close")) SetDialogRect(new Rect(Screen.width + 100, 0, 0, 0));
                 GUILayout.EndVertical();
             };
