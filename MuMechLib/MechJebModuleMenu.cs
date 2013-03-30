@@ -43,11 +43,7 @@ namespace MuMech
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
-                    bool on = module.enabled;
-                    if (on != GUILayout.Toggle(on, module.GetName()))
-                    {
-                        module.enabled = !on;
-                    }
+                    module.enabled = GUILayout.Toggle(module.enabled, module.GetName());
                 }
             }
 
