@@ -70,8 +70,7 @@ namespace MuMech
                 newFlight = true;
                 enabled = true;
 
-                //doLightningJoke = rand.Next(10) == 0;
-                doLightningJoke = true;
+                doLightningJoke = rand.Next(10) == 0;
                 if (doLightningJoke) tutorial = (MissionControlTutorial)ScenarioRunner.fetch.AddModule("MissionControlTutorial");
 
                 doRotationJoke = rand.Next(10) == 0;
