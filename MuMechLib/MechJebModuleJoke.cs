@@ -86,8 +86,6 @@ namespace MuMech
 
         public override void DrawGUI(bool inEditor)
         {
-            Debug.Log("hello world");
-
             if (inEditor) return;
 
             if (doLightningJoke) RunLightningJoke();

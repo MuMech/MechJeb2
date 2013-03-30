@@ -44,12 +44,13 @@ namespace MuMech
                 && vesselState.time - lastStageTime > autoStageDelay)
             {
                 //don't decouple active or idle engines or tanks
-                if (!inverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel))
+                List<int> burnedResources = FindBurnedResources();
+                if (!InverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel, burnedResources))
                 {
                     //only fire decouplers to drop deactivated engines or tanks
-                    bool firesDecoupler = inverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
+                    bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
                     if (!firesDecoupler
-                        || inverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
+                        || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
                     {
                         if (firesDecoupler)
                         {
@@ -64,11 +65,11 @@ namespace MuMech
         }
 
         //determine whether it's safe to activate inverseStage
-        public static bool inverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v)
+        public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources)
         {
             foreach (Part p in v.parts)
             {
-                if (p.inverseStage == inverseStage && p.IsDecoupler() && hasActiveOrIdleEngineOrTankDescendant(p))
+                if (p.inverseStage == inverseStage && p.IsDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources))
                 {
                     return true;
                 }
@@ -76,8 +77,17 @@ namespace MuMech
             return false;
         }
 
+        public List<int> FindBurnedResources()
+        {
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
+            var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First());
+            var burnedPropellants = engineModules.SelectMany(eng => eng.propellants);
+            List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
+            return propellantIDs;
+        }
+
         //detect if a part is above an active or idle engine in the part tree
-        public static bool hasActiveOrIdleEngineOrTankDescendant(Part p)
+        public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources)
         {
             if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE)
                 && p.IsEngine() && !p.IsSepratron() && p.EngineHasFuel())
@@ -89,7 +99,7 @@ namespace MuMech
             {
                 foreach (PartResource r in p.Resources)
                 {
-                    if (r.amount > 0 && r.info.name != "ElectricCharge")
+                    if (r.amount > 0 && r.info.name != "ElectricCharge" && tankResources.Contains(r.info.id))
                     {
                         return true;
                     }
@@ -97,14 +107,14 @@ namespace MuMech
             }
             foreach (Part child in p.children)
             {
-                if (hasActiveOrIdleEngineOrTankDescendant(child)) return true;
+                if (HasActiveOrIdleEngineOrTankDescendant(child, tankResources)) return true;
             }
             return false;
         }
 
         //determine whether activating inverseStage will fire any sort of decoupler. This
         //is used to tell whether we should delay activating the next stage after activating inverseStage
-        public static bool inverseStageFiresDecoupler(int inverseStage, Vessel v)
+        public static bool InverseStageFiresDecoupler(int inverseStage, Vessel v)
         {
             foreach (Part p in v.parts)
             {
@@ -114,17 +124,17 @@ namespace MuMech
         }
 
         //determine whether inverseStage sheds a dead engine
-        public static bool inverseStageDecouplesDeactivatedEngineOrTank(int inverseStage, Vessel v)
+        public static bool InverseStageDecouplesDeactivatedEngineOrTank(int inverseStage, Vessel v)
         {
             foreach (Part p in v.parts)
             {
-                if (p.inverseStage == inverseStage && p.IsDecoupler() && hasDeactivatedEngineOrTankDescendant(p)) return true;
+                if (p.inverseStage == inverseStage && p.IsDecoupler() && HasDeactivatedEngineOrTankDescendant(p)) return true;
             }
             return false;
         }
 
         //detect if a part is above a deactivated engine or fuel tank
-        public static bool hasDeactivatedEngineOrTankDescendant(Part p)
+        public static bool HasDeactivatedEngineOrTankDescendant(Part p)
         {
             if ((p.State == PartStates.DEACTIVATED) && (p is FuelTank || p.IsEngine()) && !p.IsSepratron())
             {
@@ -146,7 +156,7 @@ namespace MuMech
 
             foreach (Part child in p.children)
             {
-                if (hasDeactivatedEngineOrTankDescendant(child)) return true;
+                if (HasDeactivatedEngineOrTankDescendant(child)) return true;
             }
             return false;
         }

@@ -129,7 +129,7 @@ namespace MuMech
 
                     double launchTime = vesselState.time + tMinus;
 
-                    if (launchingToRendezvous)
+                    if (launchingToPlane)
                     {
                         double desiredInclination = core.target.Orbit.inclination;
                         desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));

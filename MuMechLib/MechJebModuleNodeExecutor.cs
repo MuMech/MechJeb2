@@ -9,13 +9,9 @@ namespace MuMech
     public class MechJebModuleNodeExecutor : ComputerModule
     {
         //public interface:
-        [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
-        [Persistent(pass = (int)Pass.Global)]
         public double leadTime = 3;       //how many seconds before a burn to end warp (note that we align with the node before warping)
-        [Persistent(pass = (int)Pass.Global)]
         public double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
-        [Persistent(pass = (int)Pass.Global)]
         public double precision = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
         public void ExecuteOneNode()
@@ -96,9 +92,6 @@ namespace MuMech
 
             if (timeToNode < burnTime * leadFraction)
             {
-                Debug.Log("triggering burn: timeToNode < " + burnTime * leadFraction);
-                Debug.Log("burnTime = " + burnTime + "; leadFraction = " + leadFraction);
-                Debug.Log("maxThrustAccel = " + vesselState.maxThrustAccel);
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
             }
@@ -119,7 +112,6 @@ namespace MuMech
 
             if (burnTriggered && core.attitude.attitudeAngleFromTarget() < 90)
             {
-                Debug.Log("burn is triggered!");
                 double timeConstant = (dVLeft > 10 ? 0.5 : 2);
                 double desiredAcceleration = dVLeft / timeConstant;
                 desiredAcceleration = Math.Max(precision, desiredAcceleration);
@@ -128,7 +120,6 @@ namespace MuMech
             }
             else
             {
-                Debug.Log("don't burn(burnTriggered = " + burnTriggered);
                 core.thrust.targetThrottle = 0;
             }
         }
