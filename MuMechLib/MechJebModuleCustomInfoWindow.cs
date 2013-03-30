@@ -86,18 +86,13 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-//            Debug.Log("custom info window OnLoad--registering info items!");
-//            Debug.Log("vesselState = " + vesselState);
             RegisterInfoItems(vesselState);
             foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
             {
-//                Debug.Log("Registering from " + m.GetType().Name);
                 RegisterInfoItems(m);
             }
 
             if (global == null) return;
-
-//            Debug.Log("Loading custom windows from config node:" + global.ToString());
 
             //Load custom info windows, which are stored in our ConfigNode:
 
@@ -106,8 +101,6 @@ namespace MuMech
             foreach (ConfigNode windowNode in windowNodes)
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
-
-                //window.title = (windowNode.HasValue("title") ? windowNode.GetValue("title") : "Custom Info Window");
 
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
 
@@ -295,6 +288,35 @@ namespace MuMech
         {
             showInFlight = true;
             showInEditor = true;
+        }
+
+
+        public void AddDefaultWindows()
+        {
+            MechJebModuleCustomInfoWindow vesselWindow = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(vesselWindow);
+            vesselWindow.enabled = true;
+            vesselWindow.showInFlight = true;
+            vesselWindow.showInEditor = true;
+            vesselWindow.title = "Vessel Info";
+            string[] itemNames = new string[] { "Vessel mass", "Max thrust", "Max acceleration", "Stage stats (all)" };
+            foreach (string itemName in itemNames) vesselWindow.items.Add(registry.Find(i => i.name == itemName));
+
+            MechJebModuleCustomInfoWindow orbitWindow = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(orbitWindow);
+            orbitWindow.enabled = true;
+            orbitWindow.showInFlight = true;
+            orbitWindow.title = "Orbit Info";
+            itemNames = new string[] { "Altitude (ASL)", "Altitude (true)", "Vertical speed", "Apoapsis", "Periapsis", "Inclination", "Coordinates" };
+            foreach (string itemName in itemNames) orbitWindow.items.Add(registry.Find(i => i.name == itemName));
+
+            MechJebModuleCustomInfoWindow targetWindow = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(targetWindow);
+            targetWindow.enabled = true;
+            targetWindow.showInFlight = true;
+            targetWindow.title = "Target Info";
+            itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity"};
+            foreach (string itemName in itemNames) orbitWindow.items.Add(registry.Find(i => i.name == itemName));
         }
     }
 

@@ -117,7 +117,7 @@ namespace MuMech
                 }
             }
 
-            if (burnTriggered && core.attitude.attitudeAngleFromTarget() < 5)
+            if (burnTriggered && core.attitude.attitudeAngleFromTarget() < 90)
             {
                 Debug.Log("burn is triggered!");
                 double timeConstant = (dVLeft > 10 ? 0.5 : 2);

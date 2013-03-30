@@ -37,11 +37,11 @@ namespace MuMech
         {
             Stats[] stages = new Stats[simStage + 1];
 
-            //Debug.Log("SimulteAllStages");
+            //Debug.Log("SimulateAllStages");
 
             while (simStage >= 0)
             {
-                //Debug.Log("Simulating stage " + simStage);
+                //Debug.Log("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
                 stages[simStage] = SimulateStage(throttle, atmospheres);
                 SimulateStageActivation();
             }
@@ -58,6 +58,8 @@ namespace MuMech
             stats.startThrust = VesselThrust(throttle);
             stats.endMass = stats.startMass;
             stats.maxAccel = stats.startThrust / stats.endMass;
+            stats.deltaTime = 0;
+            stats.deltaV = 0;
 
             const int maxSteps = 100;
             int step;
@@ -81,22 +83,30 @@ namespace MuMech
         {
             Stats stats = new Stats();
 
+            foreach (FuelNode n in nodes) n.ResetDrainRates();
+            foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres);
+
             stats.startMass = VesselMass();
             stats.startThrust = VesselThrust(throttle);
 
-            foreach (FuelNode n in nodes) n.ResetDrainRates();
-
             List<FuelNode> engines = FindActiveEngines();
-            foreach (FuelNode n in engines) n.SetConsumptionRates(throttle, atmospheres);
-            foreach (FuelNode n in engines) n.AssignResourceDrainRates(nodes);
-            foreach (FuelNode n in nodes) n.DebugDrainRates();
 
-            float maxDt = nodes.Min(n => n.MaxTimeStep());
-            dt = Mathf.Min(desiredDt, maxDt);
+            if (engines.Count > 0)
+            {
+                foreach (FuelNode n in engines) n.AssignResourceDrainRates(nodes);
+                //foreach (FuelNode n in nodes) n.DebugDrainRates();
 
-            //Debug.Log("Simulating time step of " + dt);
+                float maxDt = nodes.Min(n => n.MaxTimeStep());
+                dt = Mathf.Min(desiredDt, maxDt);
 
-            foreach (FuelNode n in nodes) n.DrainResources(dt);
+                //Debug.Log("Simulating time step of " + dt);
+
+                foreach (FuelNode n in nodes) n.DrainResources(dt);
+            }
+            else
+            {
+                dt = 0;
+            }
 
             stats.deltaTime = dt;
             stats.endMass = VesselMass();
@@ -129,6 +139,9 @@ namespace MuMech
         public bool AllowedToStage()
         {
             List<FuelNode> activeEngines = FindActiveEngines();
+
+            //Debug.Log("Checking whether allowed to stage:");
+            //Debug.Log("  activeEngines.Count = " + activeEngines.Count);
 
             //if no engines are active, we can always stage
             if (activeEngines.Count == 0)
@@ -320,11 +333,15 @@ namespace MuMech
         {
             if (isEngine)
             {
+                //Debug.Log("Setting consumption rates for engine " + partName);
+
                 float Isp = ispCurve.Evaluate(atmospheres);
                 float massFlowRate = (throttle * maxThrust) / (Isp * 9.81f);
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
                 resourceConsumptions = propellantRatios.Keys.ToDictionary(id => id, id => propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);
+
+                //Debug.Log("   ...resourceConsumptions.Keys.Length = " + resourceConsumptions.Keys.Count);
             }
         }
 
@@ -443,7 +460,7 @@ namespace MuMech
         {
             foreach (int type in resourceDrains.Keys)
             {
-                //Debug.Log(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
+                Debug.Log(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
             }
         }
 
@@ -464,7 +481,6 @@ namespace MuMech
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        //Debug.Log(partName + " starting to assign drain of " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name);
                         AssignFuelDrainRateRecursive(type, amount, new List<FuelNode>());
                         break;
 
@@ -499,8 +515,6 @@ namespace MuMech
         //and drain it from some subset of the sources of this node.
         void AssignFuelDrainRateRecursive(int type, float amount, List<FuelNode> visited)
         {
-            //Debug.Log(partName + ".AssignFuelDrainRateRecursive(" + (PartResourceLibrary.Instance.GetDefinition(type).name) + ", " + amount + ") (visited.Count = " + visited.Count + ")");
-
             //if we drain from our sources, newVisted is the set of nodes that those sources
             //aren't allowed to drain from. We add this node to that list to prevent loops.
             List<FuelNode> newVisited = new List<FuelNode>(visited);
@@ -517,15 +531,10 @@ namespace MuMech
                     {
                         fuelLines.Add(n);
                     }
-                    else
-                    {
-                        //Debug.Log("--fuel line can't supply me");
-                    }
                 }
             }
             if (fuelLines.Count > 0)
             {
-                //Debug.Log("--draining from " + fuelLines.Count + " fuel lines");
                 foreach (FuelNode fuelLine in fuelLines)
                 {
                     fuelLine.AssignFuelDrainRateRecursive(type, amount / fuelLines.Count, newVisited);
@@ -545,18 +554,9 @@ namespace MuMech
                     {
                         if (n.CanSupplyResourceRecursive(type, newVisited))
                         {
-                            //Debug.Log("--passing the recursive buck to " + n.partName);
                             n.AssignFuelDrainRateRecursive(type, amount, newVisited);
                             return;
                         }
-                        else
-                        {
-                            //Debug.Log("--" + n.partName + " can't supply me");
-                        }
-                    }
-                    else
-                    {
-                        //Debug.Log("--can't drain from " + n.partName + " because I'm a surface mount fuel tank");
                     }
                 }
             }
@@ -564,7 +564,6 @@ namespace MuMech
             //in the final extremity, drain the resource from this part
             if (this.resources[type] > DRAINED)
             {
-                //Debug.Log("--draining from self");
                 this.resourceDrains[type] += amount;
             }
         }
