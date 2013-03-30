@@ -35,6 +35,9 @@ namespace MuMech
 
         bool newFlight = false;
 
+        bool doLightningJoke = false;
+        bool doRotationJoke = false;
+
         MissionControlTutorial tutorial;
         bool startedTutorial = false;
 
@@ -48,57 +51,73 @@ namespace MuMech
                 newFlight = true;
                 enabled = true;
 
-                Debug.Log("adding tutorial...");
-                tutorial = (MissionControlTutorial)ScenarioRunner.fetch.AddModule("MissionControlTutorial");
-                Debug.Log("tutorial = " + tutorial);
+                doLightningJoke = rand.Next(10) == 0;
+                if (doLightningJoke) tutorial = (MissionControlTutorial)ScenarioRunner.fetch.AddModule("MissionControlTutorial");
+
+                doRotationJoke = rand.Next(10) == 0;
+
+                if (doRotationJoke)
+                {
+                    double[] rotationPeriods = { 1600, 1554, 1500, 1400, 1300, 1200, 1100, 1000, 750, 500, 250, 100, 50, 25, 10, 5, 1 };
+
+                    vessel.mainBody.rotationPeriod = rotationPeriods[rand.Next(rotationPeriods.Length)];
+                }
             }
+
+            UnlockControls(); //in case the lock somehow remains in place
         }
+
+
 
 
         public override void DrawGUI(bool inEditor)
         {
             Debug.Log("hello world");
 
-            if (!inEditor)
+            if (inEditor) return;
+
+            if (doLightningJoke) RunLightningJoke();
+        }
+
+        void RunLightningJoke()
+        {
+            if (newFlight)
             {
-                if (newFlight)
+                if (vessel.missionTime > 10 && vessel.missionTime < 13)
                 {
-                    if (vessel.missionTime > 10 && vessel.missionTime < 13)
+                    DrawLightning();
+
+
+                    if (vessel.missionTime > 11 && !lockedControls)
                     {
-                        DrawLightning();
-
-
-                        if (vessel.missionTime > 11 && !lockedControls)
-                        {
-                            LockControls();
-                            lockedControls = true;
-                        }
+                        LockControls();
+                        lockedControls = true;
                     }
-                    else
+                }
+                else
+                {
+                    if (vessel.missionTime > 14 && !startedTutorial)
                     {
-                        if (vessel.missionTime > 14 && !startedTutorial)
-                        {
-                            tutorial.StartTutorial();
-                            startedTutorial = true;
-                        }
+                        tutorial.StartTutorial();
+                        startedTutorial = true;
+                    }
 
-                        if (vessel.missionTime > 18 && !disabledSelf)
-                        {
-                            hidden = false;
-                            enabled = false;
-                            disabledSelf = true;
-                        }
+                    if (vessel.missionTime > 18 && !disabledSelf)
+                    {
+                        hidden = false;
+                        enabled = false;
+                        disabledSelf = true;
+                    }
 
-                        if (disabledSelf && enabled)
-                        {
-                            windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, GetName(), WindowOptions());
-                        }
+                    if (disabledSelf && enabled)
+                    {
+                        windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, GetName(), WindowOptions());
                     }
                 }
             }
         }
 
-        bool t1 = true, t2 = false, t3 = false, t4 = false, t5 = true;        
+        bool t1 = true, t2 = false, t3 = false, t4 = false, t5 = true;
         protected override void WindowGUI(int windowID)
         {
             bool prevT4 = t4;
@@ -156,6 +175,11 @@ namespace MuMech
             InputLockManager.RemoveControlLock(lockID);
         }
 
+        public override void OnDestroy()
+        {
+            UnlockControls();
+        }
+
         void DrawLightning()
         {
             if (rand.NextDouble() < 0.2)
@@ -170,7 +194,7 @@ namespace MuMech
         }
 
     }
-    
+
     public class MissionControlTutorial : TutorialScenario
     {
         public void StartTutorial()

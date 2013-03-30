@@ -35,7 +35,10 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            RenderingManager.AddToPostDrawQueue(1, DoMapView);
+            if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
+            {
+                RenderingManager.AddToPostDrawQueue(1, DoMapView);
+            }
         }
 
         public override void OnModuleEnabled()
