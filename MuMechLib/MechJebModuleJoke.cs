@@ -64,6 +64,20 @@ namespace MuMech
                 }
             }
 
+            if (state != PartModule.StartState.Editor)
+            {
+                Material munmat = GameObject.Find("scaledSpace").transform.Find("Mun").gameObject.renderer.material;
+
+                if (munmat.mainTexture.name != "muntroll")
+                {
+                    Texture2D troll = new Texture2D(1024, 512, TextureFormat.ARGB32, true);
+                    troll.LoadImage(Properties.Resources.troll);
+                    troll.name = "muntroll";
+
+                    munmat.mainTexture = troll;
+                }
+            }
+
             UnlockControls(); //in case the lock somehow remains in place
         }
 
