@@ -308,7 +308,8 @@ namespace MuMech
             page3.windowTitle = "Mission Control";
             page3.OnDrawContent = () =>
             {
-                GUILayout.Label(FlightGlobals.ActiveVessel.vesselName + ", try SCE to AUX.\nI think it's on the Obscure Control Panel.");
+                GUILayout.Label("...Hold on, " + FlightGlobals.ActiveVessel.vesselName + ", someone here thinks they have a solution.\n" +
+                                "Try \"SCE to AUX.\" Supposedly it's on the Obscure Control Panel. Funny, I've never heard of it.\n");
             };
 
             TutorialPage page4 = new TutorialPage("Page4");
