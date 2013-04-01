@@ -120,7 +120,6 @@ namespace MuMech
             do
             {
                 i++;
-//                Debug.Log("looking at patch #" + i + "; start = " + patch.patchStartTransition + "; PeR = " + patch.PeR);
                 double reentryRadius = patch.referenceBody.Radius + patch.referenceBody.RealMaxAtmosphereAltitude();
                 Orbit nextPatch = vessel.GetNextPatch(patch, aerobrakeNode);
                 if (patch.PeR < reentryRadius)
@@ -128,10 +127,8 @@ namespace MuMech
                     if (patch.Radius(patch.StartUT) < reentryRadius) return patch;
 
                     double reentryTime = patch.NextTimeOfRadius(patch.StartUT, reentryRadius);
-//                    Debug.Log("reentryTime = " + reentryTime + (nextPatch == null ? "; nextpatch null" : "nextpatch start = " + nextPatch.StartUT));
                     if (patch.StartUT < reentryTime && (nextPatch == null || reentryTime < nextPatch.StartUT))
                     {
-//                        Debug.Log("reentering patch is patch #" + i);
                         return patch;
                     }
                 }
@@ -139,8 +136,6 @@ namespace MuMech
                 patch = nextPatch;
             }
             while (patch != null);
-
-//            Debug.Log("No reentering patch");
 
             return null;
         }

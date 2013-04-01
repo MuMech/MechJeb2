@@ -97,7 +97,6 @@ namespace MuMech
             //Load custom info windows, which are stored in our ConfigNode:
 
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
-            Debug.Log("windowNodes.Length = " + windowNodes.Length);
             foreach (ConfigNode windowNode in windowNodes)
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);

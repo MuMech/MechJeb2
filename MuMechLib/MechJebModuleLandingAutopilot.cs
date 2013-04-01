@@ -121,9 +121,6 @@ namespace MuMech
             
             prediction = predictor.GetResult(); //grab a reference to the current result, in case a new one comes in while we're doing stuff
 
-            if (prediction == null) Debug.Log("prediction is null");
-            else Debug.Log("prediction.outcme = " + prediction.outcome);
-
             if (!PredictionReady && landStep != LandStep.DEORBIT_BURN && landStep != LandStep.PLANE_CHANGE && landStep != LandStep.LOW_DEORBIT_BURN
                 && landStep != LandStep.UNTARGETED_DEORBIT && landStep != LandStep.FINAL_DESCENT) return;
 
@@ -147,14 +144,6 @@ namespace MuMech
 
                 case LandStep.COURSE_CORRECTIONS:
                     DriveCourseCorrections(s);
-                    break;
-
-                case LandStep.COAST_TO_DECELERATION:
-                    DriveCoastToDeceleration(s);
-                    break;
-
-                case LandStep.DECELERATING:
-                    DriveDecelerationBurn(s);
                     break;
 
                 case LandStep.KILLING_HORIZONTAL_VELOCITY:
@@ -191,6 +180,10 @@ namespace MuMech
                     FixedUpdateCoastToDeceleration();
                     break;
 
+                case LandStep.DECELERATING:
+                    FixedUpdateDecelerationBurn();
+                    break;
+
                 default:
                     break;
             }
@@ -219,11 +212,8 @@ namespace MuMech
             double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
             bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, vesselState.velocityVesselOrbit) > 0;
 
-            Debug.Log("angleToTarget = " + angleToTarget + "; approaching = " + approaching);
-
             if (!planeChangeTriggered && approaching && (angleToTarget > 80) && (angleToTarget < 90))
             {
-                Debug.Log("triggering plane change");
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp(true);
                 planeChangeTriggered = true;
             }
@@ -259,9 +249,6 @@ namespace MuMech
             Vector3d currentRadialVector = vesselState.CoM - mainBody.position;
             double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
             //this calculation seems like it might be be working right:
-            Debug.Log("orbit.trueAnomaly = " + orbit.trueAnomaly);
-            Debug.Log("time for 3.6 degrees = " + (orbit.TimeOfTrueAnomaly(orbit.trueAnomaly + 3.6, vesselState.time) - vesselState.time));
-            Debug.Log("orbit.period = " + orbit.period);
             double timeToTarget = orbit.TimeOfTrueAnomaly(orbit.trueAnomaly + angleToTarget, vesselState.time) - vesselState.time;
             double planetRotationAngle = 360 * timeToTarget / mainBody.rotationPeriod;
             Quaternion planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, mainBody.angularVelocity);
@@ -302,15 +289,12 @@ namespace MuMech
                 deorbitBurnTriggered = true;
             }
 
-            Debug.Log("range to target   = " + rangeToTarget);
-            Debug.Log("trigger = " + triggerDistance);
-
             if (deorbitBurnTriggered) status = "Executing low deorbit burn";
             else status = "Moving to low deorbit burn point";
             
             //Warp toward deorbit burn if it hasn't been triggerd yet:
             if (!deorbitBurnTriggered && autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
-            if (rangeToTarget < 2 * triggerDistance && !MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+            if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
 
             //By default, thrust straight back at max throttle
             Vector3d thrustDirection = -vesselState.velocityVesselSurfaceUnit;
@@ -329,52 +313,50 @@ namespace MuMech
                 if(angleCorrection.magnitude > 0.1) angleCorrection *= 0.1 / angleCorrection.magnitude;
                 thrustDirection = (thrustDirection + angleCorrection).normalized;
 
-                Debug.Log("Angle to correct = " + Vector3d.Angle(horizontalToTarget, horizontalToLandingSite));
-
-
                 double rangeToLandingSite = Vector3d.Exclude(vesselState.up, LandingSite - vesselState.CoM).magnitude;
                 double maxAllowedSpeed = MaxAllowedSpeed();
 
-                if (!lowDeorbitEndConditionSet)
+                if (!lowDeorbitEndConditionSet && Vector3d.Distance(LandingSite, vesselState.CoM) < mainBody.Radius + vesselState.altitudeASL)
                 {
                     lowDeorbitEndOnLandingSiteNearer = rangeToLandingSite > rangeToTarget;
                     lowDeorbitEndConditionSet = true;
-                    Debug.Log("NOW SETTING lowDeorbitEndOnLandingSiteNearer = " + lowDeorbitEndOnLandingSiteNearer);
                 }
 
-                if (rangeToLandingSite > rangeToTarget)
-                {
-                    if (!lowDeorbitEndOnLandingSiteNearer)
-                    {
-                        Debug.Log("Switching to decelerating because landing site is far");
-                        landStep = LandStep.DECELERATING;
-                    }
+                lowDeorbitBurnMaxThrottle = 1;
 
-                    double maxAllowedSpeedAfterDt = MaxAllowedSpeedAfterDt(vesselState.deltaT);
-                    double speedAfterDt = vesselState.speedSurface + vesselState.deltaT * Vector3d.Dot(vesselState.gravityForce, vesselState.velocityVesselSurfaceUnit); 
-                    double throttleToMaintainLandingSite;
-                    if (vesselState.speedSurface < maxAllowedSpeed) throttleToMaintainLandingSite = 0;
-                    else throttleToMaintainLandingSite = (speedAfterDt - maxAllowedSpeedAfterDt) / (vesselState.deltaT * vesselState.maxThrustAccel);
-
-                    lowDeorbitBurnMaxThrottle = throttleToMaintainLandingSite + 1 * (rangeToLandingSite / rangeToTarget - 1) + 0.2;
-                }
-                else
+                if (orbit.PeA < 0)
                 {
-                    if(lowDeorbitEndOnLandingSiteNearer) 
+                    if (rangeToLandingSite > rangeToTarget)
                     {
-                        Debug.Log("Switching to decelerating because landing site is near");
-                        lowDeorbitBurnMaxThrottle = 1;
-                        landStep = LandStep.DECELERATING;
+                        if (lowDeorbitEndConditionSet && !lowDeorbitEndOnLandingSiteNearer)
+                        {
+                            landStep = LandStep.DECELERATING;
+                            core.thrust.targetThrottle = 0;
+                        }
+
+                        double maxAllowedSpeedAfterDt = MaxAllowedSpeedAfterDt(vesselState.deltaT);
+                        double speedAfterDt = vesselState.speedSurface + vesselState.deltaT * Vector3d.Dot(vesselState.gravityForce, vesselState.velocityVesselSurfaceUnit);
+                        double throttleToMaintainLandingSite;
+                        if (vesselState.speedSurface < maxAllowedSpeed) throttleToMaintainLandingSite = 0;
+                        else throttleToMaintainLandingSite = (speedAfterDt - maxAllowedSpeedAfterDt) / (vesselState.deltaT * vesselState.maxThrustAccel);
+
+                        lowDeorbitBurnMaxThrottle = throttleToMaintainLandingSite + 1 * (rangeToLandingSite / rangeToTarget - 1) + 0.2;
                     }
                     else
                     {
-                        lowDeorbitBurnMaxThrottle = 0;
-                        status = "Deorbit burn complete: waiting for the right moment to start braking";
+                        if (lowDeorbitEndConditionSet && lowDeorbitEndOnLandingSiteNearer)
+                        {
+                            landStep = LandStep.DECELERATING;
+                            core.thrust.targetThrottle = 0;
+                        }
+                        else
+                        {
+                            lowDeorbitBurnMaxThrottle = 0;
+                            status = "Deorbit burn complete: waiting for the right moment to start braking";
+                        }
                     }
                 }
             }
-
-            Debug.Log("final max throttle = " + lowDeorbitBurnMaxThrottle);
 
             core.attitude.attitudeTo(thrustDirection, AttitudeReference.INERTIAL, this);
 
@@ -390,7 +372,6 @@ namespace MuMech
             {
                 core.thrust.targetThrottle = 0.0F;
             }
-            Debug.Log("low deorbit applying throttle " + core.thrust.targetThrottle);
         }
 
 
@@ -401,6 +382,7 @@ namespace MuMech
             if (part.vessel.orbit.ApA < part.vessel.mainBody.RealMaxAtmosphereAltitude())
             {
                 landStep = LandStep.COURSE_CORRECTIONS;
+                core.thrust.targetThrottle = 0;
                 return;
             }
 
@@ -452,7 +434,7 @@ namespace MuMech
             else
             {
                 core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, this);
-                core.warp.WarpRegularAtRate((float)(orbit.period / 60));
+                core.warp.WarpRegularAtRate((float)(orbit.period / 10));
 
                 status = "Moving to high deorbit burn point";
             }
@@ -583,8 +565,9 @@ namespace MuMech
 
         void FixedUpdateCoastToDeceleration()
         {
+            core.thrust.targetThrottle = 0;
+
             double maxAllowedSpeed = MaxAllowedSpeed();
-            Debug.Log("maxAllowedSpeed = " + maxAllowedSpeed);
             if (vesselState.speedSurface > 0.9 * maxAllowedSpeed)
             {
                 core.warp.MinimumWarp(true);
@@ -604,36 +587,52 @@ namespace MuMech
             if (PredictionReady)
             {
                 double decelerationStartTime = prediction.trajectory.First().UT;
-                Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime).normalized;
+                Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
+                decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
+                decelerationStartAttitude = decelerationStartAttitude.normalized;
                 core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, this);
                 warpReady = core.attitude.attitudeAngleFromTarget() < 5;
             }
 
             //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
-            Debug.Log("Trying to warp at x" + (float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))));
             if (warpReady) core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))));
             else core.warp.MinimumWarp();
 
             status = "Coasting toward deceleration burn";
         }
 
-        void DriveCoastToDeceleration(FlightCtrlState s)
-        {
-            core.thrust.targetThrottle = 0;
-        }
-
-        void DriveDecelerationBurn(FlightCtrlState s)
+        void FixedUpdateDecelerationBurn()
         {
             if (vesselState.altitudeASL < DecelerationEndAltitude() + 5)
             {
                 landStep = LandStep.KILLING_HORIZONTAL_VELOCITY;
+                core.warp.MinimumWarp();
+                return;
+            }
+
+
+            double decelerationStartTime = prediction.trajectory.First().UT;
+            if (decelerationStartTime - vesselState.time > 5)
+            {
+                core.thrust.targetThrottle = 0;
+
+                status = "Warping to start of braking burn.";
+
+                //warp to deceleration start
+                Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
+                decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
+                decelerationStartAttitude = decelerationStartAttitude.normalized;
+                core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, this);
+                bool warpReady = core.attitude.attitudeAngleFromTarget() < 5;
+
+                if (warpReady) core.warp.WarpToUT(decelerationStartTime - 5);
+                else if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
                 return;
             }
 
             Vector3d desiredThrustVector = -vesselState.velocityVesselSurfaceUnit;
 
             Vector3d courseCorrection = ComputeCourseCorrection(false);
-            Debug.Log("course correction dv = " + courseCorrection.magnitude);
             double correctionAngle = courseCorrection.magnitude / (2.0 * vesselState.maxThrustAccel);
             correctionAngle = Math.Min(0.1, correctionAngle);
             desiredThrustVector = (desiredThrustVector + correctionAngle * courseCorrection.normalized).normalized;
@@ -704,6 +703,7 @@ namespace MuMech
             if (vessel.LandedOrSplashed)
             {
                 core.thrust.targetThrottle = 0;
+                core.thrust.tmode = MechJebModuleThrustController.TMode.OFF;
                 StopLanding();
                 return;
             }
@@ -799,7 +799,10 @@ namespace MuMech
 
         IDescentSpeedPolicy PickDescentSpeedPolicy()
         {
-            if (UseAtmosphereToBrake()) return new CoastDescentSpeedPolicy();
+            if (UseAtmosphereToBrake())
+            {
+                return new CoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude());
+            }
 
             return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.maxThrustAccel);
         }
@@ -843,9 +846,6 @@ namespace MuMech
             double periapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextPeriapsisTime(vesselState.time)).magnitude;
             double stoppingDistance = Math.Pow(periapsisSpeed, 2) / (2 * vesselState.maxThrustAccel);
 
-            Debug.Log("periapsisSpeed = " + periapsisSpeed);
-            Debug.Log("stoppingDistance = " + stoppingDistance);
-
             return orbit.PeA < 2 * stoppingDistance + mainBody.Radius / 4;
         }
 
@@ -880,14 +880,7 @@ namespace MuMech
 
 
 
-    class CoastDescentSpeedPolicy : IDescentSpeedPolicy
-    {
-        public CoastDescentSpeedPolicy() { }
-
-        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel) { return double.MaxValue; }
-    }
-
-
+    
     //A descent speed policy that gives the max safe speed if our entire velocity were straight down
     class SafeDescentSpeedPolicy : IDescentSpeedPolicy
     {
@@ -908,6 +901,23 @@ namespace MuMech
             return 0.9 * Math.Sqrt(2 * (thrust - g) * altitude);
         }
     }
+
+    class CoastDescentSpeedPolicy : IDescentSpeedPolicy
+    {
+        double endCoastRadius;
+        public CoastDescentSpeedPolicy(double endCoastRadius) 
+        {
+            this.endCoastRadius = endCoastRadius;
+        }
+
+        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel) 
+        {
+            if (pos.magnitude > endCoastRadius) return double.MaxValue;
+            else return 0;
+        }
+    }
+
+
 
     class GravityTurnDescentSpeedPolicy : IDescentSpeedPolicy
     {

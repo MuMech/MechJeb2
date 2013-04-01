@@ -115,9 +115,6 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            Debug.Log("============ONSTART====================");
-            Debug.Log("start = " + state);
-
             if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
 
             //OnLoad doesn't get called for parts created in editor, so do that manually so 
@@ -193,7 +190,7 @@ namespace MuMech
             {
                 if (Time.time > lastSettingsSaveTime + 30)
                 {
-                    Debug.Log("Doing periodic settings save");
+                    Debug.Log("MechJeb doing periodic settings save");
                     OnSave(null);
                     lastSettingsSaveTime = Time.time;
                 }
@@ -267,13 +264,9 @@ namespace MuMech
             {
                 bool generateDefaultWindows = false;
 
-                Debug.Log("OnLoad called !!!!!!!!!!!!!!!!!");
-
                 base.OnLoad(sfsNode); //is this necessary?
 
                 LoadComputerModules();
-
-                Debug.Log("LOADED " + computerModules.Count + " MODULES");
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
                 if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
@@ -283,7 +276,6 @@ namespace MuMech
 
                 //Todo: load a different file for each vessel type
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                Debug.Log("type path: " + IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
                 if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg"))
                 {
                     try
@@ -344,8 +336,6 @@ namespace MuMech
         {
             try
             {
-                Debug.Log("OnSave called");
-
                 base.OnSave(sfsNode); //is this necessary?
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");

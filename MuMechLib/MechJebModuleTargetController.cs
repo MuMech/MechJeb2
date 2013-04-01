@@ -182,7 +182,6 @@ namespace MuMech
             {
                 if (target != null)
                 {
-                    Debug.Log("Setting vessel target: my surface speed is " + vesselState.speedSurface);
                     FlightGlobals.fetch.SetVesselTarget(target);
                 }
             }

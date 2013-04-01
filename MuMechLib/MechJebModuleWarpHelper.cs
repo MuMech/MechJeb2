@@ -57,8 +57,6 @@ namespace MuMech
         {
             if (!warping) return;
 
-            Debug.Log("OnFixedUpdate: warping = " + warping);
-
             double targetUT = vesselState.time;
 
             switch (warpTarget)

@@ -122,8 +122,6 @@ namespace MuMech
             //are we raising or lowering the periapsis?
             bool raising = ApoapsisIsHigher(newApR, o.ApR);
 
-            Debug.Log("raising = " + raising);
-
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
 
             double minDeltaV = 0;
@@ -332,20 +330,14 @@ namespace MuMech
         {
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
 
-            Debug.Log("cheapest course correction: o.ApA = " + o.ApA + "; UT = " + UT + "; closestApproach = " + closestApproachTime);
-
             burnUT = UT;
             Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime);
-
-            Debug.Log("initial: UT = " + UT + ", dV = " + dV.magnitude);
 
             int fineness = 20;
             for (double step = 0.5; step < fineness; step += 1.0)
             {
                 double testUT = UT + (closestApproachTime - UT) * step / fineness;
                 Vector3d testDV = DeltaVToInterceptAtTime(o, testUT, target, closestApproachTime);
-
-                Debug.Log("UT = " + testUT + ", dV = " + testDV.magnitude);
 
                 if (testDV.magnitude < dV.magnitude)
                 {
@@ -373,9 +365,6 @@ namespace MuMech
             double idealBurnUT;
             Vector3d idealDeltaV = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT, out idealBurnUT);
 
-            Debug.Log("idealBurnUT - UT = " + (idealBurnUT - UT));
-            Debug.Log("idealDeltaV = " + idealDeltaV);
-
             //Compute the actual transfer orbit this ideal burn would lead to.
             Orbit transferOrbit = planetOrbit.PerturbedOrbit(idealBurnUT, idealDeltaV);
 
@@ -392,10 +381,6 @@ namespace MuMech
             //project the desired exit direction into the current orbit plane to get the feasible exit direction
             Vector3d inPlaneSoiExitDirection = Vector3d.Exclude(o.SwappedOrbitNormal(), soiExitVelocity).normalized;
 
-            Debug.Log("soiExitVelocity = " + soiExitVelocity);
-            Debug.Log("inPlaneSoiExitDirection = " + inPlaneSoiExitDirection);
-
-
             //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn) 
             //and SOI exit (approximated as radius = infinity)
             double soiExitEnergy = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
@@ -403,11 +388,6 @@ namespace MuMech
 
             double ejectionKineticEnergy = soiExitEnergy + o.referenceBody.gravParameter / ejectionRadius;
             double ejectionSpeed = Math.Sqrt(2 * ejectionKineticEnergy);
-
-            Debug.Log("soiExitEnergy = " + soiExitEnergy);
-            Debug.Log("ejectionRadius = " + ejectionRadius);
-            Debug.Log("ejectionKineticEnergy = " + ejectionKineticEnergy);
-            Debug.Log("ejectionSpeed = " + ejectionSpeed);
 
             //construct a sample ejection orbit
             Vector3d ejectionOrbitInitialVelocity = ejectionSpeed * (Vector3d)o.referenceBody.transform.right;
@@ -419,20 +399,6 @@ namespace MuMech
 
             double turningAngle = Math.Abs(Vector3d.Angle(ejectionOrbitInitialVelocity, ejectionOrbitFinalVelocity));
 
-            Debug.Log("ejectionOrbitInitialVElocity = " + ejectionOrbitInitialVelocity);
-            //Debug.Log("ejectionOrbitFinalTrueAnomaly = " + ejectionOrbitFinalTrueAnomaly);
-            Debug.Log("ejectionOrbitDuration = " + ejectionOrbitDuration);
-            Debug.Log("ejectionOrbitFinalVelocity = " + ejectionOrbitFinalVelocity);
-            Debug.Log("turningAngle = " + turningAngle);
-
-/*            double hyperbolaSemiMajorAxis = -o.referenceBody.gravParameter / (2 * soiExitEnergy);
-            double hyperbolaEccentricity = 1 - ejectionRadius / hyperbolaSemiMajorAxis;
-            double turningAngle = 180 / Math.PI * Math.Asin(1 / hyperbolaEccentricity);
-
-            Debug.Log("ejectionRadius = " + ejectionRadius);
-            Debug.Log("hyperbolaEccentricity = " + hyperbolaEccentricity);
-            Debug.Log("turningAngle = " + turningAngle);*/
-
             //rotate the exit direction by 90 + the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn. Then convert this to a true anomaly and compute the time closest
             //to planetUT at which we will pass through that true anomaly.
@@ -442,26 +408,13 @@ namespace MuMech
             
             if (idealBurnUT - burnUT > o.period / 2)
             {
-                Debug.Log("upping burnUT by one period");
                 burnUT += o.period;
             }
-            Debug.Log("ejectionPointDirection = " + ejectionPointDirection);
-            Debug.Log("relPos at burnUT = " + o.SwappedRelativePositionAtUT(burnUT));
-
-
-            Debug.Log("ejectionTrueAnomaly = " + ejectionTrueAnomaly);
-            Debug.Log("(burnUT - UT) = " + (burnUT - UT));
-
-
-            Debug.Log("ejectionSpeed = " + ejectionSpeed);
 
             //rotate the exit direction by the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn
             Vector3d ejectionBurnDirection = Quaternion.AngleAxis(-(float)(turningAngle), o.SwappedOrbitNormal()) * inPlaneSoiExitDirection;
             Vector3d ejectionVelocity = ejectionSpeed * ejectionBurnDirection;
-
-            Debug.Log("ejectionVelocity = " + ejectionVelocity);
-            Debug.Log("obtvel at burnUT = " + o.SwappedOrbitalVelocityAtUT(burnUT));
 
             Vector3d preEjectionVelocity = o.SwappedOrbitalVelocityAtUT(burnUT);
 

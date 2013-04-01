@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -69,8 +70,12 @@ namespace MuMech
         {
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
-                TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
-                TimeWarp.SetRate(0, true);
+                double instantAltitudeASL = (vesselState.CoM - mainBody.position).magnitude - mainBody.Radius;
+                if (instantAltitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                {
+                    TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
+                    TimeWarp.SetRate(0, true);
+                }
                 return false; 
             }
             return true;

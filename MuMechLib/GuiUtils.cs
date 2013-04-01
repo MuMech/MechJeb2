@@ -263,8 +263,6 @@ namespace MuMech
 
         	}
         	catch (Exception) {
-//        		Debug.LogError(seconds.ToString());
-//        		Debug.LogError(ex.Message);
         		return "NaN";
         	}
         	return ret;

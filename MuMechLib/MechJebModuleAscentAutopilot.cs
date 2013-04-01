@@ -241,8 +241,6 @@ namespace MuMech
             }
             else
             {
-                Debug.Log("placing circularization node");
-
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
                 double UT = orbit.NextApoapsisTime(vesselState.time);

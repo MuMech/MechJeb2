@@ -88,8 +88,6 @@ namespace MuMech
                 else
                 {
                     core.target.UpdateDirectionTarget(ILSAimDirection());
-                    Debug.Log("core.target.Target.GetTransform().position = " + core.target.Target.GetTransform().position);
-                    Debug.Log("minus com dotted with forward: " + Vector3d.Dot(vesselState.forward, core.target.Target.GetTransform().position - vesselState.CoM));
                 }
             }
         }

@@ -56,6 +56,7 @@ namespace MuMech
 
         public static double RealMaxAtmosphereAltitude(this CelestialBody body)
         {
+            if (!body.atmosphere) return 0;
             //Atmosphere actually cuts out when exp(-altitude / scale height) = 1e-6
             return -body.atmosphereScaleHeight * 1000 * Math.Log(1e-6);
         }

@@ -23,36 +23,36 @@ namespace MuMech
         public bool trans_land_gears = false;
 
         [ToggleInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public bool limitToTerminalVelocity = false;
 
         [ToggleInfoItem("Prevent overheats", InfoItem.Category.Thrust)]
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventOverheats = false;
 
         [ToggleInfoItem("Smooth throttle", InfoItem.Category.Thrust)]
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public bool smoothThrottle = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public double throttleSmoothingTime = 1.0;
 
         [ToggleInfoItem("Prevent jet flameout", InfoItem.Category.Thrust)]
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventFlameout = false;
 
         // 5% safety margin on flameouts
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDouble flameoutSafetyPct = 5;
 
         [ToggleInfoItem("Manage air intakes", InfoItem.Category.Thrust)]
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Global)]
         public bool manageIntakes = false;
-        
-        [Persistent(pass = (int)Pass.Local)]
+
+        [Persistent(pass = (int)Pass.Global)]
         public bool limitAcceleration = false;
-        
-        [Persistent(pass = (int)Pass.Local)]
+
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxAcceleration = 40;
 
         [GeneralInfoItem("Limit acceleration", InfoItem.Category.Thrust)]
