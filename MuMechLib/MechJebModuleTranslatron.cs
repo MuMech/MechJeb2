@@ -55,7 +55,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if ((core.thrust.enabled && !users.AmIUser(this)) || core.thrust.trans_land)
+            if ((core.thrust.enabled && !core.thrust.users.AmIUser(this)) || core.thrust.trans_land)
             {
                 if (!autoMode)
                 {

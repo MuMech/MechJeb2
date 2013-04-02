@@ -38,7 +38,9 @@ namespace MuMech
 
         private float lastSettingsSaveTime;
 
-        private bool showGui = true;        
+        private bool showGui = true;
+
+        public static GUISkin skin = null;
         
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
@@ -440,6 +442,8 @@ namespace MuMech
         private void OnGUI()
         {
             if (!showGui) return;
+
+            GUI.skin = skin;
 
             if (this == vessel.GetMasterMechJeb() &&
                 ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD))))
