@@ -181,6 +181,11 @@ namespace MuMech
             }
             if (users.Count == 0) controlledModule.enabled = false;
         }
+
+        public bool AmIUser(object user)
+        {
+            return users.Contains(user);
+        }
     }
 
 }

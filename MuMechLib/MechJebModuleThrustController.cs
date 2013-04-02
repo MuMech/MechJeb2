@@ -102,6 +102,7 @@ namespace MuMech
             KEEP_ORBITAL,
             KEEP_SURFACE,
             KEEP_VERTICAL,
+            KEEP_RELATIVE,
             DIRECT
         }
 

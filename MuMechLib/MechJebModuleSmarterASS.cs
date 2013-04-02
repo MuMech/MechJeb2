@@ -95,85 +95,92 @@ namespace MuMech
                 btAuto.normal.textColor = Color.red;
                 btAuto.onActive = btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
             }
-            
-            GUILayout.BeginVertical();
 
-            GUILayout.BeginHorizontal();
-            TargetButton(Target.OFF);
-            TargetButton(Target.KILLROT);
-            TargetButton(Target.NODE);
-            GUILayout.EndHorizontal();
-
-            GUILayout.Label("Mode:");
-            GUILayout.BeginHorizontal();
-            ModeButton(Mode.ORBITAL);
-            ModeButton(Mode.SURFACE);
-            ModeButton(Mode.TARGET);
-            ModeButton(Mode.ADVANCED);
-            GUILayout.EndHorizontal();
-
-            switch (mode)
+            if (core.attitude.enabled && !users.AmIUser(this))
             {
-                case Mode.ORBITAL:
-                    GUILayout.BeginHorizontal();
-                    TargetButton(Target.PROGRADE);
-                    TargetButton(Target.NORMAL_PLUS);
-                    TargetButton(Target.RADIAL_PLUS);
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    TargetButton(Target.RETROGRADE);
-                    TargetButton(Target.NORMAL_MINUS);
-                    TargetButton(Target.RADIAL_MINUS);
-                    GUILayout.EndHorizontal();
-                    break;
-                case Mode.SURFACE:
-                    GuiUtils.SimpleTextBox("HDG:", srfHdg);
-                    GuiUtils.SimpleTextBox("PIT:", srfPit);
-
-                    if (GUILayout.Button("EXECUTE", GUILayout.ExpandWidth(true)))
-                    {
-                        target = Target.SURFACE;
-                        Engage();
-                    }
-                    break;
-                case Mode.TARGET:
-                    if (core.target.NormalTargetExists)
-                    {
-                        GUILayout.BeginHorizontal();
-                        TargetButton(Target.TARGET_PLUS);
-                        TargetButton(Target.RELATIVE_PLUS);
-                        TargetButton(Target.PARALLEL_PLUS);
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        TargetButton(Target.TARGET_MINUS);
-                        TargetButton(Target.RELATIVE_MINUS);
-                        TargetButton(Target.PARALLEL_MINUS);
-                        GUILayout.EndHorizontal();
-                    }
-                    else
-                    {
-                        GUILayout.Label("Please select a target");
-                    }
-                    break;
-                case Mode.ADVANCED:
-                    GUILayout.Label("Reference:");
-                    advReference = (AttitudeReference)GuiUtils.ArrowSelector((int)advReference, Enum.GetValues(typeof(AttitudeReference)).Length, advReference.ToString());
-
-                    GUILayout.Label("Direction:");
-                    advDirection = (Vector6.Direction)GuiUtils.ArrowSelector((int)advDirection, Enum.GetValues(typeof(Vector6.Direction)).Length, advDirection.ToString());
-
-                    if (GUILayout.Button("EXECUTE", btNormal, GUILayout.ExpandWidth(true)))
-                    {
-                        target = Target.ADVANCED;
-                        Engage();
-                    }
-                    break;
-                case Mode.AUTO:
-                    break;
+                GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }
+            else
+            {
+                GUILayout.BeginVertical();
 
-            GUILayout.EndVertical();
+                GUILayout.BeginHorizontal();
+                TargetButton(Target.OFF);
+                TargetButton(Target.KILLROT);
+                TargetButton(Target.NODE);
+                GUILayout.EndHorizontal();
 
+                GUILayout.Label("Mode:");
+                GUILayout.BeginHorizontal();
+                ModeButton(Mode.ORBITAL);
+                ModeButton(Mode.SURFACE);
+                ModeButton(Mode.TARGET);
+                ModeButton(Mode.ADVANCED);
+                GUILayout.EndHorizontal();
+
+                switch (mode)
+                {
+                    case Mode.ORBITAL:
+                        GUILayout.BeginHorizontal();
+                        TargetButton(Target.PROGRADE);
+                        TargetButton(Target.NORMAL_PLUS);
+                        TargetButton(Target.RADIAL_PLUS);
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        TargetButton(Target.RETROGRADE);
+                        TargetButton(Target.NORMAL_MINUS);
+                        TargetButton(Target.RADIAL_MINUS);
+                        GUILayout.EndHorizontal();
+                        break;
+                    case Mode.SURFACE:
+                        GuiUtils.SimpleTextBox("HDG:", srfHdg);
+                        GuiUtils.SimpleTextBox("PIT:", srfPit);
+
+                        if (GUILayout.Button("EXECUTE", GUILayout.ExpandWidth(true)))
+                        {
+                            target = Target.SURFACE;
+                            Engage();
+                        }
+                        break;
+                    case Mode.TARGET:
+                        if (core.target.NormalTargetExists)
+                        {
+                            GUILayout.BeginHorizontal();
+                            TargetButton(Target.TARGET_PLUS);
+                            TargetButton(Target.RELATIVE_PLUS);
+                            TargetButton(Target.PARALLEL_PLUS);
+                            GUILayout.EndHorizontal();
+                            GUILayout.BeginHorizontal();
+                            TargetButton(Target.TARGET_MINUS);
+                            TargetButton(Target.RELATIVE_MINUS);
+                            TargetButton(Target.PARALLEL_MINUS);
+                            GUILayout.EndHorizontal();
+                        }
+                        else
+                        {
+                            GUILayout.Label("Please select a target");
+                        }
+                        break;
+                    case Mode.ADVANCED:
+                        GUILayout.Label("Reference:");
+                        advReference = (AttitudeReference)GuiUtils.ArrowSelector((int)advReference, Enum.GetValues(typeof(AttitudeReference)).Length, advReference.ToString());
+
+                        GUILayout.Label("Direction:");
+                        advDirection = (Vector6.Direction)GuiUtils.ArrowSelector((int)advDirection, Enum.GetValues(typeof(Vector6.Direction)).Length, advDirection.ToString());
+
+                        if (GUILayout.Button("EXECUTE", btNormal, GUILayout.ExpandWidth(true)))
+                        {
+                            target = Target.ADVANCED;
+                            Engage();
+                        }
+                        break;
+                    case Mode.AUTO:
+                        break;
+                }
+
+                GUILayout.EndVertical();
+            }
+            
             base.WindowGUI(windowID);
         }
 
