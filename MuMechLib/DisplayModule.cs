@@ -58,7 +58,7 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, GetName(), WindowOptions());
+                windowPos = GUILayout.Window(GetName().GetHashCode(), windowPos, WindowGUI, GetName(), WindowOptions());
 
                 if (GUI.Button(new Rect(windowPos.x + windowPos.width - 18, windowPos.y + 2, 16, 16), ""))
                 {
