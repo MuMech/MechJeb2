@@ -309,7 +309,7 @@ namespace MuMech
             page3.OnDrawContent = () =>
             {
                 GUILayout.Label("...Hold on, " + FlightGlobals.ActiveVessel.vesselName + ", someone here thinks they have a solution.\n" +
-                                "Try \"SCE to AUX.\" Supposedly it's on the Obscure Control Panel. Funny, I've never heard of it.\n");
+                                "Try \"SCE to AUX\". Supposedly it's on the Obscure Control Panel. Funny, I've never heard of it.");
             };
 
             TutorialPage page4 = new TutorialPage("Page4");

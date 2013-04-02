@@ -166,13 +166,19 @@ namespace MuMech
 
         public void Add(object user)
         {
-            users.Add(user);
+            if (!users.Contains(user))
+            {
+                users.Add(user);
+            }
             controlledModule.enabled = true;
         }
 
         public void Remove(object user)
         {
-            users.Remove(user);
+            if (users.Contains(user))
+            {
+                users.Remove(user);
+            }
             if (users.Count == 0) controlledModule.enabled = false;
         }
     }
