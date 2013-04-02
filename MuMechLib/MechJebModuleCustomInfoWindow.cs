@@ -315,7 +315,7 @@ namespace MuMech
             targetWindow.showInFlight = true;
             targetWindow.title = "Target Info";
             itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity"};
-            foreach (string itemName in itemNames) orbitWindow.items.Add(registry.Find(i => i.name == itemName));
+            foreach (string itemName in itemNames) targetWindow.items.Add(registry.Find(i => i.name == itemName));
         }
     }
 
