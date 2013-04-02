@@ -285,7 +285,6 @@ namespace MuMech
                     catch (Exception e)
                     {
                         Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
-                        generateDefaultWindows = true;
                     }
                 }
 
@@ -300,6 +299,10 @@ namespace MuMech
                     {
                         Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
                     }
+                }
+                else
+                {
+                    generateDefaultWindows = true;
                 }
 
                 /*Debug.Log("OnLoad: loading from");
