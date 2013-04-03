@@ -41,6 +41,8 @@ namespace MuMech
         public double Tf = 0.1;
         [Persistent(pass = (int)Pass.Global)]
         public double drive_factor = 100000;
+        [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
+        public MovingAverage steeringError = new MovingAverage();
 
         public bool attitudeKILLROT = false;
 
@@ -242,7 +244,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            attitudeError = attitudeAngleFromTarget();
+            steeringError.value = attitudeError = attitudeAngleFromTarget();
         }
 
         public override void OnUpdate()
