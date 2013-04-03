@@ -16,9 +16,6 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            core.thrust.enabled = GUILayout.Toggle(core.thrust.enabled, "Control throttle");
-
-            core.thrust.targetThrottle = GUILayout.HorizontalSlider(core.thrust.targetThrottle, 0, 1);
             core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit to terminal velocity");
             core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent overheat");
             core.thrust.limitToPreventFlameout = GUILayout.Toggle(core.thrust.limitToPreventFlameout, "Prevent jet flameout");

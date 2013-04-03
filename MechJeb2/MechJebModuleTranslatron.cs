@@ -28,11 +28,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public string trans_spd = "0";
 
-        public MechJebModuleTranslatron(MechJebCore core)
-            : base(core)
-        {
-            hidden = true;
-        }
+        public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
 
         public override string GetName()
         {
@@ -55,7 +51,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if ((core.thrust.enabled && !core.thrust.users.AmIUser(this)) || core.thrust.trans_land)
+            if (core.thrust.trans_land)
             {
                 if (!autoMode)
                 {
