@@ -12,8 +12,21 @@ namespace MuMech
             : base(core)
         {
             priority = -10000;
-            enabled = true;
+            enabled = false;
             hidden = true;
+        }
+
+        [ToggleInfoItem("Enable 2013-04-01 Joke module", InfoItem.Category.Misc, showInEditor = true), Persistent(pass = (int)Pass.Global)]
+        public bool enableJoke
+        {
+            get
+            {
+                return enabled;
+            }
+            set
+            {
+                enabled = value;
+            }
         }
 
         static Texture2D _lightningTex;
@@ -65,10 +78,14 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (!enabled)
+            {
+                return;
+            }
+
             if ((state & PartModule.StartState.PreLaunch) != 0)
             {
                 newFlight = true;
-                enabled = true;
 
                 doLightningJoke = rand.Next(10) == 0;
                 if (doLightningJoke) tutorial = (MissionControlTutorial)ScenarioRunner.fetch.AddModule("MissionControlTutorial");

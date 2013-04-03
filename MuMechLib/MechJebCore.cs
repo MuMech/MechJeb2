@@ -270,26 +270,6 @@ namespace MuMech
 
                 LoadComputerModules();
 
-                ConfigNode local = new ConfigNode("MechJebLocalSettings");
-                if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
-                {
-                    local = sfsNode.GetNode("MechJebLocalSettings");
-                }
-
-                //Todo: load a different file for each vessel type
-                ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg"))
-                {
-                    try
-                    {
-                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg"));
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
-                    }
-                }
-
                 ConfigNode global = new ConfigNode("MechJebGlobalSettings");
                 if (File.Exists<MechJebCore>("mechjeb_settings_global.cfg"))
                 {
@@ -305,6 +285,26 @@ namespace MuMech
                 else
                 {
                     generateDefaultWindows = true;
+                }
+
+                //Todo: load a different file for each vessel type
+                ConfigNode type = new ConfigNode("MechJebTypeSettings");
+                if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg", vessel))
+                {
+                    try
+                    {
+                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg", vessel));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
+                    }
+                }
+
+                ConfigNode local = new ConfigNode("MechJebLocalSettings");
+                if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
+                {
+                    local = sfsNode.GetNode("MechJebLocalSettings");
                 }
 
                 /*Debug.Log("OnLoad: loading from");
