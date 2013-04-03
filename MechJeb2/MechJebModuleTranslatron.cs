@@ -28,11 +28,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public string trans_spd = "0";
 
-        public MechJebModuleTranslatron(MechJebCore core)
-            : base(core)
-        {
-            hidden = true;
-        }
+        public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
 
         public override string GetName()
         {
@@ -46,7 +42,6 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-
             GUIStyle sty = new GUIStyle(GUI.skin.button);
             sty.normal.textColor = sty.focused.textColor = Color.white;
             sty.hover.textColor = sty.active.textColor = Color.yellow;
@@ -55,7 +50,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if ((core.thrust.enabled && !core.thrust.users.AmIUser(this)) || core.thrust.trans_land)
+            if (core.GetComputerModule<MechJebModuleLandingAutopilot>().enabled)
             {
                 if (!autoMode)
                 {

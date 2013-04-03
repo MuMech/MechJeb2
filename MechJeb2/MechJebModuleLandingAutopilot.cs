@@ -8,7 +8,6 @@ namespace MuMech
 {
     class MechJebModuleLandingAutopilot : ComputerModule
     {
-
         //public interface:
         public void LandAtPositionTarget()
         {
@@ -46,12 +45,14 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;
 
-        public string status = "";       
-
+        public string status = "";
 
         //Internal state:
-        enum LandStep { PLANE_CHANGE, LOW_DEORBIT_BURN, DEORBIT_BURN, COURSE_CORRECTIONS, COAST_TO_DECELERATION, 
-            DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, UNTARGETED_DEORBIT, OFF }
+        enum LandStep
+        {
+            PLANE_CHANGE, LOW_DEORBIT_BURN, DEORBIT_BURN, COURSE_CORRECTIONS, COAST_TO_DECELERATION,
+            DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, UNTARGETED_DEORBIT, OFF
+        }
         LandStep landStep = LandStep.OFF;
 
         IDescentSpeedPolicy descentSpeedPolicy;
@@ -71,12 +72,15 @@ namespace MuMech
         ReentrySimulation.Result prediction;
         bool PredictionReady //We shouldn't do any autopilot stuff until this is true
         {
-            get { return (prediction != null) && 
-                         (prediction.outcome == ReentrySimulation.Outcome.LANDED); }
+            get
+            {
+                return (prediction != null) &&
+                       (prediction.outcome == ReentrySimulation.Outcome.LANDED);
+            }
         }
         double LandingAltitude //the altitude above sea level of the terrain at the landing site
         {
-            get 
+            get
             {
                 if (PredictionReady) return mainBody.TerrainAltitude(prediction.endPosition.latitude, prediction.endPosition.longitude);
                 else return 0;
@@ -84,14 +88,16 @@ namespace MuMech
         }
         Vector3d LandingSite //the current position of the landing site
         {
-            get { return mainBody.GetWorldSurfacePosition(prediction.endPosition.latitude, 
-                                                          prediction.endPosition.longitude, LandingAltitude); }
+            get
+            {
+                return mainBody.GetWorldSurfacePosition(prediction.endPosition.latitude,
+                                                        prediction.endPosition.longitude, LandingAltitude);
+            }
         }
         Vector3d RotatedLandingSite //the position where the landing site will be when we land at it
         {
             get { return prediction.WorldEndPosition(); }
         }
-
 
         public override void OnModuleEnabled()
         {
@@ -108,8 +114,6 @@ namespace MuMech
             status = "Off";
         }
 
-
-
         public override void Drive(FlightCtrlState s)
         {
             if (landStep == LandStep.OFF) return;
@@ -118,7 +122,7 @@ namespace MuMech
 
             predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
             predictor.endAltitudeASL = DecelerationEndAltitude();
-            
+
             prediction = predictor.GetResult(); //grab a reference to the current result, in case a new one comes in while we're doing stuff
 
             if (!PredictionReady && landStep != LandStep.DEORBIT_BURN && landStep != LandStep.PLANE_CHANGE && landStep != LandStep.LOW_DEORBIT_BURN
@@ -157,7 +161,7 @@ namespace MuMech
                 default:
                     break;
             }
-        
+
         }
 
         public override void OnFixedUpdate()
@@ -291,7 +295,7 @@ namespace MuMech
 
             if (deorbitBurnTriggered) status = "Executing low deorbit burn";
             else status = "Moving to low deorbit burn point";
-            
+
             //Warp toward deorbit burn if it hasn't been triggerd yet:
             if (!deorbitBurnTriggered && autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
             if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -310,7 +314,7 @@ namespace MuMech
                 Vector3d horizontalToTarget = Vector3d.Exclude(vesselState.up, core.target.GetPositionTargetPosition() - vesselState.CoM).normalized;
                 double angleGain = 4;
                 Vector3d angleCorrection = angleGain * (horizontalToTarget - horizontalToLandingSite);
-                if(angleCorrection.magnitude > 0.1) angleCorrection *= 0.1 / angleCorrection.magnitude;
+                if (angleCorrection.magnitude > 0.1) angleCorrection *= 0.1 / angleCorrection.magnitude;
                 thrustDirection = (thrustDirection + angleCorrection).normalized;
 
                 double rangeToLandingSite = Vector3d.Exclude(vesselState.up, LandingSite - vesselState.CoM).magnitude;
@@ -359,7 +363,6 @@ namespace MuMech
             }
 
             core.attitude.attitudeTo(thrustDirection, AttitudeReference.INERTIAL, this);
-
         }
 
         void DriveLowDeorbitBurn(FlightCtrlState s)
@@ -411,7 +414,6 @@ namespace MuMech
             double targetAheadAngle = Vector3d.Angle(currentRadialVector, freefallEndTargetRadialVector); //How far ahead the target is, in degrees
             double planeChangeAngle = Vector3d.Angle(currentHorizontalVelocity, freefallEndHorizontalToTarget); //The plane change required to get onto the deorbit trajectory, in degrees
 
-
             //If the target is basically almost normal to our orbit, it doesn't matter when we deorbit; might as well do it now
             //Otherwise, wait until the target is ahead
             if (targetAngleToOrbitNormal < 10
@@ -445,7 +447,6 @@ namespace MuMech
             if (deorbitBurnTriggered && core.attitude.attitudeAngleFromTarget() < 5) core.thrust.targetThrottle = 1.0F;
             else core.thrust.targetThrottle = 0.0F;
         }
-
 
         //Estimate the delta-V of the correction burn that would be required to put us on
         //course for the target
@@ -486,7 +487,7 @@ namespace MuMech
             //into a position. We can't just get the current position of those coordinates, because the planet will
             //rotate during the descent, so we have to account for that.
             Vector3d desiredLandingPosition = mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
-            float bodyRotationAngleDuringDescent = (float)(360*(prediction.endUT - vesselState.time)/mainBody.rotationPeriod);
+            float bodyRotationAngleDuringDescent = (float)(360 * (prediction.endUT - vesselState.time) / mainBody.rotationPeriod);
             Quaternion bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
 
@@ -506,7 +507,7 @@ namespace MuMech
                 //(e.g. when we are travelling close to straight up)
                 downrangeDirection = (deltas[0].magnitude * perturbationDirections[0]
                     + Math.Sign(Vector3d.Dot(deltas[0], deltas[1])) * deltas[1].magnitude * perturbationDirections[1]).normalized;
-               
+
                 downrangeDelta = Vector3d.Dot(downrangeDirection, perturbationDirections[0]) * deltas[0]
                                  + Vector3d.Dot(downrangeDirection, perturbationDirections[1]) * deltas[1];
             }
@@ -517,7 +518,6 @@ namespace MuMech
                 downrangeDirection = perturbationDirections[1];
                 downrangeDelta = deltas[1];
             }
-
 
             //Now solve a 2x2 system of linear equations to determine the linear combination
             //of perturbationDirection01 and normal+ that will give the desired offset in the
@@ -610,7 +610,6 @@ namespace MuMech
                 return;
             }
 
-
             double decelerationStartTime = prediction.trajectory.First().UT;
             if (decelerationStartTime - vesselState.time > 5)
             {
@@ -659,7 +658,6 @@ namespace MuMech
             }
 
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
-
         }
 
         public void DriveKillHorizontalVelocity(FlightCtrlState s)
@@ -712,19 +710,7 @@ namespace MuMech
 
             if (!deployedGears && (minalt < 1000)) DeployLandingGears();
 
-            if (Vector3d.Angle(vesselState.velocityVesselSurface, vesselState.up) < 80)
-            {
-                //if we have positive vertical velocity, point up and don't thrust:
-                core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
-                core.thrust.tmode = MechJebModuleThrustController.TMode.OFF;
-            }
-            else if (Vector3d.Angle(vesselState.forward, -vesselState.velocityVesselSurface) > 20)
-            {
-                //if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
-                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
-                core.thrust.tmode = MechJebModuleThrustController.TMode.OFF;
-            }
-            else if (vesselState.maxThrustAccel < vesselState.gravityForce.magnitude)
+            if (vesselState.maxThrustAccel < vesselState.gravityForce.magnitude)
             {
                 //if we have TWR < 1, just try as hard as we can to decelerate:
                 //(we need this special case because otherwise the calculations spit out NaN's)
@@ -734,16 +720,33 @@ namespace MuMech
             }
             else if (minalt > 200)
             {
-                //if we're above 200m, point retrograde and control surface velocity:
-                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                if ((vesselState.velocityVesselSurface.magnitude > 5) && (Vector3d.Angle(vesselState.velocityVesselSurface, vesselState.up) < 80))
+                {
+                    //if we have positive vertical velocity, point up and don't thrust:
+                    core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
+                    core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
+                    core.thrust.trans_spd_act = 0;
+                }
+                else if ((vesselState.velocityVesselSurface.magnitude > 5) && (Vector3d.Angle(vesselState.forward, -vesselState.velocityVesselSurface) > 45))
+                {
+                    //if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
+                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                    core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
+                    core.thrust.trans_spd_act = 0;
+                }
+                else
+                {
+                    //if we're above 200m, point retrograde and control surface velocity:
+                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
 
-                core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
+                    core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
 
-                //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
-                Vector3d estimatedLandingPosition = vesselState.CoM + vesselState.velocityVesselSurface.sqrMagnitude / (2 * vesselState.maxThrustAccel) * vesselState.velocityVesselSurfaceUnit;
-                double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
-                IDescentSpeedPolicy aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.maxThrustAccel);
-                core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface));
+                    //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
+                    Vector3d estimatedLandingPosition = vesselState.CoM + vesselState.velocityVesselSurface.sqrMagnitude / (2 * vesselState.maxThrustAccel) * vesselState.velocityVesselSurfaceUnit;
+                    double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
+                    IDescentSpeedPolicy aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.maxThrustAccel);
+                    core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface));
+                }
             }
             else
             {
@@ -774,7 +777,6 @@ namespace MuMech
             status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
         }
 
-
         void DeployLandingGears()
         {
             //new-style landing legs are activated by an event:
@@ -795,7 +797,6 @@ namespace MuMech
             }
             deployedGears = true;
         }
-
 
         IDescentSpeedPolicy PickDescentSpeedPolicy()
         {
@@ -849,16 +850,15 @@ namespace MuMech
             return orbit.PeA < 2 * stoppingDistance + mainBody.Radius / 4;
         }
 
-
         double MaxAllowedSpeed()
         {
-            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface);                
+            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface);
         }
 
         double MaxAllowedSpeedAfterDt(double dt)
         {
-            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM + vesselState.velocityVesselOrbit *  dt - mainBody.position, 
-                vesselState.velocityVesselSurface + dt * vesselState.gravityForce);                    
+            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM + vesselState.velocityVesselOrbit * dt - mainBody.position,
+                vesselState.velocityVesselSurface + dt * vesselState.gravityForce);
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -867,20 +867,8 @@ namespace MuMech
         }
 
         public MechJebModuleLandingAutopilot(MechJebCore core) : base(core) { }
-
-
-
-
-
-
     }
 
-
-
-
-
-
-    
     //A descent speed policy that gives the max safe speed if our entire velocity were straight down
     class SafeDescentSpeedPolicy : IDescentSpeedPolicy
     {
@@ -905,19 +893,17 @@ namespace MuMech
     class CoastDescentSpeedPolicy : IDescentSpeedPolicy
     {
         double endCoastRadius;
-        public CoastDescentSpeedPolicy(double endCoastRadius) 
+        public CoastDescentSpeedPolicy(double endCoastRadius)
         {
             this.endCoastRadius = endCoastRadius;
         }
 
-        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel) 
+        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
             if (pos.magnitude > endCoastRadius) return double.MaxValue;
             else return 0;
         }
     }
-
-
 
     class GravityTurnDescentSpeedPolicy : IDescentSpeedPolicy
     {
@@ -970,12 +956,5 @@ namespace MuMech
 
             return startRadius - endRadius;
         }
-
-
-
-
-
-
     }
-
 }

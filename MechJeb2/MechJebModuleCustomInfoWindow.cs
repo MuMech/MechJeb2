@@ -62,12 +62,10 @@ namespace MuMech
             }
         }
 
-
         public override string GetName()
         {
             return title;
         }
-
 
         public MechJebModuleCustomInfoWindow(MechJebCore core) : base(core) { }
     }
@@ -149,7 +147,7 @@ namespace MuMech
 
         void RegisterInfoItems(object obj)
         {
-            foreach (MemberInfo member in obj.GetType().GetMembers())
+            foreach (MemberInfo member in obj.GetType().GetMembers(BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
             {
                 foreach (Attribute attribute in member.GetCustomAttributes(true))
                 {
@@ -157,6 +155,7 @@ namespace MuMech
                     else if (attribute is ActionInfoItemAttribute) registry.Add(new ActionInfoItem(obj, (MethodInfo)member, (ActionInfoItemAttribute)attribute));
                     else if (attribute is ToggleInfoItemAttribute) registry.Add(new ToggleInfoItem(obj, member, (ToggleInfoItemAttribute)attribute));
                     else if (attribute is GeneralInfoItemAttribute) registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, (GeneralInfoItemAttribute)attribute));
+                    else if (attribute is EditableInfoItemAttribute) registry.Add(new EditableInfoItem(obj, member, (EditableInfoItemAttribute)attribute));
                 }
             }
         }
@@ -175,7 +174,6 @@ namespace MuMech
             core.RemoveComputerModule(editedWindow);
             editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
-
 
         Vector2 scrollPos, scrollPos2;
         protected override void WindowGUI(int windowID)
@@ -251,8 +249,6 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
-
-
             GUILayout.Label("Click an item to add it to the info window:");
 
             itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
@@ -289,37 +285,34 @@ namespace MuMech
             showInEditor = true;
         }
 
-
         public void AddDefaultWindows()
         {
-            MechJebModuleCustomInfoWindow vesselWindow = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(vesselWindow);
-            vesselWindow.enabled = true;
-            vesselWindow.showInFlight = true;
-            vesselWindow.showInEditor = true;
-            vesselWindow.title = "Vessel Info";
+            MechJebModuleCustomInfoWindow newWin = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(newWin);
+            newWin.enabled = false;
+            newWin.showInFlight = true;
+            newWin.showInEditor = true;
+            newWin.title = "Vessel Info";
             string[] itemNames = new string[] { "Vessel mass", "Max thrust", "Max acceleration", "Stage stats (all)" };
-            foreach (string itemName in itemNames) vesselWindow.items.Add(registry.Find(i => i.name == itemName));
+            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
 
-            MechJebModuleCustomInfoWindow orbitWindow = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(orbitWindow);
-            orbitWindow.enabled = true;
-            orbitWindow.showInFlight = true;
-            orbitWindow.title = "Orbit Info";
+            newWin = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(newWin);
+            newWin.enabled = false;
+            newWin.showInFlight = true;
+            newWin.title = "Orbit Info";
             itemNames = new string[] { "Altitude (ASL)", "Altitude (true)", "Vertical speed", "Apoapsis", "Periapsis", "Inclination", "Coordinates" };
-            foreach (string itemName in itemNames) orbitWindow.items.Add(registry.Find(i => i.name == itemName));
+            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
 
-            MechJebModuleCustomInfoWindow targetWindow = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(targetWindow);
-            targetWindow.enabled = true;
-            targetWindow.showInFlight = true;
-            targetWindow.title = "Target Info";
-            itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity"};
-            foreach (string itemName in itemNames) targetWindow.items.Add(registry.Find(i => i.name == itemName));
+            newWin = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(newWin);
+            newWin.enabled = false;
+            newWin.showInFlight = true;
+            newWin.title = "Target Info";
+            itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity" };
+            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
         }
     }
-
-
 
     public class InfoItem
     {
@@ -336,6 +329,7 @@ namespace MuMech
             Target,
             Recorder,
             Thrust,
+            Rover,
             Misc
         }
         public Category category;
@@ -424,8 +418,6 @@ namespace MuMech
         }
     }
 
-
-
     public class ActionInfoItem : InfoItem
     {
         object obj;
@@ -445,7 +437,6 @@ namespace MuMech
             if (GUILayout.Button(name)) method.Invoke(obj, new object[] { });
         }
     }
-
 
     public class ToggleInfoItem : InfoItem
     {
@@ -491,6 +482,33 @@ namespace MuMech
         public override void DrawItem()
         {
             method.Invoke(obj, new object[] { });
+        }
+    }
+
+    public class EditableInfoItem : InfoItem
+    {
+        object obj;
+        MemberInfo member;
+
+        public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
+            : base(attribute)
+        {
+            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+
+            this.obj = obj;
+            this.member = member;
+        }
+
+        public override void DrawItem()
+        {
+            IEditable val = null;
+
+            if (member is FieldInfo) val = (IEditable)((FieldInfo)member).GetValue(obj);
+            else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
+            if (val != null)
+            {
+                GuiUtils.SimpleTextBox(name, val);
+            }
         }
     }
 
@@ -541,5 +559,12 @@ namespace MuMech
     public class GeneralInfoItemAttribute : InfoItemAttribute
     {
         public GeneralInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
+    }
+
+    //Apply this attribute to a IEditable to make the contents editable via an EditableInfoItem
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    public class EditableInfoItemAttribute : InfoItemAttribute
+    {
+        public EditableInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 }
