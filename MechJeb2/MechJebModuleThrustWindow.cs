@@ -19,13 +19,13 @@ namespace MuMech
             core.thrust.enabled = GUILayout.Toggle(core.thrust.enabled, "Control throttle");
 
             core.thrust.targetThrottle = GUILayout.HorizontalSlider(core.thrust.targetThrottle, 0, 1);
-            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit To Terminal Velocity");
-            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent Overheat");
-            core.thrust.limitToPreventFlameout = GUILayout.Toggle(core.thrust.limitToPreventFlameout, "Prevent Jet Flameout");
-            core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage Air Intakes");
+            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit to terminal velocity");
+            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent overheat");
+            core.thrust.limitToPreventFlameout = GUILayout.Toggle(core.thrust.limitToPreventFlameout, "Prevent jet flameout");
+            core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             try {
-                GUILayout.Label ("Jet Safety Margin");
+                GUILayout.Label ("Jet safety margin");
                 core.thrust.flameoutSafetyPct.text = GUILayout.TextField(core.thrust.flameoutSafetyPct.text, 5);
                 GUILayout.Label("%");
             } finally {

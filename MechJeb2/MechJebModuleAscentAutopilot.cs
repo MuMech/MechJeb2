@@ -272,13 +272,13 @@ namespace MuMech
 
     public class DefaultAscentPath : IAscentPath
     {
-        [Persistent]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnStartAltitude = new EditableDouble(5000, 1000);
-        [Persistent]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAltitude = new EditableDouble(70000, 1000);
-        [Persistent]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAngle = 0;
-        [Persistent]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public double turnShapeExponent = 0.4;
 
         public double VerticalAscentEnd()
