@@ -41,6 +41,8 @@ namespace MuMech
         private bool showGui = true;
 
         public static GUISkin skin = null;
+
+        public static RenderingManager renderingManager = null;
         
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
@@ -211,7 +213,14 @@ namespace MuMech
         public void Update()
         {
             //a hack to detect when the user hides the GUI
-            if (HighLogic.LoadedSceneIsFlight && GameSettings.TOGGLE_UI.GetKeyDown()) showGui = !showGui;
+            if (renderingManager == null)
+            {
+                renderingManager = (RenderingManager)GameObject.FindObjectOfType(typeof(RenderingManager));
+            }
+            if (HighLogic.LoadedSceneIsFlight && renderingManager != null)
+            {
+                showGui = renderingManager.uiElementsToDisable[0].activeSelf;
+            }
 
             if (this != vessel.GetMasterMechJeb())
             {
