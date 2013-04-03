@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //ThrustController should be enabled/disabled through .users, not .enabled.
     public class MechJebModuleThrustController : ComputerModule
     {
         public MechJebModuleThrustController(MechJebCore core)
@@ -19,8 +18,6 @@ namespace MuMech
         public float trans_spd_act = 0;
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
-        public bool trans_land = false;
-        public bool trans_land_gears = false;
 
         [ToggleInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Global)]
@@ -81,18 +78,10 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-
         public float targetThrottle = 0;
+        protected bool tmode_changed = false;
 
-
-        private bool tmode_changed = false;
-
-        private double t_integral = 0;
-        private double t_prev_err = 0;
-
-        public float t_Kp = 0.05F;
-        public float t_Ki = 0.000001F;
-        public float t_Kd = 0.05F;
+        public PIDController pid;
 
         float lastThrottle = 0;
 
@@ -127,7 +116,8 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            this.enabled = true;
+            pid = new PIDController(0.05, 0.000001, 0.05);
+            this.users.Add(this);
         }
 
         public override void Drive(FlightCtrlState s)
@@ -169,14 +159,7 @@ namespace MuMech
                             }
                             else
                             {
-                                if (spd > 0)
-                                {
-                                    rot = vesselState.up;
-                                }
-                                else
-                                {
-                                    rot = dir.normalized;
-                                }
+                                rot = dir.normalized;
                             }
                             core.attitude.attitudeTo(rot, AttitudeReference.INERTIAL, null);
                         }
@@ -190,10 +173,8 @@ namespace MuMech
                     //allow thrust to declerate 
                     t_err *= -1;
                 }
-                t_integral += t_err * TimeWarp.fixedDeltaTime;
-                double t_deriv = (t_err - t_prev_err) / TimeWarp.fixedDeltaTime;
-                double t_act = (t_Kp * t_err) + (t_Ki * t_integral) + (t_Kd * t_deriv);
-                t_prev_err = t_err;
+
+                double t_act = pid.Compute(t_err);
 
                 if ((tmode != TMode.KEEP_VERTICAL)
                     || !trans_kill_h
@@ -426,10 +407,8 @@ namespace MuMech
                 if (trans_kill_h && (tmode == TMode.OFF))
                 {
                     core.attitude.attitudeDeactivate(null);
-                    trans_land = false;
                 }
-                t_integral = 0;
-                t_prev_err = 0;
+                pid.Reset();
                 tmode_changed = false;
                 FlightInputHandler.SetNeutralControls();
             }
