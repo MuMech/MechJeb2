@@ -257,7 +257,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Smarter A.S.S.";
+            return "Smart A.S.S.";
         }
     }
 }

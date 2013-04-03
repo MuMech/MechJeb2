@@ -42,7 +42,6 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-
             GUIStyle sty = new GUIStyle(GUI.skin.button);
             sty.normal.textColor = sty.focused.textColor = Color.white;
             sty.hover.textColor = sty.active.textColor = Color.yellow;
@@ -51,7 +50,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if (core.thrust.trans_land)
+            if (core.GetComputerModule<MechJebModuleLandingAutopilot>().enabled)
             {
                 if (!autoMode)
                 {

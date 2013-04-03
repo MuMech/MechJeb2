@@ -18,8 +18,6 @@ namespace MuMech
         public float trans_spd_act = 0;
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
-        public bool trans_land = false;
-        public bool trans_land_gears = false;
 
         [ToggleInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Global)]
@@ -409,7 +407,6 @@ namespace MuMech
                 if (trans_kill_h && (tmode == TMode.OFF))
                 {
                     core.attitude.attitudeDeactivate(null);
-                    trans_land = false;
                 }
                 pid.Reset();
                 tmode_changed = false;
