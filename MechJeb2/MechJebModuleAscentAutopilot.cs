@@ -279,7 +279,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public double turnShapeExponent = 0.4;
+        public EditableDouble turnShapeExponent = new EditableDouble(0.4, 0.01);
 
         public double VerticalAscentEnd()
         {

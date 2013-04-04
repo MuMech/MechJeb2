@@ -45,12 +45,16 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Turn start altitude:", path.turnStartAltitude, "km");
             GuiUtils.SimpleTextBox("Turn end altitude:", path.turnEndAltitude, "km");
             GuiUtils.SimpleTextBox("Final flight path angle:", path.turnEndAngle, "°");
+            GuiUtils.SimpleTextBox("Turn shape:", path.turnShapeExponent, "%");
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(String.Format("Turn shape: {0:0}%", (int)(100 * path.turnShapeExponent)));
-            path.turnShapeExponent = GUILayout.HorizontalSlider((float)path.turnShapeExponent, 0.0F, 1.0F);
+            // Round the slider's value (0..1) to sliderPrecision decimal places.
+            int sliderPrecision = 3;
 
-            GUILayout.EndHorizontal();
+            double sliderTurnShapeExponent = GUILayout.HorizontalSlider((float)path.turnShapeExponent, 0.0F, 1.0F);
+            if (Math.Round(Math.Abs(sliderTurnShapeExponent - oldTurnShapeExponent), sliderPrecision) > 0)
+            {
+                path.turnShapeExponent = new EditableDouble(Math.Round(sliderTurnShapeExponent, sliderPrecision), 0.01);
+            }
 
             GUILayout.Box(pathTexture);
 
