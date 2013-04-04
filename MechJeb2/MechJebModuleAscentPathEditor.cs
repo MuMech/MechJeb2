@@ -53,7 +53,7 @@ namespace MuMech
             double sliderTurnShapeExponent = GUILayout.HorizontalSlider((float)path.turnShapeExponent, 0.0F, 1.0F);
             if (Math.Round(Math.Abs(sliderTurnShapeExponent - oldTurnShapeExponent), sliderPrecision) > 0)
             {
-                path.turnShapeExponent = new EditableDouble(Math.Round(sliderTurnShapeExponent, sliderPrecision), 0.01);
+                path.turnShapeExponent = new EditableDoubleMult(Math.Round(sliderTurnShapeExponent, sliderPrecision), 0.01);
             }
 
             GUILayout.Box(pathTexture);

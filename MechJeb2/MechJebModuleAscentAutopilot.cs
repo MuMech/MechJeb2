@@ -19,7 +19,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public IAscentPath ascentPath = new DefaultAscentPath();
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble desiredOrbitAltitude = new EditableDouble(100000, 1000);
+        public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble desiredInclination = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -273,13 +273,13 @@ namespace MuMech
     public class DefaultAscentPath : IAscentPath
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble turnStartAltitude = new EditableDouble(5000, 1000);
+        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(5000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble turnEndAltitude = new EditableDouble(70000, 1000);
+        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(70000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble turnShapeExponent = new EditableDouble(0.4, 0.01);
+        public EditableDoubleMult turnShapeExponent = new EditableDoubleMult(0.4, 0.01);
 
         public double VerticalAscentEnd()
         {
