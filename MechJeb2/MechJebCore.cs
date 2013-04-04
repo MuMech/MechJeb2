@@ -344,10 +344,11 @@ namespace MuMech
             }
         }
 
-        //Todo: periodically save global and type settings so that e.g. window positions are saved on quitting
-        //even if the player doesn't explicitly quicksave.
         public override void OnSave(ConfigNode sfsNode)
         {
+            //we have nothing worth saving if we're outside the editor or flight scenes:
+            if (!(HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)) return;
+
             try
             {
                 base.OnSave(sfsNode); //is this necessary?
