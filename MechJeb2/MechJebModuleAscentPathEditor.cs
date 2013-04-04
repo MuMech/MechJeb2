@@ -16,6 +16,7 @@ namespace MuMech
 
         public DefaultAscentPath path;
         Texture2D pathTexture = new Texture2D(400, 100);
+        private static Boolean pathTextureDrawnBefore = false;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -63,7 +64,8 @@ namespace MuMech
             if (path.turnStartAltitude != oldTurnStartAltitude ||
                 path.turnEndAltitude != oldTurnEndAltitude ||
                 path.turnShapeExponent != oldTurnShapeExponent ||
-                path.turnEndAngle != oldTurnEndAngle)
+                path.turnEndAngle != oldTurnEndAngle ||
+                !pathTextureDrawnBefore)
             {
                 UpdatePathTexture();
             }
@@ -104,6 +106,7 @@ namespace MuMech
             }
 
             pathTexture.Apply();
+            pathTextureDrawnBefore = true;
         }
 
         public override string GetName()
