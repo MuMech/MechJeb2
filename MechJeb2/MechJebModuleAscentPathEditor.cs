@@ -19,7 +19,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentGuidance>().ascentPath;
+            path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
         }
 
         public override GUILayoutOption[] WindowOptions()
