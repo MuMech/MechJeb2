@@ -59,14 +59,11 @@ namespace MuMech
         [ValueInfoItem("Target coordinates", InfoItem.Category.Target)]
         public string GetPositionTargetString()
         {
-            if (target is PositionTarget && !(target is DirectionTarget))
-            {
-                return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
-            }
-            else
-            {
-                return "none";
-            }
+            if(target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude);
+
+            if(NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position));
+
+            return "N/A";
         }
 
         public Vector3d GetPositionTargetPosition()
