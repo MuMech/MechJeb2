@@ -93,7 +93,6 @@ namespace MuMech
             GUILayout.EndHorizontal();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
             
-            //core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
             core.staging.AutostageInfoItem();
 
             if (autopilot != null)

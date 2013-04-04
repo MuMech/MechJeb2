@@ -12,9 +12,12 @@ namespace MuMech
             : base(core)
         {
             priority = 1000;
+            enabled = true;
         }
 
         //adjustable parameters:
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool autostage = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble autoStageDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
@@ -24,7 +27,7 @@ namespace MuMech
         public void AutostageInfoItem()
         {
             GUILayout.BeginVertical();
-            enabled = GUILayout.Toggle(enabled, "Auto-stage");
+            autostage = GUILayout.Toggle(autostage, "Auto-stage");
             GuiUtils.SimpleTextBox("Staging delay:", autoStageDelay, "s");
             GuiUtils.SimpleTextBox("Stop at stage #", autoStageLimit, "");
             GUILayout.EndVertical();
@@ -36,7 +39,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!vessel.isActiveVessel || !this.enabled) return;
+            if (!vessel.isActiveVessel || !autostage) return;
 
             //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
