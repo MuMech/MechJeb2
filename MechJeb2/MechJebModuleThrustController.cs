@@ -57,7 +57,7 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
             limitAcceleration = GUILayout.Toggle(limitAcceleration, "Limit acceleration to", GUILayout.ExpandWidth(false));
-            maxAcceleration.text = GUILayout.TextField(maxAcceleration.text, GUILayout.Width(50));
+            maxAcceleration.text = GUILayout.TextField(maxAcceleration.text, GUILayout.Width(30));
             GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
@@ -73,7 +73,7 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
             limitThrottle = GUILayout.Toggle(limitThrottle, "Limit throttle to", GUILayout.ExpandWidth(false));
-            maxThrottle.text = GUILayout.TextField(maxThrottle.text, GUILayout.Width(50));
+            maxThrottle.text = GUILayout.TextField(maxThrottle.text, GUILayout.Width(30));
             GUILayout.Label("%", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
