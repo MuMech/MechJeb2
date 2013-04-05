@@ -50,7 +50,7 @@ namespace MuMech
 
             if (showInCurrentScene)
             {
-                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 50, 20), "Edit", GuiUtils.yellowOnHover))
+                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 30, 20), "Edit", GuiUtils.yellowOnHover))
                 {
                     MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                     if (editor != null)

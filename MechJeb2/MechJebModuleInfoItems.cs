@@ -22,6 +22,22 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(time);
         }
 
+        [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
+        public string TimeToManeuverNode()
+        {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(vessel.patchedConicSolver.maneuverNodes[0].UT - vesselState.time);
+        }
+
+        [ValueInfoItem("Node dV", InfoItem.Category.Misc)]
+        public string NextManeuverNodeDeltaV()
+        {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+
+            return MuUtils.ToSI(vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude, -1) + "m/s";
+        }
+
         [ValueInfoItem("Surface TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)]
         public double SurfaceTWR()
         {
@@ -41,17 +57,41 @@ namespace MuMech
             return Coordinates.ToStringDMS(vesselState.latitude, vesselState.longitude, true);
         }
 
-        [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
-        public string OrbitSummary()
+        public string OrbitSummary(Orbit o)
         {
-            if (orbit.eccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(orbit.PeA, 2) + "m";
-            else return MuUtils.ToSI(orbit.PeA, 2) + "m x " + MuUtils.ToSI(orbit.ApA, 2) + "m";
+            if (o.eccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(o.PeA, 2) + "m";
+            else return MuUtils.ToSI(o.PeA, 2) + "m x " + MuUtils.ToSI(o.ApA, 2) + "m";
+        }
+
+        public string OrbitSummaryWithInclination(Orbit o)
+        {
+            return OrbitSummary(o) + ", inc. " + o.inclination.ToString("F1") + "º";
+        }
+
+        [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
+        public string CurrentOrbitSummary()
+        {
+            return OrbitSummary(orbit);
+        }
+
+        [ValueInfoItem("Target orbit", InfoItem.Category.Target)]
+        public string TargetOrbitSummary()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return OrbitSummary(core.target.Orbit);
         }
 
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit, description = "Orbit shape w/ inc.")]
-        public string OrbitSummaryWithInclination()
+        public string CurrentOrbitSummaryWithInclination()
         {
-            return OrbitSummary() + ", inc. " + orbit.inclination.ToString("F1") + "º";
+            return OrbitSummaryWithInclination(orbit);
+        }
+
+        [ValueInfoItem("Target orbit", InfoItem.Category.Target, description = "Target orbit shape w/ inc.")]
+        public string TargetOrbitSummaryWithInclination()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return OrbitSummaryWithInclination(core.target.Orbit);
         }
 
 
@@ -261,6 +301,76 @@ namespace MuMech
             double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
             double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
             return MuUtils.ToSI(relVel, -1) + "m/s";
+        }
+
+        [ValueInfoItem("Target apoapsis", InfoItem.Category.Target)]
+        public string TargetApoapsis()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ToSI(core.target.Orbit.ApA, 2) + "m";
+        }
+
+        [ValueInfoItem("Target periapsis", InfoItem.Category.Target)]
+        public string TargetPeriapsis()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ToSI(core.target.Orbit.PeA, 2) + "m";
+        }
+
+        [ValueInfoItem("Target inclination", InfoItem.Category.Target)]
+        public string TargetInclination()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return core.target.Orbit.inclination.ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("Target orbit period", InfoItem.Category.Target)]
+        public string TargetOrbitPeriod()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.target.Orbit.period);
+        }
+
+        [ValueInfoItem("Target orbit speed", InfoItem.Category.Target)]
+        public string TargetOrbitSpeed()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ToSI(core.target.Orbit.GetVel().magnitude) + "m/s";
+        }
+
+        [ValueInfoItem("Target time to Ap", InfoItem.Category.Target)]
+        public string TargetOrbitTimeToAp()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.target.Orbit.timeToAp);
+        }
+
+        [ValueInfoItem("Target time to Pe", InfoItem.Category.Target)]
+        public string TargetOrbitTimeToPe()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.target.Orbit.timeToPe);
+        }
+
+        [ValueInfoItem("Target LAN", InfoItem.Category.Target)]
+        public string TargetLAN()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return core.target.Orbit.LAN.ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("Target eccentricity", InfoItem.Category.Target)]
+        public string TargetEccentricity()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.target.Orbit.eccentricity);
+        }
+
+        [ValueInfoItem("Target SMA", InfoItem.Category.Target)]
+        public string TargetSMA()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ToSI(core.target.Orbit.semiMajorAxis, 2) + "m";
         }
 
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
