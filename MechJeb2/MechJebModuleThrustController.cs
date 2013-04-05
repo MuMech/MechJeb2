@@ -66,7 +66,7 @@ namespace MuMech
         public bool limitThrottle = false;
 
         [Persistent(pass = (int)Pass.Local)]
-        public EditableDouble maxThrottle = new EditableDouble(1, 0.01);
+        public EditableDoubleMult maxThrottle = new EditableDoubleMult(1, 0.01);
 
         [GeneralInfoItem("Limit throttle", InfoItem.Category.Thrust)]
         public void LimitThrottleInfoItem()

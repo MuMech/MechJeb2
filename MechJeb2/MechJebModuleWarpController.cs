@@ -54,11 +54,11 @@ namespace MuMech
         {
             if (!CheckPhysicsWarp()) return;
 
-            if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] > maxRate)
+            if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] > maxRate)
             {
                 DecreasePhysicsWarp(instantOnDecrease);
             }
-            else if (TimeWarp.CurrentRateIndex < TimeWarp.fetch.warpRates.Count() && TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
+            else if (TimeWarp.CurrentRateIndex < TimeWarp.fetch.physicsWarpRates.Count() && TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
             {
                 IncreasePhysicsWarp(instantOnIncrease);
             }
