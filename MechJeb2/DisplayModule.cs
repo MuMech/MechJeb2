@@ -9,7 +9,7 @@ namespace MuMech
     public class DisplayModule : ComputerModule
     {
         public bool hidden = false;
-
+        
         public Rect windowPos
         {
             get { return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w); }
@@ -32,7 +32,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)Pass.Global)]
-        public Vector4 windowVector; //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
@@ -42,7 +42,16 @@ namespace MuMech
 
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
-        public DisplayModule(MechJebCore core) : base(core) { }
+        public int ID;
+        public static int nextID = 72190852;
+
+        public DisplayModule(MechJebCore core)
+            : base(core)
+        {
+            ID = nextID;
+            nextID++;
+        }
+
 
         public virtual GUILayoutOption[] WindowOptions()
         {
@@ -58,7 +67,7 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(GetName().GetHashCode(), windowPos, WindowGUI, GetName(), WindowOptions());
+                windowPos = GUILayout.Window(ID, windowPos, WindowGUI, GetName(), WindowOptions());
 
                 if (GUI.Button(new Rect(windowPos.x + windowPos.width - 18, windowPos.y + 2, 16, 16), ""))
                 {
