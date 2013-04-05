@@ -28,7 +28,7 @@ namespace MuMech
         }
 
         [EditableInfoItem("Heading", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
-        public EditableDouble heading = new EditableDouble();
+        public EditableDouble heading = 0;
 
         protected bool controlSpeed = false;
         [ToggleInfoItem("Speed control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
@@ -50,7 +50,7 @@ namespace MuMech
         }
 
         [EditableInfoItem("Speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
-        public EditableDouble speed = new EditableDouble();
+        public EditableDouble speed = 10;
 
         public PIDController headingPID;
         public PIDController speedPID;

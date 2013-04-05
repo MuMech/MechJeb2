@@ -22,6 +22,22 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(time);
         }
 
+        [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
+        public string TimeToManeuverNode()
+        {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(vessel.patchedConicSolver.maneuverNodes[0].UT - vesselState.time);
+        }
+
+        [ValueInfoItem("Node dV", InfoItem.Category.Misc)]
+        public string NextManeuverNodeDeltaV()
+        {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+
+            return MuUtils.ToSI(vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude, -1) + "m/s";
+        }
+
         [ValueInfoItem("Surface TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)]
         public double SurfaceTWR()
         {
