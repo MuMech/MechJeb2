@@ -12,36 +12,51 @@ namespace MuMech
             : base(core)
         {
             priority = 1000;
+            enabled = true;
         }
 
         //adjustable parameters:
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble autoStageDelay = 1.0;
+        public bool autostage = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble autostagePreDelay = 0.5;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble autostagePostDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
-        public EditableInt autoStageLimit = 0;
+        public EditableInt autostageLimit = 0;
 
         [GeneralInfoItem("Autostaging", InfoItem.Category.Misc)]
         public void AutostageInfoItem()
         {
             GUILayout.BeginVertical();
-            enabled = GUILayout.Toggle(enabled, "Auto-stage");
-            GuiUtils.SimpleTextBox("Staging delay:", autoStageDelay, "s");
-            GuiUtils.SimpleTextBox("Stop at stage #", autoStageLimit, "");
+            autostage = GUILayout.Toggle(autostage, "Auto-stage");
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Delays: pre:", GUILayout.ExpandWidth(false));
+            autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.ExpandWidth(true));
+            GUILayout.Label("s  post:", GUILayout.ExpandWidth(false));
+            autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.ExpandWidth(true));
+            GUILayout.Label("s", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
             GUILayout.EndVertical();
         }
 
         //internal state:
         double lastStageTime = 0;
 
+        bool countingDown = false;
+        double stageCountdownStart = 0;
 
         public override void OnFixedUpdate()
         {
-            if (!vessel.isActiveVessel || !this.enabled) return;
+            if (!vessel.isActiveVessel || !autostage) return;
 
             //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > autoStageLimit
-                && vesselState.time - lastStageTime > autoStageDelay)
+            if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > autostageLimit
+                && vesselState.time - lastStageTime > autostagePostDelay)
             {
                 //don't decouple active or idle engines or tanks
                 List<int> burnedResources = FindBurnedResources();
@@ -58,7 +73,21 @@ namespace MuMech
                             lastStageTime = vesselState.time;
                         }
 
-                        Staging.ActivateNextStage();
+                        //When we find that we're allowed to stage, start a countdown (with a 
+                        //length given by autostagePreDelay) and only stage once that countdown finishes,
+                        if (countingDown)
+                        {
+                            if (vesselState.time - stageCountdownStart > autostagePreDelay)
+                            {
+                                Staging.ActivateNextStage();
+                                countingDown = false;
+                            }
+                        }
+                        else
+                        {
+                            countingDown = true;
+                            stageCountdownStart = vesselState.time;
+                        }
                     }
                 }
             }

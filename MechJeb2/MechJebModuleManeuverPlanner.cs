@@ -29,15 +29,15 @@ namespace MuMech
         bool createNode = true;
 
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble newPeA = new EditableDouble(100000, 1000);
+        public EditableDoubleMult newPeA = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble newApA = new EditableDouble(200000, 1000);
+        public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime leadTime = 0;
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble circularizeAltitude = new EditableDouble(150000, 1000);
+        public EditableDoubleMult circularizeAltitude = new EditableDoubleMult(150000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime interceptInterval = 3600;
 

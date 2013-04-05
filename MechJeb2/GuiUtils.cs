@@ -18,7 +18,7 @@ namespace MuMech
     //(multiplier * parsed value). If the parsing fails, the parsed flag is set to false and
     //the stored value is unchanged. There are implicit conversions between EditableDouble and
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
-    public class EditableDouble : IEditable
+    public class EditableDoubleMult : IEditable
     {
         [Persistent]
         public double val;
@@ -40,18 +40,25 @@ namespace MuMech
             }
         }
 
-        public EditableDouble() : this(0) { }
+        public EditableDoubleMult() : this(0) { }
         
-        public EditableDouble(double val, double multiplier = 1)
+        public EditableDoubleMult(double val, double multiplier = 1)
         {
             this.val = val;
             this.multiplier = multiplier;
             _text = (val / multiplier).ToString();
         }
 
-        public static implicit operator double(EditableDouble x)
+        public static implicit operator double(EditableDoubleMult x)
         {
             return x.val;
+        }
+    }
+
+    public class EditableDouble : EditableDoubleMult
+    {
+        public EditableDouble(double val) : base(val)
+        {
         }
 
         public static implicit operator EditableDouble(double x)

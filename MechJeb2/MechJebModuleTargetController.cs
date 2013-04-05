@@ -59,14 +59,11 @@ namespace MuMech
         [ValueInfoItem("Target coordinates", InfoItem.Category.Target)]
         public string GetPositionTargetString()
         {
-            if (target is PositionTarget && !(target is DirectionTarget))
-            {
-                return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
-            }
-            else
-            {
-                return "none";
-            }
+            if(target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude);
+
+            if(NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position));
+
+            return "N/A";
         }
 
         public Vector3d GetPositionTargetPosition()
@@ -187,7 +184,16 @@ namespace MuMech
             }
 
             //notice when the user switches targets
-            if (vessel.isActiveVessel && target != FlightGlobals.fetch.VesselTarget) target = FlightGlobals.fetch.VesselTarget;
+            if (vessel.isActiveVessel && target != FlightGlobals.fetch.VesselTarget)
+            {
+                target = FlightGlobals.fetch.VesselTarget;
+                if (target is Vessel && ((Vessel)target).LandedOrSplashed && (((Vessel)target).mainBody == vessel.mainBody))
+                {
+                    targetBody = vessel.mainBody;
+                    targetLatitude = vessel.mainBody.GetLatitude(target.GetTransform().position);
+                    targetLongitude = vessel.mainBody.GetLongitude(target.GetTransform().position);
+                }
+            }
 
             //Update targets that need updating:
             if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
@@ -243,7 +249,8 @@ namespace MuMech
             if (!vessel.isActiveVessel || vessel.GetMasterMechJeb() != core) return;
 
             if (target == null) return;
-            if (!(target is PositionTarget)) return;
+            if (!(target is PositionTarget) && !(target is Vessel)) return;
+            if ((target is Vessel) && (!((Vessel)target).LandedOrSplashed || (((Vessel)target).mainBody != vessel.mainBody))) return;
             if (target is DirectionTarget) return;
 
             GLUtils.DrawMapViewGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red);

@@ -15,7 +15,7 @@ namespace MuMech
 
         const string TARGET_NAME = "Ascent Path Guidance";
 
-        public IAscentPath ascentPath = new DefaultAscentPath();
+        public IAscentPath ascentPath = null;
 
         bool launchingToPlane = false;
         bool launchingToRendezvous = false;
@@ -76,9 +76,10 @@ namespace MuMech
                     if (GUILayout.Button("Engage autopilot"))
                     {
                         autopilot.enabled = true;
-                        autopilot.ascentPath = this.ascentPath;
                     }
                 }
+
+                ascentPath = autopilot.ascentPath;
 
                 GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
                 GuiUtils.SimpleTextBox("Orbit inclination", autopilot.desiredInclination, "º");
@@ -93,7 +94,6 @@ namespace MuMech
             GUILayout.EndHorizontal();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
             
-            //core.staging.enabled = GUILayout.Toggle(core.staging.enabled, "Auto stage");
             core.staging.AutostageInfoItem();
 
             if (autopilot != null)

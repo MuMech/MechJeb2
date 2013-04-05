@@ -555,7 +555,7 @@ namespace MuMech
 
             if (core.attitude.attitudeAngleFromTarget() < 5)
             {
-                core.thrust.targetThrottle = Mathf.Clamp01((float)(deltaV.magnitude / (10.0 * vesselState.maxThrustAccel)));
+                core.thrust.targetThrottle = Mathf.Clamp01((float)(deltaV.magnitude / (2.0 * vesselState.maxThrustAccel)));
             }
             else
             {
