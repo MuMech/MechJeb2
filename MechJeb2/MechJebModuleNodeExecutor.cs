@@ -19,6 +19,7 @@ namespace MuMech
             mode = Mode.ONE_NODE;
             enabled = true;
             burnTriggered = false;
+            alignedForBurn = false;
         }
 
         public void ExecuteAllNodes()
@@ -26,6 +27,7 @@ namespace MuMech
             mode = Mode.ALL_NODES;
             enabled = true;
             burnTriggered = false;
+            alignedForBurn = false;
         }
 
         public override void OnModuleEnabled()
@@ -43,6 +45,7 @@ namespace MuMech
         protected Mode mode = Mode.ONE_NODE;
 
         public bool burnTriggered = false;
+        public bool alignedForBurn = false;
 
         public override void OnFixedUpdate()
         {
@@ -110,17 +113,33 @@ namespace MuMech
                 }
             }
 
-            if (burnTriggered && core.attitude.attitudeAngleFromTarget() < 90)
-            {
-                double timeConstant = (dVLeft > 10 ? 0.5 : 2);
-                double desiredAcceleration = dVLeft / timeConstant;
-                desiredAcceleration = Math.Max(precision, desiredAcceleration);
 
-                core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
-            }
-            else
+            core.thrust.targetThrottle = 0;
+
+            if (burnTriggered)            
             {
-                core.thrust.targetThrottle = 0;
+                if (alignedForBurn)
+                {
+                    if (core.attitude.attitudeAngleFromTarget() < 90)
+                    {
+                        double timeConstant = (dVLeft > 10 ? 0.5 : 2);
+                        double desiredAcceleration = dVLeft / timeConstant;
+                        desiredAcceleration = Math.Max(precision, desiredAcceleration);
+
+                        core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
+                    }
+                    else
+                    {
+                        alignedForBurn = false;
+                    }
+                }
+                else
+                {
+                    if (core.attitude.attitudeAngleFromTarget() < 2)
+                    {
+                        alignedForBurn = true;
+                    }
+                }
             }
         }
 
