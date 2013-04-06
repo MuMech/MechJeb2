@@ -513,6 +513,18 @@ namespace MuMech
 
             return stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
         }
+        
+        [ValueInfoItem("Stage ΔV (atmo, vac)", InfoItem.Category.Vessel, units = "m/s")]
+        public string StageDeltaVAtmosphereAndVac()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+
+            float atmDv = (stats.atmoStats.Length == 0) ? 0 : stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
+            float vacDv = (stats.vacStats.Length  == 0) ? 0 : stats.vacStats[ stats.vacStats.Length  - 1].deltaV;
+            
+            return String.Format("{0:F0}, {1:F0}", atmDv, vacDv);
+        }
 
         [ValueInfoItem("Stage time (full throttle)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME, showInEditor = true)]
         public float StageTimeLeftFullThrottle()
@@ -562,6 +574,18 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
             return stats.atmoStats.Sum(s => s.deltaV);
+        }
+
+        [ValueInfoItem("Total ΔV (atmo, vac)", InfoItem.Category.Vessel, units = "m/s")]
+        public string TotalDeltaVAtmosphereAndVac()
+        {
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate();
+
+            float atmDv = stats.atmoStats.Sum(s => s.deltaV);
+            float vacDv = stats.vacStats.Sum( s => s.deltaV);
+            
+            return String.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }
 
         [GeneralInfoItem("Docking guidance: velocity", InfoItem.Category.Target)]
