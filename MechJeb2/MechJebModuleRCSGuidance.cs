@@ -39,6 +39,8 @@ namespace MuMech
             s.normal.textColor = Color.red;
             GUILayout.Label("HIGHLY EXPERIMENTAL", s);
 
+            if (GUILayout.Button("Enable all thrusters")) core.rcs.EnableAllThrusters();
+
             selfEnabled = GUILayout.Toggle(selfEnabled, "Enable");
             if (selfEnabled)
             {

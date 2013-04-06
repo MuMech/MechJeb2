@@ -55,6 +55,20 @@ namespace MuMech
             targetVelocity = vessel.GetTransform().rotation * vel;
         }
 
+        public void EnableAllThrusters()
+        {
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (!pm.isJustForShow)
+                    {
+                        pm.Enable();
+                    }
+                }
+            }
+        }
+
         public void ApplyThrusterPower()
         {
             foreach (Part p in vessel.parts)
