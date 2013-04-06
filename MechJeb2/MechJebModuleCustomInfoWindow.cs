@@ -366,7 +366,7 @@ namespace MuMech
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj = obj;
             this.member = member;
@@ -426,7 +426,7 @@ namespace MuMech
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             this.obj = obj;
             this.method = method;
@@ -446,7 +446,7 @@ namespace MuMech
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj = obj;
             this.member = member;
@@ -473,7 +473,7 @@ namespace MuMech
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             this.obj = obj;
             this.method = method;
@@ -493,7 +493,7 @@ namespace MuMech
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj = obj;
             this.member = member;

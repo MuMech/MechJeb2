@@ -24,12 +24,12 @@ namespace MuMech
         {
             MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
-            ed.registry.Find(i => i.id == "ToggleInfoItem:MechJebModuleRoverController.ControlHeading").DrawItem();
-            ed.registry.Find(i => i.id == "EditableInfoItem:MechJebModuleRoverController.heading").DrawItem();
-            ed.registry.Find(i => i.id == "ValueInfoItem:MechJebModuleRoverController.headingErr").DrawItem();
-            ed.registry.Find(i => i.id == "ToggleInfoItem:MechJebModuleRoverController.ControlSpeed").DrawItem();
-            ed.registry.Find(i => i.id == "EditableInfoItem:MechJebModuleRoverController.speed").DrawItem();
-            ed.registry.Find(i => i.id == "ValueInfoItem:MechJebModuleRoverController.speedErr").DrawItem();
+            ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
+            ed.registry.Find(i => i.id == "Editable:RoverController.heading").DrawItem();
+            ed.registry.Find(i => i.id == "Value:RoverController.headingErr").DrawItem();
+            ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
+            ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
+            ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
 
             base.WindowGUI(windowID);
         }
