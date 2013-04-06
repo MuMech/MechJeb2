@@ -27,6 +27,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = true;
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble launchPhaseAngle = 0;
+
         //internal state:
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
@@ -234,6 +237,9 @@ namespace MuMech
             {
                 if (!vessel.patchedConicSolver.maneuverNodes.Any())
                 {
+                    MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
+                    if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
+
                     //finished circularize
                     this.enabled = false;
                     return;

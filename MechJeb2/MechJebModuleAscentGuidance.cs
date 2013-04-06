@@ -21,7 +21,6 @@ namespace MuMech
 
         bool launchingToPlane = false;
         bool launchingToRendezvous = false;
-        EditableDouble phaseAngle = 0;
 
         public override void OnModuleEnabled()
         {
@@ -102,7 +101,7 @@ namespace MuMech
             
             core.staging.AutostageInfoItem();
 
-            if (autopilot != null)
+            if (autopilot != null && !vessel.LiftedOff())
             {
                 if (core.target.NormalTargetExists && vessel.Landed)
                 {
@@ -117,7 +116,7 @@ namespace MuMech
                         {
                             launchingToRendezvous = true;
                         }
-                        phaseAngle.text = GUILayout.TextField(phaseAngle.text, GUILayout.ExpandWidth(true));
+                        autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text, GUILayout.ExpandWidth(true));
                         GUILayout.Label("º", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
                     }
@@ -125,13 +124,14 @@ namespace MuMech
                 else
                 {
                     launchingToPlane = launchingToRendezvous = false;
+                    GUILayout.Label("Select a target for launch timing features.");
                 }
 
                 if (launchingToPlane || launchingToRendezvous)
                 {
                     double tMinus;
                     if (launchingToPlane) tMinus = LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.Orbit);
-                    else tMinus = LaunchTiming.TimeToPhaseAngle(phaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
+                    else tMinus = LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
 
                     double launchTime = vesselState.time + tMinus;
 
