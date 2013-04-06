@@ -40,6 +40,7 @@ namespace MuMech
             if (!core.target.NormalTargetExists)
             {
                 users.Clear();
+                core.rcs.ClearTargetVelocity();
                 return;
             }
 
@@ -117,6 +118,11 @@ namespace MuMech
                 }
 
                 core.rcs.SetTargetWorldVelocity(targetVel + lateralVelocityNeeded + zVelocityNeeded * zAxis);
+            }
+
+            if (!enabled)
+            {
+                core.rcs.ClearTargetVelocity();
             }
         }
     }

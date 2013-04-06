@@ -27,6 +27,7 @@ namespace MuMech
         public EditableDoubleMult thrusterPower = new EditableDoubleMult(1, 0.01);
 
         public Vector3d targetVelocity = Vector3d.zero;
+        private Boolean driveToTarget = false;
 
         public PIDControllerV pid;
 
@@ -48,11 +49,18 @@ namespace MuMech
         public void SetTargetWorldVelocity(Vector3d vel)
         {
             targetVelocity = vel;
+            driveToTarget = true;
         }
 
         public void SetTargetLocalVelocity(Vector3d vel)
         {
             targetVelocity = vessel.GetTransform().rotation * vel;
+            driveToTarget = true;
+        }
+
+        public void ClearTargetVelocity()
+        {
+            driveToTarget = false;
         }
 
         public void EnableAllThrusters()
@@ -145,7 +153,8 @@ namespace MuMech
             {
                 AdjustRCSThrottles(s);
             }
-            else
+
+            if (driveToTarget)
             {
                 Vector3d worldVelocityDelta = vesselState.velocityVesselOrbit - targetVelocity;
                 worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
