@@ -176,7 +176,12 @@ public class RCSSolverThread
 
     public void post_task(List<RCSSolver.Thruster> thrusters, Vector3 direction)
     {
-        this.thrusters = thrusters;
+        // Use a copy of this list in case the caller wants to modify theirs
+        // later.
+        var newThrusters = new List<RCSSolver.Thruster>();
+        newThrusters.InsertRange(0, thrusters);
+
+        this.thrusters = newThrusters;
         this.direction = direction;
         workEvent.Set();
     }
