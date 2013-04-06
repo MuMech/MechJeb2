@@ -104,21 +104,21 @@ namespace MuMech
             if (autopilot != null && !vessel.LiftedOff())
             {
                 if (core.target.NormalTargetExists && vessel.Landed)
-                {
-                    if (!launchingToPlane && !launchingToRendezvous && GUILayout.Button("Launch into plane of target"))
-                    {
-                        launchingToPlane = true;
-                    }
+                {                    
                     if (!launchingToPlane && !launchingToRendezvous)
                     {
                         GUILayout.BeginHorizontal();
-                        if (GUILayout.Button("Launch at phase angle", GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("Launch to rendezvous:", GUILayout.ExpandWidth(false)))
                         {
                             launchingToRendezvous = true;
                         }
                         autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text, GUILayout.Width(60));
                         GUILayout.Label("º", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
+                    }
+                    if (!launchingToPlane && !launchingToRendezvous && GUILayout.Button("Launch into plane of target"))
+                    {
+                        launchingToPlane = true;
                     }
                 }
                 else

@@ -125,6 +125,8 @@ namespace MuMech
 
 
         //Some black magic to access the system clipboard from within Unity, found somewhere on the Web.
+        //Unfortunately it doesn't seem we have access to the System.Windows.Forms.Clipboard class, which would 
+        //make this easier.
         private static PropertyInfo m_systemCopyBufferProperty = null;
         private static PropertyInfo GetSystemCopyBufferProperty()
         {

@@ -267,7 +267,7 @@ namespace MuMech
         public string HeadingToTarget()
         {
             if (core.target.Target == null) return "N/A";
-            return vesselState.HeadingFromDirection(-core.target.RelativePosition).ToString("F1");
+            return vesselState.HeadingFromDirection(-core.target.RelativePosition).ToString("F1") + "º";
         }
 
         [ValueInfoItem("Relative velocity", InfoItem.Category.Target)]
@@ -401,6 +401,15 @@ namespace MuMech
             return angle.ToString("F2") + "º";
         }
 
+        [ValueInfoItem("Relative inclination", InfoItem.Category.Target)]
+        public string RelativeInclinationToTarget()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+
+            return orbit.RelativeInclination(core.target.Orbit).ToString("F2") + "º";
+        }
+
         [ValueInfoItem("Circular orbit speed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]
         public double CircularOrbitSpeed()
         {
@@ -514,7 +523,7 @@ namespace MuMech
             return stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
         }
         
-        [ValueInfoItem("Stage ΔV (atmo, vac)", InfoItem.Category.Vessel, units = "m/s")]
+        [ValueInfoItem("Stage ΔV (atmo, vac)", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)]
         public string StageDeltaVAtmosphereAndVac()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
@@ -576,7 +585,7 @@ namespace MuMech
             return stats.atmoStats.Sum(s => s.deltaV);
         }
 
-        [ValueInfoItem("Total ΔV (atmo, vac)", InfoItem.Category.Vessel, units = "m/s")]
+        [ValueInfoItem("Total ΔV (atmo, vac)", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)]
         public string TotalDeltaVAtmosphereAndVac()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();

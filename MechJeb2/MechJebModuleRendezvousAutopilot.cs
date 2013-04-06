@@ -12,6 +12,11 @@ namespace MuMech
 
         public string status = "";
 
+        public override void OnModuleEnabled()
+        {
+            if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+        }
+
         public override void OnModuleDisabled()
         {
             core.node.enabled = false; //make sure we turn off node executor if we get disabled suddenly

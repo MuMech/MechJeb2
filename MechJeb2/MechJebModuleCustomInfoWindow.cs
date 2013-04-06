@@ -63,7 +63,7 @@ namespace MuMech
                 if(GUI.Button(new Rect(windowPos.x + 45, windowPos.y, 30, 20), "Copy", GuiUtils.yellowOnHover))
                 {
                     MuUtils.SystemClipboard = ToSharingString();
-                    ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 1.5f, ScreenMessageStyle.UPPER_RIGHT);
+                    ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
                 }
             }
         }
@@ -92,7 +92,8 @@ namespace MuMech
 
             for (int i = 3; i < lines.Length; i++)
             {
-                InfoItem match = registry.FirstOrDefault(item => item.id == lines[i]);
+                string id = lines[i].Trim();
+                InfoItem match = registry.FirstOrDefault(item => item.id == id);
                 if (match != null) items.Add(match);
             }
         }
@@ -114,6 +115,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;
         static int numCategories = Enum.GetNames(typeof(InfoItem.Category)).Length;
+        int presetIndex = 0;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -298,14 +300,26 @@ namespace MuMech
             }
             GUILayout.EndScrollView();
 
-            GUILayout.EndVertical();
 
+            GUILayout.Label("Window presets:", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+
+            presetIndex = GuiUtils.ArrowSelector(presetIndex, CustomWindowPresets.presets.Length, () =>
+                {
+                    if (GUILayout.Button(CustomWindowPresets.presets[presetIndex].name))
+                    {
+                        MechJebModuleCustomInfoWindow newWindow = CreateWindowFromSharingString(CustomWindowPresets.presets[presetIndex].sharingString);
+                        if (newWindow != null) editedWindow = newWindow;
+                    }
+                });
+
+            GUILayout.EndVertical();
+            
             base.WindowGUI(windowID);
         }
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(500) };
+            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(540) };
         }
 
         public override string GetName()
@@ -348,13 +362,13 @@ namespace MuMech
             foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
         }
 
-        public void CreateWindowFromSharingString(string sharingString)
+        public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
         {
             string[] lines = sharingString.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             if (lines[0] != "--- MechJeb Custom Window ---")
             {
-                ScreenMessages.PostScreenMessage("Pasted text wasn't a MechJeb custom window descriptor.", 1.5f, ScreenMessageStyle.UPPER_RIGHT);
-                return;
+                ScreenMessages.PostScreenMessage("Pasted text wasn't a MechJeb custom window descriptor.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
+                return null;
             }
 
             MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
@@ -362,6 +376,8 @@ namespace MuMech
             window.enabled = true;
 
             window.FromSharingString(lines, registry);
+
+            return window;
         }
     }
 
@@ -617,5 +633,213 @@ namespace MuMech
     public class EditableInfoItemAttribute : InfoItemAttribute
     {
         public EditableInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
+    }
+
+
+
+    public static class CustomWindowPresets
+    {
+        public struct Preset
+        {
+            public string name;
+            public string sharingString;
+        }
+
+        public static Preset[] presets = new Preset[] 
+        {
+            new Preset
+            {
+                name = "Orbit Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Orbit Info
+Show in: flight
+Value:VesselState.speedOrbital
+Value:VesselState.orbitApA
+Value:VesselState.orbitPeA
+Value:VesselState.orbitPeriod
+Value:VesselState.orbitTimeToAp
+Value:VesselState.orbitTimeToPe
+Value:VesselState.orbitInclination
+Value:VesselState.orbitEccentricity
+Value:VesselState.angleToPrograde
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Surface Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Surface Info
+Show in: flight
+Value:VesselState.altitudeASL
+Value:VesselState.altitudeTrue
+Value:VesselState.vesselPitch
+Value:VesselState.vesselHeading
+Value:VesselState.vesselRoll
+Value:VesselState.speedSurface
+Value:VesselState.speedVertical
+Value:VesselState.speedSurfaceHorizontal
+Value:InfoItems.GetCoordinateString
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Vessel Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Vessel Info
+Show in: flight
+Value:InfoItems.MaxAcceleration
+Value:InfoItems.CurrentAcceleration
+Value:InfoItems.MaxThrust
+Value:InfoItems.VesselMass
+Value:InfoItems.SurfaceTWR
+Value:InfoItems.CrewCapacity
+-----------------------------"
+            },
+
+            new Preset 
+            {
+                name = "Ascent Stats",
+                sharingString = 
+@"--- MechJeb Custom Window ---
+Name: Ascent Stats
+Show in: flight
+Value:FlightRecorder.timeSinceMark
+Value:FlightRecorder.deltaVExpended
+Value:FlightRecorder.gravityLosses
+Value:FlightRecorder.dragLosses
+Value:FlightRecorder.steeringLosses
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Delta-V Stats",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Delta-V Stats
+Show in: flight editor
+Value:InfoItems.StageDeltaVAtmosphereAndVac
+Value:InfoItems.TotalDeltaVAtmosphereAndVac
+General:InfoItems.AllStageStats
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Rendezvous Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Rendezvous Info
+Show in: flight
+Value:InfoItems.TargetTimeToClosestApproach
+Value:InfoItems.TargetClosestApproachDistance
+Value:InfoItems.TargetClosestApproachRelativeVelocity
+Value:InfoItems.TargetDistance
+Value:InfoItems.TargetRelativeVelocity
+Value:InfoItems.RelativeInclinationToTarget
+Value:InfoItems.PhaseAngle
+Value:InfoItems.SynodicPeriod
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Landing Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Landing Info
+Show in: flight
+Value:VesselState.altitudeTrue
+Value:VesselState.speedVertical
+Value:VesselState.speedSurfaceHorizontal
+Value:InfoItems.TimeToImpact
+Value:InfoItems.SuicideBurnCountdown
+Value:InfoItems.SurfaceTWR
+Action:TargetController.PickPositionTargetOnMap
+Value:InfoItems.TargetDistance
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Target Orbit Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Target Orbit Info
+Show in: flight
+Value:InfoItems.TargetOrbitSpeed
+Value:InfoItems.TargetApoapsis
+Value:InfoItems.TargetPeriapsis
+Value:InfoItems.TargetOrbitPeriod
+Value:InfoItems.TargetOrbitTimeToAp
+Value:InfoItems.TargetOrbitTimeToPe
+Value:InfoItems.TargetInclination
+Value:InfoItems.TargetEccentricity
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Stopwatch",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Stopwatch
+Show in: flight
+Action:FlightRecorder.Mark
+Value:FlightRecorder.timeSinceMark
+Value:VesselState.time
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Surface Navigation",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Surface Navigation
+Show in: flight
+Action:TargetController.PickPositionTargetOnMap
+Value:InfoItems.TargetDistance
+Value:InfoItems.HeadingToTarget
+Value:TargetController.GetPositionTargetString
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Atmosphere Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Atmosphere Info
+Show in: flight
+Value:VesselState.atmosphericDensityGrams
+Value:InfoItems.AtmosphericPressure
+Value:InfoItems.AtmosphericDrag
+Value:VesselState.TerminalVelocity
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Maneuver Node Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Maneuver Node Info
+Show in: flight
+Value:InfoItems.TimeToManeuverNode
+Value:InfoItems.NextManeuverNodeDeltaV
+Value:InfoItems.NextManeuverNodeBurnTime
+-----------------------------"
+            }
+        };
     }
 }
