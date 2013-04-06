@@ -296,7 +296,6 @@ namespace MuMech
                     generateDefaultWindows = true;
                 }
 
-                //Todo: load a different file for each vessel type
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
                 if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg", vessel))
                 {
@@ -349,6 +348,9 @@ namespace MuMech
             //we have nothing worth saving if we're outside the editor or flight scenes:
             if (!(HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)) return;
 
+            // Only Masters can save
+            if (this != vessel.GetMasterMechJeb()) return;
+
             try
             {
                 base.OnSave(sfsNode); //is this necessary?
@@ -373,8 +375,11 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg")); //Todo: save a different file for each vessel type.
-                global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg", vessel));
+                if (vessel == FlightGlobals.ActiveVessel)
+                {
+                    global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                }
             }
             catch (Exception e)
             {
