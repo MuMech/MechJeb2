@@ -21,7 +21,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble desiredInclination = 0.0;
+        public double desiredInclination = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]

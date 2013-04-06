@@ -17,6 +17,8 @@ namespace MuMech
 
         public IAscentPath ascentPath = null;
 
+        EditableDouble desiredInclination = 0;
+
         bool launchingToPlane = false;
         bool launchingToRendezvous = false;
         EditableDouble phaseAngle = 0;
@@ -41,7 +43,9 @@ namespace MuMech
             if (core.target.Target != null && core.target.Name == TARGET_NAME)
             {
                 double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL);
-                Vector3d dir = Math.Cos(angle) * vesselState.east + Math.Sin(angle) * vesselState.up;
+                double heading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+                Vector3d horizontalDir = Math.Cos(heading) * vesselState.north + Math.Sin(heading) * vesselState.east;
+                Vector3d dir = Math.Cos(angle) * horizontalDir + Math.Sin(angle) * vesselState.up;
                 core.target.UpdateDirectionTarget(dir);
             }
         }
@@ -82,8 +86,10 @@ namespace MuMech
                 ascentPath = autopilot.ascentPath;
 
                 GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
-                GuiUtils.SimpleTextBox("Orbit inclination", autopilot.desiredInclination, "º");
+                autopilot.desiredInclination = desiredInclination;
             }
+
+            GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
 
             core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent overheats");
             core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit to terminal velocity");
@@ -131,9 +137,8 @@ namespace MuMech
 
                     if (launchingToPlane)
                     {
-                        double desiredInclination = core.target.Orbit.inclination;
+                        desiredInclination = core.target.Orbit.inclination;
                         desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
-                        autopilot.desiredInclination = desiredInclination;
                     }
 
                     if (autopilot.enabled) core.warp.WarpToUT(launchTime);
@@ -164,7 +169,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[]{ GUILayout.Width(200), GUILayout.Height(30) };
+            return new GUILayoutOption[]{ GUILayout.Width(240), GUILayout.Height(30) };
         }
 
         public override string GetName()
