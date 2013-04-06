@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using UnityEngine;
 using System.Reflection;
+using UnityEngine;
 using KSP.IO;
 
 namespace MuMech
@@ -233,6 +233,12 @@ namespace MuMech
                 modulesUpdated = false;
             }
 
+            if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            {
+                MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
+                if (windowEditor != null) windowEditor.CreateWindowFromSharingString(MuUtils.SystemClipboard);
+            }
+            
             if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
 
             foreach (ComputerModule module in computerModules)

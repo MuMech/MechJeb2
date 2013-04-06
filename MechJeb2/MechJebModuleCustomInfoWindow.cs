@@ -59,6 +59,41 @@ namespace MuMech
                         editor.editedWindow = this;
                     }
                 }
+
+                if(GUI.Button(new Rect(windowPos.x + 45, windowPos.y, 30, 20), "Copy", GuiUtils.yellowOnHover))
+                {
+                    MuUtils.SystemClipboard = ToSharingString();
+                    ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 1.5f, ScreenMessageStyle.UPPER_RIGHT);
+                }
+            }
+        }
+
+        public string ToSharingString()
+        {
+            string windowSharingString = "--- MechJeb Custom Window ---\n";
+            windowSharingString += "Name: " + GetName() + "\n";
+            windowSharingString += "Show in:" + (showInEditor ? " editor" : "") + (showInFlight ? " flight" : "") + "\n";
+            foreach (InfoItem item in items)
+            {
+                windowSharingString += item.id + "\n";
+            }
+            windowSharingString += "-----------------------------\n";
+            return windowSharingString;
+        }
+
+        public void FromSharingString(string[] lines, List<InfoItem> registry)
+        {
+            if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Substring("Name: ".Length);
+            if (lines.Length > 2 && lines[2].StartsWith("Show in:"))
+            {
+                showInEditor = lines[2].Contains("editor");
+                showInFlight = lines[2].Contains("flight");
+            }
+
+            for (int i = 3; i < lines.Length; i++)
+            {
+                InfoItem match = registry.FirstOrDefault(item => item.id == lines[i]);
+                if (match != null) items.Add(match);
             }
         }
 
@@ -311,6 +346,22 @@ namespace MuMech
             newWin.title = "Target Info";
             itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity" };
             foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
+        }
+
+        public void CreateWindowFromSharingString(string sharingString)
+        {
+            string[] lines = sharingString.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines[0] != "--- MechJeb Custom Window ---")
+            {
+                ScreenMessages.PostScreenMessage("Pasted text wasn't a MechJeb custom window descriptor.", 1.5f, ScreenMessageStyle.UPPER_RIGHT);
+                return;
+            }
+
+            MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(window);
+            window.enabled = true;
+
+            window.FromSharingString(lines, registry);
         }
     }
 
