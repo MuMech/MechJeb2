@@ -24,7 +24,7 @@ public class RCSSolver
         public Thruster(Vector3 pos, Vector3 direction, Part p = null, ModuleRCS pm = null)
         {
             this.pos = pos;
-            this.direction = direction;
+            this.direction = direction.normalized;
             this.part = p;
             this.partModule = pm;
         }
@@ -45,13 +45,14 @@ public class RCSSolver
     private Vector3 get_torque(Thruster thruster, Vector3 CoM, float throttle = 1)
     {
         Vector3 toCoM = CoM - thruster.pos;
-        Vector3 thrust = thruster.direction.normalized * throttle;
+        Vector3 thrust = thruster.direction * throttle;
         return Vector3.Cross(toCoM, thrust);
     }
 
     public void run(List<Thruster> thrusters, Vector3 direction, out double[] proportion)
     {
         proportion = new double[0];
+        direction = direction.normalized;
 
         Vector3 CoM = Vector3.zero;
 
@@ -73,7 +74,7 @@ public class RCSSolver
         for (int i = 0; i < thrusters.Count; i++)
         {
             Thruster thruster = thrusters[i];
-            Vector3 thrust = thruster.direction.normalized;
+            Vector3 thrust = thruster.direction;
             Vector3 torque = get_torque(thruster, CoM);
 
             // Waste is a value from [0..2] indicating how much thrust is being
@@ -117,13 +118,14 @@ public class RCSSolver
         // All done! But before we return, let's calculate some interesting
         // statistics.
         
-        double totalThrust = 0;
+        double thrustSum = 0;
         double effectiveThrust = 0;
         for (int i = 0; i < count; i++)
         {
-            totalThrust += proportion[i];
-            effectiveThrust += proportion[i] * (1 - A[3, i]);
+            thrustSum += proportion[i];
+            effectiveThrust += proportion[i] * Vector3.Dot(thrusters[i].direction, direction);
         }
+        totalThrust = thrustSum;
         efficiency = effectiveThrust / totalThrust;
 
         Vector3 extraTorque = Vector3.zero;
@@ -138,11 +140,13 @@ public class RCSSolverThread
 {
     public RCSSolver solver = new RCSSolver();
     public double timeSeconds = 0;
-    public string statusString;
+    public string statusString = null;
 
     private double[] throttles;
+
     private List<RCSSolver.Thruster> thrusters;
     private Vector3 direction;
+
     private AutoResetEvent workEvent = new AutoResetEvent(false);
     private Boolean stopRunning = false;
     private Thread t = null;
