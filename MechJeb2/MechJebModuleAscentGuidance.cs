@@ -116,7 +116,7 @@ namespace MuMech
                         {
                             launchingToRendezvous = true;
                         }
-                        autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text, GUILayout.ExpandWidth(true));
+                        autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text, GUILayout.Width(60));
                         GUILayout.Label("º", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
                     }
@@ -124,7 +124,7 @@ namespace MuMech
                 else
                 {
                     launchingToPlane = launchingToRendezvous = false;
-                    GUILayout.Label("Select a target for launch timing features.");
+                    GUILayout.Label("Select a target for a timed launch.");
                 }
 
                 if (launchingToPlane || launchingToRendezvous)
@@ -134,6 +134,8 @@ namespace MuMech
                     else tMinus = LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
 
                     double launchTime = vesselState.time + tMinus;
+
+                    core.warp.WarpToUT(launchTime);
 
                     if (launchingToPlane)
                     {

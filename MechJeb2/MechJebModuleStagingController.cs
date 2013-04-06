@@ -33,10 +33,10 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Delays: pre:", GUILayout.ExpandWidth(false));
-            autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.ExpandWidth(true));
+            autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.Width(35));
             GUILayout.Label("s  post:", GUILayout.ExpandWidth(false));
-            autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.ExpandWidth(true));
-            GUILayout.Label("s", GUILayout.ExpandWidth(false));
+            autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.Width(35));
+            GUILayout.Label("s", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
             GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
