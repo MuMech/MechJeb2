@@ -46,11 +46,7 @@ public class RCSSolver
     {
         Vector3 toCoM = CoM - thruster.pos;
         Vector3 thrust = thruster.direction.normalized * throttle;
-
-        return new Vector3(
-            thrust.x * (toCoM.y + toCoM.z),
-            thrust.y * (toCoM.x + toCoM.z),
-            thrust.z * (toCoM.x + toCoM.y));
+        return Vector3.Cross(toCoM, thrust);
     }
 
     public void run(List<Thruster> thrusters, Vector3 direction, out double[] proportion)
