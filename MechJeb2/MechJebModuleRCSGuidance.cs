@@ -26,30 +26,37 @@ namespace MuMech
             if (GUILayout.Button("Reset thrusters")) core.rcs.ResetThrusters();
 
             core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
-            core.rcs.runSolver = GUILayout.Toggle(core.rcs.runSolver, "Run solver");
-            core.rcs.applyResult = GUILayout.Toggle(core.rcs.applyResult, "Apply result");
-            core.rcs.genuineThrottle = GUILayout.Toggle(core.rcs.genuineThrottle, "Genuine throttle");
+
+            // The following options are really only useful for debugging.
+            //core.rcs.runSolver = GUILayout.Toggle(core.rcs.runSolver, "Run solver");
+            //core.rcs.applyResult = GUILayout.Toggle(core.rcs.applyResult, "Apply result");
+            core.rcs.genuineThrottle = !GUILayout.Toggle(!core.rcs.genuineThrottle, "Interpolate throttle");
             core.rcs.forceRecalculate = GUILayout.Toggle(core.rcs.forceRecalculate, "Force recalculation");
-            core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
-            core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
+            //core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
 
-            if (core.rcs.thrusterPowerControl)
+            GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
+            GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);
+            GuiUtils.SimpleTextBox("Waste factor", core.rcs.tuningParamFactorWaste);
+            GuiUtils.SimpleTextBox("Waste threshold", core.rcs.tuningParamWasteThreshold);
+
+            core.rcs.solverThread.solver.factorTorque       = core.rcs.tuningParamFactorTorque;
+            core.rcs.solverThread.solver.factorTranslate    = core.rcs.tuningParamFactorTranslate;
+            core.rcs.solverThread.solver.factorWaste        = core.rcs.tuningParamFactorWaste;
+            core.rcs.solverThread.solver.wasteThreshold     = core.rcs.tuningParamWasteThreshold;
+
+            GUILayout.Label("Debug info:");
+            GUILayout.Label(String.Format("solver time: {0:F3} s", core.rcs.solverThread.timeSeconds));
+            GUILayout.Label(String.Format("total thrust: {0:F3}", core.rcs.solverThread.solver.totalThrust));
+            GUILayout.Label(String.Format("thrusters used: {0}", core.rcs.thrustersUsed));
+            GUILayout.Label(String.Format("efficiency: {0:F3}%", core.rcs.solverThread.solver.efficiency * 100));
+            GUILayout.Label(String.Format("extra torque: {0:F3}", core.rcs.solverThread.solver.extraTorque.magnitude));
+            if (core.rcs.solverThread.statusString != null)
             {
-                double oldThrusterPower = core.rcs.thrusterPower;
-                GuiUtils.SimpleTextBox("Thruster power", core.rcs.thrusterPower, "%");
-
-                int sliderPrecision = 3;
-                double sliderThrusterPower = GUILayout.HorizontalSlider((float)core.rcs.thrusterPower, 0.0F, 1.0F);
-                if (Math.Round(Math.Abs(sliderThrusterPower - oldThrusterPower), sliderPrecision) > 0)
-                {
-                    core.rcs.thrusterPower = new EditableDoubleMult(Math.Round(sliderThrusterPower, sliderPrecision), 0.01);
-                }
-
-                if (oldThrusterPower != core.rcs.thrusterPower)
-                {
-                    core.rcs.ApplyThrusterPower();
-                }
+                GUILayout.Label(String.Format("status: {0}", core.rcs.solverThread.statusString));
             }
+
+            //if (GUILayout.Button("Start thread")) core.rcs.solverThread.start();
+            //if (GUILayout.Button("Stop thread"))  core.rcs.solverThread.stop();
 
             if (core.rcs.smartTranslation)
             {

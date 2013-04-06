@@ -21,20 +21,25 @@ namespace MuMech
         public bool forceRecalculate = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool multithreading = true;
+
+        // Tuning parameters
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool thrusterPowerControl = false;
+        public EditableDouble tuningParamFactorTorque = 1;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble tuningParamFactorTranslate = 0.005;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble tuningParamFactorWaste = 1;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble tuningParamWasteThreshold = 0;
 
+        // Variables for RCS solving.
         public int thrustersUsed = 0;
-
-        private RCSSolverThread solverThread = new RCSSolverThread();
-
+        public RCSSolverThread solverThread = new RCSSolverThread();
         private Vector3 lastDirection;
         private bool recalculate = true;
         private System.Random rand = new System.Random();
         private double[] throttles;
         private List<RCSSolver.Thruster> thrusters = new List<RCSSolver.Thruster>();
-
-        public EditableDoubleMult thrusterPower = new EditableDoubleMult(1, 0.01);
 
         public Vector3d targetVelocity = Vector3d.zero;
         private Boolean driveToTarget = false;
@@ -95,22 +100,6 @@ namespace MuMech
             }
         }
 
-        public void ApplyThrusterPower()
-        {
-            foreach (Part p in vessel.parts)
-            {
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                {
-                    if ((pm.isEnabled) && (!pm.isJustForShow))
-                    {
-                        int numForces = pm.thrustForces.Count;
-                        pm.Enable();
-                        pm.thrusterPower = (float)thrusterPower.val;
-                    }
-                }
-            }
-        }
-
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
             if (s.isNeutral)
@@ -134,7 +123,6 @@ namespace MuMech
 
             if (forceRecalculate) recalculate = true;
 
-            // TODO: This should be a task in a thread pool to avoid UI lag.
             if (recalculate)
             {
                 lastDirection = direction;
@@ -186,7 +174,7 @@ namespace MuMech
 
             if (!applyResult) return;
 
-            thrustersUsed = 0;
+            int sumThrusters = 0;
 
             throttles = solverThread.get_throttles();
 
@@ -211,7 +199,7 @@ namespace MuMech
                         if (pm.thrusterPower == 0)
                         {
                             pm.Enable();
-                            thrustersUsed++;
+                            sumThrusters++;
                         }
                         pm.thrusterPower = (float) throttles[i];
                     }
@@ -237,11 +225,13 @@ namespace MuMech
                         if (!pm.isEnabled)
                         {
                             pm.Enable();
-                            thrustersUsed++;
+                            sumThrusters++;
                         }
                     }
                 }
             }
+
+            thrustersUsed = sumThrusters;
         }
 
         public override void Drive(FlightCtrlState s)

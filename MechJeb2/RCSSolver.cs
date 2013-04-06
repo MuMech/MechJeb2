@@ -10,8 +10,16 @@ public class RCSSolver
     protected double[,] A;
     protected double[] B;
 
+    public double totalThrust;
     public double efficiency;
     public Vector3 extraTorque;
+
+    public double factorTorque = 1;
+    public double factorTranslate = 0.005;
+    public double factorWaste = 1;
+    public double wasteThreshold = 0.25;
+
+    private enum PARAMS { TORQUE_X, TORQUE_Y, TORQUE_Z, TRANS_X, TRANS_Y, TRANS_Z, WASTE, FUDGE };
 
     public class Thruster
     {
@@ -58,11 +66,21 @@ public class RCSSolver
 
         int count = thrusters.Count;
 
-        // We want to minimize torque (3 values) and any thrust that's not
-        // toward 'direction' (1 value). We also have a value to make sure
-        // there's always -some- thrust.
-        A = new double[5, count];
-        B = new double[] { 0, 0, 0, 0, 0.001 * count };
+        if (count == 0) return;
+
+        // We want to minimize torque (3 values), translation error (3 values),
+        // and any thrust that's wasted due to not being toward 'direction' (1
+        // value). We also have a value to make sure there's always -some-
+        // thrust.
+        A = new double[Enum.GetValues(typeof(PARAMS)).Length, count];
+        B = new double[Enum.GetValues(typeof(PARAMS)).Length];
+
+        for (int i = 0; i < B.Length; i++)
+        {
+            B[i] = 0;
+        }
+        B[B.Length - 1] = 0.001 * count;
+
         double[] x = new double[count];
         if (x.Length == proportion.Length) {
             x = proportion;
@@ -76,16 +94,22 @@ public class RCSSolver
             Thruster thruster = thrusters[i];
             Vector3 thrust = thruster.direction;
             Vector3 torque = get_torque(thruster, CoM);
+            Vector3 transErr = direction - thrust;
 
             // Waste is a value from [0..2] indicating how much thrust is being
             // wasted due to not being toward 'direction'.
             float waste = 1 - Vector3.Dot(thrust, direction);
 
-            A[0, i] = torque.x;
-            A[1, i] = torque.y;
-            A[2, i] = torque.z;
-            A[3, i] = waste;
-            A[4, i] = 0.001;
+            if (waste < wasteThreshold) waste = 0;
+
+            A[0, i] = torque.x * factorTorque;
+            A[1, i] = torque.y * factorTorque;
+            A[2, i] = torque.z * factorTorque;
+            A[3, i] = transErr.x * factorTranslate;
+            A[4, i] = transErr.y * factorTranslate;
+            A[5, i] = transErr.z * factorTranslate;
+            A[6, i] = waste * factorWaste;
+            A[7, i] = 0.001;
             x[i]    = 1;
             bndl[i] = 0;
             bndu[i] = 1;
@@ -200,7 +224,7 @@ public class RCSSolverThread
         while (workEvent.WaitOne())
         {
             if (stopRunning) return;
-            DateTime start = new DateTime();
+            DateTime start = DateTime.Now;
             try
             {
                 solver.run(thrusters, direction, out throttles);
@@ -210,8 +234,8 @@ public class RCSSolverThread
                 statusString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
                 Debug.Log(statusString);
             }
-            DateTime stop = new DateTime();
-            timeSeconds = stop.Subtract(start).TotalMilliseconds;
+            DateTime stop = DateTime.Now;
+            timeSeconds = stop.Subtract(start).TotalSeconds;
         }
     }
 }
