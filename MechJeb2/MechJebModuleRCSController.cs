@@ -20,6 +20,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRecalculate = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool multithreading = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool thrusterPowerControl = false;
 
         public int thrustersUsed = 0;
@@ -102,6 +104,12 @@ namespace MuMech
             }
         }
 
+        private void solve(object state)
+        {
+            Vector3 direction = (Vector3)state;
+            solver.run(thrusters, direction, out throttles);
+        }
+
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
             if (s.isNeutral)
@@ -152,8 +160,14 @@ namespace MuMech
                         }
                     }
                 }
-
-                solver.run(thrusters, direction, out throttles);
+                if (multithreading)
+                {
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(solve), direction);
+                }
+                else
+                {
+                    solver.run(thrusters, direction, out throttles);
+                }
             }
             else
             {

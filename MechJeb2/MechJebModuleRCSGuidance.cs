@@ -30,6 +30,7 @@ namespace MuMech
             core.rcs.applyResult = GUILayout.Toggle(core.rcs.applyResult, "Apply result");
             core.rcs.genuineThrottle = GUILayout.Toggle(core.rcs.genuineThrottle, "Genuine throttle");
             core.rcs.forceRecalculate = GUILayout.Toggle(core.rcs.forceRecalculate, "Force recalculation");
+            core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
             core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
 
             if (core.rcs.thrusterPowerControl)
