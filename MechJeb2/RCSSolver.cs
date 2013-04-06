@@ -136,21 +136,27 @@ public class RCSSolver
 
 public class RCSSolverThread
 {
+    public RCSSolver solver = new RCSSolver();
+    public double timeSeconds = 0;
+    public string statusString;
+
     private double[] throttles;
-    private RCSSolver solver = new RCSSolver();
     private List<RCSSolver.Thruster> thrusters;
     private Vector3 direction;
-    private AutoResetEvent workEvent;
+    private AutoResetEvent workEvent = new AutoResetEvent(false);
     private Boolean stopRunning = false;
-    private Thread t;
+    private Thread t = null;
 
     public void start()
     {
         lock (solver)
         {
-            workEvent = new AutoResetEvent(false);
-            t = new Thread(run);
-            t.Start();
+            if (t == null)
+            {
+                stopRunning = false;
+                t = new Thread(run);
+                t.Start();
+            }
         }
     }
 
@@ -158,8 +164,13 @@ public class RCSSolverThread
     {
         lock (solver)
         {
-            this.stopRunning = true;
-            workEvent.Set();
+            if (t != null)
+            {
+                stopRunning = true;
+                workEvent.Set();
+                t.Join();
+                t = null;
+            }
         }
     }
 
@@ -172,7 +183,7 @@ public class RCSSolverThread
 
     public double[] get_throttles()
     {
-        return throttles;
+        return (double[])throttles.Clone();
     }
 
     private void run()
@@ -180,7 +191,18 @@ public class RCSSolverThread
         while (workEvent.WaitOne())
         {
             if (stopRunning) return;
-            solver.run(thrusters, direction, out throttles);
+            DateTime start = new DateTime();
+            try
+            {
+                solver.run(thrusters, direction, out throttles);
+            }
+            catch (Exception e)
+            {
+                statusString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
+                Debug.Log(statusString);
+            }
+            DateTime stop = new DateTime();
+            timeSeconds = stop.Subtract(start).TotalMilliseconds;
         }
     }
 }
