@@ -26,7 +26,7 @@ namespace MuMech
 
         public int thrustersUsed = 0;
 
-        public RCSSolver solver = new RCSSolver();
+        private RCSSolverThread solverThread = new RCSSolverThread();
 
         private Vector3 lastDirection;
         private bool recalculate = true;
@@ -52,8 +52,15 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
             base.OnModuleEnabled();
+            solverThread.start();
+            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
+        }
+
+        public override void OnModuleDisabled()
+        {
+            solverThread.stop();
+            base.OnModuleDisabled();
         }
 
         public void SetTargetWorldVelocity(Vector3d vel)
@@ -102,12 +109,6 @@ namespace MuMech
                     }
                 }
             }
-        }
-
-        private void solve(object state)
-        {
-            Vector3 direction = (Vector3)state;
-            solver.run(thrusters, direction, out throttles);
         }
 
         protected void AdjustRCSThrottles(FlightCtrlState s)
@@ -162,11 +163,11 @@ namespace MuMech
                 }
                 if (multithreading)
                 {
-                    ThreadPool.QueueUserWorkItem(new WaitCallback(solve), direction);
+                    solverThread.post_task(thrusters, direction);
                 }
                 else
                 {
-                    solver.run(thrusters, direction, out throttles);
+                    new RCSSolver().run(thrusters, direction, out throttles);
                 }
             }
             else
@@ -186,6 +187,10 @@ namespace MuMech
             if (!applyResult) return;
 
             thrustersUsed = 0;
+
+            throttles = solverThread.get_throttles();
+
+            if (throttles.Length != thrusters.Count) return;
 
             // Now we need to apply these throttle settings to the RCS part.
             // Keep in mind that each RCS part may have multiple thrusters and

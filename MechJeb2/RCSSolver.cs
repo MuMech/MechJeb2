@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 
 public class RCSSolver
@@ -133,6 +134,57 @@ public class RCSSolver
         for (int i = 0; i < count; i++)
         {
             extraTorque += get_torque(thrusters[i], CoM, (float) proportion[i]);
+        }
+    }
+}
+
+public class RCSSolverThread
+{
+    private double[] throttles;
+    private RCSSolver solver = new RCSSolver();
+    private List<RCSSolver.Thruster> thrusters;
+    private Vector3 direction;
+    private AutoResetEvent workEvent;
+    private Boolean stopRunning = false;
+    private Thread t;
+
+    public void start()
+    {
+        lock (solver)
+        {
+            workEvent = new AutoResetEvent(false);
+            t = new Thread(run);
+            t.Start();
+        }
+    }
+
+    public void stop()
+    {
+        lock (solver)
+        {
+            this.stopRunning = true;
+            workEvent.Set();
+        }
+    }
+
+    public void post_task(List<RCSSolver.Thruster> thrusters, Vector3 direction)
+    {
+        this.thrusters = thrusters;
+        this.direction = direction;
+        workEvent.Set();
+    }
+
+    public double[] get_throttles()
+    {
+        return throttles;
+    }
+
+    private void run()
+    {
+        while (workEvent.WaitOne())
+        {
+            if (stopRunning) return;
+            solver.run(thrusters, direction, out throttles);
         }
     }
 }

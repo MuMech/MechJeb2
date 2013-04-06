@@ -50,9 +50,6 @@ namespace MuMech
                     core.rcs.ApplyThrusterPower();
                 }
             }
-            GUILayout.Label(String.Format("thrusters used: {0}", core.rcs.thrustersUsed));
-            GUILayout.Label(String.Format("efficiency: {0:F2}%", core.rcs.solver.efficiency * 100));
-            GUILayout.Label(String.Format("extra torque: {0:F2}", core.rcs.solver.extraTorque.magnitude));
 
             if (core.rcs.smartTranslation)
             {
