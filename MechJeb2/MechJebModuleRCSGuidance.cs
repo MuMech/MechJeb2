@@ -15,22 +15,6 @@ namespace MuMech
 
         const string TARGET_NAME = "RCS Guidance";
 
-        bool selfEnabled = false;
-
-        public override void OnModuleEnabled()
-        {
-            selfEnabled = core.rcs.users.AmIUser(this);
-        }
-
-        public override void OnModuleDisabled()
-        {
-            core.rcs.users.Remove(this);
-        }
-
-        public override void OnFixedUpdate()
-        {
-        }
-
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
@@ -39,37 +23,39 @@ namespace MuMech
             s.normal.textColor = Color.red;
             GUILayout.Label("HIGHLY EXPERIMENTAL", s);
 
-            if (GUILayout.Button("Enable all thrusters")) core.rcs.EnableAllThrusters();
+            if (GUILayout.Button("Reset thrusters")) core.rcs.ResetThrusters();
 
-            selfEnabled = GUILayout.Toggle(selfEnabled, "Enable");
-            if (selfEnabled)
+            core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
+            core.rcs.runSolver = GUILayout.Toggle(core.rcs.runSolver, "Run solver");
+            core.rcs.applyResult = GUILayout.Toggle(core.rcs.applyResult, "Apply result");
+            core.rcs.genuineThrottle = GUILayout.Toggle(core.rcs.genuineThrottle, "Genuine throttle");
+            core.rcs.forceRecalculate = GUILayout.Toggle(core.rcs.forceRecalculate, "Force recalculation");
+            core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
+
+            if (core.rcs.thrusterPowerControl)
+            {
+                double oldThrusterPower = core.rcs.thrusterPower;
+                GuiUtils.SimpleTextBox("Thruster power", core.rcs.thrusterPower, "%");
+
+                int sliderPrecision = 3;
+                double sliderThrusterPower = GUILayout.HorizontalSlider((float)core.rcs.thrusterPower, 0.0F, 1.0F);
+                if (Math.Round(Math.Abs(sliderThrusterPower - oldThrusterPower), sliderPrecision) > 0)
+                {
+                    core.rcs.thrusterPower = new EditableDoubleMult(Math.Round(sliderThrusterPower, sliderPrecision), 0.01);
+                }
+
+                if (oldThrusterPower != core.rcs.thrusterPower)
+                {
+                    core.rcs.ApplyThrusterPower();
+                }
+            }
+            GUILayout.Label(String.Format("thrusters used: {0}", core.rcs.thrustersUsed));
+            GUILayout.Label(String.Format("efficiency: {0:F2}%", core.rcs.solver.efficiency * 100));
+            GUILayout.Label(String.Format("extra torque: {0:F2}", core.rcs.solver.extraTorque.magnitude));
+
+            if (core.rcs.smartTranslation)
             {
                 core.rcs.users.Add(this);
-                core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
-                core.rcs.runSolver = GUILayout.Toggle(core.rcs.runSolver, "Run solver");
-                core.rcs.applyResult = GUILayout.Toggle(core.rcs.applyResult, "Apply result");
-                core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
-
-                if (core.rcs.thrusterPowerControl)
-                {
-                    double oldThrusterPower = core.rcs.thrusterPower;
-                    GuiUtils.SimpleTextBox("Thruster power", core.rcs.thrusterPower, "%");
-
-                    int sliderPrecision = 3;
-                    double sliderThrusterPower = GUILayout.HorizontalSlider((float)core.rcs.thrusterPower, 0.0F, 1.0F);
-                    if (Math.Round(Math.Abs(sliderThrusterPower - oldThrusterPower), sliderPrecision) > 0)
-                    {
-                        core.rcs.thrusterPower = new EditableDoubleMult(Math.Round(sliderThrusterPower, sliderPrecision), 0.01);
-                    }
-
-                    if (oldThrusterPower != core.rcs.thrusterPower)
-                    {
-                        core.rcs.ApplyThrusterPower();
-                    }
-                }
-                GUILayout.Label(String.Format("disabled thrusters: {0}", core.rcs.thrustersDisabled));
-                GUILayout.Label(String.Format("efficiency: {0}%", core.rcs.solver.efficiency * 100));
-                GUILayout.Label(String.Format("extra torque: {0}", core.rcs.solver.extraTorque));
             }
             else
             {

@@ -10,7 +10,7 @@ public class RCSSolver
     protected double[] B;
 
     public double efficiency;
-    public double extraTorque;
+    public Vector3 extraTorque;
 
     public class Thruster
     {
@@ -112,24 +112,27 @@ public class RCSSolver
 
         double m = proportion.Max();
 
+        for (int i = 0; i < count; i++)
+        {
+            proportion[i] /= m;
+        }
+
+        // All done! But before we return, let's calculate some interesting
+        // statistics.
+        
         double totalThrust = 0;
         double effectiveThrust = 0;
         for (int i = 0; i < count; i++)
         {
-            proportion[i] /= m;
             totalThrust += proportion[i];
             effectiveThrust += proportion[i] * (1 - A[3, i]);
         }
+        efficiency = effectiveThrust / totalThrust;
 
-        efficiency = (totalThrust <= 0) ? 0 : effectiveThrust / totalThrust;
-
-        Vector3 resultingTorque = Vector3.zero;
-
+        Vector3 extraTorque = Vector3.zero;
         for (int i = 0; i < count; i++)
         {
-            resultingTorque += get_torque(thrusters[i], CoM, (float) proportion[i]);
+            extraTorque += get_torque(thrusters[i], CoM, (float) proportion[i]);
         }
-
-        extraTorque = resultingTorque.magnitude;
     }
 }
