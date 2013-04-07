@@ -12,13 +12,17 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool smartTranslation = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool runSolver = false;
+        public bool showThrusterStates = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool applyResult = false;
+        public bool advancedOptions = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool debugInfo = false;
+
+        // Advanced options
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool interpolateThrottle = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool forceRecalculate = false;
+        public bool alwaysRecalculate = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool multithreading = true;
 
@@ -30,7 +34,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble tuningParamFactorWaste = 1;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble tuningParamWasteThreshold = 0;
+        public EditableDouble tuningParamWasteThreshold = 1;
+
+        public string thrusterStates;
 
         // Variables for RCS solving.
         public int thrustersUsed = 0;
@@ -85,7 +91,7 @@ namespace MuMech
             driveToTarget = false;
         }
 
-        public void ResetThrusters()
+        public void ResetThrusters(bool enable = true)
         {
             foreach (Part p in vessel.parts)
             {
@@ -93,8 +99,16 @@ namespace MuMech
                 {
                     if (!pm.isJustForShow)
                     {
-                        pm.Enable();
-                        pm.thrusterPower = 1;
+                        if (enable)
+                        {
+                            if (!pm.isEnabled) pm.Enable();
+                            pm.thrusterPower = 1;
+                        }
+                        else
+                        {
+                            if (pm.isEnabled) pm.Disable();
+                            pm.thrusterPower = 0;
+                        }
                     }
                 }
             }
@@ -105,23 +119,24 @@ namespace MuMech
             if (s.isNeutral)
             {
                 ResetThrusters();
-                recalculate = true;
                 return;
             }
             
             Vector3 direction = new Vector3(s.X, s.Y, s.Z);
 
             // We should only recalculate if the direction is unchanged. If the
-            // user is holding down a translate button, the movement direction
-            // is the same, and the center of mass doesn't change that quickly!
+            // user is holding down or tapping a translate button, the movement
+            // direction is the same, and the center of mass doesn't change that
+            // quickly!
+            // TODO: Consider precalculating the six cardinal directions. This
+            // would allow translation along any axis to occur without waiting
+            // for calculations.
             if (!direction.Equals(lastDirection))
             {
                 recalculate = true;
             }
 
-            if (!runSolver) return;
-
-            if (forceRecalculate) recalculate = true;
+            if (alwaysRecalculate) recalculate = true;
 
             if (recalculate)
             {
@@ -172,8 +187,6 @@ namespace MuMech
                 }
             }
 
-            if (!applyResult) return;
-
             int sumThrusters = 0;
 
             if (multithreading)
@@ -187,6 +200,7 @@ namespace MuMech
             // than move in the wrong direction.
             if (throttles == null || throttles.Length != thrusters.Count)
             {
+                Debug.Log("throttles weren't ready!");
                 throttles = new double[thrusters.Count];
                 for (int i = 0; i < thrusters.Count; i++)
                 {
@@ -200,23 +214,21 @@ namespace MuMech
 
             if (!interpolateThrottle)
             {
-                for (int i = 0; i < thrusters.Count; i++)
-                {
-                    thrusters[i].partModule.thrusterPower = 0;
-                }
-
+                var rcsPartThrottles = new Dictionary<ModuleRCS, double>();
                 for (int i = 0; i < thrusters.Count; i++)
                 {
                     ModuleRCS pm = thrusters[i].partModule;
-                    if (throttles[i] > pm.thrusterPower)
-                    {
-                        if (pm.thrusterPower == 0)
-                        {
-                            pm.Enable();
-                            sumThrusters++;
-                        }
-                        pm.thrusterPower = (float) throttles[i];
-                    }
+                    double throttle = 0;
+                    rcsPartThrottles.TryGetValue(pm, out throttle);
+                    throttle = Math.Max(throttle, throttles[i]);
+                    rcsPartThrottles[pm] = throttle;
+                }
+
+                foreach (var pair in rcsPartThrottles)
+                {
+                    ModuleRCS pm = pair.Key;
+                    pm.thrusterPower = (float)pair.Value;
+                    pm.Enable();
                 }
             }
             else
@@ -248,12 +260,38 @@ namespace MuMech
             thrustersUsed = sumThrusters;
         }
 
+        private string GetThrusterStates()
+        {
+            string thrusterStates = "";
+            foreach (Part p in vessel.parts)
+            {
+                bool hasRcs = false;
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    thrusterStates += hasRcs ? " " : "[";
+                    thrusterStates += String.Format("{0},{1}", (pm.isEnabled ? "e" : "d"), pm.thrusterPower);
+                    foreach (float f in pm.thrustForces)
+                    {
+                        thrusterStates += String.Format(",{0:F2}", f);
+                    }
+                    hasRcs = true;
+                }
+                if (hasRcs)
+                {
+                    thrusterStates += "] ";
+                }
+            }
+            return thrusterStates;
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             if (smartTranslation)
             {
                 AdjustRCSThrottles(s);
             }
+
+            thrusterStates = GetThrusterStates();
 
             if (driveToTarget)
             {
