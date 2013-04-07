@@ -30,9 +30,9 @@ namespace MuMech
             // The following options are really only useful for debugging.
             //core.rcs.runSolver = GUILayout.Toggle(core.rcs.runSolver, "Run solver");
             //core.rcs.applyResult = GUILayout.Toggle(core.rcs.applyResult, "Apply result");
-            core.rcs.genuineThrottle = !GUILayout.Toggle(!core.rcs.genuineThrottle, "Interpolate throttle");
+            core.rcs.interpolateThrottle = GUILayout.Toggle(core.rcs.interpolateThrottle, "Interpolate throttle");
             core.rcs.forceRecalculate = GUILayout.Toggle(core.rcs.forceRecalculate, "Force recalculation");
-            //core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
+            core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
 
             GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
             GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);

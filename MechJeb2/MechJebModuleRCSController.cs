@@ -16,7 +16,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool applyResult = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool genuineThrottle = true;
+        public bool interpolateThrottle = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRecalculate = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -155,7 +155,7 @@ namespace MuMech
                 }
                 else
                 {
-                    new RCSSolver().run(thrusters, direction, out throttles);
+                    throttles = new RCSSolver().run(thrusters, direction);
                 }
             }
             else
@@ -176,15 +176,29 @@ namespace MuMech
 
             int sumThrusters = 0;
 
-            throttles = solverThread.get_throttles();
+            if (multithreading)
+            {
+                throttles = solverThread.get_throttles();
+            }
 
-            if (throttles.Length != thrusters.Count) return;
+            // If the throttles we got were bad (due to the vehicle staging or,
+            // more likely, the threaded calculating not having completed yet),
+            // throttle all RCS thrusters to 0. It's better to not move at all
+            // than move in the wrong direction.
+            if (throttles == null || throttles.Length != thrusters.Count)
+            {
+                throttles = new double[thrusters.Count];
+                for (int i = 0; i < thrusters.Count; i++)
+                {
+                    throttles[i] = 0;
+                }
+            }
 
             // Now we need to apply these throttle settings to the RCS part.
             // Keep in mind that each RCS part may have multiple thrusters and
             // thus multiple calculated throttles.
 
-            if (genuineThrottle)
+            if (!interpolateThrottle)
             {
                 for (int i = 0; i < thrusters.Count; i++)
                 {

@@ -57,16 +57,16 @@ public class RCSSolver
         return Vector3.Cross(toCoM, thrust);
     }
 
-    public void run(List<Thruster> thrusters, Vector3 direction, out double[] proportion)
+    public double[] run(List<Thruster> thrusters, Vector3 direction)
     {
-        proportion = new double[0];
+        double[] throttles = new double[0];
         direction = direction.normalized;
 
         Vector3 CoM = Vector3.zero;
 
         int count = thrusters.Count;
 
-        if (count == 0) return;
+        if (count == 0) return throttles;
 
         // We want to minimize torque (3 values), translation error (3 values),
         // and any thrust that's wasted due to not being toward 'direction' (1
@@ -82,8 +82,8 @@ public class RCSSolver
         B[B.Length - 1] = 0.001 * count;
 
         double[] x = new double[count];
-        if (x.Length == proportion.Length) {
-            x = proportion;
+        if (x.Length == throttles.Length) {
+            x = throttles;
         }
         double[] bndl = new double[count];
         double[] bndu = new double[count];
@@ -130,13 +130,13 @@ public class RCSSolver
         alglib.minbleicsetinnercond(state, epsg, epsf, epsx);
         alglib.minbleicsetoutercond(state, epso, epsi);
         alglib.minbleicoptimize(state, cost_func, null, null);
-        alglib.minbleicresults(state, out proportion, out rep);
+        alglib.minbleicresults(state, out throttles, out rep);
 
-        double m = proportion.Max();
+        double m = throttles.Max();
 
         for (int i = 0; i < count; i++)
         {
-            proportion[i] /= m;
+            throttles[i] /= m;
         }
 
         // All done! But before we return, let's calculate some interesting
@@ -146,8 +146,8 @@ public class RCSSolver
         double effectiveThrust = 0;
         for (int i = 0; i < count; i++)
         {
-            thrustSum += proportion[i];
-            effectiveThrust += proportion[i] * Vector3.Dot(thrusters[i].direction, direction);
+            thrustSum += throttles[i];
+            effectiveThrust += throttles[i] * Vector3.Dot(thrusters[i].direction, direction);
         }
         totalThrust = thrustSum;
         efficiency = effectiveThrust / totalThrust;
@@ -155,8 +155,10 @@ public class RCSSolver
         Vector3 extraTorque = Vector3.zero;
         for (int i = 0; i < count; i++)
         {
-            extraTorque += get_torque(thrusters[i], CoM, (float) proportion[i]);
+            extraTorque += get_torque(thrusters[i], CoM, (float) throttles[i]);
         }
+
+        return throttles;
     }
 }
 
@@ -166,7 +168,7 @@ public class RCSSolverThread
     public double timeSeconds = 0;
     public string statusString = null;
 
-    private double[] throttles;
+    private double[] throttles = null;
 
     private List<RCSSolver.Thruster> thrusters;
     private Vector3 direction;
@@ -211,12 +213,17 @@ public class RCSSolverThread
 
         this.thrusters = newThrusters;
         this.direction = direction;
+
+        // Delete our previously calculated throttles so that get_throttles()
+        // doesn't return bad values.
+        throttles = null;
+
         workEvent.Set();
     }
 
     public double[] get_throttles()
     {
-        return (double[])throttles.Clone();
+        return (throttles == null) ? null : (double[])throttles.Clone();
     }
 
     private void run()
@@ -227,7 +234,7 @@ public class RCSSolverThread
             DateTime start = DateTime.Now;
             try
             {
-                solver.run(thrusters, direction, out throttles);
+                throttles = solver.run(thrusters, direction);
             }
             catch (Exception e)
             {
