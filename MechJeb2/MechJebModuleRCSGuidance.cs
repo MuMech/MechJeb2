@@ -55,6 +55,7 @@ namespace MuMech
                         {
                             core.rcs.thrusterPower = new EditableDoubleMult(Math.Round(sliderThrusterPower, sliderPrecision), 0.01);
                         }
+                        core.rcs.globalThrusterPower = GUILayout.Toggle(core.rcs.globalThrusterPower, "Global power");
                     }
                     
                     GuiUtils.SimpleTextBox("Thruster transform", core.rcs.thrusterTransformMode);

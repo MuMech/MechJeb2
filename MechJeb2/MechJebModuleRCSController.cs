@@ -31,6 +31,8 @@ namespace MuMech
         public bool thrusterPowerControl = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult thrusterPower = new EditableDoubleMult(1, 0.01);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool globalThrusterPower = false;
 
         // Tuning parameters
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -157,7 +159,6 @@ namespace MuMech
                 recalculate = false;
 
                 thrusters.Clear();
-                bool firstThruster = true;
                 foreach (Part p in vessel.parts)
                 {
                     if (p.Rigidbody != null)
@@ -170,10 +171,16 @@ namespace MuMech
                                 // mass, in world coordinates.
                                 Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
 
-                                // Translate to the part's reference frame.
-                                if (thrusterTransformMode >= 10)
+                                switch ((thrusterTransformMode / 10) % 10)
                                 {
-                                    pos = Quaternion.Inverse(p.transform.rotation) * pos;
+                                    case 1:
+                                        // Translate to the part's reference frame.
+                                        pos = Quaternion.Inverse(p.transform.rotation) * pos;
+                                        break;
+                                    case 2:
+                                        // Translate to the vessel's reference frame.
+                                        pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+                                        break;
                                 }
 
                                 // Create an RCSSolver.Thruster for each RCS jet
@@ -181,7 +188,7 @@ namespace MuMech
                                 int i = 0;
                                 foreach (Transform t in pm.thrusterTransforms)
                                 {
-                                    Vector3 thrustDir = t.up;
+                                    Vector3 thrustDir = -t.up;
 
                                     // Translate to the ship's reference frame?!!
                                     Vector3 tdT = Quaternion.Inverse(t.rotation) * thrustDir;
@@ -189,13 +196,6 @@ namespace MuMech
                                     Vector3 tdV = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
                                     Vector3 tdPV = Quaternion.Inverse(vessel.GetTransform().rotation) * tdP;
                                     Vector3 tdDuck = vessel.GetTransform().InverseTransformDirection(thrustDir);
-                                    if (firstThruster)
-                                    {
-                                        firstThruster = false;
-                                        status += String.Format(", tdir1 {0}, P {1}, V {2}, PV {3}, duck {4}",
-                                            t.up.normalized, tdP.normalized, tdV.normalized, tdPV.normalized,
-                                            tdDuck.normalized);
-                                    }
 
                                     switch (thrusterTransformMode % 10)
                                     {
@@ -285,7 +285,8 @@ namespace MuMech
                     ModuleRCS pm = thrusters[i].partModule;
                     if (thrusterPowerControl)
                     {
-                        pm.thrustForces[thrusters[i].partModuleIndex] = (float)(throttles[i] * thrusterPower);
+                        double force = globalThrusterPower ? 1 : throttles[i];
+                        pm.thrustForces[thrusters[i].partModuleIndex] = (float)(force * thrusterPower);
                         rcsPartThrottles[pm] = thrusterPower;
                     }
                     else
@@ -357,10 +358,30 @@ namespace MuMech
                             status += String.Format("wcom {0}, lcom {1}, pwcom {2}, plcom {3}, pos1 {4}, posP {5}, posV {6}, posPV {7}",
                                 vessel.findWorldCenterOfMass(), vessel.findLocalCenterOfMass(),
                                 p.Rigidbody.worldCenterOfMass, p.Rigidbody.centerOfMass, pos1, pos2, pos3, pos4);
+
+                            bool firstThruster = true;
+                            foreach (Transform t in pm.thrusterTransforms)
+                            {
+                                Vector3 thrustDir = -t.up;
+
+                                // Translate to the ship's reference frame?!!
+                                Vector3 tdT = Quaternion.Inverse(t.rotation) * thrustDir;
+                                Vector3 tdP = Quaternion.Inverse(p.transform.rotation) * thrustDir;
+                                Vector3 tdV = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
+                                Vector3 tdPV = Quaternion.Inverse(vessel.GetTransform().rotation) * tdP;
+                                Vector3 tdDuck = vessel.GetTransform().InverseTransformDirection(thrustDir);
+                                if (firstThruster)
+                                {
+                                    firstThruster = false;
+                                    status += String.Format(", tdir1 {0}, P {1}, V {2}, PV {3}, duck {4}",
+                                        thrustDir.normalized, tdP.normalized, tdV.normalized, tdPV.normalized,
+                                        tdDuck.normalized);
+                                }
+                            }
                         }
                         catch (Exception e)
                         {
-                            status = "bad format string";
+                            status = "bad format string: " + e.Message;
                         }
                     }
 
@@ -399,7 +420,14 @@ namespace MuMech
 
             if (smartTranslation)
             {
-                AdjustRCSThrottles(s);
+                if ((s.X == 0 ? 0 : 1) + (s.Y == 0 ? 0 : 1) + (s.Z == 0 ? 0 : 1) > 1)
+                {
+                    status = "disabled (translating on multiple axes\n";
+                }
+                else
+                {
+                    AdjustRCSThrottles(s);
+                }
             }
 
             if (driveToTarget)
