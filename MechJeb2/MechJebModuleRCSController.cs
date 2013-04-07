@@ -142,7 +142,7 @@ namespace MuMech
                                 // on this part.
                                 foreach (Transform t in pm.thrusterTransforms)
                                 {
-                                    Vector3 thrustDir = -t.up * pm.thrusterPower;
+                                    Vector3 thrustDir = t.up * pm.thrusterPower;
                                     thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm));
                                 }
                             }
