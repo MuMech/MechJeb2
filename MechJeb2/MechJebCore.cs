@@ -177,7 +177,7 @@ namespace MuMech
 
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
 
-            if ((this != vessel.GetMasterMechJeb()) || !vessel.isActiveVessel)
+            if (HighLogic.LoadedSceneIsFlight && ((this != vessel.GetMasterMechJeb()) || !vessel.isActiveVessel))
             {
                 wasMasterAndFocus = false;
             }
@@ -187,7 +187,7 @@ namespace MuMech
                 return;
             }
 
-            if (!wasMasterAndFocus && vessel.isActiveVessel)
+            if (HighLogic.LoadedSceneIsFlight && !wasMasterAndFocus && vessel.isActiveVessel)
             {
                 if ((lastFocus != null) && lastFocus.loaded && (lastFocus.GetMasterMechJeb() != null))
                 {
@@ -246,13 +246,6 @@ namespace MuMech
                 if (windowEditor != null) windowEditor.CreateWindowFromSharingString(MuUtils.SystemClipboard);
             }
 
-            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
-
-            foreach (ComputerModule module in computerModules)
-            {
-                if (module.enabled) module.OnUpdate();
-            }
-
             //periodically save settings in case we quit unexpectedly
             if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
             {
@@ -262,6 +255,13 @@ namespace MuMech
                     OnSave(null);
                     lastSettingsSaveTime = Time.time;
                 }
+            }
+
+            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
+
+            foreach (ComputerModule module in computerModules)
+            {
+                if (module.enabled) module.OnUpdate();
             }
         }
 
@@ -414,7 +414,9 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vessel.vesselName + ".cfg"));
+                string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
+                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_"+vesselName+".cfg"));
+
                 if (lastFocus == vessel)
                 {
                     global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));

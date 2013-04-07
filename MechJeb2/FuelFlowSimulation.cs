@@ -33,12 +33,13 @@ namespace MuMech
         {
             Stats[] stages = new Stats[simStage + 1];
 
-            //Debug.Log("SimulateAllStages");
+           //Debug.Log("SimulateAllStages");
 
             while (simStage >= 0)
             {
                 //Debug.Log("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
                 stages[simStage] = SimulateStage(throttle, atmospheres);
+                //Debug.Log("Staging at t = " + t);
                 SimulateStageActivation();
             }
 
@@ -56,6 +57,8 @@ namespace MuMech
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.deltaTime = 0;
             stats.deltaV = 0;
+
+            foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres); //need to set initial consumption rates for allowedToStage to work right
 
             const int maxSteps = 100;
             int step;
@@ -136,7 +139,7 @@ namespace MuMech
         {
             List<FuelNode> activeEngines = FindActiveEngines();
 
-            //Debug.Log("Checking whether allowed to stage:");
+            //Debug.Log("Checking whether allowed to stage at t = " + t);
             //Debug.Log("  activeEngines.Count = " + activeEngines.Count);
 
             //if no engines are active, we can always stage
