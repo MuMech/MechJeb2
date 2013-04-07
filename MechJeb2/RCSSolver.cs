@@ -137,9 +137,12 @@ public class RCSSolver
 
         double m = throttles.Max();
 
-        for (int i = 0; i < count; i++)
+        if (m > 0)
         {
-            throttles[i] /= m;
+            for (int i = 0; i < count; i++)
+            {
+                throttles[i] /= m;
+            }
         }
 
         // All done! But before we return, let's calculate some interesting
