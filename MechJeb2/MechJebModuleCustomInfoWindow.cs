@@ -121,6 +121,9 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
+            registry.Clear();
+            editedWindow = null;
+
             RegisterInfoItems(vesselState);
             foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
             {
@@ -130,7 +133,6 @@ namespace MuMech
             if (global == null) return;
 
             //Load custom info windows, which are stored in our ConfigNode:
-
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
             foreach (ConfigNode windowNode in windowNodes)
             {
@@ -167,6 +169,7 @@ namespace MuMech
             base.OnSave(local, type, global);
 
             //Save custom info windows within our ConfigNode:
+            if (global == null) return;
 
             foreach (MechJebModuleCustomInfoWindow window in core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
