@@ -29,13 +29,15 @@ public class RCSSolver
 
         public Part part;
         public ModuleRCS partModule;
+        public int partModuleIndex;
 
-        public Thruster(Vector3 pos, Vector3 direction, Part p = null, ModuleRCS pm = null)
+        public Thruster(Vector3 pos, Vector3 direction, Part p = null, ModuleRCS pm = null, int pmIndex = 0)
         {
             this.pos = pos;
             this.direction = direction.normalized;
             this.part = p;
             this.partModule = pm;
+            this.partModuleIndex = pmIndex;
         }
     }
 

@@ -27,6 +27,10 @@ namespace MuMech
 
             core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
             core.rcs.showThrusterStates = GUILayout.Toggle(core.rcs.showThrusterStates, "Show thruster states");
+            if (core.rcs.showThrusterStates)
+            {
+                core.rcs.onlyWhenMoving = GUILayout.Toggle(core.rcs.onlyWhenMoving, "... only when moving");
+            }
             
             if (core.rcs.smartTranslation)
             {
@@ -37,6 +41,23 @@ namespace MuMech
                     core.rcs.interpolateThrottle = GUILayout.Toggle(core.rcs.interpolateThrottle, "Interpolate throttle");
                     core.rcs.alwaysRecalculate = GUILayout.Toggle(core.rcs.alwaysRecalculate, "Always recalculate");
                     core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
+
+                    core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
+
+                    if (core.rcs.thrusterPowerControl)
+                    {
+                        double oldThrusterPower = core.rcs.thrusterPower;
+                        GuiUtils.SimpleTextBox("Thruster power", core.rcs.thrusterPower, "%");
+
+                        int sliderPrecision = 3;
+                        double sliderThrusterPower = GUILayout.HorizontalSlider((float)core.rcs.thrusterPower, 0.0F, 1.0F);
+                        if (Math.Round(Math.Abs(sliderThrusterPower - oldThrusterPower), sliderPrecision) > 0)
+                        {
+                            core.rcs.thrusterPower = new EditableDoubleMult(Math.Round(sliderThrusterPower, sliderPrecision), 0.01);
+                        }
+                    }
+                    
+                    GuiUtils.SimpleTextBox("Thruster transform", core.rcs.thrusterTransformMode);
                     GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", core.rcs.tuningParamFactorWaste);
@@ -77,7 +98,9 @@ namespace MuMech
 
             if (core.rcs.showThrusterStates)
             {
-                GUILayout.Label(String.Format("thruster states: {0}", core.rcs.thrusterStates));
+                GUILayout.Label(String.Format("control vector: {0}", core.rcs.controlVector));
+                GUILayout.Label(String.Format("thruster states:\n{0}", core.rcs.thrusterStates));
+                GUILayout.Label(String.Format("status: {0}", core.rcs.status));
             }
 
             GUILayout.EndVertical();

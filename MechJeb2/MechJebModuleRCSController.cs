@@ -14,6 +14,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool showThrusterStates = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool onlyWhenMoving = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool advancedOptions = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool debugInfo = false;
@@ -25,6 +27,10 @@ namespace MuMech
         public bool alwaysRecalculate = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool multithreading = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool thrusterPowerControl = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult thrusterPower = new EditableDoubleMult(1, 0.01);
 
         // Tuning parameters
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -36,7 +42,12 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble tuningParamWasteThreshold = 1;
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableInt thrusterTransformMode = 1;
+
         public string thrusterStates;
+        public string controlVector;
+        public string status;
 
         // Variables for RCS solving.
         public int thrustersUsed = 0;
@@ -122,7 +133,9 @@ namespace MuMech
                 return;
             }
             
-            Vector3 direction = new Vector3(s.X, s.Y, s.Z);
+            // Note that Y and Z are swapped! FlightCtrlState doesn't use the
+            // same axes as the vehicle's reference frame.
+            Vector3 direction = new Vector3(s.X, s.Z, s.Y);
 
             // We should only recalculate if the direction is unchanged. If the
             // user is holding down or tapping a translate button, the movement
@@ -144,6 +157,7 @@ namespace MuMech
                 recalculate = false;
 
                 thrusters.Clear();
+                bool firstThruster = true;
                 foreach (Part p in vessel.parts)
                 {
                     if (p.Rigidbody != null)
@@ -152,13 +166,49 @@ namespace MuMech
                         {
                             if (!pm.isJustForShow)
                             {
+                                // Find our distance from the vessel's center of
+                                // mass, in world coordinates.
                                 Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
+
+                                // Translate to the part's reference frame.
+                                if (thrusterTransformMode >= 10)
+                                {
+                                    pos = Quaternion.Inverse(p.transform.rotation) * pos;
+                                }
+
                                 // Create an RCSSolver.Thruster for each RCS jet
                                 // on this part.
+                                int i = 0;
                                 foreach (Transform t in pm.thrusterTransforms)
                                 {
-                                    Vector3 thrustDir = t.up * pm.thrusterPower;
-                                    thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm));
+                                    Vector3 thrustDir = t.up;
+
+                                    // Translate to the ship's reference frame?!!
+                                    Vector3 tdT = Quaternion.Inverse(t.rotation) * thrustDir;
+                                    Vector3 tdP = Quaternion.Inverse(p.transform.rotation) * thrustDir;
+                                    Vector3 tdV = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
+                                    Vector3 tdPV = Quaternion.Inverse(vessel.GetTransform().rotation) * tdP;
+                                    Vector3 tdDuck = vessel.GetTransform().InverseTransformDirection(thrustDir);
+                                    if (firstThruster)
+                                    {
+                                        firstThruster = false;
+                                        status += String.Format(", tdir1 {0}, P {1}, V {2}, PV {3}, duck {4}",
+                                            t.up.normalized, tdP.normalized, tdV.normalized, tdPV.normalized,
+                                            tdDuck.normalized);
+                                    }
+
+                                    switch (thrusterTransformMode % 10)
+                                    {
+                                        case 1: thrustDir = tdP; break;
+                                        case 2: thrustDir = tdV; break;
+                                        case 3: thrustDir = tdPV; break;
+                                        case 4: thrustDir = tdDuck; break;
+                                    }
+
+                                    //thrustDir *= pm.thrusterPower;
+
+                                    thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm, i));
+                                    i++;
                                 }
                             }
                         }
@@ -208,6 +258,21 @@ namespace MuMech
                 }
             }
 
+            status += "throttles:\n";
+            for (int i = 0; i < throttles.Length; i++)
+            {
+                status += String.Format("{0:F0}", throttles[i] * 9);
+                if ((i + 1) % 16 == 0)
+                {
+                    status += "\n";
+                }
+                else
+                {
+                    if ((i + 1) % 4 == 0) status += ",";
+                    status += " ";
+                }
+            }
+
             // Now we need to apply these throttle settings to the RCS part.
             // Keep in mind that each RCS part may have multiple thrusters and
             // thus multiple calculated throttles.
@@ -218,10 +283,18 @@ namespace MuMech
                 for (int i = 0; i < thrusters.Count; i++)
                 {
                     ModuleRCS pm = thrusters[i].partModule;
-                    double throttle = 0;
-                    rcsPartThrottles.TryGetValue(pm, out throttle);
-                    throttle = Math.Max(throttle, throttles[i]);
-                    rcsPartThrottles[pm] = throttle;
+                    if (thrusterPowerControl)
+                    {
+                        pm.thrustForces[thrusters[i].partModuleIndex] = (float)(throttles[i] * thrusterPower);
+                        rcsPartThrottles[pm] = thrusterPower;
+                    }
+                    else
+                    {
+                        double throttle = 0;
+                        rcsPartThrottles.TryGetValue(pm, out throttle);
+                        throttle = Math.Max(throttle, throttles[i]);
+                        rcsPartThrottles[pm] = throttle;
+                    }
                 }
 
                 foreach (var pair in rcsPartThrottles)
@@ -230,6 +303,7 @@ namespace MuMech
                     pm.thrusterPower = (float)pair.Value;
                     pm.Enable();
                 }
+                Debug.Log("applied throttles");
             }
             else
             {
@@ -263,18 +337,48 @@ namespace MuMech
         private string GetThrusterStates()
         {
             string thrusterStates = "";
+            bool first = true;
             foreach (Part p in vessel.parts)
             {
                 bool hasRcs = false;
+                int count = 0;
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
+                    if (first)
+                    {
+                        first = false;
+                        try
+                        {
+                            Vector3 pos1 = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
+                            Vector3 pos2 = Quaternion.Inverse(p.transform.rotation) * pos1;
+                            Vector3 pos3 = Quaternion.Inverse(vessel.GetTransform().rotation) * pos1;
+                            Vector3 pos4 = Quaternion.Inverse(vessel.GetTransform().rotation) * pos2;
+
+                            status += String.Format("wcom {0}, lcom {1}, pwcom {2}, plcom {3}, pos1 {4}, posP {5}, posV {6}, posPV {7}",
+                                vessel.findWorldCenterOfMass(), vessel.findLocalCenterOfMass(),
+                                p.Rigidbody.worldCenterOfMass, p.Rigidbody.centerOfMass, pos1, pos2, pos3, pos4);
+                        }
+                        catch (Exception e)
+                        {
+                            status = "bad format string";
+                        }
+                    }
+
                     thrusterStates += hasRcs ? " " : "[";
-                    thrusterStates += String.Format("{0},{1}", (pm.isEnabled ? "e" : "d"), pm.thrusterPower);
+                    thrusterStates += "(";
+                    thrusterStates += String.Format("({0:F0}", pm.thrusterPower * 9);
+                    bool firstForce = false;
                     foreach (float f in pm.thrustForces)
                     {
-                        thrusterStates += String.Format(",{0:F2}", f);
+                        if (firstForce) firstForce = false;
+                        else thrusterStates += " ";
+
+                        thrusterStates += String.Format("{0:F0}", f * 9);
                     }
+                    thrusterStates += ")";
                     hasRcs = true;
+                    count++;
+                    if (count % 2 == 0) thrusterStates += "\n";
                 }
                 if (hasRcs)
                 {
@@ -286,12 +390,17 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            if (!(s.isNeutral && core.rcs.onlyWhenMoving))
+            {
+                status = "";
+                thrusterStates = GetThrusterStates();
+                controlVector = String.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
+            }
+
             if (smartTranslation)
             {
                 AdjustRCSThrottles(s);
             }
-
-            thrusterStates = GetThrusterStates();
 
             if (driveToTarget)
             {
