@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -170,9 +171,7 @@ public class RCSSolverThread
 
     private double[] throttles = null;
 
-    private List<RCSSolver.Thruster> thrusters;
-    private Vector3 direction;
-
+    private Queue tasks = Queue.Synchronized(new Queue());
     private AutoResetEvent workEvent = new AutoResetEvent(false);
     private Boolean stopRunning = false;
     private Thread t = null;
@@ -183,6 +182,7 @@ public class RCSSolverThread
         {
             if (t == null)
             {
+                tasks.Clear();
                 stopRunning = false;
                 t = new Thread(run);
                 t.Start();
@@ -211,19 +211,17 @@ public class RCSSolverThread
         var newThrusters = new List<RCSSolver.Thruster>();
         newThrusters.InsertRange(0, thrusters);
 
-        this.thrusters = newThrusters;
-        this.direction = direction;
-
-        // Delete our previously calculated throttles so that get_throttles()
-        // doesn't return bad values.
-        throttles = null;
+        tasks.Enqueue(new KeyValuePair<List<RCSSolver.Thruster>, Vector3>(thrusters, direction));
 
         workEvent.Set();
     }
 
     public double[] get_throttles()
     {
-        return (throttles == null) ? null : (double[])throttles.Clone();
+        // If there are outstanding tasks (that is, unprocessed thruster/
+        // direction pairs to solve), return null instead of stale throttle
+        // values.
+        return (tasks.Count > 0) ? null : throttles;
     }
 
     private void run()
@@ -231,7 +229,24 @@ public class RCSSolverThread
         while (workEvent.WaitOne())
         {
             if (stopRunning) return;
+
             DateTime start = DateTime.Now;
+
+            // These are guaranteed to be set in the lock(tasks) section below.
+            List<RCSSolver.Thruster> thrusters = null;
+            Vector3 direction = Vector3.zero;
+
+            // Consume the entire tasks queue and work on the newest entry.
+            lock (tasks)
+            {
+                while (tasks.Count > 0)
+                {
+                    var pair = (KeyValuePair<List<RCSSolver.Thruster>, Vector3>)tasks.Dequeue();
+                    thrusters = pair.Key;
+                    direction = pair.Value;
+                }
+            }
+
             try
             {
                 throttles = solver.run(thrusters, direction);
@@ -240,6 +255,7 @@ public class RCSSolverThread
             {
                 statusString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
                 Debug.Log(statusString);
+                throttles = null;
             }
             DateTime stop = DateTime.Now;
             timeSeconds = stop.Subtract(start).TotalSeconds;
