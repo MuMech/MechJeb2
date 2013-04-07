@@ -87,15 +87,55 @@ namespace MuMech
 
                 status = "On intercept course. Planning to match velocities at closest approach.";
             }
-            else if (orbit.RelativeInclination(core.target.Orbit) < 0.05 && orbit.eccentricity < 0.05)
+            else if (orbit.RelativeInclination(core.target.Orbit) < 0.05 && orbit.eccentricity < 0.05 && orbit.SynodicPeriod(core.target.Orbit) < 5 * orbit.period)
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
+                //Also we are phasing quickly enough that it won't be too long until an intercept window
                 //Plot a Hohmann transfer intercept.
                 double UT;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.Orbit, vesselState.time, out UT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
                 status = "Planning Hohmann transfer for intercept.";
+            }
+            else if (orbit.RelativeInclination(core.target.Orbit) < 0.05 && orbit.eccentricity < 0.05)
+            {
+                //We are in a circular orbit in the right plane, but we aren't phasing quickly enough. Move to a better phasing orbit
+                double lowPhasingRadius = core.target.Orbit.semiMajorAxis / 1.16;
+                double highPhasingRadius = core.target.Orbit.semiMajorAxis * 1.16;
+
+                bool useLowPhasingRadius = (lowPhasingRadius > mainBody.RealMaxAtmosphereAltitude() + 3000 && orbit.semiMajorAxis < core.target.orbit.semiMajorAxis);
+
+                double phasingOrbitRadius = (useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius);
+
+                if (orbit.ApR < phasingOrbitRadius)
+                {
+                    double UT1 = vesselState.time + 15;
+                    Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(orbit, UT1, phasingOrbitRadius);
+                    vessel.PlaceManeuverNode(orbit, dV1, UT1);
+                    Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
+                    double UT2 = transferOrbit.NextApoapsisTime(UT1);
+                    Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
+                    vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
+                }
+                else if (orbit.PeR > phasingOrbitRadius)
+                {
+                    double UT1 = vesselState.time + 15;
+                    Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, UT1, phasingOrbitRadius);
+                    vessel.PlaceManeuverNode(orbit, dV1, UT1);
+                    Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
+                    double UT2 = transferOrbit.NextPeriapsisTime(UT1);
+                    Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
+                    vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
+                }
+                else
+                {
+                    double UT = orbit.NextTimeOfRadius(vesselState.time, phasingOrbitRadius);
+                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                    vessel.PlaceManeuverNode(orbit, dV, UT);
+                }
+
+                status = "Increasing phasing rate by establishing new phasing orbit at " + MuUtils.ToSI(phasingOrbitRadius - mainBody.Radius, 0) + "m";
             }
             else if (orbit.RelativeInclination(core.target.Orbit) < 0.05)
             {
