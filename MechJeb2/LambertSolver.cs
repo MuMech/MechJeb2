@@ -90,7 +90,7 @@ namespace MuMech
 
                 //replaced Arrowstar's above four commented lines with this solver:  -The_Duck 
                 //Use an initial guess of 10; NewtonSolver will get stuck with an initial guess of zero.
-                y = NewtonSolver.Solve(yEqnPoly, 10, 1.0e-12, 50); 
+                y = NewtonSolver.Solve(yEqnPoly, 10, 1.0e-12, 50);
 
                 double x_new = Math.Sqrt(Math.Pow((1 - l) / 2, 2) + m / Math.Pow(y, 2)) - (1 + l) / 2;
                 x_change = Math.Abs(x - x_new);
@@ -181,7 +181,7 @@ namespace MuMech
         {
             double x = guess;
             double iter;
-            for(iter = 0; iter < maxIterations; iter++) 
+            for (iter = 0; iter < maxIterations; iter++)
             {
                 double delta = p.Evaluate(x) / p.Derivative(x);
                 if (Math.Abs(delta) < tolerance) break;
@@ -242,5 +242,4 @@ namespace MuMech
             return ret;
         }
     }
-
 }

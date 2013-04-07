@@ -41,7 +41,6 @@ namespace MuMech
                 center + radius * (QuaternionD.AngleAxis(rotation + 130, up) * north)
             }, c);
 
-
             GLTriangleMap(new Vector3d[]{
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 110, up) * north),
@@ -93,7 +92,7 @@ namespace MuMech
             GL.Color(c);
 
             int step = (dashed ? 2 : 1);
-            for (int i = 0; i < points.Count()-1; i += step)
+            for (int i = 0; i < points.Count() - 1; i += step)
             {
                 if (!IsOccluded(points[i], mainBody) && !IsOccluded(points[i + 1], mainBody))
                 {

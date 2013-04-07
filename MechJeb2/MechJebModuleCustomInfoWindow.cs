@@ -60,7 +60,7 @@ namespace MuMech
                     }
                 }
 
-                if(GUI.Button(new Rect(windowPos.x + 45, windowPos.y, 30, 20), "Copy", GuiUtils.yellowOnHover))
+                if (GUI.Button(new Rect(windowPos.x + 45, windowPos.y, 30, 20), "Copy", GuiUtils.yellowOnHover))
                 {
                     MuUtils.SystemClipboard = ToSharingString();
                     ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
@@ -316,7 +316,7 @@ namespace MuMech
                 });
 
             GUILayout.EndVertical();
-            
+
             base.WindowGUI(windowID);
         }
 
@@ -432,7 +432,7 @@ namespace MuMech
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
         bool time;
-        
+
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {

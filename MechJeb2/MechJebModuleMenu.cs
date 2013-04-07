@@ -29,21 +29,34 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public WindowStat windowStat = WindowStat.HIDDEN;
-        
+
         [Persistent(pass = (int)Pass.Global)]
         public float windowProgr = 0;
 
         public bool firstDraw = true;
 
+        public static GUIStyle toggleActive, toggleInactive;
+
         protected override void WindowGUI(int windowID)
         {
+            if (toggleActive == null)
+            {
+                toggleInactive = new GUIStyle(GUI.skin.toggle);
+                toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
+
+                toggleActive = new GUIStyle(toggleInactive);
+                toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
+            }
+
             GUILayout.BeginVertical();
 
             foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
-                    module.enabled = GUILayout.Toggle(module.enabled, module.GetName());
+                    bool active = core.attitude.users.RecursiveUser(module) || core.thrust.users.RecursiveUser(module) || core.rover.users.RecursiveUser(module) || core.node.users.RecursiveUser(module) || core.rcs.users.RecursiveUser(module);
+                    if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
+                    module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
                 }
             }
 
@@ -51,6 +64,7 @@ namespace MuMech
             {
                 Application.OpenURL("http://wiki.mechjeb.com/index.php?title=Manual");
             }
+
             GUILayout.EndVertical();
         }
 

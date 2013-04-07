@@ -23,17 +23,15 @@ namespace MuMech
             return desiredVelocity - actualVelocity;
         }
 
-        
         //Computes the deltaV of the burn needed to set a given PeR and ApR at at a given UT.
         public static Vector3d DeltaVToEllipticize(Orbit o, double UT, double newPeR, double newApR)
         {
-
             double radius = o.Radius(UT);
 
             //sanitize inputs
-            newPeR = MuUtils.Clamp(newPeR, 0+1, radius-1);
-            newApR = Math.Max(newApR, radius+1);
-            
+            newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
+            newApR = Math.Max(newApR, radius + 1);
+
             double GM = o.referenceBody.gravParameter;
             double E = -GM / (newPeR + newApR); //total energy per unit mass of new orbit
             double L = Math.Sqrt(Math.Abs((Math.Pow(E * (newApR - newPeR), 2) - GM * GM) / (2 * E))); //angular momentum per unit mass of new orbit
@@ -50,7 +48,6 @@ namespace MuMech
             return desiredVelocity - actualVelocity;
         }
 
-
         //Computes the delta-V of the burn required to attain a given periapsis, starting from
         //a given orbit and burning at a given UT. Throws an ArgumentException if given an impossible periapsis.
         //The computed burn is always horizontal, though this may not be strictly optimal.
@@ -59,7 +56,7 @@ namespace MuMech
             double radius = o.Radius(UT);
 
             //sanitize input
-            newPeR = MuUtils.Clamp(newPeR, 0+1, radius-1);
+            newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
 
             //are we raising or lowering the periapsis?
             bool raising = (newPeR > o.PeR);
@@ -117,7 +114,7 @@ namespace MuMech
             double radius = o.Radius(UT);
 
             //sanitize input
-            if(newApR > 0) newApR = Math.Max(newApR, radius + 1);
+            if (newApR > 0) newApR = Math.Max(newApR, radius + 1);
 
             //are we raising or lowering the periapsis?
             bool raising = ApoapsisIsHigher(newApR, o.ApR);
@@ -165,7 +162,6 @@ namespace MuMech
 
             return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
         }
-
 
         //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
         //Both inputs are in degrees.
@@ -240,7 +236,7 @@ namespace MuMech
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
 
-        //Computes the time and dV of a Hohmman transfer injection burn such that at apoapsis the transfer
+        //Computes the time and dV of a Hohmann transfer injection burn such that at apoapsis the transfer
         //orbit passes as close as possible to the target.
         //The output burnUT will be the first transfer window found after the given UT.
         //Assumes o and target are in approximately the same plane, and orbiting in the same direction.
@@ -402,10 +398,10 @@ namespace MuMech
             //rotate the exit direction by 90 + the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn. Then convert this to a true anomaly and compute the time closest
             //to planetUT at which we will pass through that true anomaly.
-            Vector3d ejectionPointDirection = Quaternion.AngleAxis(-(float)(90+turningAngle), o.SwappedOrbitNormal()) * inPlaneSoiExitDirection;
+            Vector3d ejectionPointDirection = Quaternion.AngleAxis(-(float)(90 + turningAngle), o.SwappedOrbitNormal()) * inPlaneSoiExitDirection;
             double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
             burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
-            
+
             if (idealBurnUT - burnUT > o.period / 2)
             {
                 burnUT += o.period;
@@ -430,4 +426,3 @@ namespace MuMech
     }
 
 }
-    

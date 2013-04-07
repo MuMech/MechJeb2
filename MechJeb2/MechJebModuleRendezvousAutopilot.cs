@@ -19,14 +19,14 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            core.node.enabled = false; //make sure we turn off node executor if we get disabled suddenly
+            core.node.Abort(); //make sure we turn off node executor if we get disabled suddenly
         }
 
         public override void Drive(FlightCtrlState s)
         {
             if (!core.target.NormalTargetExists)
             {
-                this.enabled = false;
+                users.Clear();
                 return;
             }
 
@@ -34,12 +34,12 @@ namespace MuMech
 
             if (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
-                if (!core.node.enabled) core.node.ExecuteAllNodes();
+                if (!core.node.enabled) core.node.ExecuteAllNodes(this);
             }
             else if (core.target.Distance < 100 && core.target.RelativeVelocity.magnitude < 1)
             {
                 //finished
-                this.enabled = false;
+                users.Clear();
                 core.thrust.targetThrottle = 0;
                 status = "Successful rendezvous";
             }
@@ -191,6 +191,5 @@ namespace MuMech
                 status = "Matching planes.";
             }
         }
-
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebAR202 : PartModule
+    public class MechJebAR202 : PartModule
     {
         MechJebCore core = null;
 
@@ -89,12 +89,15 @@ namespace MuMech
             else
             {
                 bool somethingEnabled = false;
-                foreach (DisplayModule display in core.GetComputerModules<DisplayModule>())
+                if (vessel.GetMasterMechJeb() == core)
                 {
-                    if (display is MechJebModuleMenu) continue;
-                    if (display.enabled && display.showInCurrentScene)
+                    foreach (DisplayModule display in core.GetComputerModules<DisplayModule>())
                     {
-                        somethingEnabled = true;
+                        if (display is MechJebModuleMenu) continue;
+                        if (display.enabled && display.showInCurrentScene)
+                        {
+                            somethingEnabled = true;
+                        }
                     }
                 }
 
@@ -120,7 +123,6 @@ namespace MuMech
             }
 
         }
-
 
         void TurnOnLight(LightColor which)
         {

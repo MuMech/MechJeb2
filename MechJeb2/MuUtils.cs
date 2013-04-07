@@ -123,7 +123,6 @@ namespace MuMech
             return (TimeWarp.WarpMode == TimeWarp.Modes.LOW) || (TimeWarp.CurrentRateIndex == 0);
         }
 
-
         //Some black magic to access the system clipboard from within Unity, found somewhere on the Web.
         //Unfortunately it doesn't seem we have access to the System.Windows.Forms.Clipboard class, which would 
         //make this easier.

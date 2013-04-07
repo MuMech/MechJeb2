@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //LandingPredctions should be enabled/disabled through .users, not .enabled.
     public class MechJebModuleLandingPredictions : ComputerModule
     {
         //publicly available output:
@@ -132,7 +131,7 @@ namespace MuMech
                         return patch;
                     }
                 }
-                
+
                 patch = nextPatch;
             }
             while (patch != null);
@@ -221,7 +220,5 @@ namespace MuMech
         }
 
         public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
-
-
     }
 }

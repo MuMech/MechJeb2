@@ -54,7 +54,7 @@ namespace MuMech
             }
             else
             {
-                if(!vessel.patchedConicSolver.maneuverNodes.Contains(node)) node = vessel.patchedConicSolver.maneuverNodes[0];
+                if (!vessel.patchedConicSolver.maneuverNodes.Contains(node)) node = vessel.patchedConicSolver.maneuverNodes[0];
 
                 int nodeIndex = vessel.patchedConicSolver.maneuverNodes.IndexOf(node);
                 int numNodes = vessel.patchedConicSolver.maneuverNodes.Count;

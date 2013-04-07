@@ -6,9 +6,16 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleRoverWindow : DisplayModule
+    public class MechJebModuleRoverWindow : DisplayModule
     {
+        public MechJebModuleRoverController autopilot;
+
         public MechJebModuleRoverWindow(MechJebCore core) : base(core) { }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            autopilot = core.GetComputerModule<MechJebModuleRoverController>();
+        }
 
         public override string GetName()
         {
@@ -32,6 +39,21 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
 
             base.WindowGUI(windowID);
+        }
+
+        public override void OnUpdate()
+        {
+            if (autopilot != null)
+            {
+                if (autopilot.ControlHeading || autopilot.ControlSpeed)
+                {
+                    autopilot.users.Add(this);
+                }
+                else
+                {
+                    autopilot.users.Remove(this);
+                }
+            }
         }
     }
 }

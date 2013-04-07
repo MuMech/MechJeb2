@@ -43,7 +43,7 @@ namespace MuMech
             target = t;
             if (vessel != null && vessel.isActiveVessel)
             {
-                if(FlightGlobals.fetch != null) FlightGlobals.fetch.SetVesselTarget(target);
+                if (FlightGlobals.fetch != null) FlightGlobals.fetch.SetVesselTarget(target);
             }
         }
 
@@ -59,9 +59,9 @@ namespace MuMech
         [ValueInfoItem("Target coordinates", InfoItem.Category.Target)]
         public string GetPositionTargetString()
         {
-            if(target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
+            if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
 
-            if(NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position), true);
+            if (NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position), true);
 
             return "N/A";
         }
@@ -90,7 +90,6 @@ namespace MuMech
             pickingPositionTarget = false;
         }
 
-
         public void Unset()
         {
             Set(null);
@@ -100,7 +99,6 @@ namespace MuMech
         {
             targetDirection = direction;
         }
-
 
         public bool NormalTargetExists
         {
@@ -160,7 +158,6 @@ namespace MuMech
             get { return target.GetName(); }
         }
 
-
         ////////////////////////
         // Internal functions //
         ////////////////////////
@@ -169,7 +166,7 @@ namespace MuMech
         {
             RenderingManager.AddToPostDrawQueue(1, DoMapView);
 
-            this.enabled = true; //TargetController should always be running
+            users.Add(this); //TargetController should always be running
         }
 
         public override void OnFixedUpdate()
@@ -255,12 +252,7 @@ namespace MuMech
 
             GLUtils.DrawMapViewGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red);
         }
-
-
     }
-
-
-
 
     public class PositionTarget : ITargetable
     {
@@ -278,7 +270,6 @@ namespace MuMech
             double altitude = body.TerrainAltitude(latitude, longitude);
             Update(body, latitude, longitude, altitude);
         }
-
 
         public void Update(CelestialBody body, double latitude, double longitude, double altitude)
         {

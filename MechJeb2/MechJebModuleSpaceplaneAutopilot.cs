@@ -8,17 +8,17 @@ namespace MuMech
 {
     public class MechJebModuleSpaceplaneAutopilot : ComputerModule
     {
-        public void Autoland()
+        public void Autoland(object controller)
         {
-            this.enabled = true;
+            users.Add(controller);
             core.attitude.users.Add(this);
             mode = Mode.AUTOLAND;
             loweredGear = false;
         }
 
-        public void HoldHeadingAndAltitude()
+        public void HoldHeadingAndAltitude(object controller)
         {
-            this.enabled = true;
+            users.Add(controller);
             core.attitude.users.Add(this);
             mode = Mode.HOLD;
         }
@@ -26,6 +26,7 @@ namespace MuMech
         public void AutopilotOff()
         {
             mode = Mode.OFF;
+            users.Clear();
             core.attitude.users.Remove(this);
         }
 
@@ -57,7 +58,7 @@ namespace MuMech
             }
         };
 
-        public enum Mode { AUTOLAND, HOLD , OFF};
+        public enum Mode { AUTOLAND, HOLD, OFF };
         public Mode mode = Mode.OFF;
 
         //autoland parameters
@@ -68,9 +69,6 @@ namespace MuMech
         //heading and altitude hold parameters
         public EditableDouble targetAltitude = 1000;
         public EditableDouble targetHeading = 90;
-
-
-
 
         bool loweredGear = false;
 
@@ -146,7 +144,6 @@ namespace MuMech
             }
         }
 
-
         public double stableAoA = 0; //we average AoA over time to get an estimate of what pitch will produce what FPA
         public double pitchCorrection = 0; //we average (commanded pitch - actual pitch) over time in order to fix this offset in our commands
         public float maxYaw = 10.0F;
@@ -154,6 +151,7 @@ namespace MuMech
         public float maxPitchCorrection = 5.0F;
         public double AoAtimeConstant = 2.0;
         public double pitchCorrectionTimeConstant = 15.0;
+
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             //horizontal control

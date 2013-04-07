@@ -46,10 +46,10 @@ namespace MuMech
         //normalized vector along the orbital velocity
         public static Vector3d Prograde(this Orbit o, double UT)
         {
-            return o.SwappedOrbitalVelocityAtUT(UT).normalized;            
+            return o.SwappedOrbitalVelocityAtUT(UT).normalized;
         }
 
-        //noramlized vector pointing radially outward from the planet
+        //normalized vector pointing radially outward from the planet
         public static Vector3d Up(this Orbit o, double UT)
         {
             return o.SwappedRelativePositionAtUT(UT).normalized;
@@ -100,7 +100,7 @@ namespace MuMech
         }
 
         //mean motion is rate of increase of the mean anomaly
-        public static double MeanMotion(this Orbit o) 
+        public static double MeanMotion(this Orbit o)
         {
             return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
         }
@@ -114,14 +114,15 @@ namespace MuMech
         //Time during a's next orbit at which object a comes nearest to object b. 
         //If a is hyperbolic, the examined interval is the next 100 units of mean anomaly.
         //This is quite a large segment of the hyperbolic arc. However, for extremely high
-        //hyperbolic eccentricies it may not find the actual closest approach.
+        //hyperbolic eccentricity it may not find the actual closest approach.
         public static double NextClosestApproachTime(this Orbit a, Orbit b, double UT)
         {
             double closestApproachTime = UT;
             double closestApproachDistance = Double.MaxValue;
             double minTime = UT;
             double interval = a.period;
-            if(a.eccentricity > 1) {
+            if (a.eccentricity > 1)
+            {
                 interval = 100 / a.MeanMotion(); //this should be an interval of time that covers a large chunk of the hyperbolic arc
             }
             double maxTime = UT + interval;
@@ -156,17 +157,17 @@ namespace MuMech
         //The mean anomaly of the orbit.
         //For elliptical orbits, the value return is always between 0 and 2pi
         //For hyperbolic orbits, the value can be any number.
-        public static double MeanAnomalyAtUT(this Orbit o, double UT) 
+        public static double MeanAnomalyAtUT(this Orbit o, double UT)
         {
             double ret = o.meanAnomalyAtEpoch + o.MeanMotion() * (UT - o.epoch);
-            if(o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
+            if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
             return ret;
         }
 
         //The next time at which the orbiting object will reach the given mean anomaly.
         //For elliptical orbits, this will be a time between UT and UT + o.period
         //For hyperbolic orbits, this can be any time, including a time in the past, if
-        //the given mean anomaly occured in the past
+        //the given mean anomaly occurred in the past
         public static double UTAtMeanAnomaly(this Orbit o, double meanAnomaly, double UT)
         {
             double currentMeanAnomaly = o.MeanAnomalyAtUT(UT);
@@ -187,7 +188,7 @@ namespace MuMech
             }
             else
             {
-                return UT  - o.MeanAnomalyAtUT(UT) / o.MeanMotion();
+                return UT - o.MeanAnomalyAtUT(UT) / o.MeanMotion();
             }
         }
 
@@ -284,7 +285,7 @@ namespace MuMech
         //The vector is projected into the orbital plane and then the true anomaly is
         //computed as the angle this vector makes with the vector pointing to the periapsis.
         //The returned value is always between 0 and 360.
-        public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec) 
+        public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec)
         {
             Vector3d projected = Vector3d.Exclude(o.SwappedOrbitNormal(), vec);
             Vector3d vectorToPe = SwapYZ(o.eccVec);
@@ -310,13 +311,13 @@ namespace MuMech
         //For elliptical orbits this returns a value between 0 and 2pi
         //For hyperbolic orbits the returned value can be any number.
         //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
-        //past the true anomaly of the asympote) then an ArgumentException is thrown
+        //past the true anomaly of the asymptote) then an ArgumentException is thrown
         public static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             double e = o.eccentricity;
             trueAnomaly = MuUtils.ClampDegrees360(trueAnomaly);
             trueAnomaly = trueAnomaly * (Math.PI / 180);
-            
+
             if (e < 1) //elliptical orbits
             {
                 double cosE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
@@ -332,7 +333,7 @@ namespace MuMech
 
                 double E = MuUtils.Acosh(coshE);
                 if (trueAnomaly > Math.PI) E *= -1;
-                
+
                 return E;
             }
         }
@@ -358,7 +359,7 @@ namespace MuMech
         //For elliptical orbits, the output is between 0 and 2pi
         //For hyperbolic orbits, the output can be any number
         //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
-        //past the true anomaly of the asympote) then an ArgumentException is thrown
+        //past the true anomaly of the asymptote) then an ArgumentException is thrown
         public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));

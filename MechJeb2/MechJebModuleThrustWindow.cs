@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-
 namespace MuMech
 {
     public class MechJebModuleThrustWindow : DisplayModule
@@ -24,11 +23,14 @@ namespace MuMech
             core.thrust.limitToPreventFlameout = GUILayout.Toggle(core.thrust.limitToPreventFlameout, "Prevent jet flameout");
             core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-            try {
-                GUILayout.Label ("Jet safety margin");
+            try
+            {
+                GUILayout.Label("Jet safety margin");
                 core.thrust.flameoutSafetyPct.text = GUILayout.TextField(core.thrust.flameoutSafetyPct.text, 5);
                 GUILayout.Label("%");
-            } finally {
+            }
+            finally
+            {
                 GUILayout.EndHorizontal();
             }
 

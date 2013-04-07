@@ -12,7 +12,6 @@ namespace MuMech
             : base(core)
         {
             priority = 1000;
-            enabled = true;
         }
 
         //adjustable parameters:
@@ -24,6 +23,12 @@ namespace MuMech
         public EditableDouble autostagePostDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
         public EditableInt autostageLimit = 0;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            users.Add(this);
+            base.OnStart(state);
+        }
 
         [GeneralInfoItem("Autostaging", InfoItem.Category.Misc)]
         public void AutostageInfoItem()

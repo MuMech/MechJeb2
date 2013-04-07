@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //RCSController should be enabled/disabled through .users, not .enabled.
     public class MechJebModuleRCSController : ComputerModule
     {
         public Vector3d targetVelocity = Vector3d.zero;
@@ -15,7 +14,8 @@ namespace MuMech
 
         public double Kp = 0.5, Ki = 0, Kd = 0;
 
-        public MechJebModuleRCSController(MechJebCore core) : base(core)
+        public MechJebModuleRCSController(MechJebCore core)
+            : base(core)
         {
             priority = 600;
             pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);

@@ -9,7 +9,7 @@ namespace MuMech
 {
     public interface IEditable
     {
-        string text { get; set;  }
+        string text { get; set; }
     }
 
     //An EditableDouble stores a double value and a text string. The user can edit the string. 
@@ -41,7 +41,7 @@ namespace MuMech
         }
 
         public EditableDoubleMult() : this(0) { }
-        
+
         public EditableDoubleMult(double val, double multiplier = 1)
         {
             this.val = val;
@@ -57,7 +57,8 @@ namespace MuMech
 
     public class EditableDouble : EditableDoubleMult
     {
-        public EditableDouble(double val) : base(val)
+        public EditableDouble(double val)
+            : base(val)
         {
         }
 
@@ -71,7 +72,8 @@ namespace MuMech
     {
         public EditableTime() : this(0) { }
 
-        public EditableTime(double seconds) : base(seconds)                 
+        public EditableTime(double seconds)
+            : base(seconds)
         {
             _text = GuiUtils.TimeToDHMS(seconds);
         }
@@ -128,7 +130,7 @@ namespace MuMech
 
         public static implicit operator double(EditableAngle x)
         {
-            return (x.negative ? -1 : 1) * (x.degrees + x.minutes/60.0 + x.seconds/3600.0);
+            return (x.negative ? -1 : 1) * (x.degrees + x.minutes / 60.0 + x.seconds / 3600.0);
         }
 
         public static implicit operator EditableAngle(double x)
@@ -138,7 +140,7 @@ namespace MuMech
 
         public enum Direction { NS, EW }
 
-        public void DrawEditGUI(Direction direction) 
+        public void DrawEditGUI(Direction direction)
         {
             GUILayout.BeginHorizontal();
             degrees.text = GUILayout.TextField(degrees.text, GUILayout.Width(35));
@@ -222,7 +224,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public static int ArrowSelector(int index, int numIndices, Action centerGuiAction) 
+        public static int ArrowSelector(int index, int numIndices, Action centerGuiAction)
         {
             if (numIndices == 0) return index;
 
@@ -243,36 +245,38 @@ namespace MuMech
 
         public static string TimeToDHMS(double seconds)
         {
-        	if(double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
+            if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
-        	string ret = "";
+            string ret = "";
 
-        	try {
-        		string[] units = { "y", "d", "h", "m", "s" };
-        		long[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
+            try
+            {
+                string[] units = { "y", "d", "h", "m", "s" };
+                long[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
 
-        		if(seconds < 0)
-        		{
-        			ret += "-";
-        			seconds *= -1;
-        		}
+                if (seconds < 0)
+                {
+                    ret += "-";
+                    seconds *= -1;
+                }
 
-        		for (int i = 0; i < units.Length; i++)
-        		{
-        			long n = (long)(seconds / intervals[i]);
-        			bool first = ret.Length < 2;
-        			if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
-        			{
-        				ret += (first ? "" : " ") + (first ? n.ToString() : n.ToString("00")) + units[i];
-        			}
-        			seconds -= n * intervals[i];
-        		}
+                for (int i = 0; i < units.Length; i++)
+                {
+                    long n = (long)(seconds / intervals[i]);
+                    bool first = ret.Length < 2;
+                    if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
+                    {
+                        ret += (first ? "" : " ") + (first ? n.ToString() : n.ToString("00")) + units[i];
+                    }
+                    seconds -= n * intervals[i];
+                }
 
-        	}
-        	catch (Exception) {
-        		return "NaN";
-        	}
-        	return ret;
+            }
+            catch (Exception)
+            {
+                return "NaN";
+            }
+            return ret;
         }
 
         public static bool TryParseDHMS(string s, out double seconds)
@@ -294,7 +298,7 @@ namespace MuMech
                     double value;
                     if (!double.TryParse(s.Substring(0, unitPos), out value)) return false;
                     seconds += value * intervals[i];
-                    s = s.Substring(unitPos+1);
+                    s = s.Substring(unitPos + 1);
                     parsedSomething = true;
                 }
             }
@@ -304,10 +308,9 @@ namespace MuMech
             return parsedSomething;
         }
 
-
         public static bool MouseIsOverWindow(MechJebCore core)
         {
-            //try to check if the mouse is over any active displaymodule
+            //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
                 if (m.enabled && m.showInCurrentScene
@@ -383,5 +386,4 @@ namespace MuMech
             return String.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
         }
     }
-
 }

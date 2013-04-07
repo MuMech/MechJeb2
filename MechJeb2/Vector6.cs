@@ -74,7 +74,7 @@ namespace MuMech
             }
         }
 
-        public Vector6() {}
+        public Vector6() { }
         public Vector6(Vector3d positive, Vector3d negative)
         {
             this.positive = positive;

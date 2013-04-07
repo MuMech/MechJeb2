@@ -13,14 +13,21 @@ namespace MuMech
     {
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 
-        const string TARGET_NAME = "Ascent Path Guidance";
+        protected const string TARGET_NAME = "Ascent Path Guidance";
 
         public IAscentPath ascentPath = null;
 
-        EditableDouble desiredInclination = 0;
+        public EditableDouble desiredInclination = 0;
 
-        bool launchingToPlane = false;
-        bool launchingToRendezvous = false;
+        public bool launchingToPlane = false;
+        public bool launchingToRendezvous = false;
+
+        MechJebModuleAscentAutopilot autopilot;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
+        }
 
         public override void OnModuleEnabled()
         {
@@ -28,11 +35,12 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            autopilot.users.Remove(this);
             if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
             launchingToPlane = false;
             launchingToRendezvous = false;
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
-            if(editor != null) editor.enabled = false;
+            if (editor != null) editor.enabled = false;
         }
 
         public override void OnFixedUpdate()
@@ -65,20 +73,17 @@ namespace MuMech
                 core.target.SetDirectionTarget(TARGET_NAME);
             }
 
-            MechJebModuleAscentAutopilot autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
-
             if (autopilot != null)
             {
-                //autopilot.enabled = GUILayout.Toggle(autopilot.enabled, (autopilot.enabled ? "Disengage autopilot" : "Engage autopilot"), GUI.skin.button);
                 if (autopilot.enabled)
                 {
-                    if (GUILayout.Button("Disengage autopilot")) autopilot.enabled = false;
+                    if (GUILayout.Button("Disengage autopilot")) autopilot.users.Remove(this);
                 }
                 else
                 {
                     if (GUILayout.Button("Engage autopilot"))
                     {
-                        autopilot.enabled = true;
+                        autopilot.users.Add(this);
                     }
                 }
 
@@ -98,13 +103,13 @@ namespace MuMech
             GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
-            
+
             core.staging.AutostageInfoItem();
 
             if (autopilot != null && !vessel.LiftedOff())
             {
                 if (core.target.NormalTargetExists && vessel.Landed)
-                {                    
+                {
                     if (!launchingToPlane && !launchingToRendezvous)
                     {
                         GUILayout.BeginHorizontal();
@@ -162,7 +167,7 @@ namespace MuMech
             }
 
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
-            if(editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
+            if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
 
@@ -171,7 +176,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[]{ GUILayout.Width(240), GUILayout.Height(30) };
+            return new GUILayoutOption[] { GUILayout.Width(240), GUILayout.Height(30) };
         }
 
         public override string GetName()

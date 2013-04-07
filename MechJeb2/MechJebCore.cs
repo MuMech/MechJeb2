@@ -23,6 +23,7 @@ namespace MuMech
         public MechJebModuleTargetController target;
         public MechJebModuleWarpController warp;
         public MechJebModuleRCSController rcs;
+        public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
 
         public VesselState vesselState = new VesselState();
@@ -244,7 +245,7 @@ namespace MuMech
                 MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
                 if (windowEditor != null) windowEditor.CreateWindowFromSharingString(MuUtils.SystemClipboard);
             }
-            
+
             if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
 
             foreach (ComputerModule module in computerModules)
@@ -289,6 +290,7 @@ namespace MuMech
             target = GetComputerModule<MechJebModuleTargetController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
             rcs = GetComputerModule<MechJebModuleRCSController>();
+            rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
         }
 
@@ -412,7 +414,7 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_"+vessel.vesselName+".cfg"));
+                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vessel.vesselName + ".cfg"));
                 if (lastFocus == vessel)
                 {
                     global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
