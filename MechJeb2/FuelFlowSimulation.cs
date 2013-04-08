@@ -6,10 +6,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-
-
-
-
     public class FuelFlowSimulation
     {
         public int simStage; //the simulated rocket's current stage
@@ -37,12 +33,13 @@ namespace MuMech
         {
             Stats[] stages = new Stats[simStage + 1];
 
-            //Debug.Log("SimulateAllStages");
+           //Debug.Log("SimulateAllStages");
 
             while (simStage >= 0)
             {
                 //Debug.Log("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
                 stages[simStage] = SimulateStage(throttle, atmospheres);
+                //Debug.Log("Staging at t = " + t);
                 SimulateStageActivation();
             }
 
@@ -60,6 +57,8 @@ namespace MuMech
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.deltaTime = 0;
             stats.deltaV = 0;
+
+            foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres); //need to set initial consumption rates for allowedToStage to work right
 
             const int maxSteps = 100;
             int step;
@@ -140,7 +139,7 @@ namespace MuMech
         {
             List<FuelNode> activeEngines = FindActiveEngines();
 
-            //Debug.Log("Checking whether allowed to stage:");
+            //Debug.Log("Checking whether allowed to stage at t = " + t);
             //Debug.Log("  activeEngines.Count = " + activeEngines.Count);
 
             //if no engines are active, we can always stage
@@ -194,9 +193,6 @@ namespace MuMech
             return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
 
-
-
-
         //A Stats struct describes the result of the simulation over a certain interval of time (e.g., one stage)
         public struct Stats
         {
@@ -239,7 +235,6 @@ namespace MuMech
         }
     }
 
-
     //A FuelNode is a compact summary of a Part, containing only the information needed to run the fuel flow simulation. 
     public class FuelNode
     {
@@ -277,7 +272,7 @@ namespace MuMech
             {
                 //Landing gear set physicalSignificance = NONE when they enter the flight scene
                 //Launch clamp mass should be ignored.
-                physicallySignificant = false; 
+                physicallySignificant = false;
             }
             if (physicallySignificant) dryMass = part.mass;
 
@@ -398,7 +393,6 @@ namespace MuMech
             }
         }
 
-
         public void ResetDrainRates()
         {
             resourceDrains.Clear();
@@ -491,7 +485,6 @@ namespace MuMech
             }
         }
 
-
         void AssignFuelDrainRateAllVessel(int type, float amount, List<FuelNode> vessel)
         {
             //I don't know how this flow scheme actually works but I'm going to assume
@@ -506,8 +499,6 @@ namespace MuMech
             }
             if (source != null) source.resourceDrains[type] += amount;
         }
-
-
 
         //We need to drain <totalDrainRate> of resource <type> per second from somewhere.
         //We're not allowed to drain it through any of the nodes in <visited>.
@@ -568,8 +559,6 @@ namespace MuMech
             }
         }
 
-
-
         //determine if this FuelNode can supply fuel itself, or can supply fuel by drawing
         //from other sources, without drawing through any node in <visited>
         bool CanSupplyResourceRecursive(int type, List<FuelNode> visited)
@@ -596,5 +585,4 @@ namespace MuMech
             return false;
         }
     }
-
 }

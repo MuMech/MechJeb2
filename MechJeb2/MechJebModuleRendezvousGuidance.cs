@@ -24,14 +24,12 @@ namespace MuMech
                 return;
             }
 
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) 
+            if (core.target.Orbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
                 base.WindowGUI(windowID);
                 return;
             }
-
-
 
             GUILayout.BeginVertical();
 
@@ -134,7 +132,6 @@ namespace MuMech
                     break;
 
                 case Step.GetCloser:
-
                     GUILayout.Label("If you aren't close enough after matching velocities, thrust gently toward the target:");
 
                     if (GUILayout.Button("Get closer"))
@@ -155,7 +152,18 @@ namespace MuMech
             MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
             if (autopilot != null)
             {
-                autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
+                bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enable");
+                if (autopilot.enabled != active)
+                {
+                    if (active)
+                    {
+                        autopilot.users.Add(this);
+                    }
+                    else
+                    {
+                        autopilot.users.Remove(this);
+                    }
+                }
                 if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
             }
 

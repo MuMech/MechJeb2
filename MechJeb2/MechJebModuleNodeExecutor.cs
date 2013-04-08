@@ -14,31 +14,40 @@ namespace MuMech
         public double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
         public double precision = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
-        public void ExecuteOneNode()
+        public void ExecuteOneNode(object controller)
         {
             mode = Mode.ONE_NODE;
-            enabled = true;
+            users.Add(controller);
             burnTriggered = false;
             alignedForBurn = false;
         }
 
-        public void ExecuteAllNodes()
+        public void ExecuteAllNodes(object controller)
         {
             mode = Mode.ALL_NODES;
-            enabled = true;
+            users.Add(controller);
             burnTriggered = false;
             alignedForBurn = false;
+        }
+
+        public void Abort()
+        {
+            core.warp.MinimumWarp();
+            users.Clear();
         }
 
         public override void OnModuleEnabled()
         {
             core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
+            core.thrust.users.Remove(this);
             core.thrust.targetThrottle = 0;
+            vessel.ctrlState.mainThrottle = 0;
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
@@ -51,7 +60,7 @@ namespace MuMech
         {
             if (!vessel.patchedConicSolver.maneuverNodes.Any())
             {
-                this.enabled = false;
+                Abort();
                 return;
             }
 
@@ -67,16 +76,14 @@ namespace MuMech
 
                 if (mode == Mode.ONE_NODE)
                 {
-                    this.enabled = false;
-                    vessel.ctrlState.mainThrottle = 0;
+                    Abort();
                     return;
                 }
                 else if (mode == Mode.ALL_NODES)
                 {
                     if (!vessel.patchedConicSolver.maneuverNodes.Any())
                     {
-                        this.enabled = false;
-                        vessel.ctrlState.mainThrottle = 0;
+                        Abort();
                         return;
                     }
                     else
@@ -102,10 +109,9 @@ namespace MuMech
             //autowarp, but only if we're already aligned with the node
             if (autowarp && !burnTriggered)
             {
-                if (core.attitude.attitudeAngleFromTarget() < 1 || 
-                    (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                if (core.attitude.attitudeAngleFromTarget() < 1 || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
-                    core.warp.WarpToUT(node.UT - burnTime*leadFraction - leadTime);
+                    core.warp.WarpToUT(node.UT - burnTime * leadFraction - leadTime);
                 }
                 else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10)
                 {
@@ -113,10 +119,9 @@ namespace MuMech
                 }
             }
 
-
             core.thrust.targetThrottle = 0;
 
-            if (burnTriggered)            
+            if (burnTriggered)
             {
                 if (alignedForBurn)
                 {
@@ -143,10 +148,6 @@ namespace MuMech
             }
         }
 
-
         public MechJebModuleNodeExecutor(MechJebCore core) : base(core) { }
-
-
-
     }
 }

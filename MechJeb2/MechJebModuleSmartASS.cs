@@ -96,7 +96,7 @@ namespace MuMech
                 btAuto.onActive = btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
             }
 
-            if (core.attitude.enabled && !core.attitude.users.AmIUser(this))
+            if (core.attitude.enabled && !core.attitude.users.Contains(this))
             {
                 GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }
@@ -180,7 +180,7 @@ namespace MuMech
 
                 GUILayout.EndVertical();
             }
-            
+
             base.WindowGUI(windowID);
         }
 

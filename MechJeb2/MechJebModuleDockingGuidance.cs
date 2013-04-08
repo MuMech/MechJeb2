@@ -11,7 +11,11 @@ namespace MuMech
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
         MechJebModuleDockingAutopilot autopilot;
-            
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();
+        }
 
         protected override void WindowGUI(int windowID)
         {
@@ -24,8 +28,6 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if(autopilot == null) autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();
-
             if (!(core.target.Target is ModuleDockingNode))
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
@@ -33,7 +35,7 @@ namespace MuMech
             }
 
             bool onAxisNodeExists = false;
-            foreach(ModuleDockingNode node in vessel.GetModules<ModuleDockingNode>()) 
+            foreach (ModuleDockingNode node in vessel.GetModules<ModuleDockingNode>())
             {
                 if (Vector3d.Angle(node.GetTransform().forward, vessel.ReferenceTransform.up) < 2)
                 {
@@ -44,13 +46,23 @@ namespace MuMech
 
             if (!onAxisNodeExists)
             {
-
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;
                 GUILayout.Label("Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select \"Control from here.\"", s);
             }
 
-            autopilot.enabled = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
+            bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
+            if (autopilot.enabled != active)
+            {
+                if (active)
+                {
+                    autopilot.users.Add(this);
+                }
+                else
+                {
+                    autopilot.users.Remove(this);
+                }
+            }
 
             if (autopilot.enabled)
             {
@@ -76,7 +88,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            if(autopilot != null) autopilot.enabled = false;
+            if (autopilot != null) autopilot.users.Remove(this);
         }
 
         public override string GetName()

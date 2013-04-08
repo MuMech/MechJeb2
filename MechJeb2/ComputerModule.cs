@@ -81,7 +81,7 @@ namespace MuMech
         public virtual void Drive(FlightCtrlState s)
         {
         }
-        
+
         public virtual void OnStart(PartModule.StartState state)
         {
         }
@@ -154,38 +154,50 @@ namespace MuMech
 
     //Lets multiple users enable and disable a computer module, such that the 
     //module only gets disabled when all of its users have disabled it.
-    public class UserPool
+    public class UserPool : List<object>
     {
         ComputerModule controlledModule;
-        List<object> users = new List<object>();
 
         public UserPool(ComputerModule controlledModule)
+            : base()
         {
             this.controlledModule = controlledModule;
         }
 
-        public void Add(object user)
+        public new void Add(object user)
         {
-            if (!users.Contains(user))
+            if (!base.Contains(user))
             {
-                users.Add(user);
+                base.Add(user);
             }
             controlledModule.enabled = true;
         }
 
-        public void Remove(object user)
+        public new void Remove(object user)
         {
-            if (users.Contains(user))
+            if (base.Contains(user))
             {
-                users.Remove(user);
+                base.Remove(user);
             }
-            if (users.Count == 0) controlledModule.enabled = false;
+            if (base.Count == 0) controlledModule.enabled = false;
         }
 
-        public bool AmIUser(object user)
+        public new void Clear()
         {
-            return users.Contains(user);
+            base.Clear();
+            controlledModule.enabled = false;
+        }
+
+        public bool RecursiveUser(object user)
+        {
+            if (base.Contains(user))
+            {
+                return true;
+            }
+            else
+            {
+                return this.OfType<ComputerModule>().ToList().Exists(c => (c != controlledModule) && c.users.RecursiveUser(user));
+            }
         }
     }
-
 }

@@ -6,12 +6,12 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleLandingAutopilot : ComputerModule
+    public class MechJebModuleLandingAutopilot : ComputerModule
     {
         //public interface:
-        public void LandAtPositionTarget()
+        public void LandAtPositionTarget(object controller)
         {
-            this.enabled = true;
+            users.Add(controller);
 
             predictor.users.Add(this);
             vessel.RemoveAllManeuverNodes(); //for the benefit of the landing predictions module
@@ -26,9 +26,9 @@ namespace MuMech
             else landStep = LandStep.DEORBIT_BURN;
         }
 
-        public void LandUntargeted()
+        public void LandUntargeted(object controller)
         {
-            this.enabled = true;
+            users.Add(controller);
 
             deployedGears = false;
 
@@ -37,7 +37,7 @@ namespace MuMech
 
         public void StopLanding()
         {
-            this.enabled = false;
+            this.users.Clear();
         }
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
@@ -377,7 +377,6 @@ namespace MuMech
             }
         }
 
-
         void FixedUpdateDeorbitBurn()
         {
             //if we don't want to deorbit but we're already on a reentry trajectory, we can't wait until the ideal point 
@@ -504,7 +503,7 @@ namespace MuMech
                 //Construct the linear combination of the prograde and radial+ perturbations 
                 //that produces the largest effect on the landing position. The Math.Sign is to
                 //detect and handle the case where radial+ burns actually bring the landing sign closer
-                //(e.g. when we are travelling close to straight up)
+                //(e.g. when we are traveling close to straight up)
                 downrangeDirection = (deltas[0].magnitude * perturbationDirections[0]
                     + Math.Sign(Vector3d.Dot(deltas[0], deltas[1])) * deltas[1].magnitude * perturbationDirections[1]).normalized;
 
@@ -782,7 +781,7 @@ namespace MuMech
             //new-style landing legs are activated by an event:
             vessel.rootPart.SendEvent("LowerLeg");
 
-            //old-style landings legs are actived on part activation:
+            //old-style landings legs are activated on part activation:
             foreach (Part p in vessel.parts)
             {
                 if (p is LandingLeg)

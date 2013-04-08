@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleLandingGuidance : DisplayModule
+    public class MechJebModuleLandingGuidance : DisplayModule
     {
-        MechJebModuleLandingPredictions predictor;
-        MechJebModuleLandingAutopilot autopilot;
+        public MechJebModuleLandingPredictions predictor;
+        public MechJebModuleLandingAutopilot autopilot;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -41,7 +41,18 @@ namespace MuMech
                 }
             }
 
-            predictor.enabled = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
+            bool active = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
+            if (predictor.enabled != active)
+            {
+                if (active)
+                {
+                    predictor.users.Add(this);
+                }
+                else
+                {
+                    predictor.users.Remove(this);
+                }
+            }
 
             if (predictor.enabled)
             {
@@ -60,8 +71,8 @@ namespace MuMech
                 else
                 {
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget();
-                    if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted();
+                    if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget(this);
+                    if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted(this);
                     GUILayout.EndHorizontal();
                 }
 

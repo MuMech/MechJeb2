@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace MuMech
 {
-    class MechJebModuleTranslatron : DisplayModule
+    public class MechJebModuleTranslatron : DisplayModule
     {
         protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
 
@@ -50,7 +50,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if (core.GetComputerModule<MechJebModuleLandingAutopilot>().enabled)
+            if ((core.thrust.users.Count > 1) && !core.thrust.users.Contains(this))
             {
                 if (!autoMode)
                 {
@@ -193,7 +193,7 @@ namespace MuMech
                         break;
                     case AbortStage.LAND:
                         core.thrust.users.Remove(this);
-                        core.GetComputerModule<MechJebModuleLandingAutopilot>().LandUntargeted();
+                        core.GetComputerModule<MechJebModuleLandingAutopilot>().LandUntargeted(this);
                         abort = AbortStage.OFF;
                         break;
                 }

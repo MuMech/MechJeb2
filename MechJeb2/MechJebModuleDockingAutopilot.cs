@@ -16,7 +16,8 @@ namespace MuMech
 
         public PIDController lateralPID;
 
-        public MechJebModuleDockingAutopilot(MechJebCore core) : base(core)
+        public MechJebModuleDockingAutopilot(MechJebCore core)
+            : base(core)
         {
             lateralPID = new PIDController(Kp, Ki, Kd);
         }
@@ -38,7 +39,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists)
             {
-                enabled = false;
+                users.Clear();
                 return;
             }
 
@@ -95,7 +96,7 @@ namespace MuMech
                     }
                     else
                     {
-                        //we're not extremly close in z, so just stay at this z distance while we fix the lateral separation
+                        //we're not extremely close in z, so just stay at this z distance while we fix the lateral separation
                         zVelocityNeeded = 0;
                         status = "Holding still in Z and moving toward the docking axis at " + lateralVelocityNeeded.magnitude.ToString("F2") + " m/s.";
                     }
@@ -111,7 +112,7 @@ namespace MuMech
                     else
                     {
                         // close enough, turn it off and let the magnetic dock work
-                        enabled = false;
+                        users.Clear();
                     }
                 }
 

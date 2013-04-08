@@ -20,8 +20,11 @@ namespace MuMech
                   "change inclination", "match planes with target", "Hohmann transfer to target", 
                   "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target"};
 
-        enum TimeReference { COMPUTED, X_FROM_NOW, APOAPSIS, PERIAPSIS, ALTITUDE, EQ_ASCENDING, EQ_DESCENDING, 
-            REL_ASCENDING, REL_DESCENDING, CLOSEST_APPROACH };
+        enum TimeReference
+        {
+            COMPUTED, X_FROM_NOW, APOAPSIS, PERIAPSIS, ALTITUDE, EQ_ASCENDING, EQ_DESCENDING,
+            REL_ASCENDING, REL_DESCENDING, CLOSEST_APPROACH
+        };
         static int numTimeReferences = Enum.GetNames(typeof(TimeReference)).Length;
 
         Operation operation = Operation.CIRCULARIZE;
@@ -46,7 +49,6 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-
 
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
             bool anyNodeExists = (maneuverNodes.Count() > 0);
@@ -88,7 +90,7 @@ namespace MuMech
                 {
                     MakeNodeForOperation(o, UT);
                 }
-                else if(!createNode)
+                else if (!createNode)
                 {
                     //Add removed node back in, since we decided not to create a new one.
                     vessel.patchedConicSolver.AddManeuverNode(removedNode.UT).OnGizmoUpdated(removedNode.DeltaV, removedNode.UT);
@@ -113,14 +115,14 @@ namespace MuMech
                 {
                     if (GUILayout.Button("Execute next node"))
                     {
-                        core.node.ExecuteOneNode();
+                        core.node.ExecuteOneNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
                         if (GUILayout.Button("Execute all nodes"))
                         {
-                            core.node.ExecuteAllNodes();
+                            core.node.ExecuteAllNodes(this);
                         }
                     }
                 }
@@ -128,16 +130,12 @@ namespace MuMech
                 {
                     if (GUILayout.Button("ABORT"))
                     {
-                        core.node.enabled = false;
+                        core.node.Abort();
                     }
                 }
             }
 
-
-
             GUILayout.EndVertical();
-
-
 
             base.WindowGUI(windowID);
         }
@@ -208,8 +206,8 @@ namespace MuMech
         double DoChooseTimeGUI()
         {
             Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
-            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW};
-            references[Operation.PERIAPSIS] = new TimeReference[] {TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS};
+            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW };
+            references[Operation.PERIAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
             references[Operation.APOAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
             references[Operation.ELLIPTICIZE] = new TimeReference[] { TimeReference.X_FROM_NOW };
             references[Operation.INCLINATION] = new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW };
@@ -249,7 +247,6 @@ namespace MuMech
                 });
 
             timeReference = allowedReferences[referenceIndex];
-
 
             bool error = false;
             string timeErrorMessage = "";
@@ -364,12 +361,11 @@ namespace MuMech
             return UT;
         }
 
-
         bool CheckPreconditions(Orbit o, double UT)
         {
             errorMessage = "";
             bool error = false;
-            
+
             string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
 
             switch (operation)
@@ -514,9 +510,9 @@ namespace MuMech
                         if (o.referenceBody == core.target.Orbit.referenceBody) errorMessage = "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
                         else errorMessage = "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
                     }
-                    else if(o.referenceBody.orbit.RelativeInclination(core.target.Orbit) > 30) 
+                    else if (o.referenceBody.orbit.RelativeInclination(core.target.Orbit) > 30)
                     {
-                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.Orbit).ToString("F0") + "º angle to " + o.referenceBody.theName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly."; 
+                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.Orbit).ToString("F0") + "º angle to " + o.referenceBody.theName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly.";
                     }
                     else
                     {
@@ -563,7 +559,6 @@ namespace MuMech
 
             return !error;
         }
-
 
         void MakeNodeForOperation(Orbit o, double UT)
         {
@@ -619,7 +614,7 @@ namespace MuMech
                 case Operation.LAMBERT:
                     dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.Orbit, UT + interceptInterval);
                     break;
-                    
+
                 case Operation.KILL_RELVEL:
                     dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, UT, core.target.Orbit);
                     break;
@@ -627,7 +622,6 @@ namespace MuMech
 
             vessel.PlaceManeuverNode(o, dV, UT);
         }
-
 
         public override GUILayoutOption[] WindowOptions()
         {

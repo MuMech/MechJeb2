@@ -74,7 +74,6 @@ namespace MuMech
             trajectory = new List<AbsoluteVector>();
         }
 
-
         public Result RunSimulation()
         {
             Result result = new Result();
@@ -121,12 +120,12 @@ namespace MuMech
 
         void AdvanceToFreefallEnd(Orbit initialOrbit)
         {
-            
+
             t = FindFreefallEndTime(initialOrbit);
-            
+
             x = initialOrbit.SwappedRelativePositionAtUT(t);
             v = initialOrbit.SwappedOrbitalVelocityAtUT(t);
-            
+
             if (double.IsNaN(v.magnitude))
             {
                 //For eccentricities close to 1, the Orbit class functions are unreliable and
@@ -315,8 +314,7 @@ namespace MuMech
         }
     }
 
-
-    //An IDescentSpeedPolicy describes a strategy for doing the brakinb burn.
+    //An IDescentSpeedPolicy describes a strategy for doing the braking burn.
     //while landing. The function MaxAllowedSpeed is supposed to compute the maximum allowed speed
     //as a function of body-relative position and rotating frame, surface-relative velocity. 
     //This lets the ReentrySimulator simulate the descent of a vessel following this policy.
@@ -412,7 +410,7 @@ namespace MuMech
             return referenceBody.position + WorldVelocityAtCurrentTime(absolute);
         }
 
-        //Interprests a given AbsoluteVector as a velocity, and returns the corresponding Vector3d velocity
+        //Interprets a given AbsoluteVector as a velocity, and returns the corresponding Vector3d velocity
         //in world coordinates.
         public Vector3d WorldVelocityAtCurrentTime(AbsoluteVector absolute)
         {
@@ -421,5 +419,4 @@ namespace MuMech
             return absolute.radius * referenceBody.GetSurfaceNVector(absolute.latitude, unrotatedLongitude);
         }
     }
-
 }

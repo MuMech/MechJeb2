@@ -157,7 +157,7 @@ namespace MuMech
             radialPlus = Vector3d.Exclude(velocityVesselOrbit, up).normalized;
             normalPlusSurface = -Vector3d.Cross(radialPlusSurface, velocityVesselSurfaceUnit);
             normalPlus = -Vector3d.Cross(radialPlus, velocityVesselOrbitUnit);
-            
+
             gravityForce = FlightGlobals.getGeeForceAtPosition(CoM);
             localg = gravityForce.magnitude;
 
@@ -209,7 +209,7 @@ namespace MuMech
             orbitPeriod.value = vessel.orbit.period;
             orbitTimeToAp.value = vessel.orbit.timeToAp;
             if (vessel.orbit.eccentricity < 1) orbitTimeToPe.value = vessel.orbit.timeToPe;
-            else orbitTimeToPe.value = -vessel.orbit.meanAnomaly / (2 * Math.PI / vessel.orbit.period);            
+            else orbitTimeToPe.value = -vessel.orbit.meanAnomaly / (2 * Math.PI / vessel.orbit.period);
             orbitLAN.value = vessel.orbit.LAN;
             orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
             orbitInclination.value = vessel.orbit.inclination;
@@ -232,8 +232,6 @@ namespace MuMech
             mainBody = vessel.mainBody;
 
             radius = (CoM - vessel.mainBody.position).magnitude;
-
-
 
             mass = thrustAvailable = thrustMinimum = massDrag = torqueRAvailable = torquePYAvailable = torqueThrustPYAvailable = 0;
             rcsThrustAvailable = new Vector6();
@@ -624,9 +622,6 @@ namespace MuMech
                     idx++;
                 }
             }
-
         }
-
-
     }
 }

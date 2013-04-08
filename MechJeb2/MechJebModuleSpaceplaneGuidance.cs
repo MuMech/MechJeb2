@@ -32,7 +32,7 @@ namespace MuMech
 
             autopilot.showLandingTarget = GUILayout.Toggle(autopilot.showLandingTarget, "Show landing navball guidance");
 
-            if (GUILayout.Button("Autoland")) autopilot.Autoland();
+            if (GUILayout.Button("Autoland")) autopilot.Autoland(this);
             if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.AUTOLAND
                 && GUILayout.Button("Abort")) autopilot.AutopilotOff();
 
@@ -41,7 +41,7 @@ namespace MuMech
             GUILayout.Label("Hold", s);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Initiate hold:")) autopilot.HoldHeadingAndAltitude();
+            if (GUILayout.Button("Initiate hold:")) autopilot.HoldHeadingAndAltitude(this);
             GUILayout.Label("Heading:");
             autopilot.targetHeading.text = GUILayout.TextField(autopilot.targetHeading.text, GUILayout.Width(40));
             GUILayout.Label("º Altitude:");
@@ -57,11 +57,9 @@ namespace MuMech
             GUI.DragWindow();
         }
 
-
         public override void OnStart(PartModule.StartState state)
         {
             autopilot = core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
-            autopilot.enabled = true;
         }
 
         public MechJebModuleSpaceplaneGuidance(MechJebCore core) : base(core) { }
