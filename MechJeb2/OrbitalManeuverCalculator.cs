@@ -351,7 +351,7 @@ namespace MuMech
         //the target planet has a fairly low relative inclination with respect to the first planet. If the
         //inclination change is nonzero you should also do a mid-course correction burn, as computed by
         //DeltaVForCourseCorrection.
-        public static Vector3d DeltaVAndTimeForInterplanetaryTransferEjection(Orbit o, double UT, Orbit target, out double burnUT)
+        public static Vector3d DeltaVAndTimeForInterplanetaryTransferEjection(Orbit o, double UT, Orbit target, bool syncPhaseAngle, out double burnUT)
         {
             Orbit planetOrbit = o.referenceBody.orbit;
 
@@ -359,7 +359,24 @@ namespace MuMech
             //This gives us the "ideal" deltaV and UT of the ejection burn, if we didn't have to worry about waiting for the right
             //ejection angle and if we didn't have to worry about the planet's gravity dragging us back and increasing the required dV.
             double idealBurnUT;
-            Vector3d idealDeltaV = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT, out idealBurnUT);
+            Vector3d idealDeltaV;
+
+            if (syncPhaseAngle)
+            {
+                //time the ejection burn to intercept the target
+                idealDeltaV = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT, out idealBurnUT);
+            }
+            else
+            {
+                //don't time the ejection burn to intercept the target; we just care about the final peri/apoapsis
+                idealBurnUT = UT;
+                if (target.semiMajorAxis < planetOrbit.semiMajorAxis) idealDeltaV = DeltaVToChangePeriapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
+                else idealDeltaV = DeltaVToChangeApoapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
+
+                Debug.Log("UT = " + UT);
+                Debug.Log("idealBurnUT = " + idealBurnUT);
+                Debug.Log("idealDeltaV = " + idealDeltaV);
+            }
 
             //Compute the actual transfer orbit this ideal burn would lead to.
             Orbit transferOrbit = planetOrbit.PerturbedOrbit(idealBurnUT, idealDeltaV);
@@ -374,6 +391,8 @@ namespace MuMech
             //have the ejection orbit we should just move the ejection burn back by the time to exit the soi?
             Vector3d soiExitVelocity = idealDeltaV;
 
+            Debug.Log("planetOrbit.GetVel() = " + planetOrbit.GetVel());
+
             //project the desired exit direction into the current orbit plane to get the feasible exit direction
             Vector3d inPlaneSoiExitDirection = Vector3d.Exclude(o.SwappedOrbitNormal(), soiExitVelocity).normalized;
 
@@ -387,9 +406,8 @@ namespace MuMech
 
             //construct a sample ejection orbit
             Vector3d ejectionOrbitInitialVelocity = ejectionSpeed * (Vector3d)o.referenceBody.transform.right;
-            Orbit sampleEjectionOrbit = MuUtils.OrbitFromStateVectors(o.referenceBody.position + ejectionRadius * (Vector3d)o.referenceBody.transform.up, ejectionOrbitInitialVelocity, o.referenceBody, 0);
-            //double ejectionOrbitFinalTrueAnomaly = 180 / Math.PI * sampleEjectionOrbit.TrueAnomalyAtRadius(o.referenceBody.sphereOfInfluence);
-            //double ejectionOrbitDuration = sampleEjectionOrbit.TimeOfTrueAnomaly(ejectionOrbitFinalTrueAnomaly, 0);
+            Vector3d ejectionOrbitInitialPosition = o.referenceBody.position + ejectionRadius * (Vector3d)o.referenceBody.transform.up;
+            Orbit sampleEjectionOrbit = MuUtils.OrbitFromStateVectors(ejectionOrbitInitialPosition, ejectionOrbitInitialVelocity, o.referenceBody, 0);
             double ejectionOrbitDuration = sampleEjectionOrbit.NextTimeOfRadius(0, o.referenceBody.sphereOfInfluence);
             Vector3d ejectionOrbitFinalVelocity = sampleEjectionOrbit.SwappedOrbitalVelocityAtUT(ejectionOrbitDuration);
 
@@ -402,7 +420,7 @@ namespace MuMech
             double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
             burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
 
-            if (idealBurnUT - burnUT > o.period / 2)
+            if ((idealBurnUT - burnUT > o.period / 2) || (idealBurnUT < UT))
             {
                 burnUT += o.period;
             }
@@ -415,6 +433,27 @@ namespace MuMech
             Vector3d preEjectionVelocity = o.SwappedOrbitalVelocityAtUT(burnUT);
 
             return ejectionVelocity - preEjectionVelocity;
+        }
+
+        public static Vector3d DeltaVAndTimeForMoonReturnEjection(Orbit o, double UT, double targetPrimaryRadius, out double burnUT)
+        {
+            CelestialBody moon = o.referenceBody;
+            CelestialBody primary = moon.referenceBody;
+
+            Debug.Log("targetPrimaryRadius = " + targetPrimaryRadius);
+
+            //construct an orbit at the target radius around the primary, in the same plane as the moon. This is a fake target
+            //orbit for DeltaVAndtimeForInterplanetaryTransferEjection to aim for.
+            //Vector3d primaryOrbitPosition = primary.position + targetPrimaryRadius * (moon.position - primary.position).normalized;
+            //Vector3d primaryOrbitVelocity = OrbitalManeuverCalculator.CircularOrbitSpeed(primary, targetPrimaryRadius) * moon.orbit.GetVel().normalized;
+            //Orbit primaryOrbit = MuUtils.OrbitFromStateVectors(primaryOrbitPosition, primaryOrbitVelocity, o.referenceBody, 0);
+
+            Orbit primaryOrbit = new Orbit(moon.orbit.inclination, moon.orbit.eccentricity, targetPrimaryRadius, moon.orbit.LAN, moon.orbit.argumentOfPeriapsis, moon.orbit.meanAnomalyAtEpoch, moon.orbit.epoch, primary);
+
+            Debug.Log("primaryOrbit.eccentricity = " + primaryOrbit.eccentricity);
+            Debug.Log("primaryOrbit.ApA = " + primaryOrbit.ApA);
+
+            return DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, primaryOrbit, false, out burnUT);
         }
 
         //Computes the delta-V of the burn at a given time required to zero out the difference in orbital velocities
