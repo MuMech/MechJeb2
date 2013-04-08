@@ -20,6 +20,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool advancedOptions = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool multiAxisFix = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool perThrusterControl = false;
 
         // Advanced: overdrive scale. While 'overdrive' will range from 0..1,
@@ -114,6 +116,59 @@ namespace MuMech
             }
         }
 
+        private void AddThrusters(Vector3 direction, List<RCSSolver.Thruster> thrusters, Part p, ModuleRCS pm)
+        {
+            // Find our distance from the vessel's center of
+            // mass, in world coordinates.
+            Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
+
+            // Translate to the vessel's reference frame.
+            pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+
+            if (multiAxisFix)
+            {
+                // Create a single RCSSolver.Thruster for this part. This
+                // requires some assumptions about how the game's RCS code will
+                // drive the individual thrusters (which we can't control).
+                Vector3 partForce = Vector3.zero;
+                foreach (Transform t in pm.thrusterTransforms)
+                {
+                    // The game appears to throttle a thruster based on its
+                    // angle from the direction vector. (Each throttle is also
+                    // multiplied by the magnitude of the direction vector, but
+                    // we can ignore this, since that applies equally to all
+                    // thrusters.)
+                    Vector3 thrusterDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+                    double thrusterThrottle = Vector3.Dot(direction, thrusterDir.normalized);
+
+                    if (thrusterThrottle > 0)
+                    {
+                        float a = (float)thrusterThrottle;
+                        thrusterDir = Vector3.Scale(thrusterDir, new Vector3(a, a, a));
+                        partForce += thrusterDir;
+                    }
+                }
+                thrusters.Add(new RCSSolver.Thruster(pos, partForce, p, pm, 0));
+            }
+            else
+            {
+                // Create an RCSSolver.Thruster for each RCS jet on this part.
+                int i = 0;
+                foreach (Transform t in pm.thrusterTransforms)
+                {
+                    // 'up' is the direction of exhaust, so thrust is the
+                    // opposite direction.
+                    Vector3 thrustDir = -t.up;
+
+                    // Translate to the vessel's reference frame.
+                    thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
+
+                    thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm, i));
+                    i++;
+                }
+            }
+        }
+
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
             if (s.isNeutral)
@@ -122,15 +177,18 @@ namespace MuMech
                 return;
             }
 
-            // We can only set the throttle on a per-part basis, not a per-
-            // thruster one. This means we'll run into problems if a part wants
-            // to fire multiple thrusters, which is quite likely if the user is
-            // translating on multiple axes.
-            int axesUsed = (s.X == 0 ? 0 : 1) + (s.Y == 0 ? 0 : 1) + (s.Z == 0 ? 0 : 1);
-            if (axesUsed > 1)
+            if (!multiAxisFix)
             {
-                status += "disabled (translating on multiple axes)";
-                return;
+                // We can only set the throttle on a per-part basis, not a per-
+                // thruster one. This means we'll run into problems if a part
+                // wants to fire multiple thrusters, which is quite likely if
+                // the user is translating on multiple axes.
+                int axesUsed = (s.X == 0 ? 0 : 1) + (s.Y == 0 ? 0 : 1) + (s.Z == 0 ? 0 : 1);
+                if (axesUsed > 1)
+                {
+                    status += "disabled (translating on multiple axes)";
+                    return;
+                }
             }
             
             // Note that FlightCtrlState doesn't use the same axes as the
@@ -173,28 +231,7 @@ namespace MuMech
                     {
                         if (p.Rigidbody != null && pm.isEnabled && !pm.isJustForShow)
                         {
-                            // Find our distance from the vessel's center of
-                            // mass, in world coordinates.
-                            Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
-
-                            // Translate to the vessel's reference frame.
-                            pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
-
-                            // Create an RCSSolver.Thruster for each RCS jet
-                            // on this part.
-                            int i = 0;
-                            foreach (Transform t in pm.thrusterTransforms)
-                            {
-                                // 'up' is the direction of exhaust, so
-                                // thrust is the opposite direction.
-                                Vector3 thrustDir = -t.up;
-
-                                // Translate to the vessel's reference frame.
-                                thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
-
-                                thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm, i));
-                                i++;
-                            }
+                            AddThrusters(direction, thrusters, p, pm);
                         }
                     }
                 }
@@ -254,7 +291,7 @@ namespace MuMech
             for (int i = 0; i < thrusters.Count; i++)
             {
                 ModuleRCS pm = thrusters[i].partModule;
-                if (perThrusterControl)
+                if (perThrusterControl && !multiAxisFix)
                 {
                     // Throttle the individual thrusters and set the part-wide
                     // throttle to 1. This would be the ideal behavior, but the

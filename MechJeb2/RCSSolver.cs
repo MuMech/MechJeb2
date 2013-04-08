@@ -11,9 +11,6 @@ public class RCSSolver
     protected double[,] A;
     protected double[] B;
 
-    public double totalThrust;
-    public double efficiency;
-
     public double factorTorque = 1;
     public double factorTranslate = 0.005;
     public double factorWaste = 1;
@@ -33,7 +30,7 @@ public class RCSSolver
         public Thruster(Vector3 pos, Vector3 direction, Part p, ModuleRCS pm, int pmIndex)
         {
             this.pos = pos;
-            this.direction = direction.normalized;
+            this.direction = direction;
             this.part = p;
             this.partModule = pm;
             this.partModuleIndex = pmIndex;
@@ -146,19 +143,6 @@ public class RCSSolver
                 throttles[i] /= m;
             }
         }
-
-        // All done! But before we return, let's calculate some interesting
-        // statistics.
-        
-        double thrustSum = 0;
-        double effectiveThrust = 0;
-        for (int i = 0; i < count; i++)
-        {
-            thrustSum += throttles[i];
-            effectiveThrust += throttles[i] * Vector3.Dot(thrusters[i].direction, direction);
-        }
-        totalThrust = thrustSum;
-        efficiency = effectiveThrust / totalThrust;
 
         return throttles;
     }

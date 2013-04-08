@@ -58,7 +58,11 @@ namespace MuMech
                 if (core.rcs.advancedOptions)
                 {
                     if (GUILayout.Button("Reset thrusters")) core.rcs.ResetThrusters();
-                    core.rcs.perThrusterControl = GUILayout.Toggle(core.rcs.perThrusterControl, "Per-thruster control (broken)");
+                    core.rcs.multiAxisFix = GUILayout.Toggle(core.rcs.multiAxisFix, "Attempt multi-axis corrections");
+                    if (!core.rcs.multiAxisFix)
+                    {
+                        core.rcs.perThrusterControl = GUILayout.Toggle(core.rcs.perThrusterControl, "Per-thruster control (broken)");
+                    }
 
                     GuiUtils.SimpleTextBox("Overdrive scale", core.rcs.overdriveScale);
                     GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
@@ -74,9 +78,7 @@ namespace MuMech
                     {
                         core.rcs.onlyWhenMoving = GUILayout.Toggle(core.rcs.onlyWhenMoving, "... update only when moving");
                     }
-                    SimpleTextInfo("Solver time",  String.Format("{0:F3} s", core.rcs.solverThread.timeSeconds));
-                    SimpleTextInfo("Total thrust", String.Format("{0:F3}",   core.rcs.solverThread.solver.totalThrust));
-                    SimpleTextInfo("Efficiency",   String.Format("{0:F3}%",  core.rcs.solverThread.solver.efficiency * 100));
+                    SimpleTextInfo("Calculation time", MuUtils.ToSI(core.rcs.solverThread.timeSeconds) + "s");
                 }
 
                 if (core.rcs.status != null && core.rcs.status != "")
