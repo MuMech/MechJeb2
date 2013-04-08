@@ -78,12 +78,13 @@ namespace MuMech
                 windowSharingString += item.id + "\n";
             }
             windowSharingString += "-----------------------------\n";
+            windowSharingString = windowSharingString.Replace("\n", Environment.NewLine);
             return windowSharingString;
         }
 
         public void FromSharingString(string[] lines, List<InfoItem> registry)
         {
-            if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Substring("Name: ".Length);
+            if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Trim().Substring("Name: ".Length);
             if (lines.Length > 2 && lines[2].StartsWith("Show in:"))
             {
                 showInEditor = lines[2].Contains("editor");
@@ -220,100 +221,103 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("New window")) AddNewWindow();
-
             if (editedWindow == null) editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
             if (editedWindow == null)
             {
+                if (GUILayout.Button("New window")) AddNewWindow();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("New window")) AddNewWindow();
+                if (GUILayout.Button("Delete window")) RemoveCurrentWindow();
                 GUILayout.EndHorizontal();
+            }
+
+            if (editedWindow != null)
+            {
+                List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Title:", GUILayout.ExpandWidth(false));
+                int editedWindowIndex = allWindows.IndexOf(editedWindow);
+                editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
+                    {
+                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
+                    });
+                editedWindow = allWindows[editedWindowIndex];
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Show in:");
+                editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight");
+                editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
+                GUILayout.EndHorizontal();
+
+                GUILayout.Label("Window contents (click to edit):");
+
+                GUILayout.BeginVertical(GUILayout.Height(100));
+                scrollPos = GUILayout.BeginScrollView(scrollPos);
+                foreach (InfoItem item in editedWindow.items)
+                {
+                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                    if (item == selectedItem) s.normal.textColor = Color.yellow;
+
+                    if (GUILayout.Button(item.description, s)) selectedItem = item;
+                }
+                GUILayout.EndScrollView();
                 GUILayout.EndVertical();
-                GUI.DragWindow();
-                return;
-            }
 
-            if (GUILayout.Button("Delete window")) RemoveCurrentWindow();
-            GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
 
-            List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
-
-            int editedWindowIndex = allWindows.IndexOf(editedWindow);
-            editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
+                if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
+                if (GUILayout.Button("Move up") && selectedItem != null)
                 {
-                    editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
-                });
-            editedWindow = allWindows[editedWindowIndex];
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Show in:");
-            editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight");
-            editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
-            GUILayout.EndHorizontal();
-
-            GUILayout.Label("Window contents (click to edit):");
-
-            GUILayout.BeginVertical(GUILayout.Height(100));
-            scrollPos = GUILayout.BeginScrollView(scrollPos);
-            foreach (InfoItem item in editedWindow.items)
-            {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                if (item == selectedItem) s.normal.textColor = Color.yellow;
-
-                if (GUILayout.Button(item.description, s)) selectedItem = item;
-            }
-            GUILayout.EndScrollView();
-            GUILayout.EndVertical();
-
-            GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
-            if (GUILayout.Button("Move up") && selectedItem != null)
-            {
-                int index = editedWindow.items.IndexOf(selectedItem);
-                if (index > 0)
-                {
-                    editedWindow.items.Remove(selectedItem);
-                    editedWindow.items.Insert(index - 1, selectedItem);
+                    int index = editedWindow.items.IndexOf(selectedItem);
+                    if (index > 0)
+                    {
+                        editedWindow.items.Remove(selectedItem);
+                        editedWindow.items.Insert(index - 1, selectedItem);
+                    }
                 }
-            }
-            if (GUILayout.Button("Move down") && selectedItem != null)
-            {
-                int index = editedWindow.items.IndexOf(selectedItem);
-                if (index < editedWindow.items.Count - 1)
+                if (GUILayout.Button("Move down") && selectedItem != null)
                 {
-                    editedWindow.items.Remove(selectedItem);
-                    editedWindow.items.Insert(index + 1, selectedItem);
+                    int index = editedWindow.items.IndexOf(selectedItem);
+                    if (index < editedWindow.items.Count - 1)
+                    {
+                        editedWindow.items.Remove(selectedItem);
+                        editedWindow.items.Insert(index + 1, selectedItem);
+                    }
                 }
-            }
 
-            GUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();
 
-            GUILayout.Label("Click an item to add it to the info window:");
+                GUILayout.Label("Click an item to add it to the info window:");
 
-            itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
+                itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
 
-            scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
-            foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
-            {
-                if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
+                scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
+                foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
                 {
-                    editedWindow.items.Add(item);
+                    if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
+                    {
+                        editedWindow.items.Add(item);
+                    }
                 }
+                GUILayout.EndScrollView();
             }
-            GUILayout.EndScrollView();
-
 
             GUILayout.Label("Window presets:", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
 
             presetIndex = GuiUtils.ArrowSelector(presetIndex, CustomWindowPresets.presets.Length, () =>
+            {
+                if (GUILayout.Button(CustomWindowPresets.presets[presetIndex].name))
                 {
-                    if (GUILayout.Button(CustomWindowPresets.presets[presetIndex].name))
-                    {
-                        MechJebModuleCustomInfoWindow newWindow = CreateWindowFromSharingString(CustomWindowPresets.presets[presetIndex].sharingString);
-                        if (newWindow != null) editedWindow = newWindow;
-                    }
-                });
+                    MechJebModuleCustomInfoWindow newWindow = CreateWindowFromSharingString(CustomWindowPresets.presets[presetIndex].sharingString);
+                    if (newWindow != null) editedWindow = newWindow;
+                }
+            });
 
             GUILayout.EndVertical();
 
@@ -716,6 +720,7 @@ Value:FlightRecorder.deltaVExpended
 Value:FlightRecorder.gravityLosses
 Value:FlightRecorder.dragLosses
 Value:FlightRecorder.steeringLosses
+Value:FlightRecorder.phaseAngleFromMark
 -----------------------------"
             },
 
