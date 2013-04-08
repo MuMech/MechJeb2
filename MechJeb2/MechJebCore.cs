@@ -177,7 +177,7 @@ namespace MuMech
 
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
 
-            if (HighLogic.LoadedSceneIsFlight && ((this != vessel.GetMasterMechJeb()) || !vessel.isActiveVessel))
+            if (this != vessel.GetMasterMechJeb() || (HighLogic.LoadedSceneIsFlight && !vessel.isActiveVessel))
             {
                 wasMasterAndFocus = false;
             }
@@ -187,9 +187,9 @@ namespace MuMech
                 return;
             }
 
-            if (HighLogic.LoadedSceneIsFlight && !wasMasterAndFocus && vessel.isActiveVessel)
+            if (!wasMasterAndFocus && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
             {
-                if ((lastFocus != null) && lastFocus.loaded && (lastFocus.GetMasterMechJeb() != null))
+                if (HighLogic.LoadedSceneIsFlight && (lastFocus != null) && lastFocus.loaded && (lastFocus.GetMasterMechJeb() != null))
                 {
                     print("Focus changed! Forcing " + lastFocus.vesselName + " to save");
                     lastFocus.GetMasterMechJeb().OnSave(null);
