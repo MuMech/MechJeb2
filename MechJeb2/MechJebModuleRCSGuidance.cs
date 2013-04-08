@@ -13,7 +13,7 @@ namespace MuMech
     {
         public MechJebModuleRCSGuidance(MechJebCore core) : base(core) { }
 
-        const string TARGET_NAME = "RCS Guidance";
+        const string TARGET_NAME = "RCS Control";
 
         private void SimpleTextInfo(string left, string right)
         {
@@ -28,11 +28,18 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUIStyle s = new GUIStyle(GUI.skin.label);
-            s.normal.textColor = Color.red;
+            s.normal.textColor = Color.yellow;
             s.alignment = TextAnchor.MiddleCenter;
-            GUILayout.Label("HIGHLY EXPERIMENTAL", s);
+            GUILayout.Label("experimental".ToUpper(), s);
+
+            bool wasEnabled = core.rcs.smartTranslation;
 
             core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
+
+            if (wasEnabled && !core.rcs.smartTranslation)
+            {
+                core.rcs.ResetThrusters();
+            }
             
             // Overdrive!
             if (core.rcs.smartTranslation)
@@ -49,7 +56,7 @@ namespace MuMech
                     core.rcs.overdrive = new EditableDoubleMult(rounded, 0.01);
                 }
 
-                GUILayout.Label("Overdrive increases power but reduces RCS fuel efficiency.");
+                GUILayout.Label("Overdrive increases power when possible, at the cost of RCS fuel efficiency.");
             }
             
             if (core.rcs.smartTranslation)
@@ -57,7 +64,6 @@ namespace MuMech
                 core.rcs.advancedOptions = GUILayout.Toggle(core.rcs.advancedOptions, "Advanced options");
                 if (core.rcs.advancedOptions)
                 {
-                    if (GUILayout.Button("Reset thrusters")) core.rcs.ResetThrusters();
                     core.rcs.multiAxisFix = GUILayout.Toggle(core.rcs.multiAxisFix, "Attempt multi-axis corrections");
                     if (!core.rcs.multiAxisFix)
                     {
@@ -78,7 +84,7 @@ namespace MuMech
                     {
                         core.rcs.onlyWhenMoving = GUILayout.Toggle(core.rcs.onlyWhenMoving, "... update only when moving");
                     }
-                    SimpleTextInfo("Calculation time", MuUtils.ToSI(core.rcs.solverThread.timeSeconds) + "s");
+                    SimpleTextInfo("Calculation time", (int)(core.rcs.solverThread.timeSeconds * 1000) + " ms");
                 }
 
                 if (core.rcs.status != null && core.rcs.status != "")

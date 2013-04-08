@@ -168,7 +168,7 @@ namespace MuMech
         [ValueInfoItem("RCS translation efficiency", InfoItem.Category.Misc)]
         public string RCSTranslationEfficiency()
         {
-            double totalThrust = RCSThrust();
+            double totalThrust = RCSThrust() / 1000; // N to kN
             double effectiveThrust = 0;
             FlightCtrlState s = FlightInputHandler.state;
 

@@ -48,8 +48,8 @@ namespace MuMech
         public bool onlyWhenMoving = true;
 
         public string status;
-        public string thrusterStateStr;
-        public string throttleCalcStr;
+        public string thrusterStateStr = "";
+        public string throttleCalcStr  = "";
 
         // Variables for RCS solving.
         public RCSSolverThread solverThread = new RCSSolverThread();
@@ -102,7 +102,7 @@ namespace MuMech
             driveToTarget = false;
         }
 
-        public void ResetThrusters(bool enable = true)
+        public void ResetThrusters()
         {
             foreach (Part p in vessel.parts)
             {
@@ -272,14 +272,9 @@ namespace MuMech
             for (int i = 0; i < throttles.Length; i++)
             {
                 throttleCalcStr += String.Format("{0:F0}", throttles[i] * 9);
-                if ((i + 1) % 16 == 0)
+                if (i < throttles.Length - 1)
                 {
-                    if (i != throttles.Length - 1) throttleCalcStr += "\n";
-                }
-                else
-                {
-                    if ((i + 1) % 4 == 0) throttleCalcStr += ",";
-                    throttleCalcStr += " ";
+                    throttleCalcStr += ((i + 1) % 16 == 0) ? "\n" : " ";
                 }
             }
 
@@ -329,11 +324,11 @@ namespace MuMech
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     thrusterStates += (firstRcsModule ? "[" : " ") + "(";
-                    thrusterStates += String.Format("({0:F1}:", pm.thrusterPower);
+                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
                     firstRcsModule = false;
                     foreach (float f in pm.thrustForces)
                     {
-                        thrusterStates += String.Format(" {0:F1}", f);
+                        thrusterStates += String.Format(" {0:F0}", f * 9);
                     }
                     thrusterStates += ")";
                 }
@@ -369,11 +364,12 @@ namespace MuMech
             {
                 if (status != "") status += "\n";
                 status += String.Format("control vector: {0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
-                if (showThrusterStates)
+                status += "\n(thruster/throttle values are 0..9)";
+                if (showThrusterStates && thrusterStateStr != "")
                 {
                     status += "\n" + thrusterStateStr;
                 }
-                if (throttleCalcStr != null && throttleCalcStr != "")
+                if (throttleCalcStr != "")
                 {
                     status += "\n" + throttleCalcStr;
                 }
