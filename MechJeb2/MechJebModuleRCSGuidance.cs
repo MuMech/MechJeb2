@@ -15,21 +15,41 @@ namespace MuMech
 
         const string TARGET_NAME = "RCS Guidance";
 
+        private void SimpleTextInfo(string left, string right)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(left, GUILayout.ExpandWidth(true));
+            GUILayout.Label(right, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
             GUIStyle s = new GUIStyle(GUI.skin.label);
             s.normal.textColor = Color.red;
+            s.alignment = TextAnchor.MiddleCenter;
             GUILayout.Label("HIGHLY EXPERIMENTAL", s);
 
-            if (GUILayout.Button("Reset thrusters")) core.rcs.ResetThrusters();
-
             core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
-            core.rcs.showThrusterStates = GUILayout.Toggle(core.rcs.showThrusterStates, "Show thruster states");
-            if (core.rcs.showThrusterStates)
+            
+            // Overdrive!
+            if (core.rcs.smartTranslation)
             {
-                core.rcs.onlyWhenMoving = GUILayout.Toggle(core.rcs.onlyWhenMoving, "... only when moving");
+                double oldVal = core.rcs.overdrive;
+
+                GuiUtils.SimpleTextBox("Overdrive", core.rcs.overdrive, "%");
+
+                double sliderVal = GUILayout.HorizontalSlider((float)core.rcs.overdrive, 0.0F, 1.0F);
+                int sliderPrecision = 3;
+                if (Math.Round(Math.Abs(sliderVal - oldVal), sliderPrecision) > 0)
+                {
+                    double rounded = Math.Round(sliderVal, sliderPrecision);
+                    core.rcs.overdrive = new EditableDoubleMult(rounded, 0.01);
+                }
+
+                GUILayout.Label("Overdrive increases power but reduces RCS fuel efficiency.");
             }
             
             if (core.rcs.smartTranslation)
@@ -37,48 +57,42 @@ namespace MuMech
                 core.rcs.advancedOptions = GUILayout.Toggle(core.rcs.advancedOptions, "Advanced options");
                 if (core.rcs.advancedOptions)
                 {
-                    // The following options are really only useful for debugging.
-                    core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
+                    if (GUILayout.Button("Reset thrusters")) core.rcs.ResetThrusters();
+                    core.rcs.perThrusterControl = GUILayout.Toggle(core.rcs.perThrusterControl, "Per-thruster control (broken)");
 
-                    core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
-
-                    if (core.rcs.thrusterPowerControl)
-                    {
-                        double oldThrusterPower = core.rcs.thrusterPower;
-                        GuiUtils.SimpleTextBox("Thruster power", core.rcs.thrusterPower, "%");
-
-                        int sliderPrecision = 3;
-                        double sliderThrusterPower = GUILayout.HorizontalSlider((float)core.rcs.thrusterPower, 0.0F, 1.0F);
-                        if (Math.Round(Math.Abs(sliderThrusterPower - oldThrusterPower), sliderPrecision) > 0)
-                        {
-                            core.rcs.thrusterPower = new EditableDoubleMult(Math.Round(sliderThrusterPower, sliderPrecision), 0.01);
-                        }
-                        core.rcs.globalThrusterPower = GUILayout.Toggle(core.rcs.globalThrusterPower, "Global power");
-                    }
-                    
+                    GuiUtils.SimpleTextBox("Overdrive scale", core.rcs.overdriveScale);
                     GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", core.rcs.tuningParamFactorWaste);
-                    GuiUtils.SimpleTextBox("Waste threshold", core.rcs.tuningParamWasteThreshold);
-
-                    core.rcs.solverThread.solver.factorTorque = core.rcs.tuningParamFactorTorque;
-                    core.rcs.solverThread.solver.factorTranslate = core.rcs.tuningParamFactorTranslate;
-                    core.rcs.solverThread.solver.factorWaste = core.rcs.tuningParamFactorWaste;
-                    core.rcs.solverThread.solver.wasteThreshold = core.rcs.tuningParamWasteThreshold;
                 }
 
                 core.rcs.debugInfo = GUILayout.Toggle(core.rcs.debugInfo, "Debug info");
                 if (core.rcs.debugInfo)
                 {
-                    GUILayout.Label(String.Format("solver time: {0:F3} s", core.rcs.solverThread.timeSeconds));
-                    GUILayout.Label(String.Format("total thrust: {0:F3}", core.rcs.solverThread.solver.totalThrust));
-                    GUILayout.Label(String.Format("efficiency: {0:F3}%", core.rcs.solverThread.solver.efficiency * 100));
-                    GUILayout.Label(String.Format("extra torque: {0:F3}", core.rcs.solverThread.solver.extraTorque.magnitude));
-                    if (core.rcs.solverThread.statusString != null)
+                    core.rcs.showThrusterStates = GUILayout.Toggle(core.rcs.showThrusterStates, "Show thruster states");
+                    if (core.rcs.showThrusterStates)
                     {
-                        GUILayout.Label(String.Format("status: {0}", core.rcs.solverThread.statusString));
+                        core.rcs.onlyWhenMoving = GUILayout.Toggle(core.rcs.onlyWhenMoving, "... update only when moving");
                     }
+                    SimpleTextInfo("Solver time",  String.Format("{0:F3} s", core.rcs.solverThread.timeSeconds));
+                    SimpleTextInfo("Total thrust", String.Format("{0:F3}",   core.rcs.solverThread.solver.totalThrust));
+                    SimpleTextInfo("Efficiency",   String.Format("{0:F3}%",  core.rcs.solverThread.solver.efficiency * 100));
                 }
+
+                if (core.rcs.status != null && core.rcs.status != "")
+                {
+                    GUILayout.Label(core.rcs.status);
+                }
+
+                // Apply tuning parameters.
+                // TODO: Force core.rcs to recalculate throttles. Currently, these new
+                // settings won't take effect until the user changes the direction in
+                // which they're translating.
+                double wasteThreshold = core.rcs.overdrive * core.rcs.overdriveScale;
+                core.rcs.solverThread.solver.wasteThreshold  = wasteThreshold;
+                core.rcs.solverThread.solver.factorTorque    = core.rcs.tuningParamFactorTorque;
+                core.rcs.solverThread.solver.factorTranslate = core.rcs.tuningParamFactorTranslate;
+                core.rcs.solverThread.solver.factorWaste     = core.rcs.tuningParamFactorWaste;
             }
 
             if (core.rcs.smartTranslation || core.rcs.showThrusterStates)
@@ -88,13 +102,6 @@ namespace MuMech
             else
             {
                 core.rcs.users.Remove(this);
-            }
-
-            if (core.rcs.showThrusterStates)
-            {
-                GUILayout.Label(String.Format("control vector: {0}", core.rcs.controlVector));
-                GUILayout.Label(String.Format("thruster states:\n{0}", core.rcs.thrusterStates));
-                GUILayout.Label(String.Format("status: {0}", core.rcs.status));
             }
 
             GUILayout.EndVertical();

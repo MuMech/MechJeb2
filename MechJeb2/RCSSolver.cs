@@ -13,7 +13,6 @@ public class RCSSolver
 
     public double totalThrust;
     public double efficiency;
-    public Vector3 extraTorque;
 
     public double factorTorque = 1;
     public double factorTranslate = 0.005;
@@ -31,7 +30,7 @@ public class RCSSolver
         public ModuleRCS partModule;
         public int partModuleIndex;
 
-        public Thruster(Vector3 pos, Vector3 direction, Part p = null, ModuleRCS pm = null, int pmIndex = 0)
+        public Thruster(Vector3 pos, Vector3 direction, Part p, ModuleRCS pm, int pmIndex)
         {
             this.pos = pos;
             this.direction = direction.normalized;
@@ -100,7 +99,10 @@ public class RCSSolver
             Vector3 transErr = direction - thrust;
 
             // Waste is a value from [0..2] indicating how much thrust is being
-            // wasted due to not being toward 'direction'.
+            // wasted due to not being toward 'direction':
+            //     0: perfectly aligned with direction
+            //     1: perpendicular to direction
+            //     2: perfectly opposite direction
             float waste = 1 - Vector3.Dot(thrust, direction);
 
             if (waste < wasteThreshold) waste = 0;
@@ -157,12 +159,6 @@ public class RCSSolver
         }
         totalThrust = thrustSum;
         efficiency = effectiveThrust / totalThrust;
-
-        Vector3 extraTorque = Vector3.zero;
-        for (int i = 0; i < count; i++)
-        {
-            extraTorque += get_torque(thrusters[i], CoM, (float) throttles[i]);
-        }
 
         return throttles;
     }
