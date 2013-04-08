@@ -11,7 +11,7 @@ namespace MuMech
         public static List<T> GetParts<T>(this Vessel vessel) where T : Part
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.OfType<T>().ToList();
-            if(vessel == null) return new List<T>();
+            if (vessel == null) return new List<T>();
             return vessel.Parts.OfType<T>().ToList();
         }
 

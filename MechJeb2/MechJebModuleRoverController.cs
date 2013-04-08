@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleRoverController : ComputerModule
+    public class MechJebModuleRoverController : ComputerModule
     {
         protected bool controlHeading;
         [ToggleInfoItem("Heading control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]

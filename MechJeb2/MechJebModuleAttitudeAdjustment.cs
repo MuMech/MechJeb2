@@ -10,7 +10,7 @@ namespace MuMech
     {
         public EditableDouble Kp, Ki, Kd, Tf, factor, Ki_limit;
 
-        public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) {}
+        public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) { }
 
         public override void OnStart(PartModule.StartState state)
         {

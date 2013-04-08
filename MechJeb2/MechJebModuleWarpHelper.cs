@@ -6,17 +6,16 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleWarpHelper : DisplayModule
+    public class MechJebModuleWarpHelper : DisplayModule
     {
-
-        enum WarpTarget { Periapsis, Apoapsis, Node, SoI }
-        string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition" };
+        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI }
+        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition" };
         static readonly int numWarpTargets = Enum.GetNames(typeof(WarpTarget)).Length;
-        WarpTarget warpTarget = WarpTarget.Periapsis;
+        public WarpTarget warpTarget = WarpTarget.Periapsis;
 
-        EditableTime leadTime = 0;
+        public EditableTime leadTime = 0;
 
-        bool warping = false;
+        public bool warping = false;
 
         protected override void WindowGUI(int windowID)
         {
@@ -46,7 +45,7 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
-            if(warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
+            if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
 
             GUILayout.EndVertical();
 

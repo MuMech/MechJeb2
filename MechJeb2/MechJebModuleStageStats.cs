@@ -11,19 +11,19 @@ namespace MuMech
     //This module will then run the stage stats computation in a separate thread, update
     //the publicly available atmoStats and vacStats. Then it will disable itself unless
     //it got another RequestUpdate in the meantime.
-    class MechJebModuleStageStats : ComputerModule
+    public class MechJebModuleStageStats : ComputerModule
     {
         public MechJebModuleStageStats(MechJebCore core) : base(core) { }
 
-        public FuelFlowSimulation.Stats[] atmoStats = {};
-        public FuelFlowSimulation.Stats[] vacStats = {};
+        public FuelFlowSimulation.Stats[] atmoStats = { };
+        public FuelFlowSimulation.Stats[] vacStats = { };
 
-        public void RequestUpdate()
+        public void RequestUpdate(object controller)
         {
-            this.enabled = true;
+            users.Add(controller);
             updateRequested = true;
 
-            if(HighLogic.LoadedSceneIsEditor) TryStartSimulation();
+            if (HighLogic.LoadedSceneIsEditor) TryStartSimulation();
         }
 
         protected bool updateRequested = false;
@@ -32,7 +32,7 @@ namespace MuMech
 
         long millisecondsBetweenSimulations;
 
-        public override void OnModuleEnabled() 
+        public override void OnModuleEnabled()
         {
             millisecondsBetweenSimulations = 0;
             stopwatch.Start();
@@ -68,7 +68,7 @@ namespace MuMech
                     }
                     else
                     {
-                        this.enabled = false;
+                        users.Clear();
                     }
                 }
             }
@@ -82,7 +82,7 @@ namespace MuMech
 
             //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
             List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
-            FuelFlowSimulation[] sims = {new FuelFlowSimulation(parts), new FuelFlowSimulation(parts)};
+            FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts), new FuelFlowSimulation(parts) };
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sims);
@@ -111,8 +111,5 @@ namespace MuMech
 
             simulationRunning = false;
         }
-
-
-
     }
 }

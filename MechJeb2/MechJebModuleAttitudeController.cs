@@ -99,7 +99,8 @@ namespace MuMech
 
         public double attitudeError;
 
-        public MechJebModuleAttitudeController(MechJebCore core) : base(core)
+        public MechJebModuleAttitudeController(MechJebCore core)
+            : base(core)
         {
             priority = 800;
         }
@@ -185,9 +186,9 @@ namespace MuMech
             return attitudeGetReferenceRotation(reference) * vector;
         }
 
-        public bool attitudeTo(Quaternion attitude, AttitudeReference reference, ComputerModule controller)
+        public bool attitudeTo(Quaternion attitude, AttitudeReference reference, object controller)
         {
-            enabled = true;
+            users.Add(controller);
             attitudeReference = reference;
             attitudeTarget = attitude;
             _attitudeRollMatters = true;
@@ -195,7 +196,7 @@ namespace MuMech
             return true;
         }
 
-        public bool attitudeTo(Vector3d direction, AttitudeReference reference, ComputerModule controller)
+        public bool attitudeTo(Vector3d direction, AttitudeReference reference, object controller)
         {
             bool ok = false;
             double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
@@ -222,7 +223,7 @@ namespace MuMech
             }
         }
 
-        public bool attitudeTo(double heading, double pitch, double roll, ComputerModule controller)
+        public bool attitudeTo(double heading, double pitch, double roll, object controller)
         {
             Quaternion attitude = Quaternion.AngleAxis((float)heading, Vector3.up) * Quaternion.AngleAxis(-(float)pitch, Vector3.right) * Quaternion.AngleAxis(-(float)roll, Vector3.forward);
             return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller);
@@ -230,7 +231,7 @@ namespace MuMech
 
         public bool attitudeDeactivate(ComputerModule controller)
         {
-            enabled = false;
+            users.Remove(controller);
             attitudeChanged = true;
 
             return true;

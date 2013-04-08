@@ -16,7 +16,6 @@ namespace MuMech
 
         double warpIncreaseAttemptTime = 0;
 
-
         public void WarpToUT(double UT, double maxRate = 100000)
         {
             double desiredRate = 1.0 * (UT - vesselState.time);
@@ -33,7 +32,7 @@ namespace MuMech
                 WarpRegularAtRate((float)desiredRate);
             }
         }
-         
+
         //warp at the highest regular warp rate that is <= maxRate
         public void WarpRegularAtRate(float maxRate, bool instantOnIncrease = false, bool instantOnDecrease = true)
         {
@@ -63,7 +62,7 @@ namespace MuMech
                 IncreasePhysicsWarp(instantOnIncrease);
             }
         }
-        
+
         //If the warp mode is regular warp, returns true
         //If the warp mode is physics warp, switches it to regular warp and returns false
         private bool CheckRegularWarp()
@@ -76,7 +75,7 @@ namespace MuMech
                     TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
                     TimeWarp.SetRate(0, true);
                 }
-                return false; 
+                return false;
             }
             return true;
         }
@@ -89,11 +88,10 @@ namespace MuMech
             {
                 TimeWarp.fetch.Mode = TimeWarp.Modes.LOW;
                 TimeWarp.SetRate(0, true);
-                return false; 
+                return false;
             }
             return true;
         }
-
 
         public bool IncreaseRegularWarp(bool instant = false)
         {
@@ -149,10 +147,9 @@ namespace MuMech
             return true;
         }
 
-
         public bool MinimumWarp(bool instant = false)
         {
-            if (TimeWarp.CurrentRateIndex == 0) return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kracken)
+            if (TimeWarp.CurrentRateIndex == 0) return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
             TimeWarp.SetRate(0, instant);
             return true;
         }

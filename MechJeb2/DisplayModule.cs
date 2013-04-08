@@ -9,7 +9,7 @@ namespace MuMech
     public class DisplayModule : ComputerModule
     {
         public bool hidden = false;
-        
+
         public Rect windowPos
         {
             get { return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w); }
@@ -51,7 +51,6 @@ namespace MuMech
             ID = nextID;
             nextID++;
         }
-
 
         public virtual GUILayoutOption[] WindowOptions()
         {
@@ -122,4 +121,3 @@ namespace MuMech
         }
     }
 }
-

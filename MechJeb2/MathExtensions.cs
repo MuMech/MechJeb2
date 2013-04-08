@@ -38,8 +38,6 @@ namespace MuMech
             return new Vector3d(1 / vector.x, 1 / vector.y, 1 / vector.z);
         }
 
-
-
         public static Vector3 ProjectIntoPlane(this Vector3 vector, Vector3 planeNormal)
         {
             return vector - Vector3.Project(vector, planeNormal);
@@ -65,6 +63,5 @@ namespace MuMech
 
             return (float)((Math.Atan2(r1.y, r1.x) - Math.Atan2(r2.y, r2.x)) * 180.0 / Math.PI);
         }
-
     }
 }

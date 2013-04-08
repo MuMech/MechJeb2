@@ -50,7 +50,7 @@ namespace MuMech
 
             if (showInCurrentScene)
             {
-                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 30, 20), "Edit", GuiUtils.yellowOnHover))
+                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 13, 20), "E", GuiUtils.yellowOnHover))
                 {
                     MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                     if (editor != null)
@@ -59,6 +59,43 @@ namespace MuMech
                         editor.editedWindow = this;
                     }
                 }
+
+                if (GUI.Button(new Rect(windowPos.x + 25, windowPos.y, 13, 20), "C", GuiUtils.yellowOnHover))
+                {
+                    MuUtils.SystemClipboard = ToSharingString();
+                    ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
+                }
+            }
+        }
+
+        public string ToSharingString()
+        {
+            string windowSharingString = "--- MechJeb Custom Window ---\n";
+            windowSharingString += "Name: " + GetName() + "\n";
+            windowSharingString += "Show in:" + (showInEditor ? " editor" : "") + (showInFlight ? " flight" : "") + "\n";
+            foreach (InfoItem item in items)
+            {
+                windowSharingString += item.id + "\n";
+            }
+            windowSharingString += "-----------------------------\n";
+            windowSharingString = windowSharingString.Replace("\n", Environment.NewLine);
+            return windowSharingString;
+        }
+
+        public void FromSharingString(string[] lines, List<InfoItem> registry)
+        {
+            if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Trim().Substring("Name: ".Length);
+            if (lines.Length > 2 && lines[2].StartsWith("Show in:"))
+            {
+                showInEditor = lines[2].Contains("editor");
+                showInFlight = lines[2].Contains("flight");
+            }
+
+            for (int i = 3; i < lines.Length; i++)
+            {
+                string id = lines[i].Trim();
+                InfoItem match = registry.FirstOrDefault(item => item.id == id);
+                if (match != null) items.Add(match);
             }
         }
 
@@ -79,10 +116,14 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;
         static int numCategories = Enum.GetNames(typeof(InfoItem.Category)).Length;
+        int presetIndex = 0;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
+
+            registry.Clear();
+            editedWindow = null;
 
             RegisterInfoItems(vesselState);
             foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
@@ -93,7 +134,6 @@ namespace MuMech
             if (global == null) return;
 
             //Load custom info windows, which are stored in our ConfigNode:
-
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
             foreach (ConfigNode windowNode in windowNodes)
             {
@@ -130,6 +170,7 @@ namespace MuMech
             base.OnSave(local, type, global);
 
             //Save custom info windows within our ConfigNode:
+            if (global == null) return;
 
             foreach (MechJebModuleCustomInfoWindow window in core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
@@ -180,88 +221,103 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("New window")) AddNewWindow();
-
             if (editedWindow == null) editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
             if (editedWindow == null)
             {
+                if (GUILayout.Button("New window")) AddNewWindow();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("New window")) AddNewWindow();
+                if (GUILayout.Button("Delete window")) RemoveCurrentWindow();
                 GUILayout.EndHorizontal();
+            }
+
+            if (editedWindow != null)
+            {
+                List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Title:", GUILayout.ExpandWidth(false));
+                int editedWindowIndex = allWindows.IndexOf(editedWindow);
+                editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
+                    {
+                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
+                    });
+                editedWindow = allWindows[editedWindowIndex];
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Show in:");
+                editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight");
+                editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
+                GUILayout.EndHorizontal();
+
+                GUILayout.Label("Window contents (click to edit):");
+
+                GUILayout.BeginVertical(GUILayout.Height(100));
+                scrollPos = GUILayout.BeginScrollView(scrollPos);
+                foreach (InfoItem item in editedWindow.items)
+                {
+                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                    if (item == selectedItem) s.normal.textColor = Color.yellow;
+
+                    if (GUILayout.Button(item.description, s)) selectedItem = item;
+                }
+                GUILayout.EndScrollView();
                 GUILayout.EndVertical();
-                GUI.DragWindow();
-                return;
-            }
 
-            if (GUILayout.Button("Delete window")) RemoveCurrentWindow();
-            GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
 
-            List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
-
-            int editedWindowIndex = allWindows.IndexOf(editedWindow);
-            editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
+                if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
+                if (GUILayout.Button("Move up") && selectedItem != null)
                 {
-                    editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
-                });
-            editedWindow = allWindows[editedWindowIndex];
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Show in:");
-            editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight");
-            editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
-            GUILayout.EndHorizontal();
-
-            GUILayout.Label("Window contents (click to edit):");
-
-            GUILayout.BeginVertical(GUILayout.Height(100));
-            scrollPos = GUILayout.BeginScrollView(scrollPos);
-            foreach (InfoItem item in editedWindow.items)
-            {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                if (item == selectedItem) s.normal.textColor = Color.yellow;
-
-                if (GUILayout.Button(item.description, s)) selectedItem = item;
-            }
-            GUILayout.EndScrollView();
-            GUILayout.EndVertical();
-
-            GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
-            if (GUILayout.Button("Move up") && selectedItem != null)
-            {
-                int index = editedWindow.items.IndexOf(selectedItem);
-                if (index > 0)
-                {
-                    editedWindow.items.Remove(selectedItem);
-                    editedWindow.items.Insert(index - 1, selectedItem);
+                    int index = editedWindow.items.IndexOf(selectedItem);
+                    if (index > 0)
+                    {
+                        editedWindow.items.Remove(selectedItem);
+                        editedWindow.items.Insert(index - 1, selectedItem);
+                    }
                 }
-            }
-            if (GUILayout.Button("Move down") && selectedItem != null)
-            {
-                int index = editedWindow.items.IndexOf(selectedItem);
-                if (index < editedWindow.items.Count - 1)
+                if (GUILayout.Button("Move down") && selectedItem != null)
                 {
-                    editedWindow.items.Remove(selectedItem);
-                    editedWindow.items.Insert(index + 1, selectedItem);
+                    int index = editedWindow.items.IndexOf(selectedItem);
+                    if (index < editedWindow.items.Count - 1)
+                    {
+                        editedWindow.items.Remove(selectedItem);
+                        editedWindow.items.Insert(index + 1, selectedItem);
+                    }
                 }
-            }
 
-            GUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();
 
-            GUILayout.Label("Click an item to add it to the info window:");
+                GUILayout.Label("Click an item to add it to the info window:");
 
-            itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
+                itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
 
-            scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
-            foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
-            {
-                if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
+                scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
+                foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
                 {
-                    editedWindow.items.Add(item);
+                    if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
+                    {
+                        editedWindow.items.Add(item);
+                    }
                 }
+                GUILayout.EndScrollView();
             }
-            GUILayout.EndScrollView();
+
+            GUILayout.Label("Window presets:", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+
+            presetIndex = GuiUtils.ArrowSelector(presetIndex, CustomWindowPresets.presets.Length, () =>
+            {
+                if (GUILayout.Button(CustomWindowPresets.presets[presetIndex].name))
+                {
+                    MechJebModuleCustomInfoWindow newWindow = CreateWindowFromSharingString(CustomWindowPresets.presets[presetIndex].sharingString);
+                    if (newWindow != null) editedWindow = newWindow;
+                }
+            });
 
             GUILayout.EndVertical();
 
@@ -270,7 +326,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(500) };
+            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(540) };
         }
 
         public override string GetName()
@@ -311,6 +367,24 @@ namespace MuMech
             newWin.title = "Target Info";
             itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity" };
             foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
+        }
+
+        public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
+        {
+            string[] lines = sharingString.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines[0] != "--- MechJeb Custom Window ---")
+            {
+                ScreenMessages.PostScreenMessage("Pasted text wasn't a MechJeb custom window descriptor.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
+                return null;
+            }
+
+            MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
+            core.AddComputerModule(window);
+            window.enabled = true;
+
+            window.FromSharingString(lines, registry);
+
+            return window;
         }
     }
 
@@ -362,11 +436,11 @@ namespace MuMech
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
         bool time;
-        
+
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj = obj;
             this.member = member;
@@ -426,7 +500,7 @@ namespace MuMech
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             this.obj = obj;
             this.method = method;
@@ -446,7 +520,7 @@ namespace MuMech
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj = obj;
             this.member = member;
@@ -473,7 +547,7 @@ namespace MuMech
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + method.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             this.obj = obj;
             this.method = method;
@@ -493,7 +567,7 @@ namespace MuMech
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
         {
-            id = this.GetType().Name + ":" + obj.GetType().Name + "." + member.Name;
+            id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj = obj;
             this.member = member;
@@ -566,5 +640,214 @@ namespace MuMech
     public class EditableInfoItemAttribute : InfoItemAttribute
     {
         public EditableInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
+    }
+
+
+
+    public static class CustomWindowPresets
+    {
+        public struct Preset
+        {
+            public string name;
+            public string sharingString;
+        }
+
+        public static Preset[] presets = new Preset[] 
+        {
+            new Preset
+            {
+                name = "Orbit Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Orbit Info
+Show in: flight
+Value:VesselState.speedOrbital
+Value:VesselState.orbitApA
+Value:VesselState.orbitPeA
+Value:VesselState.orbitPeriod
+Value:VesselState.orbitTimeToAp
+Value:VesselState.orbitTimeToPe
+Value:VesselState.orbitInclination
+Value:VesselState.orbitEccentricity
+Value:VesselState.angleToPrograde
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Surface Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Surface Info
+Show in: flight
+Value:VesselState.altitudeASL
+Value:VesselState.altitudeTrue
+Value:VesselState.vesselPitch
+Value:VesselState.vesselHeading
+Value:VesselState.vesselRoll
+Value:VesselState.speedSurface
+Value:VesselState.speedVertical
+Value:VesselState.speedSurfaceHorizontal
+Value:InfoItems.GetCoordinateString
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Vessel Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Vessel Info
+Show in: flight
+Value:InfoItems.MaxAcceleration
+Value:InfoItems.CurrentAcceleration
+Value:InfoItems.MaxThrust
+Value:InfoItems.VesselMass
+Value:InfoItems.SurfaceTWR
+Value:InfoItems.CrewCapacity
+-----------------------------"
+            },
+
+            new Preset 
+            {
+                name = "Ascent Stats",
+                sharingString = 
+@"--- MechJeb Custom Window ---
+Name: Ascent Stats
+Show in: flight
+Value:FlightRecorder.timeSinceMark
+Value:FlightRecorder.deltaVExpended
+Value:FlightRecorder.gravityLosses
+Value:FlightRecorder.dragLosses
+Value:FlightRecorder.steeringLosses
+Value:FlightRecorder.phaseAngleFromMark
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Delta-V Stats",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Delta-V Stats
+Show in: flight editor
+Value:InfoItems.StageDeltaVAtmosphereAndVac
+Value:InfoItems.TotalDeltaVAtmosphereAndVac
+General:InfoItems.AllStageStats
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Rendezvous Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Rendezvous Info
+Show in: flight
+Value:InfoItems.TargetTimeToClosestApproach
+Value:InfoItems.TargetClosestApproachDistance
+Value:InfoItems.TargetClosestApproachRelativeVelocity
+Value:InfoItems.TargetDistance
+Value:InfoItems.TargetRelativeVelocity
+Value:InfoItems.RelativeInclinationToTarget
+Value:InfoItems.PhaseAngle
+Value:InfoItems.SynodicPeriod
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Landing Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Landing Info
+Show in: flight
+Value:VesselState.altitudeTrue
+Value:VesselState.speedVertical
+Value:VesselState.speedSurfaceHorizontal
+Value:InfoItems.TimeToImpact
+Value:InfoItems.SuicideBurnCountdown
+Value:InfoItems.SurfaceTWR
+Action:TargetController.PickPositionTargetOnMap
+Value:InfoItems.TargetDistance
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Target Orbit Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Target Orbit Info
+Show in: flight
+Value:InfoItems.TargetOrbitSpeed
+Value:InfoItems.TargetApoapsis
+Value:InfoItems.TargetPeriapsis
+Value:InfoItems.TargetOrbitPeriod
+Value:InfoItems.TargetOrbitTimeToAp
+Value:InfoItems.TargetOrbitTimeToPe
+Value:InfoItems.TargetInclination
+Value:InfoItems.TargetEccentricity
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Stopwatch",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Stopwatch
+Show in: flight
+Action:FlightRecorder.Mark
+Value:FlightRecorder.timeSinceMark
+Value:VesselState.time
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Surface Navigation",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Surface Navigation
+Show in: flight
+Action:TargetController.PickPositionTargetOnMap
+Value:InfoItems.TargetDistance
+Value:InfoItems.HeadingToTarget
+Value:TargetController.GetPositionTargetString
+-----------------------------"
+            },
+
+
+            new Preset
+            {
+                name = "Atmosphere Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Atmosphere Info
+Show in: flight
+Value:VesselState.atmosphericDensityGrams
+Value:InfoItems.AtmosphericPressure
+Value:InfoItems.AtmosphericDrag
+Value:VesselState.TerminalVelocity
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Maneuver Node Info",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Maneuver Node Info
+Show in: flight
+Value:InfoItems.TimeToManeuverNode
+Value:InfoItems.NextManeuverNodeDeltaV
+Value:InfoItems.NextManeuverNodeBurnTime
+-----------------------------"
+            }
+        };
     }
 }

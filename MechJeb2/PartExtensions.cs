@@ -48,7 +48,8 @@ namespace MuMech
             return (p.ActivatesEvenIfDisconnected && p.IsSRB());
         }
 
-        public static bool IsSRB(this Part p) {
+        public static bool IsSRB(this Part p)
+        {
             if (p is SolidRocket) return true;
 
             //new-style SRBs:
@@ -58,10 +59,10 @@ namespace MuMech
 
         public static bool IsEngine(this Part p)
         {
-            return (p is SolidRocket || 
-                p is LiquidEngine || 
-                p is LiquidFuelEngine || 
-                p is AtmosphericEngine ||  
+            return (p is SolidRocket ||
+                p is LiquidEngine ||
+                p is LiquidFuelEngine ||
+                p is AtmosphericEngine ||
                 p.HasModule<ModuleEngines>());
         }
     }

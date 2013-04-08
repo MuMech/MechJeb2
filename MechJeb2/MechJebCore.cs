@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using UnityEngine;
 using System.Reflection;
+using UnityEngine;
 using KSP.IO;
 
 namespace MuMech
@@ -23,6 +23,7 @@ namespace MuMech
         public MechJebModuleTargetController target;
         public MechJebModuleWarpController warp;
         public MechJebModuleRCSController rcs;
+        public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
 
         public VesselState vesselState = new VesselState();
@@ -35,15 +36,12 @@ namespace MuMech
         public string blacklist = "";
 
         private bool weLockedEditor = false;
-
         private float lastSettingsSaveTime;
-
         private bool showGui = true;
-
         public static GUISkin skin = null;
-
         public static RenderingManager renderingManager = null;
-        
+        protected bool wasMasterAndFocus = false;
+        protected static Vessel lastFocus = null;
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
@@ -60,6 +58,7 @@ namespace MuMech
                 vessel.OnFlyByWire += OnFlyByWire;
             }
             controlledVessel = vessel;
+
             return false;
         }
 
@@ -178,26 +177,34 @@ namespace MuMech
 
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
 
+            if (this != vessel.GetMasterMechJeb() || (HighLogic.LoadedSceneIsFlight && !vessel.isActiveVessel))
+            {
+                wasMasterAndFocus = false;
+            }
+
             if (this != vessel.GetMasterMechJeb())
             {
                 return;
+            }
+
+            if (!wasMasterAndFocus && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
+            {
+                if (HighLogic.LoadedSceneIsFlight && (lastFocus != null) && lastFocus.loaded && (lastFocus.GetMasterMechJeb() != null))
+                {
+                    print("Focus changed! Forcing " + lastFocus.vesselName + " to save");
+                    lastFocus.GetMasterMechJeb().OnSave(null);
+                }
+
+                OnLoad(null); // Force Global reload
+
+                wasMasterAndFocus = true;
+                lastFocus = vessel;
             }
 
             if (modulesUpdated)
             {
                 computerModules.Sort();
                 modulesUpdated = false;
-            }
-
-            //periodically save settings in case we quit unexpectedly
-            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
-            {
-                if (Time.time > lastSettingsSaveTime + 30)
-                {
-                    Debug.Log("MechJeb doing periodic settings save");
-                    OnSave(null);
-                    lastSettingsSaveTime = Time.time;
-                }
             }
 
             if (vessel == null) return; //don't run ComputerModules' OnFixedUpdate in editor
@@ -233,6 +240,23 @@ namespace MuMech
                 modulesUpdated = false;
             }
 
+            if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            {
+                MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
+                if (windowEditor != null) windowEditor.CreateWindowFromSharingString(MuUtils.SystemClipboard);
+            }
+
+            //periodically save settings in case we quit unexpectedly
+            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+            {
+                if (Time.time > lastSettingsSaveTime + 5)
+                {
+                    //Debug.Log("MechJeb doing periodic settings save");
+                    OnSave(null);
+                    lastSettingsSaveTime = Time.time;
+                }
+            }
+
             if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
 
             foreach (ComputerModule module in computerModules)
@@ -254,7 +278,7 @@ namespace MuMech
             foreach (Type t in moduleRegistry)
             {
                 if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
-                    && !blacklist.Contains(t.Name))
+                    && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                 {
                     AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
                 }
@@ -266,6 +290,7 @@ namespace MuMech
             target = GetComputerModule<MechJebModuleTargetController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
             rcs = GetComputerModule<MechJebModuleRCSController>();
+            rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
         }
 
@@ -296,17 +321,16 @@ namespace MuMech
                     generateDefaultWindows = true;
                 }
 
-                //Todo: load a different file for each vessel type
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                if (File.Exists<MechJebCore>("mechjeb_settings_type.cfg", vessel))
+                if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg"))
                 {
                     try
                     {
-                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg", vessel));
+                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vessel.vesselName + ".cfg"));
                     }
                     catch (Exception e)
                     {
-                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type.cfg: " + e);
+                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vessel.vesselName + ".cfg: " + e);
                     }
                 }
 
@@ -314,6 +338,13 @@ namespace MuMech
                 if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
                 {
                     local = sfsNode.GetNode("MechJebLocalSettings");
+                }
+                else if (sfsNode == null) // capture current Local settings
+                {
+                    foreach (ComputerModule module in computerModules)
+                    {
+                        module.OnSave(local.AddNode(module.GetType().Name), null, null);
+                    }
                 }
 
                 /*Debug.Log("OnLoad: loading from");
@@ -323,6 +354,13 @@ namespace MuMech
                 Debug.Log(type.ToString());
                 Debug.Log("Global:");
                 Debug.Log(global.ToString());*/
+
+                // Remove any currently loaded custom windows
+                MechJebModuleCustomInfoWindow win;
+                while ((win = GetComputerModule<MechJebModuleCustomInfoWindow>()) != null)
+                {
+                    RemoveComputerModule(win);
+                }
 
                 foreach (ComputerModule module in computerModules)
                 {
@@ -349,9 +387,12 @@ namespace MuMech
             //we have nothing worth saving if we're outside the editor or flight scenes:
             if (!(HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)) return;
 
+            // Only Masters can save
+            if (this != vessel.GetMasterMechJeb()) return;
+
             try
             {
-                base.OnSave(sfsNode); //is this necessary?
+                // base.OnSave(sfsNode); //is this necessary?
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
@@ -373,8 +414,13 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type.cfg")); //Todo: save a different file for each vessel type.
-                global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
+                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_"+vesselName+".cfg"));
+
+                if (lastFocus == vessel)
+                {
+                    global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                }
             }
             catch (Exception e)
             {

@@ -21,17 +21,19 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble desiredInclination = 0.0;
+        public double desiredInclination = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = true;
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble launchPhaseAngle = 0;
+
         //internal state:
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
-
 
         public override void OnModuleEnabled()
         {
@@ -39,18 +41,19 @@ namespace MuMech
             placedCircularizeNode = false;
 
             core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
+            core.thrust.users.Remove(this);
             core.thrust.targetThrottle = 0;
 
-            if (placedCircularizeNode) core.node.enabled = false;
+            if (placedCircularizeNode) core.node.Abort();
 
             status = "Off";
         }
-
 
         public override void Drive(FlightCtrlState s)
         {
@@ -74,8 +77,6 @@ namespace MuMech
             }
         }
 
-
-
         void DriveVerticalAscent(FlightCtrlState s)
         {
             if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
@@ -87,7 +88,6 @@ namespace MuMech
 
             status = "Vertical ascent";
         }
-
 
         //gives a throttle setting that reduces as we approach the desired apoapsis
         //so that we can precisely match the desired apoapsis instead of overshooting it
@@ -106,7 +106,6 @@ namespace MuMech
 
             return Mathf.Clamp((float)(speedDifference / (1.0 * vesselState.maxThrustAccel)), 0.05F, 1.0F); //1 second time constant for throttle reduction
         }
-
 
         void DriveGravityTurn(FlightCtrlState s)
         {
@@ -234,8 +233,11 @@ namespace MuMech
             {
                 if (!vessel.patchedConicSolver.maneuverNodes.Any())
                 {
+                    MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
+                    if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
+
                     //finished circularize
-                    this.enabled = false;
+                    this.users.Clear();
                     return;
                 }
             }
@@ -248,16 +250,13 @@ namespace MuMech
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 
-                core.node.ExecuteOneNode();
+                core.node.ExecuteOneNode(this);
             }
 
             if (core.node.burnTriggered) status = "Circularizing";
             else status = "Coasting to circularization burn";
         }
     }
-
-
-
 
     //An IAscentPath describes the desired gravity turn path
     public interface IAscentPath
@@ -268,7 +267,6 @@ namespace MuMech
         //controls the ascent path
         double FlightPathAngle(double altitude);
     }
-
 
     public class DefaultAscentPath : IAscentPath
     {
@@ -295,8 +293,6 @@ namespace MuMech
             return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
         }
     }
-
-
 
     public static class LaunchTiming
     {
@@ -334,7 +330,6 @@ namespace MuMech
 
             return phaseAngleDifference / phaseAngleRate;
         }
-
 
         //Computes the time required for the given launch location to rotate under the target orbital plane. 
         //If the latitude is too high for the launch location to ever actually rotate under the target plane,

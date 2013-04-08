@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-
 namespace MuMech
 {
     public class MechJebModuleThrustController : ComputerModule
@@ -117,7 +116,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             pid = new PIDController(0.05, 0.000001, 0.05);
-            this.users.Add(this);
+            users.Add(this);
+
+            base.OnStart(state);
         }
 
         public override void Drive(FlightCtrlState s)
@@ -257,7 +258,6 @@ namespace MuMech
             return Mathf.Clamp((float)(1.0 - falloff * (velocityRatio - 1.0)), 0.0F, 1.0F);
         }
 
-
         //a throttle setting that throttles down if something is close to overheating
         float TemperatureSafetyThrottle()
         {
@@ -271,7 +271,7 @@ namespace MuMech
 
         float SmoothThrottle(float mainThrottle)
         {
-            return Mathf.Clamp(mainThrottle, 
+            return Mathf.Clamp(mainThrottle,
                                (float)(lastThrottle - vesselState.deltaT / throttleSmoothingTime),
                                (float)(lastThrottle + vesselState.deltaT / throttleSmoothingTime));
         }
@@ -284,9 +284,10 @@ namespace MuMech
             // much we need at full throttle, add a safety margin, and
             // that's the max throttle for that resource.  Take the min of
             // the max throttles.
-            foreach(var resource in vesselState.resources.Values)
+            foreach (var resource in vesselState.resources.Values)
             {
-                if (resource.intakes.Length == 0) {
+                if (resource.intakes.Length == 0)
+                {
                     // No intakes provide this resource; not our problem.
                     continue;
                 }
@@ -299,22 +300,26 @@ namespace MuMech
 
                 double margin = (1 + 0.01 * flameoutSafetyPct);
                 double safeRequirement = margin * resource.requiredAtMaxThrottle;
-                safeRequirement = Math.Max (safeRequirement, resource.required);
+                safeRequirement = Math.Max(safeRequirement, resource.required);
 
                 // Open the right number of intakes.
-                if (manageIntakes) {
+                if (manageIntakes)
+                {
                     OptimizeIntakes(resource, safeRequirement);
                 }
 
                 double provided = resource.intakeProvided;
-                if (resource.required >= provided) {
+                if (resource.required >= provided)
+                {
                     // We must cut throttle immediately, otherwise we are
                     // flaming out immediately.  Continue doing the rest of the
                     // loop anyway, but we'll be at zero throttle.
                     throttle = 0;
-                } else {
+                }
+                else
+                {
                     double maxthrottle = provided / safeRequirement;
-                    throttle = Mathf.Min (throttle, (float)maxthrottle);
+                    throttle = Mathf.Min(throttle, (float)maxthrottle);
                 }
             }
             return throttle;
@@ -348,22 +353,26 @@ namespace MuMech
             var groups = new List<List<ModuleResourceIntake>>();
             var groupIds = new Dictionary<ModuleResourceIntake, int>();
             var data = new Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData>();
-            foreach(var intakeData in info.intakes) {
+            foreach (var intakeData in info.intakes)
+            {
                 ModuleResourceIntake intake = intakeData.intake;
                 data[intake] = intakeData;
                 if (groupIds.ContainsKey(intake)) { continue; }
 
                 var intakes = new List<ModuleResourceIntake>();
                 intakes.Add(intake);
-                foreach(var part in intake.part.symmetryCounterparts) {
-                    foreach(var symintake in part.Modules.OfType<ModuleResourceIntake>()) {
-                        intakes.Add (symintake);
+                foreach (var part in intake.part.symmetryCounterparts)
+                {
+                    foreach (var symintake in part.Modules.OfType<ModuleResourceIntake>())
+                    {
+                        intakes.Add(symintake);
                     }
                 }
 
                 int grpId = groups.Count;
-                groups.Add (intakes);
-                foreach(var member in intakes) {
+                groups.Add(intakes);
+                foreach (var member in intakes)
+                {
                     groupIds[member] = grpId;
                 }
             }
@@ -372,20 +381,28 @@ namespace MuMech
             // closed intakes.  If we have enough air, close any open intakes.
             // OrderBy is stable, so we'll always be opening the same intakes.
             double airFlowSoFar = 0;
-            KSPActionParam param = new KSPActionParam(KSPActionGroup.None, 
+            KSPActionParam param = new KSPActionParam(KSPActionGroup.None,
                     KSPActionType.Activate);
-            foreach(var grp in groups.OrderBy(grp => grp.Count)) {
-                if (airFlowSoFar < requiredFlow) {
-                    foreach(var intake in grp) {
+            foreach (var grp in groups.OrderBy(grp => grp.Count))
+            {
+                if (airFlowSoFar < requiredFlow)
+                {
+                    foreach (var intake in grp)
+                    {
                         double airFlowThisIntake = data[intake].predictedMassFlow;
-                        if (!intake.intakeEnabled) {
+                        if (!intake.intakeEnabled)
+                        {
                             intake.ToggleAction(param);
                         }
                         airFlowSoFar += airFlowThisIntake;
                     }
-                } else {
-                    foreach(var intake in grp) {
-                        if (intake.intakeEnabled) {
+                }
+                else
+                {
+                    foreach (var intake in grp)
+                    {
+                        if (intake.intakeEnabled)
+                        {
                             intake.ToggleAction(param);
                         }
                     }

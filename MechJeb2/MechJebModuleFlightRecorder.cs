@@ -7,21 +7,21 @@ using UnityEngine;
 namespace MuMech
 {
     //A class to record flight data, currently deltaV and time
-    //Todo: add launch phase angle measurement
-    //Todo: decide whether to keep separate "total" and "since mark" records
-    //Todo: record RCS dV expended?
-    //Todo: make records persistent
-    class MechJebModuleFlightRecorder : ComputerModule
+    //TODO: add launch phase angle measurement
+    //TODO: decide whether to keep separate "total" and "since mark" records
+    //TODO: record RCS dV expended?
+    //TODO: make records persistent
+    public class MechJebModuleFlightRecorder : ComputerModule
     {
         public MechJebModuleFlightRecorder(MechJebCore core) : base(core) { priority = 2000; }
 
-        [Persistent(pass=(int)Pass.Local)]
+        [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark UT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         public double markUT = 0;
 
         [ValueInfoItem("Time since mark", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         public double timeSinceMark = 0;
-        
+
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("ΔV expended", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
         public double deltaVExpended = 0;
@@ -44,15 +44,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark latitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE)]
         public double markLatitude = 0;
-        
+
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark longitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE)]
         public double markLongitude = 0;
-        
+
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark altitude ASL", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
         public double markAltitude = 0;
-        
+
         [Persistent(pass = (int)Pass.Local)]
         public int markBodyIndex = 1;
 
@@ -84,9 +84,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            this.enabled = true; //flight recorder should always run.
+            this.users.Add(this); //flight recorder should always run.
         }
-        
+
         public override void OnFixedUpdate()
         {
             if (markUT == 0) Mark();
@@ -109,7 +109,6 @@ namespace MuMech
             double circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
             double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
             phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (vesselState.time - markUT) / circularPeriod - angleTraversed);
-
         }
 
         public override void Drive(FlightCtrlState s)
