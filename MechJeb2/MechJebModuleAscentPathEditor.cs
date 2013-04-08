@@ -16,7 +16,7 @@ namespace MuMech
 
         public DefaultAscentPath path;
         Texture2D pathTexture = new Texture2D(400, 100);
-        private static Boolean pathTextureDrawnBefore = false;
+        private Boolean pathTextureDrawnBefore = false;
 
         public override void OnStart(PartModule.StartState state)
         {
