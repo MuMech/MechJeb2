@@ -133,6 +133,88 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 
+        private MovingAverage rcsThrustAvg = new MovingAverage(10);
+
+        [ValueInfoItem("RCS thrust", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "N")]
+        public double RCSThrust()
+        {
+            double rcsThrust = 0;
+
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
+                    {
+                        continue;
+                    }
+
+                    foreach (float f in pm.thrustForces)
+                    {
+                        rcsThrust += f * pm.thrusterPower;
+                    }
+                }
+            }
+
+            // Convert kN to N so that SI prefixes will look right.
+            rcsThrust *= 1000;
+
+            rcsThrustAvg.value = rcsThrust;
+            return rcsThrustAvg.value;
+        }
+
+        private MovingAverage rcsTranslationEfficiencyAvg = new MovingAverage(10);
+
+        [ValueInfoItem("RCS translation efficiency", InfoItem.Category.Misc)]
+        public string RCSTranslationEfficiency()
+        {
+            double totalThrust = RCSThrust();
+            double effectiveThrust = 0;
+            FlightCtrlState s = FlightInputHandler.state;
+
+            // FlightCtrlState and a vessel have different coordinate systems.
+            // See MechJebModuleRCSController for a comment explaining this.
+            Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
+            if (totalThrust == 0 || direction.magnitude == 0)
+            {
+                return "--";
+            }
+
+            direction.Normalize();
+
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
+                    {
+                        continue;
+                    }
+
+                    // Find our distance from the vessel's center of mass, in
+                    // world coordinates.
+                    Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
+
+                    // Translate to the vessel's reference frame.
+                    pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+
+                    for (int i = 0; i < pm.thrustForces.Count; i++)
+                    {
+                        float force = pm.thrustForces[i];
+                        Transform t = pm.thrusterTransforms[i];
+
+                        Vector3 thrusterDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+                        double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
+
+                        effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
+                    }
+                }
+            }
+
+            rcsTranslationEfficiencyAvg.value = effectiveThrust / totalThrust;
+            return (rcsTranslationEfficiencyAvg.value * 100).ToString("F2") + "%";
+        }
+
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {
