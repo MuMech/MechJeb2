@@ -38,8 +38,6 @@ namespace MuMech
                 if (core.rcs.advancedOptions)
                 {
                     // The following options are really only useful for debugging.
-                    core.rcs.interpolateThrottle = GUILayout.Toggle(core.rcs.interpolateThrottle, "Interpolate throttle");
-                    core.rcs.alwaysRecalculate = GUILayout.Toggle(core.rcs.alwaysRecalculate, "Always recalculate");
                     core.rcs.multithreading = GUILayout.Toggle(core.rcs.multithreading, "Multithreading");
 
                     core.rcs.thrusterPowerControl = GUILayout.Toggle(core.rcs.thrusterPowerControl, "Power override");
@@ -58,7 +56,6 @@ namespace MuMech
                         core.rcs.globalThrusterPower = GUILayout.Toggle(core.rcs.globalThrusterPower, "Global power");
                     }
                     
-                    GuiUtils.SimpleTextBox("Thruster transform", core.rcs.thrusterTransformMode);
                     GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", core.rcs.tuningParamFactorWaste);
@@ -75,16 +72,12 @@ namespace MuMech
                 {
                     GUILayout.Label(String.Format("solver time: {0:F3} s", core.rcs.solverThread.timeSeconds));
                     GUILayout.Label(String.Format("total thrust: {0:F3}", core.rcs.solverThread.solver.totalThrust));
-                    GUILayout.Label(String.Format("thrusters used: {0}", core.rcs.thrustersUsed));
                     GUILayout.Label(String.Format("efficiency: {0:F3}%", core.rcs.solverThread.solver.efficiency * 100));
                     GUILayout.Label(String.Format("extra torque: {0:F3}", core.rcs.solverThread.solver.extraTorque.magnitude));
                     if (core.rcs.solverThread.statusString != null)
                     {
                         GUILayout.Label(String.Format("status: {0}", core.rcs.solverThread.statusString));
                     }
-
-                    //if (GUILayout.Button("Start thread")) core.rcs.solverThread.start();
-                    //if (GUILayout.Button("Stop thread"))  core.rcs.solverThread.stop();
                 }
             }
 

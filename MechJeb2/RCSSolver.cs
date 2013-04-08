@@ -43,12 +43,12 @@ public class RCSSolver
 
     protected void cost_func(double[] x, ref double func, object obj) {
         func = 0;
-        for (int i = 0; i < B.Length; i++) {
+        for (int attr = 0; attr < B.Length; attr++) {
             double tmp = 0;
-            for (int j = 0; j < x.Length; j++) {
-                tmp += x[j] * A[i, j];
+            for (int row = 0; row < x.Length; row++) {
+                tmp += x[row] * A[attr, row];
             }
-            tmp -= B[i];
+            tmp -= B[attr];
             func += tmp * tmp;
         }
     }
