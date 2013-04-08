@@ -50,7 +50,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if (core.thrust.enabled && !core.thrust.users.Contains(this))
+            if ((core.thrust.users.Count > 1) && !core.thrust.users.Contains(this))
             {
                 if (!autoMode)
                 {
