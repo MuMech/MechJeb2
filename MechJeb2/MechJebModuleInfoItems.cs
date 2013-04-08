@@ -138,6 +138,13 @@ namespace MuMech
         [ValueInfoItem("RCS thrust", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "N")]
         public double RCSThrust()
         {
+            rcsThrustAvg.value = RCSThrustNow();
+            return rcsThrustAvg.value * 1000; // kN to N
+        }
+
+        // Returns a value in kN.
+        private double RCSThrustNow()
+        {
             double rcsThrust = 0;
 
             foreach (Part p in vessel.parts)
@@ -156,11 +163,7 @@ namespace MuMech
                 }
             }
 
-            // Convert kN to N so that SI prefixes will look right.
-            rcsThrust *= 1000;
-
-            rcsThrustAvg.value = rcsThrust;
-            return rcsThrustAvg.value;
+            return rcsThrust;
         }
 
         private MovingAverage rcsTranslationEfficiencyAvg = new MovingAverage(10);
@@ -168,7 +171,7 @@ namespace MuMech
         [ValueInfoItem("RCS translation efficiency", InfoItem.Category.Misc)]
         public string RCSTranslationEfficiency()
         {
-            double totalThrust = RCSThrust() / 1000; // N to kN
+            double totalThrust = RCSThrustNow();
             double effectiveThrust = 0;
             FlightCtrlState s = FlightInputHandler.state;
 
