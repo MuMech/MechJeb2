@@ -50,7 +50,7 @@ namespace MuMech
 
             if (showInCurrentScene)
             {
-                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 30, 20), "Edit", GuiUtils.yellowOnHover))
+                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 13, 20), "E", GuiUtils.yellowOnHover))
                 {
                     MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                     if (editor != null)
@@ -60,7 +60,7 @@ namespace MuMech
                     }
                 }
 
-                if (GUI.Button(new Rect(windowPos.x + 45, windowPos.y, 30, 20), "Copy", GuiUtils.yellowOnHover))
+                if (GUI.Button(new Rect(windowPos.x + 25, windowPos.y, 13, 20), "C", GuiUtils.yellowOnHover))
                 {
                     MuUtils.SystemClipboard = ToSharingString();
                     ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
