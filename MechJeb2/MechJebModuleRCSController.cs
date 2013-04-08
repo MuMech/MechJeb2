@@ -315,26 +315,28 @@ namespace MuMech
             }
         }
 
+        public void ForceRecalculate()
+        {
+            recalculate = true;
+        }
+
         private string GetThrusterStates()
         {
             string thrusterStates = "";
+            bool firstRcsModule = true;
             foreach (Part p in vessel.parts)
             {
-                bool firstRcsModule = true;
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    thrusterStates += (firstRcsModule ? "[" : " ") + "(";
-                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
+                    if (!firstRcsModule) thrusterStates += " ";
                     firstRcsModule = false;
-                    foreach (float f in pm.thrustForces)
+                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
+                    for (int i = 0; i < pm.thrustForces.Count; i++)
                     {
-                        thrusterStates += String.Format(",{0:F0}", f * 9);
+                        if (i != 0) thrusterStates += ",";
+                        thrusterStates += pm.thrustForces[i].ToString("F0");
                     }
                     thrusterStates += ")";
-                }
-                if (!firstRcsModule)
-                {
-                    thrusterStates += "] ";
                 }
             }
 

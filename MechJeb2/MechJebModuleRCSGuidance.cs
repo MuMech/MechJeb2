@@ -27,40 +27,45 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GUIStyle s = new GUIStyle(GUI.skin.label);
-            s.normal.textColor = Color.yellow;
-            s.alignment = TextAnchor.MiddleCenter;
-            GUILayout.Label("experimental".ToUpper(), s);
-
             bool wasEnabled = core.rcs.smartTranslation;
 
+            GUILayout.BeginHorizontal();
             core.rcs.smartTranslation = GUILayout.Toggle(core.rcs.smartTranslation, "Smart translation");
+            GUIStyle s = new GUIStyle(GUI.skin.label);
+            s.normal.textColor = Color.yellow;
+            GUILayout.Label("experimental", s);
+            GUILayout.EndHorizontal();
 
             if (wasEnabled && !core.rcs.smartTranslation)
             {
                 core.rcs.ResetThrusters();
             }
             
-            // Overdrive!
             if (core.rcs.smartTranslation)
             {
-                double oldVal = core.rcs.overdrive;
+                // Overdrive
+
+                double oldOverdrive         = core.rcs.overdrive;
+                double oldOverdriveScale    = core.rcs.overdriveScale;
+                double oldFactorTorque      = core.rcs.tuningParamFactorTorque;
+                double oldFactorTranslate   = core.rcs.tuningParamFactorTranslate;
+                double oldFactorWaste       = core.rcs.tuningParamFactorWaste;
 
                 GuiUtils.SimpleTextBox("Overdrive", core.rcs.overdrive, "%");
 
                 double sliderVal = GUILayout.HorizontalSlider((float)core.rcs.overdrive, 0.0F, 1.0F);
                 int sliderPrecision = 3;
-                if (Math.Round(Math.Abs(sliderVal - oldVal), sliderPrecision) > 0)
+                if (Math.Round(Math.Abs(sliderVal - oldOverdrive), sliderPrecision) > 0)
                 {
                     double rounded = Math.Round(sliderVal, sliderPrecision);
                     core.rcs.overdrive = new EditableDoubleMult(rounded, 0.01);
                 }
 
                 GUILayout.Label("Overdrive increases power when possible, at the cost of RCS fuel efficiency.");
-            }
-            
-            if (core.rcs.smartTranslation)
-            {
+
+
+                // Advanced options
+
                 core.rcs.advancedOptions = GUILayout.Toggle(core.rcs.advancedOptions, "Advanced options");
                 if (core.rcs.advancedOptions)
                 {
@@ -75,6 +80,9 @@ namespace MuMech
                     GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", core.rcs.tuningParamFactorWaste);
                 }
+
+
+                // Debug info
 
                 core.rcs.debugInfo = GUILayout.Toggle(core.rcs.debugInfo, "Debug info");
                 if (core.rcs.debugInfo)
@@ -92,18 +100,25 @@ namespace MuMech
                     GUILayout.Label(core.rcs.status);
                 }
 
+
                 // Apply tuning parameters.
-                // TODO: Force core.rcs to recalculate throttles. Currently, these new
-                // settings won't take effect until the user changes the direction in
-                // which they're translating.
-                double wasteThreshold = core.rcs.overdrive * core.rcs.overdriveScale;
-                core.rcs.solverThread.solver.wasteThreshold  = wasteThreshold;
-                core.rcs.solverThread.solver.factorTorque    = core.rcs.tuningParamFactorTorque;
-                core.rcs.solverThread.solver.factorTranslate = core.rcs.tuningParamFactorTranslate;
-                core.rcs.solverThread.solver.factorWaste     = core.rcs.tuningParamFactorWaste;
+
+                if (oldOverdrive != core.rcs.overdrive
+                    || oldOverdriveScale != core.rcs.overdriveScale
+                    || oldFactorTorque != core.rcs.tuningParamFactorTorque
+                    || oldFactorTranslate != core.rcs.tuningParamFactorTranslate
+                    || oldFactorWaste != core.rcs.tuningParamFactorWaste)
+                {
+                    double wasteThreshold = core.rcs.overdrive * core.rcs.overdriveScale;
+                    core.rcs.solverThread.solver.wasteThreshold = wasteThreshold;
+                    core.rcs.solverThread.solver.factorTorque = core.rcs.tuningParamFactorTorque;
+                    core.rcs.solverThread.solver.factorTranslate = core.rcs.tuningParamFactorTranslate;
+                    core.rcs.solverThread.solver.factorWaste = core.rcs.tuningParamFactorWaste;
+                    core.rcs.ForceRecalculate();
+                }
             }
 
-            if (core.rcs.smartTranslation || core.rcs.showThrusterStates)
+            if (core.rcs.smartTranslation)
             {
                 core.rcs.users.Add(this);
             }
