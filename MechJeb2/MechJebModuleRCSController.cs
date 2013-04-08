@@ -328,7 +328,7 @@ namespace MuMech
                     firstRcsModule = false;
                     foreach (float f in pm.thrustForces)
                     {
-                        thrusterStates += String.Format(" {0:F0}", f * 9);
+                        thrusterStates += String.Format(",{0:F0}", f * 9);
                     }
                     thrusterStates += ")";
                 }
@@ -340,7 +340,7 @@ namespace MuMech
 
             if (thrusterStates != "")
             {
-                thrusterStates = "thruster states: " + thrusterStates;
+                thrusterStates = "thruster states:\n" + thrusterStates;
             }
             return thrusterStates;
         }
