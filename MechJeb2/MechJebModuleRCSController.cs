@@ -351,7 +351,8 @@ namespace MuMech
             if (smartTranslation && debugInfo)
             {
                 if (status != "") status += "\n";
-                status += String.Format("control vector: {0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
+                status += String.Format("control vector: {0:F2} {1:F2} {2:F2} {3:F2} {4:F2} {5:F2}",
+                    s.X, s.Y, s.Z, s.roll, s.pitch, s.yaw);
                 status += "\n(thruster/throttle values are 0..9)";
                 if (showThrusterStates && thrusterStateStr != "")
                 {
