@@ -81,9 +81,6 @@ public class RCSSolver
         B[B.Length - 1] = 0.001 * count;
 
         double[] x = new double[count];
-        if (x.Length == throttles.Length) {
-            x = throttles;
-        }
         double[] bndl = new double[count];
         double[] bndu = new double[count];
 
