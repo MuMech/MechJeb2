@@ -184,6 +184,55 @@ public partial class alglib
         return result;
     }
 
+    /*************************************************************************
+    This function generates  random number from discrete distribution given by
+    finite sample X.
+
+    INPUT PARAMETERS
+        State   -   high quality random number generator, must be
+                    initialized with HQRNDRandomize() or HQRNDSeed().
+            X   -   finite sample
+            N   -   number of elements to use, N>=1
+
+    RESULT
+        this function returns one of the X[i] for random i=0..N-1
+
+      -- ALGLIB --
+         Copyright 08.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrnddiscrete(hqrndstate state, double[] x, int n)
+    {
+
+        double result = hqrnd.hqrnddiscrete(state.innerobj, x, n);
+        return result;
+    }
+
+    /*************************************************************************
+    This function generates random number from continuous  distribution  given
+    by finite sample X.
+
+    INPUT PARAMETERS
+        State   -   high quality random number generator, must be
+                    initialized with HQRNDRandomize() or HQRNDSeed().
+            X   -   finite sample, array[N] (can be larger, in this  case only
+                    leading N elements are used). THIS ARRAY MUST BE SORTED BY
+                    ASCENDING.
+            N   -   number of elements to use, N>=1
+
+    RESULT
+        this function returns random number from continuous distribution which
+        tries to approximate X as mush as possible. min(X)<=Result<=max(X).
+
+      -- ALGLIB --
+         Copyright 08.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrndcontinuous(hqrndstate state, double[] x, int n)
+    {
+
+        double result = hqrnd.hqrndcontinuous(state.innerobj, x, n);
+        return result;
+    }
+
 }
 public partial class alglib
 {
@@ -270,7 +319,7 @@ public partial class alglib
                     one row corresponds to one point.
                     first NX columns contain X-values, next NY (NY may be zero)
                     columns may contain associated Y-values
-        N       -   number of points, N>=1
+        N       -   number of points, N>=0.
         NX      -   space dimension, NX>=1.
         NY      -   number of optional Y-values, NY>=0.
         NormType-   norm type:
@@ -325,7 +374,7 @@ public partial class alglib
                     columns may contain associated Y-values
         Tags    -   tags, array[0..N-1], contains integer tags associated
                     with points.
-        N       -   number of points, N>=1
+        N       -   number of points, N>=0
         NX      -   space dimension, NX>=1.
         NY      -   number of optional Y-values, NY>=0.
         NormType-   norm type:
@@ -746,12 +795,28 @@ public partial class alglib
             MagicV      -   'magic' value used to determine whether State structure
                             was correctly initialized.
         *************************************************************************/
-        public class hqrndstate
+        public class hqrndstate : apobject
         {
             public int s1;
             public int s2;
             public double v;
             public int magicv;
+            public hqrndstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                hqrndstate _result = new hqrndstate();
+                _result.s1 = s1;
+                _result.s2 = s2;
+                _result.v = v;
+                _result.magicv = magicv;
+                return _result;
+            }
         };
 
 
@@ -772,7 +837,12 @@ public partial class alglib
         *************************************************************************/
         public static void hqrndrandomize(hqrndstate state)
         {
-            hqrndseed(math.randominteger(hqrndm1), math.randominteger(hqrndm2), state);
+            int s0 = 0;
+            int s1 = 0;
+
+            s0 = math.randominteger(hqrndm1);
+            s1 = math.randominteger(hqrndm2);
+            hqrndseed(s0, s1, state);
         }
 
 
@@ -831,8 +901,8 @@ public partial class alglib
             // Correct handling of N's close to RNDBaseMax
             // (avoiding skewed distributions for RNDBaseMax<>K*N)
             //
-            ap.assert(n>0, "HQRNDUniformI: N<=0!");
-            ap.assert(n<hqrndmax-1, "HQRNDUniformI: N>=RNDBaseMax-1!");
+            alglib.ap.assert(n>0, "HQRNDUniformI: N<=0!");
+            alglib.ap.assert(n<hqrndmax-1, "HQRNDUniformI: N>=RNDBaseMax-1!");
             mx = hqrndmax-1-(hqrndmax-1)%n;
             do
             {
@@ -890,7 +960,7 @@ public partial class alglib
             {
                 hqrndnormal2(state, ref x, ref y);
             }
-            while( !((double)(x)!=(double)(0) | (double)(y)!=(double)(0)) );
+            while( !((double)(x)!=(double)(0) || (double)(y)!=(double)(0)) );
             mx = Math.Max(Math.Abs(x), Math.Abs(y));
             mn = Math.Min(Math.Abs(x), Math.Abs(y));
             v = mx*Math.Sqrt(1+math.sqr(mn/mx));
@@ -926,7 +996,7 @@ public partial class alglib
                 u = 2*hqrnduniformr(state)-1;
                 v = 2*hqrnduniformr(state)-1;
                 s = math.sqr(u)+math.sqr(v);
-                if( (double)(s)>(double)(0) & (double)(s)<(double)(1) )
+                if( (double)(s)>(double)(0) && (double)(s)<(double)(1) )
                 {
                     
                     //
@@ -955,8 +1025,88 @@ public partial class alglib
         {
             double result = 0;
 
-            ap.assert((double)(lambdav)>(double)(0), "HQRNDExponential: LambdaV<=0!");
+            alglib.ap.assert((double)(lambdav)>(double)(0), "HQRNDExponential: LambdaV<=0!");
             result = -(Math.Log(hqrnduniformr(state))/lambdav);
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function generates  random number from discrete distribution given by
+        finite sample X.
+
+        INPUT PARAMETERS
+            State   -   high quality random number generator, must be
+                        initialized with HQRNDRandomize() or HQRNDSeed().
+                X   -   finite sample
+                N   -   number of elements to use, N>=1
+
+        RESULT
+            this function returns one of the X[i] for random i=0..N-1
+
+          -- ALGLIB --
+             Copyright 08.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double hqrnddiscrete(hqrndstate state,
+            double[] x,
+            int n)
+        {
+            double result = 0;
+
+            alglib.ap.assert(n>0, "HQRNDDiscrete: N<=0");
+            alglib.ap.assert(n<=alglib.ap.len(x), "HQRNDDiscrete: Length(X)<N");
+            result = x[hqrnduniformi(state, n)];
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function generates random number from continuous  distribution  given
+        by finite sample X.
+
+        INPUT PARAMETERS
+            State   -   high quality random number generator, must be
+                        initialized with HQRNDRandomize() or HQRNDSeed().
+                X   -   finite sample, array[N] (can be larger, in this  case only
+                        leading N elements are used). THIS ARRAY MUST BE SORTED BY
+                        ASCENDING.
+                N   -   number of elements to use, N>=1
+
+        RESULT
+            this function returns random number from continuous distribution which  
+            tries to approximate X as mush as possible. min(X)<=Result<=max(X).
+
+          -- ALGLIB --
+             Copyright 08.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double hqrndcontinuous(hqrndstate state,
+            double[] x,
+            int n)
+        {
+            double result = 0;
+            double mx = 0;
+            double mn = 0;
+            int i = 0;
+
+            alglib.ap.assert(n>0, "HQRNDContinuous: N<=0");
+            alglib.ap.assert(n<=alglib.ap.len(x), "HQRNDContinuous: Length(X)<N");
+            if( n==1 )
+            {
+                result = x[0];
+                return result;
+            }
+            i = hqrnduniformi(state, n-1);
+            mn = x[i];
+            mx = x[i+1];
+            alglib.ap.assert((double)(mx)>=(double)(mn), "HQRNDDiscrete: X is not sorted by ascending");
+            if( (double)(mx)!=(double)(mn) )
+            {
+                result = (mx-mn)*hqrnduniformr(state)+mn;
+            }
+            else
+            {
+                result = mn;
+            }
             return result;
         }
 
@@ -970,7 +1120,7 @@ public partial class alglib
             int result = 0;
             int k = 0;
 
-            ap.assert(state.magicv==hqrndmagic, "HQRNDIntegerBase: State is not correctly initialized!");
+            alglib.ap.assert(state.magicv==hqrndmagic, "HQRNDIntegerBase: State is not correctly initialized!");
             k = state.s1/53668;
             state.s1 = 40014*(state.s1-k*53668)-k*12211;
             if( state.s1<0 )
@@ -999,7 +1149,7 @@ public partial class alglib
     }
     public class nearestneighbor
     {
-        public class kdtree
+        public class kdtree : apobject
         {
             public int n;
             public int nx;
@@ -1026,6 +1176,10 @@ public partial class alglib
             public int debugcounter;
             public kdtree()
             {
+                init();
+            }
+            public override void init()
+            {
                 xy = new double[0,0];
                 tags = new int[0];
                 boxmin = new double[0];
@@ -1038,6 +1192,34 @@ public partial class alglib
                 buf = new double[0];
                 curboxmin = new double[0];
                 curboxmax = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                kdtree _result = new kdtree();
+                _result.n = n;
+                _result.nx = nx;
+                _result.ny = ny;
+                _result.normtype = normtype;
+                _result.xy = (double[,])xy.Clone();
+                _result.tags = (int[])tags.Clone();
+                _result.boxmin = (double[])boxmin.Clone();
+                _result.boxmax = (double[])boxmax.Clone();
+                _result.nodes = (int[])nodes.Clone();
+                _result.splits = (double[])splits.Clone();
+                _result.x = (double[])x.Clone();
+                _result.kneeded = kneeded;
+                _result.rneeded = rneeded;
+                _result.selfmatch = selfmatch;
+                _result.approxf = approxf;
+                _result.kcur = kcur;
+                _result.idx = (int[])idx.Clone();
+                _result.r = (double[])r.Clone();
+                _result.buf = (double[])buf.Clone();
+                _result.curboxmin = (double[])curboxmin.Clone();
+                _result.curboxmax = (double[])curboxmax.Clone();
+                _result.curdist = curdist;
+                _result.debugcounter = debugcounter;
+                return _result;
             }
         };
 
@@ -1058,7 +1240,7 @@ public partial class alglib
                         one row corresponds to one point.
                         first NX columns contain X-values, next NY (NY may be zero)
                         columns may contain associated Y-values
-            N       -   number of points, N>=1
+            N       -   number of points, N>=0.
             NX      -   space dimension, NX>=1.
             NY      -   number of optional Y-values, NY>=0.
             NormType-   norm type:
@@ -1093,17 +1275,20 @@ public partial class alglib
             int[] tags = new int[0];
             int i = 0;
 
-            ap.assert(n>=1, "KDTreeBuild: N<1!");
-            ap.assert(nx>=1, "KDTreeBuild: NX<1!");
-            ap.assert(ny>=0, "KDTreeBuild: NY<0!");
-            ap.assert(normtype>=0 & normtype<=2, "KDTreeBuild: incorrect NormType!");
-            ap.assert(ap.rows(xy)>=n, "KDTreeBuild: rows(X)<N!");
-            ap.assert(ap.cols(xy)>=nx+ny, "KDTreeBuild: cols(X)<NX+NY!");
-            ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuild: X contains infinite or NaN values!");
-            tags = new int[n];
-            for(i=0; i<=n-1; i++)
+            alglib.ap.assert(n>=0, "KDTreeBuild: N<0");
+            alglib.ap.assert(nx>=1, "KDTreeBuild: NX<1");
+            alglib.ap.assert(ny>=0, "KDTreeBuild: NY<0");
+            alglib.ap.assert(normtype>=0 && normtype<=2, "KDTreeBuild: incorrect NormType");
+            alglib.ap.assert(alglib.ap.rows(xy)>=n, "KDTreeBuild: rows(X)<N");
+            alglib.ap.assert(alglib.ap.cols(xy)>=nx+ny || n==0, "KDTreeBuild: cols(X)<NX+NY");
+            alglib.ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuild: XY contains infinite or NaN values");
+            if( n>0 )
             {
-                tags[i] = 0;
+                tags = new int[n];
+                for(i=0; i<=n-1; i++)
+                {
+                    tags[i] = 0;
+                }
             }
             kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt);
         }
@@ -1122,7 +1307,7 @@ public partial class alglib
                         columns may contain associated Y-values
             Tags    -   tags, array[0..N-1], contains integer tags associated
                         with points.
-            N       -   number of points, N>=1
+            N       -   number of points, N>=0
             NX      -   space dimension, NX>=1.
             NY      -   number of optional Y-values, NY>=0.
             NormType-   norm type:
@@ -1162,13 +1347,13 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            ap.assert(n>=1, "KDTreeBuildTagged: N<1!");
-            ap.assert(nx>=1, "KDTreeBuildTagged: NX<1!");
-            ap.assert(ny>=0, "KDTreeBuildTagged: NY<0!");
-            ap.assert(normtype>=0 & normtype<=2, "KDTreeBuildTagged: incorrect NormType!");
-            ap.assert(ap.rows(xy)>=n, "KDTreeBuildTagged: rows(X)<N!");
-            ap.assert(ap.cols(xy)>=nx+ny, "KDTreeBuildTagged: cols(X)<NX+NY!");
-            ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuildTagged: X contains infinite or NaN values!");
+            alglib.ap.assert(n>=0, "KDTreeBuildTagged: N<0");
+            alglib.ap.assert(nx>=1, "KDTreeBuildTagged: NX<1");
+            alglib.ap.assert(ny>=0, "KDTreeBuildTagged: NY<0");
+            alglib.ap.assert(normtype>=0 && normtype<=2, "KDTreeBuildTagged: incorrect NormType");
+            alglib.ap.assert(alglib.ap.rows(xy)>=n, "KDTreeBuildTagged: rows(X)<N");
+            alglib.ap.assert(alglib.ap.cols(xy)>=nx+ny || n==0, "KDTreeBuildTagged: cols(X)<NX+NY");
+            alglib.ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuildTagged: XY contains infinite or NaN values");
             
             //
             // initialize
@@ -1177,6 +1362,15 @@ public partial class alglib
             kdt.nx = nx;
             kdt.ny = ny;
             kdt.normtype = normtype;
+            kdt.kcur = 0;
+            
+            //
+            // N=0 => quick exit
+            //
+            if( n==0 )
+            {
+                return;
+            }
             
             //
             // Allocate
@@ -1240,11 +1434,6 @@ public partial class alglib
                 kdt.curboxmax[i_] = kdt.boxmax[i_];
             }
             kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, 0, n, 8);
-            
-            //
-            // Set current query size to 0
-            //
-            kdt.kcur = 0;
         }
 
 
@@ -1283,9 +1472,9 @@ public partial class alglib
         {
             int result = 0;
 
-            ap.assert(k>=1, "KDTreeQueryKNN: K<1!");
-            ap.assert(ap.len(x)>=kdt.nx, "KDTreeQueryKNN: Length(X)<NX!");
-            ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryKNN: X contains infinite or NaN values!");
+            alglib.ap.assert(k>=1, "KDTreeQueryKNN: K<1!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryKNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryKNN: X contains infinite or NaN values!");
             result = kdtreequeryaknn(kdt, x, k, selfmatch, 0.0);
             return result;
         }
@@ -1328,9 +1517,19 @@ public partial class alglib
             int i = 0;
             int j = 0;
 
-            ap.assert((double)(r)>(double)(0), "KDTreeQueryRNN: incorrect R!");
-            ap.assert(ap.len(x)>=kdt.nx, "KDTreeQueryRNN: Length(X)<NX!");
-            ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryRNN: X contains infinite or NaN values!");
+            alglib.ap.assert((double)(r)>(double)(0), "KDTreeQueryRNN: incorrect R!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryRNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryRNN: X contains infinite or NaN values!");
+            
+            //
+            // Handle special case: KDT.N=0
+            //
+            if( kdt.n==0 )
+            {
+                kdt.kcur = 0;
+                result = 0;
+                return result;
+            }
             
             //
             // Prepare parameters
@@ -1420,10 +1619,20 @@ public partial class alglib
             int i = 0;
             int j = 0;
 
-            ap.assert(k>0, "KDTreeQueryAKNN: incorrect K!");
-            ap.assert((double)(eps)>=(double)(0), "KDTreeQueryAKNN: incorrect Eps!");
-            ap.assert(ap.len(x)>=kdt.nx, "KDTreeQueryAKNN: Length(X)<NX!");
-            ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryAKNN: X contains infinite or NaN values!");
+            alglib.ap.assert(k>0, "KDTreeQueryAKNN: incorrect K!");
+            alglib.ap.assert((double)(eps)>=(double)(0), "KDTreeQueryAKNN: incorrect Eps!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryAKNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryAKNN: X contains infinite or NaN values!");
+            
+            //
+            // Handle special case: KDT.N=0
+            //
+            if( kdt.n==0 )
+            {
+                kdt.kcur = 0;
+                result = 0;
+                return result;
+            }
             
             //
             // Prepare parameters
@@ -1510,7 +1719,7 @@ public partial class alglib
             {
                 return;
             }
-            if( ap.rows(x)<kdt.kcur | ap.cols(x)<kdt.nx )
+            if( alglib.ap.rows(x)<kdt.kcur || alglib.ap.cols(x)<kdt.nx )
             {
                 x = new double[kdt.kcur, kdt.nx];
             }
@@ -1568,7 +1777,7 @@ public partial class alglib
             {
                 return;
             }
-            if( ap.rows(xy)<kdt.kcur | ap.cols(xy)<kdt.nx+kdt.ny )
+            if( alglib.ap.rows(xy)<kdt.kcur || alglib.ap.cols(xy)<kdt.nx+kdt.ny )
             {
                 xy = new double[kdt.kcur, kdt.nx+kdt.ny];
             }
@@ -1624,7 +1833,7 @@ public partial class alglib
             {
                 return;
             }
-            if( ap.len(tags)<kdt.kcur )
+            if( alglib.ap.len(tags)<kdt.kcur )
             {
                 tags = new int[kdt.kcur];
             }
@@ -1675,7 +1884,7 @@ public partial class alglib
             {
                 return;
             }
-            if( ap.len(r)<kdt.kcur )
+            if( alglib.ap.len(r)<kdt.kcur )
             {
                 r = new double[kdt.kcur];
             }
@@ -1876,9 +2085,9 @@ public partial class alglib
             // check correctness of header
             //
             i0 = s.unserialize_int();
-            ap.assert(i0==scodes.getkdtreeserializationcode(), "KDTreeUnserialize: stream header corrupted");
+            alglib.ap.assert(i0==scodes.getkdtreeserializationcode(), "KDTreeUnserialize: stream header corrupted");
             i1 = s.unserialize_int();
-            ap.assert(i1==kdtreefirstversion, "KDTreeUnserialize: stream header corrupted");
+            alglib.ap.assert(i1==kdtreefirstversion, "KDTreeUnserialize: stream header corrupted");
             
             //
             // Unserialize data
@@ -1918,6 +2127,7 @@ public partial class alglib
 
             i3 = 0;
 
+            alglib.ap.assert(kdt.n>0, "KDTreeSplit: internal error");
             
             //
             // split XY/Tags in two parts:
@@ -2014,7 +2224,8 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            ap.assert(i2>i1, "KDTreeGenerateTreeRec: internal error");
+            alglib.ap.assert(kdt.n>0, "KDTreeGenerateTreeRec: internal error");
+            alglib.ap.assert(i2>i1, "KDTreeGenerateTreeRec: internal error");
             
             //
             // Generate leaf if needed
@@ -2088,7 +2299,7 @@ public partial class alglib
                     cntgreater = cntgreater+1;
                 }
             }
-            if( cntless>0 & cntgreater>0 )
+            if( cntless>0 && cntgreater>0 )
             {
                 
                 //
@@ -2207,6 +2418,7 @@ public partial class alglib
             bool bestisleft = new bool();
             bool updatemin = new bool();
 
+            alglib.ap.assert(kdt.n>0, "KDTreeQueryNNRec: internal error");
             
             //
             // Leaf node.
@@ -2249,7 +2461,7 @@ public partial class alglib
                     //
                     // Skip points with zero distance if self-matches are turned off
                     //
-                    if( (double)(ptdist)==(double)(0) & !kdt.selfmatch )
+                    if( (double)(ptdist)==(double)(0) && !kdt.selfmatch )
                     {
                         continue;
                     }
@@ -2258,7 +2470,7 @@ public partial class alglib
                     // We CAN'T process point if R-criterion isn't satisfied,
                     // i.e. (RNeeded<>0) AND (PtDist>R).
                     //
-                    if( (double)(kdt.rneeded)==(double)(0) | (double)(ptdist)<=(double)(kdt.rneeded) )
+                    if( (double)(kdt.rneeded)==(double)(0) || (double)(ptdist)<=(double)(kdt.rneeded) )
                     {
                         
                         //
@@ -2267,7 +2479,7 @@ public partial class alglib
                         //   (or skip, if worst point is better)
                         // * add point without replacement otherwise
                         //
-                        if( kdt.kcur<kdt.kneeded | kdt.kneeded==0 )
+                        if( kdt.kcur<kdt.kneeded || kdt.kneeded==0 )
                         {
                             
                             //
@@ -2406,13 +2618,13 @@ public partial class alglib
                     //
                     // Decide: to dive into cell or not to dive
                     //
-                    if( (double)(kdt.rneeded)!=(double)(0) & (double)(kdt.curdist)>(double)(kdt.rneeded) )
+                    if( (double)(kdt.rneeded)!=(double)(0) && (double)(kdt.curdist)>(double)(kdt.rneeded) )
                     {
                         todive = false;
                     }
                     else
                     {
-                        if( kdt.kcur<kdt.kneeded | kdt.kneeded==0 )
+                        if( kdt.kcur<kdt.kneeded || kdt.kneeded==0 )
                         {
                             
                             //
@@ -2469,6 +2681,7 @@ public partial class alglib
             double vmin = 0;
             double vmax = 0;
 
+            alglib.ap.assert(kdt.n>0, "KDTreeInitBox: internal error");
             
             //
             // calculate distance from point to current bounding box
@@ -2560,6 +2773,7 @@ public partial class alglib
             int nx,
             int ny)
         {
+            alglib.ap.assert(kdt.n>0, "KDTreeAllocDatasetIndependent: internal error");
             kdt.x = new double[nx];
             kdt.boxmin = new double[nx];
             kdt.boxmax = new double[nx];
@@ -2583,6 +2797,7 @@ public partial class alglib
             int nx,
             int ny)
         {
+            alglib.ap.assert(n>0, "KDTreeAllocDatasetDependent: internal error");
             kdt.xy = new double[n, 2*nx+ny];
             kdt.tags = new int[n];
             kdt.idx = new int[n];
@@ -2608,6 +2823,7 @@ public partial class alglib
             int nx,
             int ny)
         {
+            alglib.ap.assert(n>0, "KDTreeAllocTemporaries: internal error");
             kdt.x = new double[nx];
             kdt.idx = new int[n];
             kdt.r = new double[n];

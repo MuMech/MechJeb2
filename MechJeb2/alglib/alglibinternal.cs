@@ -57,6 +57,24 @@ public partial class alglib
         }
 
 
+        public static int getmlpeserializationcode()
+        {
+            int result = 0;
+
+            result = 4;
+            return result;
+        }
+
+
+        public static int getrbfserializationcode()
+        {
+            int result = 0;
+
+            result = 5;
+            return result;
+        }
+
+
     }
     public class apserv
     {
@@ -71,7 +89,7 @@ public partial class alglib
         functions buffer sizes will be finally determined,  and  on  a next run no
         allocation will be required.
         *************************************************************************/
-        public class apbuffers
+        public class apbuffers : apobject
         {
             public int[] ia0;
             public int[] ia1;
@@ -83,6 +101,10 @@ public partial class alglib
             public double[] ra3;
             public apbuffers()
             {
+                init();
+            }
+            public override void init()
+            {
                 ia0 = new int[0];
                 ia1 = new int[0];
                 ia2 = new int[0];
@@ -92,9 +114,253 @@ public partial class alglib
                 ra2 = new double[0];
                 ra3 = new double[0];
             }
+            public override alglib.apobject make_copy()
+            {
+                apbuffers _result = new apbuffers();
+                _result.ia0 = (int[])ia0.Clone();
+                _result.ia1 = (int[])ia1.Clone();
+                _result.ia2 = (int[])ia2.Clone();
+                _result.ia3 = (int[])ia3.Clone();
+                _result.ra0 = (double[])ra0.Clone();
+                _result.ra1 = (double[])ra1.Clone();
+                _result.ra2 = (double[])ra2.Clone();
+                _result.ra3 = (double[])ra3.Clone();
+                return _result;
+            }
         };
 
 
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class sboolean : apobject
+        {
+            public bool val;
+            public sboolean()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                sboolean _result = new sboolean();
+                _result.val = val;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class sbooleanarray : apobject
+        {
+            public bool[] val;
+            public sbooleanarray()
+            {
+                init();
+            }
+            public override void init()
+            {
+                val = new bool[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                sbooleanarray _result = new sbooleanarray();
+                _result.val = (bool[])val.Clone();
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class sinteger : apobject
+        {
+            public int val;
+            public sinteger()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                sinteger _result = new sinteger();
+                _result.val = val;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class sintegerarray : apobject
+        {
+            public int[] val;
+            public sintegerarray()
+            {
+                init();
+            }
+            public override void init()
+            {
+                val = new int[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                sintegerarray _result = new sintegerarray();
+                _result.val = (int[])val.Clone();
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class sreal : apobject
+        {
+            public double val;
+            public sreal()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                sreal _result = new sreal();
+                _result.val = val;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class srealarray : apobject
+        {
+            public double[] val;
+            public srealarray()
+            {
+                init();
+            }
+            public override void init()
+            {
+                val = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                srealarray _result = new srealarray();
+                _result.val = (double[])val.Clone();
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class scomplex : apobject
+        {
+            public complex val;
+            public scomplex()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                scomplex _result = new scomplex();
+                _result.val = val;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Structure which is used to workaround limitations of ALGLIB parallellization
+        environment.
+
+          -- ALGLIB --
+             Copyright 12.04.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public class scomplexarray : apobject
+        {
+            public complex[] val;
+            public scomplexarray()
+            {
+                init();
+            }
+            public override void init()
+            {
+                val = new complex[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                scomplexarray _result = new scomplexarray();
+                _result.val = (alglib.complex[])val.Clone();
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        This function compares two numbers for approximate equality, with tolerance
+        to errors as large as max(|a|,|b|)*tol.
+
+
+          -- ALGLIB --
+             Copyright 02.12.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool approxequalrel(double a,
+            double b,
+            double tol)
+        {
+            bool result = new bool();
+
+            result = (double)(Math.Abs(a-b))<=(double)(Math.Max(Math.Abs(a), Math.Abs(b))*tol);
+            return result;
+        }
 
 
         /*************************************************************************
@@ -118,7 +384,7 @@ public partial class alglib
             x = new double[0];
             y = new double[0];
 
-            ap.assert(n>=1, "TaskGenInterpolationEqdist1D: N<1!");
+            alglib.ap.assert(n>=1, "TaskGenInterpolationEqdist1D: N<1!");
             x = new double[n];
             y = new double[n];
             if( n>1 )
@@ -168,7 +434,7 @@ public partial class alglib
             x = new double[0];
             y = new double[0];
 
-            ap.assert(n>=1, "TaskGenInterpolationEqdist1D: N<1!");
+            alglib.ap.assert(n>=1, "TaskGenInterpolationEqdist1D: N<1!");
             x = new double[n];
             y = new double[n];
             if( n>1 )
@@ -210,7 +476,7 @@ public partial class alglib
             x = new double[0];
             y = new double[0];
 
-            ap.assert(n>=1, "TaskGenInterpolation1DCheb1: N<1!");
+            alglib.ap.assert(n>=1, "TaskGenInterpolation1DCheb1: N<1!");
             x = new double[n];
             y = new double[n];
             if( n>1 )
@@ -256,7 +522,7 @@ public partial class alglib
             x = new double[0];
             y = new double[0];
 
-            ap.assert(n>=1, "TaskGenInterpolation1DCheb2: N<1!");
+            alglib.ap.assert(n>=1, "TaskGenInterpolation1DCheb2: N<1!");
             x = new double[n];
             y = new double[n];
             if( n>1 )
@@ -307,7 +573,7 @@ public partial class alglib
             int i = 0;
             bool nonsorted = new bool();
 
-            ap.assert(n>=1, "APSERVAreDistinct: internal error (N<1)");
+            alglib.ap.assert(n>=1, "APSERVAreDistinct: internal error (N<1)");
             if( n==1 )
             {
                 
@@ -325,9 +591,9 @@ public partial class alglib
             {
                 a = Math.Min(a, x[i]);
                 b = Math.Max(b, x[i]);
-                nonsorted = nonsorted | (double)(x[i-1])>=(double)(x[i]);
+                nonsorted = nonsorted || (double)(x[i-1])>=(double)(x[i]);
             }
-            ap.assert(!nonsorted, "APSERVAreDistinct: internal error (not sorted)");
+            alglib.ap.assert(!nonsorted, "APSERVAreDistinct: internal error (not sorted)");
             for(i=1; i<=n-1; i++)
             {
                 if( (double)((x[i]-a)/(b-a)+1)==(double)((x[i-1]-a)/(b-a)+1) )
@@ -342,6 +608,23 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function checks that two boolean values are the same (both  are  True 
+        or both are False).
+
+          -- ALGLIB --
+             Copyright 02.12.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool aresameboolean(bool v1,
+            bool v2)
+        {
+            bool result = new bool();
+
+            result = (v1 && v2) || (!v1 && !v2);
+            return result;
+        }
+
+
+        /*************************************************************************
         If Length(X)<N, resizes X
 
           -- ALGLIB --
@@ -350,7 +633,7 @@ public partial class alglib
         public static void bvectorsetlengthatleast(ref bool[] x,
             int n)
         {
-            if( ap.len(x)<n )
+            if( alglib.ap.len(x)<n )
             {
                 x = new bool[n];
             }
@@ -366,7 +649,7 @@ public partial class alglib
         public static void ivectorsetlengthatleast(ref int[] x,
             int n)
         {
-            if( ap.len(x)<n )
+            if( alglib.ap.len(x)<n )
             {
                 x = new int[n];
             }
@@ -382,7 +665,7 @@ public partial class alglib
         public static void rvectorsetlengthatleast(ref double[] x,
             int n)
         {
-            if( ap.len(x)<n )
+            if( alglib.ap.len(x)<n )
             {
                 x = new double[n];
             }
@@ -399,9 +682,12 @@ public partial class alglib
             int m,
             int n)
         {
-            if( ap.rows(x)<m | ap.cols(x)<n )
+            if( m>0 && n>0 )
             {
-                x = new double[m, n];
+                if( alglib.ap.rows(x)<m || alglib.ap.cols(x)<n )
+                {
+                    x = new double[m, n];
+                }
             }
         }
 
@@ -424,15 +710,15 @@ public partial class alglib
             int m2 = 0;
             int n2 = 0;
 
-            m2 = ap.rows(x);
-            n2 = ap.cols(x);
-            ap.swap(ref x, ref oldx);
+            m2 = alglib.ap.rows(x);
+            n2 = alglib.ap.cols(x);
+            alglib.ap.swap(ref x, ref oldx);
             x = new double[m, n];
             for(i=0; i<=m-1; i++)
             {
                 for(j=0; j<=n-1; j++)
                 {
-                    if( i<m2 & j<n2 )
+                    if( i<m2 && j<n2 )
                     {
                         x[i,j] = oldx[i,j];
                     }
@@ -446,7 +732,8 @@ public partial class alglib
 
 
         /*************************************************************************
-        This function checks that all values from X[] are finite
+        This function checks that length(X) is at least N and first N values  from
+        X[] are finite
 
           -- ALGLIB --
              Copyright 18.06.2010 by Bochkanov Sergey
@@ -457,7 +744,17 @@ public partial class alglib
             bool result = new bool();
             int i = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteVector: internal error (N<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteVector: internal error (N<0)");
+            if( n==0 )
+            {
+                result = true;
+                return result;
+            }
+            if( alglib.ap.len(x)<n )
+            {
+                result = false;
+                return result;
+            }
             for(i=0; i<=n-1; i++)
             {
                 if( !math.isfinite(x[i]) )
@@ -472,7 +769,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        This function checks that all values from X[] are finite
+        This function checks that first N values from X[] are finite
 
           -- ALGLIB --
              Copyright 18.06.2010 by Bochkanov Sergey
@@ -483,10 +780,10 @@ public partial class alglib
             bool result = new bool();
             int i = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteCVector: internal error (N<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteCVector: internal error (N<0)");
             for(i=0; i<=n-1; i++)
             {
-                if( !math.isfinite(z[i].x) | !math.isfinite(z[i].y) )
+                if( !math.isfinite(z[i].x) || !math.isfinite(z[i].y) )
                 {
                     result = false;
                     return result;
@@ -498,7 +795,8 @@ public partial class alglib
 
 
         /*************************************************************************
-        This function checks that all values from X[0..M-1,0..N-1] are finite
+        This function checks that size of X is at least MxN and values from
+        X[0..M-1,0..N-1] are finite.
 
           -- ALGLIB --
              Copyright 18.06.2010 by Bochkanov Sergey
@@ -511,8 +809,18 @@ public partial class alglib
             int i = 0;
             int j = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteMatrix: internal error (N<0)");
-            ap.assert(m>=0, "APSERVIsFiniteMatrix: internal error (M<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteMatrix: internal error (N<0)");
+            alglib.ap.assert(m>=0, "APSERVIsFiniteMatrix: internal error (M<0)");
+            if( m==0 || n==0 )
+            {
+                result = true;
+                return result;
+            }
+            if( alglib.ap.rows(x)<m || alglib.ap.cols(x)<n )
+            {
+                result = false;
+                return result;
+            }
             for(i=0; i<=m-1; i++)
             {
                 for(j=0; j<=n-1; j++)
@@ -543,13 +851,13 @@ public partial class alglib
             int i = 0;
             int j = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteCMatrix: internal error (N<0)");
-            ap.assert(m>=0, "APSERVIsFiniteCMatrix: internal error (M<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteCMatrix: internal error (N<0)");
+            alglib.ap.assert(m>=0, "APSERVIsFiniteCMatrix: internal error (M<0)");
             for(i=0; i<=m-1; i++)
             {
                 for(j=0; j<=n-1; j++)
                 {
-                    if( !math.isfinite(x[i,j].x) | !math.isfinite(x[i,j].y) )
+                    if( !math.isfinite(x[i,j].x) || !math.isfinite(x[i,j].y) )
                     {
                         result = false;
                         return result;
@@ -562,8 +870,8 @@ public partial class alglib
 
 
         /*************************************************************************
-        This function checks that all values from upper/lower triangle of
-        X[0..N-1,0..N-1] are finite
+        This function checks that size of X is at least NxN and all values from
+        upper/lower triangle of X[0..N-1,0..N-1] are finite
 
           -- ALGLIB --
              Copyright 18.06.2010 by Bochkanov Sergey
@@ -578,7 +886,17 @@ public partial class alglib
             int j2 = 0;
             int j = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteRTRMatrix: internal error (N<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteRTRMatrix: internal error (N<0)");
+            if( n==0 )
+            {
+                result = true;
+                return result;
+            }
+            if( alglib.ap.rows(x)<n || alglib.ap.cols(x)<n )
+            {
+                result = false;
+                return result;
+            }
             for(i=0; i<=n-1; i++)
             {
                 if( isupper )
@@ -622,7 +940,7 @@ public partial class alglib
             int j2 = 0;
             int j = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteCTRMatrix: internal error (N<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteCTRMatrix: internal error (N<0)");
             for(i=0; i<=n-1; i++)
             {
                 if( isupper )
@@ -637,7 +955,7 @@ public partial class alglib
                 }
                 for(j=j1; j<=j2; j++)
                 {
-                    if( !math.isfinite(x[i,j].x) | !math.isfinite(x[i,j].y) )
+                    if( !math.isfinite(x[i,j].x) || !math.isfinite(x[i,j].y) )
                     {
                         result = false;
                         return result;
@@ -664,13 +982,13 @@ public partial class alglib
             int i = 0;
             int j = 0;
 
-            ap.assert(n>=0, "APSERVIsFiniteOrNaNMatrix: internal error (N<0)");
-            ap.assert(m>=0, "APSERVIsFiniteOrNaNMatrix: internal error (M<0)");
+            alglib.ap.assert(n>=0, "APSERVIsFiniteOrNaNMatrix: internal error (N<0)");
+            alglib.ap.assert(m>=0, "APSERVIsFiniteOrNaNMatrix: internal error (M<0)");
             for(i=0; i<=m-1; i++)
             {
                 for(j=0; j<=n-1; j++)
                 {
-                    if( !(math.isfinite(x[i,j]) | Double.IsNaN(x[i,j])) )
+                    if( !(math.isfinite(x[i,j]) || Double.IsNaN(x[i,j])) )
                     {
                         result = false;
                         return result;
@@ -916,7 +1234,7 @@ public partial class alglib
         {
             k = 0;
 
-            ap.assert((double)(a)<(double)(b), "APPeriodicMap: internal error!");
+            alglib.ap.assert((double)(a)<(double)(b), "APPeriodicMap: internal error!");
             k = (int)Math.Floor((x-a)/(b-a));
             x = x-k*(b-a);
             while( (double)(x)<(double)(a) )
@@ -931,6 +1249,40 @@ public partial class alglib
             }
             x = Math.Max(x, a);
             x = Math.Min(x, b);
+        }
+
+
+        /*************************************************************************
+        Returns random normal number using low-quality system-provided generator
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static double randomnormal()
+        {
+            double result = 0;
+            double u = 0;
+            double v = 0;
+            double s = 0;
+
+            while( true )
+            {
+                u = 2*math.randomreal()-1;
+                v = 2*math.randomreal()-1;
+                s = math.sqr(u)+math.sqr(v);
+                if( (double)(s)>(double)(0) && (double)(s)<(double)(1) )
+                {
+                    
+                    //
+                    // two Sqrt's instead of one to
+                    // avoid overflow when S is too small
+                    //
+                    s = Math.Sqrt(-(2*Math.Log(s)))/Math.Sqrt(s);
+                    result = u*s;
+                    return result;
+                }
+            }
+            return result;
         }
 
 
@@ -1007,7 +1359,7 @@ public partial class alglib
 
             if( n<0 )
             {
-                n = ap.len(v);
+                n = alglib.ap.len(v);
             }
             s.alloc_entry();
             for(i=0; i<=n-1; i++)
@@ -1028,7 +1380,7 @@ public partial class alglib
 
             if( n<0 )
             {
-                n = ap.len(v);
+                n = alglib.ap.len(v);
             }
             s.serialize_int(n);
             for(i=0; i<=n-1; i++)
@@ -1075,7 +1427,7 @@ public partial class alglib
 
             if( n<0 )
             {
-                n = ap.len(v);
+                n = alglib.ap.len(v);
             }
             s.alloc_entry();
             for(i=0; i<=n-1; i++)
@@ -1096,7 +1448,7 @@ public partial class alglib
 
             if( n<0 )
             {
-                n = ap.len(v);
+                n = alglib.ap.len(v);
             }
             s.serialize_int(n);
             for(i=0; i<=n-1; i++)
@@ -1145,11 +1497,11 @@ public partial class alglib
 
             if( n0<0 )
             {
-                n0 = ap.rows(v);
+                n0 = alglib.ap.rows(v);
             }
             if( n1<0 )
             {
-                n1 = ap.cols(v);
+                n1 = alglib.ap.cols(v);
             }
             s.alloc_entry();
             s.alloc_entry();
@@ -1176,11 +1528,11 @@ public partial class alglib
 
             if( n0<0 )
             {
-                n0 = ap.rows(v);
+                n0 = alglib.ap.rows(v);
             }
             if( n1<0 )
             {
-                n1 = ap.cols(v);
+                n1 = alglib.ap.cols(v);
             }
             s.serialize_int(n0);
             s.serialize_int(n1);
@@ -1210,7 +1562,7 @@ public partial class alglib
 
             n0 = s.unserialize_int();
             n1 = s.unserialize_int();
-            if( n0==0 | n1==0 )
+            if( n0==0 || n1==0 )
             {
                 return;
             }
@@ -1236,10 +1588,10 @@ public partial class alglib
 
             dst = new int[0];
 
-            if( ap.len(src)>0 )
+            if( alglib.ap.len(src)>0 )
             {
-                dst = new int[ap.len(src)];
-                for(i=0; i<=ap.len(src)-1; i++)
+                dst = new int[alglib.ap.len(src)];
+                for(i=0; i<=alglib.ap.len(src)-1; i++)
                 {
                     dst[i] = src[i];
                 }
@@ -1257,10 +1609,10 @@ public partial class alglib
 
             dst = new double[0];
 
-            if( ap.len(src)>0 )
+            if( alglib.ap.len(src)>0 )
             {
-                dst = new double[ap.len(src)];
-                for(i=0; i<=ap.len(src)-1; i++)
+                dst = new double[alglib.ap.len(src)];
+                for(i=0; i<=alglib.ap.len(src)-1; i++)
                 {
                     dst[i] = src[i];
                 }
@@ -1279,12 +1631,12 @@ public partial class alglib
 
             dst = new double[0,0];
 
-            if( ap.rows(src)>0 & ap.cols(src)>0 )
+            if( alglib.ap.rows(src)>0 && alglib.ap.cols(src)>0 )
             {
-                dst = new double[ap.rows(src), ap.cols(src)];
-                for(i=0; i<=ap.rows(src)-1; i++)
+                dst = new double[alglib.ap.rows(src), alglib.ap.cols(src)];
+                for(i=0; i<=alglib.ap.rows(src)-1; i++)
                 {
-                    for(j=0; j<=ap.cols(src)-1; j++)
+                    for(j=0; j<=alglib.ap.cols(src)-1; j++)
                     {
                         dst[i,j] = src[i,j];
                     }
@@ -1357,6 +1709,21 @@ public partial class alglib
                     i1 = mididx;
                 }
             }
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function convert integer value to real value.
+
+          -- ALGLIB --
+             Copyright 17.09.2012 by Bochkanov Sergey
+        *************************************************************************/
+        private static double inttoreal(int a)
+        {
+            double result = 0;
+
+            result = a;
             return result;
         }
 
@@ -1556,8 +1923,8 @@ public partial class alglib
             isdescending = true;
             for(i=1; i<=n-1; i++)
             {
-                isascending = isascending & a[i]>=a[i-1];
-                isdescending = isdescending & a[i]<=a[i-1];
+                isascending = isascending && a[i]>=a[i-1];
+                isdescending = isdescending && a[i]<=a[i-1];
             }
             if( isascending )
             {
@@ -1585,11 +1952,11 @@ public partial class alglib
             //
             // General case
             //
-            if( ap.len(bufa)<n )
+            if( alglib.ap.len(bufa)<n )
             {
                 bufa = new double[n];
             }
-            if( ap.len(bufb)<n )
+            if( alglib.ap.len(bufb)<n )
             {
                 bufb = new int[n];
             }
@@ -1641,8 +2008,8 @@ public partial class alglib
             isdescending = true;
             for(i=1; i<=n-1; i++)
             {
-                isascending = isascending & a[i]>=a[i-1];
-                isdescending = isdescending & a[i]<=a[i-1];
+                isascending = isascending && a[i]>=a[i-1];
+                isdescending = isdescending && a[i]<=a[i-1];
             }
             if( isascending )
             {
@@ -1670,11 +2037,11 @@ public partial class alglib
             //
             // General case
             //
-            if( ap.len(bufa)<n )
+            if( alglib.ap.len(bufa)<n )
             {
                 bufa = new double[n];
             }
-            if( ap.len(bufb)<n )
+            if( alglib.ap.len(bufb)<n )
             {
                 bufb = new double[n];
             }
@@ -1724,8 +2091,8 @@ public partial class alglib
             isdescending = true;
             for(i=1; i<=n-1; i++)
             {
-                isascending = isascending & a[i]>=a[i-1];
-                isdescending = isdescending & a[i]<=a[i-1];
+                isascending = isascending && a[i]>=a[i-1];
+                isdescending = isdescending && a[i]<=a[i-1];
             }
             if( isascending )
             {
@@ -1750,11 +2117,121 @@ public partial class alglib
             //
             // General case
             //
-            if( ap.len(bufa)<n )
+            if( alglib.ap.len(bufa)<n )
             {
                 bufa = new double[n];
             }
             tagsortfastrec(ref a, ref bufa, 0, n-1);
+        }
+
+
+        /*************************************************************************
+        Sorting function optimized for integer keys and real labels, can be used
+        to sort middle of the array
+
+        A is sorted, and same permutations are applied to B.
+
+        NOTES:
+            this function assumes that A[] is finite; it doesn't checks that
+            condition. All other conditions (size of input arrays, etc.) are not
+            checked too.
+
+          -- ALGLIB --
+             Copyright 11.12.2008 by Bochkanov Sergey
+        *************************************************************************/
+        public static void tagsortmiddleir(ref int[] a,
+            ref double[] b,
+            int offset,
+            int n)
+        {
+            int i = 0;
+            int k = 0;
+            int t = 0;
+            int tmp = 0;
+            double tmpr = 0;
+
+            
+            //
+            // Special cases
+            //
+            if( n<=1 )
+            {
+                return;
+            }
+            
+            //
+            // General case, N>1: sort, update B
+            //
+            i = 2;
+            do
+            {
+                t = i;
+                while( t!=1 )
+                {
+                    k = t/2;
+                    if( a[offset+k-1]>=a[offset+t-1] )
+                    {
+                        t = 1;
+                    }
+                    else
+                    {
+                        tmp = a[offset+k-1];
+                        a[offset+k-1] = a[offset+t-1];
+                        a[offset+t-1] = tmp;
+                        tmpr = b[offset+k-1];
+                        b[offset+k-1] = b[offset+t-1];
+                        b[offset+t-1] = tmpr;
+                        t = k;
+                    }
+                }
+                i = i+1;
+            }
+            while( i<=n );
+            i = n-1;
+            do
+            {
+                tmp = a[offset+i];
+                a[offset+i] = a[offset+0];
+                a[offset+0] = tmp;
+                tmpr = b[offset+i];
+                b[offset+i] = b[offset+0];
+                b[offset+0] = tmpr;
+                t = 1;
+                while( t!=0 )
+                {
+                    k = 2*t;
+                    if( k>i )
+                    {
+                        t = 0;
+                    }
+                    else
+                    {
+                        if( k<i )
+                        {
+                            if( a[offset+k]>a[offset+k-1] )
+                            {
+                                k = k+1;
+                            }
+                        }
+                        if( a[offset+t-1]>=a[offset+k-1] )
+                        {
+                            t = 0;
+                        }
+                        else
+                        {
+                            tmp = a[offset+k-1];
+                            a[offset+k-1] = a[offset+t-1];
+                            a[offset+t-1] = tmp;
+                            tmpr = b[offset+k-1];
+                            b[offset+k-1] = b[offset+t-1];
+                            b[offset+t-1] = tmpr;
+                            t = k;
+                        }
+                    }
+                }
+                i = i-1;
+            }
+            while( i>=1 );
         }
 
 
@@ -2002,6 +2479,92 @@ public partial class alglib
             b[n-1] = b[0];
             n = n-1;
             tagheapreplacetopi(ref a, ref b, n, va, vb);
+        }
+
+
+        /*************************************************************************
+        Search first element less than T in sorted array.
+
+        PARAMETERS:
+            A - sorted array by ascending from 0 to N-1
+            N - number of elements in array
+            T - the desired element
+
+        RESULT:
+            The very first element's index, which isn't less than T.
+        In the case when there aren't such elements, returns N.
+        *************************************************************************/
+        public static int lowerbound(double[] a,
+            int n,
+            double t)
+        {
+            int result = 0;
+            int l = 0;
+            int half = 0;
+            int first = 0;
+            int middle = 0;
+
+            l = n;
+            first = 0;
+            while( l>0 )
+            {
+                half = l/2;
+                middle = first+half;
+                if( (double)(a[middle])<(double)(t) )
+                {
+                    first = middle+1;
+                    l = l-half-1;
+                }
+                else
+                {
+                    l = half;
+                }
+            }
+            result = first;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Search first element more than T in sorted array.
+
+        PARAMETERS:
+            A - sorted array by ascending from 0 to N-1
+            N - number of elements in array
+            T - the desired element
+
+            RESULT:
+            The very first element's index, which more than T.
+        In the case when there aren't such elements, returns N.
+        *************************************************************************/
+        public static int upperbound(double[] a,
+            int n,
+            double t)
+        {
+            int result = 0;
+            int l = 0;
+            int half = 0;
+            int first = 0;
+            int middle = 0;
+
+            l = n;
+            first = 0;
+            while( l>0 )
+            {
+                half = l/2;
+                middle = first+half;
+                if( (double)(t)<(double)(a[middle]) )
+                {
+                    l = half;
+                }
+                else
+                {
+                    first = middle+1;
+                    l = l-half-1;
+                }
+            }
+            result = first;
+            return result;
         }
 
 
@@ -2569,11 +3132,11 @@ public partial class alglib
                 x[0] = 1;
                 return;
             }
-            if( ap.len(buf.ra1)<n )
+            if( alglib.ap.len(buf.ra1)<n )
             {
                 buf.ra1 = new double[n];
             }
-            if( ap.len(buf.ia1)<n )
+            if( alglib.ap.len(buf.ia1)<n )
             {
                 buf.ia1 = new int[n];
             }
@@ -2971,7 +3534,7 @@ public partial class alglib
             int jb,
             int optypeb,
             double beta,
-            ref double[,] c,
+            double[,] c,
             int ic,
             int jc)
         {
@@ -3137,7 +3700,7 @@ public partial class alglib
             int i = 0;
             int j = 0;
 
-            ap.assert(i2-i1==j2-j1, "UpperHessenberg1Norm: I2-I1<>J2-J1!");
+            alglib.ap.assert(i2-i1==j2-j1, "UpperHessenberg1Norm: I2-I1<>J2-J1!");
             for(j=j1; j<=j2; j++)
             {
                 work[j] = 0;
@@ -3174,12 +3737,12 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( is1>is2 | js1>js2 )
+            if( is1>is2 || js1>js2 )
             {
                 return;
             }
-            ap.assert(is2-is1==id2-id1, "CopyMatrix: different sizes!");
-            ap.assert(js2-js1==jd2-jd1, "CopyMatrix: different sizes!");
+            alglib.ap.assert(is2-is1==id2-id1, "CopyMatrix: different sizes!");
+            alglib.ap.assert(js2-js1==jd2-jd1, "CopyMatrix: different sizes!");
             for(isrc=is1; isrc<=is2; isrc++)
             {
                 idst = isrc-is1+id1;
@@ -3207,11 +3770,11 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( i1>i2 | j1>j2 )
+            if( i1>i2 || j1>j2 )
             {
                 return;
             }
-            ap.assert(i1-i2==j1-j2, "InplaceTranspose error: incorrect array size!");
+            alglib.ap.assert(i1-i2==j1-j2, "InplaceTranspose error: incorrect array size!");
             for(i=i1; i<=i2-1; i++)
             {
                 j = j1+i-i1;
@@ -3253,12 +3816,12 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( is1>is2 | js1>js2 )
+            if( is1>is2 || js1>js2 )
             {
                 return;
             }
-            ap.assert(is2-is1==jd2-jd1, "CopyAndTranspose: different sizes!");
-            ap.assert(js2-js1==id2-id1, "CopyAndTranspose: different sizes!");
+            alglib.ap.assert(is2-is1==jd2-jd1, "CopyAndTranspose: different sizes!");
+            alglib.ap.assert(js2-js1==id2-id1, "CopyAndTranspose: different sizes!");
             for(isrc=is1; isrc<=is2; isrc++)
             {
                 jdst = isrc-is1+jd1;
@@ -3297,12 +3860,12 @@ public partial class alglib
                 //
                 // y := alpha*A*x + beta*y;
                 //
-                if( i1>i2 | j1>j2 )
+                if( i1>i2 || j1>j2 )
                 {
                     return;
                 }
-                ap.assert(j2-j1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
-                ap.assert(i2-i1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
+                alglib.ap.assert(j2-j1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
+                alglib.ap.assert(i2-i1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
                 
                 //
                 // beta*y
@@ -3342,12 +3905,12 @@ public partial class alglib
                 //
                 // y := alpha*A'*x + beta*y;
                 //
-                if( i1>i2 | j1>j2 )
+                if( i1>i2 || j1>j2 )
                 {
                     return;
                 }
-                ap.assert(i2-i1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
-                ap.assert(j2-j1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
+                alglib.ap.assert(i2-i1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
+                alglib.ap.assert(j2-j1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
                 
                 //
                 // beta*y
@@ -3468,8 +4031,8 @@ public partial class alglib
                 brows = bj2-bj1+1;
                 bcols = bi2-bi1+1;
             }
-            ap.assert(acols==brows, "MatrixMatrixMultiply: incorrect matrix sizes!");
-            if( ((arows<=0 | acols<=0) | brows<=0) | bcols<=0 )
+            alglib.ap.assert(acols==brows, "MatrixMatrixMultiply: incorrect matrix sizes!");
+            if( ((arows<=0 || acols<=0) || brows<=0) || bcols<=0 )
             {
                 return;
             }
@@ -3512,7 +4075,7 @@ public partial class alglib
             //
             // A*B
             //
-            if( !transa & !transb )
+            if( !transa && !transb )
             {
                 for(l=ai1; l<=ai2; l++)
                 {
@@ -3533,7 +4096,7 @@ public partial class alglib
             //
             // A*B'
             //
-            if( !transa & transb )
+            if( !transa && transb )
             {
                 if( arows*acols<brows*bcols )
                 {
@@ -3574,7 +4137,7 @@ public partial class alglib
             //
             // A'*B
             //
-            if( transa & !transb )
+            if( transa && !transb )
             {
                 for(l=aj1; l<=aj2; l++)
                 {
@@ -3595,7 +4158,7 @@ public partial class alglib
             //
             // A'*B'
             //
-            if( transa & transb )
+            if( transa && transb )
             {
                 if( arows*acols<brows*bcols )
                 {
@@ -4028,7 +4591,7 @@ public partial class alglib
             int vm = 0;
             int i_ = 0;
 
-            if( ((double)(tau)==(double)(0) | n1>n2) | m1>m2 )
+            if( ((double)(tau)==(double)(0) || n1>n2) || m1>m2 )
             {
                 return;
             }
@@ -4107,7 +4670,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( ((double)(tau)==(double)(0) | n1>n2) | m1>m2 )
+            if( ((double)(tau)==(double)(0) || n1>n2) || m1>m2 )
             {
                 return;
             }
@@ -4246,7 +4809,7 @@ public partial class alglib
             }
             alphr = alpha.x;
             alphi = alpha.y;
-            if( (double)(xnorm)==(double)(0) & (double)(alphi)==(double)(0) )
+            if( (double)(xnorm)==(double)(0) && (double)(alphi)==(double)(0) )
             {
                 tau = 0;
                 x[1] = x[1]*s;
@@ -4324,7 +4887,7 @@ public partial class alglib
             int vm = 0;
             int i_ = 0;
 
-            if( (tau==0 | n1>n2) | m1>m2 )
+            if( (tau==0 || n1>n2) || m1>m2 )
             {
                 return;
             }
@@ -4403,7 +4966,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( (tau==0 | n1>n2) | m1>m2 )
+            if( (tau==0 || n1>n2) || m1>m2 )
             {
                 return;
             }
@@ -4688,7 +5251,7 @@ public partial class alglib
             double temp = 0;
             int i_ = 0;
 
-            if( m1>m2 | n1>n2 )
+            if( m1>m2 || n1>n2 )
             {
                 return;
             }
@@ -4708,7 +5271,7 @@ public partial class alglib
                     {
                         ctemp = c[j-m1+1];
                         stemp = s[j-m1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             jp1 = j+1;
                             for(i_=n1; i_<=n2;i_++)
@@ -4744,7 +5307,7 @@ public partial class alglib
                     {
                         ctemp = c[j-m1+1];
                         stemp = s[j-m1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             temp = a[j+1,n1];
                             a[j+1,n1] = ctemp*temp-stemp*a[j,n1];
@@ -4765,7 +5328,7 @@ public partial class alglib
                     {
                         ctemp = c[j-m1+1];
                         stemp = s[j-m1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             jp1 = j+1;
                             for(i_=n1; i_<=n2;i_++)
@@ -4801,7 +5364,7 @@ public partial class alglib
                     {
                         ctemp = c[j-m1+1];
                         stemp = s[j-m1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             temp = a[j+1,n1];
                             a[j+1,n1] = ctemp*temp-stemp*a[j,n1];
@@ -4871,7 +5434,7 @@ public partial class alglib
                     {
                         ctemp = c[j-n1+1];
                         stemp = s[j-n1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             jp1 = j+1;
                             for(i_=m1; i_<=m2;i_++)
@@ -4907,7 +5470,7 @@ public partial class alglib
                     {
                         ctemp = c[j-n1+1];
                         stemp = s[j-n1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             temp = a[m1,j+1];
                             a[m1,j+1] = ctemp*temp-stemp*a[m1,j];
@@ -4928,7 +5491,7 @@ public partial class alglib
                     {
                         ctemp = c[j-n1+1];
                         stemp = s[j-n1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             jp1 = j+1;
                             for(i_=m1; i_<=m2;i_++)
@@ -4964,7 +5527,7 @@ public partial class alglib
                     {
                         ctemp = c[j-n1+1];
                         stemp = s[j-n1+1];
-                        if( (double)(ctemp)!=(double)(1) | (double)(stemp)!=(double)(0) )
+                        if( (double)(ctemp)!=(double)(1) || (double)(stemp)!=(double)(0) )
                         {
                             temp = a[m1,j+1];
                             a[m1,j+1] = ctemp*temp-stemp*a[m1,j];
@@ -5025,7 +5588,7 @@ public partial class alglib
                     }
                     cs = f1/r;
                     sn = g1/r;
-                    if( (double)(Math.Abs(f))>(double)(Math.Abs(g)) & (double)(cs)<(double)(0) )
+                    if( (double)(Math.Abs(f))>(double)(Math.Abs(g)) && (double)(cs)<(double)(0) )
                     {
                         cs = -cs;
                         sn = -sn;
@@ -5184,9 +5747,9 @@ public partial class alglib
             workv3 = new double[3+1];
             tmpwr = new double[Math.Max(n, 1)+1];
             tmpwi = new double[Math.Max(n, 1)+1];
-            ap.assert(n>=0, "InternalSchurDecomposition: incorrect N!");
-            ap.assert(tneeded==0 | tneeded==1, "InternalSchurDecomposition: incorrect TNeeded!");
-            ap.assert((zneeded==0 | zneeded==1) | zneeded==2, "InternalSchurDecomposition: incorrect ZNeeded!");
+            alglib.ap.assert(n>=0, "InternalSchurDecomposition: incorrect N!");
+            alglib.ap.assert(tneeded==0 || tneeded==1, "InternalSchurDecomposition: incorrect TNeeded!");
+            alglib.ap.assert((zneeded==0 || zneeded==1) || zneeded==2, "InternalSchurDecomposition: incorrect ZNeeded!");
             wantt = tneeded==1;
             initz = zneeded==2;
             wantz = zneeded!=0;
@@ -5243,7 +5806,7 @@ public partial class alglib
             //
             // Test if N is sufficiently small
             //
-            if( (ns<=2 | ns>n) | maxb>=n )
+            if( (ns<=2 || ns>n) || maxb>=n )
             {
                 
                 //
@@ -5394,7 +5957,7 @@ public partial class alglib
                     // eigenvalues only are being computed, only the active submatrix
                     // need be transformed.
                     //
-                    if( its==20 | its==30 )
+                    if( its==20 || its==30 )
                     {
                         
                         //
@@ -5785,7 +6348,7 @@ public partial class alglib
                     // eigenvalues only are being computed, only the active submatrix
                     // need be transformed.
                     //
-                    if( its==10 | its==20 )
+                    if( its==10 || its==20 )
                     {
                         
                         //
@@ -6143,7 +6706,7 @@ public partial class alglib
                 }
                 else
                 {
-                    if( (double)(a-d)==(double)(0) & extschursigntoone(b)!=extschursigntoone(c) )
+                    if( (double)(a-d)==(double)(0) && extschursigntoone(b)!=extschursigntoone(c) )
                     {
                         cs = 1;
                         sn = 0;
@@ -6591,7 +7154,7 @@ public partial class alglib
                         grow = 1/Math.Max(xbnd, smlnum);
                         xbnd = grow;
                         j = jfirst;
-                        while( (jinc>0 & j<=jlast) | (jinc<0 & j>=jlast) )
+                        while( (jinc>0 && j<=jlast) || (jinc<0 && j>=jlast) )
                         {
                             
                             //
@@ -6640,7 +7203,7 @@ public partial class alglib
                         //
                         grow = Math.Min(1, 1/Math.Max(xbnd, smlnum));
                         j = jfirst;
-                        while( (jinc>0 & j<=jlast) | (jinc<0 & j>=jlast) )
+                        while( (jinc>0 && j<=jlast) || (jinc<0 && j>=jlast) )
                         {
                             
                             //
@@ -6696,7 +7259,7 @@ public partial class alglib
                         grow = 1/Math.Max(xbnd, smlnum);
                         xbnd = grow;
                         j = jfirst;
-                        while( (jinc>0 & j<=jlast) | (jinc<0 & j>=jlast) )
+                        while( (jinc>0 && j<=jlast) || (jinc<0 && j>=jlast) )
                         {
                             
                             //
@@ -6738,7 +7301,7 @@ public partial class alglib
                         //
                         grow = Math.Min(1, 1/Math.Max(xbnd, smlnum));
                         j = jfirst;
-                        while( (jinc>0 & j<=jlast) | (jinc<0 & j>=jlast) )
+                        while( (jinc>0 && j<=jlast) || (jinc<0 && j>=jlast) )
                         {
                             
                             //
@@ -6766,7 +7329,7 @@ public partial class alglib
                 // Use the Level 2 BLAS solve if the reciprocal of the bound on
                 // elements of X is not too small.
                 //
-                if( (upper & notran) | (!upper & !notran) )
+                if( (upper && notran) || (!upper && !notran) )
                 {
                     if( nounit )
                     {
@@ -6876,7 +7439,7 @@ public partial class alglib
                     // Solve A * x = b
                     //
                     j = jfirst;
-                    while( (jinc>0 & j<=jlast) | (jinc<0 & j>=jlast) )
+                    while( (jinc>0 && j<=jlast) || (jinc<0 && j>=jlast) )
                     {
                         
                         //
@@ -7077,7 +7640,7 @@ public partial class alglib
                     // Solve A' * x = b
                     //
                     j = jfirst;
-                    while( (jinc>0 & j<=jlast) | (jinc<0 & j>=jlast) )
+                    while( (jinc>0 && j<=jlast) || (jinc<0 && j>=jlast) )
                     {
                         
                         //
@@ -7342,8 +7905,8 @@ public partial class alglib
             double[] tmp = new double[0];
             int i_ = 0;
 
-            ap.assert(n>0, "RMatrixTRSafeSolve: incorrect N!");
-            ap.assert(trans==0 | trans==1, "RMatrixTRSafeSolve: incorrect Trans!");
+            alglib.ap.assert(n>0, "RMatrixTRSafeSolve: incorrect N!");
+            alglib.ap.assert(trans==0 || trans==1, "RMatrixTRSafeSolve: incorrect Trans!");
             result = true;
             lnmax = Math.Log(math.maxrealnumber);
             
@@ -7370,7 +7933,7 @@ public partial class alglib
             //
             tmp = new double[n];
             result = true;
-            if( isupper & trans==0 )
+            if( isupper && trans==0 )
             {
                 
                 //
@@ -7420,7 +7983,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( !isupper & trans==0 )
+            if( !isupper && trans==0 )
             {
                 
                 //
@@ -7470,7 +8033,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( isupper & trans==1 )
+            if( isupper && trans==1 )
             {
                 
                 //
@@ -7520,7 +8083,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( !isupper & trans==1 )
+            if( !isupper && trans==1 )
             {
                 
                 //
@@ -7613,8 +8176,8 @@ public partial class alglib
             complex[] tmp = new complex[0];
             int i_ = 0;
 
-            ap.assert(n>0, "CMatrixTRSafeSolve: incorrect N!");
-            ap.assert((trans==0 | trans==1) | trans==2, "CMatrixTRSafeSolve: incorrect Trans!");
+            alglib.ap.assert(n>0, "CMatrixTRSafeSolve: incorrect N!");
+            alglib.ap.assert((trans==0 || trans==1) || trans==2, "CMatrixTRSafeSolve: incorrect Trans!");
             result = true;
             lnmax = Math.Log(math.maxrealnumber);
             
@@ -7641,7 +8204,7 @@ public partial class alglib
             //
             tmp = new complex[n];
             result = true;
-            if( isupper & trans==0 )
+            if( isupper && trans==0 )
             {
                 
                 //
@@ -7691,7 +8254,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( !isupper & trans==0 )
+            if( !isupper && trans==0 )
             {
                 
                 //
@@ -7741,7 +8304,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( isupper & trans==1 )
+            if( isupper && trans==1 )
             {
                 
                 //
@@ -7790,7 +8353,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( !isupper & trans==1 )
+            if( !isupper && trans==1 )
             {
                 
                 //
@@ -7839,7 +8402,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( isupper & trans==2 )
+            if( isupper && trans==2 )
             {
                 
                 //
@@ -7888,7 +8451,7 @@ public partial class alglib
                 }
                 return result;
             }
-            if( !isupper & trans==2 )
+            if( !isupper && trans==2 )
             {
                 
                 //
@@ -8181,7 +8744,7 @@ public partial class alglib
             //
             // total error
             //
-            if( (double)(rerrx)==(double)(0) & (double)(rerry)==(double)(0) )
+            if( (double)(rerrx)==(double)(0) && (double)(rerry)==(double)(0) )
             {
                 rerr = 0;
             }
@@ -8246,7 +8809,7 @@ public partial class alglib
                 rerr = 0;
                 return;
             }
-            ap.assert(n<536870912, "XDot: N is too large!");
+            alglib.ap.assert(n<536870912, "XDot: N is too large!");
             
             //
             // Prepare
@@ -8316,7 +8879,7 @@ public partial class alglib
                 }
                 r = r+s*ks;
                 v = Math.Abs(r);
-                if( allzeros | (double)(s*n+mx)==(double)(mx) )
+                if( allzeros || (double)(s*n+mx)==(double)(mx) )
                 {
                     break;
                 }
@@ -8368,7 +8931,7 @@ public partial class alglib
     }
     public class linmin
     {
-        public class linminstate
+        public class linminstate : apobject
         {
             public bool brackt;
             public bool stage1;
@@ -8395,10 +8958,47 @@ public partial class alglib
             public double width;
             public double width1;
             public double xtrapf;
+            public linminstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                linminstate _result = new linminstate();
+                _result.brackt = brackt;
+                _result.stage1 = stage1;
+                _result.infoc = infoc;
+                _result.dg = dg;
+                _result.dgm = dgm;
+                _result.dginit = dginit;
+                _result.dgtest = dgtest;
+                _result.dgx = dgx;
+                _result.dgxm = dgxm;
+                _result.dgy = dgy;
+                _result.dgym = dgym;
+                _result.finit = finit;
+                _result.ftest1 = ftest1;
+                _result.fm = fm;
+                _result.fx = fx;
+                _result.fxm = fxm;
+                _result.fy = fy;
+                _result.fym = fym;
+                _result.stx = stx;
+                _result.sty = sty;
+                _result.stmin = stmin;
+                _result.stmax = stmax;
+                _result.width = width;
+                _result.width1 = width1;
+                _result.xtrapf = xtrapf;
+                return _result;
+            }
         };
 
 
-        public class armijostate
+        public class armijostate : apobject
         {
             public bool needf;
             public double[] x;
@@ -8415,10 +9015,32 @@ public partial class alglib
             public rcommstate rstate;
             public armijostate()
             {
+                init();
+            }
+            public override void init()
+            {
                 x = new double[0];
                 xbase = new double[0];
                 s = new double[0];
                 rstate = new rcommstate();
+            }
+            public override alglib.apobject make_copy()
+            {
+                armijostate _result = new armijostate();
+                _result.needf = needf;
+                _result.x = (double[])x.Clone();
+                _result.f = f;
+                _result.n = n;
+                _result.xbase = (double[])xbase.Clone();
+                _result.s = (double[])s.Clone();
+                _result.stplen = stplen;
+                _result.fcur = fcur;
+                _result.stpmax = stpmax;
+                _result.fmax = fmax;
+                _result.nfev = nfev;
+                _result.info = info;
+                _result.rstate = (rcommstate)rstate.make_copy();
+                return _result;
             }
         };
 
@@ -8654,13 +9276,13 @@ public partial class alglib
                     //
                     //     CHECK THE INPUT PARAMETERS FOR ERRORS.
                     //
-                    if( (double)(stpmax)<(double)(stpmin) & (double)(stpmax)>(double)(0) )
+                    if( (double)(stpmax)<(double)(stpmin) && (double)(stpmax)>(double)(0) )
                     {
                         info = 5;
                         stp = 0.0;
                         return;
                     }
-                    if( ((((((n<=0 | (double)(stp)<=(double)(0)) | (double)(ftol)<(double)(0)) | (double)(gtol)<(double)(zero)) | (double)(xtol)<(double)(zero)) | (double)(stpmin)<(double)(zero)) | (double)(stpmax)<(double)(stpmin)) | maxfev<=0 )
+                    if( ((((((n<=0 || (double)(stp)<=(double)(0)) || (double)(ftol)<(double)(0)) || (double)(gtol)<(double)(zero)) || (double)(xtol)<(double)(zero)) || (double)(stpmin)<(double)(zero)) || (double)(stpmax)<(double)(stpmin)) || maxfev<=0 )
                     {
                         stage = 0;
                         return;
@@ -8763,7 +9385,7 @@ public partial class alglib
                     //        IF AN UNUSUAL TERMINATION IS TO OCCUR THEN LET
                     //        STP BE THE LOWEST POINT OBTAINED SO FAR.
                     //
-                    if( (((state.brackt & ((double)(stp)<=(double)(state.stmin) | (double)(stp)>=(double)(state.stmax))) | nfev>=maxfev-1) | state.infoc==0) | (state.brackt & (double)(state.stmax-state.stmin)<=(double)(xtol*state.stmax)) )
+                    if( (((state.brackt && ((double)(stp)<=(double)(state.stmin) || (double)(stp)>=(double)(state.stmax))) || nfev>=maxfev-1) || state.infoc==0) || (state.brackt && (double)(state.stmax-state.stmin)<=(double)(xtol*state.stmax)) )
                     {
                         stp = state.stx;
                     }
@@ -8802,15 +9424,15 @@ public partial class alglib
                     //
                     //        TEST FOR CONVERGENCE.
                     //
-                    if( (state.brackt & ((double)(stp)<=(double)(state.stmin) | (double)(stp)>=(double)(state.stmax))) | state.infoc==0 )
+                    if( (state.brackt && ((double)(stp)<=(double)(state.stmin) || (double)(stp)>=(double)(state.stmax))) || state.infoc==0 )
                     {
                         info = 6;
                     }
-                    if( ((double)(stp)==(double)(stpmax) & (double)(f)<=(double)(state.ftest1)) & (double)(state.dg)<=(double)(state.dgtest) )
+                    if( ((double)(stp)==(double)(stpmax) && (double)(f)<=(double)(state.ftest1)) && (double)(state.dg)<=(double)(state.dgtest) )
                     {
                         info = 5;
                     }
-                    if( (double)(stp)==(double)(stpmin) & ((double)(f)>(double)(state.ftest1) | (double)(state.dg)>=(double)(state.dgtest)) )
+                    if( (double)(stp)==(double)(stpmin) && ((double)(f)>(double)(state.ftest1) || (double)(state.dg)>=(double)(state.dgtest)) )
                     {
                         info = 4;
                     }
@@ -8818,11 +9440,11 @@ public partial class alglib
                     {
                         info = 3;
                     }
-                    if( state.brackt & (double)(state.stmax-state.stmin)<=(double)(xtol*state.stmax) )
+                    if( state.brackt && (double)(state.stmax-state.stmin)<=(double)(xtol*state.stmax) )
                     {
                         info = 2;
                     }
-                    if( (double)(f)<=(double)(state.ftest1) & (double)(Math.Abs(state.dg))<=(double)(-(gtol*state.dginit)) )
+                    if( (double)(f)<=(double)(state.ftest1) && (double)(Math.Abs(state.dg))<=(double)(-(gtol*state.dginit)) )
                     {
                         info = 1;
                     }
@@ -8840,7 +9462,7 @@ public partial class alglib
                     //        IN THE FIRST STAGE WE SEEK A STEP FOR WHICH THE MODIFIED
                     //        FUNCTION HAS A NONPOSITIVE VALUE AND NONNEGATIVE DERIVATIVE.
                     //
-                    if( (state.stage1 & (double)(f)<=(double)(state.ftest1)) & (double)(state.dg)>=(double)(Math.Min(ftol, gtol)*state.dginit) )
+                    if( (state.stage1 && (double)(f)<=(double)(state.ftest1)) && (double)(state.dg)>=(double)(Math.Min(ftol, gtol)*state.dginit) )
                     {
                         state.stage1 = false;
                     }
@@ -8852,7 +9474,7 @@ public partial class alglib
                     //        DERIVATIVE, AND IF A LOWER FUNCTION VALUE HAS BEEN
                     //        OBTAINED BUT THE DECREASE IS NOT SUFFICIENT.
                     //
-                    if( (state.stage1 & (double)(f)<=(double)(state.fx)) & (double)(f)>(double)(state.ftest1) )
+                    if( (state.stage1 && (double)(f)<=(double)(state.fx)) && (double)(f)>(double)(state.ftest1) )
                     {
                         
                         //
@@ -8949,15 +9571,15 @@ public partial class alglib
         {
             int i_ = 0;
 
-            if( ap.len(state.x)<n )
+            if( alglib.ap.len(state.x)<n )
             {
                 state.x = new double[n];
             }
-            if( ap.len(state.xbase)<n )
+            if( alglib.ap.len(state.xbase)<n )
             {
                 state.xbase = new double[n];
             }
-            if( ap.len(state.s)<n )
+            if( alglib.ap.len(state.s)<n )
             {
                 state.s = new double[n];
             }
@@ -9034,7 +9656,7 @@ public partial class alglib
             //
             // Routine body
             //
-            if( ((double)(state.stplen)<=(double)(0) | (double)(state.stpmax)<(double)(0)) | state.fmax<2 )
+            if( ((double)(state.stplen)<=(double)(0) || (double)(state.stpmax)<(double)(0)) || state.fmax<2 )
             {
                 state.info = 0;
                 result = false;
@@ -9057,7 +9679,7 @@ public partial class alglib
             //
             // Bound StpLen
             //
-            if( (double)(state.stplen)>(double)(state.stpmax) & (double)(state.stpmax)!=(double)(0) )
+            if( (double)(state.stplen)>(double)(state.stpmax) && (double)(state.stpmax)!=(double)(0) )
             {
                 state.stplen = state.stpmax;
             }
@@ -9066,7 +9688,7 @@ public partial class alglib
             // Increase length
             //
             v = state.stplen*armijofactor;
-            if( (double)(v)>(double)(state.stpmax) & (double)(state.stpmax)!=(double)(0) )
+            if( (double)(v)>(double)(state.stpmax) && (double)(state.stpmax)!=(double)(0) )
             {
                 v = state.stpmax;
             }
@@ -9114,7 +9736,7 @@ public partial class alglib
             // evaluate F
             //
             v = state.stplen*armijofactor;
-            if( (double)(v)>(double)(state.stpmax) & (double)(state.stpmax)!=(double)(0) )
+            if( (double)(v)>(double)(state.stpmax) && (double)(state.stpmax)!=(double)(0) )
             {
                 v = state.stpmax;
             }
@@ -9305,7 +9927,7 @@ public partial class alglib
             //
             //     CHECK THE INPUT PARAMETERS FOR ERRORS.
             //
-            if( ((brackt & ((double)(stp)<=(double)(Math.Min(stx, sty)) | (double)(stp)>=(double)(Math.Max(stx, sty)))) | (double)(dx*(stp-stx))>=(double)(0)) | (double)(stmax)<(double)(stmin) )
+            if( ((brackt && ((double)(stp)<=(double)(Math.Min(stx, sty)) || (double)(stp)>=(double)(Math.Max(stx, sty)))) || (double)(dx*(stp-stx))>=(double)(0)) || (double)(stmax)<(double)(stmin) )
             {
                 return;
             }
@@ -9414,7 +10036,7 @@ public partial class alglib
                         p = gamma-dp+theta;
                         q = gamma+(dx-dp)+gamma;
                         r = p/q;
-                        if( (double)(r)<(double)(0) & (double)(gamma)!=(double)(0) )
+                        if( (double)(r)<(double)(0) && (double)(gamma)!=(double)(0) )
                         {
                             stpc = stp+r*(stx-stp);
                         }
@@ -9523,7 +10145,7 @@ public partial class alglib
             stpf = Math.Min(stmax, stpf);
             stpf = Math.Max(stmin, stpf);
             stp = stpf;
-            if( brackt & bound )
+            if( brackt && bound )
             {
                 if( (double)(sty)>(double)(stx) )
                 {
@@ -9538,64 +10160,9 @@ public partial class alglib
 
 
     }
-    public class optserv
-    {
-        /*************************************************************************
-        This subroutine is used to prepare threshold value which will be used for
-        trimming of the target function (see comments on TrimFunction() for more
-        information).
-
-        This function accepts only one parameter: function value at the starting
-        point. It returns threshold which will be used for trimming.
-
-          -- ALGLIB --
-             Copyright 10.05.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void trimprepare(double f,
-            ref double threshold)
-        {
-            threshold = 0;
-
-            threshold = 10*(Math.Abs(f)+1);
-        }
-
-
-        /*************************************************************************
-        This subroutine is used to "trim" target function, i.e. to do following
-        transformation:
-
-                           { {F,G}          if F<Threshold
-            {F_tr, G_tr} = {
-                           { {Threshold, 0} if F>=Threshold
-                           
-        Such transformation allows us to  solve  problems  with  singularities  by
-        redefining function in such way that it becomes bounded from above.
-
-          -- ALGLIB --
-             Copyright 10.05.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void trimfunction(ref double f,
-            ref double[] g,
-            int n,
-            double threshold)
-        {
-            int i = 0;
-
-            if( (double)(f)>=(double)(threshold) )
-            {
-                f = threshold;
-                for(i=0; i<=n-1; i++)
-                {
-                    g[i] = 0.0;
-                }
-            }
-        }
-
-
-    }
     public class ftbase
     {
-        public class ftplan
+        public class ftplan : apobject
         {
             public int[] plan;
             public double[] precomputed;
@@ -9603,10 +10170,23 @@ public partial class alglib
             public double[] stackbuf;
             public ftplan()
             {
+                init();
+            }
+            public override void init()
+            {
                 plan = new int[0];
                 precomputed = new double[0];
                 tmpbuf = new double[0];
                 stackbuf = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                ftplan _result = new ftplan();
+                _result.plan = (int[])plan.Clone();
+                _result.precomputed = (double[])precomputed.Clone();
+                _result.tmpbuf = (double[])tmpbuf.Clone();
+                _result.stackbuf = (double[])stackbuf.Clone();
+                return _result;
             }
         };
 
@@ -9663,13 +10243,13 @@ public partial class alglib
             tmpmemsize = 2*n;
             plan.plan = new int[planarraysize];
             ftbasegenerateplanrec(n, ftbasecffttask, plan, ref plansize, ref precomputedsize, ref planarraysize, ref tmpmemsize, ref stackmemsize, stackptr);
-            ap.assert(stackptr==0, "Internal error in FTBaseGenerateComplexFFTPlan: stack ptr!");
+            alglib.ap.assert(stackptr==0, "Internal error in FTBaseGenerateComplexFFTPlan: stack ptr!");
             plan.stackbuf = new double[Math.Max(stackmemsize, 1)];
             plan.tmpbuf = new double[Math.Max(tmpmemsize, 1)];
             plan.precomputed = new double[Math.Max(precomputedsize, 1)];
             stackptr = 0;
             ftbaseprecomputeplanrec(plan, 0, stackptr);
-            ap.assert(stackptr==0, "Internal error in FTBaseGenerateComplexFFTPlan: stack ptr!");
+            alglib.ap.assert(stackptr==0, "Internal error in FTBaseGenerateComplexFFTPlan: stack ptr!");
         }
 
 
@@ -9694,13 +10274,13 @@ public partial class alglib
             tmpmemsize = 2*n;
             plan.plan = new int[planarraysize];
             ftbasegenerateplanrec(n, ftbaserffttask, plan, ref plansize, ref precomputedsize, ref planarraysize, ref tmpmemsize, ref stackmemsize, stackptr);
-            ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFFTPlan: stack ptr!");
+            alglib.ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFFTPlan: stack ptr!");
             plan.stackbuf = new double[Math.Max(stackmemsize, 1)];
             plan.tmpbuf = new double[Math.Max(tmpmemsize, 1)];
             plan.precomputed = new double[Math.Max(precomputedsize, 1)];
             stackptr = 0;
             ftbaseprecomputeplanrec(plan, 0, stackptr);
-            ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFFTPlan: stack ptr!");
+            alglib.ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFFTPlan: stack ptr!");
         }
 
 
@@ -9725,13 +10305,13 @@ public partial class alglib
             tmpmemsize = n;
             plan.plan = new int[planarraysize];
             ftbasegenerateplanrec(n, ftbaserfhttask, plan, ref plansize, ref precomputedsize, ref planarraysize, ref tmpmemsize, ref stackmemsize, stackptr);
-            ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFHTPlan: stack ptr!");
+            alglib.ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFHTPlan: stack ptr!");
             plan.stackbuf = new double[Math.Max(stackmemsize, 1)];
             plan.tmpbuf = new double[Math.Max(tmpmemsize, 1)];
             plan.precomputed = new double[Math.Max(precomputedsize, 1)];
             stackptr = 0;
             ftbaseprecomputeplanrec(plan, 0, stackptr);
-            ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFHTPlan: stack ptr!");
+            alglib.ap.assert(stackptr==0, "Internal error in FTBaseGenerateRealFHTPlan: stack ptr!");
         }
 
 
@@ -10386,7 +10966,7 @@ public partial class alglib
             //
             // normalize
             //
-            if( n2==1 & n1!=1 )
+            if( n2==1 && n1!=1 )
             {
                 n2 = n1;
                 n1 = 1;
@@ -10554,7 +11134,7 @@ public partial class alglib
             // generate plans
             //
             ftbasefactorize(n, tasktype, ref n1, ref n2);
-            if( tasktype==ftbasecffttask | tasktype==ftbaserffttask )
+            if( tasktype==ftbasecffttask || tasktype==ftbaserffttask )
             {
                 
                 //
@@ -10591,7 +11171,7 @@ public partial class alglib
                 }
                 else
                 {
-                    if( ((n==2 | n==3) | n==4) | n==5 )
+                    if( ((n==2 || n==3) || n==4) || n==5 )
                     {
                         
                         //
@@ -10684,7 +11264,7 @@ public partial class alglib
                     plan.plan[entryoffset+5] = -1;
                     plan.plan[entryoffset+6] = -1;
                     plan.plan[entryoffset+7] = -1;
-                    if( ((n==2 | n==3) | n==4) | n==5 )
+                    if( ((n==2 || n==3) || n==4) || n==5 )
                     {
                         
                         //
@@ -10735,13 +11315,13 @@ public partial class alglib
             double bx = 0;
             double by = 0;
 
-            if( (plan.plan[entryoffset+3]==fftcooleytukeyplan | plan.plan[entryoffset+3]==fftrealcooleytukeyplan) | plan.plan[entryoffset+3]==fhtcooleytukeyplan )
+            if( (plan.plan[entryoffset+3]==fftcooleytukeyplan || plan.plan[entryoffset+3]==fftrealcooleytukeyplan) || plan.plan[entryoffset+3]==fhtcooleytukeyplan )
             {
                 ftbaseprecomputeplanrec(plan, plan.plan[entryoffset+5], stackptr);
                 ftbaseprecomputeplanrec(plan, plan.plan[entryoffset+6], stackptr);
                 return;
             }
-            if( plan.plan[entryoffset+3]==fftcodeletplan | plan.plan[entryoffset+3]==fhtcodeletplan )
+            if( plan.plan[entryoffset+3]==fftcodeletplan || plan.plan[entryoffset+3]==fhtcodeletplan )
             {
                 n1 = plan.plan[entryoffset+1];
                 n2 = plan.plan[entryoffset+2];
@@ -10966,7 +11546,7 @@ public partial class alglib
             int m1 = 0;
             int n1 = 0;
 
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -10997,11 +11577,11 @@ public partial class alglib
                 //                                  ( B2 )
                 //
                 n1 = n/2;
-                if( n-n1>=8 & n1%8!=0 )
+                if( n-n1>=8 && n1%8!=0 )
                 {
                     n1 = n1+(8-n1%8);
                 }
-                ap.assert(n-n1>0);
+                alglib.ap.assert(n-n1>0);
                 ffticltrec(ref a, astart, astride, ref b, bstart, bstride, m, n1);
                 ffticltrec(ref a, astart+2*n1, astride, ref b, bstart+2*n1*bstride, bstride, m, n-n1);
             }
@@ -11015,11 +11595,11 @@ public partial class alglib
                 //                     ( A2 )
                 //
                 m1 = m/2;
-                if( m-m1>=8 & m1%8!=0 )
+                if( m-m1>=8 && m1%8!=0 )
                 {
                     m1 = m1+(8-m1%8);
                 }
-                ap.assert(m-m1>0);
+                alglib.ap.assert(m-m1>0);
                 ffticltrec(ref a, astart, astride, ref b, bstart, bstride, m1, n);
                 ffticltrec(ref a, astart+2*m1*astride, astride, ref b, bstart+2*m1, bstride, m-m1, n);
             }
@@ -11049,7 +11629,7 @@ public partial class alglib
             int m1 = 0;
             int n1 = 0;
 
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -11078,11 +11658,11 @@ public partial class alglib
                 //                                  ( B2 )
                 //
                 n1 = n/2;
-                if( n-n1>=8 & n1%8!=0 )
+                if( n-n1>=8 && n1%8!=0 )
                 {
                     n1 = n1+(8-n1%8);
                 }
-                ap.assert(n-n1>0);
+                alglib.ap.assert(n-n1>0);
                 fftirltrec(ref a, astart, astride, ref b, bstart, bstride, m, n1);
                 fftirltrec(ref a, astart+n1, astride, ref b, bstart+n1*bstride, bstride, m, n-n1);
             }
@@ -11096,11 +11676,11 @@ public partial class alglib
                 //                     ( A2 )
                 //
                 m1 = m/2;
-                if( m-m1>=8 & m1%8!=0 )
+                if( m-m1>=8 && m1%8!=0 )
                 {
                     m1 = m1+(8-m1%8);
                 }
-                ap.assert(m-m1>0);
+                alglib.ap.assert(m-m1>0);
                 fftirltrec(ref a, astart, astride, ref b, bstart, bstride, m1, n);
                 fftirltrec(ref a, astart+m1*astride, astride, ref b, bstart+m1, bstride, m-m1, n);
             }
@@ -11118,7 +11698,7 @@ public partial class alglib
             int leastfactor,
             ref int best)
         {
-            ap.assert(ftbasemaxsmoothfactor<=5, "FTBaseFindSmoothRec: internal error!");
+            alglib.ap.assert(ftbasemaxsmoothfactor<=5, "FTBaseFindSmoothRec: internal error!");
             if( seed>=n )
             {
                 best = Math.Min(best, seed);
@@ -11178,7 +11758,7 @@ public partial class alglib
             int j = 0;
             double v = 0;
 
-            ap.assert(n>0, "RefFHTR1D: incorrect N!");
+            alglib.ap.assert(n>0, "RefFHTR1D: incorrect N!");
             buf = new double[n];
             for(i=0; i<=n-1; i++)
             {
@@ -11207,7 +11787,7 @@ public partial class alglib
             double lq = 0;
 
             z = 1.0+x;
-            if( (double)(z)<(double)(0.70710678118654752440) | (double)(z)>(double)(1.41421356237309504880) )
+            if( (double)(z)<(double)(0.70710678118654752440) || (double)(z)>(double)(1.41421356237309504880) )
             {
                 result = Math.Log(z);
                 return result;
@@ -11241,7 +11821,7 @@ public partial class alglib
             double ep = 0;
             double eq = 0;
 
-            if( (double)(x)<(double)(-0.5) | (double)(x)>(double)(0.5) )
+            if( (double)(x)<(double)(-0.5) || (double)(x)>(double)(0.5) )
             {
                 result = Math.Exp(x)-1.0;
                 return result;
@@ -11267,7 +11847,7 @@ public partial class alglib
             double xx = 0;
             double c = 0;
 
-            if( (double)(x)<(double)(-(0.25*Math.PI)) | (double)(x)>(double)(0.25*Math.PI) )
+            if( (double)(x)<(double)(-(0.25*Math.PI)) || (double)(x)>(double)(0.25*Math.PI) )
             {
                 result = Math.Cos(x)-1;
                 return result;

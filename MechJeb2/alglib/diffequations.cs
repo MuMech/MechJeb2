@@ -227,7 +227,7 @@ public partial class alglib
 {
     public class odesolver
     {
-        public class odesolverstate
+        public class odesolverstate : apobject
         {
             public int n;
             public int m;
@@ -256,6 +256,10 @@ public partial class alglib
             public rcommstate rstate;
             public odesolverstate()
             {
+                init();
+            }
+            public override void init()
+            {
                 yc = new double[0];
                 escale = new double[0];
                 xg = new double[0];
@@ -271,13 +275,57 @@ public partial class alglib
                 rkk = new double[0,0];
                 rstate = new rcommstate();
             }
+            public override alglib.apobject make_copy()
+            {
+                odesolverstate _result = new odesolverstate();
+                _result.n = n;
+                _result.m = m;
+                _result.xscale = xscale;
+                _result.h = h;
+                _result.eps = eps;
+                _result.fraceps = fraceps;
+                _result.yc = (double[])yc.Clone();
+                _result.escale = (double[])escale.Clone();
+                _result.xg = (double[])xg.Clone();
+                _result.solvertype = solvertype;
+                _result.needdy = needdy;
+                _result.x = x;
+                _result.y = (double[])y.Clone();
+                _result.dy = (double[])dy.Clone();
+                _result.ytbl = (double[,])ytbl.Clone();
+                _result.repterminationtype = repterminationtype;
+                _result.repnfev = repnfev;
+                _result.yn = (double[])yn.Clone();
+                _result.yns = (double[])yns.Clone();
+                _result.rka = (double[])rka.Clone();
+                _result.rkc = (double[])rkc.Clone();
+                _result.rkcs = (double[])rkcs.Clone();
+                _result.rkb = (double[,])rkb.Clone();
+                _result.rkk = (double[,])rkk.Clone();
+                _result.rstate = (rcommstate)rstate.make_copy();
+                return _result;
+            }
         };
 
 
-        public class odesolverreport
+        public class odesolverreport : apobject
         {
             public int nfev;
             public int terminationtype;
+            public odesolverreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                odesolverreport _result = new odesolverreport();
+                _result.nfev = nfev;
+                _result.terminationtype = terminationtype;
+                return _result;
+            }
         };
 
 
@@ -342,15 +390,15 @@ public partial class alglib
             double h,
             odesolverstate state)
         {
-            ap.assert(n>=1, "ODESolverRKCK: N<1!");
-            ap.assert(m>=1, "ODESolverRKCK: M<1!");
-            ap.assert(ap.len(y)>=n, "ODESolverRKCK: Length(Y)<N!");
-            ap.assert(ap.len(x)>=m, "ODESolverRKCK: Length(X)<M!");
-            ap.assert(apserv.isfinitevector(y, n), "ODESolverRKCK: Y contains infinite or NaN values!");
-            ap.assert(apserv.isfinitevector(x, m), "ODESolverRKCK: Y contains infinite or NaN values!");
-            ap.assert(math.isfinite(eps), "ODESolverRKCK: Eps is not finite!");
-            ap.assert((double)(eps)!=(double)(0), "ODESolverRKCK: Eps is zero!");
-            ap.assert(math.isfinite(h), "ODESolverRKCK: H is not finite!");
+            alglib.ap.assert(n>=1, "ODESolverRKCK: N<1!");
+            alglib.ap.assert(m>=1, "ODESolverRKCK: M<1!");
+            alglib.ap.assert(alglib.ap.len(y)>=n, "ODESolverRKCK: Length(Y)<N!");
+            alglib.ap.assert(alglib.ap.len(x)>=m, "ODESolverRKCK: Length(X)<M!");
+            alglib.ap.assert(apserv.isfinitevector(y, n), "ODESolverRKCK: Y contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x, m), "ODESolverRKCK: Y contains infinite or NaN values!");
+            alglib.ap.assert(math.isfinite(eps), "ODESolverRKCK: Eps is not finite!");
+            alglib.ap.assert((double)(eps)!=(double)(0), "ODESolverRKCK: Eps is zero!");
+            alglib.ap.assert(math.isfinite(h), "ODESolverRKCK: H is not finite!");
             odesolverinit(0, y, n, x, m, eps, h, state);
         }
 
@@ -448,8 +496,8 @@ public partial class alglib
             // some preliminary checks for internal errors
             // after this we assume that H>0 and M>1
             //
-            ap.assert((double)(state.h)>(double)(0), "ODESolver: internal error");
-            ap.assert(m>1, "ODESolverIteration: internal error");
+            alglib.ap.assert((double)(state.h)>(double)(0), "ODESolver: internal error");
+            alglib.ap.assert(m>1, "ODESolverIteration: internal error");
             
             //
             // choose solver
@@ -839,7 +887,7 @@ public partial class alglib
             //
             // check parameters.
             //
-            if( (n<=0 | m<1) | (double)(eps)==(double)(0) )
+            if( (n<=0 || m<1) || (double)(eps)==(double)(0) )
             {
                 state.repterminationtype = -1;
                 return;
@@ -880,7 +928,7 @@ public partial class alglib
             }
             for(i=1; i<=m-1; i++)
             {
-                if( ((double)(x[1])>(double)(x[0]) & (double)(x[i])<=(double)(x[i-1])) | ((double)(x[1])<(double)(x[0]) & (double)(x[i])>=(double)(x[i-1])) )
+                if( ((double)(x[1])>(double)(x[0]) && (double)(x[i])<=(double)(x[i-1])) || ((double)(x[1])<(double)(x[0]) && (double)(x[i])>=(double)(x[i-1])) )
                 {
                     state.repterminationtype = -2;
                     return;

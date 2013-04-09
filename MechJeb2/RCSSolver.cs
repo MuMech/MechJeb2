@@ -120,14 +120,12 @@ public class RCSSolver
         double epsg = 0.000001;
         double epsf = 0;
         double epsx = 0;
-        double epso = 0.00001;
-        double epsi = 0.00001;
         double diffstep = 1.0e-6;
+        int maxits = 0;
 
         alglib.minbleiccreatef(x, diffstep, out state);
         alglib.minbleicsetbc(state, bndl, bndu);
-        alglib.minbleicsetinnercond(state, epsg, epsf, epsx);
-        alglib.minbleicsetoutercond(state, epso, epsi);
+        alglib.minbleicsetcond(state, epsg, epsf, epsx, maxits);
         alglib.minbleicoptimize(state, cost_func, null, null);
         alglib.minbleicresults(state, out throttles, out rep);
 

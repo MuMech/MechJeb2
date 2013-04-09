@@ -33,7 +33,7 @@ public partial class alglib
         A   -   source matrix, MxN submatrix is copied and transposed
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
-        A   -   destination matrix
+        B   -   destination matrix, must be large enough to store result
         IB  -   submatrix offset (row index)
         JB  -   submatrix offset (column index)
     *************************************************************************/
@@ -53,7 +53,7 @@ public partial class alglib
         A   -   source matrix, MxN submatrix is copied and transposed
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
-        A   -   destination matrix
+        B   -   destination matrix, must be large enough to store result
         IB  -   submatrix offset (row index)
         JB  -   submatrix offset (column index)
     *************************************************************************/
@@ -73,7 +73,7 @@ public partial class alglib
         A   -   source matrix, MxN submatrix is copied and transposed
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
-        B   -   destination matrix
+        B   -   destination matrix, must be large enough to store result
         IB  -   submatrix offset (row index)
         JB  -   submatrix offset (column index)
     *************************************************************************/
@@ -93,7 +93,7 @@ public partial class alglib
         A   -   source matrix, MxN submatrix is copied and transposed
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
-        B   -   destination matrix
+        B   -   destination matrix, must be large enough to store result
         IB  -   submatrix offset (row index)
         JB  -   submatrix offset (column index)
     *************************************************************************/
@@ -164,6 +164,7 @@ public partial class alglib
         X   -   input vector
         IX  -   subvector offset
         IY  -   subvector offset
+        Y   -   preallocated matrix, must be large enough to store result
 
     OUTPUT PARAMETERS:
         Y   -   vector which stores result
@@ -199,6 +200,7 @@ public partial class alglib
         X   -   input vector
         IX  -   subvector offset
         IY  -   subvector offset
+        Y   -   preallocated matrix, must be large enough to store result
 
     OUTPUT PARAMETERS:
         Y   -   vector which stores result
@@ -240,7 +242,7 @@ public partial class alglib
                     * 0 - no transformation
                     * 1 - transposition
                     * 2 - conjugate transposition
-        C   -   matrix, actial matrix is stored in C[I2:I2+M-1,J2:J2+N-1]
+        X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
         I2  -   submatrix offset
         J2  -   submatrix offset
 
@@ -276,7 +278,7 @@ public partial class alglib
                     * 0 - no transformation
                     * 1 - transposition
                     * 2 - conjugate transposition
-        C   -   matrix, actial matrix is stored in C[I2:I2+M-1,J2:J2+N-1]
+        X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
         I2  -   submatrix offset
         J2  -   submatrix offset
 
@@ -292,9 +294,28 @@ public partial class alglib
     }
 
     /*************************************************************************
-    Same as CMatrixRightTRSM, but for real matrices
+    This subroutine calculates X*op(A^-1) where:
+    * X is MxN general matrix
+    * A is NxN upper/lower triangular/unitriangular matrix
+    * "op" may be identity transformation, transposition
 
-    OpType may be only 0 or 1.
+    Multiplication result replaces X.
+    Cache-oblivious algorithm is used.
+
+    INPUT PARAMETERS
+        N   -   matrix size, N>=0
+        M   -   matrix size, N>=0
+        A       -   matrix, actial matrix is stored in A[I1:I1+N-1,J1:J1+N-1]
+        I1      -   submatrix offset
+        J1      -   submatrix offset
+        IsUpper -   whether matrix is upper triangular
+        IsUnit  -   whether matrix is unitriangular
+        OpType  -   transformation type:
+                    * 0 - no transformation
+                    * 1 - transposition
+        X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
+        I2  -   submatrix offset
+        J2  -   submatrix offset
 
       -- ALGLIB routine --
          15.12.2009
@@ -308,9 +329,28 @@ public partial class alglib
     }
 
     /*************************************************************************
-    Same as CMatrixLeftTRSM, but for real matrices
+    This subroutine calculates op(A^-1)*X where:
+    * X is MxN general matrix
+    * A is MxM upper/lower triangular/unitriangular matrix
+    * "op" may be identity transformation, transposition
 
-    OpType may be only 0 or 1.
+    Multiplication result replaces X.
+    Cache-oblivious algorithm is used.
+
+    INPUT PARAMETERS
+        N   -   matrix size, N>=0
+        M   -   matrix size, N>=0
+        A       -   matrix, actial matrix is stored in A[I1:I1+M-1,J1:J1+M-1]
+        I1      -   submatrix offset
+        J1      -   submatrix offset
+        IsUpper -   whether matrix is upper triangular
+        IsUnit  -   whether matrix is unitriangular
+        OpType  -   transformation type:
+                    * 0 - no transformation
+                    * 1 - transposition
+        X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
+        I2  -   submatrix offset
+        J2  -   submatrix offset
 
       -- ALGLIB routine --
          15.12.2009
@@ -364,9 +404,33 @@ public partial class alglib
     }
 
     /*************************************************************************
-    Same as CMatrixSYRK, but for real matrices
+    This subroutine calculates  C=alpha*A*A^T+beta*C  or  C=alpha*A^T*A+beta*C
+    where:
+    * C is NxN symmetric matrix given by its upper/lower triangle
+    * A is NxK matrix when A*A^T is calculated, KxN matrix otherwise
 
-    OpType may be only 0 or 1.
+    Additional info:
+    * cache-oblivious algorithm is used.
+    * multiplication result replaces C. If Beta=0, C elements are not used in
+      calculations (not multiplied by zero - just not referenced)
+    * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
+    * if both Beta and Alpha are zero, C is filled by zeros.
+
+    INPUT PARAMETERS
+        N       -   matrix size, N>=0
+        K       -   matrix size, K>=0
+        Alpha   -   coefficient
+        A       -   matrix
+        IA      -   submatrix offset
+        JA      -   submatrix offset
+        OpTypeA -   multiplication type:
+                    * 0 - A*A^T is calculated
+                    * 2 - A^T*A is calculated
+        Beta    -   coefficient
+        C       -   matrix
+        IC      -   submatrix offset
+        JC      -   submatrix offset
+        IsUpper -   whether C is upper triangular or lower triangular
 
       -- ALGLIB routine --
          16.12.2009
@@ -394,8 +458,8 @@ public partial class alglib
     * if both Beta and Alpha are zero, C is filled by zeros.
 
     INPUT PARAMETERS
+        M       -   matrix size, M>0
         N       -   matrix size, N>0
-        M       -   matrix size, N>0
         K       -   matrix size, K>0
         Alpha   -   coefficient
         A       -   matrix
@@ -429,17 +493,20 @@ public partial class alglib
     }
 
     /*************************************************************************
-    Same as CMatrixGEMM, but for real numbers.
-    OpType may be only 0 or 1.
 
-      -- ALGLIB routine --
-         16.12.2009
-         Bochkanov Sergey
     *************************************************************************/
     public static void rmatrixgemm(int m, int n, int k, double alpha, double[,] a, int ia, int ja, int optypea, double[,] b, int ib, int jb, int optypeb, double beta, ref double[,] c, int ic, int jc)
     {
 
-        ablas.rmatrixgemm(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
+        ablas.rmatrixgemm(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+        return;
+    }
+
+
+    public static void smp_rmatrixgemm(int m, int n, int k, double alpha, double[,] a, int ia, int ja, int optypea, double[,] b, int ib, int jb, int optypeb, double beta, ref double[,] c, int ic, int jc)
+    {
+
+        ablas._pexec_rmatrixgemm(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
         return;
     }
 
@@ -1309,6 +1376,163 @@ public partial class alglib
         q = new complex[0,0];
         ortfac.hmatrixtdunpackq(a, n, isupper, tau, ref q);
         return;
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
+    Singular value decomposition of a bidiagonal matrix (extended algorithm)
+
+    The algorithm performs the singular value decomposition  of  a  bidiagonal
+    matrix B (upper or lower) representing it as B = Q*S*P^T, where Q and  P -
+    orthogonal matrices, S - diagonal matrix with non-negative elements on the
+    main diagonal, in descending order.
+
+    The  algorithm  finds  singular  values.  In  addition,  the algorithm can
+    calculate  matrices  Q  and P (more precisely, not the matrices, but their
+    product  with  given  matrices U and VT - U*Q and (P^T)*VT)).  Of  course,
+    matrices U and VT can be of any type, including identity. Furthermore, the
+    algorithm can calculate Q'*C (this product is calculated more  effectively
+    than U*Q,  because  this calculation operates with rows instead  of matrix
+    columns).
+
+    The feature of the algorithm is its ability to find  all  singular  values
+    including those which are arbitrarily close to 0  with  relative  accuracy
+    close to  machine precision. If the parameter IsFractionalAccuracyRequired
+    is set to True, all singular values will have high relative accuracy close
+    to machine precision. If the parameter is set to False, only  the  biggest
+    singular value will have relative accuracy  close  to  machine  precision.
+    The absolute error of other singular values is equal to the absolute error
+    of the biggest singular value.
+
+    Input parameters:
+        D       -   main diagonal of matrix B.
+                    Array whose index ranges within [0..N-1].
+        E       -   superdiagonal (or subdiagonal) of matrix B.
+                    Array whose index ranges within [0..N-2].
+        N       -   size of matrix B.
+        IsUpper -   True, if the matrix is upper bidiagonal.
+        IsFractionalAccuracyRequired -
+                    THIS PARAMETER IS IGNORED SINCE ALGLIB 3.5.0
+                    SINGULAR VALUES ARE ALWAYS SEARCHED WITH HIGH ACCURACY.
+        U       -   matrix to be multiplied by Q.
+                    Array whose indexes range within [0..NRU-1, 0..N-1].
+                    The matrix can be bigger, in that case only the  submatrix
+                    [0..NRU-1, 0..N-1] will be multiplied by Q.
+        NRU     -   number of rows in matrix U.
+        C       -   matrix to be multiplied by Q'.
+                    Array whose indexes range within [0..N-1, 0..NCC-1].
+                    The matrix can be bigger, in that case only the  submatrix
+                    [0..N-1, 0..NCC-1] will be multiplied by Q'.
+        NCC     -   number of columns in matrix C.
+        VT      -   matrix to be multiplied by P^T.
+                    Array whose indexes range within [0..N-1, 0..NCVT-1].
+                    The matrix can be bigger, in that case only the  submatrix
+                    [0..N-1, 0..NCVT-1] will be multiplied by P^T.
+        NCVT    -   number of columns in matrix VT.
+
+    Output parameters:
+        D       -   singular values of matrix B in descending order.
+        U       -   if NRU>0, contains matrix U*Q.
+        VT      -   if NCVT>0, contains matrix (P^T)*VT.
+        C       -   if NCC>0, contains matrix Q'*C.
+
+    Result:
+        True, if the algorithm has converged.
+        False, if the algorithm hasn't converged (rare case).
+
+    Additional information:
+        The type of convergence is controlled by the internal  parameter  TOL.
+        If the parameter is greater than 0, the singular values will have
+        relative accuracy TOL. If TOL<0, the singular values will have
+        absolute accuracy ABS(TOL)*norm(B).
+        By default, |TOL| falls within the range of 10*Epsilon and 100*Epsilon,
+        where Epsilon is the machine precision. It is not  recommended  to  use
+        TOL less than 10*Epsilon since this will  considerably  slow  down  the
+        algorithm and may not lead to error decreasing.
+    History:
+        * 31 March, 2007.
+            changed MAXITR from 6 to 12.
+
+      -- LAPACK routine (version 3.0) --
+         Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+         Courant Institute, Argonne National Lab, and Rice University
+         October 31, 1999.
+    *************************************************************************/
+    public static bool rmatrixbdsvd(ref double[] d, double[] e, int n, bool isupper, bool isfractionalaccuracyrequired, ref double[,] u, int nru, ref double[,] c, int ncc, ref double[,] vt, int ncvt)
+    {
+
+        bool result = bdsvd.rmatrixbdsvd(ref d, e, n, isupper, isfractionalaccuracyrequired, ref u, nru, ref c, ncc, ref vt, ncvt);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
+    Singular value decomposition of a rectangular matrix.
+
+    The algorithm calculates the singular value decomposition of a matrix of
+    size MxN: A = U * S * V^T
+
+    The algorithm finds the singular values and, optionally, matrices U and V^T.
+    The algorithm can find both first min(M,N) columns of matrix U and rows of
+    matrix V^T (singular vectors), and matrices U and V^T wholly (of sizes MxM
+    and NxN respectively).
+
+    Take into account that the subroutine does not return matrix V but V^T.
+
+    Input parameters:
+        A           -   matrix to be decomposed.
+                        Array whose indexes range within [0..M-1, 0..N-1].
+        M           -   number of rows in matrix A.
+        N           -   number of columns in matrix A.
+        UNeeded     -   0, 1 or 2. See the description of the parameter U.
+        VTNeeded    -   0, 1 or 2. See the description of the parameter VT.
+        AdditionalMemory -
+                        If the parameter:
+                         * equals 0, the algorithm doesn’t use additional
+                           memory (lower requirements, lower performance).
+                         * equals 1, the algorithm uses additional
+                           memory of size min(M,N)*min(M,N) of real numbers.
+                           It often speeds up the algorithm.
+                         * equals 2, the algorithm uses additional
+                           memory of size M*min(M,N) of real numbers.
+                           It allows to get a maximum performance.
+                        The recommended value of the parameter is 2.
+
+    Output parameters:
+        W           -   contains singular values in descending order.
+        U           -   if UNeeded=0, U isn't changed, the left singular vectors
+                        are not calculated.
+                        if Uneeded=1, U contains left singular vectors (first
+                        min(M,N) columns of matrix U). Array whose indexes range
+                        within [0..M-1, 0..Min(M,N)-1].
+                        if UNeeded=2, U contains matrix U wholly. Array whose
+                        indexes range within [0..M-1, 0..M-1].
+        VT          -   if VTNeeded=0, VT isn’t changed, the right singular vectors
+                        are not calculated.
+                        if VTNeeded=1, VT contains right singular vectors (first
+                        min(M,N) rows of matrix V^T). Array whose indexes range
+                        within [0..min(M,N)-1, 0..N-1].
+                        if VTNeeded=2, VT contains matrix V^T wholly. Array whose
+                        indexes range within [0..N-1, 0..N-1].
+
+      -- ALGLIB --
+         Copyright 2005 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool rmatrixsvd(double[,] a, int m, int n, int uneeded, int vtneeded, int additionalmemory, out double[] w, out double[,] u, out double[,] vt)
+    {
+        w = new double[0];
+        u = new double[0,0];
+        vt = new double[0,0];
+        bool result = svd.rmatrixsvd(a, m, n, uneeded, vtneeded, additionalmemory, ref w, ref u, ref vt);
+        return result;
     }
 
 }
@@ -3312,89 +3536,943 @@ public partial class alglib
 
 
     /*************************************************************************
-    Singular value decomposition of a bidiagonal matrix (extended algorithm)
+    Sparse matrix
 
-    The algorithm performs the singular value decomposition  of  a  bidiagonal
-    matrix B (upper or lower) representing it as B = Q*S*P^T, where Q and  P -
-    orthogonal matrices, S - diagonal matrix with non-negative elements on the
-    main diagonal, in descending order.
-
-    The  algorithm  finds  singular  values.  In  addition,  the algorithm can
-    calculate  matrices  Q  and P (more precisely, not the matrices, but their
-    product  with  given  matrices U and VT - U*Q and (P^T)*VT)).  Of  course,
-    matrices U and VT can be of any type, including identity. Furthermore, the
-    algorithm can calculate Q'*C (this product is calculated more  effectively
-    than U*Q,  because  this calculation operates with rows instead  of matrix
-    columns).
-
-    The feature of the algorithm is its ability to find  all  singular  values
-    including those which are arbitrarily close to 0  with  relative  accuracy
-    close to  machine precision. If the parameter IsFractionalAccuracyRequired
-    is set to True, all singular values will have high relative accuracy close
-    to machine precision. If the parameter is set to False, only  the  biggest
-    singular value will have relative accuracy  close  to  machine  precision.
-    The absolute error of other singular values is equal to the absolute error
-    of the biggest singular value.
-
-    Input parameters:
-        D       -   main diagonal of matrix B.
-                    Array whose index ranges within [0..N-1].
-        E       -   superdiagonal (or subdiagonal) of matrix B.
-                    Array whose index ranges within [0..N-2].
-        N       -   size of matrix B.
-        IsUpper -   True, if the matrix is upper bidiagonal.
-        IsFractionalAccuracyRequired -
-                    accuracy to search singular values with.
-        U       -   matrix to be multiplied by Q.
-                    Array whose indexes range within [0..NRU-1, 0..N-1].
-                    The matrix can be bigger, in that case only the  submatrix
-                    [0..NRU-1, 0..N-1] will be multiplied by Q.
-        NRU     -   number of rows in matrix U.
-        C       -   matrix to be multiplied by Q'.
-                    Array whose indexes range within [0..N-1, 0..NCC-1].
-                    The matrix can be bigger, in that case only the  submatrix
-                    [0..N-1, 0..NCC-1] will be multiplied by Q'.
-        NCC     -   number of columns in matrix C.
-        VT      -   matrix to be multiplied by P^T.
-                    Array whose indexes range within [0..N-1, 0..NCVT-1].
-                    The matrix can be bigger, in that case only the  submatrix
-                    [0..N-1, 0..NCVT-1] will be multiplied by P^T.
-        NCVT    -   number of columns in matrix VT.
-
-    Output parameters:
-        D       -   singular values of matrix B in descending order.
-        U       -   if NRU>0, contains matrix U*Q.
-        VT      -   if NCVT>0, contains matrix (P^T)*VT.
-        C       -   if NCC>0, contains matrix Q'*C.
-
-    Result:
-        True, if the algorithm has converged.
-        False, if the algorithm hasn't converged (rare case).
-
-    Additional information:
-        The type of convergence is controlled by the internal  parameter  TOL.
-        If the parameter is greater than 0, the singular values will have
-        relative accuracy TOL. If TOL<0, the singular values will have
-        absolute accuracy ABS(TOL)*norm(B).
-        By default, |TOL| falls within the range of 10*Epsilon and 100*Epsilon,
-        where Epsilon is the machine precision. It is not  recommended  to  use
-        TOL less than 10*Epsilon since this will  considerably  slow  down  the
-        algorithm and may not lead to error decreasing.
-    History:
-        * 31 March, 2007.
-            changed MAXITR from 6 to 12.
-
-      -- LAPACK routine (version 3.0) --
-         Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-         Courant Institute, Argonne National Lab, and Rice University
-         October 31, 1999.
+    You should use ALGLIB functions to work with sparse matrix.
+    Never try to access its fields directly!
     *************************************************************************/
-    public static bool rmatrixbdsvd(ref double[] d, double[] e, int n, bool isupper, bool isfractionalaccuracyrequired, ref double[,] u, int nru, ref double[,] c, int ncc, ref double[,] vt, int ncvt)
+    public class sparsematrix
+    {
+        //
+        // Public declarations
+        //
+
+        public sparsematrix()
+        {
+            _innerobj = new sparse.sparsematrix();
+        }
+
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private sparse.sparsematrix _innerobj;
+        public sparse.sparsematrix innerobj { get { return _innerobj; } }
+        public sparsematrix(sparse.sparsematrix obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+    /*************************************************************************
+    This function creates sparse matrix in a Hash-Table format.
+
+    This function creates Hast-Table matrix, which can be  converted  to  CRS
+    format after its initialization is over. Typical  usage  scenario  for  a
+    sparse matrix is:
+    1. creation in a Hash-Table format
+    2. insertion of the matrix elements
+    3. conversion to the CRS representation
+    4. matrix is passed to some linear algebra algorithm
+
+    Some  information  about  different matrix formats can be found below, in
+    the "NOTES" section.
+
+    INPUT PARAMETERS
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        K           -   K>=0, expected number of non-zero elements in a matrix.
+                        K can be inexact approximation, can be less than actual
+                        number  of  elements  (table will grow when needed) or
+                        even zero).
+                        It is important to understand that although hash-table
+                        may grow automatically, it is better to  provide  good
+                        estimate of data size.
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        All elements of the matrix are zero.
+
+    NOTE 1.
+
+    Sparse matrices can be stored using either Hash-Table  representation  or
+    Compressed  Row  Storage  representation. Hast-table is better suited for
+    querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
+    initialization), but it is inefficient when you want to make some  linear
+    algebra operations.
+
+    From the other side, CRS is better suited for linear algebra  operations,
+    but initialization is less convenient - you have to tell row sizes at the
+    initialization,  and  you  can  fill matrix only row by row, from left to
+    right. CRS is also very inefficient when you want to find matrix  element
+    by its index.
+
+    Thus,  Hash-Table  representation   does   not   support  linear  algebra
+    operations, while CRS format does not support modification of the  table.
+    Tables below outline information about these two formats:
+
+        OPERATIONS WITH MATRIX      HASH        CRS
+        create                      +           +
+        read element                +           +
+        modify element              +
+        add value to element        +
+        A*x  (dense vector)                     +
+        A'*x (dense vector)                     +
+        A*X  (dense matrix)                     +
+        A'*X (dense matrix)                     +
+
+    NOTE 2.
+
+    Hash-tables use memory inefficiently, and they have to keep  some  amount
+    of the "spare memory" in order to have good performance. Hash  table  for
+    matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
+    where C is a small constant, about 1.5-2 in magnitude.
+
+    CRS storage, from the other side, is  more  memory-efficient,  and  needs
+    just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
+    in a matrix.
+
+    When you convert from the Hash-Table to CRS  representation, all unneeded
+    memory will be freed.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreate(int m, int n, int k, out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreate(m, n, k, s.innerobj);
+        return;
+    }
+    public static void sparsecreate(int m, int n, out sparsematrix s)
+    {
+        int k;
+
+        s = new sparsematrix();
+        k = 0;
+        sparse.sparsecreate(m, n, k, s.innerobj);
+
+        return;
+    }
+
+    /*************************************************************************
+    This function creates sparse matrix in a CRS format (expert function for
+    situations when you are running out of memory).
+
+    This function creates CRS matrix. Typical usage scenario for a CRS matrix
+    is:
+    1. creation (you have to tell number of non-zero elements at each row  at
+       this moment)
+    2. insertion of the matrix elements (row by row, from left to right)
+    3. matrix is passed to some linear algebra algorithm
+
+    This function is a memory-efficient alternative to SparseCreate(), but it
+    is more complex because it requires you to know in advance how large your
+    matrix is. Some  information about  different matrix formats can be found
+    below, in the "NOTES" section.
+
+    INPUT PARAMETERS
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        NER         -   number of elements at each row, array[M], NER[I]>=0
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS representation.
+                        You have to fill ALL non-zero elements by calling
+                        SparseSet() BEFORE you try to use this matrix.
+
+    NOTE 1.
+
+    Sparse matrices can be stored using either Hash-Table  representation  or
+    Compressed  Row  Storage  representation. Hast-table is better suited for
+    querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
+    initialization), but it is inefficient when you want to make some  linear
+    algebra operations.
+
+    From the other side, CRS is better suited for linear algebra  operations,
+    but initialization is less convenient - you have to tell row sizes at the
+    initialization,  and  you  can  fill matrix only row by row, from left to
+    right. CRS is also very inefficient when you want to find matrix  element
+    by its index.
+
+    Thus,  Hash-Table  representation   does   not   support  linear  algebra
+    operations, while CRS format does not support modification of the  table.
+    Tables below outline information about these two formats:
+
+        OPERATIONS WITH MATRIX      HASH        CRS
+        create                      +           +
+        read element                +           +
+        modify element              +
+        add value to element        +
+        A*x  (dense vector)                     +
+        A'*x (dense vector)                     +
+        A*X  (dense matrix)                     +
+        A'*X (dense matrix)                     +
+
+    NOTE 2.
+
+    Hash-tables use memory inefficiently, and they have to keep  some  amount
+    of the "spare memory" in order to have good performance. Hash  table  for
+    matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
+    where C is a small constant, about 1.5-2 in magnitude.
+
+    CRS storage, from the other side, is  more  memory-efficient,  and  needs
+    just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
+    in a matrix.
+
+    When you convert from the Hash-Table to CRS  representation, all unneeded
+    memory will be freed.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatecrs(int m, int n, int[] ner, out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreatecrs(m, n, ner, s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function copies S0 to S1.
+
+    NOTE:  this  function  does  not verify its arguments, it just copies all
+    fields of the structure.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopy(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopy(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function adds value to S[i,j] - element of the sparse matrix. Matrix
+    must be in a Hash-Table mode.
+
+    In case S[i,j] already exists in the table, V i added to  its  value.  In
+    case  S[i,j]  is  non-existent,  it  is  inserted  in  the  table.  Table
+    automatically grows when necessary.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        Exception will be thrown for CRS matrix.
+        I           -   row index of the element to modify, 0<=I<M
+        J           -   column index of the element to modify, 0<=J<N
+        V           -   value to add, must be finite number
+
+    OUTPUT PARAMETERS
+        S           -   modified matrix
+
+    NOTE 1:  when  S[i,j]  is exactly zero after modification, it is  deleted
+    from the table.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseadd(sparsematrix s, int i, int j, double v)
     {
 
-        bool result = bdsvd.rmatrixbdsvd(ref d, e, n, isupper, isfractionalaccuracyrequired, ref u, nru, ref c, ncc, ref vt, ncvt);
+        sparse.sparseadd(s.innerobj, i, j, v);
+        return;
+    }
+
+    /*************************************************************************
+    This function modifies S[i,j] - element of the sparse matrix.
+
+    For Hash-based storage format:
+    * new value can be zero or non-zero.  In case new value of S[i,j] is zero,
+      this element is deleted from the table.
+    * this  function  has  no  effect when called with zero V for non-existent
+      element.
+
+    For CRS-bases storage format:
+    * new value MUST be non-zero. Exception will be thrown for zero V.
+    * elements must be initialized in correct order -  from top row to bottom,
+      within row - from left to right.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table or CRS representation.
+        I           -   row index of the element to modify, 0<=I<M
+        J           -   column index of the element to modify, 0<=J<N
+        V           -   value to set, must be finite number, can be zero
+
+    OUTPUT PARAMETERS
+        S           -   modified matrix
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseset(sparsematrix s, int i, int j, double v)
+    {
+
+        sparse.sparseset(s.innerobj, i, j, v);
+        return;
+    }
+
+    /*************************************************************************
+    This function returns S[i,j] - element of the sparse matrix.  Matrix  can
+    be in any mode (Hash-Table or CRS), but this function is  less  efficient
+    for CRS matrices.  Hash-Table  matrices can  find element  in O(1)  time,
+    while  CRS  matrices  need O(log(RS)) time, where RS is an number of non-
+    zero elements in a row.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        Exception will be thrown for CRS matrix.
+        I           -   row index of the element to modify, 0<=I<M
+        J           -   column index of the element to modify, 0<=J<N
+
+    RESULT
+        value of S[I,J] or zero (in case no element with such index is found)
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double sparseget(sparsematrix s, int i, int j)
+    {
+
+        double result = sparse.sparseget(s.innerobj, i, j);
         return result;
     }
+
+    /*************************************************************************
+    This function returns I-th diagonal element of the sparse matrix.
+
+    Matrix can be in any mode (Hash-Table or CRS storage), but this  function
+    is most efficient for CRS matrices - it requires less than 50 CPU  cycles
+    to extract diagonal element. For Hash-Table matrices we still  have  O(1)
+    query time, but function is many times slower.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        Exception will be thrown for CRS matrix.
+        I           -   index of the element to modify, 0<=I<min(M,N)
+
+    RESULT
+        value of S[I,I] or zero (in case no element with such index is found)
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double sparsegetdiagonal(sparsematrix s, int i)
+    {
+
+        double result = sparse.sparsegetdiagonal(s.innerobj, i);
+        return result;
+    }
+
+    /*************************************************************************
+    This function converts matrix to CRS format.
+
+    Some  algorithms  (linear  algebra ones, for example) require matrices in
+    CRS format.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in any format
+
+    OUTPUT PARAMETERS
+        S           -   matrix in CRS format
+
+    NOTE:  this  function  has  no  effect  when  called with matrix which is
+    already in CRS mode.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseconverttocrs(sparsematrix s)
+    {
+
+        sparse.sparseconverttocrs(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product  S*x.  Matrix  S  must  be
+    stored in CRS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        Y           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y           -   array[M], S*x
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemv(sparsematrix s, double[] x, ref double[] y)
+    {
+
+        sparse.sparsemv(s.innerobj, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product  S^T*x. Matrix S  must  be
+    stored in CRS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        X           -   array[M], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least M, but we do not check for NAN's or INF's.
+        Y           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y           -   array[N], S^T*x
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemtv(sparsematrix s, double[] x, ref double[] y)
+    {
+
+        sparse.sparsemtv(s.innerobj, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function simultaneously calculates two matrix-vector products:
+        S*x and S^T*x.
+    S must be square (non-rectangular) matrix stored in CRS format (exception
+    will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse N*N matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        Y0          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+        Y1          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y0          -   array[N], S*x
+        Y1          -   array[N], S^T*x
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function. It also throws exception when S is non-square.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemv2(sparsematrix s, double[] x, ref double[] y0, ref double[] y1)
+    {
+
+        sparse.sparsemv2(s.innerobj, x, ref y0, ref y1);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product  S*x, when S is  symmetric
+    matrix.  Matrix  S  must  be stored in  CRS  format  (exception  will  be
+    thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*M matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        IsUpper     -   whether upper or lower triangle of S is given:
+                        * if upper triangle is given,  only   S[i,j] for j>=i
+                          are used, and lower triangle is ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for j<=i
+                          are used, and upper triangle is ignored.
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        Y           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y           -   array[M], S*x
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesmv(sparsematrix s, bool isupper, double[] x, ref double[] y)
+    {
+
+        sparse.sparsesmv(s.innerobj, isupper, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-matrix product  S*A.  Matrix  S  must  be
+    stored in CRS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        A           -   array[N][K], input dense matrix. For  performance reasons
+                        we make only quick checks - we check that array size
+                        is at least N, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B           -   array[M][K], S*A
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemm(sparsematrix s, double[,] a, int k, ref double[,] b)
+    {
+
+        sparse.sparsemm(s.innerobj, a, k, ref b);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-matrix product  S^T*A. Matrix S  must  be
+    stored in CRS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        A           -   array[M][K], input dense matrix. For performance reasons
+                        we make only quick checks - we check that array size  is
+                        at least M, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B           -   array[N][K], S^T*A
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemtm(sparsematrix s, double[,] a, int k, ref double[,] b)
+    {
+
+        sparse.sparsemtm(s.innerobj, a, k, ref b);
+        return;
+    }
+
+    /*************************************************************************
+    This function simultaneously calculates two matrix-matrix products:
+        S*A and S^T*A.
+    S must be square (non-rectangular) matrix stored in CRS format (exception
+    will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse N*N matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        A           -   array[N][K], input dense matrix. For performance reasons
+                        we make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B0          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+        B1          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B0          -   array[N][K], S*A
+        B1          -   array[N][K], S^T*A
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function. It also throws exception when S is non-square.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemm2(sparsematrix s, double[,] a, int k, ref double[,] b0, ref double[,] b1)
+    {
+
+        sparse.sparsemm2(s.innerobj, a, k, ref b0, ref b1);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-matrix product  S*A, when S  is  symmetric
+    matrix.  Matrix  S  must  be stored  in  CRS  format  (exception  will  be
+    thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*M matrix in CRS format (you MUST convert  it
+                        to CRS before calling this function).
+        IsUpper     -   whether upper or lower triangle of S is given:
+                        * if upper triangle is given,  only   S[i,j] for j>=i
+                          are used, and lower triangle is ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for j<=i
+                          are used, and upper triangle is ignored.
+        A           -   array[N][K], input dense matrix. For performance reasons
+                        we make only quick checks - we check that array size is
+                        at least N, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B           -   array[M][K], S*A
+
+    NOTE: this function throws exception when called for non-CRS matrix.  You
+    must convert your matrix  with  SparseConvertToCRS()  before  using  this
+    function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesmm(sparsematrix s, bool isupper, double[,] a, int k, ref double[,] b)
+    {
+
+        sparse.sparsesmm(s.innerobj, isupper, a, k, ref b);
+        return;
+    }
+
+    /*************************************************************************
+    This procedure resizes Hash-Table matrix. It can be called when you  have
+    deleted too many elements from the matrix, and you want to  free unneeded
+    memory.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseresizematrix(sparsematrix s)
+    {
+
+        sparse.sparseresizematrix(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  is  used  to enumerate all elements of the sparse matrix.
+    Before  first  call  user  initializes  T0 and T1 counters by zero. These
+    counters are used to remember current position in a  matrix;  after  each
+    call they are updated by the function.
+
+    Subsequent calls to this function return non-zero elements of the  sparse
+    matrix, one by one. If you enumerate CRS matrix, matrix is traversed from
+    left to right, from top to bottom. In case you enumerate matrix stored as
+    Hash table, elements are returned in random order.
+
+    EXAMPLE
+        > T0=0
+        > T1=0
+        > while SparseEnumerate(S,T0,T1,I,J,V) do
+        >     ....do something with I,J,V
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table or CRS representation.
+        T0          -   internal counter
+        T1          -   internal counter
+
+    OUTPUT PARAMETERS
+        T0          -   new value of the internal counter
+        T1          -   new value of the internal counter
+        I           -   row index of non-zero element, 0<=I<M.
+        J           -   column index of non-zero element, 0<=J<N
+        V           -   value of the T-th element
+
+    RESULT
+        True in case of success (next non-zero element was retrieved)
+        False in case all non-zero elements were enumerated
+
+      -- ALGLIB PROJECT --
+         Copyright 14.03.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseenumerate(sparsematrix s, ref int t0, ref int t1, out int i, out int j, out double v)
+    {
+        i = 0;
+        j = 0;
+        v = 0;
+        bool result = sparse.sparseenumerate(s.innerobj, ref t0, ref t1, ref i, ref j, ref v);
+        return result;
+    }
+
+    /*************************************************************************
+    This function rewrites existing (non-zero) element. It  returns  True   if
+    element  exists  or  False,  when  it  is  called for non-existing  (zero)
+    element.
+
+    The purpose of this function is to provide convenient thread-safe  way  to
+    modify  sparse  matrix.  Such  modification  (already  existing element is
+    rewritten) is guaranteed to be thread-safe without any synchronization, as
+    long as different threads modify different elements.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table or CRS representation.
+        I           -   row index of non-zero element to modify, 0<=I<M
+        J           -   column index of non-zero element to modify, 0<=J<N
+        V           -   value to rewrite, must be finite number
+
+    OUTPUT PARAMETERS
+        S           -   modified matrix
+    RESULT
+        True in case when element exists
+        False in case when element doesn't exist or it is zero
+
+      -- ALGLIB PROJECT --
+         Copyright 14.03.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparserewriteexisting(sparsematrix s, int i, int j, double v)
+    {
+
+        bool result = sparse.sparserewriteexisting(s.innerobj, i, j, v);
+        return result;
+    }
+
+    /*************************************************************************
+    This function returns I-th row of the sparse matrix stored in CRS format.
+
+    NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non-CRS)  are
+          passed, this function throws exception.
+
+    INPUT PARAMETERS:
+        S           -   sparse M*N matrix in CRS format
+        I           -   row index, 0<=I<M
+        IRow        -   output buffer, can be  preallocated.  In  case  buffer
+                        size  is  too  small  to  store  I-th   row,   it   is
+                        automatically reallocated.
+
+    OUTPUT PARAMETERS:
+        IRow        -   array[M], I-th row.
+
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsegetrow(sparsematrix s, int i, ref double[] irow)
+    {
+
+        sparse.sparsegetrow(s.innerobj, i, ref irow);
+        return;
+    }
+
+    /*************************************************************************
+    This function performs in-place conversion from CRS format to  Hash  table
+    storage.
+
+    INPUT PARAMETERS
+        S           -   sparse matrix in CRS format.
+
+    OUTPUT PARAMETERS
+        S           -   sparse matrix in Hash table format.
+
+    NOTE:  this  function  has  no  effect  when  called with matrix which is
+    already in Hash table mode.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseconverttohash(sparsematrix s)
+    {
+
+        sparse.sparseconverttohash(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to  Hash table storage
+    format. S0 is copied to S1 and converted on-the-fly.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in Hash table format.
+
+    NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytohash(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopytohash(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
+    copied to S1 and converted on-the-fly.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in CRS format.
+
+    NOTE: if S0 is stored as CRS, it is just copied without conversion.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytocrs(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopytocrs(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function returns type of the matrix storage format.
+
+    INPUT PARAMETERS:
+        S           -   sparse matrix.
+
+    RESULT:
+        sparse storage format used by matrix:
+            0   -   Hash-table
+            1   -   CRS-format
+
+    NOTE: future  versions  of  ALGLIB  may  include additional sparse storage
+          formats.
+
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetmatrixtype(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetmatrixtype(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    This function checks matrix storage format and returns True when matrix is
+    stored using Hash table representation.
+
+    INPUT PARAMETERS:
+        S   -   sparse matrix.
+
+    RESULT:
+        True if matrix type is Hash table
+        False if matrix type is not Hash table
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseishash(sparsematrix s)
+    {
+
+        bool result = sparse.sparseishash(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    This function checks matrix storage format and returns True when matrix is
+    stored using CRS representation.
+
+    INPUT PARAMETERS:
+        S   -   sparse matrix.
+
+    RESULT:
+        True if matrix type is CRS
+        False if matrix type is not CRS
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseiscrs(sparsematrix s)
+    {
+
+        bool result = sparse.sparseiscrs(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    The function frees all memory occupied by  sparse  matrix.  Sparse  matrix
+    structure becomes unusable after this call.
+
+    OUTPUT PARAMETERS
+        S   -   sparse matrix to delete
+
+      -- ALGLIB PROJECT --
+         Copyright 24.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsefree(out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsefree(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    The function returns number of rows of a sparse matrix.
+
+    RESULT: number of rows of a sparse matrix.
+
+      -- ALGLIB PROJECT --
+         Copyright 23.08.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetnrows(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetnrows(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    The function returns number of columns of a sparse matrix.
+
+    RESULT: number of columns of a sparse matrix.
+
+      -- ALGLIB PROJECT --
+         Copyright 23.08.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetncols(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetncols(s.innerobj);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+
 
 }
 public partial class alglib
@@ -3402,71 +4480,135 @@ public partial class alglib
 
 
     /*************************************************************************
-    Singular value decomposition of a rectangular matrix.
+    This object stores state of the iterative norm estimation algorithm.
 
-    The algorithm calculates the singular value decomposition of a matrix of
-    size MxN: A = U * S * V^T
-
-    The algorithm finds the singular values and, optionally, matrices U and V^T.
-    The algorithm can find both first min(M,N) columns of matrix U and rows of
-    matrix V^T (singular vectors), and matrices U and V^T wholly (of sizes MxM
-    and NxN respectively).
-
-    Take into account that the subroutine does not return matrix V but V^T.
-
-    Input parameters:
-        A           -   matrix to be decomposed.
-                        Array whose indexes range within [0..M-1, 0..N-1].
-        M           -   number of rows in matrix A.
-        N           -   number of columns in matrix A.
-        UNeeded     -   0, 1 or 2. See the description of the parameter U.
-        VTNeeded    -   0, 1 or 2. See the description of the parameter VT.
-        AdditionalMemory -
-                        If the parameter:
-                         * equals 0, the algorithm doesn’t use additional
-                           memory (lower requirements, lower performance).
-                         * equals 1, the algorithm uses additional
-                           memory of size min(M,N)*min(M,N) of real numbers.
-                           It often speeds up the algorithm.
-                         * equals 2, the algorithm uses additional
-                           memory of size M*min(M,N) of real numbers.
-                           It allows to get a maximum performance.
-                        The recommended value of the parameter is 2.
-
-    Output parameters:
-        W           -   contains singular values in descending order.
-        U           -   if UNeeded=0, U isn't changed, the left singular vectors
-                        are not calculated.
-                        if Uneeded=1, U contains left singular vectors (first
-                        min(M,N) columns of matrix U). Array whose indexes range
-                        within [0..M-1, 0..Min(M,N)-1].
-                        if UNeeded=2, U contains matrix U wholly. Array whose
-                        indexes range within [0..M-1, 0..M-1].
-        VT          -   if VTNeeded=0, VT isn’t changed, the right singular vectors
-                        are not calculated.
-                        if VTNeeded=1, VT contains right singular vectors (first
-                        min(M,N) rows of matrix V^T). Array whose indexes range
-                        within [0..min(M,N)-1, 0..N-1].
-                        if VTNeeded=2, VT contains matrix V^T wholly. Array whose
-                        indexes range within [0..N-1, 0..N-1].
-
-      -- ALGLIB --
-         Copyright 2005 by Bochkanov Sergey
+    You should use ALGLIB functions to work with this object.
     *************************************************************************/
-    public static bool rmatrixsvd(double[,] a, int m, int n, int uneeded, int vtneeded, int additionalmemory, out double[] w, out double[,] u, out double[,] vt)
+    public class normestimatorstate
     {
-        w = new double[0];
-        u = new double[0,0];
-        vt = new double[0,0];
-        bool result = svd.rmatrixsvd(a, m, n, uneeded, vtneeded, additionalmemory, ref w, ref u, ref vt);
-        return result;
+        //
+        // Public declarations
+        //
+
+        public normestimatorstate()
+        {
+            _innerobj = new normestimator.normestimatorstate();
+        }
+
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private normestimator.normestimatorstate _innerobj;
+        public normestimator.normestimatorstate innerobj { get { return _innerobj; } }
+        public normestimatorstate(normestimator.normestimatorstate obj)
+        {
+            _innerobj = obj;
+        }
     }
 
-}
-public partial class alglib
-{
+    /*************************************************************************
+    This procedure initializes matrix norm estimator.
+
+    USAGE:
+    1. User initializes algorithm state with NormEstimatorCreate() call
+    2. User calls NormEstimatorEstimateSparse() (or NormEstimatorIteration())
+    3. User calls NormEstimatorResults() to get solution.
+
+    INPUT PARAMETERS:
+        M       -   number of rows in the matrix being estimated, M>0
+        N       -   number of columns in the matrix being estimated, N>0
+        NStart  -   number of random starting vectors
+                    recommended value - at least 5.
+        NIts    -   number of iterations to do with best starting vector
+                    recommended value - at least 5.
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
 
 
+    NOTE: this algorithm is effectively deterministic, i.e. it always  returns
+    same result when repeatedly called for the same matrix. In fact, algorithm
+    uses randomized starting vectors, but internal  random  numbers  generator
+    always generates same sequence of the random values (it is a  feature, not
+    bug).
+
+    Algorithm can be made non-deterministic with NormEstimatorSetSeed(0) call.
+
+      -- ALGLIB --
+         Copyright 06.12.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void normestimatorcreate(int m, int n, int nstart, int nits, out normestimatorstate state)
+    {
+        state = new normestimatorstate();
+        normestimator.normestimatorcreate(m, n, nstart, nits, state.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function changes seed value used by algorithm. In some cases we  need
+    deterministic processing, i.e. subsequent calls must return equal results,
+    in other cases we need non-deterministic algorithm which returns different
+    results for the same matrix on every pass.
+
+    Setting zero seed will lead to non-deterministic algorithm, while non-zero
+    value will make our algorithm deterministic.
+
+    INPUT PARAMETERS:
+        State       -   norm estimator state, must be initialized with a  call
+                        to NormEstimatorCreate()
+        SeedVal     -   seed value, >=0. Zero value = non-deterministic algo.
+
+      -- ALGLIB --
+         Copyright 06.12.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void normestimatorsetseed(normestimatorstate state, int seedval)
+    {
+
+        normestimator.normestimatorsetseed(state.innerobj, seedval);
+        return;
+    }
+
+    /*************************************************************************
+    This function estimates norm of the sparse M*N matrix A.
+
+    INPUT PARAMETERS:
+        State       -   norm estimator state, must be initialized with a  call
+                        to NormEstimatorCreate()
+        A           -   sparse M*N matrix, must be converted to CRS format
+                        prior to calling this function.
+
+    After this function  is  over  you can call NormEstimatorResults() to get
+    estimate of the norm(A).
+
+      -- ALGLIB --
+         Copyright 06.12.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void normestimatorestimatesparse(normestimatorstate state, sparsematrix a)
+    {
+
+        normestimator.normestimatorestimatesparse(state.innerobj, a.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    Matrix norm estimation results
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+
+    OUTPUT PARAMETERS:
+        Nrm     -   estimate of the matrix norm, Nrm>=0
+
+      -- ALGLIB --
+         Copyright 06.12.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void normestimatorresults(normestimatorstate state, out double nrm)
+    {
+        nrm = 0;
+        normestimator.normestimatorresults(state.innerobj, ref nrm);
+        return;
+    }
 
 }
 public partial class alglib
@@ -4130,7 +5272,7 @@ public partial class alglib
             A   -   source matrix, MxN submatrix is copied and transposed
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
-            A   -   destination matrix
+            B   -   destination matrix, must be large enough to store result
             IB  -   submatrix offset (row index)
             JB  -   submatrix offset (column index)
         *************************************************************************/
@@ -4149,7 +5291,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( m<=2*ablascomplexblocksize(a) & n<=2*ablascomplexblocksize(a) )
+            if( m<=2*ablascomplexblocksize(a) && n<=2*ablascomplexblocksize(a) )
             {
                 
                 //
@@ -4195,7 +5337,7 @@ public partial class alglib
             A   -   source matrix, MxN submatrix is copied and transposed
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
-            A   -   destination matrix
+            B   -   destination matrix, must be large enough to store result
             IB  -   submatrix offset (row index)
             JB  -   submatrix offset (column index)
         *************************************************************************/
@@ -4214,7 +5356,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( m<=2*ablasblocksize(a) & n<=2*ablasblocksize(a) )
+            if( m<=2*ablasblocksize(a) && n<=2*ablasblocksize(a) )
             {
                 
                 //
@@ -4260,7 +5402,7 @@ public partial class alglib
             A   -   source matrix, MxN submatrix is copied and transposed
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
-            B   -   destination matrix
+            B   -   destination matrix, must be large enough to store result
             IB  -   submatrix offset (row index)
             JB  -   submatrix offset (column index)
         *************************************************************************/
@@ -4277,6 +5419,10 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
+            if( m==0 || n==0 )
+            {
+                return;
+            }
             for(i=0; i<=m-1; i++)
             {
                 i1_ = (ja) - (jb);
@@ -4297,7 +5443,7 @@ public partial class alglib
             A   -   source matrix, MxN submatrix is copied and transposed
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
-            B   -   destination matrix
+            B   -   destination matrix, must be large enough to store result
             IB  -   submatrix offset (row index)
             JB  -   submatrix offset (column index)
         *************************************************************************/
@@ -4314,6 +5460,10 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
+            if( m==0 || n==0 )
+            {
+                return;
+            }
             for(i=0; i<=m-1; i++)
             {
                 i1_ = (ja) - (jb);
@@ -4354,7 +5504,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -4403,7 +5553,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -4441,6 +5591,7 @@ public partial class alglib
             X   -   input vector
             IX  -   subvector offset
             IY  -   subvector offset
+            Y   -   preallocated matrix, must be large enough to store result
 
         OUTPUT PARAMETERS:
             Y   -   vector which stores result
@@ -4564,6 +5715,7 @@ public partial class alglib
             X   -   input vector
             IX  -   subvector offset
             IY  -   subvector offset
+            Y   -   preallocated matrix, must be large enough to store result
 
         OUTPUT PARAMETERS:
             Y   -   vector which stores result
@@ -4672,7 +5824,7 @@ public partial class alglib
                         * 0 - no transformation
                         * 1 - transposition
                         * 2 - conjugate transposition
-            C   -   matrix, actial matrix is stored in C[I2:I2+M-1,J2:J2+N-1]
+            X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
             I2  -   submatrix offset
             J2  -   submatrix offset
 
@@ -4697,7 +5849,7 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( m<=bs & n<=bs )
+            if( m<=bs && n<=bs )
             {
                 cmatrixrighttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
@@ -4725,7 +5877,7 @@ public partial class alglib
                 // IsUpper/OpType combinations
                 //
                 ablascomplexsplitlength(a, n, ref s1, ref s2);
-                if( isupper & optype==0 )
+                if( isupper && optype==0 )
                 {
                     
                     //
@@ -4738,7 +5890,7 @@ public partial class alglib
                     cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
                     return;
                 }
-                if( isupper & optype!=0 )
+                if( isupper && optype!=0 )
                 {
                     
                     //
@@ -4751,7 +5903,7 @@ public partial class alglib
                     cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
-                if( !isupper & optype==0 )
+                if( !isupper && optype==0 )
                 {
                     
                     //
@@ -4764,7 +5916,7 @@ public partial class alglib
                     cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
-                if( !isupper & optype!=0 )
+                if( !isupper && optype!=0 )
                 {
                     
                     //
@@ -4802,7 +5954,7 @@ public partial class alglib
                         * 0 - no transformation
                         * 1 - transposition
                         * 2 - conjugate transposition
-            C   -   matrix, actial matrix is stored in C[I2:I2+M-1,J2:J2+N-1]
+            X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
             I2  -   submatrix offset
             J2  -   submatrix offset
 
@@ -4827,7 +5979,7 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( m<=bs & n<=bs )
+            if( m<=bs && n<=bs )
             {
                 cmatrixlefttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
@@ -4849,7 +6001,7 @@ public partial class alglib
                 // Split A
                 //
                 ablascomplexsplitlength(a, m, ref s1, ref s2);
-                if( isupper & optype==0 )
+                if( isupper && optype==0 )
                 {
                     
                     //
@@ -4862,7 +6014,7 @@ public partial class alglib
                     cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
-                if( isupper & optype!=0 )
+                if( isupper && optype!=0 )
                 {
                     
                     //
@@ -4875,7 +6027,7 @@ public partial class alglib
                     cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
                     return;
                 }
-                if( !isupper & optype==0 )
+                if( !isupper && optype==0 )
                 {
                     
                     //
@@ -4888,7 +6040,7 @@ public partial class alglib
                     cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
                     return;
                 }
-                if( !isupper & optype!=0 )
+                if( !isupper && optype!=0 )
                 {
                     
                     //
@@ -4906,9 +6058,28 @@ public partial class alglib
 
 
         /*************************************************************************
-        Same as CMatrixRightTRSM, but for real matrices
+        This subroutine calculates X*op(A^-1) where:
+        * X is MxN general matrix
+        * A is NxN upper/lower triangular/unitriangular matrix
+        * "op" may be identity transformation, transposition
 
-        OpType may be only 0 or 1.
+        Multiplication result replaces X.
+        Cache-oblivious algorithm is used.
+
+        INPUT PARAMETERS
+            N   -   matrix size, N>=0
+            M   -   matrix size, N>=0
+            A       -   matrix, actial matrix is stored in A[I1:I1+N-1,J1:J1+N-1]
+            I1      -   submatrix offset
+            J1      -   submatrix offset
+            IsUpper -   whether matrix is upper triangular
+            IsUnit  -   whether matrix is unitriangular
+            OpType  -   transformation type:
+                        * 0 - no transformation
+                        * 1 - transposition
+            X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
+            I2  -   submatrix offset
+            J2  -   submatrix offset
 
           -- ALGLIB routine --
              15.12.2009
@@ -4931,7 +6102,7 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( m<=bs & n<=bs )
+            if( m<=bs && n<=bs )
             {
                 rmatrixrighttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
@@ -4959,7 +6130,7 @@ public partial class alglib
                 // IsUpper/OpType combinations
                 //
                 ablassplitlength(a, n, ref s1, ref s2);
-                if( isupper & optype==0 )
+                if( isupper && optype==0 )
                 {
                     
                     //
@@ -4968,11 +6139,11 @@ public partial class alglib
                     //                  (     A2)
                     //
                     rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    rmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1, j1+s1, 0, 1.0, ref x, i2, j2+s1);
+                    rmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1, j1+s1, 0, 1.0, x, i2, j2+s1);
                     rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
                     return;
                 }
-                if( isupper & optype!=0 )
+                if( isupper && optype!=0 )
                 {
                     
                     //
@@ -4981,11 +6152,11 @@ public partial class alglib
                     //                  (A12' A2')
                     //
                     rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
-                    rmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1, j1+s1, optype, 1.0, ref x, i2, j2);
+                    rmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1, j1+s1, optype, 1.0, x, i2, j2);
                     rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
-                if( !isupper & optype==0 )
+                if( !isupper && optype==0 )
                 {
                     
                     //
@@ -4994,11 +6165,11 @@ public partial class alglib
                     //                  (A21  A2)
                     //
                     rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
-                    rmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1+s1, j1, 0, 1.0, ref x, i2, j2);
+                    rmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1+s1, j1, 0, 1.0, x, i2, j2);
                     rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
-                if( !isupper & optype!=0 )
+                if( !isupper && optype!=0 )
                 {
                     
                     //
@@ -5007,7 +6178,7 @@ public partial class alglib
                     //                  (     A2')
                     //
                     rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    rmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1+s1, j1, optype, 1.0, ref x, i2, j2+s1);
+                    rmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1+s1, j1, optype, 1.0, x, i2, j2+s1);
                     rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
                     return;
                 }
@@ -5016,9 +6187,28 @@ public partial class alglib
 
 
         /*************************************************************************
-        Same as CMatrixLeftTRSM, but for real matrices
+        This subroutine calculates op(A^-1)*X where:
+        * X is MxN general matrix
+        * A is MxM upper/lower triangular/unitriangular matrix
+        * "op" may be identity transformation, transposition
 
-        OpType may be only 0 or 1.
+        Multiplication result replaces X.
+        Cache-oblivious algorithm is used.
+
+        INPUT PARAMETERS
+            N   -   matrix size, N>=0
+            M   -   matrix size, N>=0
+            A       -   matrix, actial matrix is stored in A[I1:I1+M-1,J1:J1+M-1]
+            I1      -   submatrix offset
+            J1      -   submatrix offset
+            IsUpper -   whether matrix is upper triangular
+            IsUnit  -   whether matrix is unitriangular
+            OpType  -   transformation type:
+                        * 0 - no transformation
+                        * 1 - transposition
+            X   -   matrix, actial matrix is stored in X[I2:I2+M-1,J2:J2+N-1]
+            I2  -   submatrix offset
+            J2  -   submatrix offset
 
           -- ALGLIB routine --
              15.12.2009
@@ -5041,7 +6231,7 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( m<=bs & n<=bs )
+            if( m<=bs && n<=bs )
             {
                 rmatrixlefttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
@@ -5063,7 +6253,7 @@ public partial class alglib
                 // Split A
                 //
                 ablassplitlength(a, m, ref s1, ref s2);
-                if( isupper & optype==0 )
+                if( isupper && optype==0 )
                 {
                     
                     //
@@ -5072,11 +6262,11 @@ public partial class alglib
                     //           (     A2)    ( X2 )
                     //
                     rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
-                    rmatrixgemm(s1, n, s2, -1.0, a, i1, j1+s1, 0, x, i2+s1, j2, 0, 1.0, ref x, i2, j2);
+                    rmatrixgemm(s1, n, s2, -1.0, a, i1, j1+s1, 0, x, i2+s1, j2, 0, 1.0, x, i2, j2);
                     rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
-                if( isupper & optype!=0 )
+                if( isupper && optype!=0 )
                 {
                     
                     //
@@ -5085,11 +6275,11 @@ public partial class alglib
                     //          (A12' A2')   ( X2 )
                     //
                     rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    rmatrixgemm(s2, n, s1, -1.0, a, i1, j1+s1, optype, x, i2, j2, 0, 1.0, ref x, i2+s1, j2);
+                    rmatrixgemm(s2, n, s1, -1.0, a, i1, j1+s1, optype, x, i2, j2, 0, 1.0, x, i2+s1, j2);
                     rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
                     return;
                 }
-                if( !isupper & optype==0 )
+                if( !isupper && optype==0 )
                 {
                     
                     //
@@ -5098,11 +6288,11 @@ public partial class alglib
                     //          (A21  A2)   ( X2 )
                     //
                     rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    rmatrixgemm(s2, n, s1, -1.0, a, i1+s1, j1, 0, x, i2, j2, 0, 1.0, ref x, i2+s1, j2);
+                    rmatrixgemm(s2, n, s1, -1.0, a, i1+s1, j1, 0, x, i2, j2, 0, 1.0, x, i2+s1, j2);
                     rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
                     return;
                 }
-                if( !isupper & optype!=0 )
+                if( !isupper && optype!=0 )
                 {
                     
                     //
@@ -5111,7 +6301,7 @@ public partial class alglib
                     //          (     A2')   ( X2 )
                     //
                     rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
-                    rmatrixgemm(s1, n, s2, -1.0, a, i1+s1, j1, optype, x, i2+s1, j2, 0, 1.0, ref x, i2, j2);
+                    rmatrixgemm(s1, n, s2, -1.0, a, i1+s1, j1, optype, x, i2+s1, j2, 0, 1.0, x, i2, j2);
                     rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                     return;
                 }
@@ -5170,7 +6360,7 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( n<=bs & k<=bs )
+            if( n<=bs && k<=bs )
             {
                 cmatrixsyrk2(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                 return;
@@ -5200,28 +6390,28 @@ public partial class alglib
                 // Split N
                 //
                 ablascomplexsplitlength(a, n, ref s1, ref s2);
-                if( optypea==0 & isupper )
+                if( optypea==0 && isupper )
                 {
                     cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                     cmatrixgemm(s1, s2, k, alpha, a, ia, ja, 0, a, ia+s1, ja, 2, beta, ref c, ic, jc+s1);
                     cmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
-                if( optypea==0 & !isupper )
+                if( optypea==0 && !isupper )
                 {
                     cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                     cmatrixgemm(s2, s1, k, alpha, a, ia+s1, ja, 0, a, ia, ja, 2, beta, ref c, ic+s1, jc);
                     cmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
-                if( optypea!=0 & isupper )
+                if( optypea!=0 && isupper )
                 {
                     cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                     cmatrixgemm(s1, s2, k, alpha, a, ia, ja, 2, a, ia, ja+s1, 0, beta, ref c, ic, jc+s1);
                     cmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
-                if( optypea!=0 & !isupper )
+                if( optypea!=0 && !isupper )
                 {
                     cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                     cmatrixgemm(s2, s1, k, alpha, a, ia, ja+s1, 2, a, ia, ja, 0, beta, ref c, ic+s1, jc);
@@ -5233,9 +6423,33 @@ public partial class alglib
 
 
         /*************************************************************************
-        Same as CMatrixSYRK, but for real matrices
+        This subroutine calculates  C=alpha*A*A^T+beta*C  or  C=alpha*A^T*A+beta*C
+        where:
+        * C is NxN symmetric matrix given by its upper/lower triangle
+        * A is NxK matrix when A*A^T is calculated, KxN matrix otherwise
 
-        OpType may be only 0 or 1.
+        Additional info:
+        * cache-oblivious algorithm is used.
+        * multiplication result replaces C. If Beta=0, C elements are not used in
+          calculations (not multiplied by zero - just not referenced)
+        * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
+        * if both Beta and Alpha are zero, C is filled by zeros.
+
+        INPUT PARAMETERS
+            N       -   matrix size, N>=0
+            K       -   matrix size, K>=0
+            Alpha   -   coefficient
+            A       -   matrix
+            IA      -   submatrix offset
+            JA      -   submatrix offset
+            OpTypeA -   multiplication type:
+                        * 0 - A*A^T is calculated
+                        * 2 - A^T*A is calculated
+            Beta    -   coefficient
+            C       -   matrix
+            IC      -   submatrix offset
+            JC      -   submatrix offset
+            IsUpper -   whether C is upper triangular or lower triangular
 
           -- ALGLIB routine --
              16.12.2009
@@ -5259,7 +6473,7 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( n<=bs & k<=bs )
+            if( n<=bs && k<=bs )
             {
                 rmatrixsyrk2(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                 return;
@@ -5289,31 +6503,31 @@ public partial class alglib
                 // Split N
                 //
                 ablassplitlength(a, n, ref s1, ref s2);
-                if( optypea==0 & isupper )
+                if( optypea==0 && isupper )
                 {
                     rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    rmatrixgemm(s1, s2, k, alpha, a, ia, ja, 0, a, ia+s1, ja, 1, beta, ref c, ic, jc+s1);
+                    rmatrixgemm(s1, s2, k, alpha, a, ia, ja, 0, a, ia+s1, ja, 1, beta, c, ic, jc+s1);
                     rmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
-                if( optypea==0 & !isupper )
+                if( optypea==0 && !isupper )
                 {
                     rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    rmatrixgemm(s2, s1, k, alpha, a, ia+s1, ja, 0, a, ia, ja, 1, beta, ref c, ic+s1, jc);
+                    rmatrixgemm(s2, s1, k, alpha, a, ia+s1, ja, 0, a, ia, ja, 1, beta, c, ic+s1, jc);
                     rmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
-                if( optypea!=0 & isupper )
+                if( optypea!=0 && isupper )
                 {
                     rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    rmatrixgemm(s1, s2, k, alpha, a, ia, ja, 1, a, ia, ja+s1, 0, beta, ref c, ic, jc+s1);
+                    rmatrixgemm(s1, s2, k, alpha, a, ia, ja, 1, a, ia, ja+s1, 0, beta, c, ic, jc+s1);
                     rmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
-                if( optypea!=0 & !isupper )
+                if( optypea!=0 && !isupper )
                 {
                     rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    rmatrixgemm(s2, s1, k, alpha, a, ia, ja+s1, 1, a, ia, ja, 0, beta, ref c, ic+s1, jc);
+                    rmatrixgemm(s2, s1, k, alpha, a, ia, ja+s1, 1, a, ia, ja, 0, beta, c, ic+s1, jc);
                     rmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
                     return;
                 }
@@ -5336,8 +6550,8 @@ public partial class alglib
         * if both Beta and Alpha are zero, C is filled by zeros.
 
         INPUT PARAMETERS
+            M       -   matrix size, M>0
             N       -   matrix size, N>0
-            M       -   matrix size, N>0
             K       -   matrix size, K>0
             Alpha   -   coefficient
             A       -   matrix
@@ -5385,12 +6599,12 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( (m<=bs & n<=bs) & k<=bs )
+            if( (m<=bs && n<=bs) && k<=bs )
             {
                 cmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
                 return;
             }
-            if( m>=n & m>=k )
+            if( m>=n && m>=k )
             {
                 
                 //
@@ -5408,7 +6622,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( n>=m & n>=k )
+            if( n>=m && n>=k )
             {
                 
                 //
@@ -5427,29 +6641,29 @@ public partial class alglib
                 }
                 return;
             }
-            if( k>=m & k>=n )
+            if( k>=m && k>=n )
             {
                 
                 //
                 // A*B = (A1 A2)*(B1 B2)^T
                 //
                 ablascomplexsplitlength(a, k, ref s1, ref s2);
-                if( optypea==0 & optypeb==0 )
+                if( optypea==0 && optypeb==0 )
                 {
                     cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
                     cmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, ref c, ic, jc);
                 }
-                if( optypea==0 & optypeb!=0 )
+                if( optypea==0 && optypeb!=0 )
                 {
                     cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
                     cmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, ref c, ic, jc);
                 }
-                if( optypea!=0 & optypeb==0 )
+                if( optypea!=0 && optypeb==0 )
                 {
                     cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
                     cmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, ref c, ic, jc);
                 }
-                if( optypea!=0 & optypeb!=0 )
+                if( optypea!=0 && optypeb!=0 )
                 {
                     cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
                     cmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, ref c, ic, jc);
@@ -5459,14 +6673,6 @@ public partial class alglib
         }
 
 
-        /*************************************************************************
-        Same as CMatrixGEMM, but for real numbers.
-        OpType may be only 0 or 1.
-
-          -- ALGLIB routine --
-             16.12.2009
-             Bochkanov Sergey
-        *************************************************************************/
         public static void rmatrixgemm(int m,
             int n,
             int k,
@@ -5480,7 +6686,7 @@ public partial class alglib
             int jb,
             int optypeb,
             double beta,
-            ref double[,] c,
+            double[,] c,
             int ic,
             int jc)
         {
@@ -5489,12 +6695,26 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( (m<=bs & n<=bs) & k<=bs )
+            
+            //
+            // Use basecase code
+            //
+            if( (m<=bs && n<=bs) && k<=bs )
             {
-                rmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
+                rmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
                 return;
             }
-            if( m>=n & m>=k )
+            
+            //
+            // SMP support is turned on when M or N are larger than or equal to 4*BlockSize.
+            // Magnitude of K is not taken into account because splitting on K does not
+            // allow us to spawn child tasks.
+            //
+            
+            //
+            // Recursive algorithm
+            //
+            if( m>=n && m>=k )
             {
                 
                 //
@@ -5503,17 +6723,17 @@ public partial class alglib
                 ablassplitlength(a, m, ref s1, ref s2);
                 if( optypea==0 )
                 {
-                    rmatrixgemm(s1, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(s2, n, k, alpha, a, ia+s1, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic+s1, jc);
+                    rmatrixgemm(s1, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(s2, n, k, alpha, a, ia+s1, ja, optypea, b, ib, jb, optypeb, beta, c, ic+s1, jc);
                 }
                 else
                 {
-                    rmatrixgemm(s1, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(s2, n, k, alpha, a, ia, ja+s1, optypea, b, ib, jb, optypeb, beta, ref c, ic+s1, jc);
+                    rmatrixgemm(s1, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(s2, n, k, alpha, a, ia, ja+s1, optypea, b, ib, jb, optypeb, beta, c, ic+s1, jc);
                 }
                 return;
             }
-            if( n>=m & n>=k )
+            if( n>=m && n>=k )
             {
                 
                 //
@@ -5522,45 +6742,69 @@ public partial class alglib
                 ablassplitlength(a, n, ref s1, ref s2);
                 if( optypeb==0 )
                 {
-                    rmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib, jb+s1, optypeb, beta, ref c, ic, jc+s1);
+                    rmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib, jb+s1, optypeb, beta, c, ic, jc+s1);
                 }
                 else
                 {
-                    rmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib+s1, jb, optypeb, beta, ref c, ic, jc+s1);
+                    rmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib+s1, jb, optypeb, beta, c, ic, jc+s1);
                 }
                 return;
             }
-            if( k>=m & k>=n )
+            if( k>=m && k>=n )
             {
                 
                 //
                 // A*B = (A1 A2)*(B1 B2)^T
                 //
                 ablassplitlength(a, k, ref s1, ref s2);
-                if( optypea==0 & optypeb==0 )
+                if( optypea==0 && optypeb==0 )
                 {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, ref c, ic, jc);
+                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
                 }
-                if( optypea==0 & optypeb!=0 )
+                if( optypea==0 && optypeb!=0 )
                 {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, ref c, ic, jc);
+                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
                 }
-                if( optypea!=0 & optypeb==0 )
+                if( optypea!=0 && optypeb==0 )
                 {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, ref c, ic, jc);
+                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
                 }
-                if( optypea!=0 & optypeb!=0 )
+                if( optypea!=0 && optypeb!=0 )
                 {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, ref c, ic, jc);
+                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
                 }
                 return;
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixgemm(int m,
+            int n,
+            int k,
+            double alpha,
+            double[,] a,
+            int ia,
+            int ja,
+            int optypea,
+            double[,] b,
+            int ib,
+            int jb,
+            int optypeb,
+            double beta,
+            double[,] c,
+            int ic,
+            int jc)
+        {
+            rmatrixgemm(m,n,k,alpha,a,ia,ja,optypea,b,ib,jb,optypeb,beta,c,ic,jc);
         }
 
 
@@ -6501,7 +7745,7 @@ public partial class alglib
             //
             // Fast exit (nothing to be done)
             //
-            if( ((double)(alpha)==(double)(0) | k==0) & (double)(beta)==(double)(1) )
+            if( ((double)(alpha)==(double)(0) || k==0) && (double)(beta)==(double)(1) )
             {
                 return;
             }
@@ -6537,7 +7781,7 @@ public partial class alglib
                     }
                     for(j=j1; j<=j2; j++)
                     {
-                        if( (double)(alpha)!=(double)(0) & k>0 )
+                        if( (double)(alpha)!=(double)(0) && k>0 )
                         {
                             v = 0.0;
                             for(i_=ja; i_<=ja+k-1;i_++)
@@ -6649,7 +7893,7 @@ public partial class alglib
             //
             // Fast exit (nothing to be done)
             //
-            if( ((double)(alpha)==(double)(0) | k==0) & (double)(beta)==(double)(1) )
+            if( ((double)(alpha)==(double)(0) || k==0) && (double)(beta)==(double)(1) )
             {
                 return;
             }
@@ -6685,7 +7929,7 @@ public partial class alglib
                     }
                     for(j=j1; j<=j2; j++)
                     {
-                        if( (double)(alpha)!=(double)(0) & k>0 )
+                        if( (double)(alpha)!=(double)(0) && k>0 )
                         {
                             v = 0.0;
                             for(i_=ja; i_<=ja+k-1;i_++)
@@ -6847,7 +8091,7 @@ public partial class alglib
             //
             // General case
             //
-            if( optypea==0 & optypeb!=0 )
+            if( optypea==0 && optypeb!=0 )
             {
                 
                 //
@@ -6857,7 +8101,7 @@ public partial class alglib
                 {
                     for(j=0; j<=n-1; j++)
                     {
-                        if( k==0 | alpha==0 )
+                        if( k==0 || alpha==0 )
                         {
                             v = 0;
                         }
@@ -6894,7 +8138,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( optypea==0 & optypeb==0 )
+            if( optypea==0 && optypeb==0 )
             {
                 
                 //
@@ -6931,7 +8175,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( optypea!=0 & optypeb!=0 )
+            if( optypea!=0 && optypeb!=0 )
             {
                 
                 //
@@ -7002,7 +8246,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( optypea!=0 & optypeb==0 )
+            if( optypea!=0 && optypeb==0 )
             {
                 
                 //
@@ -7075,7 +8319,7 @@ public partial class alglib
             int jb,
             int optypeb,
             double beta,
-            ref double[,] c,
+            double[,] c,
             int ic,
             int jc)
         {
@@ -7097,7 +8341,7 @@ public partial class alglib
             //
             // Try optimized code
             //
-            if( ablasf.rmatrixgemmf(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc) )
+            if( ablasf.rmatrixgemmf(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc) )
             {
                 return;
             }
@@ -7136,7 +8380,7 @@ public partial class alglib
             //
             // General case
             //
-            if( optypea==0 & optypeb!=0 )
+            if( optypea==0 && optypeb!=0 )
             {
                 
                 //
@@ -7146,7 +8390,7 @@ public partial class alglib
                 {
                     for(j=0; j<=n-1; j++)
                     {
-                        if( k==0 | (double)(alpha)==(double)(0) )
+                        if( k==0 || (double)(alpha)==(double)(0) )
                         {
                             v = 0;
                         }
@@ -7171,7 +8415,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( optypea==0 & optypeb==0 )
+            if( optypea==0 && optypeb==0 )
             {
                 
                 //
@@ -7208,7 +8452,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( optypea!=0 & optypeb!=0 )
+            if( optypea!=0 && optypeb!=0 )
             {
                 
                 //
@@ -7243,7 +8487,7 @@ public partial class alglib
                 }
                 return;
             }
-            if( optypea!=0 & optypeb==0 )
+            if( optypea!=0 && optypeb==0 )
             {
                 
                 //
@@ -7348,7 +8592,7 @@ public partial class alglib
 
             tau = new double[0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -7402,7 +8646,7 @@ public partial class alglib
                 //
                 if( blockstart+blocksize<=n-1 )
                 {
-                    if( n-blockstart-blocksize>=2*ablas.ablasblocksize(a) | rowscount>=4*ablas.ablasblocksize(a) )
+                    if( n-blockstart-blocksize>=2*ablas.ablasblocksize(a) || rowscount>=4*ablas.ablasblocksize(a) )
                     {
                         
                         //
@@ -7416,9 +8660,9 @@ public partial class alglib
                         // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
                         // Q' = E + Y*T'*Y' = E + TmpA*TmpT'*TmpA'
                         //
-                        ablas.rmatrixgemm(blocksize, n-blockstart-blocksize, rowscount, 1.0, tmpa, 0, 0, 1, a, blockstart, blockstart+blocksize, 0, 0.0, ref tmpr, 0, 0);
-                        ablas.rmatrixgemm(blocksize, n-blockstart-blocksize, blocksize, 1.0, tmpt, 0, 0, 1, tmpr, 0, 0, 0, 0.0, ref tmpr, blocksize, 0);
-                        ablas.rmatrixgemm(rowscount, n-blockstart-blocksize, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, ref a, blockstart, blockstart+blocksize);
+                        ablas.rmatrixgemm(blocksize, n-blockstart-blocksize, rowscount, 1.0, tmpa, 0, 0, 1, a, blockstart, blockstart+blocksize, 0, 0.0, tmpr, 0, 0);
+                        ablas.rmatrixgemm(blocksize, n-blockstart-blocksize, blocksize, 1.0, tmpt, 0, 0, 1, tmpr, 0, 0, 0, 0.0, tmpr, blocksize, 0);
+                        ablas.rmatrixgemm(rowscount, n-blockstart-blocksize, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, a, blockstart, blockstart+blocksize);
                     }
                     else
                     {
@@ -7503,7 +8747,7 @@ public partial class alglib
 
             tau = new double[0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -7570,9 +8814,9 @@ public partial class alglib
                         //
                         // Q  = E + Y*T*Y'  = E + TmpA'*TmpT*TmpA
                         //
-                        ablas.rmatrixgemm(m-blockstart-blocksize, blocksize, columnscount, 1.0, a, blockstart+blocksize, blockstart, 0, tmpa, 0, 0, 1, 0.0, ref tmpr, 0, 0);
-                        ablas.rmatrixgemm(m-blockstart-blocksize, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 0, 0.0, ref tmpr, 0, blocksize);
-                        ablas.rmatrixgemm(m-blockstart-blocksize, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, ref a, blockstart+blocksize, blockstart);
+                        ablas.rmatrixgemm(m-blockstart-blocksize, blocksize, columnscount, 1.0, a, blockstart+blocksize, blockstart, 0, tmpa, 0, 0, 1, 0.0, tmpr, 0, 0);
+                        ablas.rmatrixgemm(m-blockstart-blocksize, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 0, 0.0, tmpr, 0, blocksize);
+                        ablas.rmatrixgemm(m-blockstart-blocksize, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, a, blockstart+blocksize, blockstart);
                     }
                     else
                     {
@@ -7643,7 +8887,7 @@ public partial class alglib
 
             tau = new complex[0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -7784,7 +9028,7 @@ public partial class alglib
 
             tau = new complex[0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -7928,8 +9172,8 @@ public partial class alglib
 
             q = new double[0,0];
 
-            ap.assert(qcolumns<=m, "UnpackQFromQR: QColumns>M!");
-            if( (m<=0 | n<=0) | qcolumns<=0 )
+            alglib.ap.assert(qcolumns<=m, "UnpackQFromQR: QColumns>M!");
+            if( (m<=0 || n<=0) || qcolumns<=0 )
             {
                 return;
             }
@@ -7969,56 +9213,59 @@ public partial class alglib
             while( blockstart>=0 )
             {
                 rowscount = m-blockstart;
-                
-                //
-                // Copy current block
-                //
-                ablas.rmatrixcopy(rowscount, blocksize, a, blockstart, blockstart, ref tmpa, 0, 0);
-                i1_ = (blockstart) - (0);
-                for(i_=0; i_<=blocksize-1;i_++)
-                {
-                    taubuf[i_] = tau[i_+i1_];
-                }
-                
-                //
-                // Update, choose between:
-                // a) Level 2 algorithm (when the rest of the matrix is small enough)
-                // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
-                //    representation for products of Householder transformations',
-                //    by R. Schreiber and C. Van Loan.
-                //
-                if( qcolumns>=2*ablas.ablasblocksize(a) )
+                if( blocksize>0 )
                 {
                     
                     //
-                    // Prepare block reflector
+                    // Copy current block
                     //
-                    rmatrixblockreflector(ref tmpa, ref taubuf, true, rowscount, blocksize, ref tmpt, ref work);
-                    
-                    //
-                    // Multiply matrix by Q.
-                    //
-                    // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
-                    //
-                    ablas.rmatrixgemm(blocksize, qcolumns, rowscount, 1.0, tmpa, 0, 0, 1, q, blockstart, 0, 0, 0.0, ref tmpr, 0, 0);
-                    ablas.rmatrixgemm(blocksize, qcolumns, blocksize, 1.0, tmpt, 0, 0, 0, tmpr, 0, 0, 0, 0.0, ref tmpr, blocksize, 0);
-                    ablas.rmatrixgemm(rowscount, qcolumns, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, ref q, blockstart, 0);
-                }
-                else
-                {
-                    
-                    //
-                    // Level 2 algorithm
-                    //
-                    for(i=blocksize-1; i>=0; i--)
+                    ablas.rmatrixcopy(rowscount, blocksize, a, blockstart, blockstart, ref tmpa, 0, 0);
+                    i1_ = (blockstart) - (0);
+                    for(i_=0; i_<=blocksize-1;i_++)
                     {
-                        i1_ = (i) - (1);
-                        for(i_=1; i_<=rowscount-i;i_++)
+                        taubuf[i_] = tau[i_+i1_];
+                    }
+                    
+                    //
+                    // Update, choose between:
+                    // a) Level 2 algorithm (when the rest of the matrix is small enough)
+                    // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
+                    //    representation for products of Householder transformations',
+                    //    by R. Schreiber and C. Van Loan.
+                    //
+                    if( qcolumns>=2*ablas.ablasblocksize(a) )
+                    {
+                        
+                        //
+                        // Prepare block reflector
+                        //
+                        rmatrixblockreflector(ref tmpa, ref taubuf, true, rowscount, blocksize, ref tmpt, ref work);
+                        
+                        //
+                        // Multiply matrix by Q.
+                        //
+                        // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
+                        //
+                        ablas.rmatrixgemm(blocksize, qcolumns, rowscount, 1.0, tmpa, 0, 0, 1, q, blockstart, 0, 0, 0.0, tmpr, 0, 0);
+                        ablas.rmatrixgemm(blocksize, qcolumns, blocksize, 1.0, tmpt, 0, 0, 0, tmpr, 0, 0, 0, 0.0, tmpr, blocksize, 0);
+                        ablas.rmatrixgemm(rowscount, qcolumns, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, q, blockstart, 0);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Level 2 algorithm
+                        //
+                        for(i=blocksize-1; i>=0; i--)
                         {
-                            t[i_] = tmpa[i_+i1_,i];
+                            i1_ = (i) - (1);
+                            for(i_=1; i_<=rowscount-i;i_++)
+                            {
+                                t[i_] = tmpa[i_+i1_,i];
+                            }
+                            t[1] = 1;
+                            reflections.applyreflectionfromtheleft(ref q, taubuf[i], t, blockstart+i, m-1, 0, qcolumns-1, ref work);
                         }
-                        t[1] = 1;
-                        reflections.applyreflectionfromtheleft(ref q, taubuf[i], t, blockstart+i, m-1, 0, qcolumns-1, ref work);
                     }
                 }
                 
@@ -8058,7 +9305,7 @@ public partial class alglib
 
             r = new double[0,0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -8131,8 +9378,8 @@ public partial class alglib
 
             q = new double[0,0];
 
-            ap.assert(qrows<=n, "RMatrixLQUnpackQ: QRows>N!");
-            if( (m<=0 | n<=0) | qrows<=0 )
+            alglib.ap.assert(qrows<=n, "RMatrixLQUnpackQ: QRows>N!");
+            if( (m<=0 || n<=0) || qrows<=0 )
             {
                 return;
             }
@@ -8172,56 +9419,59 @@ public partial class alglib
             while( blockstart>=0 )
             {
                 columnscount = n-blockstart;
-                
-                //
-                // Copy submatrix
-                //
-                ablas.rmatrixcopy(blocksize, columnscount, a, blockstart, blockstart, ref tmpa, 0, 0);
-                i1_ = (blockstart) - (0);
-                for(i_=0; i_<=blocksize-1;i_++)
-                {
-                    taubuf[i_] = tau[i_+i1_];
-                }
-                
-                //
-                // Update matrix, choose between:
-                // a) Level 2 algorithm (when the rest of the matrix is small enough)
-                // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
-                //    representation for products of Householder transformations',
-                //    by R. Schreiber and C. Van Loan.
-                //
-                if( qrows>=2*ablas.ablasblocksize(a) )
+                if( blocksize>0 )
                 {
                     
                     //
-                    // Prepare block reflector
+                    // Copy submatrix
                     //
-                    rmatrixblockreflector(ref tmpa, ref taubuf, false, columnscount, blocksize, ref tmpt, ref work);
-                    
-                    //
-                    // Multiply the rest of A by Q'.
-                    //
-                    // Q'  = E + Y*T'*Y'  = E + TmpA'*TmpT'*TmpA
-                    //
-                    ablas.rmatrixgemm(qrows, blocksize, columnscount, 1.0, q, 0, blockstart, 0, tmpa, 0, 0, 1, 0.0, ref tmpr, 0, 0);
-                    ablas.rmatrixgemm(qrows, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 1, 0.0, ref tmpr, 0, blocksize);
-                    ablas.rmatrixgemm(qrows, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, ref q, 0, blockstart);
-                }
-                else
-                {
-                    
-                    //
-                    // Level 2 algorithm
-                    //
-                    for(i=blocksize-1; i>=0; i--)
+                    ablas.rmatrixcopy(blocksize, columnscount, a, blockstart, blockstart, ref tmpa, 0, 0);
+                    i1_ = (blockstart) - (0);
+                    for(i_=0; i_<=blocksize-1;i_++)
                     {
-                        i1_ = (i) - (1);
-                        for(i_=1; i_<=columnscount-i;i_++)
+                        taubuf[i_] = tau[i_+i1_];
+                    }
+                    
+                    //
+                    // Update matrix, choose between:
+                    // a) Level 2 algorithm (when the rest of the matrix is small enough)
+                    // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
+                    //    representation for products of Householder transformations',
+                    //    by R. Schreiber and C. Van Loan.
+                    //
+                    if( qrows>=2*ablas.ablasblocksize(a) )
+                    {
+                        
+                        //
+                        // Prepare block reflector
+                        //
+                        rmatrixblockreflector(ref tmpa, ref taubuf, false, columnscount, blocksize, ref tmpt, ref work);
+                        
+                        //
+                        // Multiply the rest of A by Q'.
+                        //
+                        // Q'  = E + Y*T'*Y'  = E + TmpA'*TmpT'*TmpA
+                        //
+                        ablas.rmatrixgemm(qrows, blocksize, columnscount, 1.0, q, 0, blockstart, 0, tmpa, 0, 0, 1, 0.0, tmpr, 0, 0);
+                        ablas.rmatrixgemm(qrows, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 1, 0.0, tmpr, 0, blocksize);
+                        ablas.rmatrixgemm(qrows, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, q, 0, blockstart);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Level 2 algorithm
+                        //
+                        for(i=blocksize-1; i>=0; i--)
                         {
-                            t[i_] = tmpa[i,i_+i1_];
+                            i1_ = (i) - (1);
+                            for(i_=1; i_<=columnscount-i;i_++)
+                            {
+                                t[i_] = tmpa[i,i_+i1_];
+                            }
+                            t[1] = 1;
+                            reflections.applyreflectionfromtheright(ref q, taubuf[i], t, 0, qrows-1, blockstart+i, n-1, ref work);
                         }
-                        t[1] = 1;
-                        reflections.applyreflectionfromtheright(ref q, taubuf[i], t, 0, qrows-1, blockstart+i, n-1, ref work);
                     }
                 }
                 
@@ -8261,7 +9511,7 @@ public partial class alglib
 
             l = new double[0,0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -8334,8 +9584,8 @@ public partial class alglib
 
             q = new complex[0,0];
 
-            ap.assert(qcolumns<=m, "UnpackQFromQR: QColumns>M!");
-            if( m<=0 | n<=0 )
+            alglib.ap.assert(qcolumns<=m, "UnpackQFromQR: QColumns>M!");
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -8375,59 +9625,62 @@ public partial class alglib
             while( blockstart>=0 )
             {
                 rowscount = m-blockstart;
-                
-                //
-                // QR decomposition of submatrix.
-                // Matrix is copied to temporary storage to solve
-                // some TLB issues arising from non-contiguous memory
-                // access pattern.
-                //
-                ablas.cmatrixcopy(rowscount, blocksize, a, blockstart, blockstart, ref tmpa, 0, 0);
-                i1_ = (blockstart) - (0);
-                for(i_=0; i_<=blocksize-1;i_++)
-                {
-                    taubuf[i_] = tau[i_+i1_];
-                }
-                
-                //
-                // Update matrix, choose between:
-                // a) Level 2 algorithm (when the rest of the matrix is small enough)
-                // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
-                //    representation for products of Householder transformations',
-                //    by R. Schreiber and C. Van Loan.
-                //
-                if( qcolumns>=2*ablas.ablascomplexblocksize(a) )
+                if( blocksize>0 )
                 {
                     
                     //
-                    // Prepare block reflector
+                    // QR decomposition of submatrix.
+                    // Matrix is copied to temporary storage to solve
+                    // some TLB issues arising from non-contiguous memory
+                    // access pattern.
                     //
-                    cmatrixblockreflector(ref tmpa, ref taubuf, true, rowscount, blocksize, ref tmpt, ref work);
-                    
-                    //
-                    // Multiply the rest of A by Q.
-                    //
-                    // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
-                    //
-                    ablas.cmatrixgemm(blocksize, qcolumns, rowscount, 1.0, tmpa, 0, 0, 2, q, blockstart, 0, 0, 0.0, ref tmpr, 0, 0);
-                    ablas.cmatrixgemm(blocksize, qcolumns, blocksize, 1.0, tmpt, 0, 0, 0, tmpr, 0, 0, 0, 0.0, ref tmpr, blocksize, 0);
-                    ablas.cmatrixgemm(rowscount, qcolumns, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, ref q, blockstart, 0);
-                }
-                else
-                {
-                    
-                    //
-                    // Level 2 algorithm
-                    //
-                    for(i=blocksize-1; i>=0; i--)
+                    ablas.cmatrixcopy(rowscount, blocksize, a, blockstart, blockstart, ref tmpa, 0, 0);
+                    i1_ = (blockstart) - (0);
+                    for(i_=0; i_<=blocksize-1;i_++)
                     {
-                        i1_ = (i) - (1);
-                        for(i_=1; i_<=rowscount-i;i_++)
+                        taubuf[i_] = tau[i_+i1_];
+                    }
+                    
+                    //
+                    // Update matrix, choose between:
+                    // a) Level 2 algorithm (when the rest of the matrix is small enough)
+                    // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
+                    //    representation for products of Householder transformations',
+                    //    by R. Schreiber and C. Van Loan.
+                    //
+                    if( qcolumns>=2*ablas.ablascomplexblocksize(a) )
+                    {
+                        
+                        //
+                        // Prepare block reflector
+                        //
+                        cmatrixblockreflector(ref tmpa, ref taubuf, true, rowscount, blocksize, ref tmpt, ref work);
+                        
+                        //
+                        // Multiply the rest of A by Q.
+                        //
+                        // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
+                        //
+                        ablas.cmatrixgemm(blocksize, qcolumns, rowscount, 1.0, tmpa, 0, 0, 2, q, blockstart, 0, 0, 0.0, ref tmpr, 0, 0);
+                        ablas.cmatrixgemm(blocksize, qcolumns, blocksize, 1.0, tmpt, 0, 0, 0, tmpr, 0, 0, 0, 0.0, ref tmpr, blocksize, 0);
+                        ablas.cmatrixgemm(rowscount, qcolumns, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, ref q, blockstart, 0);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Level 2 algorithm
+                        //
+                        for(i=blocksize-1; i>=0; i--)
                         {
-                            t[i_] = tmpa[i_+i1_,i];
+                            i1_ = (i) - (1);
+                            for(i_=1; i_<=rowscount-i;i_++)
+                            {
+                                t[i_] = tmpa[i_+i1_,i];
+                            }
+                            t[1] = 1;
+                            creflections.complexapplyreflectionfromtheleft(ref q, taubuf[i], t, blockstart+i, m-1, 0, qcolumns-1, ref work);
                         }
-                        t[1] = 1;
-                        creflections.complexapplyreflectionfromtheleft(ref q, taubuf[i], t, blockstart+i, m-1, 0, qcolumns-1, ref work);
                     }
                 }
                 
@@ -8467,7 +9720,7 @@ public partial class alglib
 
             r = new complex[0,0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -8540,7 +9793,7 @@ public partial class alglib
 
             q = new complex[0,0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -8580,59 +9833,62 @@ public partial class alglib
             while( blockstart>=0 )
             {
                 columnscount = n-blockstart;
-                
-                //
-                // LQ decomposition of submatrix.
-                // Matrix is copied to temporary storage to solve
-                // some TLB issues arising from non-contiguous memory
-                // access pattern.
-                //
-                ablas.cmatrixcopy(blocksize, columnscount, a, blockstart, blockstart, ref tmpa, 0, 0);
-                i1_ = (blockstart) - (0);
-                for(i_=0; i_<=blocksize-1;i_++)
-                {
-                    taubuf[i_] = tau[i_+i1_];
-                }
-                
-                //
-                // Update matrix, choose between:
-                // a) Level 2 algorithm (when the rest of the matrix is small enough)
-                // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
-                //    representation for products of Householder transformations',
-                //    by R. Schreiber and C. Van Loan.
-                //
-                if( qrows>=2*ablas.ablascomplexblocksize(a) )
+                if( blocksize>0 )
                 {
                     
                     //
-                    // Prepare block reflector
+                    // LQ decomposition of submatrix.
+                    // Matrix is copied to temporary storage to solve
+                    // some TLB issues arising from non-contiguous memory
+                    // access pattern.
                     //
-                    cmatrixblockreflector(ref tmpa, ref taubuf, false, columnscount, blocksize, ref tmpt, ref work);
-                    
-                    //
-                    // Multiply the rest of A by Q'.
-                    //
-                    // Q'  = E + Y*T'*Y'  = E + TmpA'*TmpT'*TmpA
-                    //
-                    ablas.cmatrixgemm(qrows, blocksize, columnscount, 1.0, q, 0, blockstart, 0, tmpa, 0, 0, 2, 0.0, ref tmpr, 0, 0);
-                    ablas.cmatrixgemm(qrows, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 2, 0.0, ref tmpr, 0, blocksize);
-                    ablas.cmatrixgemm(qrows, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, ref q, 0, blockstart);
-                }
-                else
-                {
-                    
-                    //
-                    // Level 2 algorithm
-                    //
-                    for(i=blocksize-1; i>=0; i--)
+                    ablas.cmatrixcopy(blocksize, columnscount, a, blockstart, blockstart, ref tmpa, 0, 0);
+                    i1_ = (blockstart) - (0);
+                    for(i_=0; i_<=blocksize-1;i_++)
                     {
-                        i1_ = (i) - (1);
-                        for(i_=1; i_<=columnscount-i;i_++)
+                        taubuf[i_] = tau[i_+i1_];
+                    }
+                    
+                    //
+                    // Update matrix, choose between:
+                    // a) Level 2 algorithm (when the rest of the matrix is small enough)
+                    // b) blocked algorithm, see algorithm 5 from  'A storage efficient WY
+                    //    representation for products of Householder transformations',
+                    //    by R. Schreiber and C. Van Loan.
+                    //
+                    if( qrows>=2*ablas.ablascomplexblocksize(a) )
+                    {
+                        
+                        //
+                        // Prepare block reflector
+                        //
+                        cmatrixblockreflector(ref tmpa, ref taubuf, false, columnscount, blocksize, ref tmpt, ref work);
+                        
+                        //
+                        // Multiply the rest of A by Q'.
+                        //
+                        // Q'  = E + Y*T'*Y'  = E + TmpA'*TmpT'*TmpA
+                        //
+                        ablas.cmatrixgemm(qrows, blocksize, columnscount, 1.0, q, 0, blockstart, 0, tmpa, 0, 0, 2, 0.0, ref tmpr, 0, 0);
+                        ablas.cmatrixgemm(qrows, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 2, 0.0, ref tmpr, 0, blocksize);
+                        ablas.cmatrixgemm(qrows, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, ref q, 0, blockstart);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Level 2 algorithm
+                        //
+                        for(i=blocksize-1; i>=0; i--)
                         {
-                            t[i_] = math.conj(tmpa[i,i_+i1_]);
+                            i1_ = (i) - (1);
+                            for(i_=1; i_<=columnscount-i;i_++)
+                            {
+                                t[i_] = math.conj(tmpa[i,i_+i1_]);
+                            }
+                            t[1] = 1;
+                            creflections.complexapplyreflectionfromtheright(ref q, math.conj(taubuf[i]), ref t, 0, qrows-1, blockstart+i, n-1, ref work);
                         }
-                        t[1] = 1;
-                        creflections.complexapplyreflectionfromtheright(ref q, math.conj(taubuf[i]), ref t, 0, qrows-1, blockstart+i, n-1, ref work);
                     }
                 }
                 
@@ -8672,7 +9928,7 @@ public partial class alglib
 
             l = new complex[0,0];
 
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -8694,6 +9950,124 @@ public partial class alglib
                 for(i_=0; i_<=k;i_++)
                 {
                     l[i,i_] = a[i,i_];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Base case for real QR
+
+          -- LAPACK routine (version 3.0) --
+             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+             Courant Institute, Argonne National Lab, and Rice University
+             September 30, 1994.
+             Sergey Bochkanov, ALGLIB project, translation from FORTRAN to
+             pseudocode, 2007-2010.
+        *************************************************************************/
+        public static void rmatrixqrbasecase(ref double[,] a,
+            int m,
+            int n,
+            ref double[] work,
+            ref double[] t,
+            ref double[] tau)
+        {
+            int i = 0;
+            int k = 0;
+            int minmn = 0;
+            double tmp = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            minmn = Math.Min(m, n);
+            
+            //
+            // Test the input arguments
+            //
+            k = minmn;
+            for(i=0; i<=k-1; i++)
+            {
+                
+                //
+                // Generate elementary reflector H(i) to annihilate A(i+1:m,i)
+                //
+                i1_ = (i) - (1);
+                for(i_=1; i_<=m-i;i_++)
+                {
+                    t[i_] = a[i_+i1_,i];
+                }
+                reflections.generatereflection(ref t, m-i, ref tmp);
+                tau[i] = tmp;
+                i1_ = (1) - (i);
+                for(i_=i; i_<=m-1;i_++)
+                {
+                    a[i_,i] = t[i_+i1_];
+                }
+                t[1] = 1;
+                if( i<n )
+                {
+                    
+                    //
+                    // Apply H(i) to A(i:m-1,i+1:n-1) from the left
+                    //
+                    reflections.applyreflectionfromtheleft(ref a, tau[i], t, i, m-1, i+1, n-1, ref work);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Base case for real LQ
+
+          -- LAPACK routine (version 3.0) --
+             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+             Courant Institute, Argonne National Lab, and Rice University
+             September 30, 1994.
+             Sergey Bochkanov, ALGLIB project, translation from FORTRAN to
+             pseudocode, 2007-2010.
+        *************************************************************************/
+        public static void rmatrixlqbasecase(ref double[,] a,
+            int m,
+            int n,
+            ref double[] work,
+            ref double[] t,
+            ref double[] tau)
+        {
+            int i = 0;
+            int k = 0;
+            int minmn = 0;
+            double tmp = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            minmn = Math.Min(m, n);
+            k = Math.Min(m, n);
+            for(i=0; i<=k-1; i++)
+            {
+                
+                //
+                // Generate elementary reflector H(i) to annihilate A(i,i+1:n-1)
+                //
+                i1_ = (i) - (1);
+                for(i_=1; i_<=n-i;i_++)
+                {
+                    t[i_] = a[i,i_+i1_];
+                }
+                reflections.generatereflection(ref t, n-i, ref tmp);
+                tau[i] = tmp;
+                i1_ = (1) - (i);
+                for(i_=i; i_<=n-1;i_++)
+                {
+                    a[i,i_] = t[i_+i1_];
+                }
+                t[1] = 1;
+                if( i<n )
+                {
+                    
+                    //
+                    // Apply H(i) to A(i+1:m,i:n) from the right
+                    //
+                    reflections.applyreflectionfromtheright(ref a, tau[i], t, i+1, m-1, i, n-1, ref work);
                 }
             }
         }
@@ -8778,7 +10152,7 @@ public partial class alglib
             //
             // Prepare
             //
-            if( n<=0 | m<=0 )
+            if( n<=0 || m<=0 )
             {
                 return;
             }
@@ -8957,9 +10331,9 @@ public partial class alglib
 
             q = new double[0,0];
 
-            ap.assert(qcolumns<=m, "RMatrixBDUnpackQ: QColumns>M!");
-            ap.assert(qcolumns>=0, "RMatrixBDUnpackQ: QColumns<0!");
-            if( (m==0 | n==0) | qcolumns==0 )
+            alglib.ap.assert(qcolumns<=m, "RMatrixBDUnpackQ: QColumns>M!");
+            alglib.ap.assert(qcolumns>=0, "RMatrixBDUnpackQ: QColumns<0!");
+            if( (m==0 || n==0) || qcolumns==0 )
             {
                 return;
             }
@@ -9040,11 +10414,11 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( ((m<=0 | n<=0) | zrows<=0) | zcolumns<=0 )
+            if( ((m<=0 || n<=0) || zrows<=0) || zcolumns<=0 )
             {
                 return;
             }
-            ap.assert((fromtheright & zcolumns==m) | (!fromtheright & zrows==m), "RMatrixBDMultiplyByQ: incorrect Z size!");
+            alglib.ap.assert((fromtheright && zcolumns==m) || (!fromtheright && zrows==m), "RMatrixBDMultiplyByQ: incorrect Z size!");
             
             //
             // init
@@ -9194,9 +10568,9 @@ public partial class alglib
 
             pt = new double[0,0];
 
-            ap.assert(ptrows<=n, "RMatrixBDUnpackPT: PTRows>N!");
-            ap.assert(ptrows>=0, "RMatrixBDUnpackPT: PTRows<0!");
-            if( (m==0 | n==0) | ptrows==0 )
+            alglib.ap.assert(ptrows<=n, "RMatrixBDUnpackPT: PTRows>N!");
+            alglib.ap.assert(ptrows>=0, "RMatrixBDUnpackPT: PTRows<0!");
+            if( (m==0 || n==0) || ptrows==0 )
             {
                 return;
             }
@@ -9277,11 +10651,11 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            if( ((m<=0 | n<=0) | zrows<=0) | zcolumns<=0 )
+            if( ((m<=0 || n<=0) || zrows<=0) || zcolumns<=0 )
             {
                 return;
             }
-            ap.assert((fromtheright & zcolumns==n) | (!fromtheright & zrows==n), "RMatrixBDMultiplyByP: incorrect Z size!");
+            alglib.ap.assert((fromtheright && zcolumns==n) || (!fromtheright && zrows==n), "RMatrixBDMultiplyByP: incorrect Z size!");
             
             //
             // init
@@ -9434,7 +10808,7 @@ public partial class alglib
             e = new double[0];
 
             isupper = m>=n;
-            if( m<=0 | n<=0 )
+            if( m<=0 || n<=0 )
             {
                 return;
             }
@@ -9510,7 +10884,7 @@ public partial class alglib
 
             tau = new double[0];
 
-            ap.assert(n>=0, "RMatrixHessenberg: incorrect N!");
+            alglib.ap.assert(n>=0, "RMatrixHessenberg: incorrect N!");
             
             //
             // Quick return if possible
@@ -10158,7 +11532,7 @@ public partial class alglib
             }
             for(i=0; i<=n-1; i++)
             {
-                ap.assert((double)(a[i,i].y)==(double)(0));
+                alglib.ap.assert((double)(a[i,i].y)==(double)(0));
             }
             if( n>1 )
             {
@@ -10452,124 +11826,6 @@ public partial class alglib
                     }
                     v[1] = 1;
                     creflections.complexapplyreflectionfromtheleft(ref q, tau[i], v, i+1, n-1, 0, n-1, ref work);
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Base case for real QR
-
-          -- LAPACK routine (version 3.0) --
-             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-             Courant Institute, Argonne National Lab, and Rice University
-             September 30, 1994.
-             Sergey Bochkanov, ALGLIB project, translation from FORTRAN to
-             pseudocode, 2007-2010.
-        *************************************************************************/
-        private static void rmatrixqrbasecase(ref double[,] a,
-            int m,
-            int n,
-            ref double[] work,
-            ref double[] t,
-            ref double[] tau)
-        {
-            int i = 0;
-            int k = 0;
-            int minmn = 0;
-            double tmp = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            minmn = Math.Min(m, n);
-            
-            //
-            // Test the input arguments
-            //
-            k = minmn;
-            for(i=0; i<=k-1; i++)
-            {
-                
-                //
-                // Generate elementary reflector H(i) to annihilate A(i+1:m,i)
-                //
-                i1_ = (i) - (1);
-                for(i_=1; i_<=m-i;i_++)
-                {
-                    t[i_] = a[i_+i1_,i];
-                }
-                reflections.generatereflection(ref t, m-i, ref tmp);
-                tau[i] = tmp;
-                i1_ = (1) - (i);
-                for(i_=i; i_<=m-1;i_++)
-                {
-                    a[i_,i] = t[i_+i1_];
-                }
-                t[1] = 1;
-                if( i<n )
-                {
-                    
-                    //
-                    // Apply H(i) to A(i:m-1,i+1:n-1) from the left
-                    //
-                    reflections.applyreflectionfromtheleft(ref a, tau[i], t, i, m-1, i+1, n-1, ref work);
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Base case for real LQ
-
-          -- LAPACK routine (version 3.0) --
-             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-             Courant Institute, Argonne National Lab, and Rice University
-             September 30, 1994.
-             Sergey Bochkanov, ALGLIB project, translation from FORTRAN to
-             pseudocode, 2007-2010.
-        *************************************************************************/
-        private static void rmatrixlqbasecase(ref double[,] a,
-            int m,
-            int n,
-            ref double[] work,
-            ref double[] t,
-            ref double[] tau)
-        {
-            int i = 0;
-            int k = 0;
-            int minmn = 0;
-            double tmp = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            minmn = Math.Min(m, n);
-            k = Math.Min(m, n);
-            for(i=0; i<=k-1; i++)
-            {
-                
-                //
-                // Generate elementary reflector H(i) to annihilate A(i,i+1:n-1)
-                //
-                i1_ = (i) - (1);
-                for(i_=1; i_<=n-i;i_++)
-                {
-                    t[i_] = a[i,i_+i1_];
-                }
-                reflections.generatereflection(ref t, n-i, ref tmp);
-                tau[i] = tmp;
-                i1_ = (1) - (i);
-                for(i_=i; i_<=n-1;i_++)
-                {
-                    a[i,i_] = t[i_+i1_];
-                }
-                t[1] = 1;
-                if( i<n )
-                {
-                    
-                    //
-                    // Apply H(i) to A(i+1:m,i:n) from the right
-                    //
-                    reflections.applyreflectionfromtheright(ref a, tau[i], t, i+1, m-1, i, n-1, ref work);
                 }
             }
         }
@@ -10946,6 +12202,1712 @@ public partial class alglib
 
 
     }
+    public class bdsvd
+    {
+        /*************************************************************************
+        Singular value decomposition of a bidiagonal matrix (extended algorithm)
+
+        The algorithm performs the singular value decomposition  of  a  bidiagonal
+        matrix B (upper or lower) representing it as B = Q*S*P^T, where Q and  P -
+        orthogonal matrices, S - diagonal matrix with non-negative elements on the
+        main diagonal, in descending order.
+
+        The  algorithm  finds  singular  values.  In  addition,  the algorithm can
+        calculate  matrices  Q  and P (more precisely, not the matrices, but their
+        product  with  given  matrices U and VT - U*Q and (P^T)*VT)).  Of  course,
+        matrices U and VT can be of any type, including identity. Furthermore, the
+        algorithm can calculate Q'*C (this product is calculated more  effectively
+        than U*Q,  because  this calculation operates with rows instead  of matrix
+        columns).
+
+        The feature of the algorithm is its ability to find  all  singular  values
+        including those which are arbitrarily close to 0  with  relative  accuracy
+        close to  machine precision. If the parameter IsFractionalAccuracyRequired
+        is set to True, all singular values will have high relative accuracy close
+        to machine precision. If the parameter is set to False, only  the  biggest
+        singular value will have relative accuracy  close  to  machine  precision.
+        The absolute error of other singular values is equal to the absolute error
+        of the biggest singular value.
+
+        Input parameters:
+            D       -   main diagonal of matrix B.
+                        Array whose index ranges within [0..N-1].
+            E       -   superdiagonal (or subdiagonal) of matrix B.
+                        Array whose index ranges within [0..N-2].
+            N       -   size of matrix B.
+            IsUpper -   True, if the matrix is upper bidiagonal.
+            IsFractionalAccuracyRequired -
+                        THIS PARAMETER IS IGNORED SINCE ALGLIB 3.5.0
+                        SINGULAR VALUES ARE ALWAYS SEARCHED WITH HIGH ACCURACY.
+            U       -   matrix to be multiplied by Q.
+                        Array whose indexes range within [0..NRU-1, 0..N-1].
+                        The matrix can be bigger, in that case only the  submatrix
+                        [0..NRU-1, 0..N-1] will be multiplied by Q.
+            NRU     -   number of rows in matrix U.
+            C       -   matrix to be multiplied by Q'.
+                        Array whose indexes range within [0..N-1, 0..NCC-1].
+                        The matrix can be bigger, in that case only the  submatrix
+                        [0..N-1, 0..NCC-1] will be multiplied by Q'.
+            NCC     -   number of columns in matrix C.
+            VT      -   matrix to be multiplied by P^T.
+                        Array whose indexes range within [0..N-1, 0..NCVT-1].
+                        The matrix can be bigger, in that case only the  submatrix
+                        [0..N-1, 0..NCVT-1] will be multiplied by P^T.
+            NCVT    -   number of columns in matrix VT.
+
+        Output parameters:
+            D       -   singular values of matrix B in descending order.
+            U       -   if NRU>0, contains matrix U*Q.
+            VT      -   if NCVT>0, contains matrix (P^T)*VT.
+            C       -   if NCC>0, contains matrix Q'*C.
+
+        Result:
+            True, if the algorithm has converged.
+            False, if the algorithm hasn't converged (rare case).
+
+        Additional information:
+            The type of convergence is controlled by the internal  parameter  TOL.
+            If the parameter is greater than 0, the singular values will have
+            relative accuracy TOL. If TOL<0, the singular values will have
+            absolute accuracy ABS(TOL)*norm(B).
+            By default, |TOL| falls within the range of 10*Epsilon and 100*Epsilon,
+            where Epsilon is the machine precision. It is not  recommended  to  use
+            TOL less than 10*Epsilon since this will  considerably  slow  down  the
+            algorithm and may not lead to error decreasing.
+        History:
+            * 31 March, 2007.
+                changed MAXITR from 6 to 12.
+
+          -- LAPACK routine (version 3.0) --
+             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+             Courant Institute, Argonne National Lab, and Rice University
+             October 31, 1999.
+        *************************************************************************/
+        public static bool rmatrixbdsvd(ref double[] d,
+            double[] e,
+            int n,
+            bool isupper,
+            bool isfractionalaccuracyrequired,
+            ref double[,] u,
+            int nru,
+            ref double[,] c,
+            int ncc,
+            ref double[,] vt,
+            int ncvt)
+        {
+            bool result = new bool();
+            double[] d1 = new double[0];
+            double[] e1 = new double[0];
+            int i_ = 0;
+            int i1_ = 0;
+
+            e = (double[])e.Clone();
+
+            d1 = new double[n+1];
+            i1_ = (0) - (1);
+            for(i_=1; i_<=n;i_++)
+            {
+                d1[i_] = d[i_+i1_];
+            }
+            if( n>1 )
+            {
+                e1 = new double[n-1+1];
+                i1_ = (0) - (1);
+                for(i_=1; i_<=n-1;i_++)
+                {
+                    e1[i_] = e[i_+i1_];
+                }
+            }
+            result = bidiagonalsvddecompositioninternal(ref d1, e1, n, isupper, isfractionalaccuracyrequired, ref u, 0, nru, ref c, 0, ncc, ref vt, 0, ncvt);
+            i1_ = (1) - (0);
+            for(i_=0; i_<=n-1;i_++)
+            {
+                d[i_] = d1[i_+i1_];
+            }
+            return result;
+        }
+
+
+        public static bool bidiagonalsvddecomposition(ref double[] d,
+            double[] e,
+            int n,
+            bool isupper,
+            bool isfractionalaccuracyrequired,
+            ref double[,] u,
+            int nru,
+            ref double[,] c,
+            int ncc,
+            ref double[,] vt,
+            int ncvt)
+        {
+            bool result = new bool();
+
+            e = (double[])e.Clone();
+
+            result = bidiagonalsvddecompositioninternal(ref d, e, n, isupper, isfractionalaccuracyrequired, ref u, 1, nru, ref c, 1, ncc, ref vt, 1, ncvt);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Internal working subroutine for bidiagonal decomposition
+        *************************************************************************/
+        private static bool bidiagonalsvddecompositioninternal(ref double[] d,
+            double[] e,
+            int n,
+            bool isupper,
+            bool isfractionalaccuracyrequired,
+            ref double[,] u,
+            int ustart,
+            int nru,
+            ref double[,] c,
+            int cstart,
+            int ncc,
+            ref double[,] vt,
+            int vstart,
+            int ncvt)
+        {
+            bool result = new bool();
+            int i = 0;
+            int idir = 0;
+            int isub = 0;
+            int iter = 0;
+            int j = 0;
+            int ll = 0;
+            int lll = 0;
+            int m = 0;
+            int maxit = 0;
+            int oldll = 0;
+            int oldm = 0;
+            double abse = 0;
+            double abss = 0;
+            double cosl = 0;
+            double cosr = 0;
+            double cs = 0;
+            double eps = 0;
+            double f = 0;
+            double g = 0;
+            double h = 0;
+            double mu = 0;
+            double oldcs = 0;
+            double oldsn = 0;
+            double r = 0;
+            double shift = 0;
+            double sigmn = 0;
+            double sigmx = 0;
+            double sinl = 0;
+            double sinr = 0;
+            double sll = 0;
+            double smax = 0;
+            double smin = 0;
+            double sminl = 0;
+            double sminlo = 0;
+            double sminoa = 0;
+            double sn = 0;
+            double thresh = 0;
+            double tol = 0;
+            double tolmul = 0;
+            double unfl = 0;
+            double[] work0 = new double[0];
+            double[] work1 = new double[0];
+            double[] work2 = new double[0];
+            double[] work3 = new double[0];
+            int maxitr = 0;
+            bool matrixsplitflag = new bool();
+            bool iterflag = new bool();
+            double[] utemp = new double[0];
+            double[] vttemp = new double[0];
+            double[] ctemp = new double[0];
+            double[] etemp = new double[0];
+            bool rightside = new bool();
+            bool fwddir = new bool();
+            double tmp = 0;
+            int mm1 = 0;
+            int mm0 = 0;
+            bool bchangedir = new bool();
+            int uend = 0;
+            int cend = 0;
+            int vend = 0;
+            int i_ = 0;
+
+            e = (double[])e.Clone();
+
+            result = true;
+            if( n==0 )
+            {
+                return result;
+            }
+            if( n==1 )
+            {
+                if( (double)(d[1])<(double)(0) )
+                {
+                    d[1] = -d[1];
+                    if( ncvt>0 )
+                    {
+                        for(i_=vstart; i_<=vstart+ncvt-1;i_++)
+                        {
+                            vt[vstart,i_] = -1*vt[vstart,i_];
+                        }
+                    }
+                }
+                return result;
+            }
+            
+            //
+            // these initializers are not really necessary,
+            // but without them compiler complains about uninitialized locals
+            //
+            ll = 0;
+            oldsn = 0;
+            
+            //
+            // init
+            //
+            work0 = new double[n-1+1];
+            work1 = new double[n-1+1];
+            work2 = new double[n-1+1];
+            work3 = new double[n-1+1];
+            uend = ustart+Math.Max(nru-1, 0);
+            vend = vstart+Math.Max(ncvt-1, 0);
+            cend = cstart+Math.Max(ncc-1, 0);
+            utemp = new double[uend+1];
+            vttemp = new double[vend+1];
+            ctemp = new double[cend+1];
+            maxitr = 12;
+            rightside = true;
+            fwddir = true;
+            
+            //
+            // resize E from N-1 to N
+            //
+            etemp = new double[n+1];
+            for(i=1; i<=n-1; i++)
+            {
+                etemp[i] = e[i];
+            }
+            e = new double[n+1];
+            for(i=1; i<=n-1; i++)
+            {
+                e[i] = etemp[i];
+            }
+            e[n] = 0;
+            idir = 0;
+            
+            //
+            // Get machine constants
+            //
+            eps = math.machineepsilon;
+            unfl = math.minrealnumber;
+            
+            //
+            // If matrix lower bidiagonal, rotate to be upper bidiagonal
+            // by applying Givens rotations on the left
+            //
+            if( !isupper )
+            {
+                for(i=1; i<=n-1; i++)
+                {
+                    rotations.generaterotation(d[i], e[i], ref cs, ref sn, ref r);
+                    d[i] = r;
+                    e[i] = sn*d[i+1];
+                    d[i+1] = cs*d[i+1];
+                    work0[i] = cs;
+                    work1[i] = sn;
+                }
+                
+                //
+                // Update singular vectors if desired
+                //
+                if( nru>0 )
+                {
+                    rotations.applyrotationsfromtheright(fwddir, ustart, uend, 1+ustart-1, n+ustart-1, work0, work1, ref u, ref utemp);
+                }
+                if( ncc>0 )
+                {
+                    rotations.applyrotationsfromtheleft(fwddir, 1+cstart-1, n+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
+                }
+            }
+            
+            //
+            // Compute singular values to relative accuracy TOL
+            // (By setting TOL to be negative, algorithm will compute
+            // singular values to absolute accuracy ABS(TOL)*norm(input matrix))
+            //
+            tolmul = Math.Max(10, Math.Min(100, Math.Pow(eps, -0.125)));
+            tol = tolmul*eps;
+            
+            //
+            // Compute approximate maximum, minimum singular values
+            //
+            smax = 0;
+            for(i=1; i<=n; i++)
+            {
+                smax = Math.Max(smax, Math.Abs(d[i]));
+            }
+            for(i=1; i<=n-1; i++)
+            {
+                smax = Math.Max(smax, Math.Abs(e[i]));
+            }
+            sminl = 0;
+            if( (double)(tol)>=(double)(0) )
+            {
+                
+                //
+                // Relative accuracy desired
+                //
+                sminoa = Math.Abs(d[1]);
+                if( (double)(sminoa)!=(double)(0) )
+                {
+                    mu = sminoa;
+                    for(i=2; i<=n; i++)
+                    {
+                        mu = Math.Abs(d[i])*(mu/(mu+Math.Abs(e[i-1])));
+                        sminoa = Math.Min(sminoa, mu);
+                        if( (double)(sminoa)==(double)(0) )
+                        {
+                            break;
+                        }
+                    }
+                }
+                sminoa = sminoa/Math.Sqrt(n);
+                thresh = Math.Max(tol*sminoa, maxitr*n*n*unfl);
+            }
+            else
+            {
+                
+                //
+                // Absolute accuracy desired
+                //
+                thresh = Math.Max(Math.Abs(tol)*smax, maxitr*n*n*unfl);
+            }
+            
+            //
+            // Prepare for main iteration loop for the singular values
+            // (MAXIT is the maximum number of passes through the inner
+            // loop permitted before nonconvergence signalled.)
+            //
+            maxit = maxitr*n*n;
+            iter = 0;
+            oldll = -1;
+            oldm = -1;
+            
+            //
+            // M points to last element of unconverged part of matrix
+            //
+            m = n;
+            
+            //
+            // Begin main iteration loop
+            //
+            while( true )
+            {
+                
+                //
+                // Check for convergence or exceeding iteration count
+                //
+                if( m<=1 )
+                {
+                    break;
+                }
+                if( iter>maxit )
+                {
+                    result = false;
+                    return result;
+                }
+                
+                //
+                // Find diagonal block of matrix to work on
+                //
+                if( (double)(tol)<(double)(0) && (double)(Math.Abs(d[m]))<=(double)(thresh) )
+                {
+                    d[m] = 0;
+                }
+                smax = Math.Abs(d[m]);
+                smin = smax;
+                matrixsplitflag = false;
+                for(lll=1; lll<=m-1; lll++)
+                {
+                    ll = m-lll;
+                    abss = Math.Abs(d[ll]);
+                    abse = Math.Abs(e[ll]);
+                    if( (double)(tol)<(double)(0) && (double)(abss)<=(double)(thresh) )
+                    {
+                        d[ll] = 0;
+                    }
+                    if( (double)(abse)<=(double)(thresh) )
+                    {
+                        matrixsplitflag = true;
+                        break;
+                    }
+                    smin = Math.Min(smin, abss);
+                    smax = Math.Max(smax, Math.Max(abss, abse));
+                }
+                if( !matrixsplitflag )
+                {
+                    ll = 0;
+                }
+                else
+                {
+                    
+                    //
+                    // Matrix splits since E(LL) = 0
+                    //
+                    e[ll] = 0;
+                    if( ll==m-1 )
+                    {
+                        
+                        //
+                        // Convergence of bottom singular value, return to top of loop
+                        //
+                        m = m-1;
+                        continue;
+                    }
+                }
+                ll = ll+1;
+                
+                //
+                // E(LL) through E(M-1) are nonzero, E(LL-1) is zero
+                //
+                if( ll==m-1 )
+                {
+                    
+                    //
+                    // 2 by 2 block, handle separately
+                    //
+                    svdv2x2(d[m-1], e[m-1], d[m], ref sigmn, ref sigmx, ref sinr, ref cosr, ref sinl, ref cosl);
+                    d[m-1] = sigmx;
+                    e[m-1] = 0;
+                    d[m] = sigmn;
+                    
+                    //
+                    // Compute singular vectors, if desired
+                    //
+                    if( ncvt>0 )
+                    {
+                        mm0 = m+(vstart-1);
+                        mm1 = m-1+(vstart-1);
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vttemp[i_] = cosr*vt[mm1,i_];
+                        }
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vttemp[i_] = vttemp[i_] + sinr*vt[mm0,i_];
+                        }
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vt[mm0,i_] = cosr*vt[mm0,i_];
+                        }
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vt[mm0,i_] = vt[mm0,i_] - sinr*vt[mm1,i_];
+                        }
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vt[mm1,i_] = vttemp[i_];
+                        }
+                    }
+                    if( nru>0 )
+                    {
+                        mm0 = m+ustart-1;
+                        mm1 = m-1+ustart-1;
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            utemp[i_] = cosl*u[i_,mm1];
+                        }
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            utemp[i_] = utemp[i_] + sinl*u[i_,mm0];
+                        }
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            u[i_,mm0] = cosl*u[i_,mm0];
+                        }
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            u[i_,mm0] = u[i_,mm0] - sinl*u[i_,mm1];
+                        }
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            u[i_,mm1] = utemp[i_];
+                        }
+                    }
+                    if( ncc>0 )
+                    {
+                        mm0 = m+cstart-1;
+                        mm1 = m-1+cstart-1;
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            ctemp[i_] = cosl*c[mm1,i_];
+                        }
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            ctemp[i_] = ctemp[i_] + sinl*c[mm0,i_];
+                        }
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            c[mm0,i_] = cosl*c[mm0,i_];
+                        }
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            c[mm0,i_] = c[mm0,i_] - sinl*c[mm1,i_];
+                        }
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            c[mm1,i_] = ctemp[i_];
+                        }
+                    }
+                    m = m-2;
+                    continue;
+                }
+                
+                //
+                // If working on new submatrix, choose shift direction
+                // (from larger end diagonal element towards smaller)
+                //
+                // Previously was
+                //     "if (LL>OLDM) or (M<OLDLL) then"
+                // fixed thanks to Michael Rolle < m@rolle.name >
+                // Very strange that LAPACK still contains it.
+                //
+                bchangedir = false;
+                if( idir==1 && (double)(Math.Abs(d[ll]))<(double)(1.0E-3*Math.Abs(d[m])) )
+                {
+                    bchangedir = true;
+                }
+                if( idir==2 && (double)(Math.Abs(d[m]))<(double)(1.0E-3*Math.Abs(d[ll])) )
+                {
+                    bchangedir = true;
+                }
+                if( (ll!=oldll || m!=oldm) || bchangedir )
+                {
+                    if( (double)(Math.Abs(d[ll]))>=(double)(Math.Abs(d[m])) )
+                    {
+                        
+                        //
+                        // Chase bulge from top (big end) to bottom (small end)
+                        //
+                        idir = 1;
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Chase bulge from bottom (big end) to top (small end)
+                        //
+                        idir = 2;
+                    }
+                }
+                
+                //
+                // Apply convergence tests
+                //
+                if( idir==1 )
+                {
+                    
+                    //
+                    // Run convergence test in forward direction
+                    // First apply standard test to bottom of matrix
+                    //
+                    if( (double)(Math.Abs(e[m-1]))<=(double)(Math.Abs(tol)*Math.Abs(d[m])) || ((double)(tol)<(double)(0) && (double)(Math.Abs(e[m-1]))<=(double)(thresh)) )
+                    {
+                        e[m-1] = 0;
+                        continue;
+                    }
+                    if( (double)(tol)>=(double)(0) )
+                    {
+                        
+                        //
+                        // If relative accuracy desired,
+                        // apply convergence criterion forward
+                        //
+                        mu = Math.Abs(d[ll]);
+                        sminl = mu;
+                        iterflag = false;
+                        for(lll=ll; lll<=m-1; lll++)
+                        {
+                            if( (double)(Math.Abs(e[lll]))<=(double)(tol*mu) )
+                            {
+                                e[lll] = 0;
+                                iterflag = true;
+                                break;
+                            }
+                            sminlo = sminl;
+                            mu = Math.Abs(d[lll+1])*(mu/(mu+Math.Abs(e[lll])));
+                            sminl = Math.Min(sminl, mu);
+                        }
+                        if( iterflag )
+                        {
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    
+                    //
+                    // Run convergence test in backward direction
+                    // First apply standard test to top of matrix
+                    //
+                    if( (double)(Math.Abs(e[ll]))<=(double)(Math.Abs(tol)*Math.Abs(d[ll])) || ((double)(tol)<(double)(0) && (double)(Math.Abs(e[ll]))<=(double)(thresh)) )
+                    {
+                        e[ll] = 0;
+                        continue;
+                    }
+                    if( (double)(tol)>=(double)(0) )
+                    {
+                        
+                        //
+                        // If relative accuracy desired,
+                        // apply convergence criterion backward
+                        //
+                        mu = Math.Abs(d[m]);
+                        sminl = mu;
+                        iterflag = false;
+                        for(lll=m-1; lll>=ll; lll--)
+                        {
+                            if( (double)(Math.Abs(e[lll]))<=(double)(tol*mu) )
+                            {
+                                e[lll] = 0;
+                                iterflag = true;
+                                break;
+                            }
+                            sminlo = sminl;
+                            mu = Math.Abs(d[lll])*(mu/(mu+Math.Abs(e[lll])));
+                            sminl = Math.Min(sminl, mu);
+                        }
+                        if( iterflag )
+                        {
+                            continue;
+                        }
+                    }
+                }
+                oldll = ll;
+                oldm = m;
+                
+                //
+                // Compute shift.  First, test if shifting would ruin relative
+                // accuracy, and if so set the shift to zero.
+                //
+                if( (double)(tol)>=(double)(0) && (double)(n*tol*(sminl/smax))<=(double)(Math.Max(eps, 0.01*tol)) )
+                {
+                    
+                    //
+                    // Use a zero shift to avoid loss of relative accuracy
+                    //
+                    shift = 0;
+                }
+                else
+                {
+                    
+                    //
+                    // Compute the shift from 2-by-2 block at end of matrix
+                    //
+                    if( idir==1 )
+                    {
+                        sll = Math.Abs(d[ll]);
+                        svd2x2(d[m-1], e[m-1], d[m], ref shift, ref r);
+                    }
+                    else
+                    {
+                        sll = Math.Abs(d[m]);
+                        svd2x2(d[ll], e[ll], d[ll+1], ref shift, ref r);
+                    }
+                    
+                    //
+                    // Test if shift negligible, and if so set to zero
+                    //
+                    if( (double)(sll)>(double)(0) )
+                    {
+                        if( (double)(math.sqr(shift/sll))<(double)(eps) )
+                        {
+                            shift = 0;
+                        }
+                    }
+                }
+                
+                //
+                // Increment iteration count
+                //
+                iter = iter+m-ll;
+                
+                //
+                // If SHIFT = 0, do simplified QR iteration
+                //
+                if( (double)(shift)==(double)(0) )
+                {
+                    if( idir==1 )
+                    {
+                        
+                        //
+                        // Chase bulge from top to bottom
+                        // Save cosines and sines for later singular vector updates
+                        //
+                        cs = 1;
+                        oldcs = 1;
+                        for(i=ll; i<=m-1; i++)
+                        {
+                            rotations.generaterotation(d[i]*cs, e[i], ref cs, ref sn, ref r);
+                            if( i>ll )
+                            {
+                                e[i-1] = oldsn*r;
+                            }
+                            rotations.generaterotation(oldcs*r, d[i+1]*sn, ref oldcs, ref oldsn, ref tmp);
+                            d[i] = tmp;
+                            work0[i-ll+1] = cs;
+                            work1[i-ll+1] = sn;
+                            work2[i-ll+1] = oldcs;
+                            work3[i-ll+1] = oldsn;
+                        }
+                        h = d[m]*cs;
+                        d[m] = h*oldcs;
+                        e[m-1] = h*oldsn;
+                        
+                        //
+                        // Update singular vectors
+                        //
+                        if( ncvt>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, ref vt, ref vttemp);
+                        }
+                        if( nru>0 )
+                        {
+                            rotations.applyrotationsfromtheright(fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work2, work3, ref u, ref utemp);
+                        }
+                        if( ncc>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, ref c, ref ctemp);
+                        }
+                        
+                        //
+                        // Test convergence
+                        //
+                        if( (double)(Math.Abs(e[m-1]))<=(double)(thresh) )
+                        {
+                            e[m-1] = 0;
+                        }
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Chase bulge from bottom to top
+                        // Save cosines and sines for later singular vector updates
+                        //
+                        cs = 1;
+                        oldcs = 1;
+                        for(i=m; i>=ll+1; i--)
+                        {
+                            rotations.generaterotation(d[i]*cs, e[i-1], ref cs, ref sn, ref r);
+                            if( i<m )
+                            {
+                                e[i] = oldsn*r;
+                            }
+                            rotations.generaterotation(oldcs*r, d[i-1]*sn, ref oldcs, ref oldsn, ref tmp);
+                            d[i] = tmp;
+                            work0[i-ll] = cs;
+                            work1[i-ll] = -sn;
+                            work2[i-ll] = oldcs;
+                            work3[i-ll] = -oldsn;
+                        }
+                        h = d[ll]*cs;
+                        d[ll] = h*oldcs;
+                        e[ll] = h*oldsn;
+                        
+                        //
+                        // Update singular vectors
+                        //
+                        if( ncvt>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, ref vt, ref vttemp);
+                        }
+                        if( nru>0 )
+                        {
+                            rotations.applyrotationsfromtheright(!fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work0, work1, ref u, ref utemp);
+                        }
+                        if( ncc>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
+                        }
+                        
+                        //
+                        // Test convergence
+                        //
+                        if( (double)(Math.Abs(e[ll]))<=(double)(thresh) )
+                        {
+                            e[ll] = 0;
+                        }
+                    }
+                }
+                else
+                {
+                    
+                    //
+                    // Use nonzero shift
+                    //
+                    if( idir==1 )
+                    {
+                        
+                        //
+                        // Chase bulge from top to bottom
+                        // Save cosines and sines for later singular vector updates
+                        //
+                        f = (Math.Abs(d[ll])-shift)*(extsignbdsqr(1, d[ll])+shift/d[ll]);
+                        g = e[ll];
+                        for(i=ll; i<=m-1; i++)
+                        {
+                            rotations.generaterotation(f, g, ref cosr, ref sinr, ref r);
+                            if( i>ll )
+                            {
+                                e[i-1] = r;
+                            }
+                            f = cosr*d[i]+sinr*e[i];
+                            e[i] = cosr*e[i]-sinr*d[i];
+                            g = sinr*d[i+1];
+                            d[i+1] = cosr*d[i+1];
+                            rotations.generaterotation(f, g, ref cosl, ref sinl, ref r);
+                            d[i] = r;
+                            f = cosl*e[i]+sinl*d[i+1];
+                            d[i+1] = cosl*d[i+1]-sinl*e[i];
+                            if( i<m-1 )
+                            {
+                                g = sinl*e[i+1];
+                                e[i+1] = cosl*e[i+1];
+                            }
+                            work0[i-ll+1] = cosr;
+                            work1[i-ll+1] = sinr;
+                            work2[i-ll+1] = cosl;
+                            work3[i-ll+1] = sinl;
+                        }
+                        e[m-1] = f;
+                        
+                        //
+                        // Update singular vectors
+                        //
+                        if( ncvt>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, ref vt, ref vttemp);
+                        }
+                        if( nru>0 )
+                        {
+                            rotations.applyrotationsfromtheright(fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work2, work3, ref u, ref utemp);
+                        }
+                        if( ncc>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, ref c, ref ctemp);
+                        }
+                        
+                        //
+                        // Test convergence
+                        //
+                        if( (double)(Math.Abs(e[m-1]))<=(double)(thresh) )
+                        {
+                            e[m-1] = 0;
+                        }
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Chase bulge from bottom to top
+                        // Save cosines and sines for later singular vector updates
+                        //
+                        f = (Math.Abs(d[m])-shift)*(extsignbdsqr(1, d[m])+shift/d[m]);
+                        g = e[m-1];
+                        for(i=m; i>=ll+1; i--)
+                        {
+                            rotations.generaterotation(f, g, ref cosr, ref sinr, ref r);
+                            if( i<m )
+                            {
+                                e[i] = r;
+                            }
+                            f = cosr*d[i]+sinr*e[i-1];
+                            e[i-1] = cosr*e[i-1]-sinr*d[i];
+                            g = sinr*d[i-1];
+                            d[i-1] = cosr*d[i-1];
+                            rotations.generaterotation(f, g, ref cosl, ref sinl, ref r);
+                            d[i] = r;
+                            f = cosl*e[i-1]+sinl*d[i-1];
+                            d[i-1] = cosl*d[i-1]-sinl*e[i-1];
+                            if( i>ll+1 )
+                            {
+                                g = sinl*e[i-2];
+                                e[i-2] = cosl*e[i-2];
+                            }
+                            work0[i-ll] = cosr;
+                            work1[i-ll] = -sinr;
+                            work2[i-ll] = cosl;
+                            work3[i-ll] = -sinl;
+                        }
+                        e[ll] = f;
+                        
+                        //
+                        // Test convergence
+                        //
+                        if( (double)(Math.Abs(e[ll]))<=(double)(thresh) )
+                        {
+                            e[ll] = 0;
+                        }
+                        
+                        //
+                        // Update singular vectors if desired
+                        //
+                        if( ncvt>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, ref vt, ref vttemp);
+                        }
+                        if( nru>0 )
+                        {
+                            rotations.applyrotationsfromtheright(!fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work0, work1, ref u, ref utemp);
+                        }
+                        if( ncc>0 )
+                        {
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
+                        }
+                    }
+                }
+                
+                //
+                // QR iteration finished, go back and check convergence
+                //
+                continue;
+            }
+            
+            //
+            // All singular values converged, so make them positive
+            //
+            for(i=1; i<=n; i++)
+            {
+                if( (double)(d[i])<(double)(0) )
+                {
+                    d[i] = -d[i];
+                    
+                    //
+                    // Change sign of singular vectors, if desired
+                    //
+                    if( ncvt>0 )
+                    {
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vt[i+vstart-1,i_] = -1*vt[i+vstart-1,i_];
+                        }
+                    }
+                }
+            }
+            
+            //
+            // Sort the singular values into decreasing order (insertion sort on
+            // singular values, but only one transposition per singular vector)
+            //
+            for(i=1; i<=n-1; i++)
+            {
+                
+                //
+                // Scan for smallest D(I)
+                //
+                isub = 1;
+                smin = d[1];
+                for(j=2; j<=n+1-i; j++)
+                {
+                    if( (double)(d[j])<=(double)(smin) )
+                    {
+                        isub = j;
+                        smin = d[j];
+                    }
+                }
+                if( isub!=n+1-i )
+                {
+                    
+                    //
+                    // Swap singular values and vectors
+                    //
+                    d[isub] = d[n+1-i];
+                    d[n+1-i] = smin;
+                    if( ncvt>0 )
+                    {
+                        j = n+1-i;
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vttemp[i_] = vt[isub+vstart-1,i_];
+                        }
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vt[isub+vstart-1,i_] = vt[j+vstart-1,i_];
+                        }
+                        for(i_=vstart; i_<=vend;i_++)
+                        {
+                            vt[j+vstart-1,i_] = vttemp[i_];
+                        }
+                    }
+                    if( nru>0 )
+                    {
+                        j = n+1-i;
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            utemp[i_] = u[i_,isub+ustart-1];
+                        }
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            u[i_,isub+ustart-1] = u[i_,j+ustart-1];
+                        }
+                        for(i_=ustart; i_<=uend;i_++)
+                        {
+                            u[i_,j+ustart-1] = utemp[i_];
+                        }
+                    }
+                    if( ncc>0 )
+                    {
+                        j = n+1-i;
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            ctemp[i_] = c[isub+cstart-1,i_];
+                        }
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            c[isub+cstart-1,i_] = c[j+cstart-1,i_];
+                        }
+                        for(i_=cstart; i_<=cend;i_++)
+                        {
+                            c[j+cstart-1,i_] = ctemp[i_];
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+
+        private static double extsignbdsqr(double a,
+            double b)
+        {
+            double result = 0;
+
+            if( (double)(b)>=(double)(0) )
+            {
+                result = Math.Abs(a);
+            }
+            else
+            {
+                result = -Math.Abs(a);
+            }
+            return result;
+        }
+
+
+        private static void svd2x2(double f,
+            double g,
+            double h,
+            ref double ssmin,
+            ref double ssmax)
+        {
+            double aas = 0;
+            double at = 0;
+            double au = 0;
+            double c = 0;
+            double fa = 0;
+            double fhmn = 0;
+            double fhmx = 0;
+            double ga = 0;
+            double ha = 0;
+
+            ssmin = 0;
+            ssmax = 0;
+
+            fa = Math.Abs(f);
+            ga = Math.Abs(g);
+            ha = Math.Abs(h);
+            fhmn = Math.Min(fa, ha);
+            fhmx = Math.Max(fa, ha);
+            if( (double)(fhmn)==(double)(0) )
+            {
+                ssmin = 0;
+                if( (double)(fhmx)==(double)(0) )
+                {
+                    ssmax = ga;
+                }
+                else
+                {
+                    ssmax = Math.Max(fhmx, ga)*Math.Sqrt(1+math.sqr(Math.Min(fhmx, ga)/Math.Max(fhmx, ga)));
+                }
+            }
+            else
+            {
+                if( (double)(ga)<(double)(fhmx) )
+                {
+                    aas = 1+fhmn/fhmx;
+                    at = (fhmx-fhmn)/fhmx;
+                    au = math.sqr(ga/fhmx);
+                    c = 2/(Math.Sqrt(aas*aas+au)+Math.Sqrt(at*at+au));
+                    ssmin = fhmn*c;
+                    ssmax = fhmx/c;
+                }
+                else
+                {
+                    au = fhmx/ga;
+                    if( (double)(au)==(double)(0) )
+                    {
+                        
+                        //
+                        // Avoid possible harmful underflow if exponent range
+                        // asymmetric (true SSMIN may not underflow even if
+                        // AU underflows)
+                        //
+                        ssmin = fhmn*fhmx/ga;
+                        ssmax = ga;
+                    }
+                    else
+                    {
+                        aas = 1+fhmn/fhmx;
+                        at = (fhmx-fhmn)/fhmx;
+                        c = 1/(Math.Sqrt(1+math.sqr(aas*au))+Math.Sqrt(1+math.sqr(at*au)));
+                        ssmin = fhmn*c*au;
+                        ssmin = ssmin+ssmin;
+                        ssmax = ga/(c+c);
+                    }
+                }
+            }
+        }
+
+
+        private static void svdv2x2(double f,
+            double g,
+            double h,
+            ref double ssmin,
+            ref double ssmax,
+            ref double snr,
+            ref double csr,
+            ref double snl,
+            ref double csl)
+        {
+            bool gasmal = new bool();
+            bool swp = new bool();
+            int pmax = 0;
+            double a = 0;
+            double clt = 0;
+            double crt = 0;
+            double d = 0;
+            double fa = 0;
+            double ft = 0;
+            double ga = 0;
+            double gt = 0;
+            double ha = 0;
+            double ht = 0;
+            double l = 0;
+            double m = 0;
+            double mm = 0;
+            double r = 0;
+            double s = 0;
+            double slt = 0;
+            double srt = 0;
+            double t = 0;
+            double temp = 0;
+            double tsign = 0;
+            double tt = 0;
+            double v = 0;
+
+            ssmin = 0;
+            ssmax = 0;
+            snr = 0;
+            csr = 0;
+            snl = 0;
+            csl = 0;
+
+            ft = f;
+            fa = Math.Abs(ft);
+            ht = h;
+            ha = Math.Abs(h);
+            
+            //
+            // these initializers are not really necessary,
+            // but without them compiler complains about uninitialized locals
+            //
+            clt = 0;
+            crt = 0;
+            slt = 0;
+            srt = 0;
+            tsign = 0;
+            
+            //
+            // PMAX points to the maximum absolute element of matrix
+            //  PMAX = 1 if F largest in absolute values
+            //  PMAX = 2 if G largest in absolute values
+            //  PMAX = 3 if H largest in absolute values
+            //
+            pmax = 1;
+            swp = (double)(ha)>(double)(fa);
+            if( swp )
+            {
+                
+                //
+                // Now FA .ge. HA
+                //
+                pmax = 3;
+                temp = ft;
+                ft = ht;
+                ht = temp;
+                temp = fa;
+                fa = ha;
+                ha = temp;
+            }
+            gt = g;
+            ga = Math.Abs(gt);
+            if( (double)(ga)==(double)(0) )
+            {
+                
+                //
+                // Diagonal matrix
+                //
+                ssmin = ha;
+                ssmax = fa;
+                clt = 1;
+                crt = 1;
+                slt = 0;
+                srt = 0;
+            }
+            else
+            {
+                gasmal = true;
+                if( (double)(ga)>(double)(fa) )
+                {
+                    pmax = 2;
+                    if( (double)(fa/ga)<(double)(math.machineepsilon) )
+                    {
+                        
+                        //
+                        // Case of very large GA
+                        //
+                        gasmal = false;
+                        ssmax = ga;
+                        if( (double)(ha)>(double)(1) )
+                        {
+                            v = ga/ha;
+                            ssmin = fa/v;
+                        }
+                        else
+                        {
+                            v = fa/ga;
+                            ssmin = v*ha;
+                        }
+                        clt = 1;
+                        slt = ht/gt;
+                        srt = 1;
+                        crt = ft/gt;
+                    }
+                }
+                if( gasmal )
+                {
+                    
+                    //
+                    // Normal case
+                    //
+                    d = fa-ha;
+                    if( (double)(d)==(double)(fa) )
+                    {
+                        l = 1;
+                    }
+                    else
+                    {
+                        l = d/fa;
+                    }
+                    m = gt/ft;
+                    t = 2-l;
+                    mm = m*m;
+                    tt = t*t;
+                    s = Math.Sqrt(tt+mm);
+                    if( (double)(l)==(double)(0) )
+                    {
+                        r = Math.Abs(m);
+                    }
+                    else
+                    {
+                        r = Math.Sqrt(l*l+mm);
+                    }
+                    a = 0.5*(s+r);
+                    ssmin = ha/a;
+                    ssmax = fa*a;
+                    if( (double)(mm)==(double)(0) )
+                    {
+                        
+                        //
+                        // Note that M is very tiny
+                        //
+                        if( (double)(l)==(double)(0) )
+                        {
+                            t = extsignbdsqr(2, ft)*extsignbdsqr(1, gt);
+                        }
+                        else
+                        {
+                            t = gt/extsignbdsqr(d, ft)+m/t;
+                        }
+                    }
+                    else
+                    {
+                        t = (m/(s+t)+m/(r+l))*(1+a);
+                    }
+                    l = Math.Sqrt(t*t+4);
+                    crt = 2/l;
+                    srt = t/l;
+                    clt = (crt+srt*m)/a;
+                    v = ht/ft;
+                    slt = v*srt/a;
+                }
+            }
+            if( swp )
+            {
+                csl = srt;
+                snl = crt;
+                csr = slt;
+                snr = clt;
+            }
+            else
+            {
+                csl = clt;
+                snl = slt;
+                csr = crt;
+                snr = srt;
+            }
+            
+            //
+            // Correct signs of SSMAX and SSMIN
+            //
+            if( pmax==1 )
+            {
+                tsign = extsignbdsqr(1, csr)*extsignbdsqr(1, csl)*extsignbdsqr(1, f);
+            }
+            if( pmax==2 )
+            {
+                tsign = extsignbdsqr(1, snr)*extsignbdsqr(1, csl)*extsignbdsqr(1, g);
+            }
+            if( pmax==3 )
+            {
+                tsign = extsignbdsqr(1, snr)*extsignbdsqr(1, snl)*extsignbdsqr(1, h);
+            }
+            ssmax = extsignbdsqr(ssmax, tsign);
+            ssmin = extsignbdsqr(ssmin, tsign*extsignbdsqr(1, f)*extsignbdsqr(1, h));
+        }
+
+
+    }
+    public class svd
+    {
+        /*************************************************************************
+        Singular value decomposition of a rectangular matrix.
+
+        The algorithm calculates the singular value decomposition of a matrix of
+        size MxN: A = U * S * V^T
+
+        The algorithm finds the singular values and, optionally, matrices U and V^T.
+        The algorithm can find both first min(M,N) columns of matrix U and rows of
+        matrix V^T (singular vectors), and matrices U and V^T wholly (of sizes MxM
+        and NxN respectively).
+
+        Take into account that the subroutine does not return matrix V but V^T.
+
+        Input parameters:
+            A           -   matrix to be decomposed.
+                            Array whose indexes range within [0..M-1, 0..N-1].
+            M           -   number of rows in matrix A.
+            N           -   number of columns in matrix A.
+            UNeeded     -   0, 1 or 2. See the description of the parameter U.
+            VTNeeded    -   0, 1 or 2. See the description of the parameter VT.
+            AdditionalMemory -
+                            If the parameter:
+                             * equals 0, the algorithm doesn’t use additional
+                               memory (lower requirements, lower performance).
+                             * equals 1, the algorithm uses additional
+                               memory of size min(M,N)*min(M,N) of real numbers.
+                               It often speeds up the algorithm.
+                             * equals 2, the algorithm uses additional
+                               memory of size M*min(M,N) of real numbers.
+                               It allows to get a maximum performance.
+                            The recommended value of the parameter is 2.
+
+        Output parameters:
+            W           -   contains singular values in descending order.
+            U           -   if UNeeded=0, U isn't changed, the left singular vectors
+                            are not calculated.
+                            if Uneeded=1, U contains left singular vectors (first
+                            min(M,N) columns of matrix U). Array whose indexes range
+                            within [0..M-1, 0..Min(M,N)-1].
+                            if UNeeded=2, U contains matrix U wholly. Array whose
+                            indexes range within [0..M-1, 0..M-1].
+            VT          -   if VTNeeded=0, VT isn’t changed, the right singular vectors
+                            are not calculated.
+                            if VTNeeded=1, VT contains right singular vectors (first
+                            min(M,N) rows of matrix V^T). Array whose indexes range
+                            within [0..min(M,N)-1, 0..N-1].
+                            if VTNeeded=2, VT contains matrix V^T wholly. Array whose
+                            indexes range within [0..N-1, 0..N-1].
+
+          -- ALGLIB --
+             Copyright 2005 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixsvd(double[,] a,
+            int m,
+            int n,
+            int uneeded,
+            int vtneeded,
+            int additionalmemory,
+            ref double[] w,
+            ref double[,] u,
+            ref double[,] vt)
+        {
+            bool result = new bool();
+            double[] tauq = new double[0];
+            double[] taup = new double[0];
+            double[] tau = new double[0];
+            double[] e = new double[0];
+            double[] work = new double[0];
+            double[,] t2 = new double[0,0];
+            bool isupper = new bool();
+            int minmn = 0;
+            int ncu = 0;
+            int nrvt = 0;
+            int nru = 0;
+            int ncvt = 0;
+            int i = 0;
+            int j = 0;
+
+            a = (double[,])a.Clone();
+            w = new double[0];
+            u = new double[0,0];
+            vt = new double[0,0];
+
+            result = true;
+            if( m==0 || n==0 )
+            {
+                return result;
+            }
+            alglib.ap.assert(uneeded>=0 && uneeded<=2, "SVDDecomposition: wrong parameters!");
+            alglib.ap.assert(vtneeded>=0 && vtneeded<=2, "SVDDecomposition: wrong parameters!");
+            alglib.ap.assert(additionalmemory>=0 && additionalmemory<=2, "SVDDecomposition: wrong parameters!");
+            
+            //
+            // initialize
+            //
+            minmn = Math.Min(m, n);
+            w = new double[minmn+1];
+            ncu = 0;
+            nru = 0;
+            if( uneeded==1 )
+            {
+                nru = m;
+                ncu = minmn;
+                u = new double[nru-1+1, ncu-1+1];
+            }
+            if( uneeded==2 )
+            {
+                nru = m;
+                ncu = m;
+                u = new double[nru-1+1, ncu-1+1];
+            }
+            nrvt = 0;
+            ncvt = 0;
+            if( vtneeded==1 )
+            {
+                nrvt = minmn;
+                ncvt = n;
+                vt = new double[nrvt-1+1, ncvt-1+1];
+            }
+            if( vtneeded==2 )
+            {
+                nrvt = n;
+                ncvt = n;
+                vt = new double[nrvt-1+1, ncvt-1+1];
+            }
+            
+            //
+            // M much larger than N
+            // Use bidiagonal reduction with QR-decomposition
+            //
+            if( (double)(m)>(double)(1.6*n) )
+            {
+                if( uneeded==0 )
+                {
+                    
+                    //
+                    // No left singular vectors to be computed
+                    //
+                    ortfac.rmatrixqr(ref a, m, n, ref tau);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        for(j=0; j<=i-1; j++)
+                        {
+                            a[i,j] = 0;
+                        }
+                    }
+                    ortfac.rmatrixbd(ref a, n, n, ref tauq, ref taup);
+                    ortfac.rmatrixbdunpackpt(a, n, n, taup, nrvt, ref vt);
+                    ortfac.rmatrixbdunpackdiagonals(a, n, n, ref isupper, ref w, ref e);
+                    result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, 0, ref a, 0, ref vt, ncvt);
+                    return result;
+                }
+                else
+                {
+                    
+                    //
+                    // Left singular vectors (may be full matrix U) to be computed
+                    //
+                    ortfac.rmatrixqr(ref a, m, n, ref tau);
+                    ortfac.rmatrixqrunpackq(a, m, n, tau, ncu, ref u);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        for(j=0; j<=i-1; j++)
+                        {
+                            a[i,j] = 0;
+                        }
+                    }
+                    ortfac.rmatrixbd(ref a, n, n, ref tauq, ref taup);
+                    ortfac.rmatrixbdunpackpt(a, n, n, taup, nrvt, ref vt);
+                    ortfac.rmatrixbdunpackdiagonals(a, n, n, ref isupper, ref w, ref e);
+                    if( additionalmemory<1 )
+                    {
+                        
+                        //
+                        // No additional memory can be used
+                        //
+                        ortfac.rmatrixbdmultiplybyq(a, n, n, tauq, ref u, m, n, true, false);
+                        result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, m, ref a, 0, ref vt, ncvt);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Large U. Transforming intermediate matrix T2
+                        //
+                        work = new double[Math.Max(m, n)+1];
+                        ortfac.rmatrixbdunpackq(a, n, n, tauq, n, ref t2);
+                        blas.copymatrix(u, 0, m-1, 0, n-1, ref a, 0, m-1, 0, n-1);
+                        blas.inplacetranspose(ref t2, 0, n-1, 0, n-1, ref work);
+                        result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, 0, ref t2, n, ref vt, ncvt);
+                        blas.matrixmatrixmultiply(a, 0, m-1, 0, n-1, false, t2, 0, n-1, 0, n-1, true, 1.0, ref u, 0, m-1, 0, n-1, 0.0, ref work);
+                    }
+                    return result;
+                }
+            }
+            
+            //
+            // N much larger than M
+            // Use bidiagonal reduction with LQ-decomposition
+            //
+            if( (double)(n)>(double)(1.6*m) )
+            {
+                if( vtneeded==0 )
+                {
+                    
+                    //
+                    // No right singular vectors to be computed
+                    //
+                    ortfac.rmatrixlq(ref a, m, n, ref tau);
+                    for(i=0; i<=m-1; i++)
+                    {
+                        for(j=i+1; j<=m-1; j++)
+                        {
+                            a[i,j] = 0;
+                        }
+                    }
+                    ortfac.rmatrixbd(ref a, m, m, ref tauq, ref taup);
+                    ortfac.rmatrixbdunpackq(a, m, m, tauq, ncu, ref u);
+                    ortfac.rmatrixbdunpackdiagonals(a, m, m, ref isupper, ref w, ref e);
+                    work = new double[m+1];
+                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
+                    result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref vt, 0);
+                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
+                    return result;
+                }
+                else
+                {
+                    
+                    //
+                    // Right singular vectors (may be full matrix VT) to be computed
+                    //
+                    ortfac.rmatrixlq(ref a, m, n, ref tau);
+                    ortfac.rmatrixlqunpackq(a, m, n, tau, nrvt, ref vt);
+                    for(i=0; i<=m-1; i++)
+                    {
+                        for(j=i+1; j<=m-1; j++)
+                        {
+                            a[i,j] = 0;
+                        }
+                    }
+                    ortfac.rmatrixbd(ref a, m, m, ref tauq, ref taup);
+                    ortfac.rmatrixbdunpackq(a, m, m, tauq, ncu, ref u);
+                    ortfac.rmatrixbdunpackdiagonals(a, m, m, ref isupper, ref w, ref e);
+                    work = new double[Math.Max(m, n)+1];
+                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
+                    if( additionalmemory<1 )
+                    {
+                        
+                        //
+                        // No additional memory available
+                        //
+                        ortfac.rmatrixbdmultiplybyp(a, m, m, taup, ref vt, m, n, false, true);
+                        result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref vt, n);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Large VT. Transforming intermediate matrix T2
+                        //
+                        ortfac.rmatrixbdunpackpt(a, m, m, taup, m, ref t2);
+                        result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref t2, m);
+                        blas.copymatrix(vt, 0, m-1, 0, n-1, ref a, 0, m-1, 0, n-1);
+                        blas.matrixmatrixmultiply(t2, 0, m-1, 0, m-1, false, a, 0, m-1, 0, n-1, false, 1.0, ref vt, 0, m-1, 0, n-1, 0.0, ref work);
+                    }
+                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
+                    return result;
+                }
+            }
+            
+            //
+            // M<=N
+            // We can use inplace transposition of U to get rid of columnwise operations
+            //
+            if( m<=n )
+            {
+                ortfac.rmatrixbd(ref a, m, n, ref tauq, ref taup);
+                ortfac.rmatrixbdunpackq(a, m, n, tauq, ncu, ref u);
+                ortfac.rmatrixbdunpackpt(a, m, n, taup, nrvt, ref vt);
+                ortfac.rmatrixbdunpackdiagonals(a, m, n, ref isupper, ref w, ref e);
+                work = new double[m+1];
+                blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
+                result = bdsvd.rmatrixbdsvd(ref w, e, minmn, isupper, false, ref a, 0, ref u, nru, ref vt, ncvt);
+                blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
+                return result;
+            }
+            
+            //
+            // Simple bidiagonal reduction
+            //
+            ortfac.rmatrixbd(ref a, m, n, ref tauq, ref taup);
+            ortfac.rmatrixbdunpackq(a, m, n, tauq, ncu, ref u);
+            ortfac.rmatrixbdunpackpt(a, m, n, taup, nrvt, ref vt);
+            ortfac.rmatrixbdunpackdiagonals(a, m, n, ref isupper, ref w, ref e);
+            if( additionalmemory<2 || uneeded==0 )
+            {
+                
+                //
+                // We cant use additional memory or there is no need in such operations
+                //
+                result = bdsvd.rmatrixbdsvd(ref w, e, minmn, isupper, false, ref u, nru, ref a, 0, ref vt, ncvt);
+            }
+            else
+            {
+                
+                //
+                // We can use additional memory
+                //
+                t2 = new double[minmn-1+1, m-1+1];
+                blas.copyandtranspose(u, 0, m-1, 0, minmn-1, ref t2, 0, minmn-1, 0, m-1);
+                result = bdsvd.rmatrixbdsvd(ref w, e, minmn, isupper, false, ref u, 0, ref t2, m, ref vt, ncvt);
+                blas.copyandtranspose(t2, 0, minmn-1, 0, m-1, ref u, 0, m-1, 0, minmn-1);
+            }
+            return result;
+        }
+
+
+    }
     public class evd
     {
         /*************************************************************************
@@ -10996,7 +13958,7 @@ public partial class alglib
             d = new double[0];
             z = new double[0,0];
 
-            ap.assert(zneeded==0 | zneeded==1, "SMatrixEVD: incorrect ZNeeded");
+            alglib.ap.assert(zneeded==0 || zneeded==1, "SMatrixEVD: incorrect ZNeeded");
             ortfac.smatrixtd(ref a, n, isupper, ref tau, ref d, ref e);
             if( zneeded==1 )
             {
@@ -11066,7 +14028,7 @@ public partial class alglib
             w = new double[0];
             z = new double[0,0];
 
-            ap.assert(zneeded==0 | zneeded==1, "SMatrixTDEVDR: incorrect ZNeeded");
+            alglib.ap.assert(zneeded==0 || zneeded==1, "SMatrixTDEVDR: incorrect ZNeeded");
             ortfac.smatrixtd(ref a, n, isupper, ref tau, ref w, ref e);
             if( zneeded==1 )
             {
@@ -11131,7 +14093,7 @@ public partial class alglib
             w = new double[0];
             z = new double[0,0];
 
-            ap.assert(zneeded==0 | zneeded==1, "SMatrixEVDI: incorrect ZNeeded");
+            alglib.ap.assert(zneeded==0 || zneeded==1, "SMatrixEVDI: incorrect ZNeeded");
             ortfac.smatrixtd(ref a, n, isupper, ref tau, ref w, ref e);
             if( zneeded==1 )
             {
@@ -11201,7 +14163,7 @@ public partial class alglib
             d = new double[0];
             z = new complex[0,0];
 
-            ap.assert(zneeded==0 | zneeded==1, "HermitianEVD: incorrect ZNeeded");
+            alglib.ap.assert(zneeded==0 || zneeded==1, "HermitianEVD: incorrect ZNeeded");
             
             //
             // Reduce to tridiagonal form
@@ -11222,7 +14184,7 @@ public partial class alglib
             // Eigenvectors are needed
             // Calculate Z = Q*T = Re(Q)*T + i*Im(Q)*T
             //
-            if( result & zneeded!=0 )
+            if( result && zneeded!=0 )
             {
                 work = new double[n-1+1];
                 z = new complex[n-1+1, n-1+1];
@@ -11345,7 +14307,7 @@ public partial class alglib
             w = new double[0];
             z = new complex[0,0];
 
-            ap.assert(zneeded==0 | zneeded==1, "HermitianEigenValuesAndVectorsInInterval: incorrect ZNeeded");
+            alglib.ap.assert(zneeded==0 || zneeded==1, "HermitianEigenValuesAndVectorsInInterval: incorrect ZNeeded");
             
             //
             // Reduce to tridiagonal form
@@ -11366,7 +14328,7 @@ public partial class alglib
             // Eigenvectors are needed
             // Calculate Z = Q*T = Re(Q)*T + i*Im(Q)*T
             //
-            if( (result & zneeded!=0) & m!=0 )
+            if( (result && zneeded!=0) && m!=0 )
             {
                 work = new double[m-1+1];
                 z = new complex[n-1+1, m-1+1];
@@ -11486,7 +14448,7 @@ public partial class alglib
             w = new double[0];
             z = new complex[0,0];
 
-            ap.assert(zneeded==0 | zneeded==1, "HermitianEigenValuesAndVectorsByIndexes: incorrect ZNeeded");
+            alglib.ap.assert(zneeded==0 || zneeded==1, "HermitianEigenValuesAndVectorsByIndexes: incorrect ZNeeded");
             
             //
             // Reduce to tridiagonal form
@@ -11508,7 +14470,7 @@ public partial class alglib
             // Calculate Z = Q*T = Re(Q)*T + i*Im(Q)*T
             //
             m = i2-i1+1;
-            if( result & zneeded!=0 )
+            if( result && zneeded!=0 )
             {
                 work = new double[m-1+1];
                 z = new complex[n-1+1, m-1+1];
@@ -11711,7 +14673,7 @@ public partial class alglib
                     }
                     return result;
                 }
-                ap.assert(false, "SMatrixTDEVD: Incorrect ZNeeded!");
+                alglib.ap.assert(false, "SMatrixTDEVD: Incorrect ZNeeded!");
             }
             return result;
         }
@@ -11800,7 +14762,7 @@ public partial class alglib
 
             m = 0;
 
-            ap.assert(zneeded>=0 & zneeded<=2, "SMatrixTDEVDR: incorrect ZNeeded!");
+            alglib.ap.assert(zneeded>=0 && zneeded<=2, "SMatrixTDEVDR: incorrect ZNeeded!");
             
             //
             // Special cases
@@ -11843,7 +14805,7 @@ public partial class alglib
             if( zneeded==0 )
             {
                 result = internalbisectioneigenvalues(d1, e1, n, 2, 1, a, b, 0, 0, -1, ref w, ref m, ref nsplit, ref iblock, ref isplit, ref errorcode);
-                if( !result | m==0 )
+                if( !result || m==0 )
                 {
                     m = 0;
                     return result;
@@ -11867,7 +14829,7 @@ public partial class alglib
                 // Find eigen pairs
                 //
                 result = internalbisectioneigenvalues(d1, e1, n, 2, 2, a, b, 0, 0, -1, ref w, ref m, ref nsplit, ref iblock, ref isplit, ref errorcode);
-                if( !result | m==0 )
+                if( !result || m==0 )
                 {
                     m = 0;
                     return result;
@@ -11959,7 +14921,7 @@ public partial class alglib
                 // Find eigen pairs
                 //
                 result = internalbisectioneigenvalues(d1, e1, n, 2, 2, a, b, 0, 0, -1, ref w, ref m, ref nsplit, ref iblock, ref isplit, ref errorcode);
-                if( !result | m==0 )
+                if( !result || m==0 )
                 {
                     m = 0;
                     return result;
@@ -12101,7 +15063,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            ap.assert((0<=i1 & i1<=i2) & i2<n, "SMatrixTDEVDI: incorrect I1/I2!");
+            alglib.ap.assert((0<=i1 && i1<=i2) && i2<n, "SMatrixTDEVDI: incorrect I1/I2!");
             
             //
             // Copy D,E to D1, E1
@@ -12409,7 +15371,7 @@ public partial class alglib
             vl = new double[0,0];
             vr = new double[0,0];
 
-            ap.assert(vneeded>=0 & vneeded<=3, "RMatrixEVD: incorrect VNeeded!");
+            alglib.ap.assert(vneeded>=0 && vneeded<=3, "RMatrixEVD: incorrect VNeeded!");
             a1 = new double[n+1, n+1];
             for(i=1; i<=n; i++)
             {
@@ -12434,7 +15396,7 @@ public partial class alglib
                 {
                     wi[i_] = wi1[i_+i1_];
                 }
-                if( vneeded==2 | vneeded==3 )
+                if( vneeded==2 || vneeded==3 )
                 {
                     vl = new double[n-1+1, n-1+1];
                     for(i=0; i<=n-1; i++)
@@ -12446,7 +15408,7 @@ public partial class alglib
                         }
                     }
                 }
-                if( vneeded==1 | vneeded==3 )
+                if( vneeded==1 || vneeded==3 )
                 {
                     vr = new double[n-1+1, n-1+1];
                     for(i=0; i<=n-1; i++)
@@ -12522,12 +15484,12 @@ public partial class alglib
 
             e = (double[])e.Clone();
 
-            ap.assert(zneeded>=0 & zneeded<=3, "TridiagonalEVD: Incorrent ZNeeded");
+            alglib.ap.assert(zneeded>=0 && zneeded<=3, "TridiagonalEVD: Incorrent ZNeeded");
             
             //
             // Quick return if possible
             //
-            if( zneeded<0 | zneeded>3 )
+            if( zneeded<0 || zneeded>3 )
             {
                 result = false;
                 return result;
@@ -12539,7 +15501,7 @@ public partial class alglib
             }
             if( n==1 )
             {
-                if( zneeded==2 | zneeded==3 )
+                if( zneeded==2 || zneeded==3 )
                 {
                     z = new double[1+1, 1+1];
                     z[1,1] = 1;
@@ -13698,11 +16660,11 @@ public partial class alglib
             //
             result = false;
             errorcode = 0;
-            if( irange<=0 | irange>=4 )
+            if( irange<=0 || irange>=4 )
             {
                 errorcode = -4;
             }
-            if( iorder<=0 | iorder>=3 )
+            if( iorder<=0 || iorder>=3 )
             {
                 errorcode = -5;
             }
@@ -13710,15 +16672,15 @@ public partial class alglib
             {
                 errorcode = -3;
             }
-            if( irange==2 & (double)(vl)>=(double)(vu) )
+            if( irange==2 && (double)(vl)>=(double)(vu) )
             {
                 errorcode = -6;
             }
-            if( irange==3 & (il<1 | il>Math.Max(1, n)) )
+            if( irange==3 && (il<1 || il>Math.Max(1, n)) )
             {
                 errorcode = -8;
             }
-            if( irange==3 & (iu<Math.Min(n, il) | iu>n) )
+            if( irange==3 && (iu<Math.Min(n, il) || iu>n) )
             {
                 errorcode = -9;
             }
@@ -13736,7 +16698,7 @@ public partial class alglib
             //
             // Simplifications:
             //
-            if( (irange==3 & il==1) & iu==n )
+            if( (irange==3 && il==1) && iu==n )
             {
                 irange = 1;
             }
@@ -13748,7 +16710,7 @@ public partial class alglib
             {
                 nsplit = 1;
                 isplit[1] = 1;
-                if( irange==2 & ((double)(vl)>=(double)(d[1]) | (double)(vu)<(double)(d[1])) )
+                if( irange==2 && ((double)(vl)>=(double)(d[1]) || (double)(vu)<(double)(d[1])) )
                 {
                     m = 0;
                 }
@@ -13918,7 +16880,7 @@ public partial class alglib
                     wul = work[n+1];
                     nwu = iwork[3];
                 }
-                if( ((nwl<0 | nwl>=n) | nwu<1) | nwu>n )
+                if( ((nwl<0 || nwl>=n) || nwu<1) || nwu>n )
                 {
                     errorcode = 4;
                     result = false;
@@ -13978,15 +16940,15 @@ public partial class alglib
                     //
                     // Special Case -- IIN=1
                     //
-                    if( irange==1 | (double)(wl)>=(double)(d[ibegin]-pivmin) )
+                    if( irange==1 || (double)(wl)>=(double)(d[ibegin]-pivmin) )
                     {
                         nwl = nwl+1;
                     }
-                    if( irange==1 | (double)(wu)>=(double)(d[ibegin]-pivmin) )
+                    if( irange==1 || (double)(wu)>=(double)(d[ibegin]-pivmin) )
                     {
                         nwu = nwu+1;
                     }
-                    if( irange==1 | ((double)(wl)<(double)(d[ibegin]-pivmin) & (double)(wu)>=(double)(d[ibegin]-pivmin)) )
+                    if( irange==1 || ((double)(wl)<(double)(d[ibegin]-pivmin) && (double)(wu)>=(double)(d[ibegin]-pivmin)) )
                     {
                         m = m+1;
                         w[m] = d[ibegin];
@@ -14170,17 +17132,17 @@ public partial class alglib
                 im = 0;
                 idiscl = il-1-nwl;
                 idiscu = nwu-iu;
-                if( idiscl>0 | idiscu>0 )
+                if( idiscl>0 || idiscu>0 )
                 {
                     for(je=1; je<=m; je++)
                     {
-                        if( (double)(w[je])<=(double)(wlu) & idiscl>0 )
+                        if( (double)(w[je])<=(double)(wlu) && idiscl>0 )
                         {
                             idiscl = idiscl-1;
                         }
                         else
                         {
-                            if( (double)(w[je])>=(double)(wul) & idiscu>0 )
+                            if( (double)(w[je])>=(double)(wul) && idiscu>0 )
                             {
                                 idiscu = idiscu-1;
                             }
@@ -14194,7 +17156,7 @@ public partial class alglib
                     }
                     m = im;
                 }
-                if( idiscl>0 | idiscu>0 )
+                if( idiscl>0 || idiscu>0 )
                 {
                     
                     //
@@ -14216,7 +17178,7 @@ public partial class alglib
                             iw = 0;
                             for(je=1; je<=m; je++)
                             {
-                                if( iblock[je]!=0 & ((double)(w[je])<(double)(wkill) | iw==0) )
+                                if( iblock[je]!=0 && ((double)(w[je])<(double)(wkill) || iw==0) )
                                 {
                                     iw = je;
                                     wkill = w[je];
@@ -14233,7 +17195,7 @@ public partial class alglib
                             iw = 0;
                             for(je=1; je<=m; je++)
                             {
-                                if( iblock[je]!=0 & ((double)(w[je])>(double)(wkill) | iw==0) )
+                                if( iblock[je]!=0 && ((double)(w[je])>(double)(wkill) || iw==0) )
                                 {
                                     iw = je;
                                     wkill = w[je];
@@ -14254,7 +17216,7 @@ public partial class alglib
                     }
                     m = im;
                 }
-                if( idiscl<0 | idiscu<0 )
+                if( idiscl<0 || idiscu<0 )
                 {
                     toofew = true;
                 }
@@ -14265,7 +17227,7 @@ public partial class alglib
             //    by block.
             // If ORDER='E', sort the eigenvalues from smallest to largest
             //
-            if( iorder==1 & nsplit>1 )
+            if( iorder==1 && nsplit>1 )
             {
                 for(je=1; je<=m-1; je++)
                 {
@@ -14400,7 +17362,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            if( m<0 | m>n )
+            if( m<0 || m>n )
             {
                 info = -4;
                 return;
@@ -14412,7 +17374,7 @@ public partial class alglib
                     info = -6;
                     break;
                 }
-                if( iblock[j]==iblock[j-1] & (double)(w[j])<(double)(w[j-1]) )
+                if( iblock[j]==iblock[j-1] && (double)(w[j])<(double)(w[j-1]) )
                 {
                     info = -5;
                     break;
@@ -14426,7 +17388,7 @@ public partial class alglib
             //
             // Quick return if possible
             //
-            if( n==0 | m==0 )
+            if( n==0 || m==0 )
             {
                 return;
             }
@@ -14795,12 +17757,12 @@ public partial class alglib
                         c[k] = mult;
                     }
                 }
-                if( (double)(Math.Max(piv1, piv2))<=(double)(tl) & iin[n]==0 )
+                if( (double)(Math.Max(piv1, piv2))<=(double)(tl) && iin[n]==0 )
                 {
                     iin[n] = k;
                 }
             }
-            if( (double)(Math.Abs(a[n]))<=(double)(scale1*tl) & iin[n]==0 )
+            if( (double)(Math.Abs(a[n]))<=(double)(scale1*tl) && iin[n]==0 )
             {
                 iin[n] = n;
             }
@@ -14901,7 +17863,7 @@ public partial class alglib
                     {
                         if( (double)(absak)<(double)(sfmin) )
                         {
-                            if( (double)(absak)==(double)(0) | (double)(Math.Abs(temp)*sfmin)>(double)(absak) )
+                            if( (double)(absak)==(double)(0) || (double)(Math.Abs(temp)*sfmin)>(double)(absak) )
                             {
                                 ak = ak+pert;
                                 pert = 2*pert;
@@ -14967,7 +17929,7 @@ public partial class alglib
             info = 0;
 
             info = 0;
-            if( ijob<1 | ijob>3 )
+            if( ijob<1 || ijob>3 )
             {
                 info = -1;
                 return;
@@ -15181,7 +18143,7 @@ public partial class alglib
                 {
                     tmp1 = Math.Abs(ab[ji,2]-ab[ji,1]);
                     tmp2 = Math.Max(Math.Abs(ab[ji,2]), Math.Abs(ab[ji,1]));
-                    if( (double)(tmp1)<(double)(Math.Max(abstol, Math.Max(pivmin, reltol*tmp2))) | nab[ji,1]>=nab[ji,2] )
+                    if( (double)(tmp1)<(double)(Math.Max(abstol, Math.Max(pivmin, reltol*tmp2))) || nab[ji,1]>=nab[ji,2] )
                     {
                         
                         //
@@ -15335,11 +18297,11 @@ public partial class alglib
             crv4 = new double[4+1];
             if( howmny!=1 )
             {
-                if( side==1 | side==3 )
+                if( side==1 || side==3 )
                 {
                     vr = new double[n+1, n+1];
                 }
-                if( side==2 | side==3 )
+                if( side==2 || side==3 )
                 {
                     vl = new double[n+1, n+1];
                 }
@@ -15349,8 +18311,8 @@ public partial class alglib
             // Decode and test the input parameters
             //
             bothv = side==3;
-            rightv = side==1 | bothv;
-            leftv = side==2 | bothv;
+            rightv = side==1 || bothv;
+            leftv = side==2 || bothv;
             allv = howmny==2;
             over = howmny==1;
             somev = howmny==3;
@@ -15360,12 +18322,12 @@ public partial class alglib
                 info = -2;
                 return;
             }
-            if( !rightv & !leftv )
+            if( !rightv && !leftv )
             {
                 info = -3;
                 return;
             }
-            if( (!allv & !over) & !somev )
+            if( (!allv && !over) && !somev )
             {
                 info = -4;
                 return;
@@ -15401,7 +18363,7 @@ public partial class alglib
                             else
                             {
                                 pair = true;
-                                if( vselect[j] | vselect[j+1] )
+                                if( vselect[j] || vselect[j+1] )
                                 {
                                     vselect[j] = true;
                                     m = m+2;
@@ -16757,7 +19719,7 @@ public partial class alglib
                     // Check scaling for  X = B / C
                     //
                     bnorm = Math.Abs(b[1,1]);
-                    if( (double)(cnorm)<(double)(1) & (double)(bnorm)>(double)(1) )
+                    if( (double)(cnorm)<(double)(1) && (double)(bnorm)>(double)(1) )
                     {
                         if( (double)(bnorm)>(double)(bignum*cnorm) )
                         {
@@ -16798,7 +19760,7 @@ public partial class alglib
                     // Check scaling for  X = B / C
                     //
                     bnorm = Math.Abs(b[1,1])+Math.Abs(b[1,2]);
-                    if( (double)(cnorm)<(double)(1) & (double)(bnorm)>(double)(1) )
+                    if( (double)(cnorm)<(double)(1) && (double)(bnorm)>(double)(1) )
                     {
                         if( (double)(bnorm)>(double)(bignum*cnorm) )
                         {
@@ -16860,7 +19822,7 @@ public partial class alglib
                     if( (double)(cmax)<(double)(smini) )
                     {
                         bnorm = Math.Max(Math.Abs(b[1,1]), Math.Abs(b[2,1]));
-                        if( (double)(smini)<(double)(1) & (double)(bnorm)>(double)(1) )
+                        if( (double)(smini)<(double)(1) && (double)(bnorm)>(double)(1) )
                         {
                             if( (double)(bnorm)>(double)(bignum*smini) )
                             {
@@ -16906,7 +19868,7 @@ public partial class alglib
                     }
                     br2 = br2-lr21*br1;
                     bbnd = Math.Max(Math.Abs(br1*(ur22*ur11r)), Math.Abs(br2));
-                    if( (double)(bbnd)>(double)(1) & (double)(Math.Abs(ur22))<(double)(1) )
+                    if( (double)(bbnd)>(double)(1) && (double)(Math.Abs(ur22))<(double)(1) )
                     {
                         if( (double)(bbnd)>=(double)(bignum*Math.Abs(ur22)) )
                         {
@@ -16930,7 +19892,7 @@ public partial class alglib
                     //
                     // Further scaling if  norm(A) norm(X) > overflow
                     //
-                    if( (double)(xnorm)>(double)(1) & (double)(cmax)>(double)(1) )
+                    if( (double)(xnorm)>(double)(1) && (double)(cmax)>(double)(1) )
                     {
                         if( (double)(xnorm)>(double)(bignum/cmax) )
                         {
@@ -16971,7 +19933,7 @@ public partial class alglib
                     if( (double)(cmax)<(double)(smini) )
                     {
                         bnorm = Math.Max(Math.Abs(b[1,1])+Math.Abs(b[1,2]), Math.Abs(b[2,1])+Math.Abs(b[2,2]));
-                        if( (double)(smini)<(double)(1) & (double)(bnorm)>(double)(1) )
+                        if( (double)(smini)<(double)(1) && (double)(bnorm)>(double)(1) )
                         {
                             if( (double)(bnorm)>(double)(bignum*smini) )
                             {
@@ -16999,7 +19961,7 @@ public partial class alglib
                     ui12 = civ4[ipivot44[3,icmax]];
                     cr22 = crv4[ipivot44[4,icmax]];
                     ci22 = civ4[ipivot44[4,icmax]];
-                    if( icmax==1 | icmax==4 )
+                    if( icmax==1 || icmax==4 )
                     {
                         
                         //
@@ -17067,7 +20029,7 @@ public partial class alglib
                     br2 = br2-lr21*br1+li21*bi1;
                     bi2 = bi2-li21*br1-lr21*bi1;
                     bbnd = Math.Max((Math.Abs(br1)+Math.Abs(bi1))*(u22abs*(Math.Abs(ur11r)+Math.Abs(ui11r))), Math.Abs(br2)+Math.Abs(bi2));
-                    if( (double)(bbnd)>(double)(1) & (double)(u22abs)<(double)(1) )
+                    if( (double)(bbnd)>(double)(1) && (double)(u22abs)<(double)(1) )
                     {
                         if( (double)(bbnd)>=(double)(bignum*u22abs) )
                         {
@@ -17100,7 +20062,7 @@ public partial class alglib
                     //
                     // Further scaling if  norm(A) norm(X) > overflow
                     //
-                    if( (double)(xnorm)>(double)(1) & (double)(cmax)>(double)(1) )
+                    if( (double)(xnorm)>(double)(1) && (double)(cmax)>(double)(1) )
                     {
                         if( (double)(xnorm)>(double)(bignum/cmax) )
                         {
@@ -17186,7 +20148,7 @@ public partial class alglib
             vl = new double[0,0];
             vr = new double[0,0];
 
-            ap.assert(vneeded>=0 & vneeded<=3, "NonSymmetricEVD: incorrect VNeeded!");
+            alglib.ap.assert(vneeded>=0 && vneeded<=3, "NonSymmetricEVD: incorrect VNeeded!");
             if( vneeded==0 )
             {
                 
@@ -17210,7 +20172,7 @@ public partial class alglib
             {
                 return result;
             }
-            if( vneeded==1 | vneeded==3 )
+            if( vneeded==1 || vneeded==3 )
             {
                 vr = new double[n+1, n+1];
                 for(i=1; i<=n; i++)
@@ -17221,7 +20183,7 @@ public partial class alglib
                     }
                 }
             }
-            if( vneeded==2 | vneeded==3 )
+            if( vneeded==2 || vneeded==3 )
             {
                 vl = new double[n+1, n+1];
                 for(i=1; i<=n; i++)
@@ -17253,7 +20215,7 @@ public partial class alglib
 
             tau = new double[0];
 
-            ap.assert(n>=0, "ToUpperHessenberg: incorrect N!");
+            alglib.ap.assert(n>=0, "ToUpperHessenberg: incorrect N!");
             
             //
             // Quick return if possible
@@ -17388,7 +20350,7 @@ public partial class alglib
 
             a = new double[0,0];
 
-            ap.assert(n>=1, "RMatrixRndOrthogonal: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixRndOrthogonal: N<1!");
             a = new double[n, n];
             for(i=0; i<=n-1; i++)
             {
@@ -17433,7 +20395,7 @@ public partial class alglib
 
             a = new double[0,0];
 
-            ap.assert(n>=1 & (double)(c)>=(double)(1), "RMatrixRndCond: N<1 or C<1!");
+            alglib.ap.assert(n>=1 && (double)(c)>=(double)(1), "RMatrixRndCond: N<1 or C<1!");
             a = new double[n, n];
             if( n==1 )
             {
@@ -17485,7 +20447,7 @@ public partial class alglib
 
             a = new complex[0,0];
 
-            ap.assert(n>=1, "CMatrixRndOrthogonal: N<1!");
+            alglib.ap.assert(n>=1, "CMatrixRndOrthogonal: N<1!");
             a = new complex[n, n];
             for(i=0; i<=n-1; i++)
             {
@@ -17533,7 +20495,7 @@ public partial class alglib
 
             a = new complex[0,0];
 
-            ap.assert(n>=1 & (double)(c)>=(double)(1), "CMatrixRndCond: N<1 or C<1!");
+            alglib.ap.assert(n>=1 && (double)(c)>=(double)(1), "CMatrixRndCond: N<1 or C<1!");
             a = new complex[n, n];
             if( n==1 )
             {
@@ -17592,7 +20554,7 @@ public partial class alglib
 
             a = new double[0,0];
 
-            ap.assert(n>=1 & (double)(c)>=(double)(1), "SMatrixRndCond: N<1 or C<1!");
+            alglib.ap.assert(n>=1 && (double)(c)>=(double)(1), "SMatrixRndCond: N<1 or C<1!");
             a = new double[n, n];
             if( n==1 )
             {
@@ -17660,7 +20622,7 @@ public partial class alglib
             //
             // Special cases
             //
-            if( n<=0 | (double)(c)<(double)(1) )
+            if( n<=0 || (double)(c)<(double)(1) )
             {
                 return;
             }
@@ -17723,7 +20685,7 @@ public partial class alglib
 
             a = new complex[0,0];
 
-            ap.assert(n>=1 & (double)(c)>=(double)(1), "HMatrixRndCond: N<1 or C<1!");
+            alglib.ap.assert(n>=1 && (double)(c)>=(double)(1), "HMatrixRndCond: N<1 or C<1!");
             a = new complex[n, n];
             if( n==1 )
             {
@@ -17799,7 +20761,7 @@ public partial class alglib
             //
             // Special cases
             //
-            if( n<=0 | (double)(c)<(double)(1) )
+            if( n<=0 || (double)(c)<(double)(1) )
             {
                 return;
             }
@@ -17873,7 +20835,7 @@ public partial class alglib
             hqrnd.hqrndstate state = new hqrnd.hqrndstate();
             int i_ = 0;
 
-            ap.assert(n>=1 & m>=1, "RMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
+            alglib.ap.assert(n>=1 && m>=1, "RMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
             if( n==1 )
             {
                 
@@ -17974,7 +20936,7 @@ public partial class alglib
             hqrnd.hqrndstate state = new hqrnd.hqrndstate();
             int i_ = 0;
 
-            ap.assert(n>=1 & m>=1, "RMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
+            alglib.ap.assert(n>=1 && m>=1, "RMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
             if( m==1 )
             {
                 
@@ -18073,7 +21035,7 @@ public partial class alglib
             hqrnd.hqrndstate state = new hqrnd.hqrndstate();
             int i_ = 0;
 
-            ap.assert(n>=1 & m>=1, "CMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
+            alglib.ap.assert(n>=1 && m>=1, "CMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
             if( n==1 )
             {
                 
@@ -18168,7 +21130,7 @@ public partial class alglib
             hqrnd.hqrndstate state = new hqrnd.hqrndstate();
             int i_ = 0;
 
-            ap.assert(n>=1 & m>=1, "CMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
+            alglib.ap.assert(n>=1 && m>=1, "CMatrixRndOrthogonalFromTheRight: N<1 or M<1!");
             if( m==1 )
             {
                 
@@ -18321,6 +21283,17 @@ public partial class alglib
                     a[i,i_] = tau*a[i,i_];
                 }
             }
+            
+            //
+            // Copy upper triangle to lower
+            //
+            for(i=0; i<=n-2; i++)
+            {
+                for(i_=i+1; i_<=n-1;i_++)
+                {
+                    a[i_,i] = a[i,i_];
+                }
+            }
         }
 
 
@@ -18404,6 +21377,25 @@ public partial class alglib
                     a[i,i_] = tau*a[i,i_];
                 }
             }
+            
+            //
+            // Change all values from lower triangle by complex-conjugate values
+            // from upper one
+            //
+            for(i=0; i<=n-2; i++)
+            {
+                for(i_=i+1; i_<=n-1;i_++)
+                {
+                    a[i_,i] = a[i,i_];
+                }
+            }
+            for(s=0; s<=n-2; s++)
+            {
+                for(i=s+1; i<=n-1; i++)
+                {
+                    a[i,s].y = -a[i,s].y;
+                }
+            }
         }
 
 
@@ -18448,8 +21440,8 @@ public partial class alglib
         {
             pivots = new int[0];
 
-            ap.assert(m>0, "RMatrixLU: incorrect M!");
-            ap.assert(n>0, "RMatrixLU: incorrect N!");
+            alglib.ap.assert(m>0, "RMatrixLU: incorrect M!");
+            alglib.ap.assert(n>0, "RMatrixLU: incorrect N!");
             rmatrixplu(ref a, m, n, ref pivots);
         }
 
@@ -18492,8 +21484,8 @@ public partial class alglib
         {
             pivots = new int[0];
 
-            ap.assert(m>0, "CMatrixLU: incorrect M!");
-            ap.assert(n>0, "CMatrixLU: incorrect N!");
+            alglib.ap.assert(m>0, "CMatrixLU: incorrect M!");
+            alglib.ap.assert(n>0, "CMatrixLU: incorrect N!");
             cmatrixplu(ref a, m, n, ref pivots);
         }
 
@@ -18609,8 +21601,8 @@ public partial class alglib
             // Internal LU decomposition subroutine.
             // Never call it directly.
             //
-            ap.assert(m>0, "RMatrixLUP: incorrect M!");
-            ap.assert(n>0, "RMatrixLUP: incorrect N!");
+            alglib.ap.assert(m>0, "RMatrixLUP: incorrect M!");
+            alglib.ap.assert(n>0, "RMatrixLUP: incorrect N!");
             
             //
             // Scale matrix to avoid overflows,
@@ -18671,8 +21663,8 @@ public partial class alglib
             // Internal LU decomposition subroutine.
             // Never call it directly.
             //
-            ap.assert(m>0, "CMatrixLUP: incorrect M!");
-            ap.assert(n>0, "CMatrixLUP: incorrect N!");
+            alglib.ap.assert(m>0, "CMatrixLUP: incorrect M!");
+            alglib.ap.assert(n>0, "CMatrixLUP: incorrect N!");
             
             //
             // Scale matrix to avoid overflows,
@@ -18733,8 +21725,8 @@ public partial class alglib
             // Internal LU decomposition subroutine.
             // Never call it directly.
             //
-            ap.assert(m>0, "RMatrixPLU: incorrect M!");
-            ap.assert(n>0, "RMatrixPLU: incorrect N!");
+            alglib.ap.assert(m>0, "RMatrixPLU: incorrect M!");
+            alglib.ap.assert(n>0, "RMatrixPLU: incorrect N!");
             tmp = new double[2*Math.Max(m, n)];
             pivots = new int[Math.Min(m, n)];
             
@@ -18795,8 +21787,8 @@ public partial class alglib
             // Internal LU decomposition subroutine.
             // Never call it directly.
             //
-            ap.assert(m>0, "CMatrixPLU: incorrect M!");
-            ap.assert(n>0, "CMatrixPLU: incorrect N!");
+            alglib.ap.assert(m>0, "CMatrixPLU: incorrect M!");
+            alglib.ap.assert(n>0, "CMatrixPLU: incorrect N!");
             tmp = new complex[2*Math.Max(m, n)];
             pivots = new int[Math.Min(m, n)];
             
@@ -18883,7 +21875,7 @@ public partial class alglib
             //
             // Prepare buffer
             //
-            if( ap.len(tmp)<2*n )
+            if( alglib.ap.len(tmp)<2*n )
             {
                 tmp = new double[2*n];
             }
@@ -19155,7 +22147,7 @@ public partial class alglib
                     }
                 }
                 ablas.rmatrixrighttrsm(m2, m1, a, offs, offs, true, true, 0, ref a, offs+m1, offs);
-                ablas.rmatrixgemm(m-m1, n-m1, m1, -1.0, a, offs+m1, offs, 0, a, offs, offs+m1, 0, 1.0, ref a, offs+m1, offs+m1);
+                ablas.rmatrixgemm(m-m1, n-m1, m1, -1.0, a, offs+m1, offs, 0, a, offs, offs+m1, 0, 1.0, a, offs+m1, offs+m1);
                 rmatrixluprec(ref a, offs+m1, m-m1, n-m1, ref pivots, ref tmp);
                 for(i=0; i<=m2-1; i++)
                 {
@@ -19385,7 +22377,7 @@ public partial class alglib
                     }
                 }
                 ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, false, true, 0, ref a, offs, offs+n1);
-                ablas.rmatrixgemm(m-n1, n-n1, n1, -1.0, a, offs+n1, offs, 0, a, offs, offs+n1, 0, 1.0, ref a, offs+n1, offs+n1);
+                ablas.rmatrixgemm(m-n1, n-n1, n1, -1.0, a, offs+n1, offs, 0, a, offs, offs+n1, 0, 1.0, a, offs+n1, offs+n1);
                 rmatrixplurec(ref a, offs+n1, m-n1, n-n1, ref pivots, ref tmp);
                 for(i=0; i<=n2-1; i++)
                 {
@@ -19436,7 +22428,7 @@ public partial class alglib
             //
             // Quick return if possible
             //
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -19480,7 +22472,7 @@ public partial class alglib
                 //
                 // LU decomposition of 1x(N-J) matrix
                 //
-                if( a[offs+j,offs+j]!=0 & j+1<=n-1 )
+                if( a[offs+j,offs+j]!=0 && j+1<=n-1 )
                 {
                     s = 1/a[offs+j,offs+j];
                     for(i_=offs+j+1; i_<=offs+n-1;i_++)
@@ -19535,7 +22527,7 @@ public partial class alglib
             //
             // Quick return if possible
             //
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -19579,7 +22571,7 @@ public partial class alglib
                 //
                 // LU decomposition of 1x(N-J) matrix
                 //
-                if( (double)(a[offs+j,offs+j])!=(double)(0) & j+1<=n-1 )
+                if( (double)(a[offs+j,offs+j])!=(double)(0) && j+1<=n-1 )
                 {
                     s = 1/a[offs+j,offs+j];
                     for(i_=offs+j+1; i_<=offs+n-1;i_++)
@@ -19635,7 +22627,7 @@ public partial class alglib
             //
             // Quick return if possible
             //
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -19730,7 +22722,7 @@ public partial class alglib
             //
             // Quick return if possible
             //
-            if( m==0 | n==0 )
+            if( m==0 || n==0 )
             {
                 return;
             }
@@ -19829,7 +22821,7 @@ public partial class alglib
             //
             // Prepare buffer
             //
-            if( ap.len(tmp)<2*n )
+            if( alglib.ap.len(tmp)<2*n )
             {
                 tmp = new complex[2*n];
             }
@@ -20221,7 +23213,7 @@ public partial class alglib
 
             a = (double[,])a.Clone();
 
-            ap.assert(n>=1, "RMatrixRCond1: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixRCond1: N<1!");
             t = new double[n];
             for(i=0; i<=n-1; i++)
             {
@@ -20275,7 +23267,7 @@ public partial class alglib
 
             a = (double[,])a.Clone();
 
-            ap.assert(n>=1, "RMatrixRCondInf: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixRCondInf: N<1!");
             nrm = 0;
             for(i=0; i<=n-1; i++)
             {
@@ -20417,7 +23409,7 @@ public partial class alglib
             int j1 = 0;
             int j2 = 0;
 
-            ap.assert(n>=1, "RMatrixTRRCond1: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixTRRCond1: N<1!");
             t = new double[n];
             for(i=0; i<=n-1; i++)
             {
@@ -20492,7 +23484,7 @@ public partial class alglib
             int j1 = 0;
             int j2 = 0;
 
-            ap.assert(n>=1, "RMatrixTRRCondInf: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixTRRCondInf: N<1!");
             nrm = 0;
             for(i=0; i<=n-1; i++)
             {
@@ -20647,7 +23639,7 @@ public partial class alglib
 
             a = (complex[,])a.Clone();
 
-            ap.assert(n>=1, "CMatrixRCond1: N<1!");
+            alglib.ap.assert(n>=1, "CMatrixRCond1: N<1!");
             t = new double[n];
             for(i=0; i<=n-1; i++)
             {
@@ -20701,7 +23693,7 @@ public partial class alglib
 
             a = (complex[,])a.Clone();
 
-            ap.assert(n>=1, "CMatrixRCondInf: N<1!");
+            alglib.ap.assert(n>=1, "CMatrixRCondInf: N<1!");
             nrm = 0;
             for(i=0; i<=n-1; i++)
             {
@@ -20876,7 +23868,7 @@ public partial class alglib
             double result = 0;
             double v = 0;
 
-            ap.assert(n>=1, "CMatrixLURCond1: N<1!");
+            alglib.ap.assert(n>=1, "CMatrixLURCond1: N<1!");
             cmatrixrcondluinternal(lua, n, true, false, 0.0, ref v);
             result = v;
             return result;
@@ -20908,7 +23900,7 @@ public partial class alglib
             double result = 0;
             double v = 0;
 
-            ap.assert(n>=1, "CMatrixLURCondInf: N<1!");
+            alglib.ap.assert(n>=1, "CMatrixLURCondInf: N<1!");
             cmatrixrcondluinternal(lua, n, false, false, 0.0, ref v);
             result = v;
             return result;
@@ -20949,7 +23941,7 @@ public partial class alglib
             int j1 = 0;
             int j2 = 0;
 
-            ap.assert(n>=1, "RMatrixTRRCond1: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixTRRCond1: N<1!");
             t = new double[n];
             for(i=0; i<=n-1; i++)
             {
@@ -21024,7 +24016,7 @@ public partial class alglib
             int j1 = 0;
             int j2 = 0;
 
-            ap.assert(n>=1, "RMatrixTRRCondInf: N<1!");
+            alglib.ap.assert(n>=1, "RMatrixTRRCondInf: N<1!");
             nrm = 0;
             for(i=0; i<=n-1; i++)
             {
@@ -21472,7 +24464,7 @@ public partial class alglib
 
             rc = 0;
 
-            ap.assert(n>=1);
+            alglib.ap.assert(n>=1);
             tmp = new double[n];
             
             //
@@ -21739,7 +24731,7 @@ public partial class alglib
 
             rc = 0;
 
-            ap.assert(n>=1);
+            alglib.ap.assert(n>=1);
             tmp = new complex[n];
             
             //
@@ -22687,7 +25679,7 @@ public partial class alglib
                 flg = false;
                 for(i=1; i<=n; i++)
                 {
-                    if( ((double)(x[i])>=(double)(0) & isgn[i]<0) | ((double)(x[i])<(double)(0) & isgn[i]>=0) )
+                    if( ((double)(x[i])>=(double)(0) && isgn[i]<0) || ((double)(x[i])<(double)(0) && isgn[i]>=0) )
                     {
                         flg = true;
                     }
@@ -22697,7 +25689,7 @@ public partial class alglib
                 // REPEATED SIGN VECTOR DETECTED, HENCE ALGORITHM HAS CONVERGED.
                 // OR MAY BE CYCLING.
                 //
-                if( !flg | (double)(est)<=(double)(v[posestold]) )
+                if( !flg || (double)(est)<=(double)(v[posestold]) )
                 {
                     v[posaltsgn] = 1;
                     for(i=1; i<=n; i++)
@@ -22742,7 +25734,7 @@ public partial class alglib
                         isgn[posj] = i;
                     }
                 }
-                if( (double)(x[isgn[posjlast]])!=(double)(Math.Abs(x[isgn[posj]])) & isgn[positer]<itmax )
+                if( (double)(x[isgn[posjlast]])!=(double)(Math.Abs(x[isgn[posj]])) && isgn[positer]<itmax )
                 {
                     isgn[positer] = isgn[positer]+1;
                     for(i=1; i<=n; i++)
@@ -22954,7 +25946,7 @@ public partial class alglib
             {
                 jlast = j;
                 j = internalcomplexrcondicmax1(x, n);
-                if( (double)(math.abscomplex(x[jlast]))!=(double)(math.abscomplex(x[j])) & iter<itmax )
+                if( (double)(math.abscomplex(x[jlast]))!=(double)(math.abscomplex(x[j])) && iter<itmax )
                 {
                     iter = iter+1;
                     
@@ -23101,10 +26093,24 @@ public partial class alglib
         * R1    reciprocal of condition number in 1-norm
         * RInf  reciprocal of condition number in inf-norm
         *************************************************************************/
-        public class matinvreport
+        public class matinvreport : apobject
         {
             public double r1;
             public double rinf;
+            public matinvreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                matinvreport _result = new matinvreport();
+                _result.r1 = r1;
+                _result.rinf = rinf;
+                return _result;
+            }
         };
 
 
@@ -23158,27 +26164,27 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "RMatrixLUInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "RMatrixLUInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "RMatrixLUInverse: rows(A)<N!");
-            ap.assert(ap.len(pivots)>=n, "RMatrixLUInverse: len(Pivots)<N!");
-            ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixLUInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "RMatrixLUInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixLUInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixLUInverse: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.len(pivots)>=n, "RMatrixLUInverse: len(Pivots)<N!");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixLUInverse: A contains infinite or NaN values!");
             info = 1;
             for(i=0; i<=n-1; i++)
             {
-                if( pivots[i]>n-1 | pivots[i]<i )
+                if( pivots[i]>n-1 || pivots[i]<i )
                 {
                     info = -1;
                 }
             }
-            ap.assert(info>0, "RMatrixLUInverse: incorrect Pivots array!");
+            alglib.ap.assert(info>0, "RMatrixLUInverse: incorrect Pivots array!");
             
             //
             // calculate condition numbers
             //
             rep.r1 = rcond.rmatrixlurcond1(a, n);
             rep.rinf = rcond.rmatrixlurcondinf(a, n);
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) | (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -23247,10 +26253,10 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "RMatrixInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "RMatrixInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "RMatrixInverse: rows(A)<N!");
-            ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "RMatrixInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixInverse: rows(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixInverse: A contains infinite or NaN values!");
             trfac.rmatrixlu(ref a, n, n, ref pivots);
             rmatrixluinverse(ref a, pivots, n, ref info, rep);
         }
@@ -23293,27 +26299,27 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "CMatrixLUInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "CMatrixLUInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "CMatrixLUInverse: rows(A)<N!");
-            ap.assert(ap.len(pivots)>=n, "CMatrixLUInverse: len(Pivots)<N!");
-            ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixLUInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "CMatrixLUInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixLUInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixLUInverse: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.len(pivots)>=n, "CMatrixLUInverse: len(Pivots)<N!");
+            alglib.ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixLUInverse: A contains infinite or NaN values!");
             info = 1;
             for(i=0; i<=n-1; i++)
             {
-                if( pivots[i]>n-1 | pivots[i]<i )
+                if( pivots[i]>n-1 || pivots[i]<i )
                 {
                     info = -1;
                 }
             }
-            ap.assert(info>0, "CMatrixLUInverse: incorrect Pivots array!");
+            alglib.ap.assert(info>0, "CMatrixLUInverse: incorrect Pivots array!");
             
             //
             // calculate condition numbers
             //
             rep.r1 = rcond.cmatrixlurcond1(a, n);
             rep.rinf = rcond.cmatrixlurcondinf(a, n);
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) | (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -23378,10 +26384,10 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "CRMatrixInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "CRMatrixInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "CRMatrixInverse: rows(A)<N!");
-            ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "CRMatrixInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CRMatrixInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CRMatrixInverse: rows(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixInverse: A contains infinite or NaN values!");
             trfac.cmatrixlu(ref a, n, n, ref pivots);
             cmatrixluinverse(ref a, pivots, n, ref info, rep);
         }
@@ -23432,23 +26438,23 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "SPDMatrixCholeskyInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "SPDMatrixCholeskyInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "SPDMatrixCholeskyInverse: rows(A)<N!");
+            alglib.ap.assert(n>0, "SPDMatrixCholeskyInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixCholeskyInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixCholeskyInverse: rows(A)<N!");
             info = 1;
             f = true;
             for(i=0; i<=n-1; i++)
             {
-                f = f & math.isfinite(a[i,i]);
+                f = f && math.isfinite(a[i,i]);
             }
-            ap.assert(f, "SPDMatrixCholeskyInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(f, "SPDMatrixCholeskyInverse: A contains infinite or NaN values!");
             
             //
             // calculate condition numbers
             //
             rep.r1 = rcond.spdmatrixcholeskyrcond(a, n, isupper);
             rep.rinf = rep.r1;
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) | (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
             {
                 if( isupper )
                 {
@@ -23526,10 +26532,10 @@ public partial class alglib
         {
             info = 0;
 
-            ap.assert(n>0, "SPDMatrixInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "SPDMatrixInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "SPDMatrixInverse: rows(A)<N!");
-            ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "SPDMatrixInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "SPDMatrixInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixInverse: rows(A)<N!");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "SPDMatrixInverse: A contains infinite or NaN values!");
             info = 1;
             if( trfac.spdmatrixcholesky(ref a, n, isupper) )
             {
@@ -23587,15 +26593,15 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "HPDMatrixCholeskyInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "HPDMatrixCholeskyInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "HPDMatrixCholeskyInverse: rows(A)<N!");
+            alglib.ap.assert(n>0, "HPDMatrixCholeskyInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "HPDMatrixCholeskyInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "HPDMatrixCholeskyInverse: rows(A)<N!");
             f = true;
             for(i=0; i<=n-1; i++)
             {
-                f = (f & math.isfinite(a[i,i].x)) & math.isfinite(a[i,i].y);
+                f = (f && math.isfinite(a[i,i].x)) && math.isfinite(a[i,i].y);
             }
-            ap.assert(f, "HPDMatrixCholeskyInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(f, "HPDMatrixCholeskyInverse: A contains infinite or NaN values!");
             info = 1;
             
             //
@@ -23603,7 +26609,7 @@ public partial class alglib
             //
             rep.r1 = rcond.hpdmatrixcholeskyrcond(a, n, isupper);
             rep.rinf = rep.r1;
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) | (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
             {
                 if( isupper )
                 {
@@ -23681,10 +26687,10 @@ public partial class alglib
         {
             info = 0;
 
-            ap.assert(n>0, "HPDMatrixInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "HPDMatrixInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "HPDMatrixInverse: rows(A)<N!");
-            ap.assert(apserv.apservisfinitectrmatrix(a, n, isupper), "HPDMatrixInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "HPDMatrixInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "HPDMatrixInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "HPDMatrixInverse: rows(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitectrmatrix(a, n, isupper), "HPDMatrixInverse: A contains infinite or NaN values!");
             info = 1;
             if( trfac.hpdmatrixcholesky(ref a, n, isupper) )
             {
@@ -23748,10 +26754,10 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "RMatrixTRInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "RMatrixTRInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "RMatrixTRInverse: rows(A)<N!");
-            ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "RMatrixTRInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "RMatrixTRInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixTRInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixTRInverse: rows(A)<N!");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "RMatrixTRInverse: A contains infinite or NaN values!");
             info = 1;
             
             //
@@ -23759,7 +26765,7 @@ public partial class alglib
             //
             rep.r1 = rcond.rmatrixtrrcond1(a, n, isupper, isunit);
             rep.rinf = rcond.rmatrixtrrcondinf(a, n, isupper, isunit);
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) | (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -23833,10 +26839,10 @@ public partial class alglib
 
             info = 0;
 
-            ap.assert(n>0, "CMatrixTRInverse: N<=0!");
-            ap.assert(ap.cols(a)>=n, "CMatrixTRInverse: cols(A)<N!");
-            ap.assert(ap.rows(a)>=n, "CMatrixTRInverse: rows(A)<N!");
-            ap.assert(apserv.apservisfinitectrmatrix(a, n, isupper), "CMatrixTRInverse: A contains infinite or NaN values!");
+            alglib.ap.assert(n>0, "CMatrixTRInverse: N<=0!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixTRInverse: cols(A)<N!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixTRInverse: rows(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitectrmatrix(a, n, isupper), "CMatrixTRInverse: A contains infinite or NaN values!");
             info = 1;
             
             //
@@ -23844,7 +26850,7 @@ public partial class alglib
             //
             rep.r1 = rcond.cmatrixtrrcond1(a, n, isupper, isunit);
             rep.rinf = rcond.cmatrixtrrcondinf(a, n, isupper, isunit);
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) | (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -24360,7 +27366,7 @@ public partial class alglib
             //         ( Y   Z )
             //
             ablas.ablassplitlength(a, n, ref n1, ref n2);
-            ap.assert(n2>0, "LUInverseRec: internal error!");
+            alglib.ap.assert(n2>0, "LUInverseRec: internal error!");
             
             //
             // X := inv(U1)*U12*inv(U2)
@@ -24382,7 +27388,7 @@ public partial class alglib
             {
                 return;
             }
-            ablas.rmatrixgemm(n1, n1, n2, 1.0, a, offs, offs+n1, 0, a, offs+n1, offs, 0, 1.0, ref a, offs, offs);
+            ablas.rmatrixgemm(n1, n1, n2, 1.0, a, offs, offs+n1, 0, a, offs+n1, offs, 0, 1.0, a, offs, offs);
             
             //
             // X := -X*inv(L2)
@@ -24495,7 +27501,7 @@ public partial class alglib
             //         ( Y   Z )
             //
             ablas.ablascomplexsplitlength(a, n, ref n1, ref n2);
-            ap.assert(n2>0, "LUInverseRec: internal error!");
+            alglib.ap.assert(n2>0, "LUInverseRec: internal error!");
             
             //
             // X := inv(U1)*U12*inv(U2)
@@ -24952,1710 +27958,2265 @@ public partial class alglib
 
 
     }
-    public class bdsvd
+    public class sparse
     {
         /*************************************************************************
-        Singular value decomposition of a bidiagonal matrix (extended algorithm)
+        Sparse matrix
 
-        The algorithm performs the singular value decomposition  of  a  bidiagonal
-        matrix B (upper or lower) representing it as B = Q*S*P^T, where Q and  P -
-        orthogonal matrices, S - diagonal matrix with non-negative elements on the
-        main diagonal, in descending order.
-
-        The  algorithm  finds  singular  values.  In  addition,  the algorithm can
-        calculate  matrices  Q  and P (more precisely, not the matrices, but their
-        product  with  given  matrices U and VT - U*Q and (P^T)*VT)).  Of  course,
-        matrices U and VT can be of any type, including identity. Furthermore, the
-        algorithm can calculate Q'*C (this product is calculated more  effectively
-        than U*Q,  because  this calculation operates with rows instead  of matrix
-        columns).
-
-        The feature of the algorithm is its ability to find  all  singular  values
-        including those which are arbitrarily close to 0  with  relative  accuracy
-        close to  machine precision. If the parameter IsFractionalAccuracyRequired
-        is set to True, all singular values will have high relative accuracy close
-        to machine precision. If the parameter is set to False, only  the  biggest
-        singular value will have relative accuracy  close  to  machine  precision.
-        The absolute error of other singular values is equal to the absolute error
-        of the biggest singular value.
-
-        Input parameters:
-            D       -   main diagonal of matrix B.
-                        Array whose index ranges within [0..N-1].
-            E       -   superdiagonal (or subdiagonal) of matrix B.
-                        Array whose index ranges within [0..N-2].
-            N       -   size of matrix B.
-            IsUpper -   True, if the matrix is upper bidiagonal.
-            IsFractionalAccuracyRequired -
-                        accuracy to search singular values with.
-            U       -   matrix to be multiplied by Q.
-                        Array whose indexes range within [0..NRU-1, 0..N-1].
-                        The matrix can be bigger, in that case only the  submatrix
-                        [0..NRU-1, 0..N-1] will be multiplied by Q.
-            NRU     -   number of rows in matrix U.
-            C       -   matrix to be multiplied by Q'.
-                        Array whose indexes range within [0..N-1, 0..NCC-1].
-                        The matrix can be bigger, in that case only the  submatrix
-                        [0..N-1, 0..NCC-1] will be multiplied by Q'.
-            NCC     -   number of columns in matrix C.
-            VT      -   matrix to be multiplied by P^T.
-                        Array whose indexes range within [0..N-1, 0..NCVT-1].
-                        The matrix can be bigger, in that case only the  submatrix
-                        [0..N-1, 0..NCVT-1] will be multiplied by P^T.
-            NCVT    -   number of columns in matrix VT.
-
-        Output parameters:
-            D       -   singular values of matrix B in descending order.
-            U       -   if NRU>0, contains matrix U*Q.
-            VT      -   if NCVT>0, contains matrix (P^T)*VT.
-            C       -   if NCC>0, contains matrix Q'*C.
-
-        Result:
-            True, if the algorithm has converged.
-            False, if the algorithm hasn't converged (rare case).
-
-        Additional information:
-            The type of convergence is controlled by the internal  parameter  TOL.
-            If the parameter is greater than 0, the singular values will have
-            relative accuracy TOL. If TOL<0, the singular values will have
-            absolute accuracy ABS(TOL)*norm(B).
-            By default, |TOL| falls within the range of 10*Epsilon and 100*Epsilon,
-            where Epsilon is the machine precision. It is not  recommended  to  use
-            TOL less than 10*Epsilon since this will  considerably  slow  down  the
-            algorithm and may not lead to error decreasing.
-        History:
-            * 31 March, 2007.
-                changed MAXITR from 6 to 12.
-
-          -- LAPACK routine (version 3.0) --
-             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-             Courant Institute, Argonne National Lab, and Rice University
-             October 31, 1999.
+        You should use ALGLIB functions to work with sparse matrix.
+        Never try to access its fields directly!
         *************************************************************************/
-        public static bool rmatrixbdsvd(ref double[] d,
-            double[] e,
-            int n,
-            bool isupper,
-            bool isfractionalaccuracyrequired,
-            ref double[,] u,
-            int nru,
-            ref double[,] c,
-            int ncc,
-            ref double[,] vt,
-            int ncvt)
+        public class sparsematrix : apobject
         {
-            bool result = new bool();
-            double[] d1 = new double[0];
-            double[] e1 = new double[0];
-            int i_ = 0;
-            int i1_ = 0;
+            public double[] vals;
+            public int[] idx;
+            public int[] ridx;
+            public int[] didx;
+            public int[] uidx;
+            public int matrixtype;
+            public int m;
+            public int n;
+            public int nfree;
+            public int ninitialized;
+            public sparsematrix()
+            {
+                init();
+            }
+            public override void init()
+            {
+                vals = new double[0];
+                idx = new int[0];
+                ridx = new int[0];
+                didx = new int[0];
+                uidx = new int[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                sparsematrix _result = new sparsematrix();
+                _result.vals = (double[])vals.Clone();
+                _result.idx = (int[])idx.Clone();
+                _result.ridx = (int[])ridx.Clone();
+                _result.didx = (int[])didx.Clone();
+                _result.uidx = (int[])uidx.Clone();
+                _result.matrixtype = matrixtype;
+                _result.m = m;
+                _result.n = n;
+                _result.nfree = nfree;
+                _result.ninitialized = ninitialized;
+                return _result;
+            }
+        };
 
-            e = (double[])e.Clone();
 
-            d1 = new double[n+1];
-            i1_ = (0) - (1);
-            for(i_=1; i_<=n;i_++)
+
+
+        public const double desiredloadfactor = 0.66;
+        public const double maxloadfactor = 0.75;
+        public const double growfactor = 2.00;
+        public const int additional = 10;
+        public const int linalgswitch = 16;
+
+
+        /*************************************************************************
+        This function creates sparse matrix in a Hash-Table format.
+
+        This function creates Hast-Table matrix, which can be  converted  to  CRS
+        format after its initialization is over. Typical  usage  scenario  for  a
+        sparse matrix is:
+        1. creation in a Hash-Table format
+        2. insertion of the matrix elements
+        3. conversion to the CRS representation
+        4. matrix is passed to some linear algebra algorithm
+
+        Some  information  about  different matrix formats can be found below, in
+        the "NOTES" section.
+
+        INPUT PARAMETERS
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            K           -   K>=0, expected number of non-zero elements in a matrix.
+                            K can be inexact approximation, can be less than actual
+                            number  of  elements  (table will grow when needed) or 
+                            even zero).
+                            It is important to understand that although hash-table
+                            may grow automatically, it is better to  provide  good
+                            estimate of data size.
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            All elements of the matrix are zero.
+
+        NOTE 1.
+
+        Sparse matrices can be stored using either Hash-Table  representation  or
+        Compressed  Row  Storage  representation. Hast-table is better suited for
+        querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
+        initialization), but it is inefficient when you want to make some  linear 
+        algebra operations.
+
+        From the other side, CRS is better suited for linear algebra  operations,
+        but initialization is less convenient - you have to tell row sizes at the
+        initialization,  and  you  can  fill matrix only row by row, from left to 
+        right. CRS is also very inefficient when you want to find matrix  element 
+        by its index.
+
+        Thus,  Hash-Table  representation   does   not   support  linear  algebra
+        operations, while CRS format does not support modification of the  table.
+        Tables below outline information about these two formats:
+
+            OPERATIONS WITH MATRIX      HASH        CRS
+            create                      +           +
+            read element                +           +
+            modify element              +           
+            add value to element        +
+            A*x  (dense vector)                     +
+            A'*x (dense vector)                     +
+            A*X  (dense matrix)                     +
+            A'*X (dense matrix)                     +
+
+        NOTE 2.
+
+        Hash-tables use memory inefficiently, and they have to keep  some  amount
+        of the "spare memory" in order to have good performance. Hash  table  for
+        matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
+        where C is a small constant, about 1.5-2 in magnitude.
+
+        CRS storage, from the other side, is  more  memory-efficient,  and  needs
+        just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
+        in a matrix.
+
+        When you convert from the Hash-Table to CRS  representation, all unneeded
+        memory will be freed.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreate(int m,
+            int n,
+            int k,
+            sparsematrix s)
+        {
+            int i = 0;
+            int sz = 0;
+
+            alglib.ap.assert(m>0, "SparseCreate: M<=0");
+            alglib.ap.assert(n>0, "SparseCreate: N<=0");
+            alglib.ap.assert(k>=0, "SparseCreate: K<0");
+            sz = (int)Math.Round(k/desiredloadfactor+additional);
+            s.matrixtype = 0;
+            s.m = m;
+            s.n = n;
+            s.nfree = sz;
+            s.vals = new double[sz];
+            s.idx = new int[2*sz];
+            for(i=0; i<=sz-1; i++)
             {
-                d1[i_] = d[i_+i1_];
+                s.idx[2*i] = -1;
             }
-            if( n>1 )
-            {
-                e1 = new double[n-1+1];
-                i1_ = (0) - (1);
-                for(i_=1; i_<=n-1;i_++)
-                {
-                    e1[i_] = e[i_+i1_];
-                }
-            }
-            result = bidiagonalsvddecompositioninternal(ref d1, e1, n, isupper, isfractionalaccuracyrequired, ref u, 0, nru, ref c, 0, ncc, ref vt, 0, ncvt);
-            i1_ = (1) - (0);
-            for(i_=0; i_<=n-1;i_++)
-            {
-                d[i_] = d1[i_+i1_];
-            }
-            return result;
         }
 
 
-        public static bool bidiagonalsvddecomposition(ref double[] d,
-            double[] e,
+        /*************************************************************************
+        This function creates sparse matrix in a CRS format (expert function for
+        situations when you are running out of memory).
+
+        This function creates CRS matrix. Typical usage scenario for a CRS matrix 
+        is:
+        1. creation (you have to tell number of non-zero elements at each row  at 
+           this moment)
+        2. insertion of the matrix elements (row by row, from left to right) 
+        3. matrix is passed to some linear algebra algorithm
+
+        This function is a memory-efficient alternative to SparseCreate(), but it
+        is more complex because it requires you to know in advance how large your
+        matrix is. Some  information about  different matrix formats can be found 
+        below, in the "NOTES" section.
+
+        INPUT PARAMETERS
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            NER         -   number of elements at each row, array[M], NER[I]>=0
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS representation.
+                            You have to fill ALL non-zero elements by calling
+                            SparseSet() BEFORE you try to use this matrix.
+
+        NOTE 1.
+
+        Sparse matrices can be stored using either Hash-Table  representation  or
+        Compressed  Row  Storage  representation. Hast-table is better suited for
+        querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
+        initialization), but it is inefficient when you want to make some  linear 
+        algebra operations.
+
+        From the other side, CRS is better suited for linear algebra  operations,
+        but initialization is less convenient - you have to tell row sizes at the
+        initialization,  and  you  can  fill matrix only row by row, from left to 
+        right. CRS is also very inefficient when you want to find matrix  element 
+        by its index.
+
+        Thus,  Hash-Table  representation   does   not   support  linear  algebra
+        operations, while CRS format does not support modification of the  table.
+        Tables below outline information about these two formats:
+
+            OPERATIONS WITH MATRIX      HASH        CRS
+            create                      +           +
+            read element                +           +
+            modify element              +           
+            add value to element        +
+            A*x  (dense vector)                     +
+            A'*x (dense vector)                     +
+            A*X  (dense matrix)                     +
+            A'*X (dense matrix)                     +
+
+        NOTE 2.
+
+        Hash-tables use memory inefficiently, and they have to keep  some  amount
+        of the "spare memory" in order to have good performance. Hash  table  for
+        matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
+        where C is a small constant, about 1.5-2 in magnitude.
+
+        CRS storage, from the other side, is  more  memory-efficient,  and  needs
+        just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
+        in a matrix.
+
+        When you convert from the Hash-Table to CRS  representation, all unneeded
+        memory will be freed.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatecrs(int m,
             int n,
-            bool isupper,
-            bool isfractionalaccuracyrequired,
-            ref double[,] u,
-            int nru,
-            ref double[,] c,
-            int ncc,
-            ref double[,] vt,
-            int ncvt)
+            int[] ner,
+            sparsematrix s)
         {
-            bool result = new bool();
+            int i = 0;
+            int noe = 0;
 
-            e = (double[])e.Clone();
+            alglib.ap.assert(m>0, "SparseCreateCRS: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateCRS: N<=0");
+            alglib.ap.assert(alglib.ap.len(ner)>=m, "SparseCreateCRS: Length(NER)<M");
+            noe = 0;
+            s.matrixtype = 1;
+            s.ninitialized = 0;
+            s.m = m;
+            s.n = n;
+            s.ridx = new int[s.m+1];
+            s.ridx[0] = 0;
+            for(i=0; i<=s.m-1; i++)
+            {
+                alglib.ap.assert(ner[i]>=0, "SparseCreateCRS: NER[] contains negative elements");
+                noe = noe+ner[i];
+                s.ridx[i+1] = s.ridx[i]+ner[i];
+            }
+            s.vals = new double[noe];
+            s.idx = new int[noe];
+            if( noe==0 )
+            {
+                sparseinitduidx(s);
+            }
+        }
 
-            result = bidiagonalsvddecompositioninternal(ref d, e, n, isupper, isfractionalaccuracyrequired, ref u, 1, nru, ref c, 1, ncc, ref vt, 1, ncvt);
+
+        /*************************************************************************
+        This function copies S0 to S1.
+
+        NOTE:  this  function  does  not verify its arguments, it just copies all
+        fields of the structure.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopy(sparsematrix s0,
+            sparsematrix s1)
+        {
+            int l = 0;
+            int i = 0;
+
+            s1.matrixtype = s0.matrixtype;
+            s1.m = s0.m;
+            s1.n = s0.n;
+            s1.nfree = s0.nfree;
+            s1.ninitialized = s0.ninitialized;
+            
+            //
+            // Initialization for arrays
+            //
+            l = alglib.ap.len(s0.vals);
+            s1.vals = new double[l];
+            for(i=0; i<=l-1; i++)
+            {
+                s1.vals[i] = s0.vals[i];
+            }
+            l = alglib.ap.len(s0.ridx);
+            s1.ridx = new int[l];
+            for(i=0; i<=l-1; i++)
+            {
+                s1.ridx[i] = s0.ridx[i];
+            }
+            l = alglib.ap.len(s0.idx);
+            s1.idx = new int[l];
+            for(i=0; i<=l-1; i++)
+            {
+                s1.idx[i] = s0.idx[i];
+            }
+            
+            //
+            // Initalization for CRS-parameters
+            //
+            l = alglib.ap.len(s0.uidx);
+            s1.uidx = new int[l];
+            for(i=0; i<=l-1; i++)
+            {
+                s1.uidx[i] = s0.uidx[i];
+            }
+            l = alglib.ap.len(s0.didx);
+            s1.didx = new int[l];
+            for(i=0; i<=l-1; i++)
+            {
+                s1.didx[i] = s0.didx[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This function adds value to S[i,j] - element of the sparse matrix. Matrix
+        must be in a Hash-Table mode.
+
+        In case S[i,j] already exists in the table, V i added to  its  value.  In
+        case  S[i,j]  is  non-existent,  it  is  inserted  in  the  table.  Table
+        automatically grows when necessary.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            Exception will be thrown for CRS matrix.
+            I           -   row index of the element to modify, 0<=I<M
+            J           -   column index of the element to modify, 0<=J<N
+            V           -   value to add, must be finite number
+
+        OUTPUT PARAMETERS
+            S           -   modified matrix
+            
+        NOTE 1:  when  S[i,j]  is exactly zero after modification, it is  deleted
+        from the table.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseadd(sparsematrix s,
+            int i,
+            int j,
+            double v)
+        {
+            int hashcode = 0;
+            int tcode = 0;
+            int k = 0;
+
+            alglib.ap.assert(s.matrixtype==0, "SparseAdd: matrix must be in the Hash-Table mode to do this operation");
+            alglib.ap.assert(i>=0, "SparseAdd: I<0");
+            alglib.ap.assert(i<s.m, "SparseAdd: I>=M");
+            alglib.ap.assert(j>=0, "SparseAdd: J<0");
+            alglib.ap.assert(j<s.n, "SparseAdd: J>=N");
+            alglib.ap.assert(math.isfinite(v), "SparseAdd: V is not finite number");
+            if( (double)(v)==(double)(0) )
+            {
+                return;
+            }
+            tcode = -1;
+            k = alglib.ap.len(s.vals);
+            if( (double)((1-maxloadfactor)*k)>=(double)(s.nfree) )
+            {
+                sparseresizematrix(s);
+                k = alglib.ap.len(s.vals);
+            }
+            hashcode = hash(i, j, k);
+            while( true )
+            {
+                if( s.idx[2*hashcode]==-1 )
+                {
+                    if( tcode!=-1 )
+                    {
+                        hashcode = tcode;
+                    }
+                    s.vals[hashcode] = v;
+                    s.idx[2*hashcode] = i;
+                    s.idx[2*hashcode+1] = j;
+                    if( tcode==-1 )
+                    {
+                        s.nfree = s.nfree-1;
+                    }
+                    return;
+                }
+                else
+                {
+                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                    {
+                        s.vals[hashcode] = s.vals[hashcode]+v;
+                        if( (double)(s.vals[hashcode])==(double)(0) )
+                        {
+                            s.idx[2*hashcode] = -2;
+                        }
+                        return;
+                    }
+                    
+                    //
+                    // Is it deleted element?
+                    //
+                    if( tcode==-1 && s.idx[2*hashcode]==-2 )
+                    {
+                        tcode = hashcode;
+                    }
+                    
+                    //
+                    // Next step
+                    //
+                    hashcode = (hashcode+1)%k;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function modifies S[i,j] - element of the sparse matrix.
+
+        For Hash-based storage format:
+        * new value can be zero or non-zero.  In case new value of S[i,j] is zero,
+          this element is deleted from the table.
+        * this  function  has  no  effect when called with zero V for non-existent
+          element.
+
+        For CRS-bases storage format:
+        * new value MUST be non-zero. Exception will be thrown for zero V.
+        * elements must be initialized in correct order -  from top row to bottom,
+          within row - from left to right.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table or CRS representation.
+            I           -   row index of the element to modify, 0<=I<M
+            J           -   column index of the element to modify, 0<=J<N
+            V           -   value to set, must be finite number, can be zero
+
+        OUTPUT PARAMETERS
+            S           -   modified matrix
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseset(sparsematrix s,
+            int i,
+            int j,
+            double v)
+        {
+            int hashcode = 0;
+            int tcode = 0;
+            int k = 0;
+
+            alglib.ap.assert(i>=0, "SparseSet: I<0");
+            alglib.ap.assert(i<s.m, "SparseSet: I>=M");
+            alglib.ap.assert(j>=0, "SparseSet: J<0");
+            alglib.ap.assert(j<s.n, "SparseSet: J>=N");
+            alglib.ap.assert(math.isfinite(v), "SparseSet: V is not finite number");
+            
+            //
+            // Hash-table matrix
+            //
+            if( s.matrixtype==0 )
+            {
+                tcode = -1;
+                k = alglib.ap.len(s.vals);
+                if( (double)((1-maxloadfactor)*k)>=(double)(s.nfree) )
+                {
+                    sparseresizematrix(s);
+                    k = alglib.ap.len(s.vals);
+                }
+                hashcode = hash(i, j, k);
+                while( true )
+                {
+                    if( s.idx[2*hashcode]==-1 )
+                    {
+                        if( (double)(v)!=(double)(0) )
+                        {
+                            if( tcode!=-1 )
+                            {
+                                hashcode = tcode;
+                            }
+                            s.vals[hashcode] = v;
+                            s.idx[2*hashcode] = i;
+                            s.idx[2*hashcode+1] = j;
+                            if( tcode==-1 )
+                            {
+                                s.nfree = s.nfree-1;
+                            }
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                        {
+                            if( (double)(v)==(double)(0) )
+                            {
+                                s.idx[2*hashcode] = -2;
+                            }
+                            else
+                            {
+                                s.vals[hashcode] = v;
+                            }
+                            return;
+                        }
+                        if( tcode==-1 && s.idx[2*hashcode]==-2 )
+                        {
+                            tcode = hashcode;
+                        }
+                        
+                        //
+                        // Next step
+                        //
+                        hashcode = (hashcode+1)%k;
+                    }
+                }
+            }
+            
+            //
+            // CRS matrix
+            //
+            if( s.matrixtype==1 )
+            {
+                alglib.ap.assert((double)(v)!=(double)(0), "SparseSet: CRS format does not allow you to write zero elements");
+                alglib.ap.assert(s.ridx[i]<=s.ninitialized, "SparseSet: too few initialized elements at some row (you have promised more when called SparceCreateCRS)");
+                alglib.ap.assert(s.ridx[i+1]>s.ninitialized, "SparseSet: too many initialized elements at some row (you have promised less when called SparceCreateCRS)");
+                alglib.ap.assert(s.ninitialized==s.ridx[i] || s.idx[s.ninitialized-1]<j, "SparseSet: incorrect column order (you must fill every row from left to right)");
+                s.vals[s.ninitialized] = v;
+                s.idx[s.ninitialized] = j;
+                s.ninitialized = s.ninitialized+1;
+                
+                //
+                // If matrix has been created then
+                // initiale 'S.UIdx' and 'S.DIdx'
+                //
+                if( s.ninitialized==s.ridx[s.m] )
+                {
+                    sparseinitduidx(s);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function returns S[i,j] - element of the sparse matrix.  Matrix  can
+        be in any mode (Hash-Table or CRS), but this function is  less  efficient
+        for CRS matrices.  Hash-Table  matrices can  find element  in O(1)  time, 
+        while  CRS  matrices  need O(log(RS)) time, where RS is an number of non-
+        zero elements in a row.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            Exception will be thrown for CRS matrix.
+            I           -   row index of the element to modify, 0<=I<M
+            J           -   column index of the element to modify, 0<=J<N
+
+        RESULT
+            value of S[I,J] or zero (in case no element with such index is found)
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double sparseget(sparsematrix s,
+            int i,
+            int j)
+        {
+            double result = 0;
+            int hashcode = 0;
+            int k = 0;
+            int k0 = 0;
+            int k1 = 0;
+
+            alglib.ap.assert(i>=0, "SparseGet: I<0");
+            alglib.ap.assert(i<s.m, "SparseGet: I>=M");
+            alglib.ap.assert(j>=0, "SparseGet: J<0");
+            alglib.ap.assert(j<s.n, "SparseGet: J>=N");
+            k = alglib.ap.len(s.vals);
+            result = 0;
+            if( s.matrixtype==0 )
+            {
+                hashcode = hash(i, j, k);
+                while( true )
+                {
+                    if( s.idx[2*hashcode]==-1 )
+                    {
+                        return result;
+                    }
+                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                    {
+                        result = s.vals[hashcode];
+                        return result;
+                    }
+                    hashcode = (hashcode+1)%k;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseGet: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                k0 = s.ridx[i];
+                k1 = s.ridx[i+1]-1;
+                while( k0<=k1 )
+                {
+                    k = (k0+k1)/2;
+                    if( s.idx[k]==j )
+                    {
+                        result = s.vals[k];
+                        return result;
+                    }
+                    if( s.idx[k]<j )
+                    {
+                        k0 = k+1;
+                    }
+                    else
+                    {
+                        k1 = k-1;
+                    }
+                }
+                return result;
+            }
             return result;
         }
 
 
         /*************************************************************************
-        Internal working subroutine for bidiagonal decomposition
+        This function returns I-th diagonal element of the sparse matrix.
+
+        Matrix can be in any mode (Hash-Table or CRS storage), but this  function
+        is most efficient for CRS matrices - it requires less than 50 CPU  cycles
+        to extract diagonal element. For Hash-Table matrices we still  have  O(1)
+        query time, but function is many times slower.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            Exception will be thrown for CRS matrix.
+            I           -   index of the element to modify, 0<=I<min(M,N)
+
+        RESULT
+            value of S[I,I] or zero (in case no element with such index is found)
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
         *************************************************************************/
-        private static bool bidiagonalsvddecompositioninternal(ref double[] d,
-            double[] e,
-            int n,
-            bool isupper,
-            bool isfractionalaccuracyrequired,
-            ref double[,] u,
-            int ustart,
-            int nru,
-            ref double[,] c,
-            int cstart,
-            int ncc,
-            ref double[,] vt,
-            int vstart,
-            int ncvt)
-        {
-            bool result = new bool();
-            int i = 0;
-            int idir = 0;
-            int isub = 0;
-            int iter = 0;
-            int j = 0;
-            int ll = 0;
-            int lll = 0;
-            int m = 0;
-            int maxit = 0;
-            int oldll = 0;
-            int oldm = 0;
-            double abse = 0;
-            double abss = 0;
-            double cosl = 0;
-            double cosr = 0;
-            double cs = 0;
-            double eps = 0;
-            double f = 0;
-            double g = 0;
-            double h = 0;
-            double mu = 0;
-            double oldcs = 0;
-            double oldsn = 0;
-            double r = 0;
-            double shift = 0;
-            double sigmn = 0;
-            double sigmx = 0;
-            double sinl = 0;
-            double sinr = 0;
-            double sll = 0;
-            double smax = 0;
-            double smin = 0;
-            double sminl = 0;
-            double sminlo = 0;
-            double sminoa = 0;
-            double sn = 0;
-            double thresh = 0;
-            double tol = 0;
-            double tolmul = 0;
-            double unfl = 0;
-            double[] work0 = new double[0];
-            double[] work1 = new double[0];
-            double[] work2 = new double[0];
-            double[] work3 = new double[0];
-            int maxitr = 0;
-            bool matrixsplitflag = new bool();
-            bool iterflag = new bool();
-            double[] utemp = new double[0];
-            double[] vttemp = new double[0];
-            double[] ctemp = new double[0];
-            double[] etemp = new double[0];
-            bool rightside = new bool();
-            bool fwddir = new bool();
-            double tmp = 0;
-            int mm1 = 0;
-            int mm0 = 0;
-            bool bchangedir = new bool();
-            int uend = 0;
-            int cend = 0;
-            int vend = 0;
-            int i_ = 0;
-
-            e = (double[])e.Clone();
-
-            result = true;
-            if( n==0 )
-            {
-                return result;
-            }
-            if( n==1 )
-            {
-                if( (double)(d[1])<(double)(0) )
-                {
-                    d[1] = -d[1];
-                    if( ncvt>0 )
-                    {
-                        for(i_=vstart; i_<=vstart+ncvt-1;i_++)
-                        {
-                            vt[vstart,i_] = -1*vt[vstart,i_];
-                        }
-                    }
-                }
-                return result;
-            }
-            
-            //
-            // these initializers are not really necessary,
-            // but without them compiler complains about uninitialized locals
-            //
-            ll = 0;
-            oldsn = 0;
-            
-            //
-            // init
-            //
-            work0 = new double[n-1+1];
-            work1 = new double[n-1+1];
-            work2 = new double[n-1+1];
-            work3 = new double[n-1+1];
-            uend = ustart+Math.Max(nru-1, 0);
-            vend = vstart+Math.Max(ncvt-1, 0);
-            cend = cstart+Math.Max(ncc-1, 0);
-            utemp = new double[uend+1];
-            vttemp = new double[vend+1];
-            ctemp = new double[cend+1];
-            maxitr = 12;
-            rightside = true;
-            fwddir = true;
-            
-            //
-            // resize E from N-1 to N
-            //
-            etemp = new double[n+1];
-            for(i=1; i<=n-1; i++)
-            {
-                etemp[i] = e[i];
-            }
-            e = new double[n+1];
-            for(i=1; i<=n-1; i++)
-            {
-                e[i] = etemp[i];
-            }
-            e[n] = 0;
-            idir = 0;
-            
-            //
-            // Get machine constants
-            //
-            eps = math.machineepsilon;
-            unfl = math.minrealnumber;
-            
-            //
-            // If matrix lower bidiagonal, rotate to be upper bidiagonal
-            // by applying Givens rotations on the left
-            //
-            if( !isupper )
-            {
-                for(i=1; i<=n-1; i++)
-                {
-                    rotations.generaterotation(d[i], e[i], ref cs, ref sn, ref r);
-                    d[i] = r;
-                    e[i] = sn*d[i+1];
-                    d[i+1] = cs*d[i+1];
-                    work0[i] = cs;
-                    work1[i] = sn;
-                }
-                
-                //
-                // Update singular vectors if desired
-                //
-                if( nru>0 )
-                {
-                    rotations.applyrotationsfromtheright(fwddir, ustart, uend, 1+ustart-1, n+ustart-1, work0, work1, ref u, ref utemp);
-                }
-                if( ncc>0 )
-                {
-                    rotations.applyrotationsfromtheleft(fwddir, 1+cstart-1, n+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
-                }
-            }
-            
-            //
-            // Compute singular values to relative accuracy TOL
-            // (By setting TOL to be negative, algorithm will compute
-            // singular values to absolute accuracy ABS(TOL)*norm(input matrix))
-            //
-            tolmul = Math.Max(10, Math.Min(100, Math.Pow(eps, -0.125)));
-            tol = tolmul*eps;
-            if( !isfractionalaccuracyrequired )
-            {
-                tol = -tol;
-            }
-            
-            //
-            // Compute approximate maximum, minimum singular values
-            //
-            smax = 0;
-            for(i=1; i<=n; i++)
-            {
-                smax = Math.Max(smax, Math.Abs(d[i]));
-            }
-            for(i=1; i<=n-1; i++)
-            {
-                smax = Math.Max(smax, Math.Abs(e[i]));
-            }
-            sminl = 0;
-            if( (double)(tol)>=(double)(0) )
-            {
-                
-                //
-                // Relative accuracy desired
-                //
-                sminoa = Math.Abs(d[1]);
-                if( (double)(sminoa)!=(double)(0) )
-                {
-                    mu = sminoa;
-                    for(i=2; i<=n; i++)
-                    {
-                        mu = Math.Abs(d[i])*(mu/(mu+Math.Abs(e[i-1])));
-                        sminoa = Math.Min(sminoa, mu);
-                        if( (double)(sminoa)==(double)(0) )
-                        {
-                            break;
-                        }
-                    }
-                }
-                sminoa = sminoa/Math.Sqrt(n);
-                thresh = Math.Max(tol*sminoa, maxitr*n*n*unfl);
-            }
-            else
-            {
-                
-                //
-                // Absolute accuracy desired
-                //
-                thresh = Math.Max(Math.Abs(tol)*smax, maxitr*n*n*unfl);
-            }
-            
-            //
-            // Prepare for main iteration loop for the singular values
-            // (MAXIT is the maximum number of passes through the inner
-            // loop permitted before nonconvergence signalled.)
-            //
-            maxit = maxitr*n*n;
-            iter = 0;
-            oldll = -1;
-            oldm = -1;
-            
-            //
-            // M points to last element of unconverged part of matrix
-            //
-            m = n;
-            
-            //
-            // Begin main iteration loop
-            //
-            while( true )
-            {
-                
-                //
-                // Check for convergence or exceeding iteration count
-                //
-                if( m<=1 )
-                {
-                    break;
-                }
-                if( iter>maxit )
-                {
-                    result = false;
-                    return result;
-                }
-                
-                //
-                // Find diagonal block of matrix to work on
-                //
-                if( (double)(tol)<(double)(0) & (double)(Math.Abs(d[m]))<=(double)(thresh) )
-                {
-                    d[m] = 0;
-                }
-                smax = Math.Abs(d[m]);
-                smin = smax;
-                matrixsplitflag = false;
-                for(lll=1; lll<=m-1; lll++)
-                {
-                    ll = m-lll;
-                    abss = Math.Abs(d[ll]);
-                    abse = Math.Abs(e[ll]);
-                    if( (double)(tol)<(double)(0) & (double)(abss)<=(double)(thresh) )
-                    {
-                        d[ll] = 0;
-                    }
-                    if( (double)(abse)<=(double)(thresh) )
-                    {
-                        matrixsplitflag = true;
-                        break;
-                    }
-                    smin = Math.Min(smin, abss);
-                    smax = Math.Max(smax, Math.Max(abss, abse));
-                }
-                if( !matrixsplitflag )
-                {
-                    ll = 0;
-                }
-                else
-                {
-                    
-                    //
-                    // Matrix splits since E(LL) = 0
-                    //
-                    e[ll] = 0;
-                    if( ll==m-1 )
-                    {
-                        
-                        //
-                        // Convergence of bottom singular value, return to top of loop
-                        //
-                        m = m-1;
-                        continue;
-                    }
-                }
-                ll = ll+1;
-                
-                //
-                // E(LL) through E(M-1) are nonzero, E(LL-1) is zero
-                //
-                if( ll==m-1 )
-                {
-                    
-                    //
-                    // 2 by 2 block, handle separately
-                    //
-                    svdv2x2(d[m-1], e[m-1], d[m], ref sigmn, ref sigmx, ref sinr, ref cosr, ref sinl, ref cosl);
-                    d[m-1] = sigmx;
-                    e[m-1] = 0;
-                    d[m] = sigmn;
-                    
-                    //
-                    // Compute singular vectors, if desired
-                    //
-                    if( ncvt>0 )
-                    {
-                        mm0 = m+(vstart-1);
-                        mm1 = m-1+(vstart-1);
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vttemp[i_] = cosr*vt[mm1,i_];
-                        }
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vttemp[i_] = vttemp[i_] + sinr*vt[mm0,i_];
-                        }
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vt[mm0,i_] = cosr*vt[mm0,i_];
-                        }
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vt[mm0,i_] = vt[mm0,i_] - sinr*vt[mm1,i_];
-                        }
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vt[mm1,i_] = vttemp[i_];
-                        }
-                    }
-                    if( nru>0 )
-                    {
-                        mm0 = m+ustart-1;
-                        mm1 = m-1+ustart-1;
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            utemp[i_] = cosl*u[i_,mm1];
-                        }
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            utemp[i_] = utemp[i_] + sinl*u[i_,mm0];
-                        }
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            u[i_,mm0] = cosl*u[i_,mm0];
-                        }
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            u[i_,mm0] = u[i_,mm0] - sinl*u[i_,mm1];
-                        }
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            u[i_,mm1] = utemp[i_];
-                        }
-                    }
-                    if( ncc>0 )
-                    {
-                        mm0 = m+cstart-1;
-                        mm1 = m-1+cstart-1;
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            ctemp[i_] = cosl*c[mm1,i_];
-                        }
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            ctemp[i_] = ctemp[i_] + sinl*c[mm0,i_];
-                        }
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            c[mm0,i_] = cosl*c[mm0,i_];
-                        }
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            c[mm0,i_] = c[mm0,i_] - sinl*c[mm1,i_];
-                        }
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            c[mm1,i_] = ctemp[i_];
-                        }
-                    }
-                    m = m-2;
-                    continue;
-                }
-                
-                //
-                // If working on new submatrix, choose shift direction
-                // (from larger end diagonal element towards smaller)
-                //
-                // Previously was
-                //     "if (LL>OLDM) or (M<OLDLL) then"
-                // fixed thanks to Michael Rolle < m@rolle.name >
-                // Very strange that LAPACK still contains it.
-                //
-                bchangedir = false;
-                if( idir==1 & (double)(Math.Abs(d[ll]))<(double)(1.0E-3*Math.Abs(d[m])) )
-                {
-                    bchangedir = true;
-                }
-                if( idir==2 & (double)(Math.Abs(d[m]))<(double)(1.0E-3*Math.Abs(d[ll])) )
-                {
-                    bchangedir = true;
-                }
-                if( (ll!=oldll | m!=oldm) | bchangedir )
-                {
-                    if( (double)(Math.Abs(d[ll]))>=(double)(Math.Abs(d[m])) )
-                    {
-                        
-                        //
-                        // Chase bulge from top (big end) to bottom (small end)
-                        //
-                        idir = 1;
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Chase bulge from bottom (big end) to top (small end)
-                        //
-                        idir = 2;
-                    }
-                }
-                
-                //
-                // Apply convergence tests
-                //
-                if( idir==1 )
-                {
-                    
-                    //
-                    // Run convergence test in forward direction
-                    // First apply standard test to bottom of matrix
-                    //
-                    if( (double)(Math.Abs(e[m-1]))<=(double)(Math.Abs(tol)*Math.Abs(d[m])) | ((double)(tol)<(double)(0) & (double)(Math.Abs(e[m-1]))<=(double)(thresh)) )
-                    {
-                        e[m-1] = 0;
-                        continue;
-                    }
-                    if( (double)(tol)>=(double)(0) )
-                    {
-                        
-                        //
-                        // If relative accuracy desired,
-                        // apply convergence criterion forward
-                        //
-                        mu = Math.Abs(d[ll]);
-                        sminl = mu;
-                        iterflag = false;
-                        for(lll=ll; lll<=m-1; lll++)
-                        {
-                            if( (double)(Math.Abs(e[lll]))<=(double)(tol*mu) )
-                            {
-                                e[lll] = 0;
-                                iterflag = true;
-                                break;
-                            }
-                            sminlo = sminl;
-                            mu = Math.Abs(d[lll+1])*(mu/(mu+Math.Abs(e[lll])));
-                            sminl = Math.Min(sminl, mu);
-                        }
-                        if( iterflag )
-                        {
-                            continue;
-                        }
-                    }
-                }
-                else
-                {
-                    
-                    //
-                    // Run convergence test in backward direction
-                    // First apply standard test to top of matrix
-                    //
-                    if( (double)(Math.Abs(e[ll]))<=(double)(Math.Abs(tol)*Math.Abs(d[ll])) | ((double)(tol)<(double)(0) & (double)(Math.Abs(e[ll]))<=(double)(thresh)) )
-                    {
-                        e[ll] = 0;
-                        continue;
-                    }
-                    if( (double)(tol)>=(double)(0) )
-                    {
-                        
-                        //
-                        // If relative accuracy desired,
-                        // apply convergence criterion backward
-                        //
-                        mu = Math.Abs(d[m]);
-                        sminl = mu;
-                        iterflag = false;
-                        for(lll=m-1; lll>=ll; lll--)
-                        {
-                            if( (double)(Math.Abs(e[lll]))<=(double)(tol*mu) )
-                            {
-                                e[lll] = 0;
-                                iterflag = true;
-                                break;
-                            }
-                            sminlo = sminl;
-                            mu = Math.Abs(d[lll])*(mu/(mu+Math.Abs(e[lll])));
-                            sminl = Math.Min(sminl, mu);
-                        }
-                        if( iterflag )
-                        {
-                            continue;
-                        }
-                    }
-                }
-                oldll = ll;
-                oldm = m;
-                
-                //
-                // Compute shift.  First, test if shifting would ruin relative
-                // accuracy, and if so set the shift to zero.
-                //
-                if( (double)(tol)>=(double)(0) & (double)(n*tol*(sminl/smax))<=(double)(Math.Max(eps, 0.01*tol)) )
-                {
-                    
-                    //
-                    // Use a zero shift to avoid loss of relative accuracy
-                    //
-                    shift = 0;
-                }
-                else
-                {
-                    
-                    //
-                    // Compute the shift from 2-by-2 block at end of matrix
-                    //
-                    if( idir==1 )
-                    {
-                        sll = Math.Abs(d[ll]);
-                        svd2x2(d[m-1], e[m-1], d[m], ref shift, ref r);
-                    }
-                    else
-                    {
-                        sll = Math.Abs(d[m]);
-                        svd2x2(d[ll], e[ll], d[ll+1], ref shift, ref r);
-                    }
-                    
-                    //
-                    // Test if shift negligible, and if so set to zero
-                    //
-                    if( (double)(sll)>(double)(0) )
-                    {
-                        if( (double)(math.sqr(shift/sll))<(double)(eps) )
-                        {
-                            shift = 0;
-                        }
-                    }
-                }
-                
-                //
-                // Increment iteration count
-                //
-                iter = iter+m-ll;
-                
-                //
-                // If SHIFT = 0, do simplified QR iteration
-                //
-                if( (double)(shift)==(double)(0) )
-                {
-                    if( idir==1 )
-                    {
-                        
-                        //
-                        // Chase bulge from top to bottom
-                        // Save cosines and sines for later singular vector updates
-                        //
-                        cs = 1;
-                        oldcs = 1;
-                        for(i=ll; i<=m-1; i++)
-                        {
-                            rotations.generaterotation(d[i]*cs, e[i], ref cs, ref sn, ref r);
-                            if( i>ll )
-                            {
-                                e[i-1] = oldsn*r;
-                            }
-                            rotations.generaterotation(oldcs*r, d[i+1]*sn, ref oldcs, ref oldsn, ref tmp);
-                            d[i] = tmp;
-                            work0[i-ll+1] = cs;
-                            work1[i-ll+1] = sn;
-                            work2[i-ll+1] = oldcs;
-                            work3[i-ll+1] = oldsn;
-                        }
-                        h = d[m]*cs;
-                        d[m] = h*oldcs;
-                        e[m-1] = h*oldsn;
-                        
-                        //
-                        // Update singular vectors
-                        //
-                        if( ncvt>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, ref vt, ref vttemp);
-                        }
-                        if( nru>0 )
-                        {
-                            rotations.applyrotationsfromtheright(fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work2, work3, ref u, ref utemp);
-                        }
-                        if( ncc>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, ref c, ref ctemp);
-                        }
-                        
-                        //
-                        // Test convergence
-                        //
-                        if( (double)(Math.Abs(e[m-1]))<=(double)(thresh) )
-                        {
-                            e[m-1] = 0;
-                        }
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Chase bulge from bottom to top
-                        // Save cosines and sines for later singular vector updates
-                        //
-                        cs = 1;
-                        oldcs = 1;
-                        for(i=m; i>=ll+1; i--)
-                        {
-                            rotations.generaterotation(d[i]*cs, e[i-1], ref cs, ref sn, ref r);
-                            if( i<m )
-                            {
-                                e[i] = oldsn*r;
-                            }
-                            rotations.generaterotation(oldcs*r, d[i-1]*sn, ref oldcs, ref oldsn, ref tmp);
-                            d[i] = tmp;
-                            work0[i-ll] = cs;
-                            work1[i-ll] = -sn;
-                            work2[i-ll] = oldcs;
-                            work3[i-ll] = -oldsn;
-                        }
-                        h = d[ll]*cs;
-                        d[ll] = h*oldcs;
-                        e[ll] = h*oldsn;
-                        
-                        //
-                        // Update singular vectors
-                        //
-                        if( ncvt>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, ref vt, ref vttemp);
-                        }
-                        if( nru>0 )
-                        {
-                            rotations.applyrotationsfromtheright(!fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work0, work1, ref u, ref utemp);
-                        }
-                        if( ncc>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
-                        }
-                        
-                        //
-                        // Test convergence
-                        //
-                        if( (double)(Math.Abs(e[ll]))<=(double)(thresh) )
-                        {
-                            e[ll] = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    
-                    //
-                    // Use nonzero shift
-                    //
-                    if( idir==1 )
-                    {
-                        
-                        //
-                        // Chase bulge from top to bottom
-                        // Save cosines and sines for later singular vector updates
-                        //
-                        f = (Math.Abs(d[ll])-shift)*(extsignbdsqr(1, d[ll])+shift/d[ll]);
-                        g = e[ll];
-                        for(i=ll; i<=m-1; i++)
-                        {
-                            rotations.generaterotation(f, g, ref cosr, ref sinr, ref r);
-                            if( i>ll )
-                            {
-                                e[i-1] = r;
-                            }
-                            f = cosr*d[i]+sinr*e[i];
-                            e[i] = cosr*e[i]-sinr*d[i];
-                            g = sinr*d[i+1];
-                            d[i+1] = cosr*d[i+1];
-                            rotations.generaterotation(f, g, ref cosl, ref sinl, ref r);
-                            d[i] = r;
-                            f = cosl*e[i]+sinl*d[i+1];
-                            d[i+1] = cosl*d[i+1]-sinl*e[i];
-                            if( i<m-1 )
-                            {
-                                g = sinl*e[i+1];
-                                e[i+1] = cosl*e[i+1];
-                            }
-                            work0[i-ll+1] = cosr;
-                            work1[i-ll+1] = sinr;
-                            work2[i-ll+1] = cosl;
-                            work3[i-ll+1] = sinl;
-                        }
-                        e[m-1] = f;
-                        
-                        //
-                        // Update singular vectors
-                        //
-                        if( ncvt>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, ref vt, ref vttemp);
-                        }
-                        if( nru>0 )
-                        {
-                            rotations.applyrotationsfromtheright(fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work2, work3, ref u, ref utemp);
-                        }
-                        if( ncc>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, ref c, ref ctemp);
-                        }
-                        
-                        //
-                        // Test convergence
-                        //
-                        if( (double)(Math.Abs(e[m-1]))<=(double)(thresh) )
-                        {
-                            e[m-1] = 0;
-                        }
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Chase bulge from bottom to top
-                        // Save cosines and sines for later singular vector updates
-                        //
-                        f = (Math.Abs(d[m])-shift)*(extsignbdsqr(1, d[m])+shift/d[m]);
-                        g = e[m-1];
-                        for(i=m; i>=ll+1; i--)
-                        {
-                            rotations.generaterotation(f, g, ref cosr, ref sinr, ref r);
-                            if( i<m )
-                            {
-                                e[i] = r;
-                            }
-                            f = cosr*d[i]+sinr*e[i-1];
-                            e[i-1] = cosr*e[i-1]-sinr*d[i];
-                            g = sinr*d[i-1];
-                            d[i-1] = cosr*d[i-1];
-                            rotations.generaterotation(f, g, ref cosl, ref sinl, ref r);
-                            d[i] = r;
-                            f = cosl*e[i-1]+sinl*d[i-1];
-                            d[i-1] = cosl*d[i-1]-sinl*e[i-1];
-                            if( i>ll+1 )
-                            {
-                                g = sinl*e[i-2];
-                                e[i-2] = cosl*e[i-2];
-                            }
-                            work0[i-ll] = cosr;
-                            work1[i-ll] = -sinr;
-                            work2[i-ll] = cosl;
-                            work3[i-ll] = -sinl;
-                        }
-                        e[ll] = f;
-                        
-                        //
-                        // Test convergence
-                        //
-                        if( (double)(Math.Abs(e[ll]))<=(double)(thresh) )
-                        {
-                            e[ll] = 0;
-                        }
-                        
-                        //
-                        // Update singular vectors if desired
-                        //
-                        if( ncvt>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, ref vt, ref vttemp);
-                        }
-                        if( nru>0 )
-                        {
-                            rotations.applyrotationsfromtheright(!fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work0, work1, ref u, ref utemp);
-                        }
-                        if( ncc>0 )
-                        {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
-                        }
-                    }
-                }
-                
-                //
-                // QR iteration finished, go back and check convergence
-                //
-                continue;
-            }
-            
-            //
-            // All singular values converged, so make them positive
-            //
-            for(i=1; i<=n; i++)
-            {
-                if( (double)(d[i])<(double)(0) )
-                {
-                    d[i] = -d[i];
-                    
-                    //
-                    // Change sign of singular vectors, if desired
-                    //
-                    if( ncvt>0 )
-                    {
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vt[i+vstart-1,i_] = -1*vt[i+vstart-1,i_];
-                        }
-                    }
-                }
-            }
-            
-            //
-            // Sort the singular values into decreasing order (insertion sort on
-            // singular values, but only one transposition per singular vector)
-            //
-            for(i=1; i<=n-1; i++)
-            {
-                
-                //
-                // Scan for smallest D(I)
-                //
-                isub = 1;
-                smin = d[1];
-                for(j=2; j<=n+1-i; j++)
-                {
-                    if( (double)(d[j])<=(double)(smin) )
-                    {
-                        isub = j;
-                        smin = d[j];
-                    }
-                }
-                if( isub!=n+1-i )
-                {
-                    
-                    //
-                    // Swap singular values and vectors
-                    //
-                    d[isub] = d[n+1-i];
-                    d[n+1-i] = smin;
-                    if( ncvt>0 )
-                    {
-                        j = n+1-i;
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vttemp[i_] = vt[isub+vstart-1,i_];
-                        }
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vt[isub+vstart-1,i_] = vt[j+vstart-1,i_];
-                        }
-                        for(i_=vstart; i_<=vend;i_++)
-                        {
-                            vt[j+vstart-1,i_] = vttemp[i_];
-                        }
-                    }
-                    if( nru>0 )
-                    {
-                        j = n+1-i;
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            utemp[i_] = u[i_,isub+ustart-1];
-                        }
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            u[i_,isub+ustart-1] = u[i_,j+ustart-1];
-                        }
-                        for(i_=ustart; i_<=uend;i_++)
-                        {
-                            u[i_,j+ustart-1] = utemp[i_];
-                        }
-                    }
-                    if( ncc>0 )
-                    {
-                        j = n+1-i;
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            ctemp[i_] = c[isub+cstart-1,i_];
-                        }
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            c[isub+cstart-1,i_] = c[j+cstart-1,i_];
-                        }
-                        for(i_=cstart; i_<=cend;i_++)
-                        {
-                            c[j+cstart-1,i_] = ctemp[i_];
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-
-
-        private static double extsignbdsqr(double a,
-            double b)
+        public static double sparsegetdiagonal(sparsematrix s,
+            int i)
         {
             double result = 0;
 
-            if( (double)(b)>=(double)(0) )
+            alglib.ap.assert(i>=0, "SparseGetDiagonal: I<0");
+            alglib.ap.assert(i<s.m, "SparseGetDiagonal: I>=M");
+            alglib.ap.assert(i<s.n, "SparseGetDiagonal: I>=N");
+            result = 0;
+            if( s.matrixtype==0 )
             {
-                result = Math.Abs(a);
+                result = sparseget(s, i, i);
+                return result;
             }
-            else
+            if( s.matrixtype==1 )
             {
-                result = -Math.Abs(a);
+                if( s.didx[i]!=s.uidx[i] )
+                {
+                    result = s.vals[s.didx[i]];
+                }
+                return result;
             }
             return result;
         }
 
 
-        private static void svd2x2(double f,
-            double g,
-            double h,
-            ref double ssmin,
-            ref double ssmax)
+        /*************************************************************************
+        This function converts matrix to CRS format.
+
+        Some  algorithms  (linear  algebra ones, for example) require matrices in
+        CRS format.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in any format
+
+        OUTPUT PARAMETERS
+            S           -   matrix in CRS format
+            
+        NOTE:  this  function  has  no  effect  when  called with matrix which is 
+        already in CRS mode.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseconverttocrs(sparsematrix s)
         {
-            double aas = 0;
-            double at = 0;
-            double au = 0;
-            double c = 0;
-            double fa = 0;
-            double fhmn = 0;
-            double fhmx = 0;
-            double ga = 0;
-            double ha = 0;
+            int i = 0;
+            double[] tvals = new double[0];
+            int[] tidx = new int[0];
+            int[] temp = new int[0];
+            int nonne = 0;
+            int k = 0;
 
-            ssmin = 0;
-            ssmax = 0;
-
-            fa = Math.Abs(f);
-            ga = Math.Abs(g);
-            ha = Math.Abs(h);
-            fhmn = Math.Min(fa, ha);
-            fhmx = Math.Max(fa, ha);
-            if( (double)(fhmn)==(double)(0) )
+            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseConvertToCRS: invalid matrix type");
+            if( s.matrixtype==1 )
             {
-                ssmin = 0;
-                if( (double)(fhmx)==(double)(0) )
+                return;
+            }
+            s.matrixtype = 1;
+            nonne = 0;
+            k = alglib.ap.len(s.vals);
+            alglib.ap.swap(ref s.vals, ref tvals);
+            alglib.ap.swap(ref s.idx, ref tidx);
+            s.ridx = new int[s.m+1];
+            for(i=0; i<=s.m; i++)
+            {
+                s.ridx[i] = 0;
+            }
+            temp = new int[s.m];
+            for(i=0; i<=s.m-1; i++)
+            {
+                temp[i] = 0;
+            }
+            
+            //
+            // Number of elements per row
+            //
+            for(i=0; i<=k-1; i++)
+            {
+                if( tidx[2*i]>=0 )
                 {
-                    ssmax = ga;
-                }
-                else
-                {
-                    ssmax = Math.Max(fhmx, ga)*Math.Sqrt(1+math.sqr(Math.Min(fhmx, ga)/Math.Max(fhmx, ga)));
+                    s.ridx[tidx[2*i]+1] = s.ridx[tidx[2*i]+1]+1;
+                    nonne = nonne+1;
                 }
             }
-            else
+            
+            //
+            // Fill RIdx (offsets of rows)
+            //
+            for(i=0; i<=s.m-1; i++)
             {
-                if( (double)(ga)<(double)(fhmx) )
+                s.ridx[i+1] = s.ridx[i+1]+s.ridx[i];
+            }
+            
+            //
+            // Allocate memory
+            //
+            s.vals = new double[nonne];
+            s.idx = new int[nonne];
+            for(i=0; i<=k-1; i++)
+            {
+                if( tidx[2*i]>=0 )
                 {
-                    aas = 1+fhmn/fhmx;
-                    at = (fhmx-fhmn)/fhmx;
-                    au = math.sqr(ga/fhmx);
-                    c = 2/(Math.Sqrt(aas*aas+au)+Math.Sqrt(at*at+au));
-                    ssmin = fhmn*c;
-                    ssmax = fhmx/c;
+                    s.vals[s.ridx[tidx[2*i]]+temp[tidx[2*i]]] = tvals[i];
+                    s.idx[s.ridx[tidx[2*i]]+temp[tidx[2*i]]] = tidx[2*i+1];
+                    temp[tidx[2*i]] = temp[tidx[2*i]]+1;
                 }
-                else
+            }
+            
+            //
+            // Set NInitialized
+            //
+            s.ninitialized = s.ridx[s.m];
+            
+            //
+            // Sorting of elements
+            //
+            for(i=0; i<=s.m-1; i++)
+            {
+                tsort.tagsortmiddleir(ref s.idx, ref s.vals, s.ridx[i], s.ridx[i+1]-s.ridx[i]);
+            }
+            
+            //
+            // Initialization 'S.UIdx' and 'S.DIdx'
+            //
+            sparseinitduidx(s);
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-vector product  S*x.  Matrix  S  must  be
+        stored in CRS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            Y           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[M], S*x
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemv(sparsematrix s,
+            double[] x,
+            ref double[] y)
+        {
+            double tval = 0;
+            int i = 0;
+            int j = 0;
+            int lt = 0;
+            int rt = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseMV: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseMV: length(X)<N");
+            apserv.rvectorsetlengthatleast(ref y, s.m);
+            for(i=0; i<=s.m-1; i++)
+            {
+                tval = 0;
+                lt = s.ridx[i];
+                rt = s.ridx[i+1];
+                for(j=lt; j<=rt-1; j++)
                 {
-                    au = fhmx/ga;
-                    if( (double)(au)==(double)(0) )
-                    {
-                        
-                        //
-                        // Avoid possible harmful underflow if exponent range
-                        // asymmetric (true SSMIN may not underflow even if
-                        // AU underflows)
-                        //
-                        ssmin = fhmn*fhmx/ga;
-                        ssmax = ga;
-                    }
-                    else
-                    {
-                        aas = 1+fhmn/fhmx;
-                        at = (fhmx-fhmn)/fhmx;
-                        c = 1/(Math.Sqrt(1+math.sqr(aas*au))+Math.Sqrt(1+math.sqr(at*au)));
-                        ssmin = fhmn*c*au;
-                        ssmin = ssmin+ssmin;
-                        ssmax = ga/(c+c);
-                    }
+                    tval = tval+x[s.idx[j]]*s.vals[j];
                 }
+                y[i] = tval;
             }
         }
 
 
-        private static void svdv2x2(double f,
-            double g,
-            double h,
-            ref double ssmin,
-            ref double ssmax,
-            ref double snr,
-            ref double csr,
-            ref double snl,
-            ref double csl)
+        /*************************************************************************
+        This function calculates matrix-vector product  S^T*x. Matrix S  must  be
+        stored in CRS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            X           -   array[M], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least M, but we do not check for NAN's or INF's.
+            Y           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[N], S^T*x
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemtv(sparsematrix s,
+            double[] x,
+            ref double[] y)
         {
-            bool gasmal = new bool();
-            bool swp = new bool();
-            int pmax = 0;
-            double a = 0;
-            double clt = 0;
-            double crt = 0;
-            double d = 0;
-            double fa = 0;
-            double ft = 0;
-            double ga = 0;
-            double gt = 0;
-            double ha = 0;
-            double ht = 0;
-            double l = 0;
-            double m = 0;
-            double mm = 0;
-            double r = 0;
-            double s = 0;
-            double slt = 0;
-            double srt = 0;
-            double t = 0;
-            double temp = 0;
-            double tsign = 0;
-            double tt = 0;
+            int i = 0;
+            int j = 0;
+            int lt = 0;
+            int rt = 0;
+            int ct = 0;
             double v = 0;
 
-            ssmin = 0;
-            ssmax = 0;
-            snr = 0;
-            csr = 0;
-            snl = 0;
-            csl = 0;
-
-            ft = f;
-            fa = Math.Abs(ft);
-            ht = h;
-            ha = Math.Abs(h);
-            
-            //
-            // these initializers are not really necessary,
-            // but without them compiler complains about uninitialized locals
-            //
-            clt = 0;
-            crt = 0;
-            slt = 0;
-            srt = 0;
-            tsign = 0;
-            
-            //
-            // PMAX points to the maximum absolute element of matrix
-            //  PMAX = 1 if F largest in absolute values
-            //  PMAX = 2 if G largest in absolute values
-            //  PMAX = 3 if H largest in absolute values
-            //
-            pmax = 1;
-            swp = (double)(ha)>(double)(fa);
-            if( swp )
+            alglib.ap.assert(s.matrixtype==1, "SparseMTV: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMTV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.m, "SparseMTV: Length(X)<M");
+            apserv.rvectorsetlengthatleast(ref y, s.n);
+            for(i=0; i<=s.n-1; i++)
             {
-                
-                //
-                // Now FA .ge. HA
-                //
-                pmax = 3;
-                temp = ft;
-                ft = ht;
-                ht = temp;
-                temp = fa;
-                fa = ha;
-                ha = temp;
+                y[i] = 0;
             }
-            gt = g;
-            ga = Math.Abs(gt);
-            if( (double)(ga)==(double)(0) )
+            for(i=0; i<=s.m-1; i++)
             {
-                
-                //
-                // Diagonal matrix
-                //
-                ssmin = ha;
-                ssmax = fa;
-                clt = 1;
-                crt = 1;
-                slt = 0;
-                srt = 0;
-            }
-            else
-            {
-                gasmal = true;
-                if( (double)(ga)>(double)(fa) )
+                lt = s.ridx[i];
+                rt = s.ridx[i+1];
+                v = x[i];
+                for(j=lt; j<=rt-1; j++)
                 {
-                    pmax = 2;
-                    if( (double)(fa/ga)<(double)(math.machineepsilon) )
-                    {
-                        
-                        //
-                        // Case of very large GA
-                        //
-                        gasmal = false;
-                        ssmax = ga;
-                        if( (double)(ha)>(double)(1) )
-                        {
-                            v = ga/ha;
-                            ssmin = fa/v;
-                        }
-                        else
-                        {
-                            v = fa/ga;
-                            ssmin = v*ha;
-                        }
-                        clt = 1;
-                        slt = ht/gt;
-                        srt = 1;
-                        crt = ft/gt;
-                    }
-                }
-                if( gasmal )
-                {
-                    
-                    //
-                    // Normal case
-                    //
-                    d = fa-ha;
-                    if( (double)(d)==(double)(fa) )
-                    {
-                        l = 1;
-                    }
-                    else
-                    {
-                        l = d/fa;
-                    }
-                    m = gt/ft;
-                    t = 2-l;
-                    mm = m*m;
-                    tt = t*t;
-                    s = Math.Sqrt(tt+mm);
-                    if( (double)(l)==(double)(0) )
-                    {
-                        r = Math.Abs(m);
-                    }
-                    else
-                    {
-                        r = Math.Sqrt(l*l+mm);
-                    }
-                    a = 0.5*(s+r);
-                    ssmin = ha/a;
-                    ssmax = fa*a;
-                    if( (double)(mm)==(double)(0) )
-                    {
-                        
-                        //
-                        // Note that M is very tiny
-                        //
-                        if( (double)(l)==(double)(0) )
-                        {
-                            t = extsignbdsqr(2, ft)*extsignbdsqr(1, gt);
-                        }
-                        else
-                        {
-                            t = gt/extsignbdsqr(d, ft)+m/t;
-                        }
-                    }
-                    else
-                    {
-                        t = (m/(s+t)+m/(r+l))*(1+a);
-                    }
-                    l = Math.Sqrt(t*t+4);
-                    crt = 2/l;
-                    srt = t/l;
-                    clt = (crt+srt*m)/a;
-                    v = ht/ft;
-                    slt = v*srt/a;
+                    ct = s.idx[j];
+                    y[ct] = y[ct]+v*s.vals[j];
                 }
             }
-            if( swp )
-            {
-                csl = srt;
-                snl = crt;
-                csr = slt;
-                snr = clt;
-            }
-            else
-            {
-                csl = clt;
-                snl = slt;
-                csr = crt;
-                snr = srt;
-            }
-            
-            //
-            // Correct signs of SSMAX and SSMIN
-            //
-            if( pmax==1 )
-            {
-                tsign = extsignbdsqr(1, csr)*extsignbdsqr(1, csl)*extsignbdsqr(1, f);
-            }
-            if( pmax==2 )
-            {
-                tsign = extsignbdsqr(1, snr)*extsignbdsqr(1, csl)*extsignbdsqr(1, g);
-            }
-            if( pmax==3 )
-            {
-                tsign = extsignbdsqr(1, snr)*extsignbdsqr(1, snl)*extsignbdsqr(1, h);
-            }
-            ssmax = extsignbdsqr(ssmax, tsign);
-            ssmin = extsignbdsqr(ssmin, tsign*extsignbdsqr(1, f)*extsignbdsqr(1, h));
         }
 
 
-    }
-    public class svd
-    {
         /*************************************************************************
-        Singular value decomposition of a rectangular matrix.
+        This function simultaneously calculates two matrix-vector products:
+            S*x and S^T*x.
+        S must be square (non-rectangular) matrix stored in CRS format (exception  
+        will be thrown otherwise).
 
-        The algorithm calculates the singular value decomposition of a matrix of
-        size MxN: A = U * S * V^T
+        INPUT PARAMETERS
+            S           -   sparse N*N matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            Y0          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            Y1          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y0          -   array[N], S*x
+            Y1          -   array[N], S^T*x
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function. It also throws exception when S is non-square.
 
-        The algorithm finds the singular values and, optionally, matrices U and V^T.
-        The algorithm can find both first min(M,N) columns of matrix U and rows of
-        matrix V^T (singular vectors), and matrices U and V^T wholly (of sizes MxM
-        and NxN respectively).
-
-        Take into account that the subroutine does not return matrix V but V^T.
-
-        Input parameters:
-            A           -   matrix to be decomposed.
-                            Array whose indexes range within [0..M-1, 0..N-1].
-            M           -   number of rows in matrix A.
-            N           -   number of columns in matrix A.
-            UNeeded     -   0, 1 or 2. See the description of the parameter U.
-            VTNeeded    -   0, 1 or 2. See the description of the parameter VT.
-            AdditionalMemory -
-                            If the parameter:
-                             * equals 0, the algorithm doesn’t use additional
-                               memory (lower requirements, lower performance).
-                             * equals 1, the algorithm uses additional
-                               memory of size min(M,N)*min(M,N) of real numbers.
-                               It often speeds up the algorithm.
-                             * equals 2, the algorithm uses additional
-                               memory of size M*min(M,N) of real numbers.
-                               It allows to get a maximum performance.
-                            The recommended value of the parameter is 2.
-
-        Output parameters:
-            W           -   contains singular values in descending order.
-            U           -   if UNeeded=0, U isn't changed, the left singular vectors
-                            are not calculated.
-                            if Uneeded=1, U contains left singular vectors (first
-                            min(M,N) columns of matrix U). Array whose indexes range
-                            within [0..M-1, 0..Min(M,N)-1].
-                            if UNeeded=2, U contains matrix U wholly. Array whose
-                            indexes range within [0..M-1, 0..M-1].
-            VT          -   if VTNeeded=0, VT isn’t changed, the right singular vectors
-                            are not calculated.
-                            if VTNeeded=1, VT contains right singular vectors (first
-                            min(M,N) rows of matrix V^T). Array whose indexes range
-                            within [0..min(M,N)-1, 0..N-1].
-                            if VTNeeded=2, VT contains matrix V^T wholly. Array whose
-                            indexes range within [0..N-1, 0..N-1].
-
-          -- ALGLIB --
-             Copyright 2005 by Bochkanov Sergey
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixsvd(double[,] a,
-            int m,
-            int n,
-            int uneeded,
-            int vtneeded,
-            int additionalmemory,
-            ref double[] w,
-            ref double[,] u,
-            ref double[,] vt)
+        public static void sparsemv2(sparsematrix s,
+            double[] x,
+            ref double[] y0,
+            ref double[] y1)
+        {
+            int l = 0;
+            double tval = 0;
+            int i = 0;
+            int j = 0;
+            double vx = 0;
+            double vs = 0;
+            int vi = 0;
+            int j0 = 0;
+            int j1 = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseMV2: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(s.m==s.n, "SparseMV2: matrix is non-square");
+            l = alglib.ap.len(x);
+            alglib.ap.assert(l>=s.n, "SparseMV2: Length(X)<N");
+            apserv.rvectorsetlengthatleast(ref y0, l);
+            apserv.rvectorsetlengthatleast(ref y1, l);
+            for(i=0; i<=s.n-1; i++)
+            {
+                y1[i] = 0;
+            }
+            for(i=0; i<=s.m-1; i++)
+            {
+                tval = 0;
+                vx = x[i];
+                j0 = s.ridx[i];
+                j1 = s.ridx[i+1]-1;
+                for(j=j0; j<=j1; j++)
+                {
+                    vi = s.idx[j];
+                    vs = s.vals[j];
+                    tval = tval+x[vi]*vs;
+                    y1[vi] = y1[vi]+vx*vs;
+                }
+                y0[i] = tval;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-vector product  S*x, when S is  symmetric
+        matrix.  Matrix  S  must  be stored in  CRS  format  (exception  will  be
+        thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*M matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            IsUpper     -   whether upper or lower triangle of S is given:
+                            * if upper triangle is given,  only   S[i,j] for j>=i
+                              are used, and lower triangle is ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for j<=i
+                              are used, and upper triangle is ignored.
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            Y           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[M], S*x
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesmv(sparsematrix s,
+            bool isupper,
+            double[] x,
+            ref double[] y)
+        {
+            int i = 0;
+            int j = 0;
+            int id = 0;
+            int lt = 0;
+            int rt = 0;
+            double v = 0;
+            double vy = 0;
+            double vx = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseSMV: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseSMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseSMV: length(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseSMV: non-square matrix");
+            apserv.rvectorsetlengthatleast(ref y, s.m);
+            for(i=0; i<=s.m-1; i++)
+            {
+                y[i] = 0;
+            }
+            for(i=0; i<=s.m-1; i++)
+            {
+                if( s.didx[i]!=s.uidx[i] )
+                {
+                    y[i] = y[i]+s.vals[s.didx[i]]*x[s.idx[s.didx[i]]];
+                }
+                if( isupper )
+                {
+                    lt = s.uidx[i];
+                    rt = s.ridx[i+1];
+                    vy = 0;
+                    vx = x[i];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        id = s.idx[j];
+                        v = s.vals[j];
+                        vy = vy+x[id]*v;
+                        y[id] = y[id]+vx*v;
+                    }
+                    y[i] = y[i]+vy;
+                }
+                else
+                {
+                    lt = s.ridx[i];
+                    rt = s.didx[i];
+                    vy = 0;
+                    vx = x[i];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        id = s.idx[j];
+                        v = s.vals[j];
+                        vy = vy+x[id]*v;
+                        y[id] = y[id]+vx*v;
+                    }
+                    y[i] = y[i]+vy;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-matrix product  S*A.  Matrix  S  must  be
+        stored in CRS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            A           -   array[N][K], input dense matrix. For  performance reasons
+                            we make only quick checks - we check that array size  
+                            is at least N, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).
+            B           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B           -   array[M][K], S*A
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemm(sparsematrix s,
+            double[,] a,
+            int k,
+            ref double[,] b)
+        {
+            double tval = 0;
+            double v = 0;
+            int id = 0;
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int lt = 0;
+            int rt = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseMV: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseMV: Rows(A)<N");
+            alglib.ap.assert(k>0, "SparseMV: K<=0");
+            apserv.rmatrixsetlengthatleast(ref b, s.m, k);
+            if( k<linalgswitch )
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    for(j=0; j<=k-1; j++)
+                    {
+                        tval = 0;
+                        lt = s.ridx[i];
+                        rt = s.ridx[i+1];
+                        for(k0=lt; k0<=rt-1; k0++)
+                        {
+                            tval = tval+s.vals[k0]*a[s.idx[k0],j];
+                        }
+                        b[i,j] = tval;
+                    }
+                }
+            }
+            else
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    for(j=0; j<=k-1; j++)
+                    {
+                        b[i,j] = 0;
+                    }
+                }
+                for(i=0; i<=s.m-1; i++)
+                {
+                    lt = s.ridx[i];
+                    rt = s.ridx[i+1];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        id = s.idx[j];
+                        v = s.vals[j];
+                        for(i_=0; i_<=k-1;i_++)
+                        {
+                            b[i,i_] = b[i,i_] + v*a[id,i_];
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-matrix product  S^T*A. Matrix S  must  be
+        stored in CRS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            A           -   array[M][K], input dense matrix. For performance reasons
+                            we make only quick checks - we check that array size  is
+                            at least M, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).                    
+            B           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B           -   array[N][K], S^T*A
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemtm(sparsematrix s,
+            double[,] a,
+            int k,
+            ref double[,] b)
+        {
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int lt = 0;
+            int rt = 0;
+            int ct = 0;
+            double v = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseMTM: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMTM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.m, "SparseMTM: Rows(A)<M");
+            alglib.ap.assert(k>0, "SparseMTM: K<=0");
+            apserv.rmatrixsetlengthatleast(ref b, s.n, k);
+            for(i=0; i<=s.n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b[i,j] = 0;
+                }
+            }
+            if( k<linalgswitch )
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    lt = s.ridx[i];
+                    rt = s.ridx[i+1];
+                    for(k0=lt; k0<=rt-1; k0++)
+                    {
+                        v = s.vals[k0];
+                        ct = s.idx[k0];
+                        for(j=0; j<=k-1; j++)
+                        {
+                            b[ct,j] = b[ct,j]+v*a[i,j];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    lt = s.ridx[i];
+                    rt = s.ridx[i+1];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        v = s.vals[j];
+                        ct = s.idx[j];
+                        for(i_=0; i_<=k-1;i_++)
+                        {
+                            b[ct,i_] = b[ct,i_] + v*a[i,i_];
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function simultaneously calculates two matrix-matrix products:
+            S*A and S^T*A.
+        S must be square (non-rectangular) matrix stored in CRS format (exception  
+        will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse N*N matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            A           -   array[N][K], input dense matrix. For performance reasons
+                            we make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).                    
+            B0          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            B1          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B0          -   array[N][K], S*A
+            B1          -   array[N][K], S^T*A
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function. It also throws exception when S is non-square.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemm2(sparsematrix s,
+            double[,] a,
+            int k,
+            ref double[,] b0,
+            ref double[,] b1)
+        {
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int lt = 0;
+            int rt = 0;
+            int ct = 0;
+            double v = 0;
+            double tval = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseMM2: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMM2: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(s.m==s.n, "SparseMM2: matrix is non-square");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseMM2: Rows(A)<N");
+            alglib.ap.assert(k>0, "SparseMM2: K<=0");
+            apserv.rmatrixsetlengthatleast(ref b0, s.m, k);
+            apserv.rmatrixsetlengthatleast(ref b1, s.n, k);
+            for(i=0; i<=s.n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b1[i,j] = 0;
+                }
+            }
+            if( k<linalgswitch )
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    for(j=0; j<=k-1; j++)
+                    {
+                        tval = 0;
+                        lt = s.ridx[i];
+                        rt = s.ridx[i+1];
+                        v = a[i,j];
+                        for(k0=lt; k0<=rt-1; k0++)
+                        {
+                            ct = s.idx[k0];
+                            b1[ct,j] = b1[ct,j]+s.vals[k0]*v;
+                            tval = tval+s.vals[k0]*a[ct,j];
+                        }
+                        b0[i,j] = tval;
+                    }
+                }
+            }
+            else
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    for(j=0; j<=k-1; j++)
+                    {
+                        b0[i,j] = 0;
+                    }
+                }
+                for(i=0; i<=s.m-1; i++)
+                {
+                    lt = s.ridx[i];
+                    rt = s.ridx[i+1];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        v = s.vals[j];
+                        ct = s.idx[j];
+                        for(i_=0; i_<=k-1;i_++)
+                        {
+                            b0[i,i_] = b0[i,i_] + v*a[ct,i_];
+                        }
+                        for(i_=0; i_<=k-1;i_++)
+                        {
+                            b1[ct,i_] = b1[ct,i_] + v*a[i,i_];
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-matrix product  S*A, when S  is  symmetric
+        matrix.  Matrix  S  must  be stored  in  CRS  format  (exception  will  be
+        thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*M matrix in CRS format (you MUST convert  it
+                            to CRS before calling this function).
+            IsUpper     -   whether upper or lower triangle of S is given:
+                            * if upper triangle is given,  only   S[i,j] for j>=i
+                              are used, and lower triangle is ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for j<=i
+                              are used, and upper triangle is ignored.
+            A           -   array[N][K], input dense matrix. For performance reasons
+                            we make only quick checks - we check that array size is
+                            at least N, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).  
+            B           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B           -   array[M][K], S*A
+            
+        NOTE: this function throws exception when called for non-CRS matrix.  You
+        must convert your matrix  with  SparseConvertToCRS()  before  using  this
+        function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesmm(sparsematrix s,
+            bool isupper,
+            double[,] a,
+            int k,
+            ref double[,] b)
+        {
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int id = 0;
+            int lt = 0;
+            int rt = 0;
+            double v = 0;
+            double vb = 0;
+            double va = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseSMM: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseSMM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseSMM: Rows(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseSMM: matrix is non-square");
+            apserv.rmatrixsetlengthatleast(ref b, s.m, k);
+            for(i=0; i<=s.m-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b[i,j] = 0;
+                }
+            }
+            if( k>linalgswitch )
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    for(j=0; j<=k-1; j++)
+                    {
+                        if( s.didx[i]!=s.uidx[i] )
+                        {
+                            id = s.didx[i];
+                            b[i,j] = b[i,j]+s.vals[id]*a[s.idx[id],j];
+                        }
+                        if( isupper )
+                        {
+                            lt = s.uidx[i];
+                            rt = s.ridx[i+1];
+                            vb = 0;
+                            va = a[i,j];
+                            for(k0=lt; k0<=rt-1; k0++)
+                            {
+                                id = s.idx[k0];
+                                v = s.vals[k0];
+                                vb = vb+a[id,j]*v;
+                                b[id,j] = b[id,j]+va*v;
+                            }
+                            b[i,j] = b[i,j]+vb;
+                        }
+                        else
+                        {
+                            lt = s.ridx[i];
+                            rt = s.didx[i];
+                            vb = 0;
+                            va = a[i,j];
+                            for(k0=lt; k0<=rt-1; k0++)
+                            {
+                                id = s.idx[k0];
+                                v = s.vals[k0];
+                                vb = vb+a[id,j]*v;
+                                b[id,j] = b[id,j]+va*v;
+                            }
+                            b[i,j] = b[i,j]+vb;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for(i=0; i<=s.m-1; i++)
+                {
+                    if( s.didx[i]!=s.uidx[i] )
+                    {
+                        id = s.didx[i];
+                        v = s.vals[id];
+                        for(i_=0; i_<=k-1;i_++)
+                        {
+                            b[i,i_] = b[i,i_] + v*a[s.idx[id],i_];
+                        }
+                    }
+                    if( isupper )
+                    {
+                        lt = s.uidx[i];
+                        rt = s.ridx[i+1];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            id = s.idx[j];
+                            v = s.vals[j];
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[i,i_] = b[i,i_] + v*a[id,i_];
+                            }
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[id,i_] = b[id,i_] + v*a[i,i_];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        lt = s.ridx[i];
+                        rt = s.didx[i];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            id = s.idx[j];
+                            v = s.vals[j];
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[i,i_] = b[i,i_] + v*a[id,i_];
+                            }
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[id,i_] = b[id,i_] + v*a[i,i_];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This procedure resizes Hash-Table matrix. It can be called when you  have
+        deleted too many elements from the matrix, and you want to  free unneeded
+        memory.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseresizematrix(sparsematrix s)
+        {
+            int k = 0;
+            int k1 = 0;
+            int i = 0;
+            double[] tvals = new double[0];
+            int[] tidx = new int[0];
+
+            alglib.ap.assert(s.matrixtype==0, "SparseResizeMatrix: incorrect matrix type");
+            
+            //
+            // Initialization for length and number of non-null elementd
+            //
+            k = alglib.ap.len(s.vals);
+            k1 = 0;
+            
+            //
+            // Calculating number of non-null elements
+            //
+            for(i=0; i<=k-1; i++)
+            {
+                if( s.idx[2*i]>=0 )
+                {
+                    k1 = k1+1;
+                }
+            }
+            
+            //
+            // Initialization value for free space
+            //
+            s.nfree = (int)Math.Round(k1/desiredloadfactor*growfactor+additional)-k1;
+            tvals = new double[s.nfree+k1];
+            tidx = new int[2*(s.nfree+k1)];
+            alglib.ap.swap(ref s.vals, ref tvals);
+            alglib.ap.swap(ref s.idx, ref tidx);
+            for(i=0; i<=s.nfree+k1-1; i++)
+            {
+                s.idx[2*i] = -1;
+            }
+            for(i=0; i<=k-1; i++)
+            {
+                if( tidx[2*i]>=0 )
+                {
+                    sparseset(s, tidx[2*i], tidx[2*i+1], tvals[i]);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function return average length of chain at hash-table.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double sparsegetaveragelengthofchain(sparsematrix s)
+        {
+            double result = 0;
+            int nchains = 0;
+            int talc = 0;
+            int l = 0;
+            int i = 0;
+            int ind0 = 0;
+            int ind1 = 0;
+            int hashcode = 0;
+
+            
+            //
+            // If matrix represent in CRS then return zero and exit
+            //
+            if( s.matrixtype==1 )
+            {
+                result = 0;
+                return result;
+            }
+            nchains = 0;
+            talc = 0;
+            l = alglib.ap.len(s.vals);
+            for(i=0; i<=l-1; i++)
+            {
+                ind0 = 2*i;
+                if( s.idx[ind0]!=-1 )
+                {
+                    nchains = nchains+1;
+                    hashcode = hash(s.idx[ind0], s.idx[ind0+1], l);
+                    while( true )
+                    {
+                        talc = talc+1;
+                        ind1 = 2*hashcode;
+                        if( s.idx[ind0]==s.idx[ind1] && s.idx[ind0+1]==s.idx[ind1+1] )
+                        {
+                            break;
+                        }
+                        hashcode = (hashcode+1)%l;
+                    }
+                }
+            }
+            if( nchains==0 )
+            {
+                result = 0;
+            }
+            else
+            {
+                result = (double)talc/(double)nchains;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This  function  is  used  to enumerate all elements of the sparse matrix.
+        Before  first  call  user  initializes  T0 and T1 counters by zero. These
+        counters are used to remember current position in a  matrix;  after  each
+        call they are updated by the function.
+
+        Subsequent calls to this function return non-zero elements of the  sparse
+        matrix, one by one. If you enumerate CRS matrix, matrix is traversed from
+        left to right, from top to bottom. In case you enumerate matrix stored as
+        Hash table, elements are returned in random order.
+
+        EXAMPLE
+            > T0=0
+            > T1=0
+            > while SparseEnumerate(S,T0,T1,I,J,V) do
+            >     ....do something with I,J,V
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table or CRS representation.
+            T0          -   internal counter
+            T1          -   internal counter
+            
+        OUTPUT PARAMETERS
+            T0          -   new value of the internal counter
+            T1          -   new value of the internal counter
+            I           -   row index of non-zero element, 0<=I<M.
+            J           -   column index of non-zero element, 0<=J<N
+            V           -   value of the T-th element
+            
+        RESULT
+            True in case of success (next non-zero element was retrieved)
+            False in case all non-zero elements were enumerated
+
+          -- ALGLIB PROJECT --
+             Copyright 14.03.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseenumerate(sparsematrix s,
+            ref int t0,
+            ref int t1,
+            ref int i,
+            ref int j,
+            ref double v)
         {
             bool result = new bool();
-            double[] tauq = new double[0];
-            double[] taup = new double[0];
-            double[] tau = new double[0];
-            double[] e = new double[0];
-            double[] work = new double[0];
-            double[,] t2 = new double[0,0];
-            bool isupper = new bool();
-            int minmn = 0;
-            int ncu = 0;
-            int nrvt = 0;
-            int nru = 0;
-            int ncvt = 0;
+            int sz = 0;
+            int i0 = 0;
+
+            i = 0;
+            j = 0;
+            v = 0;
+
+            if( t0<0 || (s.matrixtype==1 && t1<0) )
+            {
+                result = false;
+                return result;
+            }
+            
+            //
+            // Hash-table matrix
+            //
+            if( s.matrixtype==0 )
+            {
+                sz = alglib.ap.len(s.vals);
+                for(i0=t0; i0<=sz-1; i0++)
+                {
+                    if( s.idx[2*i0]==-1 || s.idx[2*i0]==-2 )
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        i = s.idx[2*i0];
+                        j = s.idx[2*i0+1];
+                        v = s.vals[i0];
+                        t0 = i0+1;
+                        result = true;
+                        return result;
+                    }
+                }
+                t0 = 0;
+                result = false;
+                return result;
+            }
+            
+            //
+            // CRS matrix
+            //
+            if( s.matrixtype==1 && t0<s.ninitialized )
+            {
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseEnumerate: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                while( t0>s.ridx[t1+1]-1 && t1<s.m )
+                {
+                    t1 = t1+1;
+                }
+                i = t1;
+                j = s.idx[t0];
+                v = s.vals[t0];
+                t0 = t0+1;
+                result = true;
+                return result;
+            }
+            t0 = 0;
+            t1 = 0;
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function rewrites existing (non-zero) element. It  returns  True   if
+        element  exists  or  False,  when  it  is  called for non-existing  (zero)
+        element.
+
+        The purpose of this function is to provide convenient thread-safe  way  to
+        modify  sparse  matrix.  Such  modification  (already  existing element is
+        rewritten) is guaranteed to be thread-safe without any synchronization, as
+        long as different threads modify different elements.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table or CRS representation.
+            I           -   row index of non-zero element to modify, 0<=I<M
+            J           -   column index of non-zero element to modify, 0<=J<N
+            V           -   value to rewrite, must be finite number
+
+        OUTPUT PARAMETERS
+            S           -   modified matrix
+        RESULT
+            True in case when element exists
+            False in case when element doesn't exist or it is zero
+            
+          -- ALGLIB PROJECT --
+             Copyright 14.03.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparserewriteexisting(sparsematrix s,
+            int i,
+            int j,
+            double v)
+        {
+            bool result = new bool();
+            int hashcode = 0;
+            int k = 0;
+            int k0 = 0;
+            int k1 = 0;
+
+            alglib.ap.assert(0<=i && i<s.m, "SparseRewriteExisting: invalid argument I(either I<0 or I>=S.M)");
+            alglib.ap.assert(0<=j && j<s.n, "SparseRewriteExisting: invalid argument J(either J<0 or J>=S.N)");
+            alglib.ap.assert(math.isfinite(v), "SparseRewriteExisting: invalid argument V(either V is infinite or V is NaN)");
+            result = false;
+            
+            //
+            // Hash-table matrix
+            //
+            if( s.matrixtype==0 )
+            {
+                k = alglib.ap.len(s.vals);
+                hashcode = hash(i, j, k);
+                while( true )
+                {
+                    if( s.idx[2*hashcode]==-1 )
+                    {
+                        return result;
+                    }
+                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                    {
+                        s.vals[hashcode] = v;
+                        result = true;
+                        return result;
+                    }
+                    hashcode = (hashcode+1)%k;
+                }
+            }
+            
+            //
+            // CRS matrix
+            //
+            if( s.matrixtype==1 )
+            {
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseRewriteExisting: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                k0 = s.ridx[i];
+                k1 = s.ridx[i+1]-1;
+                while( k0<=k1 )
+                {
+                    k = (k0+k1)/2;
+                    if( s.idx[k]==j )
+                    {
+                        s.vals[k] = v;
+                        result = true;
+                        return result;
+                    }
+                    if( s.idx[k]<j )
+                    {
+                        k0 = k+1;
+                    }
+                    else
+                    {
+                        k1 = k-1;
+                    }
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns I-th row of the sparse matrix stored in CRS format.
+
+        NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non-CRS)  are
+              passed, this function throws exception.
+
+        INPUT PARAMETERS:
+            S           -   sparse M*N matrix in CRS format
+            I           -   row index, 0<=I<M
+            IRow        -   output buffer, can be  preallocated.  In  case  buffer
+                            size  is  too  small  to  store  I-th   row,   it   is
+                            automatically reallocated.
+         
+        OUTPUT PARAMETERS:
+            IRow        -   array[M], I-th row.
+
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsegetrow(sparsematrix s,
+            int i,
+            ref double[] irow)
+        {
+            int i0 = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseGetRow: S must be CRS-based matrix");
+            alglib.ap.assert(i>=0 && i<s.m, "SparseGetRow: I<0 or I>=M");
+            apserv.rvectorsetlengthatleast(ref irow, s.n);
+            for(i0=0; i0<=s.n-1; i0++)
+            {
+                irow[i0] = 0;
+            }
+            for(i0=s.ridx[i]; i0<=s.ridx[i+1]-1; i0++)
+            {
+                irow[s.idx[i0]] = s.vals[i0];
+            }
+        }
+
+
+        /*************************************************************************
+        This function performs in-place conversion from CRS format to  Hash  table
+        storage.
+
+        INPUT PARAMETERS
+            S           -   sparse matrix in CRS format.
+
+        OUTPUT PARAMETERS
+            S           -   sparse matrix in Hash table format.
+
+        NOTE:  this  function  has  no  effect  when  called with matrix which is 
+        already in Hash table mode.
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseconverttohash(sparsematrix s)
+        {
+            int[] tidx = new int[0];
+            int[] tridx = new int[0];
+            double[] tvals = new double[0];
+            int tn = 0;
+            int tm = 0;
             int i = 0;
             int j = 0;
 
-            a = (double[,])a.Clone();
-            w = new double[0];
-            u = new double[0,0];
-            vt = new double[0,0];
+            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseConvertToHash: invalid matrix type");
+            if( s.matrixtype==0 )
+            {
+                return;
+            }
+            s.matrixtype = 0;
+            tm = s.m;
+            tn = s.n;
+            alglib.ap.swap(ref s.idx, ref tidx);
+            alglib.ap.swap(ref s.ridx, ref tridx);
+            alglib.ap.swap(ref s.vals, ref tvals);
+            
+            //
+            // Delete RIdx
+            //
+            s.ridx = new int[0];
+            sparsecreate(tm, tn, tridx[tm], s);
+            
+            //
+            // Fill the matrix
+            //
+            for(i=0; i<=tm-1; i++)
+            {
+                for(j=tridx[i]; j<=tridx[i+1]-1; j++)
+                {
+                    sparseset(s, i, tidx[j], tvals[j]);
+                }
+            }
+        }
 
-            result = true;
-            if( m==0 | n==0 )
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to  Hash table storage
+        format. S0 is copied to S1 and converted on-the-fly.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in Hash table format.
+
+        NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytohash(sparsematrix s0,
+            sparsematrix s1)
+        {
+            double val = 0;
+            int t0 = 0;
+            int t1 = 0;
+            int i = 0;
+            int j = 0;
+
+            alglib.ap.assert(s0.matrixtype==0 || s0.matrixtype==1, "SparseCopyToHash: invalid matrix type");
+            if( s0.matrixtype==0 )
             {
-                return result;
+                sparsecopy(s0, s1);
             }
-            ap.assert(uneeded>=0 & uneeded<=2, "SVDDecomposition: wrong parameters!");
-            ap.assert(vtneeded>=0 & vtneeded<=2, "SVDDecomposition: wrong parameters!");
-            ap.assert(additionalmemory>=0 & additionalmemory<=2, "SVDDecomposition: wrong parameters!");
-            
-            //
-            // initialize
-            //
-            minmn = Math.Min(m, n);
-            w = new double[minmn+1];
-            ncu = 0;
-            nru = 0;
-            if( uneeded==1 )
+            else
             {
-                nru = m;
-                ncu = minmn;
-                u = new double[nru-1+1, ncu-1+1];
-            }
-            if( uneeded==2 )
-            {
-                nru = m;
-                ncu = m;
-                u = new double[nru-1+1, ncu-1+1];
-            }
-            nrvt = 0;
-            ncvt = 0;
-            if( vtneeded==1 )
-            {
-                nrvt = minmn;
-                ncvt = n;
-                vt = new double[nrvt-1+1, ncvt-1+1];
-            }
-            if( vtneeded==2 )
-            {
-                nrvt = n;
-                ncvt = n;
-                vt = new double[nrvt-1+1, ncvt-1+1];
-            }
-            
-            //
-            // M much larger than N
-            // Use bidiagonal reduction with QR-decomposition
-            //
-            if( (double)(m)>(double)(1.6*n) )
-            {
-                if( uneeded==0 )
+                t0 = 0;
+                t1 = 0;
+                sparsecreate(s0.m, s0.n, s0.ridx[s0.m], s1);
+                while( sparseenumerate(s0, ref t0, ref t1, ref i, ref j, ref val) )
                 {
-                    
-                    //
-                    // No left singular vectors to be computed
-                    //
-                    ortfac.rmatrixqr(ref a, m, n, ref tau);
-                    for(i=0; i<=n-1; i++)
-                    {
-                        for(j=0; j<=i-1; j++)
-                        {
-                            a[i,j] = 0;
-                        }
-                    }
-                    ortfac.rmatrixbd(ref a, n, n, ref tauq, ref taup);
-                    ortfac.rmatrixbdunpackpt(a, n, n, taup, nrvt, ref vt);
-                    ortfac.rmatrixbdunpackdiagonals(a, n, n, ref isupper, ref w, ref e);
-                    result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, 0, ref a, 0, ref vt, ncvt);
-                    return result;
-                }
-                else
-                {
-                    
-                    //
-                    // Left singular vectors (may be full matrix U) to be computed
-                    //
-                    ortfac.rmatrixqr(ref a, m, n, ref tau);
-                    ortfac.rmatrixqrunpackq(a, m, n, tau, ncu, ref u);
-                    for(i=0; i<=n-1; i++)
-                    {
-                        for(j=0; j<=i-1; j++)
-                        {
-                            a[i,j] = 0;
-                        }
-                    }
-                    ortfac.rmatrixbd(ref a, n, n, ref tauq, ref taup);
-                    ortfac.rmatrixbdunpackpt(a, n, n, taup, nrvt, ref vt);
-                    ortfac.rmatrixbdunpackdiagonals(a, n, n, ref isupper, ref w, ref e);
-                    if( additionalmemory<1 )
-                    {
-                        
-                        //
-                        // No additional memory can be used
-                        //
-                        ortfac.rmatrixbdmultiplybyq(a, n, n, tauq, ref u, m, n, true, false);
-                        result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, m, ref a, 0, ref vt, ncvt);
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Large U. Transforming intermediate matrix T2
-                        //
-                        work = new double[Math.Max(m, n)+1];
-                        ortfac.rmatrixbdunpackq(a, n, n, tauq, n, ref t2);
-                        blas.copymatrix(u, 0, m-1, 0, n-1, ref a, 0, m-1, 0, n-1);
-                        blas.inplacetranspose(ref t2, 0, n-1, 0, n-1, ref work);
-                        result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, 0, ref t2, n, ref vt, ncvt);
-                        blas.matrixmatrixmultiply(a, 0, m-1, 0, n-1, false, t2, 0, n-1, 0, n-1, true, 1.0, ref u, 0, m-1, 0, n-1, 0.0, ref work);
-                    }
-                    return result;
+                    sparseset(s1, i, j, val);
                 }
             }
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
+        copied to S1 and converted on-the-fly.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in CRS format.
             
-            //
-            // N much larger than M
-            // Use bidiagonal reduction with LQ-decomposition
-            //
-            if( (double)(n)>(double)(1.6*m) )
+        NOTE: if S0 is stored as CRS, it is just copied without conversion.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytocrs(sparsematrix s0,
+            sparsematrix s1)
+        {
+            int[] temp = new int[0];
+            int nonne = 0;
+            int i = 0;
+            int k = 0;
+
+            alglib.ap.assert(s0.matrixtype==0 || s0.matrixtype==1, "SparseCopyToCRS: invalid matrix type");
+            if( s0.matrixtype==1 )
             {
-                if( vtneeded==0 )
-                {
-                    
-                    //
-                    // No right singular vectors to be computed
-                    //
-                    ortfac.rmatrixlq(ref a, m, n, ref tau);
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(j=i+1; j<=m-1; j++)
-                        {
-                            a[i,j] = 0;
-                        }
-                    }
-                    ortfac.rmatrixbd(ref a, m, m, ref tauq, ref taup);
-                    ortfac.rmatrixbdunpackq(a, m, m, tauq, ncu, ref u);
-                    ortfac.rmatrixbdunpackdiagonals(a, m, m, ref isupper, ref w, ref e);
-                    work = new double[m+1];
-                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
-                    result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref vt, 0);
-                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
-                    return result;
-                }
-                else
-                {
-                    
-                    //
-                    // Right singular vectors (may be full matrix VT) to be computed
-                    //
-                    ortfac.rmatrixlq(ref a, m, n, ref tau);
-                    ortfac.rmatrixlqunpackq(a, m, n, tau, nrvt, ref vt);
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(j=i+1; j<=m-1; j++)
-                        {
-                            a[i,j] = 0;
-                        }
-                    }
-                    ortfac.rmatrixbd(ref a, m, m, ref tauq, ref taup);
-                    ortfac.rmatrixbdunpackq(a, m, m, tauq, ncu, ref u);
-                    ortfac.rmatrixbdunpackdiagonals(a, m, m, ref isupper, ref w, ref e);
-                    work = new double[Math.Max(m, n)+1];
-                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
-                    if( additionalmemory<1 )
-                    {
-                        
-                        //
-                        // No additional memory available
-                        //
-                        ortfac.rmatrixbdmultiplybyp(a, m, m, taup, ref vt, m, n, false, true);
-                        result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref vt, n);
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Large VT. Transforming intermediate matrix T2
-                        //
-                        ortfac.rmatrixbdunpackpt(a, m, m, taup, m, ref t2);
-                        result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref t2, m);
-                        blas.copymatrix(vt, 0, m-1, 0, n-1, ref a, 0, m-1, 0, n-1);
-                        blas.matrixmatrixmultiply(t2, 0, m-1, 0, m-1, false, a, 0, m-1, 0, n-1, false, 1.0, ref vt, 0, m-1, 0, n-1, 0.0, ref work);
-                    }
-                    blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
-                    return result;
-                }
-            }
-            
-            //
-            // M<=N
-            // We can use inplace transposition of U to get rid of columnwise operations
-            //
-            if( m<=n )
-            {
-                ortfac.rmatrixbd(ref a, m, n, ref tauq, ref taup);
-                ortfac.rmatrixbdunpackq(a, m, n, tauq, ncu, ref u);
-                ortfac.rmatrixbdunpackpt(a, m, n, taup, nrvt, ref vt);
-                ortfac.rmatrixbdunpackdiagonals(a, m, n, ref isupper, ref w, ref e);
-                work = new double[m+1];
-                blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
-                result = bdsvd.rmatrixbdsvd(ref w, e, minmn, isupper, false, ref a, 0, ref u, nru, ref vt, ncvt);
-                blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
-                return result;
-            }
-            
-            //
-            // Simple bidiagonal reduction
-            //
-            ortfac.rmatrixbd(ref a, m, n, ref tauq, ref taup);
-            ortfac.rmatrixbdunpackq(a, m, n, tauq, ncu, ref u);
-            ortfac.rmatrixbdunpackpt(a, m, n, taup, nrvt, ref vt);
-            ortfac.rmatrixbdunpackdiagonals(a, m, n, ref isupper, ref w, ref e);
-            if( additionalmemory<2 | uneeded==0 )
-            {
-                
-                //
-                // We cant use additional memory or there is no need in such operations
-                //
-                result = bdsvd.rmatrixbdsvd(ref w, e, minmn, isupper, false, ref u, nru, ref a, 0, ref vt, ncvt);
+                sparsecopy(s0, s1);
             }
             else
             {
                 
                 //
-                // We can use additional memory
+                // Done like ConvertToCRS function
                 //
-                t2 = new double[minmn-1+1, m-1+1];
-                blas.copyandtranspose(u, 0, m-1, 0, minmn-1, ref t2, 0, minmn-1, 0, m-1);
-                result = bdsvd.rmatrixbdsvd(ref w, e, minmn, isupper, false, ref u, 0, ref t2, m, ref vt, ncvt);
-                blas.copyandtranspose(t2, 0, minmn-1, 0, m-1, ref u, 0, m-1, 0, minmn-1);
+                s1.matrixtype = 1;
+                s1.m = s0.m;
+                s1.n = s0.n;
+                s1.nfree = s0.nfree;
+                nonne = 0;
+                k = alglib.ap.len(s0.vals);
+                s1.ridx = new int[s1.m+1];
+                for(i=0; i<=s1.m; i++)
+                {
+                    s1.ridx[i] = 0;
+                }
+                temp = new int[s1.m];
+                for(i=0; i<=s1.m-1; i++)
+                {
+                    temp[i] = 0;
+                }
+                
+                //
+                // Number of elements per row
+                //
+                for(i=0; i<=k-1; i++)
+                {
+                    if( s0.idx[2*i]>=0 )
+                    {
+                        s1.ridx[s0.idx[2*i]+1] = s1.ridx[s0.idx[2*i]+1]+1;
+                        nonne = nonne+1;
+                    }
+                }
+                
+                //
+                // Fill RIdx (offsets of rows)
+                //
+                for(i=0; i<=s1.m-1; i++)
+                {
+                    s1.ridx[i+1] = s1.ridx[i+1]+s1.ridx[i];
+                }
+                
+                //
+                // Allocate memory
+                //
+                s1.vals = new double[nonne];
+                s1.idx = new int[nonne];
+                for(i=0; i<=k-1; i++)
+                {
+                    if( s0.idx[2*i]>=0 )
+                    {
+                        s1.vals[s1.ridx[s0.idx[2*i]]+temp[s0.idx[2*i]]] = s0.vals[i];
+                        s1.idx[s1.ridx[s0.idx[2*i]]+temp[s0.idx[2*i]]] = s0.idx[2*i+1];
+                        temp[s0.idx[2*i]] = temp[s0.idx[2*i]]+1;
+                    }
+                }
+                
+                //
+                // Set NInitialized
+                //
+                s1.ninitialized = s1.ridx[s1.m];
+                
+                //
+                // Sorting of elements
+                //
+                for(i=0; i<=s1.m-1; i++)
+                {
+                    tsort.tagsortmiddleir(ref s1.idx, ref s1.vals, s1.ridx[i], s1.ridx[i+1]-s1.ridx[i]);
+                }
+                
+                //
+                // Initialization 'S.UIdx' and 'S.DIdx'
+                //
+                sparseinitduidx(s1);
             }
+        }
+
+
+        /*************************************************************************
+        This function returns type of the matrix storage format.
+
+        INPUT PARAMETERS:
+            S           -   sparse matrix.
+
+        RESULT:
+            sparse storage format used by matrix:
+                0   -   Hash-table
+                1   -   CRS-format
+
+        NOTE: future  versions  of  ALGLIB  may  include additional sparse storage
+              formats.
+
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetmatrixtype(sparsematrix s)
+        {
+            int result = 0;
+
+            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseGetMatrixType: invalid matrix type");
+            result = s.matrixtype;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function checks matrix storage format and returns True when matrix is
+        stored using Hash table representation.
+
+        INPUT PARAMETERS:
+            S   -   sparse matrix.
+
+        RESULT:
+            True if matrix type is Hash table
+            False if matrix type is not Hash table 
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseishash(sparsematrix s)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseIsHash: invalid matrix type");
+            result = s.matrixtype==0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function checks matrix storage format and returns True when matrix is
+        stored using CRS representation.
+
+        INPUT PARAMETERS:
+            S   -   sparse matrix.
+
+        RESULT:
+            True if matrix type is CRS
+            False if matrix type is not CRS
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseiscrs(sparsematrix s)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseIsCRS: invalid matrix type");
+            result = s.matrixtype==1;
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function frees all memory occupied by  sparse  matrix.  Sparse  matrix
+        structure becomes unusable after this call.
+
+        OUTPUT PARAMETERS
+            S   -   sparse matrix to delete
+            
+          -- ALGLIB PROJECT --
+             Copyright 24.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsefree(sparsematrix s)
+        {
+            s.matrixtype = -1;
+            s.m = 0;
+            s.n = 0;
+            s.nfree = 0;
+            s.ninitialized = 0;
+        }
+
+
+        /*************************************************************************
+        The function returns number of rows of a sparse matrix.
+
+        RESULT: number of rows of a sparse matrix.
+            
+          -- ALGLIB PROJECT --
+             Copyright 23.08.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetnrows(sparsematrix s)
+        {
+            int result = 0;
+
+            result = s.m;
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function returns number of columns of a sparse matrix.
+
+        RESULT: number of columns of a sparse matrix.
+            
+          -- ALGLIB PROJECT --
+             Copyright 23.08.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetncols(sparsematrix s)
+        {
+            int result = 0;
+
+            result = s.n;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Procedure for initialization 'S.DIdx' and 'S.UIdx'
+
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        private static void sparseinitduidx(sparsematrix s)
+        {
+            int i = 0;
+            int j = 0;
+            int lt = 0;
+            int rt = 0;
+
+            s.didx = new int[s.m];
+            s.uidx = new int[s.m];
+            for(i=0; i<=s.m-1; i++)
+            {
+                s.uidx[i] = -1;
+                s.didx[i] = -1;
+                lt = s.ridx[i];
+                rt = s.ridx[i+1];
+                for(j=lt; j<=rt-1; j++)
+                {
+                    if( i<s.idx[j] && s.uidx[i]==-1 )
+                    {
+                        s.uidx[i] = j;
+                        break;
+                    }
+                    else
+                    {
+                        if( i==s.idx[j] )
+                        {
+                            s.didx[i] = j;
+                        }
+                    }
+                }
+                if( s.uidx[i]==-1 )
+                {
+                    s.uidx[i] = s.ridx[i+1];
+                }
+                if( s.didx[i]==-1 )
+                {
+                    s.didx[i] = s.uidx[i];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is hash function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        private static int hash(int i,
+            int j,
+            int tabsize)
+        {
+            int result = 0;
+            hqrnd.hqrndstate r = new hqrnd.hqrndstate();
+
+            hqrnd.hqrndseed(i, j, r);
+            result = hqrnd.hqrnduniformi(r, tabsize);
             return result;
         }
 
@@ -26687,7 +30248,7 @@ public partial class alglib
             
         Other fields are private and should not be used by outsiders.
         *************************************************************************/
-        public class fblslincgstate
+        public class fblslincgstate : apobject
         {
             public double e1;
             public double e2;
@@ -26706,6 +30267,10 @@ public partial class alglib
             public double[] tmp2;
             public fblslincgstate()
             {
+                init();
+            }
+            public override void init()
+            {
                 x = new double[0];
                 ax = new double[0];
                 rk = new double[0];
@@ -26717,6 +30282,26 @@ public partial class alglib
                 b = new double[0];
                 rstate = new rcommstate();
                 tmp2 = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                fblslincgstate _result = new fblslincgstate();
+                _result.e1 = e1;
+                _result.e2 = e2;
+                _result.x = (double[])x.Clone();
+                _result.ax = (double[])ax.Clone();
+                _result.xax = xax;
+                _result.n = n;
+                _result.rk = (double[])rk.Clone();
+                _result.rk1 = (double[])rk1.Clone();
+                _result.xk = (double[])xk.Clone();
+                _result.xk1 = (double[])xk1.Clone();
+                _result.pk = (double[])pk.Clone();
+                _result.pk1 = (double[])pk1.Clone();
+                _result.b = (double[])b.Clone();
+                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.tmp2 = (double[])tmp2.Clone();
+                return _result;
             }
         };
 
@@ -26733,7 +30318,7 @@ public partial class alglib
         INPUT PARAMETERS:
             CHA     -   Cholesky decomposition of A
             SqrtScaleA- square root of scale factor ScaleA
-            N       -   matrix size
+            N       -   matrix size, N>=0.
             IsUpper -   storage type
             XB      -   right part
             Tmp     -   buffer; function automatically allocates it, if it is  too
@@ -26743,7 +30328,8 @@ public partial class alglib
         OUTPUT PARAMETERS:
             XB      -   solution
 
-        NOTES: no assertion or tests are done during algorithm operation
+        NOTE 1: no assertion or tests are done during algorithm operation
+        NOTE 2: N=0 will force algorithm to silently return
 
           -- ALGLIB --
              Copyright 13.10.2010 by Bochkanov Sergey
@@ -26759,7 +30345,11 @@ public partial class alglib
             double v = 0;
             int i_ = 0;
 
-            if( ap.len(tmp)<n )
+            if( n==0 )
+            {
+                return;
+            }
+            if( alglib.ap.len(tmp)<n )
             {
                 tmp = new double[n];
             }
@@ -26957,7 +30547,7 @@ public partial class alglib
             offstmp1 = offspk1+n;
             offstmp2 = offstmp1+m;
             bs = offstmp2+n;
-            if( ap.len(buf)<bs )
+            if( alglib.ap.len(buf)<bs )
             {
                 buf = new double[bs];
             }
@@ -27204,43 +30794,43 @@ public partial class alglib
         {
             int i_ = 0;
 
-            if( ap.len(state.b)<n )
+            if( alglib.ap.len(state.b)<n )
             {
                 state.b = new double[n];
             }
-            if( ap.len(state.rk)<n )
+            if( alglib.ap.len(state.rk)<n )
             {
                 state.rk = new double[n];
             }
-            if( ap.len(state.rk1)<n )
+            if( alglib.ap.len(state.rk1)<n )
             {
                 state.rk1 = new double[n];
             }
-            if( ap.len(state.xk)<n )
+            if( alglib.ap.len(state.xk)<n )
             {
                 state.xk = new double[n];
             }
-            if( ap.len(state.xk1)<n )
+            if( alglib.ap.len(state.xk1)<n )
             {
                 state.xk1 = new double[n];
             }
-            if( ap.len(state.pk)<n )
+            if( alglib.ap.len(state.pk)<n )
             {
                 state.pk = new double[n];
             }
-            if( ap.len(state.pk1)<n )
+            if( alglib.ap.len(state.pk1)<n )
             {
                 state.pk1 = new double[n];
             }
-            if( ap.len(state.tmp2)<n )
+            if( alglib.ap.len(state.tmp2)<n )
             {
                 state.tmp2 = new double[n];
             }
-            if( ap.len(state.x)<n )
+            if( alglib.ap.len(state.x)<n )
             {
                 state.x = new double[n];
             }
-            if( ap.len(state.ax)<n )
+            if( alglib.ap.len(state.ax)<n )
             {
                 state.ax = new double[n];
             }
@@ -27558,6 +31148,546 @@ public partial class alglib
         }
 
 
+        /*************************************************************************
+        Fast  least  squares  solver,  solves  well  conditioned  system   without
+        performing  any  checks  for  degeneracy,  and using user-provided buffers
+        (which are automatically reallocated if too small).
+
+        This  function  is  intended  for solution of moderately sized systems. It
+        uses factorization algorithms based on Level 2 BLAS  operations,  thus  it
+        won't work efficiently on large scale systems.
+
+        INPUT PARAMETERS:
+            A       -   array[M,N], system matrix.
+                        Contents of A is destroyed during solution.
+            B       -   array[M], right part
+            M       -   number of equations
+            N       -   number of variables, N<=M
+            Tmp0, Tmp1, Tmp2-
+                        buffers; function automatically allocates them, if they are
+                        too  small. They can  be  reused  if  function  is   called 
+                        several times.
+                        
+        OUTPUT PARAMETERS:
+            B       -   solution (first N components, next M-N are zero)
+
+          -- ALGLIB --
+             Copyright 20.01.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void fblssolvels(ref double[,] a,
+            ref double[] b,
+            int m,
+            int n,
+            ref double[] tmp0,
+            ref double[] tmp1,
+            ref double[] tmp2)
+        {
+            int i = 0;
+            int k = 0;
+            double v = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(n>0, "FBLSSolveLS: N<=0");
+            alglib.ap.assert(m>=n, "FBLSSolveLS: M<N");
+            alglib.ap.assert(alglib.ap.rows(a)>=m, "FBLSSolveLS: Rows(A)<M");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "FBLSSolveLS: Cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=m, "FBLSSolveLS: Length(B)<M");
+            
+            //
+            // Allocate temporaries
+            //
+            apserv.rvectorsetlengthatleast(ref tmp0, Math.Max(m, n)+1);
+            apserv.rvectorsetlengthatleast(ref tmp1, Math.Max(m, n)+1);
+            apserv.rvectorsetlengthatleast(ref tmp2, Math.Min(m, n));
+            
+            //
+            // Call basecase QR
+            //
+            ortfac.rmatrixqrbasecase(ref a, m, n, ref tmp0, ref tmp1, ref tmp2);
+            
+            //
+            // Multiply B by Q'
+            //
+            for(k=0; k<=n-1; k++)
+            {
+                for(i=0; i<=k-1; i++)
+                {
+                    tmp0[i] = 0;
+                }
+                for(i_=k; i_<=m-1;i_++)
+                {
+                    tmp0[i_] = a[i_,k];
+                }
+                tmp0[k] = 1;
+                v = 0.0;
+                for(i_=k; i_<=m-1;i_++)
+                {
+                    v += tmp0[i_]*b[i_];
+                }
+                v = v*tmp2[k];
+                for(i_=k; i_<=m-1;i_++)
+                {
+                    b[i_] = b[i_] - v*tmp0[i_];
+                }
+            }
+            
+            //
+            // Solve triangular system
+            //
+            b[n-1] = b[n-1]/a[n-1,n-1];
+            for(i=n-2; i>=0; i--)
+            {
+                v = 0.0;
+                for(i_=i+1; i_<=n-1;i_++)
+                {
+                    v += a[i,i_]*b[i_];
+                }
+                b[i] = (b[i]-v)/a[i,i];
+            }
+            for(i=n; i<=m-1; i++)
+            {
+                b[i] = 0.0;
+            }
+        }
+
+
+    }
+    public class normestimator
+    {
+        /*************************************************************************
+        This object stores state of the iterative norm estimation algorithm.
+
+        You should use ALGLIB functions to work with this object.
+        *************************************************************************/
+        public class normestimatorstate : apobject
+        {
+            public int n;
+            public int m;
+            public int nstart;
+            public int nits;
+            public int seedval;
+            public double[] x0;
+            public double[] x1;
+            public double[] t;
+            public double[] xbest;
+            public hqrnd.hqrndstate r;
+            public double[] x;
+            public double[] mv;
+            public double[] mtv;
+            public bool needmv;
+            public bool needmtv;
+            public double repnorm;
+            public rcommstate rstate;
+            public normestimatorstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                x0 = new double[0];
+                x1 = new double[0];
+                t = new double[0];
+                xbest = new double[0];
+                r = new hqrnd.hqrndstate();
+                x = new double[0];
+                mv = new double[0];
+                mtv = new double[0];
+                rstate = new rcommstate();
+            }
+            public override alglib.apobject make_copy()
+            {
+                normestimatorstate _result = new normestimatorstate();
+                _result.n = n;
+                _result.m = m;
+                _result.nstart = nstart;
+                _result.nits = nits;
+                _result.seedval = seedval;
+                _result.x0 = (double[])x0.Clone();
+                _result.x1 = (double[])x1.Clone();
+                _result.t = (double[])t.Clone();
+                _result.xbest = (double[])xbest.Clone();
+                _result.r = (hqrnd.hqrndstate)r.make_copy();
+                _result.x = (double[])x.Clone();
+                _result.mv = (double[])mv.Clone();
+                _result.mtv = (double[])mtv.Clone();
+                _result.needmv = needmv;
+                _result.needmtv = needmtv;
+                _result.repnorm = repnorm;
+                _result.rstate = (rcommstate)rstate.make_copy();
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        This procedure initializes matrix norm estimator.
+
+        USAGE:
+        1. User initializes algorithm state with NormEstimatorCreate() call
+        2. User calls NormEstimatorEstimateSparse() (or NormEstimatorIteration())
+        3. User calls NormEstimatorResults() to get solution.
+           
+        INPUT PARAMETERS:
+            M       -   number of rows in the matrix being estimated, M>0
+            N       -   number of columns in the matrix being estimated, N>0
+            NStart  -   number of random starting vectors
+                        recommended value - at least 5.
+            NIts    -   number of iterations to do with best starting vector
+                        recommended value - at least 5.
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+            
+        NOTE: this algorithm is effectively deterministic, i.e. it always  returns
+        same result when repeatedly called for the same matrix. In fact, algorithm
+        uses randomized starting vectors, but internal  random  numbers  generator
+        always generates same sequence of the random values (it is a  feature, not
+        bug).
+
+        Algorithm can be made non-deterministic with NormEstimatorSetSeed(0) call.
+
+          -- ALGLIB --
+             Copyright 06.12.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void normestimatorcreate(int m,
+            int n,
+            int nstart,
+            int nits,
+            normestimatorstate state)
+        {
+            alglib.ap.assert(m>0, "NormEstimatorCreate: M<=0");
+            alglib.ap.assert(n>0, "NormEstimatorCreate: N<=0");
+            alglib.ap.assert(nstart>0, "NormEstimatorCreate: NStart<=0");
+            alglib.ap.assert(nits>0, "NormEstimatorCreate: NIts<=0");
+            state.m = m;
+            state.n = n;
+            state.nstart = nstart;
+            state.nits = nits;
+            state.seedval = 11;
+            hqrnd.hqrndrandomize(state.r);
+            state.x0 = new double[state.n];
+            state.t = new double[state.m];
+            state.x1 = new double[state.n];
+            state.xbest = new double[state.n];
+            state.x = new double[Math.Max(state.n, state.m)];
+            state.mv = new double[state.m];
+            state.mtv = new double[state.n];
+            state.rstate.ia = new int[3+1];
+            state.rstate.ra = new double[2+1];
+            state.rstate.stage = -1;
+        }
+
+
+        /*************************************************************************
+        This function changes seed value used by algorithm. In some cases we  need
+        deterministic processing, i.e. subsequent calls must return equal results,
+        in other cases we need non-deterministic algorithm which returns different
+        results for the same matrix on every pass.
+
+        Setting zero seed will lead to non-deterministic algorithm, while non-zero 
+        value will make our algorithm deterministic.
+
+        INPUT PARAMETERS:
+            State       -   norm estimator state, must be initialized with a  call
+                            to NormEstimatorCreate()
+            SeedVal     -   seed value, >=0. Zero value = non-deterministic algo.
+
+          -- ALGLIB --
+             Copyright 06.12.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void normestimatorsetseed(normestimatorstate state,
+            int seedval)
+        {
+            alglib.ap.assert(seedval>=0, "NormEstimatorSetSeed: SeedVal<0");
+            state.seedval = seedval;
+        }
+
+
+        /*************************************************************************
+
+          -- ALGLIB --
+             Copyright 06.12.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool normestimatoriteration(normestimatorstate state)
+        {
+            bool result = new bool();
+            int n = 0;
+            int m = 0;
+            int i = 0;
+            int itcnt = 0;
+            double v = 0;
+            double growth = 0;
+            double bestgrowth = 0;
+            int i_ = 0;
+
+            
+            //
+            // Reverse communication preparations
+            // I know it looks ugly, but it works the same way
+            // anywhere from C++ to Python.
+            //
+            // This code initializes locals by:
+            // * random values determined during code
+            //   generation - on first subroutine call
+            // * values from previous call - on subsequent calls
+            //
+            if( state.rstate.stage>=0 )
+            {
+                n = state.rstate.ia[0];
+                m = state.rstate.ia[1];
+                i = state.rstate.ia[2];
+                itcnt = state.rstate.ia[3];
+                v = state.rstate.ra[0];
+                growth = state.rstate.ra[1];
+                bestgrowth = state.rstate.ra[2];
+            }
+            else
+            {
+                n = -983;
+                m = -989;
+                i = -834;
+                itcnt = 900;
+                v = -287;
+                growth = 364;
+                bestgrowth = 214;
+            }
+            if( state.rstate.stage==0 )
+            {
+                goto lbl_0;
+            }
+            if( state.rstate.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rstate.stage==2 )
+            {
+                goto lbl_2;
+            }
+            if( state.rstate.stage==3 )
+            {
+                goto lbl_3;
+            }
+            
+            //
+            // Routine body
+            //
+            n = state.n;
+            m = state.m;
+            if( state.seedval>0 )
+            {
+                hqrnd.hqrndseed(state.seedval, state.seedval+2, state.r);
+            }
+            bestgrowth = 0;
+            state.xbest[0] = 1;
+            for(i=1; i<=n-1; i++)
+            {
+                state.xbest[i] = 0;
+            }
+            itcnt = 0;
+        lbl_4:
+            if( itcnt>state.nstart-1 )
+            {
+                goto lbl_6;
+            }
+            do
+            {
+                v = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    state.x0[i] = hqrnd.hqrndnormal(state.r);
+                    v = v+math.sqr(state.x0[i]);
+                }
+            }
+            while( (double)(v)==(double)(0) );
+            v = 1/Math.Sqrt(v);
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x0[i_] = v*state.x0[i_];
+            }
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x[i_] = state.x0[i_];
+            }
+            state.needmv = true;
+            state.needmtv = false;
+            state.rstate.stage = 0;
+            goto lbl_rcomm;
+        lbl_0:
+            for(i_=0; i_<=m-1;i_++)
+            {
+                state.x[i_] = state.mv[i_];
+            }
+            state.needmv = false;
+            state.needmtv = true;
+            state.rstate.stage = 1;
+            goto lbl_rcomm;
+        lbl_1:
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x1[i_] = state.mtv[i_];
+            }
+            v = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = v+math.sqr(state.x1[i]);
+            }
+            growth = Math.Sqrt(Math.Sqrt(v));
+            if( (double)(growth)>(double)(bestgrowth) )
+            {
+                v = 1/Math.Sqrt(v);
+                for(i_=0; i_<=n-1;i_++)
+                {
+                    state.xbest[i_] = v*state.x1[i_];
+                }
+                bestgrowth = growth;
+            }
+            itcnt = itcnt+1;
+            goto lbl_4;
+        lbl_6:
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x0[i_] = state.xbest[i_];
+            }
+            itcnt = 0;
+        lbl_7:
+            if( itcnt>state.nits-1 )
+            {
+                goto lbl_9;
+            }
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x[i_] = state.x0[i_];
+            }
+            state.needmv = true;
+            state.needmtv = false;
+            state.rstate.stage = 2;
+            goto lbl_rcomm;
+        lbl_2:
+            for(i_=0; i_<=m-1;i_++)
+            {
+                state.x[i_] = state.mv[i_];
+            }
+            state.needmv = false;
+            state.needmtv = true;
+            state.rstate.stage = 3;
+            goto lbl_rcomm;
+        lbl_3:
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x1[i_] = state.mtv[i_];
+            }
+            v = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = v+math.sqr(state.x1[i]);
+            }
+            state.repnorm = Math.Sqrt(Math.Sqrt(v));
+            if( (double)(v)!=(double)(0) )
+            {
+                v = 1/Math.Sqrt(v);
+                for(i_=0; i_<=n-1;i_++)
+                {
+                    state.x0[i_] = v*state.x1[i_];
+                }
+            }
+            itcnt = itcnt+1;
+            goto lbl_7;
+        lbl_9:
+            result = false;
+            return result;
+            
+            //
+            // Saving state
+            //
+        lbl_rcomm:
+            result = true;
+            state.rstate.ia[0] = n;
+            state.rstate.ia[1] = m;
+            state.rstate.ia[2] = i;
+            state.rstate.ia[3] = itcnt;
+            state.rstate.ra[0] = v;
+            state.rstate.ra[1] = growth;
+            state.rstate.ra[2] = bestgrowth;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function estimates norm of the sparse M*N matrix A.
+
+        INPUT PARAMETERS:
+            State       -   norm estimator state, must be initialized with a  call
+                            to NormEstimatorCreate()
+            A           -   sparse M*N matrix, must be converted to CRS format
+                            prior to calling this function.
+
+        After this function  is  over  you can call NormEstimatorResults() to get 
+        estimate of the norm(A).
+
+          -- ALGLIB --
+             Copyright 06.12.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void normestimatorestimatesparse(normestimatorstate state,
+            sparse.sparsematrix a)
+        {
+            normestimatorrestart(state);
+            while( normestimatoriteration(state) )
+            {
+                if( state.needmv )
+                {
+                    sparse.sparsemv(a, state.x, ref state.mv);
+                    continue;
+                }
+                if( state.needmtv )
+                {
+                    sparse.sparsemtv(a, state.x, ref state.mtv);
+                    continue;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Matrix norm estimation results
+
+        INPUT PARAMETERS:
+            State   -   algorithm state
+
+        OUTPUT PARAMETERS:
+            Nrm     -   estimate of the matrix norm, Nrm>=0
+
+          -- ALGLIB --
+             Copyright 06.12.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void normestimatorresults(normestimatorstate state,
+            ref double nrm)
+        {
+            nrm = 0;
+
+            nrm = state.repnorm;
+        }
+
+
+        /*************************************************************************
+        This  function  restarts estimator and prepares it for the next estimation
+        round.
+
+        INPUT PARAMETERS:
+            State   -   algorithm state
+          -- ALGLIB --
+             Copyright 06.12.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void normestimatorrestart(normestimatorstate state)
+        {
+            state.rstate.ia = new int[3+1];
+            state.rstate.ra = new double[2+1];
+            state.rstate.stage = -1;
+        }
+
+
     }
     public class matdet
     {
@@ -27589,11 +31719,11 @@ public partial class alglib
             int i = 0;
             int s = 0;
 
-            ap.assert(n>=1, "RMatrixLUDet: N<1!");
-            ap.assert(ap.len(pivots)>=n, "RMatrixLUDet: Pivots array is too short!");
-            ap.assert(ap.rows(a)>=n, "RMatrixLUDet: rows(A)<N!");
-            ap.assert(ap.cols(a)>=n, "RMatrixLUDet: cols(A)<N!");
-            ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixLUDet: A contains infinite or NaN values!");
+            alglib.ap.assert(n>=1, "RMatrixLUDet: N<1!");
+            alglib.ap.assert(alglib.ap.len(pivots)>=n, "RMatrixLUDet: Pivots array is too short!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixLUDet: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixLUDet: cols(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixLUDet: A contains infinite or NaN values!");
             result = 1;
             s = 1;
             for(i=0; i<=n-1; i++)
@@ -27633,10 +31763,10 @@ public partial class alglib
 
             a = (double[,])a.Clone();
 
-            ap.assert(n>=1, "RMatrixDet: N<1!");
-            ap.assert(ap.rows(a)>=n, "RMatrixDet: rows(A)<N!");
-            ap.assert(ap.cols(a)>=n, "RMatrixDet: cols(A)<N!");
-            ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixDet: A contains infinite or NaN values!");
+            alglib.ap.assert(n>=1, "RMatrixDet: N<1!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixDet: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixDet: cols(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n), "RMatrixDet: A contains infinite or NaN values!");
             trfac.rmatrixlu(ref a, n, n, ref pivots);
             result = rmatrixludet(a, pivots, n);
             return result;
@@ -27671,11 +31801,11 @@ public partial class alglib
             int i = 0;
             int s = 0;
 
-            ap.assert(n>=1, "CMatrixLUDet: N<1!");
-            ap.assert(ap.len(pivots)>=n, "CMatrixLUDet: Pivots array is too short!");
-            ap.assert(ap.rows(a)>=n, "CMatrixLUDet: rows(A)<N!");
-            ap.assert(ap.cols(a)>=n, "CMatrixLUDet: cols(A)<N!");
-            ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixLUDet: A contains infinite or NaN values!");
+            alglib.ap.assert(n>=1, "CMatrixLUDet: N<1!");
+            alglib.ap.assert(alglib.ap.len(pivots)>=n, "CMatrixLUDet: Pivots array is too short!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixLUDet: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixLUDet: cols(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixLUDet: A contains infinite or NaN values!");
             result = 1;
             s = 1;
             for(i=0; i<=n-1; i++)
@@ -27715,10 +31845,10 @@ public partial class alglib
 
             a = (complex[,])a.Clone();
 
-            ap.assert(n>=1, "CMatrixDet: N<1!");
-            ap.assert(ap.rows(a)>=n, "CMatrixDet: rows(A)<N!");
-            ap.assert(ap.cols(a)>=n, "CMatrixDet: cols(A)<N!");
-            ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixDet: A contains infinite or NaN values!");
+            alglib.ap.assert(n>=1, "CMatrixDet: N<1!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixDet: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixDet: cols(A)<N!");
+            alglib.ap.assert(apserv.apservisfinitecmatrix(a, n, n), "CMatrixDet: A contains infinite or NaN values!");
             trfac.cmatrixlu(ref a, n, n, ref pivots);
             result = cmatrixludet(a, pivots, n);
             return result;
@@ -27754,15 +31884,15 @@ public partial class alglib
             int i = 0;
             bool f = new bool();
 
-            ap.assert(n>=1, "SPDMatrixCholeskyDet: N<1!");
-            ap.assert(ap.rows(a)>=n, "SPDMatrixCholeskyDet: rows(A)<N!");
-            ap.assert(ap.cols(a)>=n, "SPDMatrixCholeskyDet: cols(A)<N!");
+            alglib.ap.assert(n>=1, "SPDMatrixCholeskyDet: N<1!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixCholeskyDet: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixCholeskyDet: cols(A)<N!");
             f = true;
             for(i=0; i<=n-1; i++)
             {
-                f = f & math.isfinite(a[i,i]);
+                f = f && math.isfinite(a[i,i]);
             }
-            ap.assert(f, "SPDMatrixCholeskyDet: A contains infinite or NaN values!");
+            alglib.ap.assert(f, "SPDMatrixCholeskyDet: A contains infinite or NaN values!");
             result = 1;
             for(i=0; i<=n-1; i++)
             {
@@ -27808,12 +31938,12 @@ public partial class alglib
 
             a = (double[,])a.Clone();
 
-            ap.assert(n>=1, "SPDMatrixDet: N<1!");
-            ap.assert(ap.rows(a)>=n, "SPDMatrixDet: rows(A)<N!");
-            ap.assert(ap.cols(a)>=n, "SPDMatrixDet: cols(A)<N!");
-            ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "SPDMatrixDet: A contains infinite or NaN values!");
+            alglib.ap.assert(n>=1, "SPDMatrixDet: N<1!");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixDet: rows(A)<N!");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixDet: cols(A)<N!");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "SPDMatrixDet: A contains infinite or NaN values!");
             b = trfac.spdmatrixcholesky(ref a, n, isupper);
-            ap.assert(b, "SPDMatrixDet: A is not SPD!");
+            alglib.ap.assert(b, "SPDMatrixDet: A is not SPD!");
             result = spdmatrixcholeskydet(a, n);
             return result;
         }
@@ -28052,8 +32182,8 @@ public partial class alglib
             r = new double[0,0];
             isupperr = new bool();
 
-            ap.assert(n>0, "SMatrixGEVDReduce: N<=0!");
-            ap.assert((problemtype==1 | problemtype==2) | problemtype==3, "SMatrixGEVDReduce: incorrect ProblemType!");
+            alglib.ap.assert(n>0, "SMatrixGEVDReduce: N<=0!");
+            alglib.ap.assert((problemtype==1 || problemtype==2) || problemtype==3, "SMatrixGEVDReduce: incorrect ProblemType!");
             result = true;
             
             //
@@ -28191,7 +32321,7 @@ public partial class alglib
             //     C = U * A * U'
             //     B = U'* U
             //
-            if( problemtype==2 | problemtype==3 )
+            if( problemtype==2 || problemtype==3 )
             {
                 
                 //
@@ -28383,8 +32513,8 @@ public partial class alglib
             double vt = 0;
             int i_ = 0;
 
-            ap.assert(updrow>=0 & updrow<n, "RMatrixInvUpdateSimple: incorrect UpdRow!");
-            ap.assert(updcolumn>=0 & updcolumn<n, "RMatrixInvUpdateSimple: incorrect UpdColumn!");
+            alglib.ap.assert(updrow>=0 && updrow<n, "RMatrixInvUpdateSimple: incorrect UpdRow!");
+            alglib.ap.assert(updcolumn>=0 && updcolumn<n, "RMatrixInvUpdateSimple: incorrect UpdColumn!");
             t1 = new double[n-1+1];
             t2 = new double[n-1+1];
             
