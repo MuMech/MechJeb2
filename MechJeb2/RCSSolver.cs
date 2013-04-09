@@ -194,7 +194,10 @@ public class RCSSolverThread
         // Use a copy of this list in case the caller wants to modify theirs
         // later.
         var newThrusters = new List<RCSSolver.Thruster>();
-        newThrusters.InsertRange(0, thrusters);
+        foreach (var t in thrusters)
+        {
+            newThrusters.Add(t);
+        }
 
         tasks.Enqueue(new KeyValuePair<List<RCSSolver.Thruster>, Vector3>(thrusters, direction));
 
