@@ -345,6 +345,32 @@ namespace MuMech
             return dV;
         }
 
+        public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, CelestialBody targetBody, double finalPeR, out double burnUT)
+        {
+            Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
+            Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
+            double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
+            Vector3d collisionPosition = target.SwappedAbsolutePositionAtUT(collisionUT);
+            Vector3d collisionRelVel = collisionOrbit.SwappedOrbitalVelocityAtUT(collisionUT) - target.SwappedOrbitalVelocityAtUT(collisionUT);
+
+            double soiEnterUT = collisionUT - targetBody.sphereOfInfluence / collisionRelVel.magnitude;
+            Vector3d soiEnterRelVel = collisionOrbit.SwappedOrbitalVelocityAtUT(soiEnterUT) - target.SwappedOrbitalVelocityAtUT(soiEnterUT);
+
+            double E = 0.5 * soiEnterRelVel.sqrMagnitude - targetBody.gravParameter / targetBody.sphereOfInfluence; //total orbital energy on SoI enter
+            double finalPeSpeed = Math.Sqrt(2 * (E + targetBody.gravParameter / finalPeR)); //conservation of energy gives the orbital speed at finalPeR.
+            double desiredImpactParameter = finalPeR * finalPeSpeed / soiEnterRelVel.magnitude; //conservation of angular momentum gives the required impact parameter
+
+            Vector3d displacementDir = Vector3d.Cross(collisionRelVel, o.SwappedOrbitNormal()).normalized;
+            Vector3d interceptTarget = collisionPosition + desiredImpactParameter * displacementDir;
+            
+            Vector3d velAfterBurn;
+            Vector3d arrivalVel;
+            LambertSolver.Solve(o.SwappedRelativePositionAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionUT - burnUT, o.referenceBody, true, out velAfterBurn, out arrivalVel);
+
+            Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
+            return deltaV;
+        }
+        
         //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another. 
         //It's assumed that the initial orbit around the first planet is circular, and that this orbit
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
@@ -372,10 +398,6 @@ namespace MuMech
                 idealBurnUT = UT;
                 if (target.semiMajorAxis < planetOrbit.semiMajorAxis) idealDeltaV = DeltaVToChangePeriapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
                 else idealDeltaV = DeltaVToChangeApoapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
-
-                Debug.Log("UT = " + UT);
-                Debug.Log("idealBurnUT = " + idealBurnUT);
-                Debug.Log("idealDeltaV = " + idealDeltaV);
             }
 
             //Compute the actual transfer orbit this ideal burn would lead to.
@@ -390,8 +412,6 @@ namespace MuMech
             //just add in (1/2)(sun gravity)*(time to exit soi)^2 ? But how to compute time to exit soi? Or maybe once we
             //have the ejection orbit we should just move the ejection burn back by the time to exit the soi?
             Vector3d soiExitVelocity = idealDeltaV;
-
-            Debug.Log("planetOrbit.GetVel() = " + planetOrbit.GetVel());
 
             //project the desired exit direction into the current orbit plane to get the feasible exit direction
             Vector3d inPlaneSoiExitDirection = Vector3d.Exclude(o.SwappedOrbitNormal(), soiExitVelocity).normalized;
@@ -440,18 +460,8 @@ namespace MuMech
             CelestialBody moon = o.referenceBody;
             CelestialBody primary = moon.referenceBody;
 
-            Debug.Log("targetPrimaryRadius = " + targetPrimaryRadius);
-
             //construct an orbit at the target radius around the primary, in the same plane as the moon. This is a fake target
-            //orbit for DeltaVAndtimeForInterplanetaryTransferEjection to aim for.
-            //Vector3d primaryOrbitPosition = primary.position + targetPrimaryRadius * (moon.position - primary.position).normalized;
-            //Vector3d primaryOrbitVelocity = OrbitalManeuverCalculator.CircularOrbitSpeed(primary, targetPrimaryRadius) * moon.orbit.GetVel().normalized;
-            //Orbit primaryOrbit = MuUtils.OrbitFromStateVectors(primaryOrbitPosition, primaryOrbitVelocity, o.referenceBody, 0);
-
             Orbit primaryOrbit = new Orbit(moon.orbit.inclination, moon.orbit.eccentricity, targetPrimaryRadius, moon.orbit.LAN, moon.orbit.argumentOfPeriapsis, moon.orbit.meanAnomalyAtEpoch, moon.orbit.epoch, primary);
-
-            Debug.Log("primaryOrbit.eccentricity = " + primaryOrbit.eccentricity);
-            Debug.Log("primaryOrbit.ApA = " + primaryOrbit.ApA);
 
             return DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, primaryOrbit, false, out burnUT);
         }

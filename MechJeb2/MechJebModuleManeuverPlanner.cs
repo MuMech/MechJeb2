@@ -36,6 +36,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
         [Persistent(pass = (int)Pass.Global)]
+        public EditableDoubleMult courseCorrectFinalPeA = new EditableDoubleMult(200000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult moonReturnAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
@@ -196,6 +198,7 @@ namespace MuMech
                     break;
 
                 case Operation.COURSE_CORRECTION:
+                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Desired final periapsis", courseCorrectFinalPeA, "km");
                     GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 
@@ -628,7 +631,15 @@ namespace MuMech
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
+                    CelestialBody targetBody = core.target.Target as CelestialBody;
+                    if (targetBody != null)
+                    {
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, targetBody, targetBody.Radius + courseCorrectFinalPeA, out UT);
+                    }
+                    else
+                    {
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
+                    }
                     break;
 
                 case Operation.INTERPLANETARY_TRANSFER:
