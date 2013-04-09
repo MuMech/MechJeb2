@@ -148,7 +148,13 @@ namespace MuMech
                         partForce += thrusterDir;
                     }
                 }
-                thrusters.Add(new RCSSolver.Thruster(pos, partForce, p, pm, 0));
+
+                // We should only bother calculating the throttle for this
+                // thruster if the game is going to be using it.
+                if (partForce.magnitude > 0)
+                {
+                    thrusters.Add(new RCSSolver.Thruster(pos, partForce, p, pm, 0));
+                }
             }
             else
             {
@@ -163,12 +169,19 @@ namespace MuMech
                     // Translate to the vessel's reference frame.
                     thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
 
-                    thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm, i));
+                    if (thrustDir.magnitude > 0)
+                    {
+                        thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm, i));
+                    }
                     i++;
                 }
             }
         }
 
+        // Throttles RCS thrusters to keep a vessel balanced during translation.
+        // Assumes every thrusters has a max thrust (thrusterPower) of 1 (kN),
+        // which is true of both RCS thruster parts in version 0.19.1.
+        // TODO: Fix this code for RCS thrusters with thrusterPower != 1.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
             if (s.isNeutral)
@@ -240,7 +253,7 @@ namespace MuMech
             throttles = solverThread.get_throttles();
 
             // If the throttles we got were bad (due to the vehicle staging or,
-            // more likely, the threaded calculating not having completed yet),
+            // more likely, the threaded calculation not having completed yet),
             // throttle all RCS thrusters to 0. It's better to not move at all
             // than move in the wrong direction.
             if (throttles == null || throttles.Length != thrusters.Count)
