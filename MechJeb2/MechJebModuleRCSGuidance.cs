@@ -69,12 +69,6 @@ namespace MuMech
                 core.rcs.advancedOptions = GUILayout.Toggle(core.rcs.advancedOptions, "Advanced options");
                 if (core.rcs.advancedOptions)
                 {
-                    core.rcs.multiAxisFix = GUILayout.Toggle(core.rcs.multiAxisFix, "Attempt multi-axis corrections");
-                    if (!core.rcs.multiAxisFix)
-                    {
-                        core.rcs.perThrusterControl = GUILayout.Toggle(core.rcs.perThrusterControl, "Per-thruster control (broken)");
-                    }
-
                     GuiUtils.SimpleTextBox("Overdrive scale", core.rcs.overdriveScale);
                     GuiUtils.SimpleTextBox("Torque factor", core.rcs.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", core.rcs.tuningParamFactorTranslate);

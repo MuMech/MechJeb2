@@ -19,10 +19,10 @@ namespace MuMech
         // Advanced options
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool advancedOptions = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool multiAxisFix = true;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool perThrusterControl = false;
+
+        // This is left in just as an illustration of how the code would likely
+        // change if per-thruster throttles were possible.
+        private readonly bool perThrusterControl = false;
 
         // Advanced: overdrive scale. While 'overdrive' will range from 0..1,
         // we should reduce it slightly before using it to control the 'waste
@@ -125,7 +125,7 @@ namespace MuMech
             // Translate to the vessel's reference frame.
             pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
 
-            if (multiAxisFix)
+            if (!perThrusterControl)
             {
                 // Create a single RCSSolver.Thruster for this part. This
                 // requires some assumptions about how the game's RCS code will
@@ -175,20 +175,6 @@ namespace MuMech
             {
                 ResetThrusters();
                 return;
-            }
-
-            if (!multiAxisFix)
-            {
-                // We can only set the throttle on a per-part basis, not a per-
-                // thruster one. This means we'll run into problems if a part
-                // wants to fire multiple thrusters, which is quite likely if
-                // the user is translating on multiple axes.
-                int axesUsed = (s.X == 0 ? 0 : 1) + (s.Y == 0 ? 0 : 1) + (s.Z == 0 ? 0 : 1);
-                if (axesUsed > 1)
-                {
-                    status += "disabled (translating on multiple axes)";
-                    return;
-                }
             }
             
             // Note that FlightCtrlState doesn't use the same axes as the
@@ -286,7 +272,7 @@ namespace MuMech
             for (int i = 0; i < thrusters.Count; i++)
             {
                 ModuleRCS pm = thrusters[i].partModule;
-                if (perThrusterControl && !multiAxisFix)
+                if (perThrusterControl)
                 {
                     // Throttle the individual thrusters and set the part-wide
                     // throttle to 1. This would be the ideal behavior, but the
@@ -334,7 +320,7 @@ namespace MuMech
                     for (int i = 0; i < pm.thrustForces.Count; i++)
                     {
                         if (i != 0) thrusterStates += ",";
-                        thrusterStates += pm.thrustForces[i].ToString("F0");
+                        thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
                     }
                     thrusterStates += ")";
                 }
