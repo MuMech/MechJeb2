@@ -31,6 +31,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            core.rcs.ClearTargetVelocity();
             core.rcs.users.Remove(this);
             core.attitude.users.Remove(this);
         }
@@ -40,7 +41,6 @@ namespace MuMech
             if (!core.target.NormalTargetExists)
             {
                 users.Clear();
-                core.rcs.ClearTargetVelocity();
                 return;
             }
 
@@ -114,15 +114,11 @@ namespace MuMech
                     {
                         // close enough, turn it off and let the magnetic dock work
                         users.Clear();
+                        return;
                     }
                 }
 
                 core.rcs.SetTargetWorldVelocity(targetVel + lateralVelocityNeeded + zVelocityNeeded * zAxis);
-            }
-
-            if (!enabled)
-            {
-                core.rcs.ClearTargetVelocity();
             }
         }
     }
