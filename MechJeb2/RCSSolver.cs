@@ -214,26 +214,23 @@ public class RCSSolverThread
 
     private void run()
     {
-        while (workEvent.WaitOne())
+        // Each iteration of this loop will consume all items in 'tasks' and
+        // work on the newest one.
+        while (workEvent.WaitOne() && !stopRunning)
         {
-            if (stopRunning) return;
+            // It's possible that we were signalled but that our task was
+            // consumed on the previous iteration of this loop (since the
+            // producer adds the task and -then- signals the event).
+            if (tasks.Count == 0) continue;
 
             DateTime start = DateTime.Now;
 
-            // These are guaranteed to be set in the lock(tasks) section below.
-            List<RCSSolver.Thruster> thrusters = null;
-            Vector3 direction = Vector3.zero;
+            // Ignore all but the latest task.
+            while (tasks.Count > 1) tasks.Dequeue();
 
-            // Consume the entire tasks queue and work on the newest entry.
-            lock (tasks)
-            {
-                while (tasks.Count > 0)
-                {
-                    var pair = (KeyValuePair<List<RCSSolver.Thruster>, Vector3>)tasks.Dequeue();
-                    thrusters = pair.Key;
-                    direction = pair.Value;
-                }
-            }
+            var pair = (KeyValuePair<List<RCSSolver.Thruster>, Vector3>)tasks.Dequeue();
+            var thrusters = pair.Key;
+            var direction = pair.Value;
 
             try
             {
