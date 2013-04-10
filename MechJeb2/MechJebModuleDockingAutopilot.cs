@@ -31,7 +31,6 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            core.rcs.ClearTargetVelocity();
             core.rcs.users.Remove(this);
             core.attitude.users.Remove(this);
         }
