@@ -106,6 +106,8 @@ namespace MuMech
 
             core.staging.AutostageInfoItem();
 
+            autopilot.autoWarpToApoapsis = GUILayout.Toggle(autopilot.autoWarpToApoapsis, "Auto-warp toward apoapsis");
+
             if (autopilot != null && !vessel.LiftedOff())
             {
                 if (core.target.NormalTargetExists && vessel.Landed)
