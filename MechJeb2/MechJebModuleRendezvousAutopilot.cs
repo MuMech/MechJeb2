@@ -40,7 +40,7 @@ namespace MuMech
             {
                 //finished
                 users.Clear();
-                core.thrust.targetThrottle = 0;
+                core.thrust.ThrustOff();
                 status = "Successful rendezvous";
             }
             else if (core.target.Distance < 100)

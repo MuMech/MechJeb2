@@ -106,6 +106,8 @@ namespace MuMech
 
             core.staging.AutostageInfoItem();
 
+            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+
             if (autopilot != null && !vessel.LiftedOff())
             {
                 if (core.target.NormalTargetExists && vessel.Landed)

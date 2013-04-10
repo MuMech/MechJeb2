@@ -119,13 +119,13 @@ namespace MuMech
 
             if (core.target.Target == null && (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION || reference == AttitudeReference.RELATIVE_VELOCITY))
             {
-                attitudeDeactivate(null);
+                attitudeDeactivate();
                 return rotRef;
             }
 
             if ((reference == AttitudeReference.MANEUVER_NODE) && (vessel.patchedConicSolver.maneuverNodes.Count == 0))
             {
-                attitudeDeactivate(null);
+                attitudeDeactivate();
                 return rotRef;
             }
 
@@ -229,9 +229,9 @@ namespace MuMech
             return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller);
         }
 
-        public bool attitudeDeactivate(ComputerModule controller)
+        public bool attitudeDeactivate()
         {
-            users.Remove(controller);
+            users.Clear();
             attitudeChanged = true;
 
             return true;

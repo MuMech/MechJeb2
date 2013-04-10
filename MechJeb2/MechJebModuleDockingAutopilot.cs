@@ -32,7 +32,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.rcs.users.Remove(this);
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
         }
 
         public override void Drive(FlightCtrlState s)
@@ -41,11 +41,6 @@ namespace MuMech
             {
                 users.Clear();
                 return;
-            }
-
-            if (!vessel.ActionGroups[KSPActionGroup.RCS])
-            {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
             }
 
             core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
@@ -113,6 +108,7 @@ namespace MuMech
                     {
                         // close enough, turn it off and let the magnetic dock work
                         users.Clear();
+                        return;
                     }
                 }
 

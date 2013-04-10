@@ -429,6 +429,21 @@ namespace MuMech
             return Math.Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period)); //period after which the phase angle repeats
         }
 
+        //Computes the phase angle between two orbiting objects. 
+        //This only makes sence if a.referenceBody == b.referenceBody.
+        public static double PhaseAngle(this Orbit a, Orbit b, double UT)
+        {
+            Vector3d normalA = a.SwappedOrbitNormal();
+            Vector3d posA = a.SwappedRelativePositionAtUT(UT);
+            Vector3d projectedB = Vector3d.Exclude(normalA, b.SwappedRelativePositionAtUT(UT));
+            double angle = Vector3d.Angle(posA, projectedB);
+            if (Vector3d.Dot(Vector3d.Cross(normalA, posA), projectedB) < 0)
+            {
+                angle = 360 - angle;
+            }
+            return angle;
+        }
+
         //Computes the angle between two orbital planes. This will be a number between 0 and 180
         //Note that in the convention used two objects orbiting in the same plane but in
         //opposite directions have a relative inclination of 180 degrees.

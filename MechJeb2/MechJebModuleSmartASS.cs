@@ -186,17 +186,11 @@ namespace MuMech
 
         public void Engage()
         {
-            if (target == Target.OFF)
-            {
-                core.attitude.users.Remove(this);
-            }
-            else
-            {
-                core.attitude.users.Add(this);
-            }
-
             switch (target)
             {
+                case Target.OFF:
+                    core.attitude.attitudeDeactivate();
+                    break;
                 case Target.KILLROT:
                     core.attitude.attitudeKILLROT = true;
                     core.attitude.attitudeTo(Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward), AttitudeReference.INERTIAL, this);

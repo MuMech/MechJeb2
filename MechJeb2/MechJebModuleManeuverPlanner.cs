@@ -12,12 +12,12 @@ namespace MuMech
 
         enum Operation
         {
-            CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER,
+            CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER, MOON_RETURN,
             INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL
         };
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
         string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap",
-                  "change inclination", "match planes with target", "Hohmann transfer to target", 
+                  "change inclination", "match planes with target", "Hohmann transfer to target", "return from a moon",
                   "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target"};
 
         enum TimeReference
@@ -35,6 +35,10 @@ namespace MuMech
         public EditableDoubleMult newPeA = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDoubleMult courseCorrectFinalPeA = new EditableDoubleMult(200000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDoubleMult moonReturnAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
         [Persistent(pass = (int)Pass.Global)]
@@ -74,6 +78,11 @@ namespace MuMech
             DoOperationParametersGUI();
 
             double UT = DoChooseTimeGUI();
+
+            if (core.node != null)
+            {
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+            }
 
             if (GUILayout.Button("Go"))
             {
@@ -184,11 +193,17 @@ namespace MuMech
                     GUILayout.Label("Schedule the burn at the next transfer window.");
                     break;
 
+                case Operation.MOON_RETURN:
+                    GuiUtils.SimpleTextBox("Target primary altitude:", moonReturnAltitude, "km");
+                    GUILayout.Label("Schedule the burn at the next return window.");
+                    break;
+
                 case Operation.INTERPLANETARY_TRANSFER:
                     GUILayout.Label("Schedule the burn at the next transfer window.");
                     break;
 
                 case Operation.COURSE_CORRECTION:
+                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Desired final periapsis", courseCorrectFinalPeA, "km");
                     GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 
@@ -213,6 +228,7 @@ namespace MuMech
             references[Operation.INCLINATION] = new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW };
             references[Operation.PLANE] = new TimeReference[] { TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
             references[Operation.TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.MOON_RETURN] = new TimeReference[] { TimeReference.COMPUTED };
             references[Operation.INTERPLANETARY_TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
             references[Operation.COURSE_CORRECTION] = new TimeReference[] { TimeReference.COMPUTED };
             references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
@@ -528,6 +544,18 @@ namespace MuMech
                     }
                     break;
 
+                case Operation.MOON_RETURN:
+                    if (o.referenceBody.referenceBody == null)
+                    {
+                        error = true;
+                        errorMessage = o.referenceBody.theName + " is not orbiting another body you could return to.";
+                    }
+                    else if (o.eccentricity > 0.2)
+                    {
+                        errorMessage = "Warning: Recommend starting moon returns from a near-circular orbit (eccentricity < 0.2). Planned return is starting from an orbit with eccentricity " + o.eccentricity.ToString("F2") + " and so may not be accurate.";
+                    }
+                    break;
+
                 case Operation.LAMBERT:
                     if (!core.target.NormalTargetExists)
                     {
@@ -603,12 +631,24 @@ namespace MuMech
                     dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, UT, out UT);
                     break;
 
+                case Operation.MOON_RETURN:
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, UT, o.referenceBody.referenceBody.Radius + moonReturnAltitude, out UT);
+                    break;
+
                 case Operation.COURSE_CORRECTION:
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
+                    CelestialBody targetBody = core.target.Target as CelestialBody;
+                    if (targetBody != null)
+                    {
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, targetBody, targetBody.Radius + courseCorrectFinalPeA, out UT);
+                    }
+                    else
+                    {
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
+                    }
                     break;
 
                 case Operation.INTERPLANETARY_TRANSFER:
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.Orbit, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.Orbit, true, out UT);
                     break;
 
                 case Operation.LAMBERT:

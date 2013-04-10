@@ -54,7 +54,14 @@ namespace MuMech
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
-                    bool active = core.attitude.users.RecursiveUser(module) || core.thrust.users.RecursiveUser(module) || core.rover.users.RecursiveUser(module) || core.node.users.RecursiveUser(module) || core.rcs.users.RecursiveUser(module);
+                    // This display module is considered active if it uses any of these modules.
+                    ComputerModule[] makesActive = { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
+
+                    bool active = false;
+                    foreach (var m in makesActive)
+                    {
+                        if (active |= m.users.RecursiveUser(module)) break;
+                    }
                     if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
                 }

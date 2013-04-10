@@ -204,6 +204,8 @@ namespace MuMech
         void AddNewWindow()
         {
             editedWindow = new MechJebModuleCustomInfoWindow(core);
+            if (HighLogic.LoadedSceneIsEditor) editedWindow.showInEditor = true;
+            if (HighLogic.LoadedSceneIsFlight) editedWindow.showInFlight = true;
             core.AddComputerModule(editedWindow);
             editedWindow.enabled = true;
         }
@@ -244,7 +246,7 @@ namespace MuMech
                 int editedWindowIndex = allWindows.IndexOf(editedWindow);
                 editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
                     {
-                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
+                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
                     });
                 editedWindow = allWindows[editedWindowIndex];
                 GUILayout.EndHorizontal();
@@ -343,30 +345,10 @@ namespace MuMech
 
         public void AddDefaultWindows()
         {
-            MechJebModuleCustomInfoWindow newWin = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(newWin);
-            newWin.enabled = false;
-            newWin.showInFlight = true;
-            newWin.showInEditor = true;
-            newWin.title = "Vessel Info";
-            string[] itemNames = new string[] { "Vessel mass", "Max thrust", "Max acceleration", "Stage stats (all)" };
-            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
-
-            newWin = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(newWin);
-            newWin.enabled = false;
-            newWin.showInFlight = true;
-            newWin.title = "Orbit Info";
-            itemNames = new string[] { "Altitude (ASL)", "Altitude (true)", "Vertical speed", "Apoapsis", "Periapsis", "Inclination", "Coordinates" };
-            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
-
-            newWin = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(newWin);
-            newWin.enabled = false;
-            newWin.showInFlight = true;
-            newWin.title = "Target Info";
-            itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity" };
-            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
+            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString);
         }
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
@@ -563,6 +545,8 @@ namespace MuMech
     {
         object obj;
         MemberInfo member;
+        public string rightLabel;
+        public float width;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
@@ -571,6 +555,8 @@ namespace MuMech
 
             this.obj = obj;
             this.member = member;
+            this.rightLabel = attribute.rightLabel;
+            this.width = attribute.width;
         }
 
         public override void DrawItem()
@@ -581,7 +567,7 @@ namespace MuMech
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
             if (val != null)
             {
-                GuiUtils.SimpleTextBox(name, val);
+                GuiUtils.SimpleTextBox(name, val, rightLabel, width);
             }
         }
     }
@@ -639,10 +625,11 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class EditableInfoItemAttribute : InfoItemAttribute
     {
+        public string rightLabel = "";
+        public float width = 100;
+
         public EditableInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
-
-
 
     public static class CustomWindowPresets
     {
@@ -698,13 +685,26 @@ Value:InfoItems.GetCoordinateString
                 sharingString =
 @"--- MechJeb Custom Window ---
 Name: Vessel Info
-Show in: flight
+Show in: flight editor
 Value:InfoItems.MaxAcceleration
 Value:InfoItems.CurrentAcceleration
 Value:InfoItems.MaxThrust
 Value:InfoItems.VesselMass
 Value:InfoItems.SurfaceTWR
 Value:InfoItems.CrewCapacity
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Delta-V Stats",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Delta-V Stats
+Show in: flight editor
+Value:InfoItems.StageDeltaVAtmosphereAndVac
+Value:InfoItems.TotalDeltaVAtmosphereAndVac
+General:InfoItems.AllStageStats
 -----------------------------"
             },
 
@@ -721,19 +721,6 @@ Value:FlightRecorder.gravityLosses
 Value:FlightRecorder.dragLosses
 Value:FlightRecorder.steeringLosses
 Value:FlightRecorder.phaseAngleFromMark
------------------------------"
-            },
-
-            new Preset
-            {
-                name = "Delta-V Stats",
-                sharingString =
-@"--- MechJeb Custom Window ---
-Name: Delta-V Stats
-Show in: flight editor
-Value:InfoItems.StageDeltaVAtmosphereAndVac
-Value:InfoItems.TotalDeltaVAtmosphereAndVac
-General:InfoItems.AllStageStats
 -----------------------------"
             },
 
