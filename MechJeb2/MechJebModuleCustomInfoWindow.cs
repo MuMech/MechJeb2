@@ -343,30 +343,10 @@ namespace MuMech
 
         public void AddDefaultWindows()
         {
-            MechJebModuleCustomInfoWindow newWin = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(newWin);
-            newWin.enabled = false;
-            newWin.showInFlight = true;
-            newWin.showInEditor = true;
-            newWin.title = "Vessel Info";
-            string[] itemNames = new string[] { "Vessel mass", "Max thrust", "Max acceleration", "Stage stats (all)" };
-            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
-
-            newWin = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(newWin);
-            newWin.enabled = false;
-            newWin.showInFlight = true;
-            newWin.title = "Orbit Info";
-            itemNames = new string[] { "Altitude (ASL)", "Altitude (true)", "Vertical speed", "Apoapsis", "Periapsis", "Inclination", "Coordinates" };
-            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
-
-            newWin = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(newWin);
-            newWin.enabled = false;
-            newWin.showInFlight = true;
-            newWin.title = "Target Info";
-            itemNames = new string[] { "Distance to target", "Relative velocity", "Closest approach distance", "Time to closest approach", "Rel. vel. at closest approach", "Docking guidance: position", "Docking guidance: velocity" };
-            foreach (string itemName in itemNames) newWin.items.Add(registry.Find(i => i.name == itemName));
+            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString);
         }
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
@@ -698,13 +678,26 @@ Value:InfoItems.GetCoordinateString
                 sharingString =
 @"--- MechJeb Custom Window ---
 Name: Vessel Info
-Show in: flight
+Show in: flight editor
 Value:InfoItems.MaxAcceleration
 Value:InfoItems.CurrentAcceleration
 Value:InfoItems.MaxThrust
 Value:InfoItems.VesselMass
 Value:InfoItems.SurfaceTWR
 Value:InfoItems.CrewCapacity
+-----------------------------"
+            },
+
+            new Preset
+            {
+                name = "Delta-V Stats",
+                sharingString =
+@"--- MechJeb Custom Window ---
+Name: Delta-V Stats
+Show in: flight editor
+Value:InfoItems.StageDeltaVAtmosphereAndVac
+Value:InfoItems.TotalDeltaVAtmosphereAndVac
+General:InfoItems.AllStageStats
 -----------------------------"
             },
 
@@ -721,19 +714,6 @@ Value:FlightRecorder.gravityLosses
 Value:FlightRecorder.dragLosses
 Value:FlightRecorder.steeringLosses
 Value:FlightRecorder.phaseAngleFromMark
------------------------------"
-            },
-
-            new Preset
-            {
-                name = "Delta-V Stats",
-                sharingString =
-@"--- MechJeb Custom Window ---
-Name: Delta-V Stats
-Show in: flight editor
-Value:InfoItems.StageDeltaVAtmosphereAndVac
-Value:InfoItems.TotalDeltaVAtmosphereAndVac
-General:InfoItems.AllStageStats
 -----------------------------"
             },
 
