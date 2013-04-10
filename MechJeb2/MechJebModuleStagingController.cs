@@ -54,7 +54,7 @@ namespace MuMech
         bool countingDown = false;
         double stageCountdownStart = 0;
 
-        public override void OnFixedUpdate()
+        public override void OnUpdate()
         {
             if (!vessel.isActiveVessel || !autostage) return;
 

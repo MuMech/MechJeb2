@@ -121,6 +121,13 @@ namespace MuMech
             base.OnStart(state);
         }
 
+        public void ThrustOff()
+        {
+            targetThrottle = 0;
+            vessel.ctrlState.mainThrottle = 0;
+            tmode = TMode.OFF;
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             //detect user input:
@@ -423,7 +430,7 @@ namespace MuMech
             {
                 if (trans_kill_h && (tmode == TMode.OFF))
                 {
-                    core.attitude.attitudeDeactivate(null);
+                    core.attitude.attitudeDeactivate();
                 }
                 pid.Reset();
                 tmode_changed = false;

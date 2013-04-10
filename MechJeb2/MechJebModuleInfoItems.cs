@@ -133,6 +133,91 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 
+        private MovingAverage rcsThrustAvg = new MovingAverage(10);
+
+        [ValueInfoItem("RCS thrust", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "N")]
+        public double RCSThrust()
+        {
+            rcsThrustAvg.value = RCSThrustNow();
+            return rcsThrustAvg.value * 1000; // kN to N
+        }
+
+        // Returns a value in kN.
+        private double RCSThrustNow()
+        {
+            double rcsThrust = 0;
+
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
+                    {
+                        continue;
+                    }
+
+                    foreach (float f in pm.thrustForces)
+                    {
+                        rcsThrust += f * pm.thrusterPower;
+                    }
+                }
+            }
+
+            return rcsThrust;
+        }
+
+        private MovingAverage rcsTranslationEfficiencyAvg = new MovingAverage(10);
+
+        [ValueInfoItem("RCS translation efficiency", InfoItem.Category.Misc)]
+        public string RCSTranslationEfficiency()
+        {
+            double totalThrust = RCSThrustNow();
+            double effectiveThrust = 0;
+            FlightCtrlState s = FlightInputHandler.state;
+
+            // FlightCtrlState and a vessel have different coordinate systems.
+            // See MechJebModuleRCSController for a comment explaining this.
+            Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
+            if (totalThrust == 0 || direction.magnitude == 0)
+            {
+                return "--";
+            }
+
+            direction.Normalize();
+
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
+                    {
+                        continue;
+                    }
+
+                    // Find our distance from the vessel's center of mass, in
+                    // world coordinates.
+                    Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
+
+                    // Translate to the vessel's reference frame.
+                    pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+
+                    for (int i = 0; i < pm.thrustForces.Count; i++)
+                    {
+                        float force = pm.thrustForces[i];
+                        Transform t = pm.thrusterTransforms[i];
+
+                        Vector3 thrusterDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+                        double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
+
+                        effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
+                    }
+                }
+            }
+
+            rcsTranslationEfficiencyAvg.value = effectiveThrust / totalThrust;
+            return (rcsTranslationEfficiencyAvg.value * 100).ToString("F2") + "%";
+        }
+
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {
@@ -280,7 +365,7 @@ namespace MuMech
         public string TargetTimeToClosestApproach()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
         }
 
@@ -288,7 +373,7 @@ namespace MuMech
         public string TargetClosestApproachDistance()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
@@ -296,7 +381,7 @@ namespace MuMech
         public string TargetClosestApproachRelativeVelocity()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
             double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
             return MuUtils.ToSI(relVel, -1) + "m/s";
@@ -382,7 +467,7 @@ namespace MuMech
         public string SynodicPeriod()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.Orbit));
         }
 
@@ -390,14 +475,18 @@ namespace MuMech
         public string PhaseAngle()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
-            Vector3d projectedTarget = Vector3d.Exclude(orbit.SwappedOrbitNormal(), core.target.Position - mainBody.position);
-            double angle = Vector3d.Angle(vesselState.CoM - mainBody.position, projectedTarget);
-            if (Vector3d.Dot(Vector3d.Cross(orbit.SwappedOrbitNormal(), vesselState.CoM - mainBody.position), projectedTarget) < 0)
-            {
-                angle = 360 - angle;
-            }
-            return angle.ToString("F2") + "º";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            
+            return orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("Target planet phase angle", InfoItem.Category.Target)]
+        public string TargetPlanetPhaseAngle()
+        {
+            if (!(core.target.Target is CelestialBody)) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
+
+            return mainBody.orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("Relative inclination", InfoItem.Category.Target)]

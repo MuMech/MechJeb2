@@ -27,7 +27,7 @@ namespace MuMech
         {
             mode = Mode.OFF;
             users.Clear();
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
         }
 
         protected bool _showLandingTarget = false;
@@ -75,7 +75,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             if (showLandingTarget) core.target.Unset();
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
         }
 
         public override void OnFixedUpdate()
