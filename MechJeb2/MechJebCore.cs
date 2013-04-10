@@ -109,6 +109,16 @@ namespace MuMech
             modulesToLoad.Add(module);
         }
 
+        void LoadDelayedModules()
+        {
+            if (modulesToLoad.Count > 0)
+            {
+                computerModules.AddRange(modulesToLoad);
+                modulesUpdated = true;
+                modulesToLoad.Clear();
+            }
+        }
+
         public void RemoveComputerModule(ComputerModule module)
         {
             computerModules.Remove(module);
@@ -168,12 +178,7 @@ namespace MuMech
 
         public void FixedUpdate()
         {
-            if (modulesToLoad.Count > 0)
-            {
-                computerModules.AddRange(modulesToLoad);
-                modulesUpdated = true;
-                modulesToLoad.Clear();
-            }
+            LoadDelayedModules();
 
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
 
@@ -226,7 +231,7 @@ namespace MuMech
             }
             if (HighLogic.LoadedSceneIsFlight && renderingManager != null)
             {
-                showGui = renderingManager.uiElementsToDisable[0].activeSelf;
+                if(renderingManager.uiElementsToDisable.Length >= 1) showGui = renderingManager.uiElementsToDisable[0].activeSelf;
             }
 
             if (this != vessel.GetMasterMechJeb())
@@ -371,6 +376,8 @@ namespace MuMech
                     module.OnLoad(moduleLocal, moduleType, moduleGlobal);
                 }
 
+                LoadDelayedModules();
+
                 if (generateDefaultWindows)
                 {
                     GetComputerModule<MechJebModuleCustomWindowEditor>().AddDefaultWindows();
@@ -392,6 +399,9 @@ namespace MuMech
 
             try
             {
+                //Add any to-be-loaded modules so they get saved properly
+                LoadDelayedModules();
+
                 // base.OnSave(sfsNode); //is this necessary?
 
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
