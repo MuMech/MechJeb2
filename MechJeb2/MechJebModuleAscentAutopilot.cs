@@ -46,9 +46,9 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
+            core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.thrust.targetThrottle = 0;
 
             if (placedCircularizeNode) core.node.Abort();
 
@@ -187,7 +187,7 @@ namespace MuMech
 
         void DriveCoastToApoapsis(FlightCtrlState s)
         {
-            core.thrust.targetThrottle = 0.0F;
+            core.thrust.targetThrottle = 0;
 
             double circularSpeed = OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, orbit.ApR);
             double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;

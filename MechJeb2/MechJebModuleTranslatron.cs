@@ -17,7 +17,8 @@ namespace MuMech
             THRUSTOFF,
             DECOUPLE,
             BURNUP,
-            LAND
+            LAND,
+            LANDING
         }
 
         protected AbortStage abort = AbortStage.OFF;
@@ -115,13 +116,23 @@ namespace MuMech
 
             if (GUILayout.Button((abort != AbortStage.OFF) ? "DON'T PANIC!" : "PANIC!!!", sty, GUILayout.ExpandWidth(true)))
             {
-                abort = (abort == AbortStage.OFF) ? AbortStage.THRUSTOFF : AbortStage.OFF;
-                if (abort == AbortStage.OFF)
+                if (abort != AbortStage.OFF)
                 {
-                    core.thrust.users.Remove(this);
+                    if ((abort == AbortStage.LAND) || (abort == AbortStage.LANDING))
+                    {
+                        core.GetComputerModule<MechJebModuleLandingAutopilot>().StopLanding();
+                    }
+                    else
+                    {
+                        core.thrust.ThrustOff();
+                        core.thrust.users.Remove(this);
+                        core.attitude.attitudeDeactivate();
+                    }
+                    abort = AbortStage.OFF;
                 }
                 else
                 {
+                    abort = AbortStage.THRUSTOFF;
                     core.thrust.users.Add(this);
                 }
             }
@@ -194,7 +205,13 @@ namespace MuMech
                     case AbortStage.LAND:
                         core.thrust.users.Remove(this);
                         core.GetComputerModule<MechJebModuleLandingAutopilot>().LandUntargeted(this);
-                        abort = AbortStage.OFF;
+                        abort = AbortStage.LANDING;
+                        break;
+                    case AbortStage.LANDING:
+                        if (vessel.LandedOrSplashed)
+                        {
+                            abort = AbortStage.OFF;
+                        }
                         break;
                 }
             }

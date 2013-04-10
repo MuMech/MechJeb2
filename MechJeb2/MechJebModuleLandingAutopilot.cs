@@ -100,14 +100,16 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
             predictor.users.Remove(this);
             predictor.descentSpeedPolicy = null;
-            core.thrust.targetThrottle = 0;
+            core.thrust.ThrustOff();
+            core.thrust.users.Remove(this);
             landStep = LandStep.OFF;
             status = "Off";
         }
@@ -267,7 +269,7 @@ namespace MuMech
             }
             else
             {
-                core.thrust.targetThrottle = 0.0F;
+                core.thrust.targetThrottle = 0;
             }
         }
 
@@ -371,7 +373,7 @@ namespace MuMech
             }
             else
             {
-                core.thrust.targetThrottle = 0.0F;
+                core.thrust.targetThrottle = 0;
             }
         }
 
@@ -442,7 +444,7 @@ namespace MuMech
         void DriveDeorbitBurn(FlightCtrlState s)
         {
             if (deorbitBurnTriggered && core.attitude.attitudeAngleFromTarget() < 5) core.thrust.targetThrottle = 1.0F;
-            else core.thrust.targetThrottle = 0.0F;
+            else core.thrust.targetThrottle = 0;
         }
 
         //Estimate the delta-V of the correction burn that would be required to put us on
@@ -697,8 +699,8 @@ namespace MuMech
         {
             if (vessel.LandedOrSplashed)
             {
-                core.thrust.targetThrottle = 0;
-                core.thrust.tmode = MechJebModuleThrustController.TMode.OFF;
+                core.thrust.ThrustOff();
+                core.thrust.users.Remove(this);
                 StopLanding();
                 return;
             }

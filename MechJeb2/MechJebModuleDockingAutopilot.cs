@@ -32,7 +32,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.rcs.users.Remove(this);
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
         }
 
         public override void Drive(FlightCtrlState s)

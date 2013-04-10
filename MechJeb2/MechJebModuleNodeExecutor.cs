@@ -44,10 +44,9 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
+            core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.thrust.targetThrottle = 0;
-            vessel.ctrlState.mainThrottle = 0;
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
