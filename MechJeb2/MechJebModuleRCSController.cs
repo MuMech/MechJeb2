@@ -14,6 +14,12 @@ namespace MuMech
 
         public double Kp = 0.5, Ki = 0, Kd = 0;
 
+        [ToggleInfoItem("Conserve RCS fuel", InfoItem.Category.Thrust)]
+        public bool conserveFuel = true;
+
+        [EditableInfoItem("Conserve RCS fuel threshold", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble conserveThreshold = 0.25;
+
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
         {
@@ -42,25 +48,41 @@ namespace MuMech
             Vector3d worldVelocityDelta = vesselState.velocityVesselOrbit - targetVelocity;
             worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
             Vector3d velocityDelta = Quaternion.Inverse(vessel.GetTransform().rotation) * worldVelocityDelta;
-            Vector3d rcs = new Vector3d();
 
-            foreach (Vector6.Direction dir in Enum.GetValues(typeof(Vector6.Direction)))
+            if (!conserveFuel || (velocityDelta.magnitude > conserveThreshold))
             {
-                if (vesselState.rcsThrustAvailable[dir] > 0)
+                if (!vessel.ActionGroups[KSPActionGroup.RCS])
                 {
-                    double dV = Vector3d.Dot(velocityDelta, Vector6.directions[dir]) / (vesselState.rcsThrustAvailable[dir] * TimeWarp.fixedDeltaTime / vesselState.mass);
-                    if (dV > 0)
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                }
+
+                Vector3d rcs = new Vector3d();
+
+                foreach (Vector6.Direction dir in Enum.GetValues(typeof(Vector6.Direction)))
+                {
+                    if (vesselState.rcsThrustAvailable[dir] > 0)
                     {
-                        rcs += Vector6.directions[dir] * dV;
+                        double dV = Vector3d.Dot(velocityDelta, Vector6.directions[dir]) / (vesselState.rcsThrustAvailable[dir] * TimeWarp.fixedDeltaTime / vesselState.mass);
+                        if (dV > 0)
+                        {
+                            rcs += Vector6.directions[dir] * dV;
+                        }
                     }
                 }
+
+                rcs = pid.Compute(rcs);
+
+                s.X = Mathf.Clamp((float)rcs.x, -1, 1);
+                s.Y = Mathf.Clamp((float)rcs.z, -1, 1);
+                s.Z = Mathf.Clamp((float)rcs.y, -1, 1);
             }
-
-            rcs = pid.Compute(rcs);
-
-            s.X = Mathf.Clamp((float)rcs.x, -1, 1);
-            s.Y = Mathf.Clamp((float)rcs.z, -1, 1);
-            s.Z = Mathf.Clamp((float)rcs.y, -1, 1);
+            else if (conserveFuel)
+            {
+                if (vessel.ActionGroups[KSPActionGroup.RCS])
+                {
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                }
+            }
 
             base.Drive(s);
         }

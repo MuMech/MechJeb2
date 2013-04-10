@@ -545,6 +545,8 @@ namespace MuMech
     {
         object obj;
         MemberInfo member;
+        public string rightLabel;
+        public float width;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
@@ -553,6 +555,8 @@ namespace MuMech
 
             this.obj = obj;
             this.member = member;
+            this.rightLabel = attribute.rightLabel;
+            this.width = attribute.width;
         }
 
         public override void DrawItem()
@@ -563,7 +567,7 @@ namespace MuMech
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
             if (val != null)
             {
-                GuiUtils.SimpleTextBox(name, val);
+                GuiUtils.SimpleTextBox(name, val, rightLabel, width);
             }
         }
     }
@@ -621,10 +625,11 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class EditableInfoItemAttribute : InfoItemAttribute
     {
+        public string rightLabel = "";
+        public float width = 100;
+
         public EditableInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
-
-
 
     public static class CustomWindowPresets
     {

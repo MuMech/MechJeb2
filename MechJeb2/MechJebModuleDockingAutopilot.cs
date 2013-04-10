@@ -43,11 +43,6 @@ namespace MuMech
                 return;
             }
 
-            if (!vessel.ActionGroups[KSPActionGroup.RCS])
-            {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
-            }
-
             core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             Vector3d targetVel = core.target.Orbit.GetVel();
