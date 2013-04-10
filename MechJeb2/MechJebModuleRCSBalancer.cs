@@ -66,6 +66,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            UpdateTuningParameters();
             solverThread.start();
 
             base.OnModuleEnabled();
@@ -290,8 +291,13 @@ namespace MuMech
             }
         }
 
-        public void ForceRecalculate()
+        public void UpdateTuningParameters()
         {
+            double wasteThreshold = overdrive * overdriveScale;
+            solverThread.solver.wasteThreshold = wasteThreshold;
+            solverThread.solver.factorTorque = tuningParamFactorTorque;
+            solverThread.solver.factorTranslate = tuningParamFactorTranslate;
+            solverThread.solver.factorWaste = tuningParamFactorWaste;
             recalculate = true;
         }
 

@@ -107,12 +107,7 @@ namespace MuMech
                     || oldFactorTranslate != balancer.tuningParamFactorTranslate
                     || oldFactorWaste != balancer.tuningParamFactorWaste)
                 {
-                    double wasteThreshold = balancer.overdrive * balancer.overdriveScale;
-                    balancer.solverThread.solver.wasteThreshold = wasteThreshold;
-                    balancer.solverThread.solver.factorTorque = balancer.tuningParamFactorTorque;
-                    balancer.solverThread.solver.factorTranslate = balancer.tuningParamFactorTranslate;
-                    balancer.solverThread.solver.factorWaste = balancer.tuningParamFactorWaste;
-                    balancer.ForceRecalculate();
+                    balancer.UpdateTuningParameters();
                 }
             }
 
