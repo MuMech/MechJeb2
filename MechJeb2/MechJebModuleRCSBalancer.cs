@@ -110,18 +110,13 @@ namespace MuMech
                 Vector3 partForce = Vector3.zero;
                 foreach (Transform t in pm.thrusterTransforms)
                 {
-                    // The game appears to throttle a thruster based on its
-                    // angle from the direction vector. (Each throttle is also
-                    // multiplied by the magnitude of the direction vector, but
-                    // we can ignore this, since that applies equally to all
-                    // thrusters.)
-                    Vector3 thrusterDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
-                    float thrusterThrottle = Vector3.Dot(direction, thrusterDir.normalized);
+                    // The game appears to throttle a thruster based on the dot
+                    // product of its thrust vector (normalized) and the
+                    // direction vector (not normalized!).
+                    Vector3 thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+                    float throttle = Mathf.Clamp01(Vector3.Dot(direction, thrustDir.normalized));
 
-                    if (thrusterThrottle > 0)
-                    {
-                        partForce += thrusterDir * thrusterThrottle;
-                    }
+                    partForce += thrustDir * throttle;
                 }
 
                 // We should only bother calculating the throttle for this
