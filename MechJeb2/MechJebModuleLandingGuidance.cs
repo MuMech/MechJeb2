@@ -41,6 +41,7 @@ namespace MuMech
                 }
             }
 
+            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
             bool active = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
             if (predictor.enabled != active)
             {

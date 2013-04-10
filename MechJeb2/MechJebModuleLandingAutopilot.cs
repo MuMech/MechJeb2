@@ -42,8 +42,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableDouble touchdownSpeed = 0.5;
-        [Persistent(pass = (int)Pass.Global)]
-        public bool autowarp = true;
 
         public string status = "";
 
@@ -241,7 +239,7 @@ namespace MuMech
             }
             else
             {
-                if (autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
+                if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
                 status = "Moving to low orbit plane change burn point";
             }
         }
@@ -297,7 +295,7 @@ namespace MuMech
             else status = "Moving to low deorbit burn point";
 
             //Warp toward deorbit burn if it hasn't been triggerd yet:
-            if (!deorbitBurnTriggered && autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
+            if (!deorbitBurnTriggered && core.node.autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
             if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
 
             //By default, thrust straight back at max throttle
@@ -435,7 +433,7 @@ namespace MuMech
             else
             {
                 core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, this);
-                core.warp.WarpRegularAtRate((float)(orbit.period / 10));
+                if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 10));
 
                 status = "Moving to high deorbit burn point";
             }
@@ -594,7 +592,7 @@ namespace MuMech
             }
 
             //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
-            if (warpReady) core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))));
+            if (warpReady && core.node.autowarp) core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))));
             else core.warp.MinimumWarp();
 
             status = "Coasting toward deceleration burn";
@@ -623,7 +621,7 @@ namespace MuMech
                 core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, this);
                 bool warpReady = core.attitude.attitudeAngleFromTarget() < 5;
 
-                if (warpReady) core.warp.WarpToUT(decelerationStartTime - 5);
+                if (warpReady && core.node.autowarp) core.warp.WarpToUT(decelerationStartTime - 5);
                 else if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
                 return;
             }
