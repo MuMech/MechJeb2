@@ -116,13 +116,11 @@ namespace MuMech
                     // we can ignore this, since that applies equally to all
                     // thrusters.)
                     Vector3 thrusterDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
-                    double thrusterThrottle = Vector3.Dot(direction, thrusterDir.normalized);
+                    float thrusterThrottle = Vector3.Dot(direction, thrusterDir.normalized);
 
                     if (thrusterThrottle > 0)
                     {
-                        float a = (float)thrusterThrottle;
-                        thrusterDir = Vector3.Scale(thrusterDir, new Vector3(a, a, a));
-                        partForce += thrusterDir;
+                        partForce += thrusterDir * thrusterThrottle;
                     }
                 }
 

@@ -23,6 +23,7 @@ namespace MuMech
         public MechJebModuleTargetController target;
         public MechJebModuleWarpController warp;
         public MechJebModuleRCSController rcs;
+        public MechJebModuleRCSBalancer rcsbal;
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
 
@@ -295,6 +296,7 @@ namespace MuMech
             target = GetComputerModule<MechJebModuleTargetController>();
             warp = GetComputerModule<MechJebModuleWarpController>();
             rcs = GetComputerModule<MechJebModuleRCSController>();
+            rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
         }
