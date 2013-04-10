@@ -365,7 +365,7 @@ namespace MuMech
         public string TargetTimeToClosestApproach()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
         }
 
@@ -373,7 +373,7 @@ namespace MuMech
         public string TargetClosestApproachDistance()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
@@ -381,7 +381,7 @@ namespace MuMech
         public string TargetClosestApproachRelativeVelocity()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
             double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
             return MuUtils.ToSI(relVel, -1) + "m/s";
@@ -467,7 +467,7 @@ namespace MuMech
         public string SynodicPeriod()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
             return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.Orbit));
         }
 
@@ -475,14 +475,18 @@ namespace MuMech
         public string PhaseAngle()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
-            Vector3d projectedTarget = Vector3d.Exclude(orbit.SwappedOrbitNormal(), core.target.Position - mainBody.position);
-            double angle = Vector3d.Angle(vesselState.CoM - mainBody.position, projectedTarget);
-            if (Vector3d.Dot(Vector3d.Cross(orbit.SwappedOrbitNormal(), vesselState.CoM - mainBody.position), projectedTarget) < 0)
-            {
-                angle = 360 - angle;
-            }
-            return angle.ToString("F2") + "º";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            
+            return orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("Target planet phase angle", InfoItem.Category.Target)]
+        public string TargetPlanetPhaseAngle()
+        {
+            if (!(core.target.Target is CelestialBody)) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
+
+            return mainBody.orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("Relative inclination", InfoItem.Category.Target)]

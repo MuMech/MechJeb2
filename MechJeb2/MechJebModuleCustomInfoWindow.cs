@@ -204,6 +204,8 @@ namespace MuMech
         void AddNewWindow()
         {
             editedWindow = new MechJebModuleCustomInfoWindow(core);
+            if (HighLogic.LoadedSceneIsEditor) editedWindow.showInEditor = true;
+            if (HighLogic.LoadedSceneIsFlight) editedWindow.showInFlight = true;
             core.AddComputerModule(editedWindow);
             editedWindow.enabled = true;
         }
@@ -244,7 +246,7 @@ namespace MuMech
                 int editedWindowIndex = allWindows.IndexOf(editedWindow);
                 editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
                     {
-                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.ExpandWidth(true));
+                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
                     });
                 editedWindow = allWindows[editedWindowIndex];
                 GUILayout.EndHorizontal();
