@@ -79,6 +79,11 @@ namespace MuMech
 
             double UT = DoChooseTimeGUI();
 
+            if (core.node != null)
+            {
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+            }
+
             if (GUILayout.Button("Go"))
             {
                 //handle updating an existing node by removing it and then re-creating it

@@ -26,8 +26,6 @@ namespace MuMech
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = true;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool autoWarpToApoapsis = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
@@ -222,7 +220,7 @@ namespace MuMech
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
-            if (autoWarpToApoapsis)
+            if (core.node.autowarp)
             {
                 //warp at x2 physical warp:
                 core.warp.WarpPhysicsAtRate(2);
