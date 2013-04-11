@@ -18,8 +18,9 @@ namespace MuMech
             if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            double time = node.GetBurnVector(node.patch).magnitude / vesselState.maxThrustAccel;
-            return GuiUtils.TimeToDHMS(time);
+            double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.maxThrustAccel;
+            if (core.thrust != null && core.thrust.enabled) burnTime /= core.thrust.throttleLimit; //account for throttle limits
+            return GuiUtils.TimeToDHMS(burnTime);
         }
 
         [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
