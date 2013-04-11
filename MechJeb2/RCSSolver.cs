@@ -61,7 +61,7 @@ public class RCSSolver
         return Vector3.Cross(toCoM, thrust);
     }
 
-    public double[] run(List<Thruster> thrusters, Vector3 direction)
+    public double[] run(List<Thruster> thrusters, Vector3 direction, Vector3 rotation)
     {
         double[] throttles = new double[0];
         direction = direction.normalized;
@@ -95,7 +95,8 @@ public class RCSSolver
             Thruster thruster = thrusters[i];
             Vector3 thrust = thruster.direction;
             Vector3 torque = get_torque(thruster, CoM);
-            Vector3 transErr = direction - thrust;
+            Vector3 torqueErr = torque - rotation;
+            Vector3 transErr = thrust - direction;
 
             // Waste is a value from [0..2] indicating how much thrust is being
             // wasted due to not being toward 'direction':
@@ -106,9 +107,9 @@ public class RCSSolver
 
             if (waste < wasteThreshold) waste = 0;
 
-            A[0, i] = torque.x * factorTorque;
-            A[1, i] = torque.y * factorTorque;
-            A[2, i] = torque.z * factorTorque;
+            A[0, i] = torqueErr.x * factorTorque;
+            A[1, i] = torqueErr.y * factorTorque;
+            A[2, i] = torqueErr.z * factorTorque;
             A[3, i] = transErr.x * factorTranslate;
             A[4, i] = transErr.y * factorTranslate;
             A[5, i] = transErr.z * factorTranslate;
@@ -239,8 +240,7 @@ public class RCSSolverThread
 
             try
             {
-                // TODO: Use SolverTask.rotation to balance rotation, too.
-                throttles = solver.run(task.thrusters, task.direction);
+                throttles = solver.run(task.thrusters, task.direction, task.rotation);
             }
             catch (Exception e)
             {

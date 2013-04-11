@@ -11,6 +11,8 @@ namespace MuMech
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool smartTranslation = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool smartRotation = false;
 
         // Overdrive
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -85,7 +87,21 @@ namespace MuMech
             }
         }
 
-        private void AddThrusters(Vector3 direction, Vector3 rotation, List<RCSSolver.Thruster> thrusters, Part p, ModuleRCS pm)
+        private Vector3 EstimateThrusterThrottle(Vector3 pos, Vector3 direction, Vector3 rotation, Transform t)
+        {
+            // The game appears to throttle a thruster based on the dot
+            // product of its thrust vector (normalized) and the
+            // direction vector (not normalized!).
+            Vector3 thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+            Vector3 torque = -Vector3.Cross(pos, thrustDir);
+            float translateThrottle = Vector3.Dot(direction, thrustDir);
+            float rotateThrottle = Vector3.Dot(rotation, torque);
+            float throttle = Mathf.Clamp01(translateThrottle + rotateThrottle);
+
+            return thrustDir * throttle;
+        }
+
+        private Vector3 VesselRelativePos(Part p)
         {
             // Find our distance from the vessel's center of
             // mass, in world coordinates.
@@ -93,6 +109,12 @@ namespace MuMech
 
             // Translate to the vessel's reference frame.
             pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+            return pos;
+        }
+
+        private void AddThrusters(Vector3 direction, Vector3 rotation, List<RCSSolver.Thruster> thrusters, Part p, ModuleRCS pm)
+        {
+            Vector3 pos = VesselRelativePos(p);
 
             // Create a single RCSSolver.Thruster for this part. This
             // requires some assumptions about how the game's RCS code will
@@ -100,16 +122,7 @@ namespace MuMech
             Vector3 partForce = Vector3.zero;
             foreach (Transform t in pm.thrusterTransforms)
             {
-                // The game appears to throttle a thruster based on the dot
-                // product of its thrust vector (normalized) and the
-                // direction vector (not normalized!).
-                Vector3 thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
-                thrustDir.Normalize();
-                float translateThrottle = Mathf.Clamp01(Vector3.Dot(direction, thrustDir));
-                float rotateThrottle = 0; // TODO
-                float throttle = Mathf.Max(translateThrottle, rotateThrottle);
-
-                partForce += thrustDir * throttle;
+                partForce += EstimateThrusterThrottle(pos, direction, rotation, t);
             }
 
             // We should only bother calculating the throttle for this
@@ -146,6 +159,8 @@ namespace MuMech
             Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
             Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
             int partCount = vessel.parts.Count;
+
+            if (!smartRotation) rotation = Vector3.zero;
 
             // We should only recalculate if the direction is unchanged. If the
             // user is holding down or tapping a translate button, the movement
@@ -191,7 +206,6 @@ namespace MuMech
             // than move in the wrong direction.
             if (throttles == null || throttles.Length != thrusters.Count)
             {
-                Debug.Log("MechJeb: RCS throttles not yet calculated");
                 throttles = new double[thrusters.Count];
                 for (int i = 0; i < thrusters.Count; i++)
                 {

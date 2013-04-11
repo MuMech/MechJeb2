@@ -77,6 +77,9 @@ namespace MuMech
                 balancer.advancedOptions = GUILayout.Toggle(balancer.advancedOptions, "Advanced options");
                 if (balancer.advancedOptions)
                 {
+                    // This doesn't work properly, and it might not even be needed.
+                    //balancer.smartRotation = GUILayout.Toggle(balancer.smartRotation, "Smart rotation");
+
                     GuiUtils.SimpleTextBox("Overdrive scale", balancer.overdriveScale);
                     GuiUtils.SimpleTextBox("Torque factor", balancer.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", balancer.tuningParamFactorTranslate);
