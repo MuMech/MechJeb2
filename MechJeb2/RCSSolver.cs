@@ -25,15 +25,20 @@ public class RCSSolver
 
         public readonly Part part;
         public readonly ModuleRCS partModule;
-        public readonly int partModuleIndex;
+        public readonly float originalForce;
 
-        public Thruster(Vector3 pos, Vector3 direction, Part p, ModuleRCS pm, int pmIndex)
+        public Thruster(Vector3 pos, Vector3 direction, Part p, ModuleRCS pm)
         {
             this.pos = pos;
             this.direction = direction;
+            this.originalForce = pm.thrusterPower;
             this.part = p;
             this.partModule = pm;
-            this.partModuleIndex = pmIndex;
+        }
+
+        public void RestoreOriginalForce()
+        {
+            partModule.thrusterPower = originalForce;
         }
     }
 

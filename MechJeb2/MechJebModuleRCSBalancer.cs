@@ -20,10 +20,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool advancedOptions = false;
 
-        // This is left in just as an illustration of how the code would likely
-        // change if per-thruster throttles were possible.
-        private readonly bool perThrusterControl = false;
-
         // Advanced: overdrive scale. While 'overdrive' will range from 0..1,
         // we should reduce it slightly before using it to control the 'waste
         // threshold' tuning parameter, because waste thresholds of 1 or above
@@ -54,8 +50,10 @@ namespace MuMech
         // Variables for RCS solving.
         public RCSSolverThread solverThread = new RCSSolverThread();
         private Vector3 lastDirection;
+        private Vector3 lastRotation;
+        private int lastPartCount;
         private bool recalculate = true;
-        private double[] throttles;
+
         private List<RCSSolver.Thruster> thrusters = new List<RCSSolver.Thruster>();
 
         public MechJebModuleRCSBalancer(MechJebCore core)
@@ -81,19 +79,13 @@ namespace MuMech
 
         public void ResetThrusters()
         {
-            foreach (Part p in vessel.parts)
+            foreach (var t in thrusters)
             {
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                {
-                    if (pm.isEnabled && !pm.isJustForShow)
-                    {
-                        pm.thrusterPower = 1;
-                    }
-                }
+                t.RestoreOriginalForce();
             }
         }
 
-        private void AddThrusters(Vector3 direction, List<RCSSolver.Thruster> thrusters, Part p, ModuleRCS pm)
+        private void AddThrusters(Vector3 direction, Vector3 rotation, List<RCSSolver.Thruster> thrusters, Part p, ModuleRCS pm)
         {
             // Find our distance from the vessel's center of
             // mass, in world coordinates.
@@ -102,56 +94,33 @@ namespace MuMech
             // Translate to the vessel's reference frame.
             pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
 
-            if (!perThrusterControl)
+            // Create a single RCSSolver.Thruster for this part. This
+            // requires some assumptions about how the game's RCS code will
+            // drive the individual thrusters (which we can't control).
+            Vector3 partForce = Vector3.zero;
+            foreach (Transform t in pm.thrusterTransforms)
             {
-                // Create a single RCSSolver.Thruster for this part. This
-                // requires some assumptions about how the game's RCS code will
-                // drive the individual thrusters (which we can't control).
-                Vector3 partForce = Vector3.zero;
-                foreach (Transform t in pm.thrusterTransforms)
-                {
-                    // The game appears to throttle a thruster based on the dot
-                    // product of its thrust vector (normalized) and the
-                    // direction vector (not normalized!).
-                    Vector3 thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
-                    float throttle = Mathf.Clamp01(Vector3.Dot(direction, thrustDir.normalized));
+                // The game appears to throttle a thruster based on the dot
+                // product of its thrust vector (normalized) and the
+                // direction vector (not normalized!).
+                Vector3 thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+                thrustDir.Normalize();
+                float translateThrottle = Mathf.Clamp01(Vector3.Dot(direction, thrustDir));
+                float rotateThrottle = 0; // TODO
+                float throttle = Mathf.Max(translateThrottle, rotateThrottle);
 
-                    partForce += thrustDir * throttle;
-                }
-
-                // We should only bother calculating the throttle for this
-                // thruster if the game is going to be using it.
-                if (partForce.magnitude > 0)
-                {
-                    thrusters.Add(new RCSSolver.Thruster(pos, partForce, p, pm, 0));
-                }
+                partForce += thrustDir * throttle;
             }
-            else
+
+            // We should only bother calculating the throttle for this
+            // thruster if the game is going to be using it.
+            if (partForce.magnitude > 0)
             {
-                // Create an RCSSolver.Thruster for each RCS jet on this part.
-                int i = 0;
-                foreach (Transform t in pm.thrusterTransforms)
-                {
-                    // 'up' is the direction of exhaust, so thrust is the
-                    // opposite direction.
-                    Vector3 thrustDir = -t.up;
-
-                    // Translate to the vessel's reference frame.
-                    thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * thrustDir;
-
-                    if (thrustDir.magnitude > 0)
-                    {
-                        thrusters.Add(new RCSSolver.Thruster(pos, thrustDir, p, pm, i));
-                    }
-                    i++;
-                }
+                thrusters.Add(new RCSSolver.Thruster(pos, partForce * pm.thrusterPower, p, pm));
             }
         }
 
         // Throttles RCS thrusters to keep a vessel balanced during translation.
-        // Assumes every thrusters has a max thrust (thrusterPower) of 1 (kN),
-        // which is true of both RCS thruster parts in version 0.19.1.
-        // TODO: Fix this code for RCS thrusters with thrusterPower != 1.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
             if (s.isNeutral)
@@ -175,7 +144,8 @@ namespace MuMech
             // To turn this vector into a vessel-relative one, we need to negate
             // each value and also swap the Y and Z values.
             Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
-            Vector3 rotation = new Vector3(s.yaw, s.pitch, s.roll);
+            Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
+            int partCount = vessel.parts.Count;
 
             // We should only recalculate if the direction is unchanged. If the
             // user is holding down or tapping a translate button, the movement
@@ -184,16 +154,21 @@ namespace MuMech
             // TODO: Consider precalculating the six cardinal directions. This
             // would allow translation along any axis to occur without waiting
             // for calculations.
-            if (!direction.Equals(lastDirection))
+            if (direction != lastDirection || rotation != lastRotation || partCount != lastPartCount)
             {
                 recalculate = true;
             }
+            lastDirection = direction;
+            lastRotation = rotation;
+            lastPartCount = partCount;
 
             if (recalculate)
             {
-                lastDirection = direction;
                 recalculate = false;
 
+                // ModuleRCS has no originalThrusterPower attribute, so we have
+                // to explicitly reset it.
+                ResetThrusters();
                 thrusters.Clear();
                 foreach (Part p in vessel.parts)
                 {
@@ -201,27 +176,14 @@ namespace MuMech
                     {
                         if (p.Rigidbody != null && pm.isEnabled && !pm.isJustForShow)
                         {
-                            AddThrusters(direction, thrusters, p, pm);
+                            AddThrusters(direction, rotation, thrusters, p, pm);
                         }
                     }
                 }
                 solverThread.post_task(thrusters, direction, rotation);
             }
-            else
-            {
-                // Make sure all the thrusters we know about are still part of
-                // the craft (in case the user de-staged while translating).
-                foreach (RCSSolver.Thruster thruster in thrusters)
-                {
-                    if (!vessel.parts.Contains(thruster.part))
-                    {
-                        recalculate = true;
-                        return;
-                    }
-                }
-            }
 
-            throttles = solverThread.get_throttles();
+            double[] throttles = solverThread.get_throttles();
 
             // If the throttles we got were bad (due to the vehicle staging or,
             // more likely, the threaded calculation not having completed yet),
@@ -248,40 +210,10 @@ namespace MuMech
                 }
             }
 
-            // Apply the calculated throttles to all RCS parts. Keep in mind
-            // that each RCS part may have multiple thrusters and thus multiple
-            // calculated throttles.
-
-            var rcsPartThrottles = new Dictionary<ModuleRCS, double>();
+            // Apply the calculated throttles to all RCS parts.
             for (int i = 0; i < thrusters.Count; i++)
             {
-                ModuleRCS pm = thrusters[i].partModule;
-                if (perThrusterControl)
-                {
-                    // Throttle the individual thrusters and set the part-wide
-                    // throttle to 1. This would be the ideal behavior, but the
-                    // game appears to override these based on the magnitude of
-                    // FlightCtrlState.s and the angle from the thrust vector to
-                    // the direction vector.
-                    pm.thrustForces[thrusters[i].partModuleIndex] = (float)throttles[i];
-                    rcsPartThrottles[pm] = 1;
-                }
-                else
-                {
-                    // Leave the individual throttles alone. Instead, set the
-                    // part-wide throttle to the maximum desired throttle among
-                    // its thrusters.
-                    double throttle = 0;
-                    rcsPartThrottles.TryGetValue(pm, out throttle);
-                    throttle = Math.Max(throttle, throttles[i]);
-                    rcsPartThrottles[pm] = throttle;
-                }
-            }
-
-            // Apply part-wide throttles.
-            foreach (var pair in rcsPartThrottles)
-            {
-                pair.Key.thrusterPower = (float)pair.Value;
+                thrusters[i].partModule.thrusterPower = (float)throttles[i];
             }
         }
 
