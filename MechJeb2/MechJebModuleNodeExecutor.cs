@@ -69,7 +69,7 @@ namespace MuMech
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            if (dVLeft < tolerance)
+            if (dVLeft < tolerance && core.attitude.attitudeAngleFromTarget() > 5)
             {
                 burnTriggered = false;
 
