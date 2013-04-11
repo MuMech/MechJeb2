@@ -195,6 +195,15 @@ namespace MuMech
         }
     }
 
+    public class ZombieGUILoader : MonoBehaviour
+    {
+        void OnGUI()
+        {
+            GuiUtils.LoadSkin();
+            GameObject.Destroy(gameObject);
+        }
+    }
+
     public static class GuiUtils
     {
         static GUIStyle _yellowOnHover;
@@ -213,6 +222,14 @@ namespace MuMech
                 }
                 return _yellowOnHover;
             }
+        }
+
+        public static GUISkin skin;
+
+        public static void LoadSkin()
+        {
+            GUI.skin = null;
+            skin = (GUISkin)GameObject.Instantiate(GUI.skin);
         }
 
         public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)

@@ -303,6 +303,11 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode sfsNode)
         {
+            if (GuiUtils.skin == null)
+            {
+                GuiUtils.skin = new GUISkin();
+                GameObject zombieGUILoader = new GameObject("zombieGUILoader", typeof(ZombieGUILoader));
+            }
             try
             {
                 bool generateDefaultWindows = false;
@@ -511,7 +516,7 @@ namespace MuMech
         {
             if (!showGui) return;
 
-            GUI.skin = skin;
+            GUI.skin = GuiUtils.skin;
 
             if (this == vessel.GetMasterMechJeb() &&
                 ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD))))
