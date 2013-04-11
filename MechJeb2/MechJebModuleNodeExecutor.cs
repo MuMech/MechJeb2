@@ -9,10 +9,12 @@ namespace MuMech
     public class MechJebModuleNodeExecutor : ComputerModule
     {
         //public interface:
+        [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
         public double leadTime = 3;       //how many seconds before a burn to end warp (note that we align with the node before warping)
         public double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
-        public double precision = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
         public void ExecuteOneNode(object controller)
         {
@@ -67,7 +69,7 @@ namespace MuMech
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            if (dVLeft < precision)
+            if (dVLeft < tolerance)
             {
                 burnTriggered = false;
 
@@ -130,7 +132,7 @@ namespace MuMech
                     {
                         double timeConstant = (dVLeft > 10 ? 0.5 : 2);
                         double desiredAcceleration = dVLeft / timeConstant;
-                        desiredAcceleration = Math.Max(precision, desiredAcceleration);
+                        desiredAcceleration = Math.Max(tolerance, desiredAcceleration);
 
                         core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
                     }
