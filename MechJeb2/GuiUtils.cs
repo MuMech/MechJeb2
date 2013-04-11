@@ -232,6 +232,27 @@ namespace MuMech
             skin = (GUISkin)GameObject.Instantiate(GUI.skin);
         }
 
+        public static void CheckSkin()
+        {
+            GUI.skin = null;
+            if (GUI.skin.name == "LazorSkin")
+            {
+                Texture2D tex = new Texture2D(64, 31, TextureFormat.ARGB32, false);
+                tex.LoadImage(Properties.Resources.default_gui_window);
+                GUI.skin.window.normal.background = GUI.skin.window.onNormal.background = tex;
+                GUI.skin.window.normal.textColor = GUI.skin.window.onNormal.textColor = XKCDColors.Pink;
+
+                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
+                tex.LoadImage(Properties.Resources.default_toggle_on);
+                GUI.skin.toggle.onNormal.background = GUI.skin.toggle.onHover.background = GUI.skin.toggle.onActive.background = tex;
+                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
+                tex.LoadImage(Properties.Resources.default_toggle_off);
+                GUI.skin.toggle.normal.background = GUI.skin.toggle.hover.background = GUI.skin.toggle.active.background = tex;
+
+                GUI.skin.name = "LazorSkinBow";
+            }
+        }
+
         public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)
         {
             GUILayout.BeginHorizontal();

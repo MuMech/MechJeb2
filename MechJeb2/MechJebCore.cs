@@ -516,6 +516,8 @@ namespace MuMech
         {
             if (!showGui) return;
 
+            GuiUtils.CheckSkin();
+
             GUI.skin = GuiUtils.skin;
 
             if (this == vessel.GetMasterMechJeb() &&

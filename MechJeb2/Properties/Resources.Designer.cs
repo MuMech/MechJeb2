@@ -60,6 +60,27 @@ namespace MuMech.Properties {
             }
         }
         
+        internal static byte[] default_gui_window {
+            get {
+                object obj = ResourceManager.GetObject("default_gui_window", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static byte[] default_toggle_off {
+            get {
+                object obj = ResourceManager.GetObject("default_toggle_off", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static byte[] default_toggle_on {
+            get {
+                object obj = ResourceManager.GetObject("default_toggle_on", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
         internal static byte[] lightning {
             get {
                 object obj = ResourceManager.GetObject("lightning", resourceCulture);
