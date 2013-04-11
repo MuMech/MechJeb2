@@ -493,9 +493,45 @@ namespace MuMech
         public string RelativeInclinationToTarget()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
 
             return orbit.RelativeInclination(core.target.Orbit).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("Time to AN", InfoItem.Category.Target)]
+        public string TimeToAscendingNodeWithTarget()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.AscendingNodeExists(core.target.Orbit)) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.target.Orbit, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Time to DN", InfoItem.Category.Target)]
+        public string TimeToDescendingNodeWithTarget()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.DescendingNodeExists(core.target.Orbit)) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.target.Orbit, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Time to equatorial AN", InfoItem.Category.Orbit)]
+        public string TimeToEquatorialAscendingNode()
+        {
+            if (!orbit.AscendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Time to equatorial DN", InfoItem.Category.Orbit)]
+        public string TimeToEquatorialDescendingNode()
+        {
+            if (!orbit.DescendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("Circular orbit speed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]
