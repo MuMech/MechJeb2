@@ -113,8 +113,9 @@ namespace MuMech
                 {
                     core.warp.WarpToUT(node.UT - burnTime * leadFraction - leadTime);
                 }
-                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10)
+                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 300)
                 {
+                    //realign
                     core.warp.MinimumWarp();
                 }
             }
