@@ -175,6 +175,7 @@ namespace MuMech
             // To turn this vector into a vessel-relative one, we need to negate
             // each value and also swap the Y and Z values.
             Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
+            Vector3 rotation = new Vector3(s.yaw, s.pitch, s.roll);
 
             // We should only recalculate if the direction is unchanged. If the
             // user is holding down or tapping a translate button, the movement
@@ -204,7 +205,7 @@ namespace MuMech
                         }
                     }
                 }
-                solverThread.post_task(thrusters, direction);
+                solverThread.post_task(thrusters, direction, rotation);
             }
             else
             {

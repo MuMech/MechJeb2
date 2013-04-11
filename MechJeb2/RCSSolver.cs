@@ -20,12 +20,12 @@ public class RCSSolver
 
     public class Thruster
     {
-        public Vector3 pos;
-        public Vector3 direction;
+        public readonly Vector3 pos;
+        public readonly Vector3 direction;
 
-        public Part part;
-        public ModuleRCS partModule;
-        public int partModuleIndex;
+        public readonly Part part;
+        public readonly ModuleRCS partModule;
+        public readonly int partModuleIndex;
 
         public Thruster(Vector3 pos, Vector3 direction, Part p, ModuleRCS pm, int pmIndex)
         {
@@ -153,7 +153,7 @@ public class RCSSolverThread
 
     private Queue tasks = Queue.Synchronized(new Queue());
     private AutoResetEvent workEvent = new AutoResetEvent(false);
-    private Boolean stopRunning = false;
+    private bool stopRunning = false;
     private Thread t = null;
 
     public void start()
@@ -184,25 +184,33 @@ public class RCSSolverThread
         }
     }
 
-    public void post_task(List<RCSSolver.Thruster> thrusters, Vector3 direction)
+    private class SolverTask
     {
-        // Use a copy of this list in case the caller wants to modify theirs
-        // later.
-        var newThrusters = new List<RCSSolver.Thruster>();
-        foreach (var t in thrusters)
+        public readonly List<RCSSolver.Thruster> thrusters;
+        public readonly Vector3 direction;
+        public readonly Vector3 rotation;
+
+        public SolverTask(List<RCSSolver.Thruster> thrusters, Vector3 direction, Vector3 rotation)
         {
-            newThrusters.Add(t);
+            this.thrusters = new List<RCSSolver.Thruster>();
+            this.direction = direction;
+            this.rotation = rotation;
+            foreach (var t in thrusters)
+            {
+                this.thrusters.Add(t);
+            }
         }
+    }
 
-        tasks.Enqueue(new KeyValuePair<List<RCSSolver.Thruster>, Vector3>(thrusters, direction));
-
+    public void post_task(List<RCSSolver.Thruster> thrusters, Vector3 direction, Vector3 rotation)
+    {
+        tasks.Enqueue(new SolverTask(thrusters, direction, rotation));
         workEvent.Set();
     }
 
     public double[] get_throttles()
     {
-        // If there are outstanding tasks (that is, unprocessed thruster/
-        // direction pairs to solve), return null instead of stale throttle
+        // If there are outstanding tasks, return null instead of stale throttle
         // values.
         return (tasks.Count > 0) ? null : throttles;
     }
@@ -222,19 +230,16 @@ public class RCSSolverThread
 
             // Ignore all but the latest task.
             while (tasks.Count > 1) tasks.Dequeue();
-
-            var pair = (KeyValuePair<List<RCSSolver.Thruster>, Vector3>)tasks.Dequeue();
-            var thrusters = pair.Key;
-            var direction = pair.Value;
+            SolverTask task = (SolverTask)tasks.Dequeue();
 
             try
             {
-                throttles = solver.run(thrusters, direction);
+                // TODO: Use SolverTask.rotation to balance rotation, too.
+                throttles = solver.run(task.thrusters, task.direction);
             }
             catch (Exception e)
             {
                 statusString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
-                Debug.Log(statusString);
                 throttles = null;
             }
             DateTime stop = DateTime.Now;
