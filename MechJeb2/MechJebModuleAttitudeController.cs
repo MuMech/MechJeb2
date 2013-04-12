@@ -331,6 +331,7 @@ namespace MuMech
 
             if (userCommandingPitchYaw || userCommandingRoll)
             {
+                pid.Reset();
                 if (useSAS)
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
@@ -349,16 +350,13 @@ namespace MuMech
                 }
             }
 
-            if (userCommandingRoll)
+            if (!attitudeRollMatters)
             {
-                pid.Reset();
-                if (!attitudeRollMatters)
-                {
-                    attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
-                    _attitudeRollMatters = false;
-                }
+                attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
+                _attitudeRollMatters = false;
             }
-            else
+
+            if (!userCommandingRoll)
             {
                 if (!double.IsNaN(act.z)) s.roll = Mathf.Clamp((float)(act.z), -drive_limit, drive_limit);
                 if (Math.Abs(s.roll) < 0.05)
@@ -367,11 +365,7 @@ namespace MuMech
                 }
             }
 
-            if (userCommandingPitchYaw)
-            {
-                pid.Reset();
-            }
-            else
+            if (!userCommandingPitchYaw)
             {
                 if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float)(act.x), -drive_limit, drive_limit);
                 if (!double.IsNaN(act.y)) s.yaw = Mathf.Clamp((float)(act.y), -drive_limit, drive_limit);
