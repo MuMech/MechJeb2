@@ -25,6 +25,7 @@ namespace MuMech
 
         public PIDControllerV pid;
         public Vector3d lastAct = Vector3d.zero;
+        private double lastResetRoll = 0;
 
         [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
         public bool useSAS = true;
@@ -266,6 +267,16 @@ namespace MuMech
         {
             // Used in the killRot activation calculation and drive_limit calculation
             double precision = Math.Max(0.5, Math.Min(10.0, (vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * s.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
+
+            // Reset the PID controller during roll to keep pitch and yaw errors
+            // from accumulating on the wrong axis.
+            double rollDelta = Mathf.Abs((float)(vesselState.vesselRoll - lastResetRoll));
+            if (rollDelta > 180) rollDelta = 360 - rollDelta;
+            if (rollDelta > 5)
+            {
+                pid.Reset();
+                lastResetRoll = vesselState.vesselRoll;
+            }
 
             // Direction we want to be facing
             Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
