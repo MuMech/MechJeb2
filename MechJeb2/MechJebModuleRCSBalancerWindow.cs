@@ -40,7 +40,7 @@ namespace MuMech
 
             if (wasEnabled != balancer.smartTranslation)
             {
-                balancer.ResetThrusters();
+                balancer.ResetThrusterForces();
 
                 if (balancer.smartTranslation)
                 {
@@ -95,7 +95,7 @@ namespace MuMech
                     {
                         balancer.onlyWhenMoving = GUILayout.Toggle(balancer.onlyWhenMoving, "... update only when moving");
                     }
-                    SimpleTextInfo("Calculation time", (int)(balancer.solverThread.timeSeconds * 1000) + " ms");
+                    SimpleTextInfo("Calculation time", (int)(balancer.GetCalculationTime() * 1000) + " ms");
                 }
 
                 if (balancer.status != null && balancer.status != "")

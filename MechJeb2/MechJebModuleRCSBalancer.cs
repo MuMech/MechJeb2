@@ -50,13 +50,13 @@ namespace MuMech
         public string throttleCalcStr = "";
 
         // Variables for RCS solving.
-        public RCSSolverThread solverThread = new RCSSolverThread();
-        private Vector3 lastDirection;
-        private Vector3 lastRotation;
-        private int lastPartCount;
-        private bool recalculate = true;
+        private RCSSolverThread solverThread = new RCSSolverThread();
 
-        private List<RCSSolver.Thruster> thrusters = new List<RCSSolver.Thruster>();
+        [EditableInfoItem("RCS balancing calculation precision", InfoItem.Category.Thrust)]
+        public EditableInt calcPrecision = 3;
+
+        [EditableInfoItem("RCS CoM shift trigger", InfoItem.Category.Thrust)]
+        public EditableDouble comShiftTrigger = 0.01;
 
         public MechJebModuleRCSBalancer(MechJebCore core)
             : base(core)
@@ -79,58 +79,15 @@ namespace MuMech
             base.OnModuleDisabled();
         }
 
-        public void ResetThrusters()
+        public void ResetThrusterForces()
         {
-            foreach (var t in thrusters)
-            {
-                t.RestoreOriginalForce();
-            }
+            solverThread.ResetThrusterForces();
         }
 
-        private Vector3 EstimateThrusterThrottle(Vector3 pos, Vector3 direction, Vector3 rotation, Transform t)
+        public void GetThrottles(Vector3 direction, Vector3 rotation,
+            out double[] throttles, out List<RCSSolver.Thruster> thrusters)
         {
-            // The game appears to throttle a thruster based on the dot
-            // product of its thrust vector (normalized) and the
-            // direction vector (not normalized!).
-            Vector3 thrustDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
-            Vector3 torque = -Vector3.Cross(pos, thrustDir);
-            float translateThrottle = Vector3.Dot(direction, thrustDir);
-            float rotateThrottle = Vector3.Dot(rotation, torque);
-            float throttle = Mathf.Clamp01(translateThrottle + rotateThrottle);
-
-            return thrustDir * throttle;
-        }
-
-        private Vector3 VesselRelativePos(Part p)
-        {
-            // Find our distance from the vessel's center of
-            // mass, in world coordinates.
-            Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
-
-            // Translate to the vessel's reference frame.
-            pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
-            return pos;
-        }
-
-        private void AddThrusters(Vector3 direction, Vector3 rotation, List<RCSSolver.Thruster> thrusters, Part p, ModuleRCS pm)
-        {
-            Vector3 pos = VesselRelativePos(p);
-
-            // Create a single RCSSolver.Thruster for this part. This
-            // requires some assumptions about how the game's RCS code will
-            // drive the individual thrusters (which we can't control).
-            Vector3 partForce = Vector3.zero;
-            foreach (Transform t in pm.thrusterTransforms)
-            {
-                partForce += EstimateThrusterThrottle(pos, direction, rotation, t);
-            }
-
-            // We should only bother calculating the throttle for this
-            // thruster if the game is going to be using it.
-            if (partForce.magnitude > 0)
-            {
-                thrusters.Add(new RCSSolver.Thruster(pos, partForce * pm.thrusterPower, p, pm));
-            }
+            solverThread.GetThrottles(vessel, vesselState, direction, rotation, out throttles, out thrusters);
         }
 
         // Throttles RCS thrusters to keep a vessel balanced during translation.
@@ -138,7 +95,7 @@ namespace MuMech
         {
             if (s.isNeutral)
             {
-                ResetThrusters();
+                solverThread.ResetThrusterForces();
                 return;
             }
 
@@ -158,52 +115,19 @@ namespace MuMech
             // each value and also swap the Y and Z values.
             Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
             Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
-            int partCount = vessel.parts.Count;
 
             if (!smartRotation) rotation = Vector3.zero;
 
-            // We should only recalculate if the direction is unchanged. If the
-            // user is holding down or tapping a translate button, the movement
-            // direction is the same, and the center of mass doesn't change that
-            // quickly!
-            // TODO: Consider precalculating the six cardinal directions. This
-            // would allow translation along any axis to occur without waiting
-            // for calculations.
-            if (direction != lastDirection || rotation != lastRotation || partCount != lastPartCount)
-            {
-                recalculate = true;
-            }
-            lastDirection = direction;
-            lastRotation = rotation;
-            lastPartCount = partCount;
+            // TODO: Update thrusters.
 
-            if (recalculate)
-            {
-                recalculate = false;
+            double[] throttles;
+            List<RCSSolver.Thruster> thrusters;
+            GetThrottles(direction, rotation, out throttles, out thrusters);
+            throttleCalcStr = "";
 
-                // ModuleRCS has no originalThrusterPower attribute, so we have
-                // to explicitly reset it.
-                ResetThrusters();
-                thrusters.Clear();
-                foreach (Part p in vessel.parts)
-                {
-                    foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                    {
-                        if (p.Rigidbody != null && pm.isEnabled && !pm.isJustForShow)
-                        {
-                            AddThrusters(direction, rotation, thrusters, p, pm);
-                        }
-                    }
-                }
-                solverThread.post_task(thrusters, direction, rotation);
-            }
-
-            double[] throttles = solverThread.get_throttles();
-
-            // If the throttles we got were bad (due to the vehicle staging or,
-            // more likely, the threaded calculation not having completed yet),
-            // throttle all RCS thrusters to 0. It's better to not move at all
-            // than move in the wrong direction.
+            // If the throttles we got were bad (due to the threaded calculation
+            // not having completed yet), throttle all RCS thrusters to 0. It's
+            // better to not move at all than move in the wrong direction.
             if (throttles == null || throttles.Length != thrusters.Count)
             {
                 throttles = new double[thrusters.Count];
@@ -213,7 +137,6 @@ namespace MuMech
                 }
             }
 
-            throttleCalcStr = "";
             throttleCalcStr += "throttles:\n";
             for (int i = 0; i < throttles.Length; i++)
             {
@@ -234,11 +157,17 @@ namespace MuMech
         public void UpdateTuningParameters()
         {
             double wasteThreshold = overdrive * overdriveScale;
-            solverThread.solver.wasteThreshold = wasteThreshold;
-            solverThread.solver.factorTorque = tuningParamFactorTorque;
-            solverThread.solver.factorTranslate = tuningParamFactorTranslate;
-            solverThread.solver.factorWaste = tuningParamFactorWaste;
-            recalculate = true;
+            RCSSolverTuningParams tuningParams = new RCSSolverTuningParams();
+            tuningParams.wasteThreshold     = wasteThreshold;
+            tuningParams.factorTorque       = tuningParamFactorTorque;
+            tuningParams.factorTranslate    = tuningParamFactorTranslate;
+            tuningParams.factorWaste        = tuningParamFactorWaste;
+            solverThread.UpdateTuningParameters(tuningParams);
+        }
+
+        public double GetCalculationTime()
+        {
+            return solverThread.calculationTime;
         }
 
         private string GetThrusterStates()
