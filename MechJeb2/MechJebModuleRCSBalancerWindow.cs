@@ -86,23 +86,6 @@ namespace MuMech
                     GuiUtils.SimpleTextBox("Waste factor", balancer.tuningParamFactorWaste);
                 }
 
-                // Debug info
-                balancer.debugInfo = GUILayout.Toggle(balancer.debugInfo, "Debug info");
-                if (balancer.debugInfo)
-                {
-                    balancer.showThrusterStates = GUILayout.Toggle(balancer.showThrusterStates, "Show thruster states");
-                    if (balancer.showThrusterStates)
-                    {
-                        balancer.onlyWhenMoving = GUILayout.Toggle(balancer.onlyWhenMoving, "... update only when moving");
-                    }
-                    SimpleTextInfo("Calculation time", (int)(balancer.GetCalculationTime() * 1000) + " ms");
-                }
-
-                if (balancer.status != null && balancer.status != "")
-                {
-                    GUILayout.Label(balancer.status);
-                }
-
                 // Apply tuning parameters.
                 if (oldOverdrive != balancer.overdrive
                     || oldOverdriveScale != balancer.overdriveScale

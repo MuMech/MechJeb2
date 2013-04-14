@@ -88,9 +88,24 @@ public class RCSSolver
         }
     }
 
-    public double[] run(List<Thruster> thrusters, Vector3 direction, Vector3 rotation)
+    public double[] run(List<Thruster> fullThrusters, Vector3 direction, Vector3 rotation)
     {
         direction = direction.normalized;
+
+        int fullCount = fullThrusters.Count;
+        List<Thruster> thrusters = new List<Thruster>();
+        Vector3[] thrustForces = new Vector3[fullCount];
+
+        // Initialize the matrix based on thruster directions.
+        for (int i = 0; i < fullThrusters.Count; i++)
+        {
+            Thruster thruster = fullThrusters[i];
+            thrustForces[i] = thruster.GetThrust(direction, rotation);
+            if (thrustForces[i].magnitude > 0)
+            {
+                thrusters.Add(thruster);
+            }
+        }
 
         int count = thrusters.Count;
 
@@ -114,34 +129,24 @@ public class RCSSolver
         double[] bndu = new double[count];
 
         // Initialize the matrix based on thruster directions.
-        for (int i = 0; i < thrusters.Count; i++)
+        for (int i = 0; i < count; i++)
         {
             Thruster thruster = thrusters[i];
-            Vector3 thrust = thruster.GetThrust(direction, rotation);
+            Vector3 thrust = thrustForces[i];
             Vector3 torque = thruster.GetTorque(thrust);
             Vector3 thrustNorm = thrust.normalized;
 
-            Vector3 torqueErr, transErr;
-            float waste;
-            if (torque.sqrMagnitude > 0)
-            {
-                torqueErr = torque - rotation;
-                transErr = thrustNorm - direction;
+            Vector3 torqueErr = torque - rotation;
+            Vector3 transErr = thrustNorm - direction;
 
-                // Waste is a value from [0..2] indicating how much thrust is being
-                // wasted due to not being toward 'direction':
-                //     0: perfectly aligned with direction
-                //     1: perpendicular to direction
-                //     2: perfectly opposite direction
-                waste = 1 - Vector3.Dot(thrustNorm, direction);
+            // Waste is a value from [0..2] indicating how much thrust is being
+            // wasted due to not being toward 'direction':
+            //     0: perfectly aligned with direction
+            //     1: perpendicular to direction
+            //     2: perfectly opposite direction
+            float waste = 1 - Vector3.Dot(thrustNorm, direction);
 
-                if (waste < wasteThreshold) waste = 0;
-            }
-            else
-            {
-                torqueErr = transErr = Vector3.zero;
-                waste = 0;
-            }
+            if (waste < wasteThreshold) waste = 0;
 
             A[0, i] = torqueErr.x * factorTorque;
             A[1, i] = torqueErr.y * factorTorque;
@@ -154,14 +159,6 @@ public class RCSSolver
             x[i]    = 1;
             bndl[i] = 0;
             bndu[i] = 1;
-
-            if (torque.sqrMagnitude == 0)
-            {
-                B[7] -= A[7, i];
-                A[7, i] = 0;
-                x[i]    = 0;
-                bndu[i] = 0;
-            }
         }
 
         alglib.minbleicstate state;
@@ -191,7 +188,15 @@ public class RCSSolver
             }
         }
 
-        return throttles;
+        double[] fullThrottles = new double[fullCount];
+
+        int j = 0;
+        for (int i = 0; i < fullCount; i++)
+        {
+            fullThrottles[i] = (thrustForces[i].magnitude == 0) ? 0 : throttles[j++];
+        }
+
+        return fullThrottles;
     }
 }
 
@@ -242,10 +247,10 @@ public class RCSSolverKey
         d.x = Bucketize(d.x / maxabs, precision);
         d.y = Bucketize(d.y / maxabs, precision);
         d.z = Bucketize(d.z / maxabs, precision);
-        int x = (int)((d.x + 1) * 0.5 * 255);
-        int y = (int)((d.y + 1) * 0.5 * 255);
-        int z = (int)((d.z + 1) * 0.5 * 255);
-        hash = (x * precision) << 16 + (y * precision) << 8 + (z * precision);
+        int x = (int)(d.x * 127);
+        int y = (int)(d.y * 127);
+        int z = (int)(d.z * 127);
+        hash = (int)(((x & 0xFF) << 16) + ((y & 0xFF) << 8) + (z & 0xFF));
     }
 
     public override bool Equals(object other)
@@ -257,6 +262,11 @@ public class RCSSolverKey
     public override int GetHashCode()
     {
         return hash;
+    }
+
+    public override string ToString()
+    {
+        return hash.ToString("x6");
     }
 }
 
@@ -272,6 +282,11 @@ public class RCSSolverThread
 {
     public double calculationTime { get; private set; }
     public string statusString { get; private set; }
+    public string errorString { get; private set; }
+    public int taskCount { get { return tasks.Count; } }
+    public int cacheHits { get; private set; }
+    public int cacheMisses { get; private set; }
+    public int cacheSize { get { return results.Count; } }
 
     private RCSSolver solver = new RCSSolver();
     private MovingAverage _calculationTime = new MovingAverage(10);
@@ -282,13 +297,19 @@ public class RCSSolverThread
     private Thread t = null;
 
     private int lastPartCount = 0;
-    private Vector3d lastCoM = Vector3d.zero;
-    private int changeFlag = 0;
-    private Vessel lastVessel;
     private List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
 
+    // Entries in the results queue have been calculated by the solver thread
+    // but not yet added to the results dictionary. GetThrottles() will check
+    // the results dictionary first, and then, if no result was found, empty the
+    // results queue into the results dictionary.
+    private Queue resultsQueue = Queue.Synchronized(new Queue());
     private Dictionary<RCSSolverKey, double[]> results = new Dictionary<RCSSolverKey, double[]>();
+    public HashSet<RCSSolverKey> pending = new HashSet<RCSSolverKey>();
     private List<RCSSolver.Thruster> thrusters = new List<RCSSolver.Thruster>();
+    private double[] originalThrottles;
+    private double[] zeroThrottles;
+    private double[] double0 = new double[0];
 
     // Make a separate list of thrusters to give to clients, just to be sure
     // they don't mess up our internal one.
@@ -307,8 +328,8 @@ public class RCSSolverThread
             if (t == null)
             {
                 tasks.Clear();
-                results.Clear();
-                changeFlag = 0;
+                ClearResults();
+                cacheHits = cacheMisses = 0;
                 stopRunning = false;
                 t = new Thread(run);
                 t.Start();
@@ -324,7 +345,7 @@ public class RCSSolverThread
             {
                 stopRunning = true;
                 workEvent.Set();
-                t.Join();
+                t.Abort();
                 t = null;
             }
         }
@@ -346,13 +367,24 @@ public class RCSSolverThread
         }
     }
 
+    private class SolverResult
+    {
+        public readonly RCSSolverKey key;
+        public readonly double[] throttles;
+
+        public SolverResult(RCSSolverKey key, double[] throttles)
+        {
+            this.key = key;
+            this.throttles = throttles;
+        }
+    }
+
     private void ClearResults()
     {
-        changeFlag++;
-        lock (results)
-        {
-            results.Clear();
-        }
+        results.Clear();
+        resultsQueue.Clear();
+        pending.Clear();
+        // TODO: Kill pending tasks (with stale inputs).
     }
 
     public void ResetThrusterForces()
@@ -363,43 +395,46 @@ public class RCSSolverThread
         }
     }
 
+    private static Vector3 WorldToVessel(Vessel vessel, Vector3 pos)
+    {
+        // Translate to the vessel's reference frame.
+        return Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+    }
+
     private static Vector3 VesselRelativePos(Vector3 com, Vessel vessel, Part p)
     {
         if (p.Rigidbody == null) return Vector3.zero;
 
-        // Find our distance from the vessel's center of
-        // mass, in world coordinates.
-        Vector3 pos = p.Rigidbody.worldCenterOfMass - com;
-
-        // Translate to the vessel's reference frame.
-        pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
-        return pos;
+        // Find our distance from the vessel's center of mass, in world
+        // coordinates.
+        return WorldToVessel(vessel, p.Rigidbody.worldCenterOfMass - com);
     }
 
-    private void CheckVessel(Vessel vessel, VesselState state, Vector3 direction, Vector3 rotation)
+    private void CheckVessel(Vessel vessel, VesselState state)
     {
-        bool changed = (vessel != lastVessel || vessel.parts.Count != lastPartCount);
+        bool changed = false;
 
-        // Make sure the center of mass hasn't shifted too much.
-        if (!changed)
+        var rcsBalancer = VesselExtensions.GetMasterMechJeb(vessel).rcsbal;
+
+        if (vessel.parts.Count != lastPartCount)
         {
-            var rcsBalancer = VesselExtensions.GetMasterMechJeb(vessel).rcsbal;
-            double comShiftSquared = (state.CoM - lastCoM).sqrMagnitude;
-            changed |= (comShiftSquared >= rcsBalancer.comShiftTrigger);
+            lastPartCount = vessel.parts.Count;
+            changed = true;
         }
 
         // Make sure all thrusters are still enabled, because if they're not,
         // our calculations will be wrong.
-        for (int i = 0; i < thrusters.Count && !changed; i++)
+        for (int i = 0; i < thrusters.Count; i++)
         {
             if (!thrusters[i].partModule.isEnabled)
             {
                 changed = true;
+                break;
             }
         }
 
-        // Likewise, make sure any disabled RCS modules we found last time
-        // around are still disabled.
+        // Likewise, make sure any previously-disabled RCS modules are still
+        // disabled.
         foreach (var pm in lastDisabled)
         {
             if (pm.isEnabled)
@@ -413,9 +448,6 @@ public class RCSSolverThread
 
         // Something about the vessel has changed. We need to reset everything.
 
-        lastVessel = vessel;
-        lastCoM = state.CoM;
-        lastPartCount = vessel.parts.Count;
         lastDisabled.Clear();
 
         // ModuleRCS has no originalThrusterPower attribute, so we have
@@ -440,7 +472,6 @@ public class RCSSolverThread
                     // Create a single RCSSolver.Thruster for this part. This
                     // requires some assumptions about how the game's RCS code will
                     // drive the individual thrusters (which we can't control).
-                    Vector3 partForce = Vector3.zero;
 
                     Vector3[] thrustDirs = new Vector3[pm.thrusterTransforms.Count];
                     Quaternion rotationQuat = Quaternion.Inverse(vessel.GetTransform().rotation);
@@ -454,15 +485,16 @@ public class RCSSolverThread
             }
         }
         callerThrusters.Clear();
-        foreach (var t in ts)
+        originalThrottles = new double[ts.Count];
+        zeroThrottles = new double[ts.Count];
+        for (int i = 0; i < ts.Count; i++)
         {
-            callerThrusters.Add(t);
+            originalThrottles[i] = ts[i].originalForce;
+            zeroThrottles[i] = 0;
+            callerThrusters.Add(ts[i]);
         }
 
-        lock (results)
-        {
-            thrusters = ts;
-        }
+        thrusters = ts;
         ClearResults();
     }
 
@@ -471,90 +503,98 @@ public class RCSSolverThread
     //      foreach part in vessel.parts:
     //          foreach rcsModule in part.Modules.OfType<ModuleRCS>:
     //              ...
-    public void GetThrottles(Vessel vessel, VesselState state, Vector3 direction, Vector3 rotation,
-        out double[] throttles, out List<RCSSolver.Thruster> thrusters)
+    // Note that rotation balancing is not supported at the moment.
+    public void GetThrottles(Vessel vessel, VesselState state, Vector3 direction,
+        out double[] throttles, out List<RCSSolver.Thruster> thrustersOut)
     {
+        thrustersOut = callerThrusters;
+        if (direction == Vector3.zero)
+        {
+            throttles = (double[])originalThrottles.Clone();
+            return;
+        }
+
+        Vector3 rotation = Vector3.zero;
+
+        var rcsBalancer = VesselExtensions.GetMasterMechJeb(vessel).rcsbal;
+
         // Update vessel info if needed.
-        CheckVessel(vessel, state, direction, rotation);
+        CheckVessel(vessel, state);
+
+        if (thrusters.Count == 0)
+        {
+            throttles = (double[])double0.Clone();
+            return;
+        }
 
         Vector3 dir = direction.normalized;
         RCSSolverKey key = new RCSSolverKey(ref dir, rotation);
-        double[] result = null;
-        bool found = false;
 
-        lock (results)
+        if (results.TryGetValue(key, out throttles))
         {
-            if (results.ContainsKey(key))
+            cacheHits++;
+        }
+        else
+        {
+            // This task hasn't been calculated. We'll handle that here.
+            // Meanwhile, TryGetValue() will have set 'throttles' to null, but
+            // we'll make it a 0-element array instead to avoid null checks.
+            cacheMisses++;
+            throttles = double0;
+
+            if (pending.Contains(key))
             {
-                result = results[key];
-                found = true;
+                // We've submitted this key before, so we need to check the
+                // results queue.
+                while (resultsQueue.Count > 0)
+                {
+                    SolverResult sr = (SolverResult)resultsQueue.Dequeue();
+                    results[sr.key] = sr.throttles;
+                    pending.Remove(sr.key);
+                    if (sr.key == key)
+                    {
+                        throttles = sr.throttles;
+                    }
+                }
             }
             else
             {
-                // Store a null value to indicate that this result is being
-                // calculated (or will be in a few lines, anyway).
-                results[key] = null;
+                // This task was neither calculated nor pending, so we've never
+                // submitted it. Do so!
+                pending.Add(key);
+                tasks.Enqueue(new SolverTask(key, dir, rotation));
+                workEvent.Set();
             }
         }
 
-        if (!found)
-        {
-            // Calculate this task so the caller will eventually get an answer.
-            tasks.Enqueue(new SolverTask(key, dir, rotation));
-            workEvent.Set();
-        }
-
-        if (result != null)
-        {
-            // Return a copy of the array to make sure ours isn't modified.
-            result = (double[])result.Clone();
-        }
-
-        throttles = result;
-        thrusters = callerThrusters;
+        // Return a copy of the array to make sure ours isn't modified.
+        throttles = (double[])throttles.Clone();
     }
 
     private void run()
     {
-        // Each iteration of this loop will consume all items in 'tasks' and
-        // work on the newest one.
+        // Each iteration of this loop will consume all items in 'tasks'.
         while (workEvent.WaitOne() && !stopRunning)
         {
-            // It's possible that we were signalled but that our task was
-            // consumed on the previous iteration of this loop (since the
-            // producer adds the task and -then- signals the event).
-            // TODO: This should no longer be the case. Remove this.
-            if (tasks.Count == 0)
-            {
-                if (statusString == null || statusString == "")
-                {
-                    statusString = "no work found!";
-                }
-                continue;
-            }
-
-            SolverTask task = (SolverTask)tasks.Dequeue();
-
             try
             {
-                int myChangeFlag = changeFlag;
-
-                double[] throttles = solver.run(thrusters, task.direction, task.rotation);
-
-                lock (results)
+                statusString = "working";
+                while (tasks.Count > 0 && !stopRunning)
                 {
-                    if (myChangeFlag == changeFlag)
-                    {
-                        results[task.key] = throttles;
-                    }
-                }
+                    SolverTask task = (SolverTask)tasks.Dequeue();
+                    DateTime start = DateTime.Now;
 
-                _calculationTime.value = DateTime.Now.Subtract(task.timeSubmitted).TotalSeconds;
-                calculationTime = _calculationTime;
+                    double[] throttles = solver.run(thrusters, task.direction, task.rotation);
+                    resultsQueue.Enqueue(new SolverResult(task.key, throttles));
+
+                    _calculationTime.value = (DateTime.Now - start).TotalSeconds;
+                    calculationTime = _calculationTime;
+                }
+                statusString = "idle";
             }
             catch (Exception e)
             {
-                statusString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
+                errorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
             }
         }
     }

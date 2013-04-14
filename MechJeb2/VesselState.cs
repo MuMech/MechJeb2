@@ -240,6 +240,30 @@ namespace MuMech
             EngineInfo einfo = new EngineInfo(forward, CoM);
             IntakeInfo iinfo = new IntakeInfo();
 
+            var rcsbal = vessel.GetMasterMechJeb().rcsbal;
+            if (vessel.ActionGroups[KSPActionGroup.RCS] && rcsbal.enabled)
+            {
+                Vector3d rot = Vector3d.zero;
+                foreach (Vector6.Direction dir6 in Enum.GetValues(typeof(Vector6.Direction)))
+                {
+                    Vector3d dir = Vector6.directions[dir6];
+                    double[] throttles;
+                    List<RCSSolver.Thruster> thrusters;
+                    rcsbal.GetThrottles(dir, out throttles, out thrusters);
+                    if (throttles != null)
+                    {
+                        for (int i = 0; i < throttles.Length; i++)
+                        {
+                            if (throttles[i] > 0)
+                            {
+                                Vector3d force = thrusters[i].GetThrust(dir, rot);
+                                rcsThrustAvailable.Add(dir * Vector3d.Dot(force * throttles[i], dir));
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach (Part p in vessel.parts)
             {
                 if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
@@ -251,7 +275,7 @@ namespace MuMech
 
                 if (p.Rigidbody != null) MoI += p.Rigidbody.inertiaTensor;
 
-                if (vessel.ActionGroups[KSPActionGroup.RCS])
+                if (vessel.ActionGroups[KSPActionGroup.RCS] && !rcsbal.enabled)
                 {
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {

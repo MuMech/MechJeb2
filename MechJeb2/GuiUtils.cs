@@ -262,6 +262,19 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
+        public static void SimpleLabel(string leftLabel, string rightLabel = "")
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        public static void SimpleLabelInt(string leftLabel, int rightValue)
+        {
+            SimpleLabel(leftLabel, rightValue.ToString());
+        }
+
         public static int ArrowSelector(int index, int numIndices, Action centerGuiAction)
         {
             if (numIndices == 0) return index;

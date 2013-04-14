@@ -10,12 +10,12 @@ namespace MuMech
     public class MechJebModuleRCSBalancer : ComputerModule
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [ToggleInfoItem("Smart RCS translation", InfoItem.Category.Thrust)]
         public bool smartTranslation = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool smartRotation = false;
 
         // Overdrive
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [EditableInfoItem("RCS balancer overdrive", InfoItem.Category.Thrust, rightLabel = "%")]
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
         // Advanced options
@@ -37,27 +37,97 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble tuningParamFactorWaste = 1;
 
-        // Debug info
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool debugInfo = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool showThrusterStates = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool onlyWhenMoving = true;
-
-        public string status;
-        public string thrusterStateStr = "";
-        public string throttleCalcStr = "";
-
         // Variables for RCS solving.
         private RCSSolverThread solverThread = new RCSSolverThread();
 
-        [EditableInfoItem("RCS balancing calculation precision", InfoItem.Category.Thrust)]
+        [EditableInfoItem("RCS balancer precision", InfoItem.Category.Thrust)]
         public EditableInt calcPrecision = 3;
 
-        [EditableInfoItem("RCS CoM shift trigger", InfoItem.Category.Thrust)]
-        public EditableDouble comShiftTrigger = 0.01;
+        [GeneralInfoItem("RCS balancer info", InfoItem.Category.Thrust)]
+        public void RCSBalancerInfoItem()
+        {
+            GUILayout.BeginVertical();
+            GuiUtils.SimpleLabel("Calculation time", (solverThread.calculationTime * 1000).ToString("F0") + " ms");
+            GuiUtils.SimpleLabelInt("Pending tasks", solverThread.taskCount);
 
+            GuiUtils.SimpleLabelInt("Cache size",   solverThread.cacheSize);
+            GuiUtils.SimpleLabelInt("Cache hits",   solverThread.cacheHits);
+            GuiUtils.SimpleLabelInt("Cache misses", solverThread.cacheMisses);
+
+            GuiUtils.SimpleLabel("Status", solverThread.statusString);
+
+            string error = solverThread.errorString;
+            if (error != null && error.Length != 0)
+            {
+                GUILayout.Label(error, GUILayout.ExpandWidth(true));
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("RCS thruster states", InfoItem.Category.Thrust)]
+        private void RCSThrusterStateInfoItem()
+        {
+            GUILayout.BeginVertical();
+            Vector3 blah = vesselState.CoM;
+            GUILayout.Label("RCS thrusters states (scaled to 0-9)");
+
+            bool firstRcsModule = true;
+            string thrusterStates = "";
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (!firstRcsModule) thrusterStates += " ";
+                    firstRcsModule = false;
+                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
+                    for (int i = 0; i < pm.thrustForces.Count; i++)
+                    {
+                        if (i != 0) thrusterStates += ",";
+                        thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
+                    }
+                    thrusterStates += ")";
+                }
+            }
+
+            GUILayout.Label(thrusterStates);
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("RCS part throttles", InfoItem.Category.Thrust)]
+        private void RCSPartThrottlesInfoItem()
+        {
+            GUILayout.BeginVertical();
+
+            bool firstRcsModule = true;
+            string thrusterStates = "";
+
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (!firstRcsModule) thrusterStates += " ";
+                    firstRcsModule = false;
+                    thrusterStates += pm.thrusterPower.ToString("F1");
+                }
+            }
+
+            GUILayout.Label(thrusterStates);
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("Control vector", InfoItem.Category.Thrust)]
+        private void ControlVectorInfoItem()
+        {
+            FlightCtrlState s = FlightInputHandler.state;
+
+            string xyz = String.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
+            string rpy = String.Format("{0:F2} {1:F2} {2:F2}", s.roll, s.pitch, s.yaw);
+            GUILayout.BeginVertical();
+            GuiUtils.SimpleLabel("X/Y/Z", xyz);
+            GuiUtils.SimpleLabel("R/P/Y", rpy);
+            GUILayout.EndVertical();
+        }
         public MechJebModuleRCSBalancer(MechJebCore core)
             : base(core)
         {
@@ -84,16 +154,15 @@ namespace MuMech
             solverThread.ResetThrusterForces();
         }
 
-        public void GetThrottles(Vector3 direction, Vector3 rotation,
-            out double[] throttles, out List<RCSSolver.Thruster> thrusters)
+        public void GetThrottles(Vector3 direction, out double[] throttles, out List<RCSSolver.Thruster> thrusters)
         {
-            solverThread.GetThrottles(vessel, vesselState, direction, rotation, out throttles, out thrusters);
+            solverThread.GetThrottles(vessel, vesselState, direction, out throttles, out thrusters);
         }
 
         // Throttles RCS thrusters to keep a vessel balanced during translation.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
-            if (s.isNeutral)
+            if (s.X == 0 && s.Y == 0 && s.Z == 0)
             {
                 solverThread.ResetThrusterForces();
                 return;
@@ -114,36 +183,24 @@ namespace MuMech
             // To turn this vector into a vessel-relative one, we need to negate
             // each value and also swap the Y and Z values.
             Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
-            Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
-
-            if (!smartRotation) rotation = Vector3.zero;
-
-            // TODO: Update thrusters.
+            
+            // RCS balancing on rotation isn't supported.
+            //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
             double[] throttles;
             List<RCSSolver.Thruster> thrusters;
-            GetThrottles(direction, rotation, out throttles, out thrusters);
-            throttleCalcStr = "";
+            RCSSolverKey.SetPrecision(calcPrecision);
+            GetThrottles(direction, out throttles, out thrusters);
 
             // If the throttles we got were bad (due to the threaded calculation
             // not having completed yet), throttle all RCS thrusters to 0. It's
             // better to not move at all than move in the wrong direction.
-            if (throttles == null || throttles.Length != thrusters.Count)
+            if (throttles.Length != thrusters.Count)
             {
                 throttles = new double[thrusters.Count];
                 for (int i = 0; i < thrusters.Count; i++)
                 {
                     throttles[i] = 0;
-                }
-            }
-
-            throttleCalcStr += "throttles:\n";
-            for (int i = 0; i < throttles.Length; i++)
-            {
-                throttleCalcStr += String.Format("{0:F0}", throttles[i] * 9);
-                if (i < throttles.Length - 1)
-                {
-                    throttleCalcStr += ((i + 1) % 16 == 0) ? "\n" : " ";
                 }
             }
 
@@ -170,62 +227,11 @@ namespace MuMech
             return solverThread.calculationTime;
         }
 
-        private string GetThrusterStates()
-        {
-            string thrusterStates = "";
-            bool firstRcsModule = true;
-            foreach (Part p in vessel.parts)
-            {
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                {
-                    if (!firstRcsModule) thrusterStates += " ";
-                    firstRcsModule = false;
-                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
-                    for (int i = 0; i < pm.thrustForces.Count; i++)
-                    {
-                        if (i != 0) thrusterStates += ",";
-                        thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
-                    }
-                    thrusterStates += ")";
-                }
-            }
-
-            if (thrusterStates != "")
-            {
-                thrusterStates = "thruster states:\n" + thrusterStates;
-            }
-            return thrusterStates;
-        }
-
         public override void Drive(FlightCtrlState s)
         {
-            status = "";
-
-            // Get thruster states -before- we adjust them.
-            if (showThrusterStates && !(s.isNeutral && onlyWhenMoving))
-            {
-                thrusterStateStr = GetThrusterStates();
-            }
-
             if (smartTranslation)
             {
                 AdjustRCSThrottles(s);
-
-                if (debugInfo)
-                {
-                    if (status != "") status += "\n";
-                    status += String.Format("control vector: {0:F2} {1:F2} {2:F2} {3:F2} {4:F2} {5:F2}",
-                        s.X, s.Y, s.Z, s.roll, s.pitch, s.yaw);
-                    status += "\n(thruster/throttle values are 0..9)";
-                    if (showThrusterStates && thrusterStateStr != "")
-                    {
-                        status += "\n" + thrusterStateStr;
-                    }
-                    if (throttleCalcStr != "")
-                    {
-                        status += "\n" + throttleCalcStr;
-                    }
-                }
             }
 
             base.Drive(s);
