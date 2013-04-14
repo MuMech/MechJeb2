@@ -219,6 +219,44 @@ namespace MuMech
             return (rcsTranslationEfficiencyAvg.value * 100).ToString("F2") + "%";
         }
 
+        [ValueInfoItem("RCS ΔV", InfoItem.Category.Vessel, format = "F1", units = "m/s", showInEditor = true)]
+        public double RCSDeltaVVacuum()
+        {
+            // Use the average specific impulse of all RCS parts.
+            double totalIsp = 0;
+            double monopropMass = 0;
+            int numThrusters = 0;
+
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor)
+                ? EditorLogic.SortedShipList
+                : (vessel == null) ? new List<Part>() : vessel.Parts;
+            foreach (Part p in parts)
+            {
+                foreach (PartResource r in p.Resources)
+                {
+                    if (r.amount > 0 && r.info.name == "MonoPropellant")
+                    {
+                        monopropMass += r.amount * r.info.density;
+                    }
+                }
+            }
+
+            foreach (ModuleRCS pm in VesselExtensions.GetModules<ModuleRCS>(vessel))
+            {
+                totalIsp += pm.atmosphereCurve.Evaluate(0);
+                numThrusters++;
+            }
+
+            double m0 = (HighLogic.LoadedSceneIsEditor)
+                ? EditorLogic.SortedShipList.Where(
+                    p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass())
+                : vesselState.mass;
+            double m1 = m0 - monopropMass;
+            if (numThrusters == 0 || m1 <= 0) return 0;
+            double isp = totalIsp / numThrusters;
+            return isp * 9.81 * Math.Log(m0 / m1);
+        }
+
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {
