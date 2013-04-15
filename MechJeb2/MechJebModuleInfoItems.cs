@@ -18,8 +18,7 @@ namespace MuMech
             if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.maxThrustAccel;
-            if (core.thrust != null && core.thrust.enabled) burnTime /= core.thrust.throttleLimit; //account for throttle limits
+            double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.limitedMaxThrustAccel;
             return GuiUtils.TimeToDHMS(burnTime);
         }
 
@@ -122,7 +121,7 @@ namespace MuMech
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
             double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
             double g = vesselState.localg;
-            double T = vesselState.maxThrustAccel;
+            double T = vesselState.limitedMaxThrustAccel;
 
             double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
             double decelTime = vesselState.speedSurface / effectiveDecel;

@@ -97,8 +97,7 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            double burnTime = dVLeft / vesselState.maxThrustAccel;
-            if (core.thrust != null && core.thrust.enabled) burnTime /= core.thrust.throttleLimit; //account for throttle limits
+            double burnTime = dVLeft / vesselState.limitedMaxThrustAccel;
             
             double timeToNode = node.UT - vesselState.time;
 

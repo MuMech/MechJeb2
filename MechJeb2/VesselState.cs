@@ -98,7 +98,9 @@ namespace MuMech
         public double mass;
         public double thrustAvailable;
         public double thrustMinimum;
-        public double maxThrustAccel;      //thrustAvailable / mass
+        public double maxThrustAccel; //thrustAvailable / mass
+        public float throttleLimit = 1;
+        public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
         public double torqueRAvailable;
         public double torquePYAvailable;
@@ -118,6 +120,7 @@ namespace MuMech
 
         public Vector6 rcsThrustAvailable;
         public Vector6 rcsTorqueAvailable;
+
 
         // Resource information keyed by resource Id.
         public Dictionary<int, ResourceInfo> resources;

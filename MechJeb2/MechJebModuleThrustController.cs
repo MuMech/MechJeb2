@@ -78,7 +78,6 @@ namespace MuMech
         }
 
         public float targetThrottle = 0;
-        public float throttleLimit = 1; //other modules can read this number to tell whether max vessel thrust is reduced because of throttle limits
 
         protected bool tmode_changed = false;
         
@@ -216,7 +215,7 @@ namespace MuMech
 
             s.mainThrottle = targetThrottle;
 
-            throttleLimit = 1;
+            float throttleLimit = 1;
 
             if (limitThrottle)
             {
@@ -247,6 +246,8 @@ namespace MuMech
 
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
             throttleLimit = Mathf.Clamp01(throttleLimit);
+
+            vesselState.throttleLimit = throttleLimit;
 
             s.mainThrottle = Mathf.Min(s.mainThrottle, throttleLimit);
 

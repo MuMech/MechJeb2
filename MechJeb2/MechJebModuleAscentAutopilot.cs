@@ -166,7 +166,7 @@ namespace MuMech
                 double difficulty = vesselState.velocityVesselSurface.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
                 if (difficulty > 5) difficulty = 5;
 
-                if (vesselState.maxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
+                if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
 
                 Vector3d steerOffset = Kp * difficulty * velocityError;
 
@@ -191,13 +191,13 @@ namespace MuMech
 
             double circularSpeed = OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, orbit.ApR);
             double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
-            double circularizeBurnTime = (circularSpeed - apoapsisSpeed) / vesselState.maxThrustAccel;
+            double circularizeBurnTime = (circularSpeed - apoapsisSpeed) / vesselState.limitedMaxThrustAccel;
 
             //Once we get above the atmosphere, plan and execute the circularization maneuver.
             //For orbits near the edge of the atmosphere, we can't wait until we break the atmosphere
             //to start the burn, so we also compare the timeToAp with the expected circularization burn time.
             if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
-                || (vesselState.maxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
+                || (vesselState.limitedMaxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
             {
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
