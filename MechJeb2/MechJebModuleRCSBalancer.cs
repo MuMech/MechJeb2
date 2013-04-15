@@ -54,8 +54,9 @@ namespace MuMech
             GuiUtils.SimpleLabelInt("Cache hits",   solverThread.cacheHits);
             GuiUtils.SimpleLabelInt("Cache misses", solverThread.cacheMisses);
 
-            GuiUtils.SimpleLabel("CoM shift",  MuUtils.ToSI(solverThread.comError) + "m");
-            GuiUtils.SimpleLabel("CoM recalc", MuUtils.ToSI(solverThread.comErrorThreshold) + "m");
+            GuiUtils.SimpleLabel("CoM shift",     MuUtils.ToSI(solverThread.comError) + "m");
+            GuiUtils.SimpleLabel("CoM recalc",    MuUtils.ToSI(solverThread.comErrorThreshold) + "m");
+            GuiUtils.SimpleLabel("Max CoM shift", MuUtils.ToSI(solverThread.maxComError) + "m");
 
             GuiUtils.SimpleLabel("Status", solverThread.statusString);
 

@@ -283,6 +283,7 @@ public class RCSSolverThread
     public double calculationTime { get; private set; }
     public double comError { get { return _comError.value; } }
     public double comErrorThreshold { get; private set; }
+    public double maxComError { get; private set; }
     public string statusString { get; private set; }
     public string errorString { get; private set; }
     public int taskCount { get { return tasks.Count; } }
@@ -304,6 +305,8 @@ public class RCSSolverThread
     private int lastPartCount = 0;
     private List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
     private Vector3 lastCoM = Vector3.zero;
+    private int comForgiveness = 1;
+    private bool comResetLastCheck = false;
 
     // Entries in the results queue have been calculated by the solver thread
     // but not yet added to the results dictionary. GetThrottles() will check
@@ -341,6 +344,9 @@ public class RCSSolverThread
                 // vessel hasn't changed. Invalidating vessel information on
                 // thread start lets the UI toggle act as a reset button.
                 lastPartCount = 0;
+                comForgiveness = 1;
+                comResetLastCheck = false;
+                maxComError = 0;
 
                 stopRunning = false;
                 t = new Thread(run);
@@ -400,6 +406,10 @@ public class RCSSolverThread
         results.Clear();
         resultsQueue.Clear();
         pending.Clear();
+
+        // Note that we do NOT clear _comError. It's a moving average, and if
+        // exceeds the CoM shift threshold on successive CheckVessel() calls,
+        // that tells us the threshold needs to be higher for this ship.
     }
 
     public void ResetThrusterForces()
@@ -494,13 +504,29 @@ public class RCSSolverThread
 
             // Assume MoI magnitude is always >=2.34, since that's all I tested.
             comErrorThreshold = (Math.Max(state.MoI.magnitude, 2.34) - 1) / 542;
+            comErrorThreshold *= comForgiveness;
 
             Vector3 com = WorldToVessel(vessel, state.CoM - rootPartBody.position);
-            _comError.value = (lastCoM - com).magnitude;
+            double thisComErr = (lastCoM - com).magnitude;
+            maxComError = Math.Max(maxComError, thisComErr);
+            _comError.value = thisComErr;
             if (_comError > comErrorThreshold)
             {
+                if (comResetLastCheck)
+                {
+                    // The CoM check has failed on two updates in a row. This
+                    // can happen if the ship bends a lot, and it means we
+                    // should be more forgiving of CoM changes on this
+                    // particular ship.
+                    comForgiveness *= 2;
+                }
                 lastCoM = com;
+                comResetLastCheck = true;
                 changed = true;
+            }
+            else
+            {
+                comResetLastCheck = false;
             }
         }
 
