@@ -330,6 +330,16 @@ public class RCSSolverThread
                 tasks.Clear();
                 ClearResults();
                 cacheHits = cacheMisses = 0;
+
+                // Make sure CheckVessel() doesn't try to reuse throttle info
+                // from when this thread was enabled previously, even if the
+                // vessel hasn't changed. Invalidating vessel information on
+                // thread start lets the UI toggle act as a full reset button
+                // and thus provide a workaround for a shift in CoM causing
+                // previously-calculated balanced throttles to lose accuracy.
+                // TODO: Clear results automatically if CoM shifts enough.
+                lastPartCount = 0;
+
                 stopRunning = false;
                 t = new Thread(run);
                 t.Start();
