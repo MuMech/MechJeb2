@@ -52,6 +52,7 @@ namespace MuMech
             }
 
             bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
+            GuiUtils.SimpleTextBox("Speed limit", autopilot.speedLimit, "m/s");
             if (autopilot.enabled != active)
             {
                 if (active)
