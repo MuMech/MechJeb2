@@ -8,6 +8,7 @@ namespace MuMech
 {
     public class MechJebModuleLandingAutopilot : ComputerModule
     {
+
         //public interface:
         public void LandAtPositionTarget(object controller)
         {
@@ -470,9 +471,12 @@ namespace MuMech
             Vector3d[] deltas = new Vector3d[3];
             for (int i = 0; i < 3; i++)
             {
-                double perturbationDeltaV = 0.1;
+                double perturbationDeltaV = 1; //warning: hard experience shows that setting this too low leads to bewildering bugs due to finite precision of Orbit functions
                 Orbit perturbedOrbit = orbit.PerturbedOrbit(vesselState.time, perturbationDeltaV * perturbationDirections[i]); //compute the perturbed orbit
-                Vector3d perturbedLandingPosition = perturbedOrbit.SwappedRelativePositionAtUT(perturbedOrbit.NextTimeOfRadius(vesselState.time, endRadius)); //find where it hits the planet
+                double perturbedLandingTime;
+                if (perturbedOrbit.PeR < endRadius) perturbedLandingTime = perturbedOrbit.NextTimeOfRadius(vesselState.time, endRadius);
+                else perturbedLandingTime = perturbedOrbit.NextPeriapsisTime(vesselState.time);
+                Vector3d perturbedLandingPosition = perturbedOrbit.SwappedRelativePositionAtUT(perturbedLandingTime); //find where it hits the planet
                 Vector3d landingDelta = perturbedLandingPosition - orbitLandingPosition; //find the difference between that and the original orbit's intersection point
                 landingDelta = convertOrbitToActual * landingDelta; //rotate that difference vector so that we can now think of it as starting at the actual landing position
                 landingDelta = Vector3d.Exclude(actualLandingPosition, landingDelta); //project the difference vector onto the plane tangent to the actual landing position
@@ -604,7 +608,8 @@ namespace MuMech
         {
             if (vesselState.altitudeASL < DecelerationEndAltitude() + 5)
             {
-                landStep = LandStep.KILLING_HORIZONTAL_VELOCITY;
+                if (UseAtmosphereToBrake()) landStep = LandStep.FINAL_DESCENT;
+                else landStep = LandStep.KILLING_HORIZONTAL_VELOCITY;
                 core.warp.MinimumWarp();
                 return;
             }
@@ -706,6 +711,8 @@ namespace MuMech
             }
 
             double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+
+            Debug.Log("minalt = " + minalt);
 
             if (!deployedGears && (minalt < 1000)) DeployLandingGears();
 
