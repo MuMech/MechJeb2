@@ -14,6 +14,11 @@ namespace MuMech
         {
             balancer = core.GetComputerModule<MechJebModuleRCSBalancer>();
 
+            if (balancer.smartTranslation)
+            {
+                balancer.users.Add(this);
+            }
+
             base.OnStart(state);
         }
 
