@@ -18,7 +18,7 @@ namespace MuMech
         public bool conserveFuel = true;
 
         [EditableInfoItem("Conserve RCS fuel threshold", InfoItem.Category.Thrust, rightLabel = "m/s")]
-        public EditableDouble conserveThreshold = 0.25;
+        public EditableDouble conserveThreshold = 0.05;
 
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
