@@ -281,6 +281,8 @@ public class RCSSolverTuningParams
 public class RCSSolverThread
 {
     public double calculationTime { get; private set; }
+    public double comError { get { return _comError.value; } }
+    public double comErrorThreshold { get; private set; }
     public string statusString { get; private set; }
     public string errorString { get; private set; }
     public int taskCount { get { return tasks.Count; } }
@@ -291,6 +293,9 @@ public class RCSSolverThread
     private RCSSolver solver = new RCSSolver();
     private MovingAverage _calculationTime = new MovingAverage(10);
 
+    // A moving average reduces measurement error due to ship flexing.
+    private MovingAverage _comError = new MovingAverage(10);
+
     private Queue tasks = Queue.Synchronized(new Queue());
     private AutoResetEvent workEvent = new AutoResetEvent(false);
     private bool stopRunning = false;
@@ -298,6 +303,7 @@ public class RCSSolverThread
 
     private int lastPartCount = 0;
     private List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
+    private Vector3 lastCoM = Vector3.zero;
 
     // Entries in the results queue have been calculated by the solver thread
     // but not yet added to the results dictionary. GetThrottles() will check
@@ -333,10 +339,7 @@ public class RCSSolverThread
                 // Make sure CheckVessel() doesn't try to reuse throttle info
                 // from when this thread was enabled previously, even if the
                 // vessel hasn't changed. Invalidating vessel information on
-                // thread start lets the UI toggle act as a full reset button
-                // and thus provide a workaround for a shift in CoM causing
-                // previously-calculated balanced throttles to lose accuracy.
-                // TODO: Clear results automatically if CoM shifts enough.
+                // thread start lets the UI toggle act as a reset button.
                 lastPartCount = 0;
 
                 stopRunning = false;
@@ -453,6 +456,51 @@ public class RCSSolverThread
             {
                 changed = true;
                 break;
+            }
+        }
+
+        // See if the CoM has moved too much.
+        Rigidbody rootPartBody = vessel.rootPart.rigidbody;
+        if (rootPartBody != null)
+        {
+            // But how much is "too much"? Well, it probably has something to do
+            // with the ship's moment of inertia (MoI). Let's say the distance
+            // 'd' that the CoM is allowed to shift without a reset is:
+            //
+            //      d = moi * x + c
+            //
+            // where 'moi' is the magnitude of the ship's moment of inertia and
+            // 'x' and 'c' are tuning parameters to be determined.
+            //
+            // Using a few actual KSP ships, I burned RCS fuel (or moved fuel
+            // from one tank to another) to see how far the CoM could shift
+            // before the the rotation error on translation became annoying.
+            // I came up with roughly:
+            //
+            //      d         moi
+            //      0.005    2.34
+            //      0.04    11.90
+            //      0.07    19.96
+            //
+            // I then halved each 'd' value, because we'd like to address this
+            // problem -before- it becomes annoying. Least-squares linear
+            // regression on the (moi, d/2) pairs gives the following (with
+            // adjusted R^2 = 0.999966):
+            //
+            //      moi = 542.268 d + 1.00654
+            //      d = (moi - 1) / 542
+            //
+            // So the numbers below have some basis in reality. =)
+
+            // Assume MoI magnitude is always >=2.34, since that's all I tested.
+            comErrorThreshold = (Math.Max(state.MoI.magnitude, 2.34) - 1) / 542;
+
+            Vector3 com = WorldToVessel(vessel, state.CoM - rootPartBody.position);
+            _comError.value = (lastCoM - com).magnitude;
+            if (_comError > comErrorThreshold)
+            {
+                lastCoM = com;
+                changed = true;
             }
         }
 

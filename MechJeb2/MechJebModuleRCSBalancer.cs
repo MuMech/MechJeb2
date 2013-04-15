@@ -54,6 +54,9 @@ namespace MuMech
             GuiUtils.SimpleLabelInt("Cache hits",   solverThread.cacheHits);
             GuiUtils.SimpleLabelInt("Cache misses", solverThread.cacheMisses);
 
+            GuiUtils.SimpleLabel("CoM shift",  MuUtils.ToSI(solverThread.comError) + "m");
+            GuiUtils.SimpleLabel("CoM recalc", MuUtils.ToSI(solverThread.comErrorThreshold) + "m");
+
             GuiUtils.SimpleLabel("Status", solverThread.statusString);
 
             string error = solverThread.errorString;
@@ -69,7 +72,6 @@ namespace MuMech
         private void RCSThrusterStateInfoItem()
         {
             GUILayout.BeginVertical();
-            Vector3 blah = vesselState.CoM;
             GUILayout.Label("RCS thrusters states (scaled to 0-9)");
 
             bool firstRcsModule = true;
