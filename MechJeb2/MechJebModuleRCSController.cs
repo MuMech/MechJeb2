@@ -33,6 +33,12 @@ namespace MuMech
             base.OnModuleEnabled();
         }
 
+        public override void OnModuleDisabled()
+        {
+            vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+            base.OnModuleDisabled();
+        }
+
         public void SetTargetWorldVelocity(Vector3d vel)
         {
             targetVelocity = vel;
