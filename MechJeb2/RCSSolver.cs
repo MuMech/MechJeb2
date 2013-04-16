@@ -286,7 +286,7 @@ public class RCSSolverThread
     public double maxComError { get; private set; }
     public string statusString { get; private set; }
     public string errorString { get; private set; }
-    public int taskCount { get { return tasks.Count; } }
+    public int taskCount { get { return tasks.Count + resultsQueue.Count + (isWorking ? 1 : 0); } }
     public int cacheHits { get; private set; }
     public int cacheMisses { get; private set; }
     public int cacheSize { get { return results.Count; } }
@@ -301,6 +301,7 @@ public class RCSSolverThread
     private AutoResetEvent workEvent = new AutoResetEvent(false);
     private bool stopRunning = false;
     private Thread t = null;
+    private bool isWorking = false;
 
     private int lastPartCount = 0;
     private List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
@@ -336,6 +337,7 @@ public class RCSSolverThread
             {
                 ClearResults();
                 cacheHits = cacheMisses = 0;
+                isWorking = false;
 
                 // Make sure CheckVessel() doesn't try to reuse throttle info
                 // from when this thread was enabled previously, even if the
@@ -653,8 +655,11 @@ public class RCSSolverThread
                 {
                     SolverTask task = (SolverTask)tasks.Dequeue();
                     DateTime start = DateTime.Now;
+                    isWorking = true;
 
                     double[] throttles = solver.run(thrusters, task.direction, task.rotation);
+
+                    isWorking = false;
                     resultsQueue.Enqueue(new SolverResult(task.key, throttles));
 
                     _calculationTime.value = (DateTime.Now - start).TotalSeconds;
