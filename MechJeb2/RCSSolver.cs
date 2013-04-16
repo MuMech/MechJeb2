@@ -327,7 +327,6 @@ public class RCSSolverThread
         {
             if (t == null)
             {
-                tasks.Clear();
                 ClearResults();
                 cacheHits = cacheMisses = 0;
 
@@ -391,10 +390,13 @@ public class RCSSolverThread
 
     private void ClearResults()
     {
+        // Note that a task being worked on right now will have already been
+        // removed from 'tasks' and will add its result to the results queue.
+        // TODO: Fix this so that any such stale results are never used.
+        tasks.Clear();
         results.Clear();
         resultsQueue.Clear();
         pending.Clear();
-        // TODO: Kill pending tasks (with stale inputs).
     }
 
     public void ResetThrusterForces()
@@ -601,6 +603,10 @@ public class RCSSolverThread
                     calculationTime = _calculationTime;
                 }
                 statusString = "idle";
+            }
+            catch (InvalidOperationException)
+            {
+                // Dequeue() failed due to the queue being cleared.
             }
             catch (Exception e)
             {
