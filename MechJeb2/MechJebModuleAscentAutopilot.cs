@@ -97,14 +97,18 @@ namespace MuMech
             else if (orbit.ApA < mainBody.RealMaxAtmosphereAltitude()) return 1.0F; //throttle hard to escape atmosphere
 
             double GM = mainBody.gravParameter;
+            double E = 0.5 * vesselState.speedOrbital * vesselState.speedOrbital - GM / vesselState.radius;
+            double L = vesselState.radius * vesselState.speedOrbitHorizontal;
+            double dEdV = vesselState.speedOrbital;
+            double dLdV = vesselState.radius * Vector3d.Dot(vesselState.horizontalOrbit, vesselState.velocityVesselOrbitUnit);
 
-            double potentialDifference = GM / currentApR - GM / finalApR;
-            double finalKineticEnergy = 0.5 * vesselState.speedOrbital * vesselState.speedOrbital + potentialDifference;
-            double speedDifference = Math.Sqrt(2 * finalKineticEnergy) - vesselState.speedOrbital;
+            //the change in apoapsis that will result from a small increase in forward velocity:
+            double dApdV = -(orbit.ApR / E) * dEdV - (0.5 * L * L * dEdV / E + L * dLdV) / Math.Sqrt(GM * GM + 2 * E * L * L);
 
-            if (speedDifference > 100) return 1.0F;
+            //estimated time until our apoapsis reaches the target value at max thrust:
+            double timeNeeded = (finalApR - currentApR) / (vesselState.maxThrustAccel * dApdV);
 
-            return Mathf.Clamp((float)(speedDifference / (1.0 * vesselState.maxThrustAccel)), 0.05F, 1.0F); //1 second time constant for throttle reduction
+            return Mathf.Clamp((float)(1.0 * timeNeeded), 0.05F, 1.0F);
         }
 
         void DriveGravityTurn(FlightCtrlState s)
