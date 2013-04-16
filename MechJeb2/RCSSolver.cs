@@ -164,7 +164,7 @@ public class RCSSolver
         alglib.minbleicstate state;
         alglib.minbleicreport rep;
 
-        double epsg = 0.000001;
+        double epsg = 0.01;
         double epsf = 0;
         double epsx = 0;
         double diffstep = 1.0e-6;
