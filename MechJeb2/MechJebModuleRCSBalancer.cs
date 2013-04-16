@@ -39,6 +39,8 @@ namespace MuMech
 
         // Variables for RCS solving.
         private RCSSolverThread solverThread = new RCSSolverThread();
+        private List<RCSSolver.Thruster> thrusters = null;
+        private double[] throttles = null;
 
         [EditableInfoItem("RCS balancer precision", InfoItem.Category.Thrust)]
         public EditableInt calcPrecision = 3;
@@ -190,8 +192,6 @@ namespace MuMech
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
-            double[] throttles;
-            List<RCSSolver.Thruster> thrusters;
             RCSSolverKey.SetPrecision(calcPrecision);
             GetThrottles(direction, out throttles, out thrusters);
 
@@ -228,6 +228,27 @@ namespace MuMech
         public double GetCalculationTime()
         {
             return solverThread.calculationTime;
+        }
+
+        public override void OnUpdate()
+        {
+            // Make thruster exhaust onscreen correspond to actual thrust.
+            if (smartTranslation && throttles != null)
+            {
+                for (int i = 0; i < throttles.Length; i++)
+                {
+                    // 'throttles' and 'thrusters' are guaranteed to be of the
+                    // same length.
+                    float throttle = (float)throttles[i];
+                    var tfx = thrusters[i].partModule.thrusterFX;
+
+                    for (int j = 0; j < tfx.Count; j++)
+                    {
+                        tfx[j].Power *= throttle;
+                    }
+                }
+            }
+            base.OnUpdate();
         }
 
         public override void Drive(FlightCtrlState s)
