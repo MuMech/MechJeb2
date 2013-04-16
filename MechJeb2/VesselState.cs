@@ -22,6 +22,7 @@ namespace MuMech
         public Vector3d forward;      //the direction the vessel is pointing
         public Vector3d horizontalOrbit;   //unit vector in the direction of horizontal component of orbit velocity
         public Vector3d horizontalSurface; //unit vector in the direction of horizontal component of surface velocity
+        public Vector3d rootPartPos;
 
         public Quaternion rotationSurface;
         public Quaternion rotationVesselSurface;
@@ -138,6 +139,9 @@ namespace MuMech
             CoM = vessel.findWorldCenterOfMass();
             MoI = vessel.findLocalMOI(CoM);
             up = (CoM - vessel.mainBody.position).normalized;
+
+            Rigidbody rigidBody = vessel.rootPart.rigidbody;
+            if (rigidBody != null) rootPartPos = rigidBody.position;
 
             north = Vector3d.Exclude(up, (vessel.mainBody.position + vessel.mainBody.transform.up * (float)vessel.mainBody.Radius) - CoM).normalized;
             east = vessel.mainBody.getRFrmVel(CoM).normalized;
