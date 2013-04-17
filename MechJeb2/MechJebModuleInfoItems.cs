@@ -799,6 +799,59 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+
+        [GeneralInfoItem("All planet phase angles", InfoItem.Category.Orbit)]
+        public void AllPlanetPhaseAngles()
+        {
+            Orbit o = orbit;
+            while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
+            
+            GUILayout.BeginVertical();
+            GUILayout.Label("Planet phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+
+            foreach (CelestialBody body in FlightGlobals.Bodies)
+            {
+                if (body == Planetarium.fetch.Sun) continue;
+                if (body.referenceBody != Planetarium.fetch.Sun) continue;
+                if (body.orbit == o) continue;
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
+                GUILayout.Label(o.PhaseAngle(body.orbit, vesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("All moon phase angles", InfoItem.Category.Orbit)]
+        public void AllMoonPhaseAngles()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("Moon phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+
+            if (orbit.referenceBody != Planetarium.fetch.Sun)
+            {
+                Orbit o = orbit;
+                while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
+
+                foreach (CelestialBody body in o.referenceBody.orbitingBodies)
+                {
+                    if (body.orbit == o) continue;
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
+                    GUILayout.Label(o.PhaseAngle(body.orbit, vesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+                }
+            }
+
+            GUILayout.EndVertical();
+        }
+
+
+
+
         static GUIStyle _separatorStyle;
         static GUIStyle separatorStyle
         {
