@@ -798,5 +798,29 @@ namespace MuMech
             GUILayout.Label("Z: " + sepZ.ToString("F2") + " m  [H/N]");
             GUILayout.EndVertical();
         }
+
+        static GUIStyle _separatorStyle;
+        static GUIStyle separatorStyle
+        {
+            get
+            {
+                if (_separatorStyle == null)
+                {
+                    Texture2D texture = new Texture2D(1, 1);
+                    texture.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f));
+                    texture.Apply();
+                    _separatorStyle = new GUIStyle();
+                    _separatorStyle.normal.background = texture;
+                    _separatorStyle.padding.left = 50;
+                }
+                return _separatorStyle;
+            }
+        }
+
+        [GeneralInfoItem("Separator", InfoItem.Category.Misc)]
+        public void HorizontalSeparator()
+        {
+            GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
+        }
     }
 }
