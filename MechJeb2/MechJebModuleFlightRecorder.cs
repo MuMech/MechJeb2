@@ -42,11 +42,11 @@ namespace MuMech
         public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark latitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("Mark latitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_NS)]
         public double markLatitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark longitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("Mark longitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]
         public double markLongitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]

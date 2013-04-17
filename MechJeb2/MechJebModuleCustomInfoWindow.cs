@@ -421,6 +421,8 @@ namespace MuMech
         public const string SI = "SI";
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
+        public const string ANGLE_NS = "ANGLE_NS";
+        public const string ANGLE_EW = "ANGLE_EW";
         bool time;
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
@@ -461,6 +463,8 @@ namespace MuMech
 
             if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue);
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
+            else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "N" : "S");
+            else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "E" : "W");
             else if (format == SI) return (MuUtils.ToSI(doubleValue) + units);
             else return doubleValue.ToString(format) + " " + units;
         }

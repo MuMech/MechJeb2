@@ -89,9 +89,9 @@ namespace MuMech
         public MovingAverage orbitEccentricity = new MovingAverage();
         [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m")]
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
-        [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]
         public MovingAverage latitude = new MovingAverage();
-        [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]
         public MovingAverage longitude = new MovingAverage();
 
         public double radius;  //distance from planet center
