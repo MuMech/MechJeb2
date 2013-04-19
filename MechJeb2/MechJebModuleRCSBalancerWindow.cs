@@ -14,6 +14,11 @@ namespace MuMech
         {
             balancer = core.GetComputerModule<MechJebModuleRCSBalancer>();
 
+            if (balancer.smartTranslation)
+            {
+                balancer.users.Add(this);
+            }
+
             base.OnStart(state);
         }
 
@@ -40,7 +45,7 @@ namespace MuMech
 
             if (wasEnabled != balancer.smartTranslation)
             {
-                balancer.ResetThrusters();
+                balancer.ResetThrusterForces();
 
                 if (balancer.smartTranslation)
                 {
@@ -77,27 +82,13 @@ namespace MuMech
                 balancer.advancedOptions = GUILayout.Toggle(balancer.advancedOptions, "Advanced options");
                 if (balancer.advancedOptions)
                 {
+                    // This doesn't work properly, and it might not even be needed.
+                    //balancer.smartRotation = GUILayout.Toggle(balancer.smartRotation, "Smart rotation");
+
                     GuiUtils.SimpleTextBox("Overdrive scale", balancer.overdriveScale);
                     GuiUtils.SimpleTextBox("Torque factor", balancer.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", balancer.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", balancer.tuningParamFactorWaste);
-                }
-
-                // Debug info
-                balancer.debugInfo = GUILayout.Toggle(balancer.debugInfo, "Debug info");
-                if (balancer.debugInfo)
-                {
-                    balancer.showThrusterStates = GUILayout.Toggle(balancer.showThrusterStates, "Show thruster states");
-                    if (balancer.showThrusterStates)
-                    {
-                        balancer.onlyWhenMoving = GUILayout.Toggle(balancer.onlyWhenMoving, "... update only when moving");
-                    }
-                    SimpleTextInfo("Calculation time", (int)(balancer.solverThread.timeSeconds * 1000) + " ms");
-                }
-
-                if (balancer.status != null && balancer.status != "")
-                {
-                    GUILayout.Label(balancer.status);
                 }
 
                 // Apply tuning parameters.

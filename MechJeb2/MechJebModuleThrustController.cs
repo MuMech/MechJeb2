@@ -78,7 +78,9 @@ namespace MuMech
         }
 
         public float targetThrottle = 0;
+
         protected bool tmode_changed = false;
+        
 
         public PIDController pid;
 
@@ -213,32 +215,41 @@ namespace MuMech
 
             s.mainThrottle = targetThrottle;
 
+            float throttleLimit = 1;
+
             if (limitThrottle)
             {
-                s.mainThrottle = Mathf.Min(s.mainThrottle, (float)maxThrottle);
+                throttleLimit = Mathf.Min(throttleLimit, (float)maxThrottle);
             }
 
             if (limitToTerminalVelocity)
             {
-                s.mainThrottle = Mathf.Min(s.mainThrottle, TerminalVelocityThrottle());
+                throttleLimit = Mathf.Min(throttleLimit, TerminalVelocityThrottle());
             }
 
             if (limitToPreventOverheats)
             {
-                s.mainThrottle = Mathf.Min(s.mainThrottle, TemperatureSafetyThrottle());
+                throttleLimit = Mathf.Min(throttleLimit, TemperatureSafetyThrottle());
             }
 
             if (limitAcceleration)
             {
-                s.mainThrottle = Mathf.Min(s.mainThrottle, AccelerationLimitedThrottle());
+                throttleLimit = Mathf.Min(throttleLimit, AccelerationLimitedThrottle());
             }
 
             if (limitToPreventFlameout)
             {
                 // This clause benefits being last: if we don't need much air
                 // due to prior limits, we can close some intakes.
-                s.mainThrottle = Mathf.Min(s.mainThrottle, FlameoutSafetyThrottle());
+                throttleLimit = Mathf.Min(throttleLimit, FlameoutSafetyThrottle());
             }
+
+            if (double.IsNaN(throttleLimit)) throttleLimit = 0;
+            throttleLimit = Mathf.Clamp01(throttleLimit);
+
+            vesselState.throttleLimit = throttleLimit;
+
+            s.mainThrottle = Mathf.Min(s.mainThrottle, throttleLimit);
 
             if (smoothThrottle)
             {

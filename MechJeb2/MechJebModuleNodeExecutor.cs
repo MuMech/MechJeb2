@@ -9,10 +9,12 @@ namespace MuMech
     public class MechJebModuleNodeExecutor : ComputerModule
     {
         //public interface:
+        [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
         public double leadTime = 3;       //how many seconds before a burn to end warp (note that we align with the node before warping)
         public double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
-        public double precision = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
         public void ExecuteOneNode(object controller)
         {
@@ -67,7 +69,7 @@ namespace MuMech
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            if (dVLeft < precision)
+            if (dVLeft < tolerance && core.attitude.attitudeAngleFromTarget() > 5)
             {
                 burnTriggered = false;
 
@@ -95,8 +97,8 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            double burnTime = dVLeft / vesselState.maxThrustAccel;
-
+            double burnTime = dVLeft / vesselState.limitedMaxThrustAccel;
+            
             double timeToNode = node.UT - vesselState.time;
 
             if (timeToNode < burnTime * leadFraction)
@@ -112,8 +114,9 @@ namespace MuMech
                 {
                     core.warp.WarpToUT(node.UT - burnTime * leadFraction - leadTime);
                 }
-                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10)
+                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 300)
                 {
+                    //realign
                     core.warp.MinimumWarp();
                 }
             }
@@ -128,7 +131,7 @@ namespace MuMech
                     {
                         double timeConstant = (dVLeft > 10 ? 0.5 : 2);
                         double desiredAcceleration = dVLeft / timeConstant;
-                        desiredAcceleration = Math.Max(precision, desiredAcceleration);
+                        desiredAcceleration = Math.Max(tolerance, desiredAcceleration);
 
                         core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
                     }

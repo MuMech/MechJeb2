@@ -79,10 +79,6 @@ namespace MuMech
 
             double UT = DoChooseTimeGUI();
 
-            if (core.node != null)
-            {
-                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
-            }
 
             if (GUILayout.Button("Go"))
             {
@@ -142,6 +138,13 @@ namespace MuMech
                         core.node.Abort();
                     }
                 }
+
+                GUILayout.BeginHorizontal();
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp", GUILayout.ExpandWidth(true));
+                GUILayout.Label("Tolerance:", GUILayout.ExpandWidth(false));
+                core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
             }
 
             GUILayout.EndVertical();

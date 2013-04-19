@@ -25,6 +25,7 @@ namespace MuMech
 
         public PIDControllerV pid;
         public Vector3d lastAct = Vector3d.zero;
+        private double lastResetRoll = 0;
 
         [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
         public bool useSAS = true;
@@ -267,6 +268,16 @@ namespace MuMech
             // Used in the killRot activation calculation and drive_limit calculation
             double precision = Math.Max(0.5, Math.Min(10.0, (vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * s.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
 
+            // Reset the PID controller during roll to keep pitch and yaw errors
+            // from accumulating on the wrong axis.
+            double rollDelta = Mathf.Abs((float)(vesselState.vesselRoll - lastResetRoll));
+            if (rollDelta > 180) rollDelta = 360 - rollDelta;
+            if (rollDelta > 5)
+            {
+                pid.Reset();
+                lastResetRoll = vesselState.vesselRoll;
+            }
+
             // Direction we want to be facing
             Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
             Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
@@ -320,6 +331,7 @@ namespace MuMech
 
             if (userCommandingPitchYaw || userCommandingRoll)
             {
+                pid.Reset();
                 if (useSAS)
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
@@ -338,16 +350,13 @@ namespace MuMech
                 }
             }
 
-            if (userCommandingRoll)
+            if (!attitudeRollMatters)
             {
-                pid.Reset();
-                if (!attitudeRollMatters)
-                {
-                    attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
-                    _attitudeRollMatters = false;
-                }
+                attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
+                _attitudeRollMatters = false;
             }
-            else
+
+            if (!userCommandingRoll)
             {
                 if (!double.IsNaN(act.z)) s.roll = Mathf.Clamp((float)(act.z), -drive_limit, drive_limit);
                 if (Math.Abs(s.roll) < 0.05)
@@ -356,11 +365,7 @@ namespace MuMech
                 }
             }
 
-            if (userCommandingPitchYaw)
-            {
-                pid.Reset();
-            }
-            else
+            if (!userCommandingPitchYaw)
             {
                 if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float)(act.x), -drive_limit, drive_limit);
                 if (!double.IsNaN(act.y)) s.yaw = Mathf.Clamp((float)(act.y), -drive_limit, drive_limit);

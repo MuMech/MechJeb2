@@ -18,8 +18,8 @@ namespace MuMech
             if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            double time = node.GetBurnVector(node.patch).magnitude / vesselState.maxThrustAccel;
-            return GuiUtils.TimeToDHMS(time);
+            double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.limitedMaxThrustAccel;
+            return GuiUtils.TimeToDHMS(burnTime);
         }
 
         [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
@@ -121,7 +121,7 @@ namespace MuMech
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
             double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
             double g = vesselState.localg;
-            double T = vesselState.maxThrustAccel;
+            double T = vesselState.limitedMaxThrustAccel;
 
             double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
             double decelTime = vesselState.speedSurface / effectiveDecel;
@@ -216,6 +216,44 @@ namespace MuMech
 
             rcsTranslationEfficiencyAvg.value = effectiveThrust / totalThrust;
             return (rcsTranslationEfficiencyAvg.value * 100).ToString("F2") + "%";
+        }
+
+        [ValueInfoItem("RCS ΔV", InfoItem.Category.Vessel, format = "F1", units = "m/s", showInEditor = true)]
+        public double RCSDeltaVVacuum()
+        {
+            // Use the average specific impulse of all RCS parts.
+            double totalIsp = 0;
+            double monopropMass = 0;
+            int numThrusters = 0;
+
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor)
+                ? EditorLogic.SortedShipList
+                : (vessel == null) ? new List<Part>() : vessel.Parts;
+            foreach (Part p in parts)
+            {
+                foreach (PartResource r in p.Resources)
+                {
+                    if (r.amount > 0 && r.info.name == "MonoPropellant")
+                    {
+                        monopropMass += r.amount * r.info.density;
+                    }
+                }
+            }
+
+            foreach (ModuleRCS pm in VesselExtensions.GetModules<ModuleRCS>(vessel))
+            {
+                totalIsp += pm.atmosphereCurve.Evaluate(0);
+                numThrusters++;
+            }
+
+            double m0 = (HighLogic.LoadedSceneIsEditor)
+                ? EditorLogic.SortedShipList.Where(
+                    p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass())
+                : vesselState.mass;
+            double m1 = m0 - monopropMass;
+            if (numThrusters == 0 || m1 <= 0) return 0;
+            double isp = totalIsp / numThrusters;
+            return isp * 9.81 * Math.Log(m0 / m1);
         }
 
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
@@ -493,9 +531,45 @@ namespace MuMech
         public string RelativeInclinationToTarget()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.Orbit.referenceBody == orbit.referenceBody) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
 
             return orbit.RelativeInclination(core.target.Orbit).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("Time to AN", InfoItem.Category.Target)]
+        public string TimeToAscendingNodeWithTarget()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.AscendingNodeExists(core.target.Orbit)) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.target.Orbit, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Time to DN", InfoItem.Category.Target)]
+        public string TimeToDescendingNodeWithTarget()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.DescendingNodeExists(core.target.Orbit)) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.target.Orbit, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Time to equatorial AN", InfoItem.Category.Orbit)]
+        public string TimeToEquatorialAscendingNode()
+        {
+            if (!orbit.AscendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Time to equatorial DN", InfoItem.Category.Orbit)]
+        public string TimeToEquatorialDescendingNode()
+        {
+            if (!orbit.DescendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("Circular orbit speed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]
@@ -723,6 +797,83 @@ namespace MuMech
             GUILayout.Label("Y: " + sepY.ToString("F2") + " m  [I/K]");
             GUILayout.Label("Z: " + sepZ.ToString("F2") + " m  [H/N]");
             GUILayout.EndVertical();
+        }
+
+
+        [GeneralInfoItem("All planet phase angles", InfoItem.Category.Orbit)]
+        public void AllPlanetPhaseAngles()
+        {
+            Orbit o = orbit;
+            while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
+            
+            GUILayout.BeginVertical();
+            GUILayout.Label("Planet phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+
+            foreach (CelestialBody body in FlightGlobals.Bodies)
+            {
+                if (body == Planetarium.fetch.Sun) continue;
+                if (body.referenceBody != Planetarium.fetch.Sun) continue;
+                if (body.orbit == o) continue;
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
+                GUILayout.Label(o.PhaseAngle(body.orbit, vesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("All moon phase angles", InfoItem.Category.Orbit)]
+        public void AllMoonPhaseAngles()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("Moon phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+
+            if (orbit.referenceBody != Planetarium.fetch.Sun)
+            {
+                Orbit o = orbit;
+                while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
+
+                foreach (CelestialBody body in o.referenceBody.orbitingBodies)
+                {
+                    if (body.orbit == o) continue;
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
+                    GUILayout.Label(o.PhaseAngle(body.orbit, vesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+                }
+            }
+
+            GUILayout.EndVertical();
+        }
+
+
+
+
+        static GUIStyle _separatorStyle;
+        static GUIStyle separatorStyle
+        {
+            get
+            {
+                if (_separatorStyle == null)
+                {
+                    Texture2D texture = new Texture2D(1, 1);
+                    texture.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f));
+                    texture.Apply();
+                    _separatorStyle = new GUIStyle();
+                    _separatorStyle.normal.background = texture;
+                    _separatorStyle.padding.left = 50;
+                }
+                return _separatorStyle;
+            }
+        }
+
+        [GeneralInfoItem("Separator", InfoItem.Category.Misc)]
+        public void HorizontalSeparator()
+        {
+            GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
         }
     }
 }
