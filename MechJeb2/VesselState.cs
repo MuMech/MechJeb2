@@ -22,6 +22,7 @@ namespace MuMech
         public Vector3d forward;      //the direction the vessel is pointing
         public Vector3d horizontalOrbit;   //unit vector in the direction of horizontal component of orbit velocity
         public Vector3d horizontalSurface; //unit vector in the direction of horizontal component of surface velocity
+        public Vector3d rootPartPos;
 
         public Quaternion rotationSurface;
         public Quaternion rotationVesselSurface;
@@ -88,9 +89,9 @@ namespace MuMech
         public MovingAverage orbitEccentricity = new MovingAverage();
         [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m")]
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
-        [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]
         public MovingAverage latitude = new MovingAverage();
-        [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]
         public MovingAverage longitude = new MovingAverage();
 
         public double radius;  //distance from planet center
@@ -98,7 +99,9 @@ namespace MuMech
         public double mass;
         public double thrustAvailable;
         public double thrustMinimum;
-        public double maxThrustAccel;      //thrustAvailable / mass
+        public double maxThrustAccel; //thrustAvailable / mass
+        public float throttleLimit = 1;
+        public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
         public double torqueRAvailable;
         public double torquePYAvailable;
@@ -119,6 +122,7 @@ namespace MuMech
         public Vector6 rcsThrustAvailable;
         public Vector6 rcsTorqueAvailable;
 
+
         // Resource information keyed by resource Id.
         public Dictionary<int, ResourceInfo> resources;
 
@@ -135,6 +139,9 @@ namespace MuMech
             CoM = vessel.findWorldCenterOfMass();
             MoI = vessel.findLocalMOI(CoM);
             up = (CoM - vessel.mainBody.position).normalized;
+
+            Rigidbody rigidBody = vessel.rootPart.rigidbody;
+            if (rigidBody != null) rootPartPos = rigidBody.position;
 
             north = Vector3d.Exclude(up, (vessel.mainBody.position + vessel.mainBody.transform.up * (float)vessel.mainBody.Radius) - CoM).normalized;
             east = vessel.mainBody.getRFrmVel(CoM).normalized;
@@ -240,6 +247,30 @@ namespace MuMech
             EngineInfo einfo = new EngineInfo(forward, CoM);
             IntakeInfo iinfo = new IntakeInfo();
 
+            var rcsbal = vessel.GetMasterMechJeb().rcsbal;
+            if (vessel.ActionGroups[KSPActionGroup.RCS] && rcsbal.enabled)
+            {
+                Vector3d rot = Vector3d.zero;
+                foreach (Vector6.Direction dir6 in Enum.GetValues(typeof(Vector6.Direction)))
+                {
+                    Vector3d dir = Vector6.directions[dir6];
+                    double[] throttles;
+                    List<RCSSolver.Thruster> thrusters;
+                    rcsbal.GetThrottles(dir, out throttles, out thrusters);
+                    if (throttles != null)
+                    {
+                        for (int i = 0; i < throttles.Length; i++)
+                        {
+                            if (throttles[i] > 0)
+                            {
+                                Vector3d force = thrusters[i].GetThrust(dir, rot);
+                                rcsThrustAvailable.Add(dir * Vector3d.Dot(force * throttles[i], dir));
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach (Part p in vessel.parts)
             {
                 if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
@@ -251,7 +282,7 @@ namespace MuMech
 
                 if (p.Rigidbody != null) MoI += p.Rigidbody.inertiaTensor;
 
-                if (vessel.ActionGroups[KSPActionGroup.RCS])
+                if (vessel.ActionGroups[KSPActionGroup.RCS] && !rcsbal.enabled)
                 {
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {

@@ -71,6 +71,8 @@ namespace MuMech
         //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
         public static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody)
         {
+            if (Vector3d.Distance(worldPosition, byBody.position) < byBody.Radius - 100) return true;
+
             Vector3d camPos = ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position);
 
             if (Vector3d.Angle(camPos - worldPosition, byBody.position - worldPosition) > 90) return false;

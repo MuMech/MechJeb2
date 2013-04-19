@@ -124,6 +124,11 @@ namespace MuMech
                 windowVector.y = (Screen.height - windowPos.height) / 2;
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
+            else
+            {
+                windowVector.x = Screen.width + 100;
+                windowVector.y = Screen.height + 100;
+            }
 
             GUI.depth = -98;
 

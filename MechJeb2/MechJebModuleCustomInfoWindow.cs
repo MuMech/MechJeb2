@@ -112,7 +112,7 @@ namespace MuMech
     {
         public List<InfoItem> registry = new List<InfoItem>();
         public MechJebModuleCustomInfoWindow editedWindow;
-        InfoItem selectedItem;
+        int selectedItemIndex = -1;
         [Persistent(pass = (int)Pass.Global)]
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;
         static int numCategories = Enum.GetNames(typeof(InfoItem.Category)).Length;
@@ -261,35 +261,39 @@ namespace MuMech
 
                 GUILayout.BeginVertical(GUILayout.Height(100));
                 scrollPos = GUILayout.BeginScrollView(scrollPos);
-                foreach (InfoItem item in editedWindow.items)
+                for (int i = 0; i < editedWindow.items.Count; i++)
                 {
                     GUIStyle s = new GUIStyle(GUI.skin.label);
-                    if (item == selectedItem) s.normal.textColor = Color.yellow;
+                    if (i == selectedItemIndex) s.normal.textColor = Color.yellow;
 
-                    if (GUILayout.Button(item.description, s)) selectedItem = item;
+                    if (GUILayout.Button(editedWindow.items[i].description, s)) selectedItemIndex = i;
                 }
                 GUILayout.EndScrollView();
                 GUILayout.EndVertical();
 
                 GUILayout.BeginHorizontal();
 
-                if (GUILayout.Button("Remove") && selectedItem != null) editedWindow.items.Remove(selectedItem);
-                if (GUILayout.Button("Move up") && selectedItem != null)
+                if (!(selectedItemIndex >= 0 && selectedItemIndex < editedWindow.items.Count)) selectedItemIndex = -1;
+
+                if (GUILayout.Button("Remove") && selectedItemIndex != -1) editedWindow.items.RemoveAt(selectedItemIndex);
+                if (GUILayout.Button("Move up") && selectedItemIndex != -1)
                 {
-                    int index = editedWindow.items.IndexOf(selectedItem);
-                    if (index > 0)
+                    if (selectedItemIndex > 0)
                     {
-                        editedWindow.items.Remove(selectedItem);
-                        editedWindow.items.Insert(index - 1, selectedItem);
+                        InfoItem item = editedWindow.items[selectedItemIndex];
+                        editedWindow.items.RemoveAt(selectedItemIndex);
+                        editedWindow.items.Insert(selectedItemIndex - 1, item);
+                        selectedItemIndex -= 1;
                     }
                 }
-                if (GUILayout.Button("Move down") && selectedItem != null)
+                if (GUILayout.Button("Move down") && selectedItemIndex != -1)
                 {
-                    int index = editedWindow.items.IndexOf(selectedItem);
-                    if (index < editedWindow.items.Count - 1)
+                    if (selectedItemIndex < editedWindow.items.Count)
                     {
-                        editedWindow.items.Remove(selectedItem);
-                        editedWindow.items.Insert(index + 1, selectedItem);
+                        InfoItem item = editedWindow.items[selectedItemIndex];
+                        editedWindow.items.RemoveAt(selectedItemIndex);
+                        editedWindow.items.Insert(selectedItemIndex + 1, item);
+                        selectedItemIndex += 1;
                     }
                 }
 
@@ -417,6 +421,8 @@ namespace MuMech
         public const string SI = "SI";
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
+        public const string ANGLE_NS = "ANGLE_NS";
+        public const string ANGLE_EW = "ANGLE_EW";
         bool time;
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
@@ -457,6 +463,8 @@ namespace MuMech
 
             if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue);
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
+            else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "N" : "S");
+            else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "E" : "W");
             else if (format == SI) return (MuUtils.ToSI(doubleValue) + units);
             else return doubleValue.ToString(format) + " " + units;
         }

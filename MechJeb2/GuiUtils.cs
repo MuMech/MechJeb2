@@ -195,6 +195,15 @@ namespace MuMech
         }
     }
 
+    public class ZombieGUILoader : MonoBehaviour
+    {
+        void OnGUI()
+        {
+            GuiUtils.LoadSkin();
+            GameObject.Destroy(gameObject);
+        }
+    }
+
     public static class GuiUtils
     {
         static GUIStyle _yellowOnHover;
@@ -215,6 +224,35 @@ namespace MuMech
             }
         }
 
+        public static GUISkin skin;
+
+        public static void LoadSkin()
+        {
+            GUI.skin = null;
+            skin = (GUISkin)GameObject.Instantiate(GUI.skin);
+        }
+
+        public static void CheckSkin()
+        {
+            GUI.skin = null;
+            if (GUI.skin.name == "LazorSkin")
+            {
+                Texture2D tex = new Texture2D(64, 31, TextureFormat.ARGB32, false);
+                tex.LoadImage(Properties.Resources.default_gui_window);
+                GUI.skin.window.normal.background = GUI.skin.window.onNormal.background = tex;
+                GUI.skin.window.normal.textColor = GUI.skin.window.onNormal.textColor = XKCDColors.Pink;
+
+                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
+                tex.LoadImage(Properties.Resources.default_toggle_on);
+                GUI.skin.toggle.onNormal.background = GUI.skin.toggle.onHover.background = GUI.skin.toggle.onActive.background = tex;
+                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
+                tex.LoadImage(Properties.Resources.default_toggle_off);
+                GUI.skin.toggle.normal.background = GUI.skin.toggle.hover.background = GUI.skin.toggle.active.background = tex;
+
+                GUI.skin.name = "LazorSkinBow";
+            }
+        }
+
         public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)
         {
             GUILayout.BeginHorizontal();
@@ -222,6 +260,19 @@ namespace MuMech
             ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(width));
             GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+        }
+
+        public static void SimpleLabel(string leftLabel, string rightLabel = "")
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        public static void SimpleLabelInt(string leftLabel, int rightValue)
+        {
+            SimpleLabel(leftLabel, rightValue.ToString());
         }
 
         public static int ArrowSelector(int index, int numIndices, Action centerGuiAction)

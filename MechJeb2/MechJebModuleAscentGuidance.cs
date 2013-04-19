@@ -108,9 +108,9 @@ namespace MuMech
 
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
-            if (autopilot != null && !vessel.LiftedOff())
+            if (autopilot != null && vessel.LandedOrSplashed)
             {
-                if (core.target.NormalTargetExists && vessel.Landed)
+                if (core.target.NormalTargetExists)
                 {
                     if (!launchingToPlane && !launchingToRendezvous)
                     {

@@ -16,6 +16,10 @@ namespace MuMech
 
         public PIDController lateralPID;
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble speedLimit = 0;
+
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
         {
@@ -33,6 +37,16 @@ namespace MuMech
         {
             core.rcs.users.Remove(this);
             core.attitude.attitudeDeactivate();
+        }
+
+        private double FixSpeed(double s)
+        {
+            if (speedLimit != 0)
+            {
+                if (s >  speedLimit) s =  speedLimit;
+                if (s < -speedLimit) s = -speedLimit;
+            }
+            return s;
         }
 
         public override void Drive(FlightCtrlState s)
@@ -53,8 +67,8 @@ namespace MuMech
             double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             Vector3d lateralSep = Vector3d.Exclude(zAxis, separation);
 
-            double zApproachSpeed = vesselState.rcsThrustAvailable.GetMagnitude(-zAxis) * approachSpeedMult / vesselState.mass;
-            double latApproachSpeed = vesselState.rcsThrustAvailable.GetMagnitude(-lateralSep) * approachSpeedMult / vesselState.mass;
+            double zApproachSpeed = FixSpeed(vesselState.rcsThrustAvailable.GetMagnitude(-zAxis) * approachSpeedMult / vesselState.mass);
+            double latApproachSpeed = FixSpeed(vesselState.rcsThrustAvailable.GetMagnitude(-lateralSep) * approachSpeedMult / vesselState.mass);
 
             if (zSep < 0)  //we're behind the target
             {
@@ -65,8 +79,9 @@ namespace MuMech
                 }
                 else
                 {
-                    core.rcs.SetTargetWorldVelocity(targetVel - zApproachSpeed * Math.Max(1, -zSep / 50) * zAxis); //back up
-                    status = "Backing up at " + Math.Max(-zApproachSpeed, zApproachSpeed * zSep / 50).ToString("F2") + " m/s to get on the correct side of the target to dock.";
+                    double backUpSpeed = FixSpeed(-zApproachSpeed * Math.Max(1, -zSep / 50));
+                    core.rcs.SetTargetWorldVelocity(targetVel + backUpSpeed * zAxis); //back up
+                    status = "Backing up at " + backUpSpeed.ToString("F2") + " m/s to get on the correct side of the target to dock.";
                 }
                 lateralPID.Reset();
             }
@@ -112,7 +127,10 @@ namespace MuMech
                     }
                 }
 
-                core.rcs.SetTargetWorldVelocity(targetVel + lateralVelocityNeeded + zVelocityNeeded * zAxis);
+                Vector3d adjustment = lateralVelocityNeeded + zVelocityNeeded * zAxis;
+                double magnitude = adjustment.magnitude;
+                if (magnitude > 0) adjustment *= FixSpeed(magnitude) / magnitude;
+                core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
             }
         }
     }
