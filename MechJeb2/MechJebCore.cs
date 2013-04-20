@@ -136,7 +136,11 @@ namespace MuMech
             //However, if you press ctrl-Z, a new PartModule object gets created, on which the
             //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
             //check whether we have loaded any computer modules.
-            if (state == StartState.Editor && computerModules.Count == 0) OnLoad(null);
+            if (state == StartState.Editor && computerModules.Count == 0)
+            {
+                Debug.Log("Calling OnLoad(null) from OnStart");
+                OnLoad(null);
+            }
 
             lastSettingsSaveTime = Time.time;
 
@@ -201,6 +205,7 @@ namespace MuMech
                     lastFocus.GetMasterMechJeb().OnSave(null);
                 }
 
+                Debug.Log("Forcing global reload");
                 OnLoad(null); // Force Global reload
 
                 wasMasterAndFocus = true;
@@ -303,6 +308,8 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode sfsNode)
         {
+            Debug.Log("OnLoad called! sfsNode = " + sfsNode);
+
             if (GuiUtils.skin == null)
             {
                 GuiUtils.skin = new GUISkin();
@@ -398,11 +405,17 @@ namespace MuMech
 
         public override void OnSave(ConfigNode sfsNode)
         {
+            Debug.Log("OnSave called!");
+
             //we have nothing worth saving if we're outside the editor or flight scenes:
             if (!(HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)) return;
 
             // Only Masters can save
             if (this != vessel.GetMasterMechJeb()) return;
+
+            //KSP calls OnSave *before* OnLoad when the first command pod is created in the editor. 
+            //Defend against saving empty settings.
+            if (computerModules.Count == 0) return;
 
             try
             {
@@ -434,8 +447,11 @@ namespace MuMech
                 string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                 type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_"+vesselName+".cfg"));
 
+                Debug.Log("Will we global-save?");
+
                 if (lastFocus == vessel)
                 {
+                    Debug.Log("Yes! Saving " + computerModules.Count + " computer modules");
                     global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
                 }
             }
