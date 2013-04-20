@@ -138,7 +138,6 @@ namespace MuMech
             //check whether we have loaded any computer modules.
             if (state == StartState.Editor && computerModules.Count == 0)
             {
-                Debug.Log("Calling OnLoad(null) from OnStart");
                 OnLoad(null);
             }
 
@@ -205,7 +204,6 @@ namespace MuMech
                     lastFocus.GetMasterMechJeb().OnSave(null);
                 }
 
-                Debug.Log("Forcing global reload");
                 OnLoad(null); // Force Global reload
 
                 wasMasterAndFocus = true;
@@ -308,8 +306,6 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode sfsNode)
         {
-            Debug.Log("OnLoad called! sfsNode = " + sfsNode);
-
             if (GuiUtils.skin == null)
             {
                 GuiUtils.skin = new GUISkin();
@@ -447,11 +443,8 @@ namespace MuMech
                 string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                 type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_"+vesselName+".cfg"));
 
-                Debug.Log("Will we global-save?");
-
                 if (lastFocus == vessel)
                 {
-                    Debug.Log("Yes! Saving " + computerModules.Count + " computer modules");
                     global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
                 }
             }
