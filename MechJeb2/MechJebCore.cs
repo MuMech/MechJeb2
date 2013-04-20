@@ -401,8 +401,6 @@ namespace MuMech
 
         public override void OnSave(ConfigNode sfsNode)
         {
-            Debug.Log("OnSave called!");
-
             //we have nothing worth saving if we're outside the editor or flight scenes:
             if (!(HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)) return;
 
