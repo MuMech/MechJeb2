@@ -97,7 +97,7 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            double burnTime = dVLeft / vesselState.limitedMaxThrustAccel;
+            double burnTime = BurnTime(dVLeft);
             
             double timeToNode = node.UT - vesselState.time;
 
@@ -148,6 +148,52 @@ namespace MuMech
                     }
                 }
             }
+        }
+
+        private double BurnTime(double dv)
+        {
+            double dvLeft = dv;
+
+            double burnTime = 0;
+
+            // Old code:
+            //      burnTime = dv / vesselState.limitedMaxThrustAccel;
+
+            var stats = core.GetComputerModule<MechJebModuleStageStats>();
+            stats.RequestUpdate(this);
+
+            for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
+            {
+                var s = stats.vacStats[i];
+                if (s.deltaV <= 0 || s.startThrust <= 0) continue;
+
+                double stageBurnDv = Math.Min(s.deltaV, dvLeft);
+                dvLeft -= stageBurnDv;
+
+                double stageBurnFraction = stageBurnDv / s.deltaV;
+
+                // Delta-V is proportional to ln(m0 / m1) (where m0 is initial
+                // mass and m1 is final mass). We need to know the final mass
+                // after this stage burns (m1b):
+                //      ln(m0 / m1) * stageBurnFraction = ln(m0 / m1b)
+                //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
+                //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
+                double stageBurnFinalMass = s.startMass / Math.Exp(Math.Log(s.startMass / s.endMass) * stageBurnFraction);
+                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2);
+
+                // Right now, for simplicity, we're ignoring throttle limits for
+                // all but the current stage. This is wrong, but hopefully it's
+                // close enough for now.
+                // TODO: Be smarter about throttle limits on future stages.
+                if (i == stats.vacStats.Length - 1)
+                {
+                    stageAvgAccel *= vesselState.throttleLimit;
+                }
+
+                burnTime += stageBurnDv / stageAvgAccel;
+            }
+
+            return burnTime;
         }
 
         public MechJebModuleNodeExecutor(MechJebCore core) : base(core) { }
