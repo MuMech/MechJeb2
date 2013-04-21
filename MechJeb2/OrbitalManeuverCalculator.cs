@@ -440,7 +440,7 @@ namespace MuMech
             double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
             burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
 
-            if ((idealBurnUT - burnUT > o.period / 2) || (idealBurnUT < UT))
+            if ((idealBurnUT - burnUT > o.period / 2) || (burnUT < UT))
             {
                 burnUT += o.period;
             }
