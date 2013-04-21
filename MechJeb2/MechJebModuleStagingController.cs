@@ -72,18 +72,18 @@ namespace MuMech
                     if (!firesDecoupler
                         || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
                     {
-                        if (firesDecoupler)
-                        {
-                            //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                            lastStageTime = vesselState.time;
-                        }
-
                         //When we find that we're allowed to stage, start a countdown (with a 
                         //length given by autostagePreDelay) and only stage once that countdown finishes,
                         if (countingDown)
                         {
                             if (vesselState.time - stageCountdownStart > autostagePreDelay)
                             {
+                                if (firesDecoupler)
+                                {
+                                    //if we decouple things, delay the next stage a bit to avoid exploding the debris
+                                    lastStageTime = vesselState.time;
+                                }
+
                                 Staging.ActivateNextStage();
                                 countingDown = false;
                             }
