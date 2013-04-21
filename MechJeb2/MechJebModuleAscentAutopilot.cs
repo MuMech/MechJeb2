@@ -86,7 +86,8 @@ namespace MuMech
             core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
-            status = "Vertical ascent";
+            if (!vessel.LiftedOff()) status = "Awaiting liftoff";
+            else status = "Vertical ascent";
         }
 
         //gives a throttle setting that reduces as we approach the desired apoapsis

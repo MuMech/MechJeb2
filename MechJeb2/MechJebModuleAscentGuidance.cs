@@ -161,11 +161,11 @@ namespace MuMech
 
                     if (GUILayout.Button("Abort")) launchingToPlane = launchingToRendezvous = false;
                 }
+            }
 
-                if (autopilot.enabled)
-                {
-                    GUILayout.Label("Autopilot status: " + autopilot.status);
-                }
+            if (autopilot != null && autopilot.enabled)
+            {
+                GUILayout.Label("Autopilot status: " + autopilot.status);
             }
 
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
