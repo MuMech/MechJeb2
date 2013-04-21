@@ -197,7 +197,7 @@ namespace MuMech
                     break;
 
                 case Operation.MOON_RETURN:
-                    GuiUtils.SimpleTextBox("Target primary altitude:", moonReturnAltitude, "km");
+                    GuiUtils.SimpleTextBox("Approximate final periapsis:", moonReturnAltitude, "km");
                     GUILayout.Label("Schedule the burn at the next return window.");
                     break;
 
@@ -206,7 +206,7 @@ namespace MuMech
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Desired final periapsis", courseCorrectFinalPeA, "km");
+                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
                     GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 
