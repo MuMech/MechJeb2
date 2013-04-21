@@ -15,7 +15,8 @@ namespace MuMech
         public double deltaT;          //TimeWarp.fixedDeltaTime
 
         public Vector3d CoM;
-        public Vector3d MoI;
+        Matrix3x3 inertiaTensor = new Matrix3x3();
+        public Vector3d MoI; //Diagonal components of the inertia tensor (almost always the dominant components)
         public Vector3d up;
         public Vector3d north;
         public Vector3d east;
@@ -137,7 +138,6 @@ namespace MuMech
             deltaT = TimeWarp.fixedDeltaTime;
 
             CoM = vessel.findWorldCenterOfMass();
-            MoI = vessel.findLocalMOI(CoM);
             up = (CoM - vessel.mainBody.position).normalized;
 
             Rigidbody rigidBody = vessel.rootPart.rigidbody;
@@ -280,8 +280,6 @@ namespace MuMech
                     massDrag += partMass * p.maximum_drag;
                 }
 
-                if (p.Rigidbody != null) MoI += p.Rigidbody.inertiaTensor;
-
                 if (vessel.ActionGroups[KSPActionGroup.RCS] && !rcsbal.enabled)
                 {
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
@@ -355,6 +353,45 @@ namespace MuMech
             maxThrustAccel = thrustAvailable / mass;
             minThrustAccel = thrustMinimum / mass;
 
+            inertiaTensor = new Matrix3x3();
+            foreach (Part p in vessel.parts)
+            {
+                if (p.Rigidbody == null) continue;
+
+                //Compute the contributions to the vessel inertia tensor due to the part inertia tensor
+                Vector3d principalMoments = p.Rigidbody.inertiaTensor;
+                Quaternion princAxesRot = Quaternion.Inverse(vessel.GetTransform().rotation) * p.transform.rotation * p.Rigidbody.inertiaTensorRotation;
+                Quaternion invPrincAxesRot = Quaternion.Inverse(princAxesRot);
+
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector3d iHat = Vector3d.zero;
+                    iHat[i] = 1;
+                    for (int j = 0; j < 3; j++)
+                    {
+                        Vector3d jHat = Vector3d.zero;
+                        jHat[j] = 1;
+                        inertiaTensor[i, j] += Vector3d.Dot(iHat, princAxesRot * Vector3d.Scale(principalMoments, invPrincAxesRot * jHat));
+                    }
+                }
+
+                //Compute the contributions to the vessel inertia tensor due to the part mass and position
+                double partMass = p.TotalMass();
+                Vector3 partPosition = vessel.transform.InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
+
+                for (int i = 0; i < 3; i++)
+                {
+                    inertiaTensor[i, i] += partMass * partPosition.sqrMagnitude;
+
+                    for (int j = 0; j < 3; j++)
+                    {
+                        inertiaTensor[i, j] += -partMass * partPosition[i] * partPosition[j];
+                    }
+                }
+            }
+
+            MoI = new Vector3d(inertiaTensor[0, 0], inertiaTensor[1, 1], inertiaTensor[2, 2]);
+            angularMomentum = inertiaTensor * angularVelocity;
         }
 
         //probably this should call a more general terminal velocity method
