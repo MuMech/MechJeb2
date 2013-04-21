@@ -108,6 +108,14 @@ namespace MuMech
             }
         }
 
+        public bool PositionTargetExists
+        {
+            get
+            {
+                return (target != null && ((target is PositionTarget) || (target is Vessel)) && !(target is DirectionTarget));
+            }
+        }
+
         public ITargetable Target
         {
             get { return target; }

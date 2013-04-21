@@ -26,10 +26,20 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GUILayout.Label("Target coordinates:");
+            if (core.target.PositionTargetExists)
+            {
+                GUILayout.Label("Target coordinates:");
 
-            core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
-            core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
+                core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
+                core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
+            }
+            else
+            {
+                if (GUILayout.Button("Enter target coordinates"))
+                {
+                    core.target.SetPositionTarget(mainBody, core.target.targetLatitude, core.target.targetLongitude);
+                }
+            }
 
             if (GUILayout.Button("Pick target on map")) core.target.PickPositionTargetOnMap();
 
@@ -72,7 +82,9 @@ namespace MuMech
                 else
                 {
                     GUILayout.BeginHorizontal();
+                    if (!core.target.PositionTargetExists) GUI.enabled = false;
                     if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget(this);
+                    GUI.enabled = true;
                     if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted(this);
                     GUILayout.EndHorizontal();
                 }
