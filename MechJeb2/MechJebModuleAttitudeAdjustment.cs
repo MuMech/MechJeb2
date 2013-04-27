@@ -8,19 +8,13 @@ namespace MuMech
 {
     public class MechJebModuleAttitudeAdjustment : DisplayModule
     {
-        public EditableDouble Kp, Ki, Kd, Tf, factor, Ki_limit;
+        public EditableDouble Tf;
 
         public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) { }
 
         public override void OnStart(PartModule.StartState state)
         {
-            Kp = new EditableDouble(core.attitude.Kp);
-            Ki = new EditableDouble(core.attitude.Ki);
-            Kd = new EditableDouble(core.attitude.Kd);
             Tf = new EditableDouble(core.attitude.Tf);
-            Ki_limit = new EditableDouble(core.attitude.Ki_limit);
-            factor = new EditableDouble(core.attitude.drive_factor);
-
             base.OnStart(state);
         }
 
@@ -28,12 +22,14 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GuiUtils.SimpleTextBox("Kp", Kp);
-            GuiUtils.SimpleTextBox("Ki", Ki);
-            GuiUtils.SimpleTextBox("Kd", Kd);
-            GuiUtils.SimpleTextBox("Tf", Tf);
-            GuiUtils.SimpleTextBox("Ki_limit", Ki_limit);
-            GuiUtils.SimpleTextBox("Factor", factor);
+            GuiUtils.SimpleTextBox("Tf (s)", Tf);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Kp, Ki, Kd", GUILayout.ExpandWidth(true));
+            GUILayout.Label(core.attitude.pid.Kp.ToString("F3") + ", " + 
+                            core.attitude.pid.Ki.ToString("F3") + ", " +
+                            core.attitude.pid.Kd.ToString("F3") , GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("prevError", GUILayout.ExpandWidth(true));
@@ -41,24 +37,18 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("|prevError|", GUILayout.ExpandWidth(true));
-            GUILayout.Label(core.attitude.pid.prevError.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("intAccum", GUILayout.ExpandWidth(true));
+            GUILayout.Label("PID Integral Act.", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.intAccum), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("|intAccum|", GUILayout.ExpandWidth(true));
-            GUILayout.Label(core.attitude.pid.intAccum.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("PID Action", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pidAction), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
-            double precision = Math.Max(0.5, Math.Min(10.0, (vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
             GUILayout.BeginHorizontal();
-            GUILayout.Label("precision", GUILayout.ExpandWidth(true));
-            GUILayout.Label(precision.ToString("F3"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Drive Action", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(core.attitude.lastAct), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             Vector3d torque = new Vector3d(
@@ -66,14 +56,15 @@ namespace MuMech
                                                     vesselState.torqueRAvailable,
                                                     vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
                                             );
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("torque", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(torque), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(torque.Reorder(132)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("|torque|", GUILayout.ExpandWidth(true));
-            GUILayout.Label(torque.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("MoI", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(vesselState.MoI.Reorder(132)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             Vector3d inertia = Vector3d.Scale(
@@ -88,24 +79,17 @@ namespace MuMech
             GUILayout.Label(MuUtils.PrettyPrint(inertia), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("|inertia|", GUILayout.ExpandWidth(true));
-            GUILayout.Label(inertia.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
 
-            if ((Kp != core.attitude.Kp) || (Ki != core.attitude.Ki) || (Kd != core.attitude.Kd))
+            if ( (core.attitude.Tf != Tf) )
             {
-                core.attitude.Kp = Kp;
-                core.attitude.Ki = Ki;
-                core.attitude.Kd = Kd;
-                core.attitude.Ki_limit = Ki_limit;
-                core.attitude.pid = new PIDControllerV(Kp, Ki, Kd, Ki_limit, -Ki_limit);
+                core.attitude.Tf = Tf;
+                double Kd = 1 / (2 * Tf);
+                double Kp = Kd / (4 * Math.Sqrt(2) * Tf);
+                double Ki = Kp / (4 * Math.Sqrt(2) * Tf);
+                core.attitude.pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
             }
-
-            core.attitude.drive_factor = factor;
-            core.attitude.Tf = Tf;
 
             base.WindowGUI(windowID);
         }
