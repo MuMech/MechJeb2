@@ -35,7 +35,6 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            autopilot.users.Remove(this);
             if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
             launchingToPlane = false;
             launchingToRendezvous = false;
