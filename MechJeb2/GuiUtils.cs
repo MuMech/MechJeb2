@@ -199,7 +199,8 @@ namespace MuMech
     {
         void OnGUI()
         {
-            GuiUtils.LoadSkin();
+            GuiUtils.CopyDefaultSkin();
+            if (GuiUtils.skin == null) GuiUtils.skin = GuiUtils.defaultSkin;
             GameObject.Destroy(gameObject);
         }
     }
@@ -224,12 +225,29 @@ namespace MuMech
             }
         }
 
+        public enum SkinType { Default, MechJeb1 }
         public static GUISkin skin;
+        public static GUISkin defaultSkin;
 
-        public static void LoadSkin()
+        public static void CopyDefaultSkin()
         {
             GUI.skin = null;
-            skin = (GUISkin)GameObject.Instantiate(GUI.skin);
+            defaultSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+        }
+
+        public static void LoadSkin(SkinType skinType)
+        {
+            switch (skinType)
+            {
+                case SkinType.Default:
+                    if (defaultSkin == null) CopyDefaultSkin();
+                    skin = defaultSkin;
+                    break;
+
+                case SkinType.MechJeb1:
+                    skin = AssetBase.GetGUISkin("KSP window 2");
+                    break;
+            }
         }
 
         public static void CheckSkin()
@@ -290,7 +308,7 @@ namespace MuMech
 
         public static int ArrowSelector(int index, int modulo, string label)
         {
-            Action drawLabel = () => GUILayout.Label(label, new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+            Action drawLabel = () => GUILayout.Label(label, new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = true });
             return ArrowSelector(index, modulo, drawLabel);
         }
 

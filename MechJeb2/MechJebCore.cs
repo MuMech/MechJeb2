@@ -39,7 +39,6 @@ namespace MuMech
         private bool weLockedEditor = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
-        public static GUISkin skin = null;
         public static RenderingManager renderingManager = null;
         protected bool wasMasterAndFocus = false;
         protected static Vessel lastFocus = null;
@@ -228,7 +227,6 @@ namespace MuMech
 
         public void Update()
         {
-            //a hack to detect when the user hides the GUI
             if (renderingManager == null)
             {
                 renderingManager = (RenderingManager)GameObject.FindObjectOfType(typeof(RenderingManager));
@@ -308,7 +306,7 @@ namespace MuMech
         {
             if (GuiUtils.skin == null)
             {
-                GuiUtils.skin = new GUISkin();
+                //GuiUtils.skin = new GUISkin();
                 GameObject zombieGUILoader = new GameObject("zombieGUILoader", typeof(ZombieGUILoader));
             }
             try

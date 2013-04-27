@@ -253,7 +253,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Show in:");
-                editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight");
+                editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight", GUILayout.Width(60));
                 editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
                 GUILayout.EndHorizontal();
 

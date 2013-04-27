@@ -37,7 +37,7 @@ namespace MuMech
             bool wasEnabled = balancer.smartTranslation;
 
             GUILayout.BeginHorizontal();
-            balancer.smartTranslation = GUILayout.Toggle(balancer.smartTranslation, "Smart translation");
+            balancer.smartTranslation = GUILayout.Toggle(balancer.smartTranslation, "Smart translation", GUILayout.Width(130));
             GUIStyle s = new GUIStyle(GUI.skin.label);
             s.normal.textColor = Color.yellow;
             GUILayout.Label("experimental", s);
