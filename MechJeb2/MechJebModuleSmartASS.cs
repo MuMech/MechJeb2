@@ -52,6 +52,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble srfPit = new EditableDouble(90);
         [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble srfRol = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
         public AttitudeReference advReference = AttitudeReference.INERTIAL;
         [Persistent(pass = (int)Pass.Local)]
         public Vector6.Direction advDirection = Vector6.Direction.FORWARD;
@@ -135,6 +137,7 @@ namespace MuMech
                     case Mode.SURFACE:
                         GuiUtils.SimpleTextBox("HDG:", srfHdg);
                         GuiUtils.SimpleTextBox("PIT:", srfPit);
+                        GuiUtils.SimpleTextBox("ROL:", srfRol);
 
                         if (GUILayout.Button("EXECUTE", GUILayout.ExpandWidth(true)))
                         {
@@ -199,8 +202,10 @@ namespace MuMech
                     core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
                     break;
                 case Target.SURFACE:
-                    Quaternion r = Quaternion.AngleAxis((float)srfHdg, Vector3.up) * Quaternion.AngleAxis(-(float)srfPit, Vector3.right);
-                    core.attitude.attitudeTo(r * Vector3d.forward, AttitudeReference.SURFACE_NORTH, this);
+                    Quaternion r = Quaternion.AngleAxis( (float)srfHdg, Vector3.up)
+                                 * Quaternion.AngleAxis(-(float)srfPit, Vector3.right)
+                                 * Quaternion.AngleAxis(-(float)srfRol, Vector3.forward);
+                    core.attitude.attitudeTo(r, AttitudeReference.SURFACE_NORTH, this);
                     break;
                 case Target.PROGRADE:
                     core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
