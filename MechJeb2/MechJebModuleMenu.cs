@@ -59,6 +59,7 @@ namespace MuMech
                         if (active |= m.users.RecursiveUser(module)) break;
                     }
                     if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
+                    if (module is MechJebModuleThrustWindow && core.thrust.limiter != MechJebModuleThrustController.LimitMode.None) active = true;
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
                 }
             }

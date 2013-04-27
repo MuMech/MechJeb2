@@ -18,13 +18,26 @@ namespace MuMech
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
 
-        [ToggleInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToTerminalVelocity = false;
+        [GeneralInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
+        public void LimitToTerminalVelocityInfoItem()
+        {
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.TerminalVelocity) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
+        }
 
-        [ToggleInfoItem("Prevent overheats", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventOverheats = false;
+
+        [GeneralInfoItem("Prevent overheats", InfoItem.Category.Thrust)]
+        public void LimitToPreventOverheatsInfoItem()
+        {
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.Temperature) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, "Prevent overheats", s);
+        }
 
         [ToggleInfoItem("Smooth throttle", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Global)]
@@ -33,9 +46,17 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public double throttleSmoothingTime = 1.0;
 
-        [ToggleInfoItem("Prevent jet flameout", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventFlameout = false;
+
+        [GeneralInfoItem("Prevent jet flameout", InfoItem.Category.Thrust)]
+        public void LimitToPreventFlameoutInfoItem()
+        {
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.Flameout) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitToPreventFlameout = GUILayout.Toggle(limitToPreventFlameout, "Prevent jet flameout", s);
+        }
+
 
         // 5% safety margin on flameouts
         [Persistent(pass = (int)Pass.Global)]
@@ -55,7 +76,9 @@ namespace MuMech
         public void LimitAccelerationInfoItem()
         {
             GUILayout.BeginHorizontal();
-            limitAcceleration = GUILayout.Toggle(limitAcceleration, "Limit acceleration to", GUILayout.Width(140));
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.Acceleration) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitAcceleration = GUILayout.Toggle(limitAcceleration, "Limit acceleration to", s, GUILayout.Width(140));
             maxAcceleration.text = GUILayout.TextField(maxAcceleration.text, GUILayout.Width(30));
             GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
@@ -71,11 +94,16 @@ namespace MuMech
         public void LimitThrottleInfoItem()
         {
             GUILayout.BeginHorizontal();
-            limitThrottle = GUILayout.Toggle(limitThrottle, "Limit throttle to", GUILayout.Width(110));
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.Throttle) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitThrottle = GUILayout.Toggle(limitThrottle, "Limit throttle to", s, GUILayout.Width(110));
             maxThrottle.text = GUILayout.TextField(maxThrottle.text, GUILayout.Width(30));
             GUILayout.Label("%", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
+
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle }
+        public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
 
@@ -217,31 +245,42 @@ namespace MuMech
 
             float throttleLimit = 1;
 
+            limiter = LimitMode.None;
+
             if (limitThrottle)
             {
+                if (maxThrottle < throttleLimit) limiter = LimitMode.Throttle;
                 throttleLimit = Mathf.Min(throttleLimit, (float)maxThrottle);
             }
 
             if (limitToTerminalVelocity)
             {
-                throttleLimit = Mathf.Min(throttleLimit, TerminalVelocityThrottle());
+                float limit = TerminalVelocityThrottle();
+                if (limit < throttleLimit) limiter = LimitMode.TerminalVelocity;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
             if (limitToPreventOverheats)
             {
-                throttleLimit = Mathf.Min(throttleLimit, TemperatureSafetyThrottle());
+                float limit = TemperatureSafetyThrottle();
+                if(limit < throttleLimit) limiter = LimitMode.Temperature;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
             if (limitAcceleration)
             {
-                throttleLimit = Mathf.Min(throttleLimit, AccelerationLimitedThrottle());
+                float limit = AccelerationLimitedThrottle();
+                if(limit < throttleLimit) limiter = LimitMode.Acceleration;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
             if (limitToPreventFlameout)
             {
                 // This clause benefits being last: if we don't need much air
                 // due to prior limits, we can close some intakes.
-                throttleLimit = Mathf.Min(throttleLimit, FlameoutSafetyThrottle());
+                float limit = FlameoutSafetyThrottle();
+                if (limit < throttleLimit) limiter = LimitMode.Flameout;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
