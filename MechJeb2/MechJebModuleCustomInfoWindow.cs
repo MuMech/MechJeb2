@@ -349,10 +349,10 @@ namespace MuMech
 
         public void AddDefaultWindows()
         {
-            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString);
-            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString);
-            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString);
-            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString);
+            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString).enabled = false;
         }
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)

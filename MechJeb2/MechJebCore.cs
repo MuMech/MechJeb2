@@ -125,6 +125,19 @@ namespace MuMech
             modulesUpdated = true;
         }
 
+        public void ReloadAllComputerModules()
+        {
+            //Dispose of all the existing computer modules
+            foreach (ComputerModule module in computerModules) module.OnDestroy();
+            computerModules.Clear();
+            
+            if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
+            controlledVessel = null;
+
+            //Start fresh
+            OnLoad(null);
+            OnStart(HighLogic.LoadedSceneIsEditor ? PartModule.StartState.Editor : PartModule.StartState.Flying);
+        }
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -327,6 +340,7 @@ namespace MuMech
                     catch (Exception e)
                     {
                         Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
+                        generateDefaultWindows = true;
                     }
                 }
                 else
