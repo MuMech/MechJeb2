@@ -67,12 +67,12 @@ namespace MuMech
     {
         public Vector3d prevError, intAccum;
         public double Kp, Ki, Kd, max, min;
-
+        public bool _pidReset;
         public PIDControllerV(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
             this.Kp = Kp;
             this.Ki = Ki;
-            this.Kd = Kd;
+            this.Kd = Kd; 
             this.max = max;
             this.min = min;
             Reset();
@@ -80,21 +80,31 @@ namespace MuMech
 
         public Vector3d Compute(Vector3d error)
         {
-            intAccum += error * TimeWarp.fixedDeltaTime;
-            Vector3d action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
-            Vector3d clamped = new Vector3d(Math.Max(min, Math.Min(max, action.x)), Math.Max(min, Math.Min(max, action.y)), Math.Max(min, Math.Min(max, action.z)));
-            if (Math.Abs((clamped - action).magnitude) > 0.01)
+            if (_pidReset == true)
             {
-                intAccum -= error * TimeWarp.fixedDeltaTime;
+                _pidReset = false;
+                intAccum = Vector3d.zero;
+                prevError = error;
             }
+            Vector3d derivativeAct = (error - prevError) * Kd / TimeWarp.fixedDeltaTime;
+            
+            // Anti-Windup
+            intAccum.x = (Math.Abs(derivativeAct.x) < 0.3 * max) ? intAccum.x + (error.x * Ki * TimeWarp.fixedDeltaTime) : 0.8 * intAccum.x;
+            intAccum.y = (Math.Abs(derivativeAct.y) < 0.3 * max) ? intAccum.y + (error.y * Ki * TimeWarp.fixedDeltaTime) : 0.8 * intAccum.y;
+            intAccum.z = (Math.Abs(derivativeAct.z) < 0.3 * max) ? intAccum.z + (error.z * Ki * TimeWarp.fixedDeltaTime) : 0.8 * intAccum.z;
+
+            Vector3d action = (error * Kp) + intAccum + derivativeAct;
+            Vector3d clamped = new Vector3d(Math.Max(min, Math.Min(max, action.x)), Math.Max(min, Math.Min(max, action.y)), Math.Max(min, Math.Min(max, action.z)));
+ 
             prevError = error;
+            action = clamped;
 
             return action;
         }
 
         public void Reset()
         {
-            prevError = intAccum = Vector3d.zero;
+            _pidReset = true;
         }
 
         public void Load(ConfigNode node)
