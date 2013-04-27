@@ -425,8 +425,10 @@ namespace MuMech
         public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
         {
             double clampedLongitude = MuUtils.ClampDegrees180(longitude);
-            return latitude.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
-                + clampedLongitude.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
+            double latitudeAbs  = Math.Abs(latitude);
+            double longitudeAbs = Math.Abs(clampedLongitude);
+            return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
+                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
         }
 
         public string ToStringDecimal(bool newline = false, int precision = 3)
