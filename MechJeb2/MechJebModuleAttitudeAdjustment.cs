@@ -85,8 +85,8 @@ namespace MuMech
             if ( (core.attitude.Tf != Tf) )
             {
                 core.attitude.Tf = Tf;
-                double Kd = 1 / (2 * Tf);
-                double Kp = Kd / (4 * Math.Sqrt(2) * Tf);
+                double Kd = 0.6 * Tf;
+                double Kp = 1 / (8 * Math.Sqrt(2) * Tf * Tf);
                 double Ki = Kp / (4 * Math.Sqrt(2) * Tf);
                 core.attitude.pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
             }
