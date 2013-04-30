@@ -94,13 +94,9 @@ namespace MuMech
 
             GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
 
-            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent overheats");
-            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit to terminal velocity");
-            GUILayout.BeginHorizontal();
-            core.thrust.limitAcceleration = GUILayout.Toggle(core.thrust.limitAcceleration, "Limit acceleration to", GUILayout.ExpandWidth(false));
-            core.thrust.maxAcceleration.text = GUILayout.TextField(core.thrust.maxAcceleration.text, GUILayout.ExpandWidth(true));
-            GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
+            core.thrust.LimitToPreventOverheatsInfoItem();
+            core.thrust.LimitToTerminalVelocityInfoItem();
+            core.thrust.LimitAccelerationInfoItem();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             core.staging.AutostageInfoItem();

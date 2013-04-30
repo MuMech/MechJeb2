@@ -30,18 +30,6 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
         }
 
-        protected bool _showLandingTarget = false;
-        public bool showLandingTarget
-        {
-            get { return _showLandingTarget; }
-            set
-            {
-                if (value && !_showLandingTarget) core.target.SetDirectionTarget("ILS Guidance");
-                if (!value && (core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance")) core.target.Unset();
-                _showLandingTarget = value;
-            }
-        }
-
         public static Runway[] runways = 
         {
             new Runway //The runway at KSC
@@ -74,20 +62,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            if (showLandingTarget) core.target.Unset();
             core.attitude.attitudeDeactivate();
-        }
-
-        public override void OnFixedUpdate()
-        {
-            if (showLandingTarget)
-            {
-                if (!(core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance")) showLandingTarget = false;
-                else
-                {
-                    core.target.UpdateDirectionTarget(ILSAimDirection());
-                }
-            }
         }
 
         public override void Drive(FlightCtrlState s)
@@ -183,7 +158,7 @@ namespace MuMech
             return runwayStart;
         }
 
-        Vector3d ILSAimDirection()
+        public Vector3d ILSAimDirection()
         {
             //positions of the start and end of the runway
             Vector3d runwayStart = RunwayStart();

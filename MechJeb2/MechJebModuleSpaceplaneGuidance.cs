@@ -10,9 +10,16 @@ namespace MuMech
     {
         MechJebModuleSpaceplaneAutopilot autopilot;
 
-        public override GUILayoutOption[] WindowOptions()
+        protected bool _showLandingTarget = false;
+        public bool showLandingTarget
         {
-            return new GUILayoutOption[] { GUILayout.Width(350), GUILayout.Height(200) };
+            get { return _showLandingTarget; }
+            set
+            {
+                if (value && !_showLandingTarget) core.target.SetDirectionTarget("ILS Guidance");
+                if (!value && (core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance")) core.target.Unset();
+                _showLandingTarget = value;
+            }
         }
 
         protected override void WindowGUI(int windowID)
@@ -30,7 +37,7 @@ namespace MuMech
 
             GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autopilot.runway.Start(vesselState.CoM)), 0) + "m");
 
-            autopilot.showLandingTarget = GUILayout.Toggle(autopilot.showLandingTarget, "Show landing navball guidance");
+            showLandingTarget = GUILayout.Toggle(showLandingTarget, "Show landing navball guidance");
 
             if (GUILayout.Button("Autoland")) autopilot.Autoland(this);
             if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.AUTOLAND
@@ -56,6 +63,25 @@ namespace MuMech
 
             GUI.DragWindow();
         }
+
+        public override GUILayoutOption[] WindowOptions()
+        {
+            return new GUILayoutOption[] { GUILayout.Width(350), GUILayout.Height(200) };
+        }
+
+        public override void OnFixedUpdate()
+        {
+            if (showLandingTarget && autopilot != null)
+            {
+                if (!(core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance")) showLandingTarget = false;
+                else
+                {
+                    core.target.UpdateDirectionTarget(autopilot.ILSAimDirection());
+                }
+            }
+        }
+
+
 
         public override void OnStart(PartModule.StartState state)
         {

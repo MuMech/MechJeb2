@@ -111,7 +111,7 @@ namespace MuMech
                 //start the stopwatch that will count off this delay
                 stopwatch.Start();
             }
-            catch (Exception e) { }
+            catch (Exception) { }
 
             simulationRunning = false;
         }

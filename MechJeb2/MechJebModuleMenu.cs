@@ -35,18 +35,14 @@ namespace MuMech
 
         public bool firstDraw = true;
 
-        public static GUIStyle toggleActive, toggleInactive;
-
         protected override void WindowGUI(int windowID)
         {
-            if (toggleActive == null)
-            {
-                toggleInactive = new GUIStyle(GUI.skin.toggle);
-                toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
+            GUIStyle toggleInactive;
+            toggleInactive = new GUIStyle(GUI.skin.toggle);
+            toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
-                toggleActive = new GUIStyle(toggleInactive);
-                toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
-            }
+            GUIStyle toggleActive = new GUIStyle(toggleInactive);
+            toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
 
             GUILayout.BeginVertical();
 
@@ -63,6 +59,7 @@ namespace MuMech
                         if (active |= m.users.RecursiveUser(module)) break;
                     }
                     if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
+                    if (module is MechJebModuleThrustWindow && core.thrust.limiter != MechJebModuleThrustController.LimitMode.None) active = true;
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
                 }
             }
