@@ -97,7 +97,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             //  system bandwidth: w0 = 1/(2*Tf)
-            double Kd = 0.6 * Tf;
+            double Kd = 0.6 / Tf;
             double Kp = 1 / (8 * Math.Sqrt(2) * Tf * Tf);
             double Ki = Kp / (4 * Math.Sqrt(2) * Tf);
             pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
