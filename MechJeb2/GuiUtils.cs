@@ -125,7 +125,7 @@ namespace MuMech
             angle -= degrees;
             minutes = (int)(60 * angle);
             angle -= minutes / 60;
-            seconds = 3600 * angle;
+            seconds = Math.Round(3600 * angle);
         }
 
         public static implicit operator double(EditableAngle x)

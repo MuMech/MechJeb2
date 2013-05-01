@@ -76,6 +76,14 @@ namespace MuMech
         public bool lockedControls = false;
         public bool disabledSelf = false;
 
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+            //it's no longer April 1, so force this module to always start disabled
+            //it can still be enabled with the toggle.
+            enabled = false; 
+        }
+
         public override void OnStart(PartModule.StartState state)
         {
             if (!enabled)

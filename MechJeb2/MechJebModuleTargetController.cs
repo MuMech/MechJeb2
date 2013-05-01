@@ -25,7 +25,9 @@ namespace MuMech
         ITargetable target;
 
         public CelestialBody targetBody;
+        [Persistent(pass = (int)Pass.Global)]
         public EditableAngle targetLatitude = new EditableAngle(0);
+        [Persistent(pass = (int)Pass.Global)]
         public EditableAngle targetLongitude = new EditableAngle(0);
 
         Vector3d targetDirection;
