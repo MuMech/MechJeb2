@@ -71,9 +71,8 @@ namespace MuMech
                 if (!InverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel, burnedResources))
                 {
                     //only fire decouplers to drop deactivated engines or tanks
-                    bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
-                    if (!firesDecoupler
-                        || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
+                    bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel) || HasStayingChutes(Staging.CurrentStage - 1, vessel);
+                    if (!firesDecoupler || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
                     {
                         //When we find that we're allowed to stage, start a countdown (with a 
                         //length given by autostagePreDelay) and only stage once that countdown finishes,
@@ -196,6 +195,20 @@ namespace MuMech
                 if (HasDeactivatedEngineOrTankDescendant(child)) return true;
             }
             return false;
+        }
+        
+        //determinate if there are chutes being fired that wouldn't also get decoupled
+        public static bool HasStayingChutes(int inverseStage, Vessel v)
+        {
+        	var chutes = new List<Part>(v.parts.FindAll(p => p.inverseStage == inverseStage &&
+        	     (p.Modules.Contains("ModuleParachute") || p.Modules.Contains("Parachutes") || p.Modules.Contains("HParachutes")) ));
+        	var decouplers = new List<Part>(v.parts.FindAll(p => p.inverseStage == inverseStage && p.IsDecoupler()));
+
+        	foreach (var c in chutes) {
+        		if (!decouplers.Exists(d => d.children.Contains(c))) { return true; }
+        	};
+        	
+        	return false;
         }
     }
 }
