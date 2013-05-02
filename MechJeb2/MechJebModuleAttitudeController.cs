@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +26,7 @@ namespace MuMech
         public Vector3d pidAction;  //info
 
         [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
-        public bool useSAS = true;
+        public bool useSAS;
         [Persistent(pass = (int)Pass.Global)]
         public double Tf = 0.2;
         [Persistent(pass = (int)Pass.Global)]
@@ -223,9 +223,12 @@ namespace MuMech
 
         public bool attitudeDeactivate()
         {
+            if (core.attitude.enabled == true )
+            {
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, useSAS);
+            } 
             users.Clear();
             attitudeChanged = true;
-
             return true;
         }
 
@@ -248,6 +251,13 @@ namespace MuMech
                 {
                     attitudeKILLROT = false;
                 }
+
+                if (vessel.ActionGroups[KSPActionGroup.SAS] == true)
+                {
+                    useSAS = true;
+                }
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+
                 pid.Reset();
 
                 attitudeChanged = false;
@@ -256,7 +266,6 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-
             // Direction we want to be facing
             Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
             Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
