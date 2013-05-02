@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,23 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GuiUtils.SimpleTextBox("Tf (s)", Tf);
+
+            if (core.attitude.enabled == false)
+            {
+                core.attitude.useSAS = vessel.ActionGroups[KSPActionGroup.SAS];
+            }
+
+            core.attitude.useSAS = GUILayout.Toggle(core.attitude.useSAS, "Use SAS");
+
+            if (core.attitude.enabled == false)
+            {
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, core.attitude.useSAS);
+            }
+
+            //GUILayout.BeginHorizontal();
+            //GUILayout.Label("use SAS", GUILayout.ExpandWidth(true));
+            //GUILayout.Label((core.attitude.useSAS) ? "True" : "False", GUILayout.ExpandWidth(false));
+            //GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Kp, Ki, Kd", GUILayout.ExpandWidth(true));
