@@ -24,22 +24,15 @@ namespace MuMech
 
             GuiUtils.SimpleTextBox("Tf (s)", Tf);
 
-            if (core.attitude.enabled == false)
-            {
-                core.attitude.useSAS = vessel.ActionGroups[KSPActionGroup.SAS];
-            }
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Use SAS", GUILayout.ExpandWidth(true));
+            GUILayout.Label(core.attitude.useSAS ? "True" : "False", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
 
-            core.attitude.useSAS = GUILayout.Toggle(core.attitude.useSAS, "Use SAS");
-
-            if (core.attitude.enabled == false)
-            {
-                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, core.attitude.useSAS);
-            }
-
-            //GUILayout.BeginHorizontal();
-            //GUILayout.Label("use SAS", GUILayout.ExpandWidth(true));
-            //GUILayout.Label((core.attitude.useSAS) ? "True" : "False", GUILayout.ExpandWidth(false));
-            //GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Use RCS", GUILayout.ExpandWidth(true));
+            GUILayout.Label(core.attitude.useRCS ? "True" : "False", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Kp, Ki, Kd", GUILayout.ExpandWidth(true));
@@ -49,7 +42,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("prevError", GUILayout.ExpandWidth(true));
+            GUILayout.Label("Attitud Error", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.prevError), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
