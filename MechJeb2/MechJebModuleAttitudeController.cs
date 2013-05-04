@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,27 +21,21 @@ namespace MuMech
 
     public class MechJebModuleAttitudeController : ComputerModule
     {
-        public double stress;
-
         public PIDControllerV pid;
         public Vector3d lastAct = Vector3d.zero;
-        private double lastResetRoll = 0;
+        public Vector3d pidAction;  //info
+        protected float timeCount = 0;
 
         [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
-        public bool useSAS = true;
+        public bool useSAS;
+        public bool onSAS;
+        public bool useRCS;
+        public bool onRCS;
+        public bool conserveFuel;
 
         [Persistent(pass = (int)Pass.Global)]
-        public double Kp = 10000;
+        public double Tf = 0.2;
         [Persistent(pass = (int)Pass.Global)]
-        public double Ki = 0;
-        [Persistent(pass = (int)Pass.Global)]
-        public double Kd = 800;
-        [Persistent(pass = (int)Pass.Global)]
-        public double Ki_limit = 1000000;
-        [Persistent(pass = (int)Pass.Global)]
-        public double Tf = 0.1;
-        [Persistent(pass = (int)Pass.Global)]
-        public double drive_factor = 100000;
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
 
@@ -51,6 +45,21 @@ namespace MuMech
 
         protected AttitudeReference _oldAttitudeReference = AttitudeReference.INERTIAL;
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
+
+        public override void OnModuleEnabled()
+        {
+            onSAS = useSAS = vessel.ActionGroups[KSPActionGroup.SAS];
+            onRCS = useRCS = vessel.ActionGroups[KSPActionGroup.RCS];
+            timeCount = 50;
+            conserveFuel = true;
+        }
+
+        public override void OnModuleDisabled()
+        {
+            part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, useSAS);
+            part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+        }
+
         public AttitudeReference attitudeReference
         {
             get
@@ -108,8 +117,11 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            pid = new PIDControllerV(Kp, Ki, Kd, Ki_limit, -Ki_limit);
-
+            //  system bandwidth: w0 = 1/(2*Tf)
+            double Kd = 0.6 / Tf;
+            double Kp = 1 / (8 * Math.Sqrt(2) * Tf * Tf);
+            double Ki = Kp / (4 * Math.Sqrt(2) * Tf);
+            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
             base.OnStart(state);
         }
 
@@ -234,7 +246,6 @@ namespace MuMech
         {
             users.Clear();
             attitudeChanged = true;
-
             return true;
         }
 
@@ -251,6 +262,26 @@ namespace MuMech
 
         public override void OnUpdate()
         {
+            // manual SAS ON/OFF checks
+            if (onSAS != vessel.ActionGroups[KSPActionGroup.SAS])
+            {
+                useSAS = !useSAS;
+            }
+
+            // RCS ON/OFF change check, manual or autodocking
+            if (onRCS != vessel.ActionGroups[KSPActionGroup.RCS])
+            {
+                if ((onRCS == false) && (useRCS == true))
+                {
+                    conserveFuel = false;
+                }
+                else
+                {
+                    useRCS = !useRCS;
+                    conserveFuel = true;
+                }
+            }
+
             if (attitudeChanged)
             {
                 if (attitudeReference != AttitudeReference.INERTIAL)
@@ -258,26 +289,12 @@ namespace MuMech
                     attitudeKILLROT = false;
                 }
                 pid.Reset();
-
                 attitudeChanged = false;
             }
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            // Used in the killRot activation calculation and drive_limit calculation
-            double precision = Math.Max(0.5, Math.Min(10.0, (vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * s.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
-
-            // Reset the PID controller during roll to keep pitch and yaw errors
-            // from accumulating on the wrong axis.
-            double rollDelta = Mathf.Abs((float)(vesselState.vesselRoll - lastResetRoll));
-            if (rollDelta > 180) rollDelta = 360 - rollDelta;
-            if (rollDelta > 5)
-            {
-                pid.Reset();
-                lastResetRoll = vesselState.vesselRoll;
-            }
-
             // Direction we want to be facing
             Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
             Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
@@ -303,28 +320,61 @@ namespace MuMech
                                                 );
 
             Vector3d err = deltaEuler * Math.PI / 180.0F;
-            err += inertia.Reorder(132);
-            err.Scale(Vector3d.Scale(vesselState.MoI, torque.Invert()));
 
-            Vector3d act = pid.Compute(err);
+            Vector3d absErr;            // Absolute error (rad.)
+            absErr.x = Math.Abs(err.x);
+            absErr.y = Math.Abs(err.y);
+            absErr.z = Math.Abs(err.z);
 
-            float drive_limit = Mathf.Clamp01((float)(err.magnitude * drive_factor / precision));
-
-            act.x = Mathf.Clamp((float)act.x, drive_limit * -1, drive_limit);
-            act.y = Mathf.Clamp((float)act.y, drive_limit * -1, drive_limit);
-            act.z = Mathf.Clamp((float)act.z, drive_limit * -1, drive_limit);
-
-            act = lastAct + (act - lastAct) * (TimeWarp.fixedDeltaTime / Tf);
-
-            SetFlightCtrlState(act, deltaEuler, s, precision, drive_limit);
-
+            err.Scale(Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132)); // To normalize the error (err * MoI / torque aviable )
+            pidAction = pid.Compute(err); 
+            Vector3d act = pidAction + inertia.Reorder(132);  // to limit of angular Momentum ( angular Velocity )
+            //Vector3d act = pidAction + Vector3d.Scale( 2 * inertia.Reorder(132), (Vector3d.one - (absErr / 3.15)));
+            act = lastAct + (act - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1)); //it is a low pass filter,  w0 = 1/Tf:           
+            SetFlightCtrlState(act, deltaEuler, s, 1);
             act = new Vector3d(s.pitch, s.yaw, s.roll);
             lastAct = act;
 
-            stress = Math.Abs(act.x) + Math.Abs(act.y) + Math.Abs(act.z);
+            // RCS and SAS control
+            if (conserveFuel == true)
+            {
+                if ((timeCount < 50) && (absErr.x < 0.005) && (absErr.y < 0.005) && (absErr.z < 0.005))
+                {
+                    timeCount++;
+                }
+                else if ((absErr.x > 0.02) || (absErr.y > 0.02) || (absErr.z > 0.02))
+                {
+                    timeCount = 0;
+                    if ((absErr.x > 0.05) || (absErr.y > 0.05) || (absErr.z > 0.05))
+                    {
+                        part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, useRCS);
+                        onRCS = useRCS;
+                    }
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                    onSAS = false;
+                }
+                else if (timeCount >= 50)
+                {
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                    onRCS = false;
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, useSAS);
+                    onSAS = useSAS;
+                    if (onSAS == true)
+                    {
+                        pid.Reset();
+                    }
+                }
+            }
+            else
+            {
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                onRCS = true;
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                onSAS = false;
+            }
         }
 
-        private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, double precision, float drive_limit)
+        private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, float drive_limit)
         {
             bool userCommandingPitchYaw = (Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F) ? false : true) || (Mathfx.Approx(s.yaw, s.yawTrim, 0.1F) ? false : true);
             bool userCommandingRoll = (Mathfx.Approx(s.roll, s.rollTrim, 0.1F) ? false : true);
@@ -332,10 +382,6 @@ namespace MuMech
             if (userCommandingPitchYaw || userCommandingRoll)
             {
                 pid.Reset();
-                if (useSAS)
-                {
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
-                }
                 if (attitudeKILLROT)
                 {
                     attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
@@ -344,39 +390,25 @@ namespace MuMech
             else
             {
                 double int_error = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, vesselState.forward));
-                if (useSAS)
+            }
+
+            if (userCommandingRoll)
+            {
+                if (!attitudeRollMatters)
                 {
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, (int_error < precision / 10.0) && (Math.Abs(deltaEuler.y) < Math.Min(0.5, precision / 2.0)));
+                    attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
+                    _attitudeRollMatters = false;
                 }
             }
-
-            if (!attitudeRollMatters)
-            {
-                attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
-                _attitudeRollMatters = false;
-            }
-
-            if (!userCommandingRoll)
+            else if ( onSAS == false)
             {
                 if (!double.IsNaN(act.z)) s.roll = Mathf.Clamp((float)(act.z), -drive_limit, drive_limit);
-                if (Math.Abs(s.roll) < 0.05)
-                {
-                    s.roll = 0;
-                }
             }
 
-            if (!userCommandingPitchYaw)
+            if (!userCommandingPitchYaw && (onSAS == false) )
             {
                 if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float)(act.x), -drive_limit, drive_limit);
                 if (!double.IsNaN(act.y)) s.yaw = Mathf.Clamp((float)(act.y), -drive_limit, drive_limit);
-                if (Math.Abs(s.pitch) < 0.05)
-                {
-                    s.pitch = 0;
-                }
-                if (Math.Abs(s.yaw) < 0.05)
-                {
-                    s.yaw = 0;
-                }
             }
         }
     }
