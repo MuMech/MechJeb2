@@ -284,7 +284,7 @@ namespace MuMech
                 {
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {
-                        double maxT = pm.thrustForces.Max();
+                        double maxT = pm.thrusterPower;
 
                         if ((pm.isEnabled) && (!pm.isJustForShow))
                         {
