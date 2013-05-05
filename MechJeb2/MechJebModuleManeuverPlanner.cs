@@ -79,8 +79,22 @@ namespace MuMech
 
             double UT = DoChooseTimeGUI();
 
+            bool makingNode = false;
+            bool executingNode = false;
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Create node"))
+            {
+                makingNode = true;
+                executingNode = false;
+            }
+            if (core.node != null && GUILayout.Button("Create and execute"))
+            {
+                makingNode = true;
+                executingNode = true;
+            }
+            GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Go"))
+            if (makingNode)
             {
                 //handle updating an existing node by removing it and then re-creating it
                 ManeuverNode removedNode = null;
@@ -94,6 +108,7 @@ namespace MuMech
                 if (CheckPreconditions(o, UT))
                 {
                     MakeNodeForOperation(o, UT);
+                    if (executingNode && core.node != null) core.node.ExecuteOneNode(this);
                 }
                 else if (!createNode)
                 {
@@ -133,7 +148,7 @@ namespace MuMech
                 }
                 else if (core.node.enabled)
                 {
-                    if (GUILayout.Button("ABORT"))
+                    if (GUILayout.Button("Abort node execution"))
                     {
                         core.node.Abort();
                     }
