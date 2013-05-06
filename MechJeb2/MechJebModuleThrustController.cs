@@ -288,6 +288,8 @@ namespace MuMech
 
             vesselState.throttleLimit = throttleLimit;
 
+            if (s.mainThrottle < throttleLimit) limiter = LimitMode.None;
+
             s.mainThrottle = Mathf.Min(s.mainThrottle, throttleLimit);
 
             if (smoothThrottle)
