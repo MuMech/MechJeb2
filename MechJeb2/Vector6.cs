@@ -85,7 +85,8 @@ namespace MuMech
         {
             foreach (Direction d in Enum.GetValues(typeof(Direction)))
             {
-                double projection = Vector3d.Project(vector, directions[d]).magnitude;
+                Vector3d proj = Vector3d.Project(vector, directions[d]);
+                double projection = proj.x + proj.y + proj.z; // Works since we project on vector with only 1 non null component. We could check if Vector3d.Angle > 90 if it wasn't the case
                 if (projection > 0)
                 {
                     this[d] += projection;
@@ -98,7 +99,8 @@ namespace MuMech
             double magnitude = 0;
             foreach (Direction d in Enum.GetValues(typeof(Direction)))
             {
-                double projection = Vector3d.Project(direction.normalized, directions[d]).magnitude;
+                Vector3d proj = Vector3d.Project(direction.normalized, directions[d]);
+                double projection = proj.x + proj.y + proj.z;
                 if (projection > 0)
                 {
                     magnitude += projection * this[d];
