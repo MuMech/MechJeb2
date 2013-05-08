@@ -104,8 +104,7 @@ namespace MuMech
         public float throttleLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
-        public double torqueRAvailable;
-        public double torquePYAvailable;
+        public Vector3d torqueAvailable;
         public double torqueThrustPYAvailable;
         public double massDrag;
         public double atmosphericDensity;
@@ -240,7 +239,8 @@ namespace MuMech
 
             radius = (CoM - vessel.mainBody.position).magnitude;
 
-            mass = thrustAvailable = thrustMinimum = massDrag = torqueRAvailable = torquePYAvailable = torqueThrustPYAvailable = 0;
+            mass = thrustAvailable = thrustMinimum = massDrag = torqueThrustPYAvailable = 0;
+            torqueAvailable = new Vector3d();
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
 
@@ -289,9 +289,6 @@ namespace MuMech
 
                         if ((pm.isEnabled) && (!pm.isJustForShow))
                         {
-                            //torqueRAvailable += maxT;
-                            //if (p.Rigidbody != null) torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-
                             foreach (Transform t in pm.thrusterTransforms)
                             {
                                 Vector3 thrust = vessel.transform.InverseTransformDirection(-t.up) * pm.thrusterPower;
@@ -303,8 +300,7 @@ namespace MuMech
                 }
                 if (p is CommandPod)
                 {
-                    torqueRAvailable += Math.Abs(((CommandPod)p).rotPower);
-                    torquePYAvailable += Math.Abs(((CommandPod)p).rotPower);
+                    torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
                 }
 
                 foreach (PartModule pm in p.Modules)
@@ -322,8 +318,7 @@ namespace MuMech
                 }
             }
             
-            torqueRAvailable += Math.Max(rcsTorqueAvailable.positive.y, rcsTorqueAvailable.negative.y);
-            torquePYAvailable += Math.Max(Math.Max(rcsTorqueAvailable.positive.x, rcsTorqueAvailable.negative.x), Math.Max(rcsTorqueAvailable.positive.z, rcsTorqueAvailable.negative.z));
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
 
             thrustAvailable += einfo.thrustAvailable;
             thrustMinimum += einfo.thrustMinimum;
