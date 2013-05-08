@@ -285,16 +285,19 @@ namespace MuMech
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {
                         double maxT = pm.thrusterPower;
+                        Vector3 partPosition = vessel.transform.InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
 
                         if ((pm.isEnabled) && (!pm.isJustForShow))
                         {
-                            torqueRAvailable += maxT;
-                            if (p.Rigidbody != null) torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
+                            //torqueRAvailable += maxT;
+                            //if (p.Rigidbody != null) torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
 
                             foreach (Transform t in pm.thrusterTransforms)
                             {
-                                rcsThrustAvailable.Add(-t.up * pm.thrusterPower);
-                            }
+                                Vector3 thrust = vessel.transform.InverseTransformDirection(-t.up) * pm.thrusterPower;
+                                rcsThrustAvailable.Add(thrust * pm.thrusterPower);
+                                rcsTorqueAvailable.Add(Vector3.Cross(partPosition, thrust));
+                            }                            
                         }
                     }
                 }
@@ -318,6 +321,9 @@ namespace MuMech
                     }
                 }
             }
+            
+            torqueRAvailable += Math.Max(rcsTorqueAvailable.positive.y, rcsTorqueAvailable.negative.y);
+            torquePYAvailable += Math.Max(Math.Max(rcsTorqueAvailable.positive.x, rcsTorqueAvailable.negative.x), Math.Max(rcsTorqueAvailable.positive.z, rcsTorqueAvailable.negative.z));
 
             thrustAvailable += einfo.thrustAvailable;
             thrustMinimum += einfo.thrustMinimum;
