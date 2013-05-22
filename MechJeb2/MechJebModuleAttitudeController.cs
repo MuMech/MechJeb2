@@ -30,17 +30,17 @@ namespace MuMech
         [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
         public bool useSAS = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Kp = 10000;
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Ki = 0;
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Kd = 800;
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Ki_limit = 1000000;
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Tf = 0.1;
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double drive_factor = 100000;
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -304,7 +304,7 @@ namespace MuMech
 
             Vector3d err = deltaEuler * Math.PI / 180.0F;
             err += inertia.Reorder(132);
-            err.Scale(Vector3d.Scale(vesselState.MoI, torque.Invert()));
+            err.Scale(Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132));
 
             Vector3d act = pid.Compute(err);
 

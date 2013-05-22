@@ -35,7 +35,6 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            autopilot.users.Remove(this);
             if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
             launchingToPlane = false;
             launchingToRendezvous = false;
@@ -95,13 +94,9 @@ namespace MuMech
 
             GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
 
-            core.thrust.limitToPreventOverheats = GUILayout.Toggle(core.thrust.limitToPreventOverheats, "Prevent overheats");
-            core.thrust.limitToTerminalVelocity = GUILayout.Toggle(core.thrust.limitToTerminalVelocity, "Limit to terminal velocity");
-            GUILayout.BeginHorizontal();
-            core.thrust.limitAcceleration = GUILayout.Toggle(core.thrust.limitAcceleration, "Limit acceleration to", GUILayout.ExpandWidth(false));
-            core.thrust.maxAcceleration.text = GUILayout.TextField(core.thrust.maxAcceleration.text, GUILayout.ExpandWidth(true));
-            GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
+            core.thrust.LimitToPreventOverheatsInfoItem();
+            core.thrust.LimitToTerminalVelocityInfoItem();
+            core.thrust.LimitAccelerationInfoItem();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             core.staging.AutostageInfoItem();
@@ -161,11 +156,11 @@ namespace MuMech
 
                     if (GUILayout.Button("Abort")) launchingToPlane = launchingToRendezvous = false;
                 }
+            }
 
-                if (autopilot.enabled)
-                {
-                    GUILayout.Label("Autopilot status: " + autopilot.status);
-                }
+            if (autopilot != null && autopilot.enabled)
+            {
+                GUILayout.Label("Autopilot status: " + autopilot.status);
             }
 
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();

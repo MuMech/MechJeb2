@@ -79,8 +79,22 @@ namespace MuMech
 
             double UT = DoChooseTimeGUI();
 
+            bool makingNode = false;
+            bool executingNode = false;
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Create node"))
+            {
+                makingNode = true;
+                executingNode = false;
+            }
+            if (core.node != null && GUILayout.Button("Create and execute"))
+            {
+                makingNode = true;
+                executingNode = true;
+            }
+            GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Go"))
+            if (makingNode)
             {
                 //handle updating an existing node by removing it and then re-creating it
                 ManeuverNode removedNode = null;
@@ -94,6 +108,7 @@ namespace MuMech
                 if (CheckPreconditions(o, UT))
                 {
                     MakeNodeForOperation(o, UT);
+                    if (executingNode && core.node != null) core.node.ExecuteOneNode(this);
                 }
                 else if (!createNode)
                 {
@@ -133,7 +148,7 @@ namespace MuMech
                 }
                 else if (core.node.enabled)
                 {
-                    if (GUILayout.Button("ABORT"))
+                    if (GUILayout.Button("Abort node execution"))
                     {
                         core.node.Abort();
                     }
@@ -197,7 +212,7 @@ namespace MuMech
                     break;
 
                 case Operation.MOON_RETURN:
-                    GuiUtils.SimpleTextBox("Target primary altitude:", moonReturnAltitude, "km");
+                    GuiUtils.SimpleTextBox("Approximate final periapsis:", moonReturnAltitude, "km");
                     GUILayout.Label("Schedule the burn at the next return window.");
                     break;
 
@@ -206,7 +221,7 @@ namespace MuMech
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Desired final periapsis", courseCorrectFinalPeA, "km");
+                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
                     GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 

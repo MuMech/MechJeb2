@@ -91,23 +91,30 @@ namespace MuMech
 
         protected void RunSimulation(object o)
         {
-            //Run the simulation
-            FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;
-            FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, 1.0f);
-            FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0f);
-            atmoStats = newAtmoStats;
-            vacStats = newVacStats;
+            try
+            {
+                //Run the simulation
+                FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;
+                FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, 1.0f);
+                FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0f);
+                atmoStats = newAtmoStats;
+                vacStats = newVacStats;
 
-            //see how long the simulation took
-            stopwatch.Stop();
-            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
-            stopwatch.Reset();
+                //see how long the simulation took
+                stopwatch.Stop();
+                long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+                stopwatch.Reset();
 
-            //set the delay before the next simulation
-            millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
+                //set the delay before the next simulation
+                millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
 
-            //start the stopwatch that will count off this delay
-            stopwatch.Start();
+                //start the stopwatch that will count off this delay
+                stopwatch.Start();
+            }
+            catch (Exception e)
+            {
+                print("Exception on MechJebModuleStageStats.RunSimulation(): " + e.Message);
+            }
 
             simulationRunning = false;
         }

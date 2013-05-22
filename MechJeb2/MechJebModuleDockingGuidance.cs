@@ -32,6 +32,7 @@ namespace MuMech
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;
+                GUILayout.Label("Warning: target is not a docking port. Right click the target docking port and select \"Set as target\"", s);
             }
 
             bool onAxisNodeExists = false;

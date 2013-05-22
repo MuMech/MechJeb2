@@ -36,15 +36,18 @@ namespace MuMech
             GUILayout.BeginVertical();
             autostage = GUILayout.Toggle(autostage, "Auto-stage");
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Delays: pre:", GUILayout.ExpandWidth(false));
-            autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.Width(35));
-            GUILayout.Label("s  post:", GUILayout.ExpandWidth(false));
-            autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.Width(35));
-            GUILayout.Label("s", GUILayout.ExpandWidth(true));
-            GUILayout.EndHorizontal();
+            if (autostage)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Delays: pre:", GUILayout.ExpandWidth(false));
+                autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.Width(35));
+                GUILayout.Label("s  post:", GUILayout.ExpandWidth(false));
+                autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.Width(35));
+                GUILayout.Label("s", GUILayout.ExpandWidth(true));
+                GUILayout.EndHorizontal();
 
-            GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
+                GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
+            }
             GUILayout.EndVertical();
         }
 
@@ -72,18 +75,18 @@ namespace MuMech
                     if (!firesDecoupler
                         || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
                     {
-                        if (firesDecoupler)
-                        {
-                            //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                            lastStageTime = vesselState.time;
-                        }
-
                         //When we find that we're allowed to stage, start a countdown (with a 
                         //length given by autostagePreDelay) and only stage once that countdown finishes,
                         if (countingDown)
                         {
                             if (vesselState.time - stageCountdownStart > autostagePreDelay)
                             {
+                                if (firesDecoupler)
+                                {
+                                    //if we decouple things, delay the next stage a bit to avoid exploding the debris
+                                    lastStageTime = vesselState.time;
+                                }
+
                                 Staging.ActivateNextStage();
                                 countingDown = false;
                             }

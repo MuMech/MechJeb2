@@ -12,6 +12,17 @@ namespace MuMech
     {
         public MechJebModuleInfoItems(MechJebCore core) : base(core) { }
 
+        //Provides a unified interface for getting the parts list in the editor or in flight:
+        List<Part> parts
+        {
+            get
+            {
+                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.SortedShipList : 
+                    (vessel == null) ? new List<Part>() : vessel.Parts;
+            }
+        }
+
+
         [ValueInfoItem("Node burn time", InfoItem.Category.Misc)]
         public string NextManeuverNodeBurnTime()
         {
@@ -223,23 +234,10 @@ namespace MuMech
         {
             // Use the average specific impulse of all RCS parts.
             double totalIsp = 0;
-            double monopropMass = 0;
             int numThrusters = 0;
 
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor)
-                ? EditorLogic.SortedShipList
-                : (vessel == null) ? new List<Part>() : vessel.Parts;
-            foreach (Part p in parts)
-            {
-                foreach (PartResource r in p.Resources)
-                {
-                    if (r.amount > 0 && r.info.name == "MonoPropellant")
-                    {
-                        monopropMass += r.amount * r.info.density;
-                    }
-                }
-            }
-
+            double monopropMass = vessel.TotalResourceMass("MonoPropellant");
+            
             foreach (ModuleRCS pm in VesselExtensions.GetModules<ModuleRCS>(vessel))
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
@@ -260,6 +258,13 @@ namespace MuMech
         public double CurrentAcceleration()
         {
             return vesselState.ThrustAccel(FlightInputHandler.state.mainThrottle);
+        }
+
+        [ValueInfoItem("Current thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kN")]
+        public double CurrentThrust()
+        {
+            double throttle = FlightInputHandler.state.mainThrottle;
+            return vesselState.thrustAvailable * throttle + vesselState.thrustMinimum * (1 - throttle);
         }
 
         [ValueInfoItem("Time to SoI switch", InfoItem.Category.Orbit)]
@@ -283,6 +288,25 @@ namespace MuMech
                                   .Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass());
             else return vesselState.mass;
         }
+
+        [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]
+        public double DryMass()
+        {
+            return parts.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.mass);
+        }
+
+        [ValueInfoItem("Liquid fuel & oxidizer mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]
+        public double LiquidFuelAndOxidizerMass()
+        {
+            return vessel.TotalResourceMass("LiquidFuel") + vessel.TotalResourceMass("Oxidizer");
+        }
+
+        [ValueInfoItem("Monopropellant mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "kg")]
+        public double MonoPropellantMass()
+        {
+            return vessel.TotalResourceMass("MonoPropellant");
+        }
+
 
         [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = "F0", units = "kN", showInEditor = true)]
         public double MaxThrust()
@@ -347,22 +371,19 @@ namespace MuMech
         [ValueInfoItem("Part count", InfoItem.Category.Vessel, showInEditor = true)]
         public int PartCount()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count;
-            else return vessel.parts.Count;
+            return parts.Count;
         }
 
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
         public int StrutCount()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Count(p => p is StrutConnector);
-            else return vessel.parts.Count(p => p is StrutConnector);
+            return parts.Count(p => p is StrutConnector);
         }
 
         [ValueInfoItem("Vessel cost", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "$")]
         public double VesselCost()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.partInfo.cost) * 1000;
-            else return vessel.parts.Sum(p => p.partInfo.cost) * 1000;
+            return parts.Sum(p => p.partInfo.cost) * 1000;
         }
 
         [ValueInfoItem("Crew count", InfoItem.Category.Vessel)]
@@ -374,8 +395,7 @@ namespace MuMech
         [ValueInfoItem("Crew capacity", InfoItem.Category.Vessel, showInEditor = true)]
         public int CrewCapacity()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.Sum(p => p.CrewCapacity);
-            else return vessel.GetCrewCapacity();
+            return parts.Sum(p => p.CrewCapacity);
         }
 
         [ValueInfoItem("Distance to target", InfoItem.Category.Target)]
@@ -514,7 +534,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            
+
             return orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
         }
 
@@ -805,7 +825,7 @@ namespace MuMech
         {
             Orbit o = orbit;
             while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
-            
+
             GUILayout.BeginVertical();
             GUILayout.Label("Planet phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
 

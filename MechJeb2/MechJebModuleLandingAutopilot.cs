@@ -242,7 +242,7 @@ namespace MuMech
             }
             else
             {
-                if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
+                if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 6));
                 status = "Moving to low orbit plane change burn point";
             }
         }
@@ -298,7 +298,7 @@ namespace MuMech
             else status = "Moving to low deorbit burn point";
 
             //Warp toward deorbit burn if it hasn't been triggerd yet:
-            if (!deorbitBurnTriggered && core.node.autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 60));
+            if (!deorbitBurnTriggered && core.node.autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 6));
             if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
 
             //By default, thrust straight back at max throttle
@@ -589,7 +589,7 @@ namespace MuMech
             bool warpReady = true;
             if (PredictionReady)
             {
-                double decelerationStartTime = prediction.trajectory.First().UT;
+                double decelerationStartTime = (prediction.trajectory.Any() ? prediction.trajectory.First().UT : vesselState.time);
                 Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
                 decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
                 decelerationStartAttitude = decelerationStartAttitude.normalized;
@@ -614,7 +614,7 @@ namespace MuMech
                 return;
             }
 
-            double decelerationStartTime = prediction.trajectory.First().UT;
+            double decelerationStartTime = (prediction.trajectory.Any() ? prediction.trajectory.First().UT : vesselState.time);
             if (decelerationStartTime - vesselState.time > 5)
             {
                 core.thrust.targetThrottle = 0;
