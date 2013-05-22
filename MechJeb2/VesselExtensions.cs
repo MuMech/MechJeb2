@@ -30,6 +30,26 @@ namespace MuMech
             return vessel.GetModules<MechJebCore>().Max();
         }
 
+        public static double TotalResourceMass(this Vessel vessel, string resourceName)
+        {
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            if (definition == null) return 0;
+
+            double amount = 0;
+            foreach (Part p in parts)
+            {
+                foreach (PartResource r in p.Resources)
+                {
+                    if (r.info.id == definition.id) amount += r.amount;
+                }
+            }
+
+            return amount * definition.density;
+        }
+
+
+
         public static bool LiftedOff(this Vessel vessel)
         {
             return vessel.situation != Vessel.Situations.PRELAUNCH;

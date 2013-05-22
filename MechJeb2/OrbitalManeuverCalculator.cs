@@ -292,19 +292,24 @@ namespace MuMech
 
         //Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
         //course to intercept a target at a specific interceptUT.
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT, double leadDistance = 0)
+        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT, double offsetDistance = 0)
         {
             double initialT = UT;
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialT);
             double finalT = interceptUT;
             Vector3d finalRelPos = target.SwappedRelativePositionAtUT(finalT);
-            finalRelPos += leadDistance * target.SwappedOrbitalVelocityAtUT(finalT).normalized;
-
+            
             double targetOrbitalSpeed = o.SwappedOrbitalVelocityAtUT(finalT).magnitude;
             double deltaTPrecision = 20.0 / targetOrbitalSpeed;
 
             Vector3d initialVelocity, finalVelocity;
             LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, true, out initialVelocity, out finalVelocity);
+
+            if (offsetDistance != 0)
+            {
+                finalRelPos += offsetDistance * Vector3d.Cross(finalVelocity, finalRelPos).normalized;
+                LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, true, out initialVelocity, out finalVelocity);
+            }
 
             Vector3d currentInitialVelocity = o.SwappedOrbitalVelocityAtUT(initialT);
             return initialVelocity - currentInitialVelocity;
@@ -440,7 +445,7 @@ namespace MuMech
             double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
             burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
 
-            if ((idealBurnUT - burnUT > o.period / 2) || (idealBurnUT < UT))
+            if ((idealBurnUT - burnUT > o.period / 2) || (burnUT < UT))
             {
                 burnUT += o.period;
             }

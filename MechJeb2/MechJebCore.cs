@@ -39,7 +39,6 @@ namespace MuMech
         private bool weLockedEditor = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
-        public static GUISkin skin = null;
         public static RenderingManager renderingManager = null;
         protected bool wasMasterAndFocus = false;
         protected static Vessel lastFocus = null;
@@ -126,6 +125,19 @@ namespace MuMech
             modulesUpdated = true;
         }
 
+        public void ReloadAllComputerModules()
+        {
+            //Dispose of all the existing computer modules
+            foreach (ComputerModule module in computerModules) module.OnDestroy();
+            computerModules.Clear();
+            
+            if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
+            controlledVessel = null;
+
+            //Start fresh
+            OnLoad(null);
+            OnStart(HighLogic.LoadedSceneIsEditor ? PartModule.StartState.Editor : PartModule.StartState.Flying);
+        }
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -136,7 +148,10 @@ namespace MuMech
             //However, if you press ctrl-Z, a new PartModule object gets created, on which the
             //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
             //check whether we have loaded any computer modules.
-            if (state == StartState.Editor && computerModules.Count == 0) OnLoad(null);
+            if (state == StartState.Editor && computerModules.Count == 0)
+            {
+                OnLoad(null);
+            }
 
             lastSettingsSaveTime = Time.time;
 
@@ -225,7 +240,6 @@ namespace MuMech
 
         public void Update()
         {
-            //a hack to detect when the user hides the GUI
             if (renderingManager == null)
             {
                 renderingManager = (RenderingManager)GameObject.FindObjectOfType(typeof(RenderingManager));
@@ -305,7 +319,7 @@ namespace MuMech
         {
             if (GuiUtils.skin == null)
             {
-                GuiUtils.skin = new GUISkin();
+                //GuiUtils.skin = new GUISkin();
                 GameObject zombieGUILoader = new GameObject("zombieGUILoader", typeof(ZombieGUILoader));
             }
             try
@@ -326,6 +340,7 @@ namespace MuMech
                     catch (Exception e)
                     {
                         Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
+                        generateDefaultWindows = true;
                     }
                 }
                 else
@@ -403,6 +418,10 @@ namespace MuMech
 
             // Only Masters can save
             if (this != vessel.GetMasterMechJeb()) return;
+
+            //KSP calls OnSave *before* OnLoad when the first command pod is created in the editor. 
+            //Defend against saving empty settings.
+            if (computerModules.Count == 0) return;
 
             try
             {

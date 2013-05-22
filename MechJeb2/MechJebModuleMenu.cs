@@ -35,18 +35,14 @@ namespace MuMech
 
         public bool firstDraw = true;
 
-        public static GUIStyle toggleActive, toggleInactive;
-
         protected override void WindowGUI(int windowID)
         {
-            if (toggleActive == null)
-            {
-                toggleInactive = new GUIStyle(GUI.skin.toggle);
-                toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
+            GUIStyle toggleInactive;
+            toggleInactive = new GUIStyle(GUI.skin.toggle);
+            toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
-                toggleActive = new GUIStyle(toggleInactive);
-                toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
-            }
+            GUIStyle toggleActive = new GUIStyle(toggleInactive);
+            toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
 
             GUILayout.BeginVertical();
 
@@ -63,6 +59,7 @@ namespace MuMech
                         if (active |= m.users.RecursiveUser(module)) break;
                     }
                     if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
+                    if (module is MechJebModuleThrustWindow && core.thrust.limiter != MechJebModuleThrustController.LimitMode.None) active = true;
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
                 }
             }
@@ -100,7 +97,7 @@ namespace MuMech
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (GUI.Button(new Rect((-Screen.height - 100) / 2, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            if (GUI.Button(new Rect((-Screen.height / 4 - 50), Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
             {
                 if (windowStat == WindowStat.HIDDEN)
                 {
@@ -121,7 +118,11 @@ namespace MuMech
             if (windowStat != WindowStat.HIDDEN)
             {
                 windowVector.x = Screen.width - windowProgr * 200;
-                windowVector.y = (Screen.height - windowPos.height) / 2;
+                windowVector.y = Screen.height / 4 - windowPos.height / 2;
+                if (windowVector.y < 75)
+                {
+                    windowVector.y = 75;
+                }
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
