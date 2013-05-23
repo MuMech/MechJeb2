@@ -418,6 +418,8 @@ namespace MuMech
         MemberInfo member;
         string units;
         string format;
+        int sigFigs; //only used with the "SI" format
+        int maxPrecision; //only used with the "SI" format
         public const string SI = "SI";
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
@@ -435,6 +437,8 @@ namespace MuMech
             units = attribute.units;
             time = attribute.time;
             format = attribute.format;
+            sigFigs = attribute.sigFigs;
+            maxPrecision = attribute.maxPrecision;
         }
 
         object GetValue()
@@ -465,7 +469,7 @@ namespace MuMech
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
             else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "N" : "S");
             else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "E" : "W");
-            else if (format == SI) return (MuUtils.ToSI(doubleValue) + units);
+            else if (format == SI) return (MuUtils.ToSI(doubleValue, maxPrecision, sigFigs) + units);
             else return doubleValue.ToString(format) + " " + units;
         }
 
@@ -603,6 +607,8 @@ namespace MuMech
         public string units = "";
         public bool time = false;
         public string format = "";
+        public int sigFigs = 4;
+        public int maxPrecision = -99;
 
         public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
