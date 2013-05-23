@@ -90,26 +90,46 @@ namespace MuMech
             else status = "Vertical ascent";
         }
 
+        //data used by ThrottleToRaiseApoapsis
+        float raiseApoapsisLastThrottle = 0;
+        double raiseApoapsisLastApR = 0;
+        double raiseApoapsisLastUT = 0;
+        MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
+
         //gives a throttle setting that reduces as we approach the desired apoapsis
         //so that we can precisely match the desired apoapsis instead of overshooting it
         float ThrottleToRaiseApoapsis(double currentApR, double finalApR)
         {
-            if (currentApR > finalApR + 5.0) return 0.0F;
-            else if (orbit.ApA < mainBody.RealMaxAtmosphereAltitude()) return 1.0F; //throttle hard to escape atmosphere
+            float desiredThrottle;
 
-            double GM = mainBody.gravParameter;
-            double E = 0.5 * vesselState.speedOrbital * vesselState.speedOrbital - GM / vesselState.radius;
-            double L = vesselState.radius * vesselState.speedOrbitHorizontal;
-            double dEdV = vesselState.speedOrbital;
-            double dLdV = vesselState.radius * Vector3d.Dot(vesselState.horizontalOrbit, vesselState.velocityVesselOrbitUnit);
+            if (currentApR > finalApR + 5.0)
+            {
+                desiredThrottle = 0.0F; //done, throttle down
+            }
+            else if (orbit.ApA < mainBody.RealMaxAtmosphereAltitude())
+            {
+                desiredThrottle = 1.0F; //throttle hard to escape atmosphere
+            }
+            else if (raiseApoapsisLastUT > vesselState.time - 1)
+            {
+                //reduce throttle as apoapsis nears target
+                double instantRatePerThrottle = (orbit.ApR - raiseApoapsisLastApR) / ((vesselState.time - raiseApoapsisLastUT) * raiseApoapsisLastThrottle);
+                instantRatePerThrottle = Math.Max(1.0, instantRatePerThrottle); //avoid problems from negative rates
+                raiseApoapsisRatePerThrottle.value = instantRatePerThrottle;
+                double desiredApRate = (finalApR - currentApR) / 1.0;
+                desiredThrottle = Mathf.Clamp((float)(desiredApRate / raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
+            }
+            else
+            {
+                desiredThrottle = 1.0F; //no recent data point; just use max thrust.
+            }
 
-            //the change in apoapsis that will result from a small increase in forward velocity:
-            double dApdV = -(orbit.ApR / E) * dEdV - (0.5 * L * L * dEdV / E + L * dLdV) / Math.Sqrt(GM * GM + 2 * E * L * L);
+            //record data for next frame
+            raiseApoapsisLastThrottle = desiredThrottle;
+            raiseApoapsisLastApR = orbit.ApR;
+            raiseApoapsisLastUT = vesselState.time;
 
-            //estimated time until our apoapsis reaches the target value at max thrust:
-            double timeNeeded = (finalApR - currentApR) / (vesselState.maxThrustAccel * dApdV);
-
-            return Mathf.Clamp((float)(1.0 * timeNeeded), 0.05F, 1.0F);
+            return desiredThrottle;
         }
 
         void DriveGravityTurn(FlightCtrlState s)

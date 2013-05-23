@@ -111,7 +111,10 @@ namespace MuMech
                 //start the stopwatch that will count off this delay
                 stopwatch.Start();
             }
-            catch (Exception) { }
+            catch (Exception e)
+            {
+                print("Exception on MechJebModuleStageStats.RunSimulation(): " + e.Message);
+            }
 
             simulationRunning = false;
         }
