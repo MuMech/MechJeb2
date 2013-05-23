@@ -312,11 +312,12 @@ namespace MuMech
             return ArrowSelector(index, modulo, drawLabel);
         }
 
-        public static string TimeToDHMS(double seconds)
+        public static string TimeToDHMS(double seconds, int decimalPlaces = 0)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
             string ret = "";
+            bool showSecondsDecimals = decimalPlaces > 0 && seconds < 60;
 
             try
             {
@@ -335,7 +336,13 @@ namespace MuMech
                     bool first = ret.Length < 2;
                     if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
                     {
-                        ret += (first ? "" : " ") + (first ? n.ToString() : n.ToString("00")) + units[i];
+                        if (!first) ret += " ";
+                        
+                        if (showSecondsDecimals) ret += seconds.ToString("0." + new string('0', decimalPlaces));
+                        else if (first) ret += n.ToString();
+                        else ret += n.ToString("00");
+
+                        ret += units[i];
                     }
                     seconds -= n * intervals[i];
                 }

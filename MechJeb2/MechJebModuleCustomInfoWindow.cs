@@ -418,14 +418,14 @@ namespace MuMech
         MemberInfo member;
         string units;
         string format;
-        int sigFigs; //only used with the "SI" format
-        int maxPrecision; //only used with the "SI" format
         public const string SI = "SI";
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
         public const string ANGLE_NS = "ANGLE_NS";
         public const string ANGLE_EW = "ANGLE_EW";
-        bool time;
+        int siSigFigs; //only used with the "SI" format
+        int siMaxPrecision; //only used with the "SI" format
+        int timeDecimalPlaces; //only used with the "TIME" format
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
@@ -435,10 +435,10 @@ namespace MuMech
             this.obj = obj;
             this.member = member;
             units = attribute.units;
-            time = attribute.time;
             format = attribute.format;
-            sigFigs = attribute.sigFigs;
-            maxPrecision = attribute.maxPrecision;
+            siSigFigs = attribute.siSigFigs;
+            siMaxPrecision = attribute.siMaxPrecision;
+            timeDecimalPlaces = attribute.timeDecimalPlaces;
         }
 
         object GetValue()
@@ -465,11 +465,11 @@ namespace MuMech
             else if (value is Vector3) doubleValue = ((Vector3)value).magnitude;
             else if (value is EditableDouble) doubleValue = (EditableDouble)value;
 
-            if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue);
+            if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue, timeDecimalPlaces);
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
             else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "N" : "S");
             else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "E" : "W");
-            else if (format == SI) return (MuUtils.ToSI(doubleValue, maxPrecision, sigFigs) + units);
+            else if (format == SI) return (MuUtils.ToSI(doubleValue, siMaxPrecision, siSigFigs) + units);
             else return doubleValue.ToString(format) + " " + units;
         }
 
@@ -605,10 +605,10 @@ namespace MuMech
     public class ValueInfoItemAttribute : InfoItemAttribute
     {
         public string units = "";
-        public bool time = false;
         public string format = "";
-        public int sigFigs = 4;
-        public int maxPrecision = -99;
+        public int siSigFigs = 4;
+        public int siMaxPrecision = -99;
+        public int timeDecimalPlaces = 0;
 
         public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }

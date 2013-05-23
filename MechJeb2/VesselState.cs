@@ -64,21 +64,21 @@ namespace MuMech
         public MovingAverage vesselPitch = new MovingAverage();
         [ValueInfoItem("Roll", InfoItem.Category.Surface, format = "F1", units = "º")]
         public MovingAverage vesselRoll = new MovingAverage();
-        [ValueInfoItem("Altitude (ASL)", InfoItem.Category.Surface, format = ValueInfoItem.SI, sigFigs = 6, maxPrecision = -1, units = "m")]
+        [ValueInfoItem("Altitude (ASL)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]
         public MovingAverage altitudeASL = new MovingAverage();
-        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, sigFigs = 6, maxPrecision = 0, units = "m")]
+        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
         public MovingAverage altitudeTrue = new MovingAverage();
-        [ValueInfoItem("Altitude (bottom)", InfoItem.Category.Surface, format = ValueInfoItem.SI, sigFigs = 6, maxPrecision = 0, units = "m")]
+        [ValueInfoItem("Altitude (bottom)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
         public double altitudeBottom = 0;
-        [ValueInfoItem("Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, sigFigs = 6, maxPrecision = 0, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitApA = new MovingAverage();
-        [ValueInfoItem("Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, sigFigs = 6, maxPrecision = 0, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitPeA = new MovingAverage();
         [ValueInfoItem("Orbital period", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitPeriod = new MovingAverage();
-        [ValueInfoItem("Time to apoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("Time to apoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
         public MovingAverage orbitTimeToAp = new MovingAverage();
-        [ValueInfoItem("Time to periapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("Time to periapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
         public MovingAverage orbitTimeToPe = new MovingAverage();
         [ValueInfoItem("LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
         public MovingAverage orbitLAN = new MovingAverage();
@@ -88,7 +88,7 @@ namespace MuMech
         public MovingAverage orbitInclination = new MovingAverage();
         [ValueInfoItem("Eccentricity", InfoItem.Category.Orbit, format = "F3")]
         public MovingAverage orbitEccentricity = new MovingAverage();
-        [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, sigFigs = 6, maxPrecision = 0, units = "m")]
+        [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
         [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]
         public MovingAverage latitude = new MovingAverage();
