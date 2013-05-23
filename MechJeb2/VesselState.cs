@@ -111,11 +111,11 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
-        [ValueInfoItem("Intake air", InfoItem.Category.Vessel, units = "kg/s")]
+        [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
-        [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, units = "kg/s")]
+        [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAirNeeded;
-        [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, units = "kg/s")]
+        [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAirAtMax;
         [ValueInfoItem("Angle to prograde", InfoItem.Category.Orbit, format = "F2", units = "º")]
         public double angleToPrograde;
