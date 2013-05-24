@@ -137,9 +137,10 @@ namespace MuMech
         //Whether we've used up the current stage
         public bool AllowedToStage()
         {
+            //Debug.Log("Checking whether allowed to stage at t = " + t);
+
             List<FuelNode> activeEngines = FindActiveEngines();
 
-            //Debug.Log("Checking whether allowed to stage at t = " + t);
             //Debug.Log("  activeEngines.Count = " + activeEngines.Count);
 
             //if no engines are active, we can always stage
@@ -154,6 +155,7 @@ namespace MuMech
             //if staging would decouple an active engine or non-empty fuel tank, we're not allowed to stage
             foreach (FuelNode n in nodes)
             {
+                //Debug.Log(n.partName + " is sepratron? " + n.isSepratron);
                 if (n.decoupledInStage == (simStage - 1) && !n.isSepratron)
                 {
                     if (activeEngines.Contains(n) || n.ContainsResources(burnedResources))
@@ -424,12 +426,16 @@ namespace MuMech
 
         public bool CanDrawNeededResources(List<FuelNode> vessel)
         {
+            //Debug.Log("Checking whether " + partName + " can draw needed resources\n");
+
             foreach (int type in resourceConsumptions.Keys)
             {
+                //Debug.Log("   Checking whether we can draw " + type);
                 switch (PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
                         //check if we contain the needed resource:
+                        //Debug.Log("      NO_FLOW: can draw = " + (resources[type] >= DRAINED));
                         if (resources[type] < DRAINED) return false;
                         break;
 
