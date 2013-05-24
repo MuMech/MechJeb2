@@ -77,5 +77,19 @@ namespace MuMech
                 p is AtmosphericEngine ||
                 p.HasModule<ModuleEngines>());
         }
+
+        public static bool IsParachute(this Part p)
+        {
+            return p is Parachutes ||
+                p is HParachutes ||
+                p.HasModule<ModuleParachute>();
+        }
+
+        public static bool IsDecoupledInStage(this Part p, int stage)
+        {
+            if (p.IsDecoupler() && p.inverseStage == stage) return true;
+            if (p.parent == null) return false;
+            return p.parent.IsDecoupledInStage(stage);
+        }
     }
 }
