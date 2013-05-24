@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -45,7 +45,18 @@ namespace MuMech
         //we assume that any SRB with ActivatesEvenIfDisconnected = True is a sepratron:
         public static bool IsSepratron(this Part p)
         {
-            return (p.ActivatesEvenIfDisconnected && p.IsSRB());
+            if (!(p.ActivatesEvenIfDisconnected && p.IsSRB())) return false;
+
+            //Guess that an SRB is a sepratron if its thrust axis is oriented
+            //more than 30 degrees from the axis of the ship.
+            Vector3d worldShipAxis;
+            if (HighLogic.LoadedSceneIsEditor) worldShipAxis = EditorLogic.SortedShipList[0].transform.up;
+            else worldShipAxis = p.vessel.GetTransform().up;
+
+            Vector3d worldThrustAxis = -p.Modules.OfType<ModuleEngines>().First().thrustTransforms[0].forward;
+
+            if (Vector3d.Angle(worldShipAxis, worldThrustAxis) > 30) return true;
+            else return false;
         }
 
         public static bool IsSRB(this Part p)
@@ -56,6 +67,7 @@ namespace MuMech
             if (!p.HasModule<ModuleEngines>()) return false; //sepratrons are motors
             return p.Modules.OfType<ModuleEngines>().First().throttleLocked; //throttleLocked signifies an SRB
         }
+
 
         public static bool IsEngine(this Part p)
         {

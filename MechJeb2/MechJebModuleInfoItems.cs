@@ -673,14 +673,14 @@ namespace MuMech
             return ret;
         }
 
-        /*[ActionInfoItem("Update stage stats", InfoItem.Category.Vessel)]
+        /*[ActionInfoItem("Update stage stats", InfoItem.Category.Vessel, showInEditor = true)]
         public void UpdateStageStats()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
 
-            stats.RequestUpdate();
+            stats.RequestUpdate(this);
         }*/
-
+        
         [ValueInfoItem("Stage ΔV (vac)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
         public float StageDeltaVVacuum()
         {
