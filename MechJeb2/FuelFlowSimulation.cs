@@ -192,6 +192,7 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         public List<FuelNode> FindActiveEngines()
         {
+            //Debug.Log("Finding active engines: excluding resource considerations, there are " + nodes.Where(n => n.isEngine && n.inverseStage >= simStage).Count());
             return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
 
@@ -244,7 +245,7 @@ namespace MuMech
         Dictionary<int, float> resourceConsumptions = new Dictionary<int, float>();                   //the resources this part consumes per unit time when active at full throttle
         DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
 
-        const float DRAINED = 1.0f; //if a resource amount falls below this amount we say that the resource has been drained
+        const float DRAINED = 0.1f; //if a resource amount falls below this amount we say that the resource has been drained
 
         FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
         Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
@@ -330,15 +331,11 @@ namespace MuMech
         {
             if (isEngine)
             {
-                //Debug.Log("Setting consumption rates for engine " + partName);
-
                 float Isp = ispCurve.Evaluate(atmospheres);
                 float massFlowRate = (throttle * maxThrust) / (Isp * 9.81f);
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
                 resourceConsumptions = propellantRatios.Keys.ToDictionary(id => id, id => propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);
-
-                //Debug.Log("   ...resourceConsumptions.Keys.Length = " + resourceConsumptions.Keys.Count);
             }
         }
 
@@ -368,14 +365,17 @@ namespace MuMech
                     && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
                          && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
                 {
-                    sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
+                    if (part.fuelCrossFeed) sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
                     if (attachNode.attachedPart == part.parent) surfaceMounted = false;
                 }
             }
 
             //Parts can draw resources from their parents
             //(exception: surface mounted fuel tanks cannot)
-            if (part.parent != null && part.parent.fuelCrossFeed) sourceNodes.Add(nodeLookup[part.parent]);
+            if (part.parent != null && part.fuelCrossFeed) sourceNodes.Add(nodeLookup[part.parent]);
+
+            //Debug.Log("source nodes for part " + partName);
+            //foreach (FuelNode n in sourceNodes) Debug.Log("    " + n.partName);
         }
 
         //call this when a node no longer exists, so that this node knows that it's no longer a valid source
@@ -426,16 +426,12 @@ namespace MuMech
 
         public bool CanDrawNeededResources(List<FuelNode> vessel)
         {
-            //Debug.Log("Checking whether " + partName + " can draw needed resources\n");
-
             foreach (int type in resourceConsumptions.Keys)
             {
-                //Debug.Log("   Checking whether we can draw " + type);
                 switch (PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
                         //check if we contain the needed resource:
-                        //Debug.Log("      NO_FLOW: can draw = " + (resources[type] >= DRAINED));
                         if (resources[type] < DRAINED) return false;
                         break;
 
@@ -585,7 +581,7 @@ namespace MuMech
                     {
                         if (n.CanSupplyResourceRecursive(type, newVisited)) return true;
                     }
-                }
+                }   
             }
 
             return false;
