@@ -73,6 +73,7 @@ namespace MuMech
             string windowSharingString = "--- MechJeb Custom Window ---\n";
             windowSharingString += "Name: " + GetName() + "\n";
             windowSharingString += "Show in:" + (showInEditor ? " editor" : "") + (showInFlight ? " flight" : "") + "\n";
+            windowSharingString += "Position: " + windowPos.x + ", " + windowPos.y + "\n";
             foreach (InfoItem item in items)
             {
                 windowSharingString += item.id + "\n";
@@ -84,14 +85,21 @@ namespace MuMech
 
         public void FromSharingString(string[] lines, List<InfoItem> registry)
         {
+        	int i = 3;
             if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Trim().Substring("Name: ".Length);
             if (lines.Length > 2 && lines[2].StartsWith("Show in:"))
             {
                 showInEditor = lines[2].Contains("editor");
                 showInFlight = lines[2].Contains("flight");
             }
-
-            for (int i = 3; i < lines.Length; i++)
+            if (lines.Length > 3 && lines[3].StartsWith("Position: "))
+            {
+            	string[] pos = lines[3].Replace("Position: ", "").Split(',');
+            	windowPos = new Rect(int.Parse(pos[0].Trim()), int.Parse(pos[1].Trim()), windowPos.width, windowPos.height);
+            	i++;
+            }
+			
+            for (i = i; i < lines.Length; i++)
             {
                 string id = lines[i].Trim();
                 InfoItem match = registry.FirstOrDefault(item => item.id == id);
@@ -162,6 +170,30 @@ namespace MuMech
                 }
 
                 core.AddComputerModuleLater(window);
+            }
+            
+            if (KSP.IO.File.Exists<MechJebCore>("mechjeb_window_presets.cfg"))
+            {
+            	string data = KSP.IO.File.ReadAllText<MechJebCore>("mechjeb_window_presets.cfg");
+            	
+            	if (data.Length == 0)
+            	{
+            		CustomWindowPresets.presets = CustomWindowPresets.defaultPresets;
+            	}
+            	else
+            	{
+            		string preset_end = "-----------------------------\n";
+            		string[] presets = data.Replace("\r", "").Split(new string[] {preset_end}, StringSplitOptions.RemoveEmptyEntries);
+            		CustomWindowPresets.presets = new CustomWindowPresets.Preset[presets.Length];
+            		for (int i = 0; i < presets.Length; i++)
+            		{
+            			CustomWindowPresets.presets[i] = new CustomWindowPresets.Preset(presets[i].Trim() + "\n" + preset_end);
+            		}
+            	}
+            }
+            else {
+            	CustomWindowPresets.presets = CustomWindowPresets.defaultPresets;
+            	KSP.IO.File.WriteAllText<MechJebCore>("", "mechjeb_window_presets.cfg");
             }
         }
 
@@ -651,6 +683,12 @@ namespace MuMech
         {
             public string name;
             public string sharingString;
+            
+            public Preset (string sharingStr)
+            {
+            	sharingString = sharingStr;
+            	name = sharingString.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[1].Substring(6);
+            }
         }
 
         public static Preset[] presets = new Preset[] 
@@ -850,5 +888,7 @@ Value:InfoItems.NextManeuverNodeBurnTime
 -----------------------------"
             }
         };
+        
+        public static Preset[] defaultPresets = presets;
     }
 }
