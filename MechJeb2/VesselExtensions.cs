@@ -103,6 +103,11 @@ namespace MuMech
                 }
             }
 
+            if (double.IsNaN(UT) || double.IsInfinity(UT))
+            {
+                throw new Exception("MechJeb VesselExtensions.PlaceManeuverNode: bad UT: " + UT);
+            }
+
             //It seems that sometimes the game can freak out if you place a maneuver node in the past, so this
             //protects against that.
             UT = Math.Max(UT, Planetarium.GetUniversalTime());

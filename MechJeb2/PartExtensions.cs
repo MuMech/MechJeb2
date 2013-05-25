@@ -42,21 +42,13 @@ namespace MuMech
              p.HasModule<ModuleAnchoredDecoupler>());
         }
 
-        //we assume that any SRB with ActivatesEvenIfDisconnected = True is a sepratron:
+        //Any engine that is decoupled in the same stage in 
+        //which it activates we call a sepratron.
         public static bool IsSepratron(this Part p)
         {
-            if (!(p.ActivatesEvenIfDisconnected && p.IsSRB())) return false;
-
-            //Guess that an SRB is a sepratron if its thrust axis is oriented
-            //more than 30 degrees from the axis of the ship.
-            Vector3d worldShipAxis;
-            if (HighLogic.LoadedSceneIsEditor) worldShipAxis = EditorLogic.SortedShipList[0].transform.up;
-            else worldShipAxis = p.vessel.GetTransform().up;
-
-            Vector3d worldThrustAxis = -p.Modules.OfType<ModuleEngines>().First().thrustTransforms[0].forward;
-
-            if (Vector3d.Angle(worldShipAxis, worldThrustAxis) > 30) return true;
-            else return false;
+            return p.ActivatesEvenIfDisconnected 
+                && p.IsEngine() 
+                && p.IsDecoupledInStage(p.inverseStage);
         }
 
         public static bool IsSRB(this Part p)
