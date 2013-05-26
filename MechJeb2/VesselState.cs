@@ -101,6 +101,7 @@ namespace MuMech
         public double thrustAvailable;
         public double thrustMinimum;
         public double maxThrustAccel; //thrustAvailable / mass
+        public double currentTWR;
         public float throttleLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
@@ -352,6 +353,7 @@ namespace MuMech
 
             maxThrustAccel = thrustAvailable / mass;
             minThrustAccel = thrustMinimum / mass;
+            currentTWR = thrustAvailable / (mass * mainBody.GeeASL * 9.81);
 
             inertiaTensor = new Matrix3x3();
             foreach (Part p in vessel.parts)
