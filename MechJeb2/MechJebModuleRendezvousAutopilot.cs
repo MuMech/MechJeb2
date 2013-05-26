@@ -10,10 +10,12 @@ namespace MuMech
 
         public MechJebModuleRendezvousAutopilot(MechJebCore core) : base(core) { }
 
+        public EditableDouble desiredDistance = 100;
         public string status = "";
 
         public override void OnModuleEnabled()
         {
+            vessel.RemoveAllManeuverNodes();
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
 
@@ -32,32 +34,57 @@ namespace MuMech
 
             core.node.autowarp = core.target.Distance > 1000; //don't warp when close to target, because warping introduces small perturbations
 
+            //If we get within the target distance and then next maneuver node is still 
+            //far in the future, delete it and we will create a new one to match velocities immediately.
+            //This can often happen because the target vessel's orbit shifts slightly when it is unpacked.
+            if (core.target.Distance < desiredDistance
+                && vessel.patchedConicSolver.maneuverNodes.Count > 0
+                && vessel.patchedConicSolver.maneuverNodes[0].UT > vesselState.time + 1)
+            {
+                vessel.RemoveAllManeuverNodes();
+            }
+
             if (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
+                //If we have plotted a maneuver, execute it.
                 if (!core.node.enabled) core.node.ExecuteAllNodes(this);
             }
-            else if (core.target.Distance < 100 && core.target.RelativeVelocity.magnitude < 1)
+            else if (core.target.Distance < desiredDistance * 1.05 + 2 
+                     && core.target.RelativeVelocity.magnitude < 1)
             {
                 //finished
                 users.Clear();
                 core.thrust.ThrustOff();
                 status = "Successful rendezvous";
             }
-            else if (core.target.Distance < 100)
+            else if (core.target.Distance < desiredDistance * 1.05 + 2)
             {
+                //We are within the target distance: match velocities
                 double UT = vesselState.time;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
-                status = "Within 100m: matching velocities.";
+                status = "Within " + desiredDistance.ToString() + "m: matching velocities.";
             }
-            else if (core.target.Distance < vesselState.radius / 50)
+            else if (core.target.Distance < vesselState.radius / 25)
             {
-                if (orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time) < 100
+                if (orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time) < desiredDistance
                     && orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) < vesselState.time + 150)
                 {
                     //We're close to the target, and on a course that will take us closer. Kill relvel at closest approach
                     double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
+
+                    //adjust burn time so as to come to rest at the desired distance from the target:
+                    double approachDistance = orbit.Separation(core.target.Orbit, UT);
+                    double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+                    if (approachDistance < desiredDistance)
+                    {
+                        UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+                    }
+
+                    //if coming in hot, stop early to avoid crashing:
+                    if (approachSpeed > 10) UT -= 1; 
+
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
                     status = "Planning to match velocities at closest approach.";
@@ -71,18 +98,30 @@ namespace MuMech
 
                     double UT = vesselState.time + 15;
                     double interceptUT = UT + closingTime;
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.Orbit, interceptUT, 10);
+                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.Orbit, interceptUT, 0);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                    status = "Close to target: plotting intercept over " + closingTime.ToString("F0") + "s";
+                    status = "Close to target: plotting intercept";
                 }
             }
-            else if (orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time) < core.target.Orbit.semiMajorAxis / 50)
+            else if (orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time) < core.target.Orbit.semiMajorAxis / 25)
             {
                 //We're not close to the target, but we're on an approximate intercept course. 
                 //Kill relative velocities at closest approach
                 double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
+
+                //adjust burn time so as to come to rest at the desired distance from the target:
+                double approachDistance = (orbit.SwappedAbsolutePositionAtUT(UT) - core.target.Orbit.SwappedAbsolutePositionAtUT(UT)).magnitude;
+                double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+                if (approachDistance < desiredDistance)
+                {
+                    UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+                }
+
+                //if coming in hot, stop early to avoid crashing:
+                if (approachSpeed > 10) UT -= 1; 
+                
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
                 status = "On intercept course. Planning to match velocities at closest approach.";

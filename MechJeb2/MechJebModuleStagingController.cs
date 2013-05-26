@@ -70,31 +70,34 @@ namespace MuMech
                 List<int> burnedResources = FindBurnedResources();
                 if (!InverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel, burnedResources))
                 {
-                    //only fire decouplers to drop deactivated engines or tanks
-                    bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
-                    if (!firesDecoupler
-                        || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
+                    //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
+                    if (!HasStayingChutes(Staging.CurrentStage - 1, vessel))
                     {
-                        //When we find that we're allowed to stage, start a countdown (with a 
-                        //length given by autostagePreDelay) and only stage once that countdown finishes,
-                        if (countingDown)
+                        //only fire decouplers to drop deactivated engines or tanks
+                        bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
+                        if (!firesDecoupler || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
                         {
-                            if (vesselState.time - stageCountdownStart > autostagePreDelay)
+                            //When we find that we're allowed to stage, start a countdown (with a 
+                            //length given by autostagePreDelay) and only stage once that countdown finishes,
+                            if (countingDown)
                             {
-                                if (firesDecoupler)
+                                if (vesselState.time - stageCountdownStart > autostagePreDelay)
                                 {
-                                    //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                                    lastStageTime = vesselState.time;
-                                }
+                                    if (firesDecoupler)
+                                    {
+                                        //if we decouple things, delay the next stage a bit to avoid exploding the debris
+                                        lastStageTime = vesselState.time;
+                                    }
 
-                                Staging.ActivateNextStage();
-                                countingDown = false;
+                                    Staging.ActivateNextStage();
+                                    countingDown = false;
+                                }
                             }
-                        }
-                        else
-                        {
-                            countingDown = true;
-                            stageCountdownStart = vesselState.time;
+                            else
+                            {
+                                countingDown = true;
+                                stageCountdownStart = vesselState.time;
+                            }
                         }
                     }
                 }
@@ -196,6 +199,19 @@ namespace MuMech
                 if (HasDeactivatedEngineOrTankDescendant(child)) return true;
             }
             return false;
+        }
+        
+        //determine if there are chutes being fired that wouldn't also get decoupled
+        public static bool HasStayingChutes(int inverseStage, Vessel v)
+        {
+        	var chutes = v.parts.FindAll(p => p.inverseStage == inverseStage && p.IsParachute());
+        	
+            foreach (Part p in chutes)
+            {
+        		if (!p.IsDecoupledInStage(inverseStage)) { return true; }
+        	}
+        	
+        	return false;
         }
     }
 }

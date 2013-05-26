@@ -27,6 +27,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
+            if(autopilot != null) desiredInclination = autopilot.desiredInclination;
         }
 
         public override void OnModuleEnabled()

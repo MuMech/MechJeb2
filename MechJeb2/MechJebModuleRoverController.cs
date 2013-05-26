@@ -79,7 +79,8 @@ namespace MuMech
                     headingLast = heading;
                 }
 
-                headingErr = MuUtils.ClampDegrees180(vesselState.vesselHeading - heading);
+                double instantaneousHeading = vesselState.rotationVesselSurface.eulerAngles.y;
+                headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
                 if (s.wheelSteer == s.wheelSteerTrim)
                 {
                     double act = headingPID.Compute(headingErr);
