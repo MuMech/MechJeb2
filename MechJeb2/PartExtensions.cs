@@ -77,9 +77,14 @@ namespace MuMech
                 p.HasModule<ModuleParachute>();
         }
 
+        public static bool IsLaunchClamp(this Part p)
+        {
+            return p.HasModule<LaunchClamp>();
+        }
+
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
-            if (p.IsDecoupler() && p.inverseStage == stage) return true;
+            if ((p.IsDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
             if (p.parent == null) return false;
             return p.parent.IsDecoupledInStage(stage);
         }
