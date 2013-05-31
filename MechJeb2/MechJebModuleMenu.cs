@@ -37,8 +37,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            GUIStyle toggleInactive;
-            toggleInactive = new GUIStyle(GUI.skin.toggle);
+            GUIStyle toggleInactive = new GUIStyle(GUI.skin.toggle);
             toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
             GUIStyle toggleActive = new GUIStyle(toggleInactive);
@@ -56,7 +55,10 @@ namespace MuMech
                     bool active = false;
                     foreach (var m in makesActive)
                     {
-                        if (active |= m.users.RecursiveUser(module)) break;
+                        if (m != null)
+                        {
+                            if (active |= m.users.RecursiveUser(module)) break;
+                        }
                     }
                     if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
                     if (module is MechJebModuleThrustWindow && core.thrust.limiter != MechJebModuleThrustController.LimitMode.None) active = true;
