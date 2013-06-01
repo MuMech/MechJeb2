@@ -299,9 +299,9 @@ namespace MuMech
     public class DefaultAscentPath : IAscentPath
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(5000, 1000);
+        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(-5000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(70000, 1000);
+        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(-70000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -309,16 +309,21 @@ namespace MuMech
 
         public double VerticalAscentEnd()
         {
-            return turnStartAltitude;
+        	var vessel = FlightGlobals.ActiveVessel;
+        	return (vessel.mainBody.atmosphere ? (turnStartAltitude > 0 ? turnStartAltitude : vessel.mainBody.RealMaxAtmosphereAltitude() / 10) : vessel.terrainAltitude + 20);
         }
 
         public double FlightPathAngle(double altitude)
         {
-            if (altitude < turnStartAltitude) return 90.0;
+        	var vessel = FlightGlobals.ActiveVessel;
+        	var targetAlt = vessel.GetMasterMechJeb().GetComputerModule<MechJebModuleAscentAutopilot>().desiredOrbitAltitude;
+        	var turnEnd = (turnEndAltitude > 0 ? turnEndAltitude : Math.Max(Math.Min(30000, targetAlt * 0.75), vessel.mainBody.RealMaxAtmosphereAltitude()));
 
-            if (altitude > turnEndAltitude) return turnEndAngle;
+        	if (altitude < VerticalAscentEnd()) return 90.0;
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
+            if (altitude > turnEnd) return turnEndAngle;
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - VerticalAscentEnd()) / (turnEnd - VerticalAscentEnd()), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
         }
     }
 
