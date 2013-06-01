@@ -97,7 +97,7 @@ public class RCSSolver
         Vector3[] thrustForces = new Vector3[fullCount];
 
         // Initialize the matrix based on thruster directions.
-        for (int i = 0; i < fullThrusters.Count; i++)
+        for (int i = 0; i < fullCount; i++)
         {
             Thruster thruster = fullThrusters[i];
             thrustForces[i] = thruster.GetThrust(direction, rotation);
@@ -129,10 +129,16 @@ public class RCSSolver
         double[] bndu = new double[count];
 
         // Initialize the matrix based on thruster directions.
-        for (int i = 0; i < count; i++)
+        int tIdx = -1;
+        for (int i = 0; i < fullCount; i++)
         {
-            Thruster thruster = thrusters[i];
             Vector3 thrust = thrustForces[i];
+            if (thrust.magnitude == 0)
+            {
+                continue;
+            }
+            Thruster thruster = thrusters[++tIdx];
+
             Vector3 torque = thruster.GetTorque(thrust);
             Vector3 thrustNorm = thrust.normalized;
 
@@ -148,17 +154,17 @@ public class RCSSolver
 
             if (waste < wasteThreshold) waste = 0;
 
-            A[0, i] = torqueErr.x * factorTorque;
-            A[1, i] = torqueErr.y * factorTorque;
-            A[2, i] = torqueErr.z * factorTorque;
-            A[3, i] = transErr.x * factorTranslate;
-            A[4, i] = transErr.y * factorTranslate;
-            A[5, i] = transErr.z * factorTranslate;
-            A[6, i] = waste * factorWaste;
-            A[7, i] = 0.001;
-            x[i]    = 1;
-            bndl[i] = 0;
-            bndu[i] = 1;
+            A[0, tIdx] = torqueErr.x * factorTorque;
+            A[1, tIdx] = torqueErr.y * factorTorque;
+            A[2, tIdx] = torqueErr.z * factorTorque;
+            A[3, tIdx] = transErr.x * factorTranslate;
+            A[4, tIdx] = transErr.y * factorTranslate;
+            A[5, tIdx] = transErr.z * factorTranslate;
+            A[6, tIdx] = waste * factorWaste;
+            A[7, tIdx] = 0.001;
+            x[tIdx] = 1;
+            bndl[tIdx] = 0;
+            bndu[tIdx] = 1;
         }
 
         alglib.minbleicstate state;
