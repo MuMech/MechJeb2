@@ -360,7 +360,6 @@ namespace MuMech
                 //decide if it's possible to draw fuel through this node:
                 if (attachNode.attachedPart != null                            //if there is a part attached here            
                     && attachNode.nodeType == AttachNode.NodeType.Stack        //and the attached part is stacked (rather than surface mounted)
-                    && attachNode.attachedPart.fuelCrossFeed                   //and the attached part allows fuel flow
                     && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
                          && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
                 {
