@@ -130,7 +130,7 @@ namespace MuMech
             //Dispose of all the existing computer modules
             foreach (ComputerModule module in computerModules) module.OnDestroy();
             computerModules.Clear();
-            
+
             if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             controlledVessel = null;
 
@@ -157,7 +157,16 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                module.OnStart(state);
+                //especially important to wrap OnStart in a try-catch so that a failure in one module
+                //doesn't prevent others from initializing.
+                try
+                {
+                    module.OnStart(state);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnStart: " + e);
+                }
             }
 
             if (vessel != null)
@@ -172,7 +181,14 @@ namespace MuMech
         {
             foreach (ComputerModule module in computerModules)
             {
-                module.OnActive();
+                try
+                {
+                    module.OnActive();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnActive: " + e);
+                }
             }
         }
 
@@ -180,7 +196,14 @@ namespace MuMech
         {
             foreach (ComputerModule module in computerModules)
             {
-                module.OnInactive();
+                try
+                {
+                    module.OnInactive();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnInactive: " + e);
+                }
             }
         }
 
@@ -188,7 +211,14 @@ namespace MuMech
         {
             foreach (ComputerModule module in computerModules)
             {
-                module.OnAwake();
+                try
+                {
+                    module.OnAwake();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnAwake: " + e);
+                }
             }
         }
 
@@ -234,7 +264,14 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                if (module.enabled) module.OnFixedUpdate();
+                try
+                {
+                    if (module.enabled) module.OnFixedUpdate();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnFixedUpdate: " + e);
+                }
             }
         }
 
@@ -246,7 +283,7 @@ namespace MuMech
             }
             if (HighLogic.LoadedSceneIsFlight && renderingManager != null)
             {
-                if(renderingManager.uiElementsToDisable.Length >= 1) showGui = renderingManager.uiElementsToDisable[0].activeSelf;
+                if (renderingManager.uiElementsToDisable.Length >= 1) showGui = renderingManager.uiElementsToDisable[0].activeSelf;
             }
 
             if (this != vessel.GetMasterMechJeb())
@@ -281,7 +318,14 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                if (module.enabled) module.OnUpdate();
+                try
+                {
+                    if (module.enabled) module.OnUpdate();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnUpdate: " + e);
+                }
             }
         }
 
@@ -339,7 +383,7 @@ namespace MuMech
                     }
                     catch (Exception e)
                     {
-                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
+                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_global.cfg: " + e);
                         generateDefaultWindows = true;
                     }
                 }
@@ -357,7 +401,7 @@ namespace MuMech
                     }
                     catch (Exception e)
                     {
-                        Debug.Log("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vessel.vesselName + ".cfg: " + e);
+                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vessel.vesselName + ".cfg: " + e);
                     }
                 }
 
@@ -370,7 +414,14 @@ namespace MuMech
                 {
                     foreach (ComputerModule module in computerModules)
                     {
-                        module.OnSave(local.AddNode(module.GetType().Name), null, null);
+                        try
+                        {
+                            module.OnSave(local.AddNode(module.GetType().Name), null, null);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnSave: " + e);
+                        }
                     }
                 }
 
@@ -391,11 +442,18 @@ namespace MuMech
 
                 foreach (ComputerModule module in computerModules)
                 {
-                    string name = module.GetType().Name;
-                    ConfigNode moduleLocal = local.HasNode(name) ? local.GetNode(name) : null;
-                    ConfigNode moduleType = type.HasNode(name) ? type.GetNode(name) : null;
-                    ConfigNode moduleGlobal = global.HasNode(name) ? global.GetNode(name) : null;
-                    module.OnLoad(moduleLocal, moduleType, moduleGlobal);
+                    try
+                    {
+                        string name = module.GetType().Name;
+                        ConfigNode moduleLocal = local.HasNode(name) ? local.GetNode(name) : null;
+                        ConfigNode moduleType = type.HasNode(name) ? type.GetNode(name) : null;
+                        ConfigNode moduleGlobal = global.HasNode(name) ? global.GetNode(name) : null;
+                        module.OnLoad(moduleLocal, moduleType, moduleGlobal);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnLoad: " + e);
+                    }
                 }
 
                 LoadDelayedModules();
@@ -407,7 +465,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                Debug.Log("MechJeb caught exception in core OnLoad: " + e);
+                Debug.LogError("MechJeb caught exception in core OnLoad: " + e);
             }
         }
 
@@ -436,8 +494,15 @@ namespace MuMech
 
                 foreach (ComputerModule module in computerModules)
                 {
-                    string name = module.GetType().Name;
-                    module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
+                    try
+                    {
+                        string name = module.GetType().Name;
+                        module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnSave: " + e);
+                    }
                 }
 
                 /*Debug.Log("OnSave:");
@@ -451,7 +516,7 @@ namespace MuMech
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
                 string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_"+vesselName+".cfg"));
+                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
 
                 if (lastFocus == vessel)
                 {
@@ -460,7 +525,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                Debug.Log("MechJeb caught exception in core OnSave: " + e);
+                Debug.LogError("MechJeb caught exception in core OnSave: " + e);
             }
         }
 
@@ -473,7 +538,14 @@ namespace MuMech
 
             foreach (ComputerModule module in computerModules)
             {
-                module.OnDestroy();
+                try
+                {
+                    module.OnDestroy();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnDestroy: " + e);
+                }
             }
             if (vessel != null)
             {
@@ -505,7 +577,14 @@ namespace MuMech
             {
                 foreach (ComputerModule module in computerModules)
                 {
-                    if (module.enabled) module.Drive(s);
+                    try
+                    {
+                        if (module.enabled) module.Drive(s);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in Drive: " + e);
+                    }
                 }
             }
         }
@@ -544,7 +623,14 @@ namespace MuMech
             {
                 foreach (DisplayModule module in GetComputerModules<DisplayModule>())
                 {
-                    if (module.enabled) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
+                    try
+                    {
+                        if (module.enabled) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in DrawGUI: " + e);
+                    }
                 }
 
                 if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
