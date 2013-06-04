@@ -19,6 +19,10 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
         public EditableDouble speedLimit = 0;
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble rol = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean forceRol = false;
 
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
@@ -57,7 +61,10 @@ namespace MuMech
                 return;
             }
 
-            core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+            if (forceRol)
+                core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.forward), AttitudeReference.TARGET_ORIENTATION, this);
+            else
+                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             Vector3d targetVel = core.target.Orbit.GetVel();
 
