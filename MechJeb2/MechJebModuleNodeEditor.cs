@@ -40,7 +40,7 @@ namespace MuMech
             if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
                 GUILayout.Label("No maneuver nodes to edit.");
-                conicModeSelectUI();
+                RelativityModeSelectUI();
                 GUI.DragWindow();
                 return;
             }
@@ -166,28 +166,27 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
-            conicModeSelectUI();
+            RelativityModeSelectUI();
 
             GUILayout.EndVertical();
 
             GUI.DragWindow();
         }
 
-        private void conicModeSelectUI()
+        static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
+        private void RelativityModeSelectUI()
         {
-            string[] conicModes = new string[] { "0", "1", "2", "3", "4" };
-            
+            GUILayout.BeginVertical();
+
             GUILayout.BeginHorizontal();
-
-            GUILayout.Label("Conics Mode:", GUILayout.ExpandWidth(false));
-            int conicMode = GUILayout.SelectionGrid((int)FlightGlobals.ActiveVessel.patchedConicRenderer.relativityMode, conicModes, 5);
-            PatchRendering.RelativityMode cmode = (PatchRendering.RelativityMode)Enum.ToObject(typeof(PatchRendering.RelativityMode), conicMode);
-            if (cmode != FlightGlobals.ActiveVessel.patchedConicRenderer.relativityMode)
-            {
-                FlightGlobals.ActiveVessel.patchedConicRenderer.relativityMode = cmode;
-            }
-
+            GUILayout.Label("Conics mode:", GUILayout.ExpandWidth(false));
+            int newRelativityMode = GUILayout.SelectionGrid((int)vessel.patchedConicRenderer.relativityMode, relativityModeStrings, 5);
+            vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)newRelativityMode;
             GUILayout.EndHorizontal();
+
+            GUILayout.Label("Current mode: " + vessel.patchedConicRenderer.relativityMode.ToString());
+
+            GUILayout.EndVertical();
         }
 
         public override GUILayoutOption[] WindowOptions()
