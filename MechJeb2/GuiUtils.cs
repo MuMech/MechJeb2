@@ -312,6 +312,52 @@ namespace MuMech
             return ArrowSelector(index, modulo, drawLabel);
         }
 
+
+        //from http://wiki.unity3d.com/index.php?title=PopupList
+        public static bool List(Rect position, ref bool showList, ref int listEntry, 
+            GUIContent buttonContent, string[] list, GUIStyle listStyle)
+        {
+            return List(position, ref showList, ref listEntry, buttonContent, list, "button", "box", listStyle);
+        }
+
+        public static bool List(Rect position, ref bool showList, ref int listEntry, GUIContent buttonContent, string[] list,
+                                 GUIStyle buttonStyle, GUIStyle boxStyle, GUIStyle listStyle)
+        {
+            int controlID = GUIUtility.GetControlID(865645, FocusType.Passive);
+            bool done = false;
+            switch (Event.current.GetTypeForControl(controlID))
+            {
+                case EventType.mouseDown:
+                    if (position.Contains(Event.current.mousePosition))
+                    {
+                        GUIUtility.hotControl = controlID;
+                        showList = true;
+                    }
+                    break;
+                case EventType.mouseUp:
+                    if (showList)
+                    {
+                        done = true;
+                    }
+                    break;
+            }
+
+            GUI.Label(position, buttonContent, buttonStyle);
+            if (showList)
+            {
+                Rect listRect = new Rect(position.x, position.y, position.width, list.Length * 20);
+                GUI.Box(listRect, "", boxStyle);
+                listEntry = GUI.SelectionGrid(listRect, listEntry, list, 1, listStyle);
+            }
+            if (done)
+            {
+                showList = false;
+            }
+            return done;
+        }
+
+
+
         public static string TimeToDHMS(double seconds, int decimalPlaces = 0)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";

@@ -105,8 +105,7 @@ namespace MuMech
         public float throttleLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
-        public double torqueRAvailable;
-        public double torquePYAvailable;
+        public Vector3d torqueAvailable;
         public double torqueThrustPYAvailable;
         public double massDrag;
         public double atmosphericDensity;
@@ -241,7 +240,8 @@ namespace MuMech
 
             radius = (CoM - vessel.mainBody.position).magnitude;
 
-            mass = thrustAvailable = thrustMinimum = massDrag = torqueRAvailable = torquePYAvailable = torqueThrustPYAvailable = 0;
+            mass = thrustAvailable = thrustMinimum = massDrag = torqueThrustPYAvailable = 0;
+            torqueAvailable = new Vector3d();
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
 
@@ -286,23 +286,23 @@ namespace MuMech
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {
                         double maxT = pm.thrusterPower;
+                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
                         if ((pm.isEnabled) && (!pm.isJustForShow))
                         {
-                            torqueRAvailable += maxT;
-                            if (p.Rigidbody != null) torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-
                             foreach (Transform t in pm.thrusterTransforms)
                             {
-                                rcsThrustAvailable.Add(-t.up * pm.thrusterPower);
-                            }
+                                Vector3d thrusterThrust = -t.up * pm.thrusterPower;
+                                rcsThrustAvailable.Add(thrusterThrust);
+                                Vector3d thrusterTorque = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, thrusterThrust));
+                                rcsTorqueAvailable.Add(thrusterTorque);
+                            }                            
                         }
                     }
                 }
                 if (p is CommandPod)
                 {
-                    torqueRAvailable += Math.Abs(((CommandPod)p).rotPower);
-                    torquePYAvailable += Math.Abs(((CommandPod)p).rotPower);
+                    torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
                 }
 
                 foreach (PartModule pm in p.Modules)
@@ -319,6 +319,8 @@ namespace MuMech
                     }
                 }
             }
+            
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
 
             thrustAvailable += einfo.thrustAvailable;
             thrustMinimum += einfo.thrustMinimum;
@@ -379,7 +381,7 @@ namespace MuMech
 
                 //Compute the contributions to the vessel inertia tensor due to the part mass and position
                 double partMass = p.TotalMass();
-                Vector3 partPosition = vessel.transform.InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
+                Vector3 partPosition = vessel.GetTransform().InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
 
                 for (int i = 0; i < 3; i++)
                 {
