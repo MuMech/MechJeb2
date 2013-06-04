@@ -50,6 +50,9 @@ namespace MuMech
 
         string errorMessage = "";
 
+        bool showList = false;
+        int listEntry = 0;
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
@@ -73,7 +76,10 @@ namespace MuMech
                 createNode = true;
             }
 
-            operation = (Operation)GuiUtils.ArrowSelector((int)operation, numOperations, operationStrings[(int)operation]);
+            //operation = (Operation)GuiUtils.ArrowSelector((int)operation, numOperations, operationStrings[(int)operation]);
+
+            GuiUtils.List(GUILayoutUtility.GetRect(300, 50), ref showList, ref listEntry, new GUIContent(operationStrings[listEntry]), operationStrings, GUI.skin.label);
+            operation = (Operation)listEntry;
 
             DoOperationParametersGUI();
 

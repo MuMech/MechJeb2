@@ -30,6 +30,11 @@ namespace MuMech
             base.OnStart(state);
         }
 
+        public void AutostageOnce()
+        {
+
+        }
+
         [GeneralInfoItem("Autostaging", InfoItem.Category.Misc)]
         public void AutostageInfoItem()
         {
