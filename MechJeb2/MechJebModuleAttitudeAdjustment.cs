@@ -55,16 +55,16 @@ namespace MuMech
             GUILayout.Label(core.attitude.pid.intAccum.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
-            double precision = Math.Max(0.5, Math.Min(10.0, (vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
+            double precision = Math.Max(0.5, Math.Min(10.0, (Math.Min(vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
             GUILayout.BeginHorizontal();
             GUILayout.Label("precision", GUILayout.ExpandWidth(true));
             GUILayout.Label(precision.ToString("F3"), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             Vector3d torque = new Vector3d(
-                                                    vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
-                                                    vesselState.torqueRAvailable,
-                                                    vesselState.torquePYAvailable + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
+                                                    vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
+                                                    vesselState.torqueAvailable.y,
+                                                    vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
                                             );
             GUILayout.BeginHorizontal();
             GUILayout.Label("torque", GUILayout.ExpandWidth(true));
