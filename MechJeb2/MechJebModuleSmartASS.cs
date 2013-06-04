@@ -222,7 +222,8 @@ namespace MuMech
                     break;
                 case Target.KILLROT:
                     core.attitude.attitudeKILLROT = true;
-                    core.attitude.attitudeTo(Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward), AttitudeReference.INERTIAL, this);
+                    attitude = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
+                    reference = AttitudeReference.INERTIAL;
                     break;
                 case Target.NODE:
                     direction = Vector3d.forward;
