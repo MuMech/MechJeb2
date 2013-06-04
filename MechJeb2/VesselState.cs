@@ -285,15 +285,16 @@ namespace MuMech
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {
                         double maxT = pm.thrusterPower;
-                        Vector3 partPosition = vessel.transform.InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
+                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
                         if ((pm.isEnabled) && (!pm.isJustForShow))
                         {
                             foreach (Transform t in pm.thrusterTransforms)
                             {
-                                Vector3 thrust = vessel.transform.InverseTransformDirection(-t.up) * pm.thrusterPower;
-                                rcsThrustAvailable.Add(thrust * pm.thrusterPower);
-                                rcsTorqueAvailable.Add(Vector3.Cross(partPosition, thrust));
+                                Vector3d thrusterThrust = -t.up * pm.thrusterPower;
+                                rcsThrustAvailable.Add(thrusterThrust);
+                                Vector3d thrusterTorque = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, thrusterThrust));
+                                rcsTorqueAvailable.Add(thrusterTorque);
                             }                            
                         }
                     }
@@ -378,7 +379,7 @@ namespace MuMech
 
                 //Compute the contributions to the vessel inertia tensor due to the part mass and position
                 double partMass = p.TotalMass();
-                Vector3 partPosition = vessel.transform.InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
+                Vector3 partPosition = vessel.GetTransform().InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
 
                 for (int i = 0; i < 3; i++)
                 {
