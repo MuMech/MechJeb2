@@ -40,6 +40,7 @@ namespace MuMech
             if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
                 GUILayout.Label("No maneuver nodes to edit.");
+                conicModeSelectUI();
                 GUI.DragWindow();
                 return;
             }
@@ -165,9 +166,28 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
+            conicModeSelectUI();
+
             GUILayout.EndVertical();
 
             GUI.DragWindow();
+        }
+
+        private void conicModeSelectUI()
+        {
+            string[] conicModes = new string[] { "0", "1", "2", "3", "4" };
+            
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Label("Conics Mode:", GUILayout.ExpandWidth(false));
+            int conicMode = GUILayout.SelectionGrid((int)FlightGlobals.ActiveVessel.patchedConicRenderer.relativityMode, conicModes, 5);
+            PatchRendering.RelativityMode cmode = (PatchRendering.RelativityMode)Enum.ToObject(typeof(PatchRendering.RelativityMode), conicMode);
+            if (cmode != FlightGlobals.ActiveVessel.patchedConicRenderer.relativityMode)
+            {
+                FlightGlobals.ActiveVessel.patchedConicRenderer.relativityMode = cmode;
+            }
+
+            GUILayout.EndHorizontal();
         }
 
         public override GUILayoutOption[] WindowOptions()
