@@ -16,44 +16,49 @@ namespace MuMech
 
         //adjustable parameters:
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool autostage = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble autostagePreDelay = 0.5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble autostagePostDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
         public EditableInt autostageLimit = 0;
 
-        public override void OnStart(PartModule.StartState state)
+        public bool autostagingOnce = false;
+
+        public void AutostageOnce(object user)
         {
-            users.Add(this);
-            base.OnStart(state);
+            users.Add(user);
+            autostagingOnce = true;
         }
 
-        public void AutostageOnce()
+        public override void OnModuleDisabled()
         {
-
+            autostagingOnce = false;
         }
 
-        [GeneralInfoItem("Autostaging", InfoItem.Category.Misc)]
-        public void AutostageInfoItem()
+        [GeneralInfoItem("Autostaging settings", InfoItem.Category.Misc)]
+        public void AutostageSettingsInfoItem()
         {
             GUILayout.BeginVertical();
-            autostage = GUILayout.Toggle(autostage, "Auto-stage");
 
-            if (autostage)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Delays: pre:", GUILayout.ExpandWidth(false));
-                autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.Width(35));
-                GUILayout.Label("s  post:", GUILayout.ExpandWidth(false));
-                autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.Width(35));
-                GUILayout.Label("s", GUILayout.ExpandWidth(true));
-                GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Delays: pre:", GUILayout.ExpandWidth(false));
+            autostagePreDelay.text = GUILayout.TextField(autostagePreDelay.text, GUILayout.Width(35));
+            GUILayout.Label("s  post:", GUILayout.ExpandWidth(false));
+            autostagePostDelay.text = GUILayout.TextField(autostagePostDelay.text, GUILayout.Width(35));
+            GUILayout.Label("s", GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
 
-                GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
-            }
+            GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
+
             GUILayout.EndVertical();
+        }
+
+        [ValueInfoItem("Autostaging status", InfoItem.Category.Misc)]
+        public string AutostageStatus()
+        {
+            if (!this.enabled) return "Autostaging off";
+            if (autostagingOnce) return "Will autostage next stage only";
+            return "Autostaging until stage #" + (int)autostageLimit;
         }
 
         //internal state:
@@ -64,8 +69,8 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (!vessel.isActiveVessel || !autostage) return;
-
+            if (!vessel.isActiveVessel) return;
+            
             //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
             if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > autostageLimit
@@ -96,6 +101,8 @@ namespace MuMech
 
                                     Staging.ActivateNextStage();
                                     countingDown = false;
+
+                                    if (autostagingOnce) users.Clear();
                                 }
                             }
                             else

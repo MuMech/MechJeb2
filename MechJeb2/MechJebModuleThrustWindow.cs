@@ -35,6 +35,17 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
+            bool oldAutostage = core.staging.users.Contains(this);
+            bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
+            if (newAutostage && !oldAutostage) core.staging.users.Add(this);
+            if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
+            
+            if (!core.staging.enabled && GUILayout.Button("Autostage once")) core.staging.AutostageOnce(this);
+            
+            if (core.staging.enabled) core.staging.AutostageSettingsInfoItem();
+
+            if (core.staging.enabled) GUILayout.Label(core.staging.AutostageStatus());
+
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
@@ -42,13 +53,13 @@ namespace MuMech
         public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[]{
-                GUILayout.Width(200), GUILayout.Height(30)
+                GUILayout.Width(250), GUILayout.Height(30)
             };
         }
 
         public override string GetName()
         {
-            return "Throttle Control";
+            return "Utilities";
         }
     }
 }
