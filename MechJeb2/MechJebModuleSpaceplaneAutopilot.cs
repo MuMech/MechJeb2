@@ -81,8 +81,8 @@ namespace MuMech
 
         public void DriveHeadingAndAltitudeHold(FlightCtrlState s)
         {
-            double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / (45.0 * Math.Pow((CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) / (CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) - vesselState.altitudeASL)), 2));
-            double targetFlightPathAngle = 180 / Math.PI * Math.Asin(Mathf.Clamp((float)(targetClimbRate / vesselState.speedSurface), (float)Math.Sin(-Math.PI / 9), (float)Math.Sin(Math.PI / 9)));
+            double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / (30.0 * Math.Pow((CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) / (CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) - vesselState.altitudeASL)), 4));
+            double targetFlightPathAngle = 180 / Math.PI * Math.Asin(Mathf.Clamp((float)(targetClimbRate / vesselState.speedSurface), (float)Math.Sin(-Math.PI / 6), (float)Math.Sin(Math.PI / 6)));
             AimVelocityVector(targetFlightPathAngle, targetHeading);
         }
 
@@ -124,6 +124,7 @@ namespace MuMech
         public float maxYaw = 10.0F;
         public float maxRoll = 10.0F;
         public float maxPitchCorrection = 5.0F;
+        public float maxPitchDiff = 25.0F;
         public double AoAtimeConstant = 2.0;
         public double pitchCorrectionTimeConstant = 15.0;
 
@@ -137,7 +138,8 @@ namespace MuMech
             double noseRoll = (maxRoll / maxYaw) * headingTurn;
 
             //vertical control
-            double nosePitch = desiredFpa + stableAoA + pitchCorrection;
+            double vesselDriectionPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
+            double nosePitch = Mathf.Clamp((float)(desiredFpa + stableAoA + pitchCorrection), (float)(vesselDriectionPitch), (float)(vesselDriectionPitch + maxPitchDiff));
 
             core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
 
