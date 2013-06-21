@@ -97,7 +97,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
         }
 
         void DrawGUIPrediction()

@@ -41,7 +41,7 @@ namespace MuMech
             {
                 GUILayout.Label("No maneuver nodes to edit.");
                 RelativityModeSelectUI();
-                GUI.DragWindow();
+                base.WindowGUI(windowID);
                 return;
             }
 
@@ -170,7 +170,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
         }
 
         static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
