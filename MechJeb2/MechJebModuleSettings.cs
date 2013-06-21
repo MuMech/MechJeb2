@@ -52,7 +52,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
         }
 
         public override string GetName()

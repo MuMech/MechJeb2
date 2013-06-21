@@ -36,6 +36,22 @@ namespace MuMech
             if (items.Count == 0) GUILayout.Label("Add items to this window with the custom window editor.");
             GUILayout.EndVertical();
 
+            if (GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
+            {
+                MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+                if (editor != null)
+                {
+                    editor.enabled = true;
+                    editor.editedWindow = this;
+                }
+            }
+
+            if (GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
+            {
+                MuUtils.SystemClipboard = ToSharingString();
+                ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
+            }
+
             base.WindowGUI(windowID);
         }
 
@@ -50,21 +66,6 @@ namespace MuMech
 
             if (showInCurrentScene)
             {
-                if (GUI.Button(new Rect(windowPos.x + 10, windowPos.y, 13, 20), "E", GuiUtils.yellowOnHover))
-                {
-                    MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-                    if (editor != null)
-                    {
-                        editor.enabled = true;
-                        editor.editedWindow = this;
-                    }
-                }
-
-                if (GUI.Button(new Rect(windowPos.x + 25, windowPos.y, 13, 20), "C", GuiUtils.yellowOnHover))
-                {
-                    MuUtils.SystemClipboard = ToSharingString();
-                    ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
-                }
             }
         }
 

@@ -269,7 +269,7 @@ namespace MuMech
                 if (core.GetComputerModule<MechJebModuleJoke>().rand.NextDouble() < TimeWarp.fixedDeltaTime / 5) vessel.parts[core.GetComputerModule<MechJebModuleJoke>().rand.Next(vessel.parts.Count)].explode();
             }
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
         }
 
         public override GUILayoutOption[] WindowOptions()
