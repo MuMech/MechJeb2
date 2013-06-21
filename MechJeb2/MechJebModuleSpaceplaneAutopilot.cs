@@ -13,6 +13,7 @@ namespace MuMech
             users.Add(controller);
             core.attitude.users.Add(this);
             mode = Mode.AUTOLAND;
+            landed = false;
             loweredGear = false;
             brakes = false;
         }
@@ -22,6 +23,9 @@ namespace MuMech
             users.Add(controller);
             core.attitude.users.Add(this);
             mode = Mode.HOLD;
+            landed = true;
+            loweredGear = false;
+            brakes = false;
         }
 
         public void AutopilotOff()
@@ -64,6 +68,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            
             core.attitude.attitudeDeactivate();
         }
 
@@ -115,6 +120,7 @@ namespace MuMech
             {
                 if (!landed)
                 {
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
                     maxRoll = 1.0F;
                     maxYaw = 2.0F;
                     landed = true;
@@ -136,6 +142,12 @@ namespace MuMech
                 
                 Vector3d runwayStart = RunwayStart();
 
+                //fine tune approach
+                if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 3000.0)
+                {
+                    maxRoll = 5.0F;
+                    maxYaw = 5.0F;
+                }
                 //prepare for landing
                 if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 1000.0)
                 {
@@ -152,7 +164,7 @@ namespace MuMech
                 double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
                 double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
                 double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
-                double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 0.0F);
+                double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 5.0F);
 
                 AimVelocityVector(desiredFPA, headingToWaypoint);
             }
@@ -160,6 +172,7 @@ namespace MuMech
             {
                 if (!landed)
                 {
+                    vessel.ctrlState.mainThrottle = 0;
                     landTime = vesselState.time;
                     landed = true;
                 }
@@ -167,7 +180,6 @@ namespace MuMech
                 if (!brakes && vesselState.time > landTime + 1.0)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-                    vessel.ctrlState.mainThrottle = 0;
                     brakes = true;
                 }
                 //keep the plane aligned with the runway:
@@ -180,8 +192,8 @@ namespace MuMech
 
         public float maxYaw = 3.0F;
         public float maxRoll = 30.0F;
-        public PIDController velocityPID = new PIDController(1, 0.01, 0.5);
-        public PIDController headingPID = new PIDController(0.2, 0.0, 0.6);
+        public PIDController pitchPID = new PIDController(1, 0.01, 0.5, 50, -50, 0.96);
+        public PIDController headingPID = new PIDController(0.2, 0, 0.6);
         public float maxPitchCorrection = 15.0F;
         public float maxPitchDiffUp = 25.0F;
         public float maxPitchDiffDown = 10.0F;
@@ -191,13 +203,13 @@ namespace MuMech
             double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
                                                                 Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
             //double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
-            double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(headingPID.Compute(desiredHeading - velocityHeading)), -maxYaw, maxYaw);
+            double headingTurn = Mathf.Clamp((float)headingPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxYaw, maxYaw);
             double noseHeading = velocityHeading + headingTurn;
             double noseRoll = (maxRoll / maxYaw) * headingTurn;
 
             //vertical control
             double velocityPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
-            double pitchCorrection = Mathf.Clamp((float)velocityPID.Compute(desiredFpa - velocityPitch), -maxPitchCorrection, maxPitchCorrection);
+            double pitchCorrection = Mathf.Clamp((float)pitchPID.Compute(desiredFpa - velocityPitch), -maxPitchCorrection, maxPitchCorrection);
             double nosePitch = Mathf.Clamp((float)(desiredFpa + pitchCorrection), (float)(velocityPitch - maxPitchDiffDown), (float)(velocityPitch + maxPitchDiffUp));
 
             core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
