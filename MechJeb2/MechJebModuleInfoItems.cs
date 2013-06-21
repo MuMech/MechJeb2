@@ -30,7 +30,7 @@ namespace MuMech
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.limitedMaxThrustAccel;
-            return GuiUtils.TimeToDHMS(burnTime);
+            return GuiUtils.TimeToDHMS(burnTime, 1);
         }
 
         [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
