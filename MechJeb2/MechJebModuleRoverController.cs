@@ -69,8 +69,26 @@ namespace MuMech
 
         protected double headingLast, speedLast;
 
+        public double HeadingToPos(Vector3d fromPos, Vector3d toPos) {
+            // thanks to Cilph who did most of this since I don't understand anything ~ BR2k
+            var body = vessel.mainBody;
+            Vector3d myPos  = fromPos - body.transform.position;
+            Vector3d north  = body.transform.position + (body.Radius * (Vector3d)body.transform.up) - fromPos;
+            Vector3d tgtPos = toPos - fromPos;
+            return Vector3d.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3d.Exclude(myPos.normalized, tgtPos.normalized));
+        }
+
         public override void Drive(FlightCtrlState s)
         {
+           	if (core.target.Target != null && core.target.Target.GetVessel() != null && core.target.Target.GetVessel().mainBody == vessel.mainBody) {
+                if (controlHeading) {
+                    heading = Math.Round(HeadingToPos(vessel.transform.position, core.target.Transform.position), 1);
+                }
+                if (controlSpeed) {
+                    speed = Math.Round(Math.Min(speed, (core.target.Distance - 50) / 10), 1);
+                }
+            }
+
             if (controlHeading)
             {
                 if (heading != headingLast)
@@ -87,6 +105,7 @@ namespace MuMech
                     s.wheelSteer = Mathf.Clamp((float)act, -1, 1);
                 }
             }
+
             if (controlSpeed)
             {
                 if (speed != speedLast)
