@@ -85,7 +85,7 @@ namespace MuMech
                     heading = Math.Round(HeadingToPos(vessel.transform.position, core.target.Transform.position), 1);
                 }
                 if (controlSpeed) {
-                    speed = Math.Round(Math.Min(speed, (core.target.Distance - 50) / 10), 1);
+                    speed = Math.Round(Math.Min(speed, (core.target.Distance - 50 - (speed * speed)) / 10), 1);
                 }
             }
 
