@@ -250,8 +250,6 @@ namespace MuMech
             double pitchCorrection = pitchCorrectionPID.Compute(desiredFpa - velocityPitch);
             nosePitch = Mathf.Clamp((float)(desiredFpa + pitchCorrection), (float)(velocityPitch + pitchCorrectionPID.min), (float)(velocityPitch + pitchCorrectionPID.max));
 
-            if (landed && vesselState.velocityMainBodySurface.magnitude < 50) nosePitch = vesselState.vesselPitch;
-
             //core.attitude.attitudeKILLROT = true;
             core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
 
