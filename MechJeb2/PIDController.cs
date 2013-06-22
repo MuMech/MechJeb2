@@ -10,22 +10,19 @@ namespace MuMech
     {
         public double prevError, intAccum, intDecay, Kp, Ki, Kd, max, min;
 
-        public PIDController(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue, double intDecay = 0)
+        public PIDController(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
             this.Kp = Kp;
             this.Ki = Ki;
             this.Kd = Kd;
             this.max = max;
             this.min = min;
-            this.intDecay = intDecay;
             Reset();
         }
 
         public double Compute(double error)
         {
-            if (intDecay != 0) intAccum *= intDecay;
             intAccum += error * TimeWarp.fixedDeltaTime;
-            if (intDecay != 0) intAccum /= intDecay; //for larger decays
             double action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
             double clamped = Math.Max(min, Math.Min(max, action));
             if (clamped != action)
