@@ -432,6 +432,7 @@ namespace MuMech
 			}
             if (!core.target.NormalTargetExists) return "N/A";
             if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
             return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
         }
 
@@ -440,7 +441,13 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
+			if (vesselState.altitudeTrue < 1000.0) {
+				double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
+				double b = (vessel.mainBody.transform.position - core.target.Transform.position).magnitude;
+				double c = Vector3d.Distance(vessel.transform.position, core.target.Position);
+				double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+				return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
+			}
 			return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
