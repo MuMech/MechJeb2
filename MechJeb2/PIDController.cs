@@ -8,7 +8,7 @@ namespace MuMech
 {
     public class PIDController : IConfigNode
     {
-        public double prevError, intAccum, intDecay, Kp, Ki, Kd, max, min;
+        public double prevError, intAccum, Kp, Ki, Kd, max, min;
 
         public PIDController(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
