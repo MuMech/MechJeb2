@@ -8,8 +8,6 @@ namespace MuMech
 {
     public class MechJebModuleSpaceplaneAutopilot : ComputerModule
     {
-        object controller;
-
         public void Autoland(object controller)
         {
             users.Add(controller);
