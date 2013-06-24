@@ -51,7 +51,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
         }
 
         public override void OnFixedUpdate()

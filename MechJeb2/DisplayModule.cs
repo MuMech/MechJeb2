@@ -59,6 +59,11 @@ namespace MuMech
 
         protected virtual void WindowGUI(int windowID)
         {
+            if (GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
+            {
+                enabled = false;
+            }
+
             GUI.DragWindow();
         }
 
@@ -67,11 +72,6 @@ namespace MuMech
             if (showInCurrentScene)
             {
                 windowPos = GUILayout.Window(ID, windowPos, WindowGUI, GetName(), WindowOptions());
-
-                if (GUI.Button(new Rect(windowPos.x + windowPos.width - 18, windowPos.y + 2, 16, 16), ""))
-                {
-                    enabled = false;
-                }
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                
