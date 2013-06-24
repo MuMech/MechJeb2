@@ -163,7 +163,7 @@ namespace MuMech
                 {
                     vessel.ctrlState.pitch = takeoffPitch;
                 }
-                vessel.ctrlState.yaw = (float)(targetHeading - vesselState.vesselHeading) * 0.1F;
+                vessel.ctrlState.yaw = (float)MuUtils.ClampDegrees180(targetHeading - vesselState.vesselHeading) * 0.1F;
             }
 
             double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / (30.0 * Math.Pow((CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) / (CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) - vesselState.altitudeASL)), 4));
@@ -256,7 +256,7 @@ namespace MuMech
                 if (Vector3d.Dot(runwayDir, vesselState.forward) < 0) runwayDir *= -1;
                 runwayHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
                 //core.attitude.attitudeTo(runwayHeading, 0, 0, this);
-                vessel.ctrlState.yaw = (float)MuUtils.ClampDegrees360(runwayHeading - vesselState.vesselHeading) * 0.1F;
+                vessel.ctrlState.yaw = (float)MuUtils.ClampDegrees180(runwayHeading - vesselState.vesselHeading) * 0.1F;
             }
         }
 

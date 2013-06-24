@@ -68,6 +68,7 @@ namespace MuMech
             autopilot.pitchCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
             autopilot.pitchCorrectionPID.Kd = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPID.Kd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("heading PD:");
             autopilot.headingPID.Kp = double.Parse(GUILayout.TextField(autopilot.headingPID.Kp.ToString(), GUILayout.Width(40)));
