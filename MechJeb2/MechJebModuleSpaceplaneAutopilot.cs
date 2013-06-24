@@ -8,10 +8,12 @@ namespace MuMech
 {
     public class MechJebModuleSpaceplaneAutopilot : ComputerModule
     {
+        object controller;
+
         public void Autoland(object controller)
         {
             users.Add(controller);
-            core.attitude.users.Add(this);
+            AutopilotOn();
             mode = Mode.AUTOLAND;
             landed = false;
             loweredGear = false;
@@ -21,18 +23,31 @@ namespace MuMech
         public void HoldHeadingAndAltitude(object controller)
         {
             users.Add(controller);
-            core.attitude.users.Add(this);
+            AutopilotOn();
             mode = Mode.HOLD;
             landed = false;
             loweredGear = false;
             brakes = false;
         }
 
+        bool autopilotOn = false;
+        public void AutopilotOn()
+        {
+            core.attitude.users.Add(this);
+            autopilotOn = true;
+        }
+
         public void AutopilotOff()
         {
-            mode = Mode.OFF;
-            users.Clear();
             core.attitude.attitudeDeactivate();
+            autopilotOn = false;
+        }
+
+        public void Abort()
+        {
+            users.Clear();
+            AutopilotOff();
+            mode = Mode.OFF;
         }
 
         public static Runway[] runways = 
@@ -87,10 +102,13 @@ namespace MuMech
         }
 
         bool gearDown = false;
+        public float takeoffPitch = 0.5F;
         public void DriveHeadingAndAltitudeHold(FlightCtrlState s)
         {
             if (!part.vessel.Landed)
             {
+                if (!autopilotOn)
+                    AutopilotOn();
                 if (!gearDown)
                 {
                     if (part.vessel.terrainAltitude < 100.0)
@@ -131,14 +149,21 @@ namespace MuMech
                 if (!brakes && vesselState.time > landTime + 1.0)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                    AutopilotOff();
                     brakes = true;
                 }
                 //if engines are started, disengage brakes and prepare for takeoff
                 if (brakes && vessel.ctrlState.mainThrottle > 0.01)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
-                    core.attitude.attitudeKILLROT = true;
+                    brakes = false;
                 }
+                //pitch up for takeoff
+                if (!brakes && vesselState.time > landTime + 1.0)
+                {
+                    vessel.ctrlState.pitch = takeoffPitch;
+                }
+                vessel.ctrlState.yaw = (float)(targetHeading - vesselState.vesselHeading) * 0.1F;
             }
 
             double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / (30.0 * Math.Pow((CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) / (CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) - vesselState.altitudeASL)), 4));
@@ -150,6 +175,7 @@ namespace MuMech
         double landTime = 0;
         public double aimAltitude = 0;
         public double distanceFrom = 0;
+        public double runwayHeading = 0;
         public void DriveAutoland(FlightCtrlState s)
         {
             if (!part.vessel.Landed)
@@ -157,6 +183,9 @@ namespace MuMech
                 if (landed) landed = false;
                 
                 Vector3d runwayStart = RunwayStart();
+
+                if (!autopilotOn)
+                    AutopilotOn();
 
                 //fine tune approach
                 if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 9000.0)
@@ -190,7 +219,7 @@ namespace MuMech
                     aimAltitude = 1500;
                     double horizontalDifference = 10000;
                     if (horizontalDistanceToRunway > 30000) { aimAltitude = 3000; horizontalDifference = 30000; }
-                    if (horizontalDistanceToRunway > 50000) { aimAltitude+= 8000; horizontalDifference = 50000; }
+                    if (horizontalDistanceToRunway > 50000) { aimAltitude = 8000; horizontalDifference = 50000; }
                     double setupFPA = 180 / Math.PI * Math.Atan2(aimAltitude - vessel.altitude, horizontalDistanceToRunway - horizontalDifference);
 
                     AimVelocityVector(setupFPA, headingToWaypoint);
@@ -210,21 +239,24 @@ namespace MuMech
                 {
                     vessel.ctrlState.mainThrottle = 0;
                     landTime = vesselState.time;
-                    maxRoll = 1.0F;
-                    maxYaw = 2.0F;
+                    AutopilotOff();
+                    //maxRoll = 1.0F;
+                    //maxYaw = 2.0F;
                     landed = true;
                 }
                 //apply breaks a little after touchdown
                 if (!brakes && vesselState.time > landTime + 1.0)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                    vessel.ctrlState.pitch = -1;
                     brakes = true;
                 }
                 //keep the plane aligned with the runway:
                 Vector3d runwayDir = runway.End(vesselState.CoM) - runway.Start(vesselState.CoM);
                 if (Vector3d.Dot(runwayDir, vesselState.forward) < 0) runwayDir *= -1;
-                double runwayHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
-                core.attitude.attitudeTo(runwayHeading, 0, 0, this);
+                runwayHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
+                //core.attitude.attitudeTo(runwayHeading, 0, 0, this);
+                vessel.ctrlState.yaw = (float)MuUtils.ClampDegrees360(runwayHeading - vesselState.vesselHeading) * 0.1F;
             }
         }
 
@@ -237,23 +269,25 @@ namespace MuMech
         public double noseRoll = 0;
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
-            //horizontal control
-            double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
-                                                                Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
-            //double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
-            double headingTurn = Mathf.Clamp((float)headingPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxYaw, maxYaw);
-            noseHeading = velocityHeading + headingTurn;
-            noseRoll = (maxRoll / maxYaw) * headingTurn;
+            if (autopilotOn)
+            {
+                //horizontal control
+                double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
+                                                                    Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
+                //double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
+                double headingTurn = Mathf.Clamp((float)headingPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxYaw, maxYaw);
+                noseHeading = velocityHeading + headingTurn;
+                noseRoll = (maxRoll / maxYaw) * headingTurn;
 
-            //vertical control
-            double velocityPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
-            double pitchCorrection = pitchCorrectionPID.Compute(desiredFpa - velocityPitch);
-            nosePitch = Mathf.Clamp((float)(desiredFpa + pitchCorrection), (float)(velocityPitch + pitchCorrectionPID.min), (float)(velocityPitch + pitchCorrectionPID.max));
+                //vertical control
+                double velocityPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
+                double pitchCorrection = pitchCorrectionPID.Compute(desiredFpa - velocityPitch);
+                nosePitch = Mathf.Clamp((float)(desiredFpa + pitchCorrection), (float)(velocityPitch + pitchCorrectionPID.min), (float)(velocityPitch + pitchCorrectionPID.max));
 
-            //core.attitude.attitudeKILLROT = true;
-            core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
+                core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
 
-            if (pitchCorrectionPID.intAccum > 50) pitchCorrectionPID.intAccum = 50;
+                if (pitchCorrectionPID.intAccum > 50) pitchCorrectionPID.intAccum = 50;
+            }
         }
 
         Vector3d RunwayStart()
