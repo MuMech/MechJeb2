@@ -12,6 +12,8 @@ namespace MuMech
         {
             users.Add(controller);
             AutopilotOn();
+            maxRoll = 22.5F;
+            maxYaw = 0.5F;
             mode = Mode.AUTOLAND;
             landed = false;
             loweredGear = false;
@@ -22,6 +24,8 @@ namespace MuMech
         {
             users.Add(controller);
             AutopilotOn();
+            maxRoll = 22.5F;
+            maxYaw = 0.5F;
             mode = Mode.HOLD;
             landed = false;
             loweredGear = false;
@@ -128,8 +132,8 @@ namespace MuMech
                 if (landed)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
-                    maxRoll = 30.0F;
-                    maxYaw = 3.0F;
+                    maxRoll = 22.5F;
+                    maxYaw = 0.5F;
                     landed = false;
                 }
             }
@@ -138,8 +142,7 @@ namespace MuMech
                 if (!landed)
                 {
                     vessel.ctrlState.mainThrottle = 0;
-                    maxRoll = 1.0F;
-                    maxYaw = 2.0F;
+                    AutopilotOff();
                     landTime = vesselState.time;
                     landed = true;
                 }
@@ -147,7 +150,6 @@ namespace MuMech
                 if (!brakes && vesselState.time > landTime + 1.0)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-                    AutopilotOff();
                     brakes = true;
                 }
                 //if engines are started, disengage brakes and prepare for takeoff
@@ -189,19 +191,19 @@ namespace MuMech
                 if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 9000.0)
                 {
                     maxRoll = 8.0F;
-                    maxYaw = 3.0F;
+                    maxYaw = 0.5F;
                 }
                 if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 3000.0)
                 {
                     maxRoll = 5.0F;
-                    maxYaw = 2.0F;
+                    maxYaw = 0.5F;
                 }
                 //prepare for landing
                 if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 1000.0)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
                     maxRoll = 3.0F;
-                    maxYaw = 1.0F;
+                    maxYaw = 0.5F;
                     loweredGear = true;
                 }
 
@@ -238,8 +240,6 @@ namespace MuMech
                     vessel.ctrlState.mainThrottle = 0;
                     landTime = vesselState.time;
                     AutopilotOff();
-                    //maxRoll = 1.0F;
-                    //maxYaw = 2.0F;
                     landed = true;
                 }
                 //apply breaks a little after touchdown
@@ -258,8 +258,8 @@ namespace MuMech
             }
         }
 
-        public float maxYaw = 3.0F;
-        public float maxRoll = 30.0F;
+        public float maxYaw = 0.5F;
+        public float maxRoll = 22.5F;
         public PIDController pitchCorrectionPID = new PIDController(3, 1, 0.5, 30, -10);
         public PIDController headingPID = new PIDController(1, 0, 0.5);
         public double nosePitch = 0;
@@ -275,6 +275,7 @@ namespace MuMech
                 //double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
                 double headingTurn = Mathf.Clamp((float)headingPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxYaw, maxYaw);
                 noseHeading = velocityHeading + headingTurn;
+                double roll = Mathf.Clamp(Mathf.Abs((float)headingTurn * 3), 3, maxRoll);
                 noseRoll = (maxRoll / maxYaw) * headingTurn;
 
                 //vertical control
@@ -287,6 +288,46 @@ namespace MuMech
                 if (pitchCorrectionPID.intAccum > 50) pitchCorrectionPID.intAccum = 50;
             }
         }
+
+        /*
+        public class LowPass360
+        {
+            public double y_old, alpha, timeConstant, dt;
+
+            public LowPass360(double timeConst)
+            {
+                this.timeConstant = timeConst;
+                clear();
+                initialize();
+            }
+
+            private void initialize()
+            {
+                dt = TimeWarp.fixedDeltaTime;
+                this.alpha = TimeWarp.fixedDeltaTime / (timeConstant - TimeWarp.fixedDeltaTime);
+            }
+
+            public double calc(double x)
+            {
+                if (dt != TimeWarp.fixedDeltaTime)
+                {
+                    initialize();
+                    y_old = x;
+                }
+                else
+                {
+                    y_old = MuUtils.ClampDegrees360(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
+                }
+
+                return y_old;
+            }
+
+            public void clear()
+            {
+                y_old = 0;
+            }
+        }
+        */
 
         Vector3d RunwayStart()
         {
