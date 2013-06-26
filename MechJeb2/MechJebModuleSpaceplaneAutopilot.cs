@@ -192,6 +192,14 @@ namespace MuMech
                 Vector3d vectorToWaypoint = ILSAimDirection();
                 double headingToWaypoint = vesselState.HeadingFromDirection(vectorToWaypoint);
 
+                //stop any rolling and aim down runway before touching down
+                if ((vesselState.CoM - runwayStart).magnitude < 500.0)
+                {
+                    Vector3d runwayDir = runway.End(vesselState.CoM) - runway.Start(vesselState.CoM);
+                    runwayHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
+                    headingToWaypoint = runwayHeading;
+                }
+
                 Vector3d vectorToRunway = runwayStart - vesselState.CoM;
                 double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
                 double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
@@ -282,8 +290,14 @@ namespace MuMech
                 //if (rollCorrectionPID.intAccum < -10) rollCorrectionPID.intAccum = -10;
 
                 //regulate throttle
-                if (pitchCorrection > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleUpPitch) * vessel.ctrlState.mainThrottle;
-                if (pitchCorrection < throttleDownPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleDownPitch) * vessel.ctrlState.mainThrottle;
+                if ((vesselState.vesselPitch - velocityPitch) > pitchPID.max * 0.95 && mode == Mode.HOLD)
+                    vessel.ctrlState.mainThrottle = 1F;
+                else
+                {
+                    if (pitchCorrection > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleUpPitch) * vessel.ctrlState.mainThrottle;
+                    if (pitchCorrection < throttleDownPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleDownPitch) * vessel.ctrlState.mainThrottle;
+                }
+
             }
         }
 
