@@ -13,6 +13,8 @@ namespace MuMech
             users.Add(controller);
             AutopilotOn();
             maxRoll = 22.5F;
+            throttleUpPitch = 0.8F;
+            throttleDownPitch = 0.7F;
             mode = Mode.AUTOLAND;
             landed = false;
             loweredGear = false;
@@ -24,6 +26,8 @@ namespace MuMech
             users.Add(controller);
             AutopilotOn();
             maxRoll = 22.5F;
+            throttleUpPitch = 0.8F;
+            throttleDownPitch = 0.7F;
             mode = Mode.HOLD;
             landed = false;
             loweredGear = false;
@@ -99,7 +103,6 @@ namespace MuMech
             }
         }
 
-        bool gearDown = false;
         public float takeoffPitch = 0.5F;
         public void DriveHeadingAndAltitudeHold(FlightCtrlState s)
         {
@@ -107,27 +110,28 @@ namespace MuMech
             {
                 if (!autopilotOn)
                     AutopilotOn();
-                if (!gearDown)
+                if (!loweredGear)
                 {
-                    if (part.vessel.terrainAltitude < 100.0)
+                    if ((part.vessel.altitude - part.vessel.terrainAltitude) < 100.0)
                     {
                         vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
-                        gearDown = true;
+                        loweredGear = true;
                     }
                 }
                 else
                 {
-                    if (part.vessel.terrainAltitude > 100.0)
+                    if ((part.vessel.altitude - part.vessel.terrainAltitude) > 100.0)
                     {
                         vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
-                        gearDown = false;
+                        loweredGear = false;
                     }
                 }
 
                 //takeoff or set for flight
                 if (landed)
                 {
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
+                    //vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
+                    loweredGear = true;
                     maxRoll = 25.0F;
                     landed = false;
                 }
@@ -140,6 +144,7 @@ namespace MuMech
                     AutopilotOff();
                     landTime = vesselState.time;
                     landed = true;
+                    loweredGear = true;
                 }
                 //apply breaks a little after touchdown
                 if (!brakes && vesselState.time > landTime + 1.0)
@@ -219,6 +224,9 @@ namespace MuMech
                     double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
                     double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 5.0F);
 
+                    throttleUpPitch = 0.9F;
+                    throttleDownPitch = 0.8F;
+
                     aimAltitude = verticalDistanceToRunway;
                     AimVelocityVector(desiredFPA, headingToWaypoint);
                 }
@@ -259,8 +267,8 @@ namespace MuMech
         public double pitchCorrection = 0;
         public double desiredRoll = 0;
         public double rollCorrection = 0;
-        public float throttleUpPitch = 0.5F;
-        public float throttleDownPitch = 0.0F;
+        public float throttleUpPitch = 0.6F;
+        public float throttleDownPitch = 0.4F;
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             if (autopilotOn)
@@ -290,13 +298,9 @@ namespace MuMech
                 //if (rollCorrectionPID.intAccum < -10) rollCorrectionPID.intAccum = -10;
 
                 //regulate throttle
-                if ((vesselState.vesselPitch - velocityPitch) > pitchPID.max * 0.95 && mode == Mode.HOLD)
-                    vessel.ctrlState.mainThrottle = 1F;
-                else
-                {
-                    if (pitchCorrection > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleUpPitch) * vessel.ctrlState.mainThrottle;
-                    if (pitchCorrection < throttleDownPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleDownPitch) * vessel.ctrlState.mainThrottle;
-                }
+                float pitchPercent = (float)((vesselState.vesselPitch - velocityPitch) / pitchPID.max);
+                if (pitchPercent > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.001F * (float)(pitchPercent - throttleUpPitch) * vessel.ctrlState.mainThrottle;
+                if (pitchPercent < throttleDownPitch) vessel.ctrlState.mainThrottle += 0.001F * (float)(pitchPercent - throttleDownPitch) * vessel.ctrlState.mainThrottle;
 
             }
         }
