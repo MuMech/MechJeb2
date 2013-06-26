@@ -13,7 +13,6 @@ namespace MuMech
             users.Add(controller);
             AutopilotOn();
             maxRoll = 22.5F;
-            maxYaw = 0.5F;
             mode = Mode.AUTOLAND;
             landed = false;
             loweredGear = false;
@@ -25,7 +24,6 @@ namespace MuMech
             users.Add(controller);
             AutopilotOn();
             maxRoll = 22.5F;
-            maxYaw = 0.5F;
             mode = Mode.HOLD;
             landed = false;
             loweredGear = false;
@@ -35,13 +33,11 @@ namespace MuMech
         bool autopilotOn = false;
         public void AutopilotOn()
         {
-            core.attitude.users.Add(this);
             autopilotOn = true;
         }
 
         public void AutopilotOff()
         {
-            core.attitude.attitudeDeactivate();
             autopilotOn = false;
         }
 
@@ -132,8 +128,7 @@ namespace MuMech
                 if (landed)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
-                    maxRoll = 22.5F;
-                    maxYaw = 0.5F;
+                    maxRoll = 25.0F;
                     landed = false;
                 }
             }
@@ -187,23 +182,10 @@ namespace MuMech
                 if (!autopilotOn)
                     AutopilotOn();
 
-                //fine tune approach
-                if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 9000.0)
-                {
-                    maxRoll = 8.0F;
-                    maxYaw = 0.5F;
-                }
-                if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 3000.0)
-                {
-                    maxRoll = 5.0F;
-                    maxYaw = 0.5F;
-                }
                 //prepare for landing
                 if (!loweredGear && (vesselState.CoM - runwayStart).magnitude < 1000.0)
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
-                    maxRoll = 3.0F;
-                    maxYaw = 0.5F;
                     loweredGear = true;
                 }
 
@@ -253,18 +235,24 @@ namespace MuMech
                 Vector3d runwayDir = runway.End(vesselState.CoM) - runway.Start(vesselState.CoM);
                 if (Vector3d.Dot(runwayDir, vesselState.forward) < 0) runwayDir *= -1;
                 runwayHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
-                //core.attitude.attitudeTo(runwayHeading, 0, 0, this);
+                vessel.ctrlState.pitch = -0.5F;
                 vessel.ctrlState.yaw = (float)MuUtils.ClampDegrees180(runwayHeading - vesselState.vesselHeading) * 0.1F;
             }
         }
 
-        public float maxYaw = 0.5F;
-        public float maxRoll = 22.5F;
-        public PIDController pitchCorrectionPID = new PIDController(3, 1, 0.5, 30, -10);
-        public PIDController headingPID = new PIDController(1, 0, 0.5);
-        public double nosePitch = 0;
-        public double noseHeading = 0;
+        public float maxRoll = 25.0F;
+        public PIDController pitchPID = new PIDController(1, 0.3, 0.1, 25, -10);
+        public PIDController pitchCorrectionPID = new PIDController(0.2, 0.05, 0.1, 1, -1);
+        public PIDController rollPID = new PIDController(2.5, 0, 0.5);
+        public PIDController rollCorrectionPID = new PIDController(0.006, 0, 0.003, 1, -1);
+        public LowPass180 rollLowPass = new LowPass180(0.35);
         public double noseRoll = 0;
+        public double desiredAoA = 0;
+        public double pitchCorrection = 0;
+        public double desiredRoll = 0;
+        public double rollCorrection = 0;
+        public float throttleUpPitch = 0.5F;
+        public float throttleDownPitch = 0.0F;
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             if (autopilotOn)
@@ -272,24 +260,33 @@ namespace MuMech
                 //horizontal control
                 double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
                                                                     Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
-                //double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
-                double headingTurn = Mathf.Clamp((float)headingPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxYaw, maxYaw);
-                noseHeading = velocityHeading + headingTurn;
-                double roll = Mathf.Clamp(Mathf.Abs((float)headingTurn * 3), 3, maxRoll);
-                noseRoll = (maxRoll / maxYaw) * headingTurn;
+                noseRoll = rollLowPass.calc(vesselState.vesselRoll);
+                desiredRoll = -Mathf.Clamp((float)rollPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxRoll, maxRoll);
+                rollCorrection = Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max);
 
                 //vertical control
                 double velocityPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
-                double pitchCorrection = pitchCorrectionPID.Compute(desiredFpa - velocityPitch);
-                nosePitch = Mathf.Clamp((float)(desiredFpa + pitchCorrection), (float)(velocityPitch + pitchCorrectionPID.min), (float)(velocityPitch + pitchCorrectionPID.max));
+                desiredAoA = Mathf.Clamp((float)pitchPID.Compute(desiredFpa - velocityPitch), (float)pitchPID.min, (float)pitchPID.max);
+                pitchCorrection = Mathf.Clamp((float)pitchCorrectionPID.Compute(desiredAoA - (vesselState.vesselPitch - velocityPitch)), (float)pitchCorrectionPID.min, (float)pitchCorrectionPID.max);
 
-                core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
+                vessel.ctrlState.roll = (float)rollCorrection;
+                vessel.ctrlState.pitch = (float)pitchCorrection;
 
-                if (pitchCorrectionPID.intAccum > 50) pitchCorrectionPID.intAccum = 50;
+                if (pitchPID.intAccum > 100) pitchPID.intAccum = 100;
+                if (pitchPID.intAccum < -100) pitchPID.intAccum = -100;
+                if (pitchCorrectionPID.intAccum > 10) pitchCorrectionPID.intAccum = 10;
+                if (pitchCorrectionPID.intAccum < -10) pitchCorrectionPID.intAccum = -10;
+                //if (rollPID.intAccum > 100) rollPID.intAccum = 100;
+                //if (rollPID.intAccum < -100) rollPID.intAccum = -100;
+                //if (rollCorrectionPID.intAccum > 10) rollCorrectionPID.intAccum = 10;
+                //if (rollCorrectionPID.intAccum < -10) rollCorrectionPID.intAccum = -10;
+
+                //regulate throttle
+                if (pitchCorrection > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleUpPitch) * vessel.ctrlState.mainThrottle;
+                if (pitchCorrection < throttleDownPitch) vessel.ctrlState.mainThrottle += 0.002F * (float)(pitchCorrection - throttleDownPitch) * vessel.ctrlState.mainThrottle;
             }
         }
 
-        /*
         public class LowPass360
         {
             public double y_old, alpha, timeConstant, dt;
@@ -327,7 +324,44 @@ namespace MuMech
                 y_old = 0;
             }
         }
-        */
+
+        public class LowPass180
+        {
+            public double y_old, alpha, timeConstant, dt;
+
+            public LowPass180(double timeConst)
+            {
+                this.timeConstant = timeConst;
+                clear();
+                initialize();
+            }
+
+            private void initialize()
+            {
+                dt = TimeWarp.fixedDeltaTime;
+                this.alpha = TimeWarp.fixedDeltaTime / (timeConstant - TimeWarp.fixedDeltaTime);
+            }
+
+            public double calc(double x)
+            {
+                if (dt != TimeWarp.fixedDeltaTime)
+                {
+                    initialize();
+                    y_old = x;
+                }
+                else
+                {
+                    y_old = MuUtils.ClampDegrees180(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
+                }
+
+                return y_old;
+            }
+
+            public void clear()
+            {
+                y_old = 0;
+            }
+        }
 
         Vector3d RunwayStart()
         {

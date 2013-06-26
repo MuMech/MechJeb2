@@ -56,24 +56,48 @@ namespace MuMech
             GUILayout.Label("m");
             GUILayout.EndHorizontal();
 
-            //temp
             GUILayout.BeginHorizontal();
             GUILayout.Label("Takeoff Pitch:");
             autopilot.takeoffPitch = float.Parse(GUILayout.TextField(autopilot.takeoffPitch.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
 
+            //temp
+            //GUILayout.Label(autopilot.desiredAoA.ToString());
+            //GUILayout.Label(autopilot.vesselState.vesselPitch.ToString());
+            //GUILayout.Label(autopilot.pitchCorrection.ToString());
             GUILayout.BeginHorizontal();
             GUILayout.Label("pitch PID:");
+            autopilot.pitchPID.Kp = double.Parse(GUILayout.TextField(autopilot.pitchPID.Kp.ToString(), GUILayout.Width(40))); ;
+            autopilot.pitchPID.Ki = double.Parse(GUILayout.TextField(autopilot.pitchPID.Ki.ToString(), GUILayout.Width(40))); ;
+            autopilot.pitchPID.Kd = double.Parse(GUILayout.TextField(autopilot.pitchPID.Kd.ToString(), GUILayout.Width(40)));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("pitch correction PID:");
             autopilot.pitchCorrectionPID.Kp = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPID.Kp.ToString(), GUILayout.Width(40)));
             autopilot.pitchCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
             autopilot.pitchCorrectionPID.Kd = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPID.Kd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
 
+            //GUILayout.Label(autopilot.desiredRoll.ToString());
+            //GUILayout.Label(autopilot.vesselState.vesselRoll.ToString());
+            //GUILayout.Label(autopilot.rollCorrection.ToString());
             GUILayout.BeginHorizontal();
-            GUILayout.Label("heading PD:");
-            autopilot.headingPID.Kp = double.Parse(GUILayout.TextField(autopilot.headingPID.Kp.ToString(), GUILayout.Width(40)));
-            autopilot.headingPID.Kd = double.Parse(GUILayout.TextField(autopilot.headingPID.Kd.ToString(), GUILayout.Width(40)));
+            GUILayout.Label("roll PID:");
+            autopilot.rollPID.Kp = double.Parse(GUILayout.TextField(autopilot.rollPID.Kp.ToString(), GUILayout.Width(40)));
+            autopilot.rollPID.Ki = double.Parse(GUILayout.TextField(autopilot.rollPID.Ki.ToString(), GUILayout.Width(40)));
+            autopilot.rollPID.Kd = double.Parse(GUILayout.TextField(autopilot.rollPID.Kd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("roll correction PID:");
+            autopilot.rollCorrectionPID.Kp = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPID.Kp.ToString(), GUILayout.Width(40)));
+            autopilot.rollCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
+            autopilot.rollCorrectionPID.Kd = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPID.Kd.ToString(), GUILayout.Width(40)));
+            GUILayout.EndHorizontal();
+
+            //GUILayout.Label(autopilot.pitchPID.intAccum.ToString());
+            //GUILayout.Label(autopilot.pitchCorrectionPID.intAccum.ToString());
+            //GUILayout.Label(autopilot.rollPID.intAccum.ToString());
+            //GUILayout.Label(autopilot.rollCorrectionPID.intAccum.ToString());
 
             if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.HOLD
                 && GUILayout.Button("Abort")) autopilot.Abort();
