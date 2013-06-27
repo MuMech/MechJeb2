@@ -166,8 +166,8 @@ namespace MuMech
                 vessel.ctrlState.yaw = (float)MuUtils.ClampDegrees180(targetHeading - vesselState.vesselHeading) * 0.1F;
             }
 
-            double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / (30.0 * Math.Pow((CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) / (CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) - vesselState.altitudeASL)), 4));
-            double targetFlightPathAngle = 180 / Math.PI * Math.Asin(Mathf.Clamp((float)(targetClimbRate / vesselState.speedSurface), (float)Math.Sin(-Math.PI / 6), (float)Math.Sin(Math.PI / 6)));
+            double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / (30.0 * Math.Pow((CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) / (CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody) - vesselState.altitudeASL)), 5));
+            double targetFlightPathAngle = 180 / Math.PI * Math.Asin(Mathf.Clamp((float)(targetClimbRate / vesselState.speedSurface), (float)Math.Sin(-Math.PI / 7), (float)Math.Sin(Math.PI / 7)));
             AimVelocityVector(targetFlightPathAngle, targetHeading);
         }
 
@@ -256,12 +256,33 @@ namespace MuMech
             }
         }
 
-        public float maxRoll = 25.0F;
         public PIDController pitchPID = new PIDController(1, 0.3, 0.1, 25, -10);
         public PIDController pitchCorrectionPID = new PIDController(0.2, 0.05, 0.1, 1, -1);
         public PIDController rollPID = new PIDController(2.5, 0, 0.5);
         public PIDController rollCorrectionPID = new PIDController(0.006, 0, 0.003, 1, -1);
-        public LowPass180 rollLowPass = new LowPass180(0.35);
+        double altitudePercent = 0;
+        double lowPitchCorPidKd = 0.1;
+        double highPitchCorPidKd = 1;
+        double lowRollCorPidKd = 0.002;
+        double highRollCorPidKd = 0.03;
+        double lowPitchPidMax = 25;
+        double highPitchPidMax = 5;
+        double lowPitchPidMin = -10;
+        double highPitchPidMin = 0;
+        void setPIDAltitude()
+        {
+            altitudePercent = vessel.altitude / CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody);
+
+            pitchCorrectionPID.Kd = lowPitchCorPidKd + (highPitchCorPidKd - lowPitchCorPidKd) * altitudePercent;
+            rollCorrectionPID.Kd = lowRollCorPidKd + (highRollCorPidKd - lowRollCorPidKd) * altitudePercent;
+
+            pitchPID.max = lowPitchPidMax + (highPitchPidMax - lowPitchPidMax) * altitudePercent;
+            pitchPID.min = lowPitchPidMin + (highPitchPidMin - lowPitchPidMin) * altitudePercent;
+        }
+
+        public float maxRoll = 25.0F;
+        public LowPass180 rollLowPass = new LowPass180(0.2);
+        public LowPass180 rollLowPassOutput = new LowPass180(0.1);
         public double noseRoll = 0;
         public double desiredAoA = 0;
         public double pitchCorrection = 0;
@@ -273,12 +294,14 @@ namespace MuMech
         {
             if (autopilotOn)
             {
+                setPIDAltitude();
+                
                 //horizontal control
                 double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
                                                                     Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
                 noseRoll = rollLowPass.calc(vesselState.vesselRoll);
                 desiredRoll = -Mathf.Clamp((float)rollPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxRoll, maxRoll);
-                rollCorrection = Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max);
+                rollCorrection = rollLowPassOutput.calc(Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max));
 
                 //vertical control
                 double velocityPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
@@ -299,15 +322,28 @@ namespace MuMech
 
                 //regulate throttle
                 float pitchPercent = (float)((vesselState.vesselPitch - velocityPitch) / pitchPID.max);
-                if (pitchPercent > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.001F * (float)(pitchPercent - throttleUpPitch) * vessel.ctrlState.mainThrottle;
-                if (pitchPercent < throttleDownPitch) vessel.ctrlState.mainThrottle += 0.001F * (float)(pitchPercent - throttleDownPitch) * vessel.ctrlState.mainThrottle;
+                if (pitchPercent > throttleUpPitch) vessel.ctrlState.mainThrottle += 0.01F * (float)(pitchPercent - throttleUpPitch) * vessel.ctrlState.mainThrottle;
+                if (pitchPercent < throttleDownPitch && vessel.altitude < 0.4 * CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody)) vessel.ctrlState.mainThrottle += 0.001F * (float)(pitchPercent - throttleDownPitch) * vessel.ctrlState.mainThrottle;
 
             }
         }
 
         public class LowPass360
         {
-            public double y_old, alpha, timeConstant, dt;
+            private double y_old, alpha, timeConstant, dt;
+
+            public double TimeConstant
+            {
+                get { return this.timeConstant; }
+                set
+                {
+                    if (value != timeConstant)
+                    {
+                        this.timeConstant = value;
+                        initialize();
+                    }
+                }
+            }
 
             public LowPass360(double timeConst)
             {
@@ -345,7 +381,20 @@ namespace MuMech
 
         public class LowPass180
         {
-            public double y_old, alpha, timeConstant, dt;
+            private double y_old, alpha, timeConstant, dt;
+
+            public double TimeConstant
+            {
+                get { return this.timeConstant; }
+                set
+                {
+                    if (value != timeConstant)
+                    {
+                        this.timeConstant = value;
+                        initialize();
+                    }
+                }
+            }
 
             public LowPass180(double timeConst)
             {

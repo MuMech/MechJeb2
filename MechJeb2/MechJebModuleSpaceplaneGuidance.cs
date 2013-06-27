@@ -65,10 +65,12 @@ namespace MuMech
             //GUILayout.Label(autopilot.desiredAoA.ToString());
             //GUILayout.Label(autopilot.vesselState.vesselPitch.ToString());
             //GUILayout.Label(autopilot.pitchCorrection.ToString());
+            //autopilot.rollLowPass.TimeConstant = double.Parse(GUILayout.TextField(autopilot.rollLowPass.TimeConstant.ToString(), GUILayout.Width(40)));
+            //autopilot.rollLowPassOutput.TimeConstant = double.Parse(GUILayout.TextField(autopilot.rollLowPassOutput.TimeConstant.ToString(), GUILayout.Width(40)));
             GUILayout.BeginHorizontal();
             GUILayout.Label("pitch PID:");
-            autopilot.pitchPID.Kp = double.Parse(GUILayout.TextField(autopilot.pitchPID.Kp.ToString(), GUILayout.Width(40))); ;
-            autopilot.pitchPID.Ki = double.Parse(GUILayout.TextField(autopilot.pitchPID.Ki.ToString(), GUILayout.Width(40))); ;
+            autopilot.pitchPID.Kp = double.Parse(GUILayout.TextField(autopilot.pitchPID.Kp.ToString(), GUILayout.Width(40)));
+            autopilot.pitchPID.Ki = double.Parse(GUILayout.TextField(autopilot.pitchPID.Ki.ToString(), GUILayout.Width(40)));
             autopilot.pitchPID.Kd = double.Parse(GUILayout.TextField(autopilot.pitchPID.Kd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
@@ -123,8 +125,6 @@ namespace MuMech
                 }
             }
         }
-
-
 
         public override void OnStart(PartModule.StartState state)
         {
