@@ -212,9 +212,9 @@ namespace MuMech
                 if (horizontalDistanceToRunway > 10000)
                 {
                     aimAltitude = 1500;
-                    double horizontalDifference = 10000;
-                    if (horizontalDistanceToRunway > 30000) { aimAltitude = 3000; horizontalDifference = 30000; }
-                    if (horizontalDistanceToRunway > 50000) { aimAltitude = 8000; horizontalDifference = 50000; }
+                    double horizontalDifference = 9900;
+                    if (horizontalDistanceToRunway > 30000) { aimAltitude = 3000; horizontalDifference = 29900; }
+                    if (horizontalDistanceToRunway > 50000) { aimAltitude = 8000; horizontalDifference = 49900; }
                     double setupFPA = 180 / Math.PI * Math.Atan2(aimAltitude - vessel.altitude, horizontalDistanceToRunway - horizontalDifference);
 
                     AimVelocityVector(setupFPA, headingToWaypoint);
@@ -256,33 +256,47 @@ namespace MuMech
             }
         }
 
-        public PIDController pitchPID = new PIDController(1, 0.3, 0.1, 25, -10);
+        public PIDController pitchPID = new PIDController(0.6, 0.2, 0.2, 25, -10);
         public PIDController pitchCorrectionPID = new PIDController(0.2, 0.05, 0.1, 1, -1);
         public PIDController rollPID = new PIDController(2.5, 0, 0.5);
         public PIDController rollCorrectionPID = new PIDController(0.006, 0, 0.003, 1, -1);
         double altitudePercent = 0;
-        double lowPitchCorPidKd = 0.1;
+        double pitchCorrectionPidKp = 0.2;
+        //double pitchCorrectionPidKi = 0.05;
+        //double pitchCorrectionPidKd = 0.2;
+        double lowPitchCorPidKd = 0.07;
         double highPitchCorPidKd = 1;
-        double lowRollCorPidKd = 0.002;
-        double highRollCorPidKd = 0.03;
+        double rollPidKp = 2.5;
+        double rollPidKd = 0.5;
+        double lowRollCorPidKd = 0.001;
+        double highRollCorPidKd = 0.01;
         double lowPitchPidMax = 25;
         double highPitchPidMax = 5;
         double lowPitchPidMin = -10;
         double highPitchPidMin = 0;
+        double controlGain = 1;
         void setPIDAltitude()
         {
             altitudePercent = vessel.altitude / CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody);
 
+            controlGain = 0.1 + vesselState.mass / 53;
+
             pitchCorrectionPID.Kd = lowPitchCorPidKd + (highPitchCorPidKd - lowPitchCorPidKd) * altitudePercent;
             rollCorrectionPID.Kd = lowRollCorPidKd + (highRollCorPidKd - lowRollCorPidKd) * altitudePercent;
+
+            pitchCorrectionPID.Kp = pitchCorrectionPidKp * controlGain;
+            pitchCorrectionPID.Kd *= controlGain;
+
+            rollPID.Kp = rollPidKp * controlGain;
+            rollPID.Kd = rollPidKd * controlGain;
 
             pitchPID.max = lowPitchPidMax + (highPitchPidMax - lowPitchPidMax) * altitudePercent;
             pitchPID.min = lowPitchPidMin + (highPitchPidMin - lowPitchPidMin) * altitudePercent;
         }
 
         public float maxRoll = 25.0F;
-        public LowPass180 rollLowPass = new LowPass180(0.2);
-        public LowPass180 rollLowPassOutput = new LowPass180(0.1);
+        public LowPass180 rollLowPass = new LowPass180(0.1);
+        public LowPass180 pitchLowPass = new LowPass180(0.1);
         public double noseRoll = 0;
         public double desiredAoA = 0;
         public double pitchCorrection = 0;
@@ -301,10 +315,10 @@ namespace MuMech
                                                                     Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
                 noseRoll = rollLowPass.calc(vesselState.vesselRoll);
                 desiredRoll = -Mathf.Clamp((float)rollPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxRoll, maxRoll);
-                rollCorrection = rollLowPassOutput.calc(Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max));
+                rollCorrection = Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max);
 
                 //vertical control
-                double velocityPitch = Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI);
+                double velocityPitch = pitchLowPass.calc(Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI));
                 desiredAoA = Mathf.Clamp((float)pitchPID.Compute(desiredFpa - velocityPitch), (float)pitchPID.min, (float)pitchPID.max);
                 pitchCorrection = Mathf.Clamp((float)pitchCorrectionPID.Compute(desiredAoA - (vesselState.vesselPitch - velocityPitch)), (float)pitchCorrectionPID.min, (float)pitchCorrectionPID.max);
 
@@ -363,7 +377,7 @@ namespace MuMech
                 if (dt != TimeWarp.fixedDeltaTime)
                 {
                     initialize();
-                    y_old = x;
+                    y_old = 0;
                 }
                 else
                 {
@@ -414,7 +428,7 @@ namespace MuMech
                 if (dt != TimeWarp.fixedDeltaTime)
                 {
                     initialize();
-                    y_old = x;
+                    y_old = 0;
                 }
                 else
                 {

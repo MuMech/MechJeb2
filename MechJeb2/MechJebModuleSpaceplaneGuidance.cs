@@ -62,11 +62,13 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             //temp
+            //GUILayout.Label(autopilot.noseRoll.ToString());
+            //autopilot.rollLowPass.TimeConstant = double.Parse(GUILayout.TextField(autopilot.rollLowPass.TimeConstant.ToString(), GUILayout.Width(40)));
+            //autopilot.pitchLowPass.TimeConstant = double.Parse(GUILayout.TextField(autopilot.pitchLowPass.TimeConstant.ToString(), GUILayout.Width(40)));
+            /*
             //GUILayout.Label(autopilot.desiredAoA.ToString());
             //GUILayout.Label(autopilot.vesselState.vesselPitch.ToString());
             //GUILayout.Label(autopilot.pitchCorrection.ToString());
-            //autopilot.rollLowPass.TimeConstant = double.Parse(GUILayout.TextField(autopilot.rollLowPass.TimeConstant.ToString(), GUILayout.Width(40)));
-            //autopilot.rollLowPassOutput.TimeConstant = double.Parse(GUILayout.TextField(autopilot.rollLowPassOutput.TimeConstant.ToString(), GUILayout.Width(40)));
             GUILayout.BeginHorizontal();
             GUILayout.Label("pitch PID:");
             autopilot.pitchPID.Kp = double.Parse(GUILayout.TextField(autopilot.pitchPID.Kp.ToString(), GUILayout.Width(40)));
@@ -95,7 +97,7 @@ namespace MuMech
             autopilot.rollCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
             autopilot.rollCorrectionPID.Kd = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPID.Kd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
-
+            */
             //GUILayout.Label(autopilot.pitchPID.intAccum.ToString());
             //GUILayout.Label(autopilot.pitchCorrectionPID.intAccum.ToString());
             //GUILayout.Label(autopilot.rollPID.intAccum.ToString());
