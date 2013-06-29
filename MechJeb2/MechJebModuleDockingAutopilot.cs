@@ -28,6 +28,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            core.attitude.attitudeRCScontrol = false;
             core.rcs.users.Add(this);
             core.attitude.users.Add(this);
             lateralPID = new PIDController(Kp, Ki, Kd);
@@ -35,6 +36,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            core.attitude.attitudeRCScontrol = true;
             core.rcs.users.Remove(this);
             core.attitude.attitudeDeactivate();
         }

@@ -76,7 +76,7 @@ namespace MuMech
                     }
                 }
 
-                rcs = pid.Compute(rcs);
+                rcs = pid.Compute(rcs, Vector3d.zero);
 
                 s.X = Mathf.Clamp((float)rcs.x, -1, 1);
                 s.Y = Mathf.Clamp((float)rcs.z, -1, 1); //note that z and
