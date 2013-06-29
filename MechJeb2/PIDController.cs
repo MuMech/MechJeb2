@@ -65,7 +65,7 @@ namespace MuMech
 
     public class PIDControllerV : IConfigNode
     {
-        public Vector3d prevError, intAccum;
+        public Vector3d intAccum, derivativeAct, propAct;
         public double Kp, Ki, Kd, max, min;
 
         public PIDControllerV(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
@@ -78,23 +78,29 @@ namespace MuMech
             Reset();
         }
 
-        public Vector3d Compute(Vector3d error)
+        public Vector3d Compute(Vector3d error, Vector3d omega )
         {
-            intAccum += error * TimeWarp.fixedDeltaTime;
-            Vector3d action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
-            Vector3d clamped = new Vector3d(Math.Max(min, Math.Min(max, action.x)), Math.Max(min, Math.Min(max, action.y)), Math.Max(min, Math.Min(max, action.z)));
-            if (Math.Abs((clamped - action).magnitude) > 0.01)
-            {
-                intAccum -= error * TimeWarp.fixedDeltaTime;
-            }
-            prevError = error;
+            derivativeAct = omega * Kd;
 
+            // integral actíon + Anti Windup
+            intAccum.x = (Math.Abs(derivativeAct.x) < 0.6 * max) ? intAccum.x + (error.x * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.x;
+            intAccum.y = (Math.Abs(derivativeAct.y) < 0.6 * max) ? intAccum.y + (error.y * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.y;
+            intAccum.z = (Math.Abs(derivativeAct.z) < 0.6 * max) ? intAccum.z + (error.z * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.z;
+
+            propAct = error * Kp;
+
+            Vector3d action = propAct + derivativeAct + intAccum;
+
+            // action clamp
+            action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),
+                                  Math.Max(min, Math.Min(max, action.y)),
+                                  Math.Max(min, Math.Min(max, action.z)) );
             return action;
         }
 
         public void Reset()
         {
-            prevError = intAccum = Vector3d.zero;
+            intAccum = Vector3d.zero;
         }
 
         public void Load(ConfigNode node)
