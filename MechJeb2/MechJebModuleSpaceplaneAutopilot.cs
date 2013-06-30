@@ -12,7 +12,7 @@ namespace MuMech
         {
             users.Add(controller);
             AutopilotOn();
-            maxRoll = 22.5F;
+            maxRoll = 30F;
             throttleUpPitch = 0.8F;
             throttleDownPitch = 0.7F;
             mode = Mode.AUTOLAND;
@@ -25,7 +25,7 @@ namespace MuMech
         {
             users.Add(controller);
             AutopilotOn();
-            maxRoll = 22.5F;
+            maxRoll = 30F;
             throttleUpPitch = 0.8F;
             throttleDownPitch = 0.7F;
             mode = Mode.HOLD;
@@ -132,7 +132,6 @@ namespace MuMech
                 {
                     //vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, false);
                     loweredGear = true;
-                    maxRoll = 25.0F;
                     landed = false;
                 }
             }
@@ -176,6 +175,8 @@ namespace MuMech
         public double aimAltitude = 0;
         public double distanceFrom = 0;
         public double runwayHeading = 0;
+        public enum HeadingState { RIGHT, LEFT, OFF };
+        public HeadingState autolandHeadingState = HeadingState.OFF;
         public void DriveAutoland(FlightCtrlState s)
         {
             if (!part.vessel.Landed)
@@ -196,6 +197,27 @@ namespace MuMech
 
                 Vector3d vectorToWaypoint = ILSAimDirection();
                 double headingToWaypoint = vesselState.HeadingFromDirection(vectorToWaypoint);
+                if (Math.Abs(MuUtils.ClampDegrees180(headingToWaypoint - vesselState.vesselHeading)) > 170)
+                {
+                    //make sure the heading doesn't keep switching from side to side
+                    switch (autolandHeadingState)
+                    {
+                        case HeadingState.RIGHT:
+                            headingToWaypoint = MuUtils.ClampDegrees360(vesselState.vesselHeading + 90);
+                            break;
+                        case HeadingState.LEFT:
+                            headingToWaypoint = MuUtils.ClampDegrees360(vesselState.vesselHeading - 90);
+                            break;
+                        case HeadingState.OFF:
+                            if (headingToWaypoint - vesselState.vesselHeading > 0)
+                                autolandHeadingState = HeadingState.RIGHT;
+                            else
+                                autolandHeadingState = HeadingState.LEFT;
+                            break;
+                    }
+                }
+                else
+                    autolandHeadingState = HeadingState.OFF;
 
                 //stop any rolling and aim down runway before touching down
                 if ((vesselState.CoM - runwayStart).magnitude < 500.0)
@@ -256,19 +278,20 @@ namespace MuMech
             }
         }
 
-        public PIDController pitchPID = new PIDController(0.6, 0.2, 0.2, 25, -10);
+        public PIDController pitchPID = new PIDController(0.6, 0.2, 0.6, 25, -10);
         public PIDController pitchCorrectionPID = new PIDController(0.2, 0.05, 0.1, 1, -1);
         public PIDController rollPID = new PIDController(2.5, 0, 0.5);
-        public PIDController rollCorrectionPID = new PIDController(0.006, 0, 0.003, 1, -1);
+        public PIDController rollCorrectionPID = new PIDController(0.002, 0, 0.002, 1, -1);
+        public PIDController yawCorrectionPID = new PIDController(0.1, 0, 0.1, 1, -1);
         double altitudePercent = 0;
         double pitchCorrectionPidKp = 0.2;
         //double pitchCorrectionPidKi = 0.05;
         //double pitchCorrectionPidKd = 0.2;
         double lowPitchCorPidKd = 0.07;
         double highPitchCorPidKd = 1;
-        double rollPidKp = 2.5;
-        double rollPidKd = 0.5;
-        double lowRollCorPidKd = 0.001;
+        public double rollPidKp = 10;
+        public double rollPidKd = 5;
+        double lowRollCorPidKd = 0.002;
         double highRollCorPidKd = 0.01;
         double lowPitchPidMax = 25;
         double highPitchPidMax = 5;
@@ -294,36 +317,52 @@ namespace MuMech
             pitchPID.min = lowPitchPidMin + (highPitchPidMin - lowPitchPidMin) * altitudePercent;
         }
 
-        public float maxRoll = 25.0F;
-        public LowPass180 rollLowPass = new LowPass180(0.1);
-        public LowPass180 pitchLowPass = new LowPass180(0.1);
+        public float maxRoll = 30.0F;
+        public LowPass180 rollLowPass = new LowPass180(0.1, 5, 0);
+        public LowPass180 desiredRollLowPass = new LowPass180(0.1, 5, 10);
+        public LowPass180 rollCorrectionLowPass = new LowPass180(0.1, 5, 20);
+        public LowPass180 yawCorrectionLowPass = new LowPass180(0.1, 5, 20);
+        public LowPass180 pitchLowPass = new LowPass180(0.1, 5, 0);
+        public LowPass360 headingLowPass = new LowPass360(0.1, 5, 0);
+        public LowPass360 velocityHeadingLowPass = new LowPass360(0.1, 5, 0);
         public double noseRoll = 0;
+        public double noseYaw = 0;
         public double desiredAoA = 0;
         public double pitchCorrection = 0;
         public double desiredRoll = 0;
+        public double desiredYaw = 0;
         public double rollCorrection = 0;
+        public double yawCorrection = 0;
         public float throttleUpPitch = 0.6F;
         public float throttleDownPitch = 0.4F;
+        public double velocityHeading = 0;
+        public double velocityHeadingTest = 0;
+        public double velocityPitch = 0;
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             if (autopilotOn)
             {
                 setPIDAltitude();
                 
+                velocityHeading = velocityHeadingLowPass.calc(180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
+                                                                    Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north)));
+                velocityPitch = pitchLowPass.calc(Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI));
+
                 //horizontal control
-                double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
-                                                                    Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
                 noseRoll = rollLowPass.calc(vesselState.vesselRoll);
-                desiredRoll = -Mathf.Clamp((float)rollPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxRoll, maxRoll);
-                rollCorrection = Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max);
+                noseYaw = MuUtils.ClampDegrees180(headingLowPass.calc(vesselState.vesselHeading) - velocityHeading);
+                desiredRoll = desiredRollLowPass.calc(- Mathf.Clamp((float)rollPID.Compute(MuUtils.ClampDegrees180(desiredHeading - velocityHeading)), -maxRoll, maxRoll));
+                desiredYaw = -desiredRoll / 4;// -(vesselState.vesselPitch - velocityPitch) * (desiredRoll / 60);
+                rollCorrection = rollCorrectionLowPass.calc(Mathf.Clamp((float)rollCorrectionPID.Compute(noseRoll - desiredRoll), (float)rollCorrectionPID.min, (float)rollCorrectionPID.max));
+                yawCorrection = yawCorrectionLowPass.calc(Mathf.Clamp((float)yawCorrectionPID.Compute(desiredYaw - noseYaw), (float)yawCorrectionPID.min, (float)yawCorrectionPID.max));
 
                 //vertical control
-                double velocityPitch = pitchLowPass.calc(Math.Atan2(vesselState.speedVertical, vesselState.speedSurface) * (180.0 / Math.PI));
                 desiredAoA = Mathf.Clamp((float)pitchPID.Compute(desiredFpa - velocityPitch), (float)pitchPID.min, (float)pitchPID.max);
                 pitchCorrection = Mathf.Clamp((float)pitchCorrectionPID.Compute(desiredAoA - (vesselState.vesselPitch - velocityPitch)), (float)pitchCorrectionPID.min, (float)pitchCorrectionPID.max);
 
                 vessel.ctrlState.roll = (float)rollCorrection;
                 vessel.ctrlState.pitch = (float)pitchCorrection;
+                vessel.ctrlState.yaw = (float)yawCorrection;
 
                 if (pitchPID.intAccum > 100) pitchPID.intAccum = 100;
                 if (pitchPID.intAccum < -100) pitchPID.intAccum = -100;
@@ -344,7 +383,8 @@ namespace MuMech
 
         public class LowPass360
         {
-            private double y_old, alpha, timeConstant, dt;
+            private double y_old, alpha, timeConstant, dt, passGap;
+            int calcCount, delayCount;
 
             public double TimeConstant
             {
@@ -364,25 +404,51 @@ namespace MuMech
                 this.timeConstant = timeConst;
                 clear();
                 initialize();
+                this.passGap = 0;
+                this.delayCount = 0;
+            }
+
+            public LowPass360(double timeConst, double passGap, int delayCount)
+            {
+                this.timeConstant = timeConst;
+                clear();
+                initialize();
+                this.passGap = passGap;
+                this.delayCount = delayCount;
             }
 
             private void initialize()
             {
                 dt = TimeWarp.fixedDeltaTime;
                 this.alpha = TimeWarp.fixedDeltaTime / (timeConstant - TimeWarp.fixedDeltaTime);
+                calcCount = 0;
+                y_old = 0;
             }
 
             public double calc(double x)
             {
-                if (dt != TimeWarp.fixedDeltaTime)
+                if (calcCount >= delayCount)
                 {
-                    initialize();
-                    y_old = 0;
+                    x = MuUtils.ClampDegrees360(x);
+                    if (dt != TimeWarp.fixedDeltaTime)
+                    {
+                        initialize();
+                        y_old = x;
+                    }
+                    else
+                    {
+                        if (calcCount > 10)
+                        {
+                            if (MuUtils.ClampDegrees180(x - y_old) > passGap)
+                                x = MuUtils.ClampDegrees360(y_old + passGap);
+                            else if (MuUtils.ClampDegrees180(x - y_old) < -passGap)
+                                x = MuUtils.ClampDegrees360(y_old - passGap);
+                        }
+                        y_old = MuUtils.ClampDegrees360(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
+                    }
                 }
-                else
-                {
-                    y_old = MuUtils.ClampDegrees360(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
-                }
+
+                if (calcCount <= 100 || calcCount <= delayCount) calcCount++;
 
                 return y_old;
             }
@@ -395,7 +461,8 @@ namespace MuMech
 
         public class LowPass180
         {
-            private double y_old, alpha, timeConstant, dt;
+            private double y_old, alpha, timeConstant, dt, passGap;
+            int calcCount, delayCount;
 
             public double TimeConstant
             {
@@ -415,25 +482,56 @@ namespace MuMech
                 this.timeConstant = timeConst;
                 clear();
                 initialize();
+                this.passGap = 0;
+                this.delayCount = 0;
             }
+
+            public LowPass180(double timeConst, double passGap, int delayCount)
+            {
+                this.timeConstant = timeConst;
+                clear();
+                initialize();
+                this.passGap = passGap;
+                this.delayCount = delayCount;
+            }
+
 
             private void initialize()
             {
                 dt = TimeWarp.fixedDeltaTime;
                 this.alpha = TimeWarp.fixedDeltaTime / (timeConstant - TimeWarp.fixedDeltaTime);
+                calcCount = 0;
+                y_old = 0;
             }
 
             public double calc(double x)
             {
-                if (dt != TimeWarp.fixedDeltaTime)
+                if (calcCount >= delayCount)
                 {
-                    initialize();
-                    y_old = 0;
+                    MuUtils.ClampDegrees180(x);
+                    if (dt != TimeWarp.fixedDeltaTime)
+                    {
+                        initialize();
+                        y_old = x;
+                    }
+                    else
+                    {
+                        if (calcCount > 100)
+                        {
+                            if (calcCount > 10)
+                            {
+                                if (MuUtils.ClampDegrees180(x - y_old) > passGap)
+                                    x = MuUtils.ClampDegrees180(y_old + passGap);
+                                else if (MuUtils.ClampDegrees180(x - y_old) < -passGap)
+                                    x = MuUtils.ClampDegrees180(y_old - passGap);
+                            }
+                            y_old = MuUtils.ClampDegrees360(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
+                        }
+                        y_old = MuUtils.ClampDegrees180(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
+                    }
                 }
-                else
-                {
-                    y_old = MuUtils.ClampDegrees180(y_old + alpha * MuUtils.ClampDegrees180(x - y_old));
-                }
+
+                if (calcCount <= 100 || calcCount <= delayCount) calcCount++;
 
                 return y_old;
             }
