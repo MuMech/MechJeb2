@@ -21,23 +21,6 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-
-            if (btNormal == null)
-            {
-                btNormal = new GUIStyle(GUI.skin.button);
-                btNormal.normal.textColor = btNormal.focused.textColor = Color.white;
-                btNormal.hover.textColor = btNormal.active.textColor = Color.yellow;
-                btNormal.onNormal.textColor = btNormal.onFocused.textColor = btNormal.onHover.textColor = btNormal.onActive.textColor = Color.green;
-                btNormal.padding = new RectOffset(8, 8, 8, 8);
-
-                btActive = new GUIStyle(btNormal);
-                btActive.active = btActive.onActive;
-                btActive.normal = btActive.onNormal;
-                btActive.onFocused = btActive.focused;
-                btActive.hover = btActive.onHover;
-            }
-
-
             if (!core.target.NormalTargetExists)
             {
                 GUILayout.Label("Choose a target to dock with");
@@ -74,16 +57,13 @@ namespace MuMech
             bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
             GuiUtils.SimpleTextBox("Speed limit", autopilot.speedLimit, "m/s");
 
-            
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("ForceROL", autopilot.forceRol ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
-            {
-                autopilot.forceRol = !autopilot.forceRol;
-            }
-            GuiUtils.SimpleTextBox("ROL:", autopilot.rol);
-            GUILayout.EndHorizontal();
+            autopilot.forceRol = GUILayout.Toggle(autopilot.forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
 
+            autopilot.rol.text = GUILayout.TextField(autopilot.rol.text, GUILayout.Width(30));
+            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
 
             if (autopilot.enabled != active)
             {
