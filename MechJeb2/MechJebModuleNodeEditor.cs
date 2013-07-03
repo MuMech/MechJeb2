@@ -81,34 +81,49 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Prograde:", prograde, "m/s", 60);
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                prograde -= progradeDelta;
+                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            }
+            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));            
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 prograde += progradeDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Radial+:", radialPlus, "m/s", 60);
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                radialPlus -= radialPlusDelta;
+                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            }
+            radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 radialPlus += radialPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Normal+:", normalPlus, "m/s", 60);
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                normalPlus -= normalPlusDelta;
+                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            }
+            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));            
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 normalPlus += normalPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
