@@ -38,14 +38,15 @@ namespace MuMech
         public void AutopilotOn()
         {
             autopilotOn = true;
-            rollLowPass.initialize();
-            desiredRollLowPass.initialize();
-            rollCorrectionLowPass.initialize();
-            yawCorrectionLowPass.initialize();
-            velocityPitchLowPass.initialize();
-            desiredAoALowPass.initialize();
-            headingLowPass.initialize();
-            velocityHeadingLowPass.initialize();
+            double timeConst = 0.35 + vesselState.mass / 50;
+            rollLowPass.TimeConstant = timeConst * 0.15;
+            desiredRollLowPass.TimeConstant = timeConst * 0.1;
+            rollCorrectionLowPass.TimeConstant = timeConst * 0.1;
+            yawCorrectionLowPass.TimeConstant = timeConst * 0.1;
+            velocityPitchLowPass.TimeConstant = timeConst * 0.15;
+            desiredAoALowPass.TimeConstant = timeConst * 0.1;
+            headingLowPass.TimeConstant = timeConst * 0.15;
+            velocityHeadingLowPass.TimeConstant = timeConst * 0.15;
         }
 
         public void AutopilotOff()

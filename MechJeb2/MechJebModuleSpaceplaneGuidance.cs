@@ -84,13 +84,6 @@ namespace MuMech
             autopilot.highPitchCorPidKd = double.Parse(GUILayout.TextField(autopilot.highPitchCorPidKd.ToString(), GUILayout.Width(30)));
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(autopilot.desiredRoll.ToString());
-            GUILayout.Label(autopilot.autolandHeadingState.ToString());
-            GUILayout.Label(autopilot.velocityHeading.ToString());
-            GUILayout.Label(autopilot.velocityHeadingTest.ToString());
-            GUILayout.Label(autopilot.rollLowPass.lastResult.ToString());
-            GUILayout.Label(autopilot.desiredRollLowPass.lastResult.ToString());
-            GUILayout.Label(autopilot.rollCorrectionLowPass.lastResult.ToString());
             //GUILayout.Label(autopilot.vesselState.vesselRoll.ToString());
             //GUILayout.Label(autopilot.rollCorrection.ToString());
             GUILayout.BeginHorizontal();
@@ -107,8 +100,8 @@ namespace MuMech
             autopilot.highRollCorPidKd = double.Parse(GUILayout.TextField(autopilot.highRollCorPidKd.ToString(), GUILayout.Width(30)));
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(autopilot.desiredYaw.ToString());
-            GUILayout.Label(autopilot.noseYaw.ToString());
+            //GUILayout.Label(autopilot.desiredYaw.ToString());
+            //GUILayout.Label(autopilot.noseYaw.ToString());
             GUILayout.BeginHorizontal();
             GUILayout.Label("yaw correction PID:");
             autopilot.yawCorrectionPidKp = double.Parse(GUILayout.TextField(autopilot.yawCorrectionPidKp.ToString(), GUILayout.Width(40)));
