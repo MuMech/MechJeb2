@@ -78,10 +78,9 @@ namespace MuMech
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("pitch correction PID:");
-            autopilot.pitchCorrectionPidKp = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPidKp.ToString(), GUILayout.Width(40)));
-            autopilot.pitchCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.pitchCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
-            autopilot.lowPitchCorPidKd = double.Parse(GUILayout.TextField(autopilot.lowPitchCorPidKd.ToString(), GUILayout.Width(30)));
-            autopilot.highPitchCorPidKd = double.Parse(GUILayout.TextField(autopilot.highPitchCorPidKd.ToString(), GUILayout.Width(30)));
+            autopilot.pitchCorPidKp = double.Parse(GUILayout.TextField(autopilot.pitchCorPidKp.ToString(), GUILayout.Width(40)));
+            autopilot.pitchCorPidKi = double.Parse(GUILayout.TextField(autopilot.pitchCorPidKi.ToString(), GUILayout.Width(40)));
+            autopilot.pitchCorPidKd = double.Parse(GUILayout.TextField(autopilot.pitchCorPidKd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
 
             //GUILayout.Label(autopilot.vesselState.vesselRoll.ToString());
@@ -94,27 +93,37 @@ namespace MuMech
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("roll correction PID:");
-            autopilot.rollCorrectionPidKp = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPidKp.ToString(), GUILayout.Width(40)));
-            autopilot.rollCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.rollCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
-            autopilot.lowRollCorPidKd = double.Parse(GUILayout.TextField(autopilot.lowRollCorPidKd.ToString(), GUILayout.Width(30)));
-            autopilot.highRollCorPidKd = double.Parse(GUILayout.TextField(autopilot.highRollCorPidKd.ToString(), GUILayout.Width(30)));
+            autopilot.rollCorPidKp = double.Parse(GUILayout.TextField(autopilot.rollCorPidKp.ToString(), GUILayout.Width(40)));
+            autopilot.rollCorPidKi = double.Parse(GUILayout.TextField(autopilot.rollCorPidKi.ToString(), GUILayout.Width(40)));
+            autopilot.rollCorPidKd = double.Parse(GUILayout.TextField(autopilot.rollCorPidKd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
 
             //GUILayout.Label(autopilot.desiredYaw.ToString());
             //GUILayout.Label(autopilot.noseYaw.ToString());
             GUILayout.BeginHorizontal();
             GUILayout.Label("yaw correction PID:");
-            autopilot.yawCorrectionPidKp = double.Parse(GUILayout.TextField(autopilot.yawCorrectionPidKp.ToString(), GUILayout.Width(40)));
-            autopilot.yawCorrectionPID.Ki = double.Parse(GUILayout.TextField(autopilot.yawCorrectionPID.Ki.ToString(), GUILayout.Width(40)));
-            autopilot.lowYawCorPidKd = double.Parse(GUILayout.TextField(autopilot.lowYawCorPidKd.ToString(), GUILayout.Width(30)));
-            autopilot.highYawCorPidKd = double.Parse(GUILayout.TextField(autopilot.highYawCorPidKd.ToString(), GUILayout.Width(30)));
+            autopilot.yawCorPidKp = double.Parse(GUILayout.TextField(autopilot.yawCorPidKp.ToString(), GUILayout.Width(40)));
+            autopilot.yawCorPidKi = double.Parse(GUILayout.TextField(autopilot.yawCorPidKi.ToString(), GUILayout.Width(40)));
+            autopilot.yawCorPidKd = double.Parse(GUILayout.TextField(autopilot.yawCorPidKd.ToString(), GUILayout.Width(40)));
             GUILayout.EndHorizontal();
             
             //GUILayout.Label(autopilot.pitchPID.intAccum.ToString());
             //GUILayout.Label(autopilot.pitchCorrectionPID.intAccum.ToString());
             //GUILayout.Label(autopilot.rollPID.intAccum.ToString());
             //GUILayout.Label(autopilot.rollCorrectionPID.intAccum.ToString());
-
+            /*
+            autopilot.contSurfNum = int.Parse(GUILayout.TextField(autopilot.contSurfNum.ToString(), GUILayout.Width(40)));
+            GUILayout.Label(autopilot.vessel.findLocalCenterOfMass().ToString());
+            GUILayout.Label((autopilot.contSurf.orgPos - autopilot.vessel.findLocalCenterOfMass()).ToString());
+            GUILayout.Label(autopilot.contSurf.orgRot.eulerAngles.ToString());
+            GUILayout.Label(autopilot.contSurf.ctrlSurfaceArea.ToString());
+            GUILayout.Label(autopilot.contSurf.ctrlSurfaceRange.ToString());
+            GUILayout.Label(autopilot.contSurf.deflectionLiftCoeff.ToString());
+            GUILayout.Label(autopilot.csTorqueFlaps.ToString());
+            GUILayout.Label(autopilot.torqueFlapsAvailable.ToString());
+            GUILayout.Label(autopilot.torqueAvailable.ToString());
+            GUILayout.Label(autopilot.vesselState.MoI.ToString());
+            */
             if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.HOLD
                 && GUILayout.Button("Abort")) autopilot.Abort();
 

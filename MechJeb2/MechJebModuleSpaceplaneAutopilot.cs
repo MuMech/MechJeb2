@@ -291,47 +291,89 @@ namespace MuMech
             }
         }
 
-        public PIDController pitchPID = new PIDController(0.6, 0.2, 0.6, 25, -10);
+        public PIDController pitchPID = new PIDController(5, 0, 5, 25, -10);
         public PIDController pitchCorrectionPID = new PIDController(0.1, 0.05, 0.1, 1, -1);
         public PIDController rollPID = new PIDController(10, 0, 5);
         public PIDController rollCorrectionPID = new PIDController(0.01, 0, 0.01, 1, -1);
         public PIDController yawCorrectionPID = new PIDController(0.1, 0, 0.1, 1, -1);
         double altitudePercent = 0;
-        public double pitchCorrectionPidKp = 0.2;
-        public double lowPitchCorPidKd = 0.2;
-        public double highPitchCorPidKd = 1;
 
-        public double rollCorrectionPidKp = 0.005;
-        public double lowRollCorPidKd = 0.005;
-        public double highRollCorPidKd = 0.025;
+        public double pitchCorPidKp = 0.005;
+        public double pitchCorPidKi = 0.05;
+        public double pitchCorPidKd = 0.01;
 
-        public double yawCorrectionPidKp = 0.05;
-        public double lowYawCorPidKd = 0.05;
-        public double highYawCorPidKd = 0.1;
+        public double rollCorPidKp = 0.005;
+        public double rollCorPidKi = 0;
+        public double rollCorPidKd = 0.01;
+
+        public double yawCorPidKp = 0.005;
+        public double yawCorPidKi = 0;
+        public double yawCorPidKd = 0.01;
 
         public double lowPitchPidMax = 25;
         public double highPitchPidMax = 5;
         public double lowPitchPidMin = -10;
         public double highPitchPidMin = 0;
-        double controlGain = 1;
+
+        public Vector3 torqueAvailable;
+        public Vector3 torqueFlapsAvailable;
+        public Vector3 csTorqueFlaps;
+        public ControlSurface contSurf = new ControlSurface();
+        public int contSurfNum = 0;
         void setPIDAltitude()
         {
-            altitudePercent = vessel.altitude / CelestialBodyExtensions.RealMaxAtmosphereAltitude(mainBody);
+            torqueFlapsAvailable = new Vector3d();
+            int contSurfCount = 0;
+            foreach (Part p in vessel.parts)
+            {
+                if (p is ControlSurface)
+                {
+                    //find control contribution of control surface
+                    ControlSurface cs = (p as ControlSurface);
+                    Vector3 offset = cs.orgPos - vessel.findLocalCenterOfMass();
+                    Vector3 orientation = cs.orgRot.eulerAngles;
 
-            controlGain = vesselState.mass / 50;
+                    float pitchEffectiveness = Mathf.Abs(Mathf.Cos(orientation.y * Mathf.PI / 180) * Mathf.Cos(orientation.z * Mathf.PI / 180));
+                    float tempTorquePitchFlaps = Mathf.Abs(pitchEffectiveness * offset.y * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * (float)vesselState.speedSurface * (float)vesselState.atmosphericDensity);
 
-            pitchCorrectionPID.Kd = lowPitchCorPidKd + (highPitchCorPidKd - lowPitchCorPidKd) * altitudePercent;
-            rollCorrectionPID.Kd = lowRollCorPidKd + (highRollCorPidKd - lowRollCorPidKd) * altitudePercent;
-            yawCorrectionPID.Kd = lowYawCorPidKd + (highYawCorPidKd - lowYawCorPidKd) * altitudePercent;
+                    float positionAngle = Mathf.Acos(offset.z / offset.x);
+                    float rollEffectiveness = Mathf.Cos((orientation.y - positionAngle) * Mathf.PI / 180) * Mathf.Cos(orientation.z * Mathf.PI / 180);
+                    float tempTorqueRollFlaps = Mathf.Abs(rollEffectiveness * Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z) * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * (float)vesselState.speedSurface * (float)vesselState.atmosphericDensity);
 
-            pitchCorrectionPID.Kp = pitchCorrectionPidKp * controlGain;
-            pitchCorrectionPID.Kd *= controlGain;
+                    float yawEffectiveness = Mathf.Abs(Mathf.Sin(orientation.y * Mathf.PI / 180) * Mathf.Cos(orientation.z * Mathf.PI / 180));
+                    float tempTorqueYawFlaps = Mathf.Abs(yawEffectiveness * offset.y * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * (float)vesselState.speedSurface * (float)vesselState.atmosphericDensity);
 
-            rollCorrectionPID.Kp = rollCorrectionPidKp * controlGain;
-            rollCorrectionPID.Kd *= controlGain;
+                    if (contSurfCount == contSurfNum)
+                    {
+                        contSurf = cs;
+                        csTorqueFlaps.x = tempTorquePitchFlaps * 0.005F;
+                        csTorqueFlaps.y = tempTorqueRollFlaps * 0.005F;
+                        csTorqueFlaps.z = tempTorqueYawFlaps * 0.005F;
+                    }
+                    contSurfCount++;
 
-            yawCorrectionPID.Kp = yawCorrectionPidKp * controlGain;
-            yawCorrectionPID.Kd *= controlGain;
+                    //flap torques are ESTIMATES
+                    torqueFlapsAvailable.x += tempTorquePitchFlaps * 0.005F;
+                    torqueFlapsAvailable.y += tempTorqueRollFlaps * 0.005F;
+                    torqueFlapsAvailable.z += tempTorqueYawFlaps * 0.005F;
+                }
+            }
+
+            torqueAvailable.x = torqueFlapsAvailable.x + (float)vesselState.torqueThrustPYAvailable;
+            torqueAvailable.y = torqueFlapsAvailable.y;
+            torqueAvailable.z = torqueFlapsAvailable.z + (float)vesselState.torqueThrustPYAvailable;
+
+            pitchCorrectionPID.Kp = (vesselState.MoI.x / torqueAvailable.x) * pitchCorPidKp;
+            pitchCorrectionPID.Ki = (vesselState.MoI.x / torqueAvailable.x) * pitchCorPidKi;
+            pitchCorrectionPID.Kd = (vesselState.MoI.x / torqueAvailable.x) * pitchCorPidKd;
+
+            rollCorrectionPID.Kp = (vesselState.MoI.y / torqueAvailable.y) * rollCorPidKp;
+            rollCorrectionPID.Ki = (vesselState.MoI.y / torqueAvailable.y) * rollCorPidKi;
+            rollCorrectionPID.Kd = (vesselState.MoI.y / torqueAvailable.y) * rollCorPidKd;
+
+            yawCorrectionPID.Kp = (vesselState.MoI.z / torqueAvailable.z) * yawCorPidKp;
+            yawCorrectionPID.Ki = (vesselState.MoI.z / torqueAvailable.z) * yawCorPidKi;
+            yawCorrectionPID.Kd = (vesselState.MoI.z / torqueAvailable.z) * yawCorPidKd;
 
             pitchPID.max = lowPitchPidMax + (highPitchPidMax - lowPitchPidMax) * altitudePercent;
             pitchPID.min = lowPitchPidMin + (highPitchPidMin - lowPitchPidMin) * altitudePercent;
