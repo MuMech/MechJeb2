@@ -300,15 +300,15 @@ namespace MuMech
         public PIDController yawCorrectionPID = new PIDController(0.1, 0, 0.1, 1, -1);
         double altitudePercent = 0;
 
-        public double pitchCorPidKp = 0.01;
-        public double pitchCorPidKi = 0.01;
+        public double pitchCorPidKp = 0.02;
+        public double pitchCorPidKi = 0.005;
         public double pitchCorPidKd = 0.01;
 
         public double pitchPidKp = 4;
         public double pitchPidKi = 1;
         public double pitchPidKd = 4;
 
-        public double rollCorPidKp = 0.01;
+        public double rollCorPidKp = 0.02;
         public double rollCorPidKi = 0;
         public double rollCorPidKd = 0.01;
 
@@ -316,7 +316,7 @@ namespace MuMech
         public double rollPidKi = 0;
         public double rollPidKd = 4;
 
-        public double yawCorPidKp = 0.01;
+        public double yawCorPidKp = 0.02;
         public double yawCorPidKi = 0;
         public double yawCorPidKd = 0.01;
 
