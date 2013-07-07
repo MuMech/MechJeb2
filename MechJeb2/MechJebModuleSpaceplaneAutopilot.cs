@@ -38,7 +38,7 @@ namespace MuMech
         public void AutopilotOn()
         {
             autopilotOn = true;
-            double timeConst = 0.35 + vesselState.mass / 50;
+            double timeConst = 0.4;// +vesselState.mass / 50;
             rollLowPass.TimeConstant = timeConst * 0.15;
             desiredRollLowPass.TimeConstant = timeConst * 0.1;
             rollCorrectionLowPass.TimeConstant = timeConst * 0.1;
@@ -293,32 +293,32 @@ namespace MuMech
             }
         }
 
-        public PIDController pitchPID = new PIDController(2, 0.7, 2, 25, -10);
+        public PIDController pitchPID = new PIDController(2, 0.7, 2, 20, -10);
         public PIDController pitchCorrectionPID = new PIDController(0.1, 0.01, 0.1, 1, -1);
         public PIDController rollPID = new PIDController(2, 0, 2);
         public PIDController rollCorrectionPID = new PIDController(0.01, 0, 0.01, 1, -1);
         public PIDController yawCorrectionPID = new PIDController(0.1, 0, 0.1, 1, -1);
         double altitudePercent = 0;
 
-        public double pitchCorPidKp = 0.005;
+        public double pitchCorPidKp = 0.01;
         public double pitchCorPidKi = 0.01;
-        public double pitchCorPidKd = 0.005;
+        public double pitchCorPidKd = 0.01;
 
-        public double pitchPidKp = 2;
-        public double pitchPidKi = 0.7;
-        public double pitchPidKd = 2;
+        public double pitchPidKp = 4;
+        public double pitchPidKi = 1;
+        public double pitchPidKd = 4;
 
-        public double rollCorPidKp = 0.005;
+        public double rollCorPidKp = 0.01;
         public double rollCorPidKi = 0;
-        public double rollCorPidKd = 0.005;
+        public double rollCorPidKd = 0.01;
 
-        public double rollPidKp = 2;
+        public double rollPidKp = 4;
         public double rollPidKi = 0;
-        public double rollPidKd = 2;
+        public double rollPidKd = 4;
 
-        public double yawCorPidKp = 0.005;
+        public double yawCorPidKp = 0.01;
         public double yawCorPidKi = 0;
-        public double yawCorPidKd = 0.005;
+        public double yawCorPidKd = 0.01;
 
         public double lowPitchPidMax = 25;
         public double highPitchPidMax = 5;
@@ -345,30 +345,30 @@ namespace MuMech
                     float speed = Mathf.Sqrt((float)vesselState.speedSurface * (float)vesselState.speedSurface + (float)vesselState.speedVertical * (float)vesselState.speedVertical);
 
                     float pitchEffectiveness = Mathf.Abs(Mathf.Cos(orientation.y * Mathf.PI / 180) * Mathf.Cos(orientation.z * Mathf.PI / 180));
-                    float tempTorquePitchFlaps = Mathf.Abs(pitchEffectiveness * offset.y * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * speed * (float)vesselState.atmosphericDensity);
+                    float tempTorquePitchFlaps = Mathf.Abs(pitchEffectiveness * offset.y * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * speed * speed * (float)vesselState.atmosphericDensity);
 
                     float positionAngle = Mathf.Acos(offset.z / offset.x);
                     if (float.IsNaN(positionAngle)) positionAngle = 90;
                     float rollEffectiveness = Mathf.Cos((orientation.y - positionAngle) * Mathf.PI / 180) * Mathf.Cos(orientation.z * Mathf.PI / 180);
                     if (float.IsNaN(rollEffectiveness)) rollEffectiveness = 1;
-                    float tempTorqueRollFlaps = Mathf.Abs(rollEffectiveness * Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z) * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * speed * (float)vesselState.atmosphericDensity);
+                    float tempTorqueRollFlaps = Mathf.Abs(rollEffectiveness * Mathf.Sqrt(offset.x * offset.x + offset.z * offset.z) * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * speed * speed * (float)vesselState.atmosphericDensity);
 
                     float yawEffectiveness = Mathf.Abs(Mathf.Sin(orientation.y * Mathf.PI / 180) * Mathf.Cos(orientation.z * Mathf.PI / 180));
-                    float tempTorqueYawFlaps = Mathf.Abs(yawEffectiveness * offset.y * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * speed * (float)vesselState.atmosphericDensity);
+                    float tempTorqueYawFlaps = Mathf.Abs(yawEffectiveness * offset.y * cs.ctrlSurfaceArea * cs.ctrlSurfaceRange * speed * speed * (float)vesselState.atmosphericDensity);
 
                     if (contSurfCount == contSurfNum)
                     {
                         contSurf = cs;
-                        csTorqueFlaps.x = tempTorquePitchFlaps * 0.005F;
-                        csTorqueFlaps.y = tempTorqueRollFlaps * 0.005F;
-                        csTorqueFlaps.z = tempTorqueYawFlaps * 0.005F;
+                        csTorqueFlaps.x = tempTorquePitchFlaps * 0.0001F;
+                        csTorqueFlaps.y = tempTorqueRollFlaps * 0.0001F;
+                        csTorqueFlaps.z = tempTorqueYawFlaps * 0.0001F;
                     }
                     contSurfCount++;
 
                     //flap torques are ESTIMATES
-                    torqueFlapsAvailable.x += tempTorquePitchFlaps * 0.005F;
-                    torqueFlapsAvailable.y += tempTorqueRollFlaps * 0.005F;
-                    torqueFlapsAvailable.z += tempTorqueYawFlaps * 0.005F;
+                    torqueFlapsAvailable.x += tempTorquePitchFlaps * 0.0001F;
+                    torqueFlapsAvailable.y += tempTorqueRollFlaps * 0.0001F;
+                    torqueFlapsAvailable.z += tempTorqueYawFlaps * 0.0001F;
                 }
             }
 
@@ -450,10 +450,10 @@ namespace MuMech
                 vessel.ctrlState.pitch = (float)pitchCorrection;
                 vessel.ctrlState.yaw = (float)yawCorrection;
 
-                if (pitchPID.intAccum > 1000) pitchPID.intAccum = 1000;
-                if (pitchPID.intAccum < -1000) pitchPID.intAccum = -1000;
-                if (pitchCorrectionPID.intAccum > 100) pitchCorrectionPID.intAccum = 100;
-                if (pitchCorrectionPID.intAccum < -100) pitchCorrectionPID.intAccum = -100;
+                if (pitchPID.intAccum > 10000) pitchPID.intAccum = 10000;
+                if (pitchPID.intAccum < -10000) pitchPID.intAccum = -10000;
+                if (pitchCorrectionPID.intAccum > 10000) pitchCorrectionPID.intAccum = 10000;
+                if (pitchCorrectionPID.intAccum < -10000) pitchCorrectionPID.intAccum = -10000;
                 //if (rollPID.intAccum > 100) rollPID.intAccum = 100;
                 //if (rollPID.intAccum < -100) rollPID.intAccum = -100;
                 //if (rollCorrectionPID.intAccum > 10) rollCorrectionPID.intAccum = 10;
