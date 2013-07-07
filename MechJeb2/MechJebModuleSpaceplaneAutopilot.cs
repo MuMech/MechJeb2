@@ -372,9 +372,9 @@ namespace MuMech
                 }
             }
 
-            torqueAvailable.x = torqueFlapsAvailable.x + (float)vesselState.torqueThrustPYAvailable;
-            torqueAvailable.y = torqueFlapsAvailable.y;
-            torqueAvailable.z = torqueFlapsAvailable.z + (float)vesselState.torqueThrustPYAvailable;
+            torqueAvailable.x = torqueFlapsAvailable.x + (float)vesselState.torquePYAvailable + (float)vesselState.torqueThrustPYAvailable;
+            torqueAvailable.y = torqueFlapsAvailable.y + (float)vesselState.torqueRAvailable;
+            torqueAvailable.z = torqueFlapsAvailable.z + (float)vesselState.torquePYAvailable + (float)vesselState.torqueThrustPYAvailable;
 
             pitchCorrectionPID.Kp = (vesselState.MoI.x / torqueAvailable.x) * pitchCorPidKp;
             pitchCorrectionPID.Ki = (vesselState.MoI.x / torqueAvailable.x) * pitchCorPidKi;
