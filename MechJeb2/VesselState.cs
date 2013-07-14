@@ -121,6 +121,7 @@ namespace MuMech
 
         public Vector6 rcsThrustAvailable;
         public Vector6 rcsTorqueAvailable;
+        public Vector6 ctrlTorqueAvailable;
 
 
         // Resource information keyed by resource Id.
@@ -243,6 +244,7 @@ namespace MuMech
             torqueAvailable = new Vector3d();
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
+            ctrlTorqueAvailable = new Vector6();
 
             EngineInfo einfo = new EngineInfo(forward, CoM);
             IntakeInfo iinfo = new IntakeInfo();
@@ -299,6 +301,20 @@ namespace MuMech
                         }
                     }
                 }
+
+                if (p is ControlSurface)
+                {
+                    Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
+                    ControlSurface cs = (p as ControlSurface);
+                    // Air Speed is velocityVesselSurface
+                    // AddForceAtPosition seems to need the airspeed vector rotated with the ctrl surface rotation x its surface
+                    Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * cs.pivotAxis);
+                    Vector3 ctrlTroquePos =  vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector( Quaternion.Inverse(airSpeedRot) * velocityVesselSurface )));
+                    Vector3 ctrlTroqueNeg =  vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector( airSpeedRot * velocityVesselSurface )));
+                    ctrlTorqueAvailable.Add(ctrlTroquePos);
+                    ctrlTorqueAvailable.Add(ctrlTroqueNeg);
+                }
+
                 if (p is CommandPod)
                 {
                     torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
@@ -320,6 +336,7 @@ namespace MuMech
             }
             
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
+            torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative);
 
             thrustAvailable += einfo.thrustAvailable;
             thrustMinimum += einfo.thrustMinimum;
