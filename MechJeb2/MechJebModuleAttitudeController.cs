@@ -29,7 +29,9 @@ namespace MuMech
 
         [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
         public bool useSAS = true;
-
+        [Persistent(pass = (int)Pass.Type)]
+		public bool rcsOnHighError = false;
+		
         [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Kp = 10000;
         [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
@@ -265,7 +267,20 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            // Used in the killRot activation calculation and drive_limit calculation
+			if (rcsOnHighError)
+			{
+				bool node = core.attitude.users.Contains(core.node) && core.node.burnTriggered && core.node.alignedForBurn;
+				if (core.attitude.attitudeError > 4.0f && !node && !vessel.ActionGroups[KSPActionGroup.RCS])
+				{
+					vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+				}
+				if (core.attitude.attitudeError < 1.0f && vessel.angularMomentum.magnitude < 1.5f && vessel.ActionGroups[KSPActionGroup.RCS])
+				{
+					vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+				}
+			}
+
+			// Used in the killRot activation calculation and drive_limit calculation
             double precision = Math.Max(0.5, Math.Min(10.0, (Math.Min(vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) + vesselState.torqueThrustPYAvailable * s.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
 
             // Reset the PID controller during roll to keep pitch and yaw errors

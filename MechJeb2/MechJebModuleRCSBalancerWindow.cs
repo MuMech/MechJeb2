@@ -32,9 +32,10 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            GUILayout.BeginVertical();
-
             bool wasEnabled = balancer.smartTranslation;
+
+            GUILayout.BeginVertical();
+            core.attitude.rcsOnHighError = GUILayout.Toggle(core.attitude.rcsOnHighError, "Auto RCS on high error");
 
             GUILayout.BeginHorizontal();
             balancer.smartTranslation = GUILayout.Toggle(balancer.smartTranslation, "Smart translation", GUILayout.Width(130));
