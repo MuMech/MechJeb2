@@ -274,7 +274,7 @@ namespace MuMech
 				{
 					vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 				}
-				if (core.attitude.attitudeError < 1.0f && vessel.angularMomentum.magnitude < 1.0f && vessel.ActionGroups[KSPActionGroup.RCS])
+				if (core.attitude.attitudeError < 1.0f && vessel.angularMomentum.magnitude < 1.5f && vessel.ActionGroups[KSPActionGroup.RCS])
 				{
 					vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
 				}
