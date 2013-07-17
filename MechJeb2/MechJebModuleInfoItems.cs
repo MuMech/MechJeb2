@@ -422,16 +422,7 @@ namespace MuMech
         [ValueInfoItem("Time to closest approach", InfoItem.Category.Target)]
         public string TargetTimeToClosestApproach()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
-            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
-        }
-
-        [ValueInfoItem("Closest approach distance", InfoItem.Category.Target)]
-        public string TargetClosestApproachDistance()
-        {
-            if (!core.target.NormalTargetExists) return "N/A";
+            if (core.target.Target == null) return "N/A";
             if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
 			if (vesselState.altitudeTrue < 1000.0) {
 				double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
@@ -440,6 +431,15 @@ namespace MuMech
 				double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
 				return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
 			}
+            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("Closest approach distance", InfoItem.Category.Target)]
+        public string TargetClosestApproachDistance()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
 			return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
         }
 
