@@ -72,20 +72,31 @@ namespace MuMech
         public double HeadingToPos(Vector3d fromPos, Vector3d toPos) {
             // thanks to Cilph who did most of this since I don't understand anything ~ BR2k
             var body = vessel.mainBody;
+            var fromLon = body.GetLongitude(fromPos);
+            var toLon = body.GetLongitude(toPos);
+        	var diff = toLon - fromLon;
+        	if (diff < -180) { diff += 360; }
+        	if (diff >  180) { diff -= 360; }
             Vector3d myPos  = fromPos - body.transform.position;
             Vector3d north  = body.transform.position + (body.Radius * (Vector3d)body.transform.up) - fromPos;
             Vector3d tgtPos = toPos - fromPos;
-            return Vector3d.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3d.Exclude(myPos.normalized, tgtPos.normalized));
+            return (diff < 0 ? -1 : 1) * Vector3d.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3d.Exclude(myPos.normalized, tgtPos.normalized));
         }
 
         public override void Drive(FlightCtrlState s)
         {
-           	if (core.target.Target != null && core.target.Target.GetVessel() != null && core.target.Target.GetVessel().mainBody == vessel.mainBody) {
+        	if (core.target.Target != null && ((core.target.PositionTargetExists && core.target.targetBody == orbit.referenceBody) || core.target.Orbit.referenceBody == orbit.referenceBody)) {
+        		var pos = (core.target.PositionTargetExists ? (Vector3)core.target.GetPositionTargetPosition() : core.target.Position);
                 if (controlHeading) {
-                    heading = Math.Round(HeadingToPos(vessel.transform.position, core.target.Transform.position), 1);
+        			heading = Math.Round(HeadingToPos(vessel.transform.position, pos), 1);
                 }
                 if (controlSpeed) {
-                    speed = Math.Round(Math.Min(speed, (core.target.Distance - 50 - (speed * speed)) / 10), 1);
+        			var curSpeed = vesselState.speedSurface;
+                    speed = Math.Round(Math.Min(speed, (core.target.Distance - 100 - (speed * speed * 2)) / 10), 1);
+                    if (curSpeed < 0.2 && core.target.Distance < 105) {
+                    	controlHeading = controlSpeed = false;
+                    	vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                    }
                 }
             }
 
