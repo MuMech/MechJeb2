@@ -336,7 +336,7 @@ namespace MuMech
                 moduleRegistry = (from ass in AppDomain.CurrentDomain.GetAssemblies() from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList();
             }
 
-            Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
+            System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
             version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
 
             foreach (Type t in moduleRegistry)
@@ -515,7 +515,7 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
+                string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
                 type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
 
                 if (lastFocus == vessel)
