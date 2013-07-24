@@ -308,6 +308,13 @@ namespace MuMech
                 {
                     if (!pm.isEnabled) continue;
 
+                    if (pm is ModuleReactionWheel)
+                    {
+                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
+                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active)
+                            torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
+                    }
+
                     if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
