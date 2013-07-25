@@ -27,9 +27,6 @@ namespace MuMech
         public Vector3d lastAct = Vector3d.zero;
         private double lastResetRoll = 0;
 
-        [ToggleInfoItem("Use SAS if available", InfoItem.Category.Vessel), Persistent(pass = (int)Pass.Local)]
-        public bool useSAS = true;
-
         [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
         public double Kp = 10000;
         [Persistent(pass = (int)Pass.Global | (int)Pass.Type)]
@@ -332,10 +329,7 @@ namespace MuMech
             if (userCommandingPitchYaw || userCommandingRoll)
             {
                 pid.Reset();
-                if (useSAS)
-                {
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
-                }
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
                 if (attitudeKILLROT)
                 {
                     attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
@@ -344,10 +338,7 @@ namespace MuMech
             else
             {
                 double int_error = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, vesselState.forward));
-                if (useSAS)
-                {
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, (int_error < precision / 10.0) && (Math.Abs(deltaEuler.y) < Math.Min(0.5, precision / 2.0)));
-                }
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
             }
 
             if (!attitudeRollMatters)
