@@ -295,7 +295,7 @@ namespace MuMech
                                 rcsThrustAvailable.Add(thrusterThrust);
                                 Vector3d thrusterTorque = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, thrusterThrust));
                                 rcsTorqueAvailable.Add(thrusterTorque);
-                            }                            
+                            }
                         }
                     }
                 }
@@ -308,6 +308,14 @@ namespace MuMech
                 {
                     if (!pm.isEnabled) continue;
 
+                    if (pm is ModuleReactionWheel)
+                    {
+                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
+                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active)
+                        {
+                            torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
+                        }
+                    }
                     if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
@@ -318,7 +326,7 @@ namespace MuMech
                     }
                 }
             }
-            
+
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
 
             thrustAvailable += einfo.thrustAvailable;
