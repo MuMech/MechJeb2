@@ -333,7 +333,7 @@ namespace MuMech
                     break;
 
                 case TimeReference.ALTITUDE:
-                    if (circularizeAltitude > o.PeA && circularizeAltitude < o.ApA)
+                    if (circularizeAltitude > o.PeA && (circularizeAltitude < o.ApA || o.eccentricity >= 1))
                     {
                         UT = o.NextTimeOfRadius(UT, o.referenceBody.Radius + circularizeAltitude);
                     }
