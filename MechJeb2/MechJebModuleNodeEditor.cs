@@ -40,7 +40,8 @@ namespace MuMech
             if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
                 GUILayout.Label("No maneuver nodes to edit.");
-                GUI.DragWindow();
+                RelativityModeSelectUI();
+                base.WindowGUI(windowID);
                 return;
             }
 
@@ -80,34 +81,49 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Prograde:", prograde, "m/s", 60);
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                prograde -= progradeDelta;
+                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            }
+            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));            
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 prograde += progradeDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Radial+:", radialPlus, "m/s", 60);
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                radialPlus -= radialPlusDelta;
+                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            }
+            radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 radialPlus += radialPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Normal+:", normalPlus, "m/s", 60);
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                normalPlus -= normalPlusDelta;
+                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            }
+            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));            
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 normalPlus += normalPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
@@ -165,9 +181,27 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
+            RelativityModeSelectUI();
+
             GUILayout.EndVertical();
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
+        }
+
+        static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
+        private void RelativityModeSelectUI()
+        {
+            GUILayout.BeginVertical();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Conics mode:", GUILayout.ExpandWidth(false));
+            int newRelativityMode = GUILayout.SelectionGrid((int)vessel.patchedConicRenderer.relativityMode, relativityModeStrings, 5);
+            vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)newRelativityMode;
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label("Current mode: " + vessel.patchedConicRenderer.relativityMode.ToString());
+
+            GUILayout.EndVertical();
         }
 
         public override GUILayoutOption[] WindowOptions()

@@ -85,7 +85,7 @@ namespace MuMech
         {
             foreach (Direction d in Enum.GetValues(typeof(Direction)))
             {
-                double projection = Vector3d.Project(vector, directions[d]).magnitude;
+                double projection = Vector3d.Dot(vector, directions[d]);
                 if (projection > 0)
                 {
                     this[d] += projection;
@@ -95,16 +95,16 @@ namespace MuMech
 
         public double GetMagnitude(Vector3d direction)
         {
-            double magnitude = 0;
+            double sqrMagnitude = 0;
             foreach (Direction d in Enum.GetValues(typeof(Direction)))
             {
-                double projection = Vector3d.Project(direction.normalized, directions[d]).magnitude;
+                double projection = Vector3d.Dot(direction.normalized, directions[d]);
                 if (projection > 0)
                 {
-                    magnitude += projection * this[d];
+                    sqrMagnitude += Math.Pow(projection * this[d], 2);
                 }
             }
-            return magnitude;
+            return Math.Sqrt(sqrMagnitude);
         }
 
         public void Load(ConfigNode node)

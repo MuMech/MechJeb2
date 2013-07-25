@@ -77,7 +77,10 @@ namespace MuMech
                     //adjust burn time so as to come to rest at the desired distance from the target:
                     double approachDistance = orbit.Separation(core.target.Orbit, UT);
                     double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
-                    UT -= Math.Sqrt(desiredDistance*desiredDistance - approachDistance * approachDistance) / approachSpeed;
+                    if (approachDistance < desiredDistance)
+                    {
+                        UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+                    }
 
                     //if coming in hot, stop early to avoid crashing:
                     if (approachSpeed > 10) UT -= 1; 
@@ -111,7 +114,10 @@ namespace MuMech
                 //adjust burn time so as to come to rest at the desired distance from the target:
                 double approachDistance = (orbit.SwappedAbsolutePositionAtUT(UT) - core.target.Orbit.SwappedAbsolutePositionAtUT(UT)).magnitude;
                 double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
-                UT -= Math.Sqrt(desiredDistance * desiredDistance - approachDistance * approachDistance) / approachSpeed;
+                if (approachDistance < desiredDistance)
+                {
+                    UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+                }
 
                 //if coming in hot, stop early to avoid crashing:
                 if (approachSpeed > 10) UT -= 1; 

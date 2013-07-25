@@ -33,7 +33,7 @@ namespace MuMech
             if (path == null)
             {
                 GUILayout.Label("Path is null!!!1!!1!1!1111!11eleven");
-                GUI.DragWindow();
+                base.WindowGUI(windowID);
             }
 
             GUILayout.BeginVertical();
@@ -70,7 +70,7 @@ namespace MuMech
                 UpdatePathTexture();
             }
 
-            GUI.DragWindow();
+            base.WindowGUI(windowID);
         }
 
         //redraw the picture of the planned flight path

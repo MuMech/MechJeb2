@@ -82,6 +82,8 @@ namespace MuMech
 
         void HandleLights()
         {
+            if (greenLight == null || redLight == null) InitializeLights();
+
             if (core == null || MapView.MapIsEnabled)
             {
                 litLight = LightColor.NEITHER;
