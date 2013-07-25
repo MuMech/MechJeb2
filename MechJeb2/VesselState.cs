@@ -64,31 +64,31 @@ namespace MuMech
         public MovingAverage vesselPitch = new MovingAverage();
         [ValueInfoItem("Roll", InfoItem.Category.Surface, format = "F1", units = "º")]
         public MovingAverage vesselRoll = new MovingAverage();
-        [ValueInfoItem("Altitude (ASL)", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("Altitude (ASL)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]
         public MovingAverage altitudeASL = new MovingAverage();
-        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
         public MovingAverage altitudeTrue = new MovingAverage();
-        [ValueInfoItem("Altitude (bottom)", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("Altitude (bottom)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
         public double altitudeBottom = 0;
-        [ValueInfoItem("Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitApA = new MovingAverage();
-        [ValueInfoItem("Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitPeA = new MovingAverage();
         [ValueInfoItem("Orbital period", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitPeriod = new MovingAverage();
-        [ValueInfoItem("Time to apoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("Time to apoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
         public MovingAverage orbitTimeToAp = new MovingAverage();
-        [ValueInfoItem("Time to periapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("Time to periapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
         public MovingAverage orbitTimeToPe = new MovingAverage();
         [ValueInfoItem("LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
         public MovingAverage orbitLAN = new MovingAverage();
         [ValueInfoItem("Argument of periapsis", InfoItem.Category.Orbit, format = "F1", units = "º")]
         public MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
-        [ValueInfoItem("Inclination", InfoItem.Category.Orbit, format = "F1", units = "º")]
+        [ValueInfoItem("Inclination", InfoItem.Category.Orbit, format = "F3", units = "º")]
         public MovingAverage orbitInclination = new MovingAverage();
         [ValueInfoItem("Eccentricity", InfoItem.Category.Orbit, format = "F3")]
         public MovingAverage orbitEccentricity = new MovingAverage();
-        [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
         [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]
         public MovingAverage latitude = new MovingAverage();
@@ -104,18 +104,17 @@ namespace MuMech
         public float throttleLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
         public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
-        public double torqueRAvailable;
-        public double torquePYAvailable;
+        public Vector3d torqueAvailable;
         public double torqueThrustPYAvailable;
         public double massDrag;
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
-        [ValueInfoItem("Intake air", InfoItem.Category.Vessel, units = "kg/s")]
+        [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
-        [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, units = "kg/s")]
+        [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAirNeeded;
-        [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, units = "kg/s")]
+        [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAirAtMax;
         [ValueInfoItem("Angle to prograde", InfoItem.Category.Orbit, format = "F2", units = "º")]
         public double angleToPrograde;
@@ -240,7 +239,8 @@ namespace MuMech
 
             radius = (CoM - vessel.mainBody.position).magnitude;
 
-            mass = thrustAvailable = thrustMinimum = massDrag = torqueRAvailable = torquePYAvailable = torqueThrustPYAvailable = 0;
+            mass = thrustAvailable = thrustMinimum = massDrag = torqueThrustPYAvailable = 0;
+            torqueAvailable = new Vector3d();
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
 
@@ -285,29 +285,37 @@ namespace MuMech
                     foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                     {
                         double maxT = pm.thrusterPower;
+                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
                         if ((pm.isEnabled) && (!pm.isJustForShow))
                         {
-                            torqueRAvailable += maxT;
-                            if (p.Rigidbody != null) torquePYAvailable += maxT * (p.Rigidbody.worldCenterOfMass - CoM).magnitude;
-
                             foreach (Transform t in pm.thrusterTransforms)
                             {
-                                rcsThrustAvailable.Add(-t.up * pm.thrusterPower);
+                                Vector3d thrusterThrust = -t.up * pm.thrusterPower;
+                                rcsThrustAvailable.Add(thrusterThrust);
+                                Vector3d thrusterTorque = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, thrusterThrust));
+                                rcsTorqueAvailable.Add(thrusterTorque);
                             }
                         }
                     }
                 }
                 if (p is CommandPod)
                 {
-                    torqueRAvailable += Math.Abs(((CommandPod)p).rotPower);
-                    torquePYAvailable += Math.Abs(((CommandPod)p).rotPower);
+                    torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
                 }
 
                 foreach (PartModule pm in p.Modules)
                 {
                     if (!pm.isEnabled) continue;
 
+                    if (pm is ModuleReactionWheel)
+                    {
+                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
+                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active)
+                        {
+                            torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
+                        }
+                    }
                     if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
@@ -318,6 +326,8 @@ namespace MuMech
                     }
                 }
             }
+
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
 
             thrustAvailable += einfo.thrustAvailable;
             thrustMinimum += einfo.thrustMinimum;
@@ -377,7 +387,7 @@ namespace MuMech
 
                 //Compute the contributions to the vessel inertia tensor due to the part mass and position
                 double partMass = p.TotalMass();
-                Vector3 partPosition = vessel.transform.InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
+                Vector3 partPosition = vessel.GetTransform().InverseTransformDirection(p.Rigidbody.worldCenterOfMass - CoM);
 
                 for (int i = 0; i < 3; i++)
                 {

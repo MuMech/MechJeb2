@@ -79,8 +79,8 @@ namespace MuMech
                 rcs = pid.Compute(rcs);
 
                 s.X = Mathf.Clamp((float)rcs.x, -1, 1);
-                s.Y = Mathf.Clamp((float)rcs.z, -1, 1);
-                s.Z = Mathf.Clamp((float)rcs.y, -1, 1);
+                s.Y = Mathf.Clamp((float)rcs.z, -1, 1); //note that z and
+                s.Z = Mathf.Clamp((float)rcs.y, -1, 1); //y must be swapped
             }
             else if (conserveFuel)
             {

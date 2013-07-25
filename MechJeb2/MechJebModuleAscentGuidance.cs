@@ -27,6 +27,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
+            if(autopilot != null) desiredInclination = autopilot.desiredInclination;
         }
 
         public override void OnModuleEnabled()
@@ -99,7 +100,8 @@ namespace MuMech
             core.thrust.LimitAccelerationInfoItem();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
-            core.staging.AutostageInfoItem();
+            autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
+            if(autopilot.autostage) core.staging.AutostageSettingsInfoItem();
 
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 

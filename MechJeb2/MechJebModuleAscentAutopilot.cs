@@ -26,6 +26,22 @@ namespace MuMech
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool _autostage;
+        public bool autostage
+        {
+            get { return _autostage; }
+            set
+            {
+                bool changed = (value != _autostage);
+                _autostage = value;
+                if (changed)
+                {
+                    if (_autostage && this.enabled) core.staging.users.Add(this);
+                    if (!_autostage) core.staging.users.Remove(this);
+                }
+            }
+        }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
@@ -42,6 +58,7 @@ namespace MuMech
 
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
+            if (autostage) core.staging.users.Add(this);
         }
 
         public override void OnModuleDisabled()
@@ -49,6 +66,7 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
+            core.staging.users.Remove(this);
 
             if (placedCircularizeNode) core.node.Abort();
 

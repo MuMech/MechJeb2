@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -42,10 +42,13 @@ namespace MuMech
              p.HasModule<ModuleAnchoredDecoupler>());
         }
 
-        //we assume that any SRB with ActivatesEvenIfDisconnected = True is a sepratron:
+        //Any engine that is decoupled in the same stage in 
+        //which it activates we call a sepratron.
         public static bool IsSepratron(this Part p)
         {
-            return (p.ActivatesEvenIfDisconnected && p.IsSRB());
+            return p.ActivatesEvenIfDisconnected 
+                && p.IsEngine() 
+                && p.IsDecoupledInStage(p.inverseStage);
         }
 
         public static bool IsSRB(this Part p)
@@ -57,6 +60,7 @@ namespace MuMech
             return p.Modules.OfType<ModuleEngines>().First().throttleLocked; //throttleLocked signifies an SRB
         }
 
+
         public static bool IsEngine(this Part p)
         {
             return (p is SolidRocket ||
@@ -64,6 +68,25 @@ namespace MuMech
                 p is LiquidFuelEngine ||
                 p is AtmosphericEngine ||
                 p.HasModule<ModuleEngines>());
+        }
+
+        public static bool IsParachute(this Part p)
+        {
+            return p is Parachutes ||
+                p is HParachutes ||
+                p.HasModule<ModuleParachute>();
+        }
+
+        public static bool IsLaunchClamp(this Part p)
+        {
+            return p.HasModule<LaunchClamp>();
+        }
+
+        public static bool IsDecoupledInStage(this Part p, int stage)
+        {
+            if ((p.IsDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
+            if (p.parent == null) return false;
+            return p.parent.IsDecoupledInStage(stage);
         }
     }
 }
