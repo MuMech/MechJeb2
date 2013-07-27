@@ -187,8 +187,11 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
+//                        	var surfaceTWR = vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
                             Vector3 hsdir = Vector3.Exclude(vesselState.up, vesselState.velocityVesselSurface);
-                            Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
+                            Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd * 2), 20 * Math.Sqrt(mainBody.GeeASL));
+//                            Vector3 dir = -hsdir.normalized * Mathf.Clamp((float)(vesselState.speedSurfaceHorizontal / (core.vesselState.torquePYAvailable * mainBody.GeeASL * 9.81)), 0f, 2f)
+//                            	/* Math.Max((float)surfaceTWR / 3, 1)*/ + vesselState.up; //* Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
                             if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
                                 tmode = TMode.DIRECT;
@@ -197,7 +200,9 @@ namespace MuMech
                             }
                             else
                             {
-                                rot = dir.normalized;
+                            	float maxTilt = 1f - Mathf.Clamp(1 / (float)(vesselState.currentTWR * 0.80f), 0.05f, 0.95f);
+                            	rot = Vector3.ClampMagnitude(vesselState.up, 1f - maxTilt) //* (vesselState.speedSurfaceHorizontal < 2 ? 10 : 1)
+                            		+ Vector3.ClampMagnitude(dir, maxTilt);
                             }
                             core.attitude.attitudeTo(rot, AttitudeReference.INERTIAL, null);
                         }
