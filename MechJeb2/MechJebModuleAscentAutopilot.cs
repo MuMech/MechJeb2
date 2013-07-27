@@ -335,7 +335,7 @@ namespace MuMech
         {
         	var vessel = FlightGlobals.ActiveVessel;
         	var targetAlt = vessel.GetMasterMechJeb().GetComputerModule<MechJebModuleAscentAutopilot>().desiredOrbitAltitude;
-        	var turnEnd = (turnEndAltitude > 0 ? turnEndAltitude : Math.Max(Math.Min(30000, targetAlt * 0.75), vessel.mainBody.RealMaxAtmosphereAltitude()));
+        	var turnEnd = (turnEndAltitude > 0 ? turnEndAltitude : Math.Max(Math.Min(30000, targetAlt * 0.85), vessel.mainBody.RealMaxAtmosphereAltitude()));
 
         	if (altitude < VerticalAscentEnd()) return 90.0;
 
