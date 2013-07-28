@@ -23,6 +23,7 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GuiUtils.SimpleTextBox("Tf (s)", Tf);
+            Tf = Math.Max(0.01, Tf);
 
             core.attitude.SAS_auto = GUILayout.Toggle(core.attitude.SAS_auto, " SAS auto mode");
 
