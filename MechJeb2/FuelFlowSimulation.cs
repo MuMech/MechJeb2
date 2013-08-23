@@ -192,7 +192,8 @@ namespace MuMech
         public List<FuelNode> FindActiveEngines()
         {
             //Debug.Log("Finding active engines: excluding resource considerations, there are " + nodes.Where(n => n.isEngine && n.inverseStage >= simStage).Count());
-            return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
+            return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes) &&
+                               (n.inverseStage == (HighLogic.LoadedSceneIsFlight ? FlightGlobals.ActiveVessel.currentStage : -1) ? n.isActive : true)).ToList();
         }
 
         //A Stats struct describes the result of the simulation over a certain interval of time (e.g., one stage)
@@ -260,6 +261,7 @@ namespace MuMech
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
         public bool isEngine = false;   //whether this part is an engine
+        public bool isActive = false;
 
         bool isFuelLine; //whether this part is a fuel line
 
@@ -301,6 +303,7 @@ namespace MuMech
                     if (engine.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
+                    isActive = !engine.engineShutdown;
 
                     maxThrust = engine.maxThrust;
                     ispCurve = engine.atmosphereCurve;
