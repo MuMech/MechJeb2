@@ -6,8 +6,47 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleRoverController : ComputerModule
+	public class MechJebRoverWaypoint {
+		public double NS;
+		public double EW;
+		public Vector3d Position;
+		public float Radius;
+		public string Name;
+		//public CelestialBody Body;
+		public MechJebRoverWaypoint(double NS, double EW, string Name = "", float Radius = 100) { //, CelestialBody Body = null) {
+			this.NS = NS;
+			this.EW = EW;
+//			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
+			var Body = FlightGlobals.ActiveVessel.orbit.referenceBody;
+			this.Radius = Radius; // radius for considering the waypoint reached in meter
+			this.Position = Body.GetWorldSurfacePosition(NS, EW, Body.TerrainAltitude(NS, EW));
+			this.Name = Name;
+//			this.Body = Body;
+		}
+		
+		public MechJebRoverWaypoint(Vector3d Position, string Name = "", float Radius = 100) { //, CelestialBody Body = null) {
+			this.Position = Position;
+			this.Radius = Radius;
+//			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
+			var Body = FlightGlobals.ActiveVessel.orbit.referenceBody;
+			this.NS = Body.GetLatitude(Position);
+			this.EW = Body.GetLongitude(Position);
+			this.Name = Name;
+//			this.Body = Body;
+		}
+		
+		public override string ToString()
+		{
+			return string.Format("[MechJebRoverWaypoint NS={0:F3}, EW={1:F3}, Position={2}, Radius={3:F3}, Name={4}]", NS, EW, (Vector3)Position, Radius, Name);
+		}		
+	}
+	
+	public class MechJebModuleRoverController : ComputerModule
     {
+    	public List<MechJebRoverWaypoint> Waypoints = new List<MechJebRoverWaypoint>();
+    	public int WaypointIndex = -1;
+    	private CelestialBody lastBody = null;
+    	
         protected bool controlHeading;
         [ToggleInfoItem("Heading control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
         public bool ControlHeading
@@ -57,8 +96,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            headingPID = new PIDController(0.05, 0.000001, 0.05);
+        	headingPID = new PIDController(0.05, 0.000001, 0.005);
             speedPID = new PIDController(5, 0.001, 1);
+            lastBody = orbit.referenceBody;
             base.OnStart(state);
         }
 
@@ -85,17 +125,35 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-        	if (core.target.Target != null && ((core.target.PositionTargetExists && core.target.targetBody == orbit.referenceBody) || core.target.Orbit.referenceBody == orbit.referenceBody)) {
-        		var pos = (core.target.PositionTargetExists ? (Vector3)core.target.GetPositionTargetPosition() : core.target.Position);
-                if (controlHeading) {
-        			heading = Math.Round(HeadingToPos(vessel.transform.position, pos), 1);
+        	double tgtSpeed = speed;
+        	
+        	if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
+        	MechJebRoverWaypoint wp = (WaypointIndex > -1 ? Waypoints[WaypointIndex] : null);
+        	
+        	if (wp != null) { // && wp.Body == orbit.referenceBody) {
+        		if (controlHeading) {
+        			heading = Math.Round(HeadingToPos(vessel.transform.position, wp.Position), 1);
                 }
                 if (controlSpeed) {
+        			var distance = Vector3.Distance(vessel.transform.position, wp.Position);
         			var curSpeed = vesselState.speedSurface;
-                    speed = Math.Round(Math.Min(speed, (core.target.Distance - 100 - (speed * speed * 2)) / 10), 1);
-                    if (curSpeed < 0.2 && core.target.Distance < 105) {
-                    	controlHeading = controlSpeed = false;
-                    	vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+        			tgtSpeed = Math.Round(Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed * 2)) / 10), 1);
+//        			tgtSpeed = (tgtSpeed >= 0 ? tgtSpeed : curSpeed - 1);
+        			tgtSpeed = Math.Max(tgtSpeed - Math.Abs(headingErr), 5); // limit speed for approaching waypoints to 5m/s and also limit the speed when doing sharp turns
+        			if (distance < (wp.Radius > 0 ? wp.Radius : 25)) {
+        				tgtSpeed = (tgtSpeed > 1 ? tgtSpeed : 1); // limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
+        				if (WaypointIndex + 1 >= Waypoints.Count) {
+                    		controlHeading = false;
+                    		tgtSpeed = -0.5;
+                    		if (curSpeed < 1) {
+                    			WaypointIndex = -1;
+                    			ControlSpeed = false;
+                    			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                    		}
+        				}
+        				else {
+        					WaypointIndex++;
+        				}
                     }
                 }
             }
@@ -125,7 +183,7 @@ namespace MuMech
                     speedLast = speed;
                 }
 
-                speedErr = speed - Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.forward);
+                speedErr = tgtSpeed - Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim)
                 {
                     double act = speedPID.Compute(speedErr);
