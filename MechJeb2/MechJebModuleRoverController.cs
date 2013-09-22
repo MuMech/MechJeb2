@@ -166,9 +166,7 @@ namespace MuMech
         		if (controlSpeed) {
         			var distance = Vector3.Distance(vessel.CoM, wp.Position);
         			var curSpeed = vesselState.speedSurface;
-//        			tgtSpeed = Math.Round(Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed * 2)) / 10), 1);
         			var newSpeed = Math.Round(Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed)) * (vesselState.localg / 9.81)), 1);
-//        			debug1 = (float)((distance - wp.Radius - (curSpeed * curSpeed)) * (vesselState.localg / 9.81));
         			newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), Math.Min(speed, turnSpeed));
         			// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
         			if (distance < (wp.Radius > 0 ? wp.Radius : 25)) {

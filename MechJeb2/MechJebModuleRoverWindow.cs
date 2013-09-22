@@ -50,7 +50,7 @@ namespace MuMech
 			GUILayout.Label("Index " + (autopilot.WaypointIndex + 1).ToString() + " of " + autopilot.Waypoints.Count.ToString(), GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 			
-			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
+//			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 			
 			GUILayout.BeginHorizontal();
 			if (core.target.Target != null && ((core.target.PositionTargetExists && core.target.targetBody == orbit.referenceBody) || core.target.Orbit.referenceBody == orbit.referenceBody)) {
@@ -66,6 +66,7 @@ namespace MuMech
 					}
 					autopilot.WaypointIndex = 0;
 					autopilot.ControlHeading = autopilot.ControlSpeed = true;
+					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
 					autopilot.loopWaypoints = Input.GetKey(KeyCode.LeftAlt);
 				}
 
@@ -115,6 +116,10 @@ namespace MuMech
 
 	public class MechJebModuleRoverWaypointWindow : DisplayModule {
 		public MechJebModuleRoverController ap;
+		private Vector2 scroll;
+		private GUIStyle active = new GUIStyle(GuiUtils.skin.button);
+		private GUIStyle inactive = new GUIStyle(GuiUtils.skin.button);
+		private int selIndex = -1;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
 
@@ -122,6 +127,8 @@ namespace MuMech
 		{
 			this.hidden = true;
 			ap = core.GetComputerModule<MechJebModuleRoverController>();
+			active.alignment = inactive.alignment = TextAnchor.UpperLeft;
+			active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
 		}
 
 		public override string GetName()
@@ -131,17 +138,29 @@ namespace MuMech
 
 		public override GUILayoutOption[] WindowOptions()
 		{
-			return new GUILayoutOption[] { GUILayout.Width(400), GUILayout.Height(300) };
+			return new GUILayoutOption[] { GUILayout.Width(600), GUILayout.Height(300) };
 		}
 
 		protected override void WindowGUI(int windowID)
 		{
-			base.WindowGUI(windowID);
-		}
-		
-		public override void OnUpdate()
-		{
+			if (selIndex > ap.Waypoints.Count) { selIndex = -1; }
 			
+			scroll = GUILayout.BeginScrollView(scroll);
+			
+			GUILayout.BeginVertical();
+			for (int i = 0; i < ap.Waypoints.Count; i++) {
+				var wp = ap.Waypoints[i];
+				GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
+				if (GUILayout.Button(string.Format("[{0}] {1} - D: {2:F1} - R: {3:F1}", i + 1, wp.Name, Vector3.Distance(vessel.CoM, wp.Position), wp.Radius), (i == selIndex ? active : inactive))) {
+					selIndex = i;
+				}
+				GUI.backgroundColor = Color.white;
+			}
+			GUILayout.EndVertical();
+			
+			GUILayout.EndScrollView();
+			
+			base.WindowGUI(windowID);
 		}
 	}
 }
