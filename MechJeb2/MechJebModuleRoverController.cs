@@ -14,36 +14,36 @@ namespace MuMech
 		public string Name;
 		public Vessel Target;
 		//public CelestialBody Body;
-		public MechJebRoverWaypoint(double NS, double EW, string Name = "", float Radius = 100) { //, CelestialBody Body = null) {
+		public MechJebRoverWaypoint(double NS, double EW, float Radius = 50, string Name = "") { //, CelestialBody Body = null) {
 			this.NS = NS;
 			this.EW = EW;
 //			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
 			var Body = FlightGlobals.ActiveVessel.mainBody;
 			this.Radius = Radius; // radius for considering the waypoint reached in meter
 			this.Position = Body.GetWorldSurfacePosition(NS, EW, Body.TerrainAltitude(NS, EW));
-			this.Name = Name + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
+			this.Name = Name + (Name != "" ? " - " : "") + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
 //			this.Body = Body;
 		}
 		
-		public MechJebRoverWaypoint(Vector3d Position, string Name = "", float Radius = 100) { //, CelestialBody Body = null) {
+		public MechJebRoverWaypoint(Vector3d Position, float Radius = 50, string Name = "") { //, CelestialBody Body = null) {
 			this.Position = Position;
 			this.Radius = Radius;
 //			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
 			var Body = FlightGlobals.ActiveVessel.mainBody;
 			this.NS = Body.GetLatitude(Position);
 			this.EW = Body.GetLongitude(Position);
-			this.Name = Name + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
+			this.Name = Name + (Name != "" ? " - " : "") + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
 //			this.Body = Body;
 		}
 		
-		public MechJebRoverWaypoint(Vessel Target, float Radius = 100) {
+		public MechJebRoverWaypoint(Vessel Target, float Radius = 50) {
 			this.Position = Target.CoM;
 			this.Radius = Radius;
 //			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
-			var Body = FlightGlobals.ActiveVessel.mainBody;
+			var Body = Target.mainBody;
 			this.NS = Body.GetLatitude(Position);
 			this.EW = Body.GetLongitude(Position);
-			this.Name = Target.name + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
+			this.Name = Target.vesselName + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
 			this.Target = Target;
 //			this.Body = Body;
 		}
@@ -53,7 +53,7 @@ namespace MuMech
 				Position = Target.CoM;
 				NS = Target.orbit.referenceBody.GetLatitude(Position);
 				EW = Target.orbit.referenceBody.GetLongitude(Position);
-				Name = Target.name + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
+				Name = Target.vesselName + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
 			}
 		}
 		
@@ -158,6 +158,8 @@ namespace MuMech
         	if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
         	MechJebRoverWaypoint wp = (WaypointIndex > -1 ? Waypoints[WaypointIndex] : null);
         	
+			var curSpeed = vesselState.speedSurface;
+        	
         	if (wp != null) { // && wp.Body == orbit.referenceBody) {
         		wp.Update();
         		if (controlHeading) {
@@ -165,21 +167,21 @@ namespace MuMech
                 }
         		if (controlSpeed) {
         			var distance = Vector3.Distance(vessel.CoM, wp.Position);
-        			var curSpeed = vesselState.speedSurface;
         			var newSpeed = Math.Round(Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed)) * (vesselState.localg / 9.81)), 1);
-        			newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), Math.Min(speed, turnSpeed));
+        			newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), new double[] { speed, turnSpeed, Math.Abs(newSpeed) }.Min());
         			// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
         			if (distance < (wp.Radius > 0 ? wp.Radius : 25)) {
-        				newSpeed = (newSpeed > 1 ? (distance < (wp.Radius * 0.75) ? 0 : 1) : newSpeed); // limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
+        				newSpeed = (newSpeed > 1 ? (distance < (wp.Radius * 0.75) ? 0 : 1) : newSpeed);
+        				// ^ limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
         				if (WaypointIndex + 1 >= Waypoints.Count) {
         					if (loopWaypoints) {
         						WaypointIndex = 0;
-        						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (curSpeed < 0.75 && newSpeed < 0.75)); // brake if needed to prevent rolling, hopefully
+        						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (curSpeed < 0.85 && newSpeed < 0.85)); // brake if needed to prevent rolling, hopefully
         					}
         					else {
 	        					controlHeading = false;
-	        					newSpeed = -0.5;
-	        					if (curSpeed < 1) {
+	        					newSpeed = -1;
+	        					if (curSpeed < 0.85) {
 	        						WaypointIndex = -1;
 	        						ControlSpeed = false;
 	        						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
@@ -206,8 +208,10 @@ namespace MuMech
                 headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
                 if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
                 {
+                	float spd = Mathf.Min((float)speed, (float)turnSpeed); // if a slower speed than the turnspeed is used also be more careful with the steering
+                	float limit = (curSpeed < turnSpeed ? 1 : Mathf.Clamp((float)((spd * spd) / (curSpeed * curSpeed)), 0.1f, 1f));
                     double act = headingPID.Compute(headingErr);
-                    s.wheelSteer = Mathf.Clamp((float)act, -1, 1);
+                    s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
                 }
             }
 
@@ -219,7 +223,7 @@ namespace MuMech
                     speedLast = speed;
                 }
 
-                speedErr = tgtSpeed - Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.forward);
+                speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed.value) - Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
                 {
                     double act = speedPID.Compute(speedErr);
