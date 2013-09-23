@@ -60,7 +60,6 @@ namespace MuMech
 //					autopilot.Waypoints.Add(new MechJebRoverWaypoint(pos));
 					if (core.target.Target.GetVessel() != null) {
 						autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.Target.GetVessel()));
-						Debug.Log(autopilot.Waypoints[0].ToString());
 					} else {
 						autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition()));
 					}
@@ -68,6 +67,8 @@ namespace MuMech
 					autopilot.ControlHeading = autopilot.ControlSpeed = true;
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
 					autopilot.loopWaypoints = Input.GetKey(KeyCode.LeftAlt);
+					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex = -1;
+					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().tmpRadius = "";
 				}
 
 				if (GUILayout.Button("Add Target")) {
@@ -84,6 +85,10 @@ namespace MuMech
 			GUILayout.EndHorizontal();
 			
 			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Clear")) {
+				autopilot.WaypointIndex = -1;
+				autopilot.Waypoints.Clear();
+			}
 			if (GUILayout.Button("Waypoints")) {
 				core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = true;
 			}
@@ -107,10 +112,6 @@ namespace MuMech
 					autopilot.users.Remove(this);
 				}
 			}
-			
-			if (!enabled) {
-				core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = false;
-			}
 		}
 	}
 
@@ -119,7 +120,8 @@ namespace MuMech
 		private Vector2 scroll;
 		private GUIStyle active = new GUIStyle(GuiUtils.skin.button);
 		private GUIStyle inactive = new GUIStyle(GuiUtils.skin.button);
-		private int selIndex = -1;
+		internal int selIndex = -1;
+		internal string tmpRadius = "";
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
 
@@ -143,24 +145,48 @@ namespace MuMech
 
 		protected override void WindowGUI(int windowID)
 		{
-			if (selIndex > ap.Waypoints.Count) { selIndex = -1; }
+			if (selIndex > ap.Waypoints.Count) { selIndex = -1; tmpRadius = ""; }
 			
-			scroll = GUILayout.BeginScrollView(scroll);
+			scroll = GUILayout.BeginScrollView(scroll);//, new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) });
 			
-			GUILayout.BeginVertical();
-			for (int i = 0; i < ap.Waypoints.Count; i++) {
-				var wp = ap.Waypoints[i];
-				GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
-				if (GUILayout.Button(string.Format("[{0}] {1} - D: {2:F1} - R: {3:F1}", i + 1, wp.Name, Vector3.Distance(vessel.CoM, wp.Position), wp.Radius), (i == selIndex ? active : inactive))) {
-					selIndex = i;
+			if (ap.Waypoints.Count > 0) {
+				GUILayout.BeginVertical();
+				for (int i = 0; i < ap.Waypoints.Count; i++) {
+					var wp = ap.Waypoints[i];
+					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
+					if (GUILayout.Button(string.Format("[{0}] {1} - D: {2}m - R: {3:F1} m", i + 1, wp.Name, MuUtils.ToSI(Vector3d.Distance(vessel.CoM, wp.Position), -1), wp.Radius), (i == selIndex ? active : inactive))) {
+						selIndex = i;
+						tmpRadius = wp.Radius.ToString();
+					}
+					GUI.backgroundColor = Color.white;
 				}
-				GUI.backgroundColor = Color.white;
+				GUILayout.EndVertical();
 			}
-			GUILayout.EndVertical();
 			
 			GUILayout.EndScrollView();
 			
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Add from Map")) {
+			}
+			if (GUILayout.Button("Remove")) {
+			}
+			GUILayout.Label("R: ", GUILayout.ExpandWidth(false));
+			tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(60));
+			if (selIndex > -1) { float.TryParse(tmpRadius, out ap.Waypoints[selIndex].Radius); }
+			if (GUILayout.Button("Move Up", GUILayout.Width(80))) {
+			}
+			if (GUILayout.Button("Move Down", GUILayout.Width(80))) {
+			}
+			if (GUILayout.Button("Settings", GUILayout.ExpandWidth(false))) {
+			}
+			GUILayout.EndHorizontal();
+			
 			base.WindowGUI(windowID);
+		}
+		
+		public override void OnFixedUpdate()
+		{
+			if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled) { enabled = false; }
 		}
 	}
 }
