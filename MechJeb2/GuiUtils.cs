@@ -429,6 +429,14 @@ namespace MuMech
 
             return parsedSomething;
         }
+        
+        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
+        	double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
+        	double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
+        	double c = Vector3d.Distance(From, To);
+        	double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+        }
 
         public static bool MouseIsOverWindow(MechJebCore core)
         {

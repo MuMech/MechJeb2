@@ -7,61 +7,65 @@ using UnityEngine;
 namespace MuMech
 {
 	public class MechJebRoverWaypoint {
-		public double NS;
-		public double EW;
+		public double Latitude;
+		public double Longitude;
 		public Vector3d Position;
 		public float Radius;
 		public string Name;
 		public Vessel Target;
-		//public CelestialBody Body;
-		public MechJebRoverWaypoint(double NS, double EW, float Radius = 50, string Name = "") { //, CelestialBody Body = null) {
-			this.NS = NS;
-			this.EW = EW;
-//			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
-			var Body = FlightGlobals.ActiveVessel.mainBody;
-			this.Radius = Radius; // radius for considering the waypoint reached in meter
-			this.Position = Body.GetWorldSurfacePosition(NS, EW, Body.TerrainAltitude(NS, EW));
-			this.Name = Name + (Name != "" ? " - " : "") + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
-//			this.Body = Body;
+		public float MinSpeed;
+		public float MaxSpeed;
+		
+		public CelestialBody Body  {
+			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
 		}
 		
-		public MechJebRoverWaypoint(Vector3d Position, float Radius = 50, string Name = "") { //, CelestialBody Body = null) {
+		public MechJebRoverWaypoint(double Latitude, double Longitude, float Radius = 50, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
+			this.Latitude = Latitude;
+			this.Longitude = Longitude;
+			this.Radius = Radius;
+			this.Name = (Name == null ? "" : Name);
+			this.MinSpeed = MinSpeed;
+			this.MaxSpeed = MaxSpeed;
+			Update();
+		}
+		public MechJebRoverWaypoint(Vector3d Position, float Radius = 50, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
+			this.Latitude = Body.GetLatitude(Position);
+			this.Longitude = Body.GetLongitude(Position);
 			this.Position = Position;
 			this.Radius = Radius;
-//			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
-			var Body = FlightGlobals.ActiveVessel.mainBody;
-			this.NS = Body.GetLatitude(Position);
-			this.EW = Body.GetLongitude(Position);
-			this.Name = Name + (Name != "" ? " - " : "") + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
-//			this.Body = Body;
+			this.Name = (Name == null ? "" : Name);
+			this.MinSpeed = MinSpeed;
+			this.MaxSpeed = MaxSpeed;
+			Update();
 		}
 		
-		public MechJebRoverWaypoint(Vessel Target, float Radius = 50) {
-			this.Position = Target.CoM;
-			this.Radius = Radius;
-//			if (Body == null) { Body = FlightGlobals.ActiveVessel.orbit.referenceBody; }
-			var Body = Target.mainBody;
-			this.NS = Body.GetLatitude(Position);
-			this.EW = Body.GetLongitude(Position);
-			this.Name = Target.vesselName + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
+		public MechJebRoverWaypoint(Vessel Target, float Radius = 50, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) {
 			this.Target = Target;
-//			this.Body = Body;
+			this.Radius = Radius;
+			this.Name = (Name == null ? "" : Name);
+			this.MinSpeed = MinSpeed;
+			this.MaxSpeed = MaxSpeed;
+			Update();
+		}
+		
+		public string GetNameWithCoords() {
+			return (Name != "" ? Name : (Target != null ? Target.vesselName : "Waypoint")) + " - " + Coordinates.ToStringDMS(Latitude, Longitude, false);
+//				((Latitude >= 0 ? "N " : "S ") + Math.Abs(Math.Round(Latitude, 3)) + ", " + (Longitude >= 0 ? "E " : "W ") + Math.Abs(Math.Round(Longitude, 3)));
 		}
 		
 		public void Update() {
-			if (Target != null && Target.vesselType != VesselType.Flag) {// && Vector3d.Distance(Target.CoM, FlightGlobals.ActiveVessel.CoM) < 3000) {
+			if (Target != null) {
 				Position = Target.CoM;
-				NS = Target.orbit.referenceBody.GetLatitude(Position);
-				EW = Target.orbit.referenceBody.GetLongitude(Position);
-				Name = Target.vesselName + " - " + ((NS >= 0 ? "N " : "S ") + Math.Abs(Math.Round(NS, 3)) + ", " + (EW >= 0 ? "E " : "W ") + Math.Abs(Math.Round(EW, 3)));
+				Latitude = Body.GetLatitude(Position);
+				Longitude = Body.GetLongitude(Position);
 			}
+			else {
+				Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
+			}
+			if (MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
+			else if (MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
 		}
-		
-		public override string ToString()
-		{
-			Update();
-			return string.Format("[MechJebRoverWaypoint NS={0:F3}, EW={1:F3}, Position={2}, Radius={3:F3}, Name={4}, Target={5}]", NS, EW, (Vector3)Position, Radius, Name, Target);
-		}		
 	}
 	
 	public class MechJebModuleRoverController : ComputerModule
@@ -126,7 +130,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
         	headingPID = new PIDController(0.05, 0.000001, 0.005);
-            speedPID = new PIDController(5, 0.001, 1);
+            speedPID = new PIDController(10, 0.001, 0.01);
             lastBody = orbit.referenceBody;
             base.OnStart(state);
         }
@@ -135,11 +139,13 @@ namespace MuMech
         public double headingErr;
         [ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
         public double speedErr;
-        public MuMech.MovingAverage tgtSpeed = new MovingAverage(100, 0);
+        public MuMech.MovingAverage tgtSpeed = new MovingAverage(300);
+        public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
+        private float smoothVel = 0;
 
         protected double headingLast, speedLast;
 
-        public double HeadingToPos(Vector3d fromPos, Vector3d toPos) {
+        public double HeadingToPos(Vector3 fromPos, Vector3 toPos) {
             // thanks to Cilph who did most of this since I don't understand anything ~ BR2k
             var body = vessel.mainBody;
             var fromLon = body.GetLongitude(fromPos);
@@ -158,41 +164,45 @@ namespace MuMech
         	if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
         	MechJebRoverWaypoint wp = (WaypointIndex > -1 ? Waypoints[WaypointIndex] : null);
         	
-			var curSpeed = vesselState.speedSurface;
+        	var curSpeed = vesselState.speedSurface;
+			etaSpeed.value = curSpeed;
         	
         	if (wp != null) { // && wp.Body == orbit.referenceBody) {
-        		wp.Update();
         		if (controlHeading) {
         			heading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
                 }
-        		if (controlSpeed) {
-        			var distance = Vector3.Distance(vessel.CoM, wp.Position);
-        			var newSpeed = Math.Round(Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed)) * (vesselState.localg / 9.81)), 1);
-        			newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), new double[] { speed, turnSpeed, Math.Abs(newSpeed) }.Min());
-        			// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
-        			if (distance < (wp.Radius > 0 ? wp.Radius : 25)) {
-        				newSpeed = (newSpeed > 1 ? (distance < (wp.Radius * 0.75) ? 0 : 1) : newSpeed);
-        				// ^ limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
-        				if (WaypointIndex + 1 >= Waypoints.Count) {
+				if (controlSpeed) {
+					var distance = Vector3.Distance(vessel.CoM, wp.Position);
+        			var newSpeed = Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
+					// var newSpeed = Math.Round(Math.Min((float)speed, Mathf.SmoothDamp((float)curSpeed, wp.MinSpeed, ref smoothVel, 10)), 1);
+					newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), new double[] { speed, turnSpeed, Math.Max(newSpeed, (wp.MinSpeed > 0 ? wp.MinSpeed : 3)) }.Min());
+					// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
+					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
+					if (distance < radius) {
+        				if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
+	        				newSpeed = new [] { newSpeed, (distance < radius * 0.8 ? 0 : 1) }.Min();
+	        				// ^ limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
         					if (loopWaypoints) {
         						WaypointIndex = 0;
-        						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (curSpeed < 0.85 && newSpeed < 0.85)); // brake if needed to prevent rolling, hopefully
         					}
         					else {
 	        					controlHeading = false;
-	        					newSpeed = -1;
+	        					newSpeed = -0.5;
+	        					tgtSpeed.force(newSpeed);
 	        					if (curSpeed < 0.85) {
 	        						WaypointIndex = -1;
 	        						ControlSpeed = false;
-	        						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
 	        					}
         					}
         				}
         				else {
         					WaypointIndex++;
+        					newSpeed = speed = (Waypoints[WaypointIndex].MaxSpeed > 0 ? Waypoints[WaypointIndex].MaxSpeed : speed);       					
         				}
         			}
-        			tgtSpeed.value = newSpeed;
+					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || (s.wheelThrottle == 0 && curSpeed < 0.85 && newSpeed < 0.85));
+    				// ^ brake if needed to prevent rolling, hopefully
+					tgtSpeed.value = Math.Round(newSpeed, 1);
                 }
             }
 
@@ -209,7 +219,7 @@ namespace MuMech
                 if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
                 {
                 	float spd = Mathf.Min((float)speed, (float)turnSpeed); // if a slower speed than the turnspeed is used also be more careful with the steering
-                	float limit = (curSpeed < turnSpeed ? 1 : Mathf.Clamp((float)((spd * spd) / (curSpeed * curSpeed)), 0.1f, 1f));
+                	float limit = (curSpeed <= turnSpeed ? 1 : Mathf.Clamp((float)((spd * spd) / (curSpeed * curSpeed)), 0.2f, 1f));
                     double act = headingPID.Compute(headingErr);
                     s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
                 }
@@ -231,6 +241,11 @@ namespace MuMech
                 }
             }
         }
+        
+		public override void OnFixedUpdate()
+		{
+			Waypoints.ForEach(wp => wp.Update());
+		}
 
         public MechJebModuleRoverController(MechJebCore core) : base(core) { }
     }
