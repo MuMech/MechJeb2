@@ -41,28 +41,25 @@ namespace MuMech
 			GUILayout.BeginVertical();
 			
 			GUILayout.BeginHorizontal();
-			GUILayout.Label("Target Speed: ", GUILayout.ExpandWidth(true));
+			GUILayout.Label("Target Speed", GUILayout.ExpandWidth(true));
 			GUILayout.Label(autopilot.tgtSpeed.value.ToString("F1"), GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label("Waypoints: ", GUILayout.ExpandWidth(true));
+			GUILayout.Label("Waypoints", GUILayout.ExpandWidth(true));
 			GUILayout.Label("Index " + (autopilot.WaypointIndex + 1).ToString() + " of " + autopilot.Waypoints.Count.ToString(), GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 			
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 			
 			GUILayout.BeginHorizontal();
-			if (core.target.Target != null && ((core.target.PositionTargetExists && core.target.targetBody == orbit.referenceBody) || core.target.Orbit.referenceBody == orbit.referenceBody)) {
+			if (core.target != null && core.target.Target != null) {// && (core.target.targetBody == orbit.referenceBody || (core.target.Orbit != null ? core.target.Orbit.referenceBody == orbit.referenceBody : false))) {
+				var vssl = core.target.Target.GetVessel();
+				
 				if (GUILayout.Button("To Target")) {
 					autopilot.Waypoints.Clear();
-//					var pos = (core.target.PositionTargetExists ? (Vector3)core.target.GetPositionTargetPosition() : core.target.Position);
-//					autopilot.Waypoints.Add(new MechJebRoverWaypoint(pos));
-					if (core.target.Target.GetVessel() != null) {
-						autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.Target.GetVessel()));
-					} else {
-						autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition()));
-					}
+					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl)); }
+					else { autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition())); }
 					autopilot.WaypointIndex = 0;
 					autopilot.ControlHeading = autopilot.ControlSpeed = true;
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
@@ -72,25 +69,53 @@ namespace MuMech
 				}
 
 				if (GUILayout.Button("Add Target")) {
-//					var pos = (core.target.PositionTargetExists ? (Vector3)core.target.GetPositionTargetPosition() : core.target.Position);
-//					autopilot.Waypoints.Add(new MechJebRoverWaypoint(pos));
-					if (core.target.Target.GetVessel() != null) {
-						autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.Target.GetVessel()));
-					} else {
-						autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition()));
-					}
+					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl)); }
+					else { autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition())); }
 					if (autopilot.WaypointIndex < 0) { autopilot.WaypointIndex = autopilot.Waypoints.Count - 1; }
 				}
 			}
 			GUILayout.EndHorizontal();
 			
+//			switch (GUILayout.SelectionGrid(-1, new string[] { (autopilot.WaypointIndex == -1 ? (autopilot.Waypoints.Count > 0 ? "Follow" : "no Waypoints") : "Stop"), "Waypoints" }, 2)) {
+//				case 0:
+//					if (autopilot.WaypointIndex == -1) {
+//						if (autopilot.Waypoints.Count > 0) {
+//							autopilot.WaypointIndex = 0;
+//						}
+//						else {
+//						}
+//					}
+//					else {
+//						autopilot.WaypointIndex = -1;
+//						autopilot.loopWaypoints = false;
+//					}
+//					break;
+//					
+//				case 1:
+//					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = !core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled;
+//					break;
+//			}
+			
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("Clear")) {
-				autopilot.WaypointIndex = -1;
-				autopilot.Waypoints.Clear();
+			if (autopilot.WaypointIndex == -1) {
+				if (autopilot.Waypoints.Count > 0) {
+					if (GUILayout.Button("Follow")) {
+						autopilot.WaypointIndex = 0;
+					}
+				}
+				else {
+//					if (GUILayout.Button("No Waypoints")) {
+//					}
+				}
+			}
+			else {
+				if (GUILayout.Button("Stop")) {
+					autopilot.WaypointIndex = -1;
+					autopilot.loopWaypoints = false;
+				}
 			}
 			if (GUILayout.Button("Waypoints")) {
-				core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = true;
+				core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = !core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled;
 			}
 			GUILayout.EndHorizontal();
 			
@@ -118,10 +143,12 @@ namespace MuMech
 	public class MechJebModuleRoverWaypointWindow : DisplayModule {
 		public MechJebModuleRoverController ap;
 		private Vector2 scroll;
-		private GUIStyle active = new GUIStyle(GuiUtils.skin.button);
-		private GUIStyle inactive = new GUIStyle(GuiUtils.skin.button);
+		private GUIStyle active;
+		private GUIStyle inactive;
 		internal int selIndex = -1;
 		internal string tmpRadius = "";
+		internal string tmpMinSpeed = "";
+		internal string tmpMaxSpeed = "";
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
 
@@ -129,6 +156,8 @@ namespace MuMech
 		{
 			this.hidden = true;
 			ap = core.GetComputerModule<MechJebModuleRoverController>();
+			active = new GUIStyle(GuiUtils.skin.button);
+			inactive = new GUIStyle(GuiUtils.skin.button);
 			active.alignment = inactive.alignment = TextAnchor.UpperLeft;
 			active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
 		}
@@ -145,34 +174,66 @@ namespace MuMech
 
 		protected override void WindowGUI(int windowID)
 		{
-			if (selIndex > ap.Waypoints.Count) { selIndex = -1; tmpRadius = ""; }
+			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
 			
 			scroll = GUILayout.BeginScrollView(scroll);//, new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) });
-			
 			if (ap.Waypoints.Count > 0) {
 				GUILayout.BeginVertical();
+				double eta = 0;
 				for (int i = 0; i < ap.Waypoints.Count; i++) {
 					var wp = ap.Waypoints[i];
+					if (i >= ap.WaypointIndex && ap.WaypointIndex > -1) {
+						eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? (Vector3d)vessel.CoM : ap.Waypoints[i - 1].Position), wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
+					}
+					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
+					                           wp.MinSpeed, (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val), MuUtils.ToSI(Vector3.Distance(vessel.CoM, wp.Position), -1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
-					if (GUILayout.Button(string.Format("[{0}] {1} - D: {2}m - R: {3:F1} m", i + 1, wp.Name, MuUtils.ToSI(Vector3d.Distance(vessel.CoM, wp.Position), -1), wp.Radius), (i == selIndex ? active : inactive))) {
-						selIndex = i;
-						tmpRadius = wp.Radius.ToString();
+					if (GUILayout.Button(str, (i == selIndex ? active : inactive))) {
+						if (selIndex == i) {
+							selIndex = -1;
+						}
+						else {
+							selIndex = i;
+							tmpRadius = wp.Radius.ToString();
+							tmpMinSpeed = wp.MinSpeed.ToString();
+							tmpMaxSpeed = wp.MaxSpeed.ToString();
+						}
 					}
 					GUI.backgroundColor = Color.white;
+					if (selIndex > -1 && selIndex == i) {
+						GUILayout.BeginHorizontal();
+						GUILayout.Label("R: ", GUILayout.ExpandWidth(false));
+						tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(55));
+						float.TryParse(tmpRadius, out ap.Waypoints[selIndex].Radius);
+						GUILayout.Label("S: ", GUILayout.ExpandWidth(false));
+						tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(45));
+						float.TryParse(tmpMinSpeed, out ap.Waypoints[selIndex].MinSpeed);
+//						if (ap.Waypoints[selIndex].MinSpeed > ap.Waypoints[selIndex].MaxSpeed) { ap.Waypoints[selIndex].MinSpeed = ap.Waypoints[selIndex].MaxSpeed; }
+						tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(45));
+						float.TryParse(tmpMaxSpeed, out ap.Waypoints[selIndex].MaxSpeed);
+//						if (ap.Waypoints[selIndex].MaxSpeed < ap.Waypoints[selIndex].MinSpeed) { ap.Waypoints[selIndex].MaxSpeed = ap.Waypoints[selIndex].MinSpeed; }
+						GUILayout.EndHorizontal();
+					}
 				}
 				GUILayout.EndVertical();
 			}
-			
 			GUILayout.EndScrollView();
 			
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add from Map")) {
 			}
 			if (GUILayout.Button("Remove")) {
+				if (Input.GetKey(KeyCode.LeftAlt)) {
+					ap.WaypointIndex = -1;
+					ap.Waypoints.Clear();
+				}
+				else {
+					ap.Waypoints.RemoveAt(selIndex);
+				}
+				selIndex = -1;
+				tmpRadius = "";
+				if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
-			GUILayout.Label("R: ", GUILayout.ExpandWidth(false));
-			tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(60));
-			if (selIndex > -1) { float.TryParse(tmpRadius, out ap.Waypoints[selIndex].Radius); }
 			if (GUILayout.Button("Move Up", GUILayout.Width(80))) {
 			}
 			if (GUILayout.Button("Move Down", GUILayout.Width(80))) {
