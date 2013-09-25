@@ -65,42 +65,23 @@ namespace MuMech
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
 					autopilot.loopWaypoints = Input.GetKey(KeyCode.LeftAlt);
 					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex = -1;
-					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().tmpRadius = "";
 				}
 
 				if (GUILayout.Button("Add Target")) {
 					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl)); }
 					else { autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition())); }
-					if (autopilot.WaypointIndex < 0) { autopilot.WaypointIndex = autopilot.Waypoints.Count - 1; }
+//					if (autopilot.WaypointIndex < 0) { autopilot.WaypointIndex = autopilot.Waypoints.Count - 1; }
 				}
 			}
 			GUILayout.EndHorizontal();
-			
-//			switch (GUILayout.SelectionGrid(-1, new string[] { (autopilot.WaypointIndex == -1 ? (autopilot.Waypoints.Count > 0 ? "Follow" : "no Waypoints") : "Stop"), "Waypoints" }, 2)) {
-//				case 0:
-//					if (autopilot.WaypointIndex == -1) {
-//						if (autopilot.Waypoints.Count > 0) {
-//							autopilot.WaypointIndex = 0;
-//						}
-//						else {
-//						}
-//					}
-//					else {
-//						autopilot.WaypointIndex = -1;
-//						autopilot.loopWaypoints = false;
-//					}
-//					break;
-//					
-//				case 1:
-//					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = !core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled;
-//					break;
-//			}
-			
+						
 			GUILayout.BeginHorizontal();
 			if (autopilot.WaypointIndex == -1) {
 				if (autopilot.Waypoints.Count > 0) {
 					if (GUILayout.Button("Follow")) {
 						autopilot.WaypointIndex = 0;
+						autopilot.ControlHeading = autopilot.ControlSpeed = true;
+						autopilot.loopWaypoints = Input.GetKey(KeyCode.LeftAlt);
 					}
 				}
 				else {
@@ -169,7 +150,7 @@ namespace MuMech
 
 		public override GUILayoutOption[] WindowOptions()
 		{
-			return new GUILayoutOption[] { GUILayout.Width(600), GUILayout.Height(300) };
+			return new GUILayoutOption[] { GUILayout.Width(500), GUILayout.Height(400) };
 		}
 
 		protected override void WindowGUI(int windowID)
@@ -182,7 +163,7 @@ namespace MuMech
 				double eta = 0;
 				for (int i = 0; i < ap.Waypoints.Count; i++) {
 					var wp = ap.Waypoints[i];
-					if (i >= ap.WaypointIndex && ap.WaypointIndex > -1) {
+					if (ap.WaypointIndex > -1 && i >= ap.WaypointIndex) {
 						eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? (Vector3d)vessel.CoM : ap.Waypoints[i - 1].Position), wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
 					}
 					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
@@ -193,25 +174,28 @@ namespace MuMech
 							selIndex = -1;
 						}
 						else {
-							selIndex = i;
-							tmpRadius = wp.Radius.ToString();
-							tmpMinSpeed = wp.MinSpeed.ToString();
-							tmpMaxSpeed = wp.MaxSpeed.ToString();
+							if (Input.GetKey(KeyCode.LeftAlt)) {
+								ap.WaypointIndex = i;
+							}
+							else {
+								selIndex = i;
+								tmpRadius = wp.Radius.ToString();
+								tmpMinSpeed = wp.MinSpeed.ToString();
+								tmpMaxSpeed = wp.MaxSpeed.ToString();
+							}
 						}
 					}
 					GUI.backgroundColor = Color.white;
 					if (selIndex > -1 && selIndex == i) {
 						GUILayout.BeginHorizontal();
-						GUILayout.Label("R: ", GUILayout.ExpandWidth(false));
+						GUILayout.Label("  Edit - Radius: ", GUILayout.ExpandWidth(false));
 						tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(55));
 						float.TryParse(tmpRadius, out ap.Waypoints[selIndex].Radius);
-						GUILayout.Label("S: ", GUILayout.ExpandWidth(false));
+						GUILayout.Label(" - Speed: ", GUILayout.ExpandWidth(false));
 						tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(45));
 						float.TryParse(tmpMinSpeed, out ap.Waypoints[selIndex].MinSpeed);
-//						if (ap.Waypoints[selIndex].MinSpeed > ap.Waypoints[selIndex].MaxSpeed) { ap.Waypoints[selIndex].MinSpeed = ap.Waypoints[selIndex].MaxSpeed; }
 						tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(45));
 						float.TryParse(tmpMaxSpeed, out ap.Waypoints[selIndex].MaxSpeed);
-//						if (ap.Waypoints[selIndex].MaxSpeed < ap.Waypoints[selIndex].MinSpeed) { ap.Waypoints[selIndex].MaxSpeed = ap.Waypoints[selIndex].MinSpeed; }
 						GUILayout.EndHorizontal();
 					}
 				}
@@ -231,15 +215,34 @@ namespace MuMech
 					ap.Waypoints.RemoveAt(selIndex);
 				}
 				selIndex = -1;
-				tmpRadius = "";
 				if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
 			if (GUILayout.Button("Move Up", GUILayout.Width(80))) {
+				if (selIndex > 0) {
+					ap.Waypoints.Swap(selIndex, selIndex - 1);
+					if (ap.WaypointIndex == selIndex) {
+						ap.WaypointIndex--;
+					}
+					else if (ap.WaypointIndex == selIndex - 1) {
+						ap.WaypointIndex++;
+					}
+					selIndex--;
+				}
 			}
 			if (GUILayout.Button("Move Down", GUILayout.Width(80))) {
+				if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
+					ap.Waypoints.Swap(selIndex, selIndex + 1);
+					if (ap.WaypointIndex == selIndex) {
+						ap.WaypointIndex++;
+					}
+					else if (ap.WaypointIndex == selIndex + 1) {
+						ap.WaypointIndex--;
+					}
+					selIndex++;
+				}
 			}
-			if (GUILayout.Button("Settings", GUILayout.ExpandWidth(false))) {
-			}
+//			if (GUILayout.Button("Settings", GUILayout.ExpandWidth(false))) {
+//			}
 			GUILayout.EndHorizontal();
 			
 			base.WindowGUI(windowID);
