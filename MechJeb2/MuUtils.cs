@@ -159,7 +159,7 @@ namespace MuMech
 			list[indexB] = tmp;
 			return list;
 		}
-}
+	}
 
     public class MovingAverage
     {

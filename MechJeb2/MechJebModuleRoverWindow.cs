@@ -123,13 +123,15 @@ namespace MuMech
 
 	public class MechJebModuleRoverWaypointWindow : DisplayModule {
 		public MechJebModuleRoverController ap;
-		private Vector2 scroll;
-		private GUIStyle active;
-		private GUIStyle inactive;
 		internal int selIndex = -1;
 		internal string tmpRadius = "";
 		internal string tmpMinSpeed = "";
 		internal string tmpMaxSpeed = "";
+		private Vector2 scroll;
+		private GUIStyle active;
+		private GUIStyle inactive;
+		private string titleAdd = "";
+		private bool waitingForPick = false;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
 
@@ -141,11 +143,15 @@ namespace MuMech
 			inactive = new GUIStyle(GuiUtils.skin.button);
 			active.alignment = inactive.alignment = TextAnchor.UpperLeft;
 			active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
+            if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
+            {
+            	RenderingManager.AddToPostDrawQueue(1, DrawWaypoints);
+            }
 		}
 
 		public override string GetName()
 		{
-			return "Rover Waypoints";
+			return "Rover Waypoints" + (ap.Waypoints.Count > 0 && titleAdd != "" ? " - " + titleAdd : "");
 		}
 
 		public override GUILayoutOption[] WindowOptions()
@@ -161,13 +167,15 @@ namespace MuMech
 			if (ap.Waypoints.Count > 0) {
 				GUILayout.BeginVertical();
 				double eta = 0;
+				double dist = 0;
 				for (int i = 0; i < ap.Waypoints.Count; i++) {
 					var wp = ap.Waypoints[i];
 					if (ap.WaypointIndex > -1 && i >= ap.WaypointIndex) {
-						eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? (Vector3d)vessel.CoM : ap.Waypoints[i - 1].Position), wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
+						eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
+						dist += Vector3.Distance((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
 					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
-					                           wp.MinSpeed, (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val), MuUtils.ToSI(Vector3.Distance(vessel.CoM, wp.Position), -1), GuiUtils.TimeToDHMS(eta));
+					                           wp.MinSpeed, (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val), MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
 					if (GUILayout.Button(str, (i == selIndex ? active : inactive))) {
 						if (selIndex == i) {
@@ -199,12 +207,16 @@ namespace MuMech
 						GUILayout.EndHorizontal();
 					}
 				}
+				titleAdd = "Distance: " + MuUtils.ToSI(dist, -1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
 				GUILayout.EndVertical();
 			}
 			GUILayout.EndScrollView();
 			
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add from Map")) {
+				core.target.Unset();
+				core.target.PickPositionTargetOnMap();
+				waitingForPick = true;
 			}
 			if (GUILayout.Button("Remove")) {
 				if (Input.GetKey(KeyCode.LeftAlt)) {
@@ -246,8 +258,27 @@ namespace MuMech
 			GUILayout.EndHorizontal();
 			
 			base.WindowGUI(windowID);
+			
+			if (waitingForPick) {
+				if (core.target.pickingPositionTarget == false) {
+					if (core.target.PositionTargetExists) {
+						ap.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition()));
+						core.target.Unset();
+					}
+					waitingForPick = false;
+				}
+			}
 		}
 		
+		public void DrawWaypoints() {
+			if (MapView.MapIsEnabled && this.enabled && ap.Waypoints.Count > 0) {
+//				for (int i = 0; i < ap.Waypoints.Count; i++) {
+//					var wp = ap.Waypoints[i];
+//					var col = (i < ap.WaypointIndex ? Color.blue : (i == ap.WaypointIndex ? Color.green : Color.yellow));
+//				}
+			}
+		}
+
 		public override void OnFixedUpdate()
 		{
 			if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled) { enabled = false; }
