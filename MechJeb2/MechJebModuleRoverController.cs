@@ -64,8 +64,8 @@ namespace MuMech
 			else {
 				Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
 			}
-			if (MaxSpeed > 0 && MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
-			else if (MinSpeed > 0 && MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
+			if (MinSpeed > 0 && MaxSpeed > 0 && MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
+			else if (MinSpeed > 0 && MaxSpeed > 0 && MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
 		}
 	}
 	
@@ -142,7 +142,6 @@ namespace MuMech
         public double speedErr;
         public MuMech.MovingAverage tgtSpeed = new MovingAverage(300);
         public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
-        private float smoothVel = 0;
 
         protected double headingLast, speedLast;
 
@@ -176,9 +175,10 @@ namespace MuMech
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // use waypoints maxSpeed if set or just stick with the set speed
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 ? maxSpeed / 2 : 0));
+					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
-					// var newSpeed = Math.Round(Math.Min((float)speed, Mathf.SmoothDamp((float)curSpeed, wp.MinSpeed, ref smoothVel, 10)), 1);
-					newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), new double[] { maxSpeed, turnSpeed, Math.Max(newSpeed, (wp.MinSpeed > 0 ? wp.MinSpeed : 3)) }.Min());
+					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) - Math.Abs(headingErr), new double[] { maxSpeed, turnSpeed, Math.Max(newSpeed, 3) }.Min());
 					// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
