@@ -15,7 +15,7 @@ namespace MuMech
 		public Vessel Target;
 		public float MinSpeed;
 		public float MaxSpeed;
-		
+				
 		public CelestialBody Body  {
 			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
 		}
@@ -29,6 +29,7 @@ namespace MuMech
 			this.MaxSpeed = MaxSpeed;
 			Update();
 		}
+		
 		public MechJebRoverWaypoint(Vector3d Position, float Radius = 50, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
 			this.Latitude = Body.GetLatitude(Position);
 			this.Longitude = Body.GetLongitude(Position);
@@ -63,8 +64,8 @@ namespace MuMech
 			else {
 				Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
 			}
-			if (MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
-			else if (MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
+			if (MaxSpeed > 0 && MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
+			else if (MinSpeed > 0 && MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
 		}
 	}
 	
@@ -167,44 +168,45 @@ namespace MuMech
         	var curSpeed = vesselState.speedSurface;
 			etaSpeed.value = curSpeed;
         	
-        	if (wp != null) { // && wp.Body == orbit.referenceBody) {
+        	if (wp != null && wp.Body == orbit.referenceBody) {
         		if (controlHeading) {
         			heading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
                 }
 				if (controlSpeed) {
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
-        			var newSpeed = Math.Min(speed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
+					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
+					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // use waypoints maxSpeed if set or just stick with the set speed
+					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
 					// var newSpeed = Math.Round(Math.Min((float)speed, Mathf.SmoothDamp((float)curSpeed, wp.MinSpeed, ref smoothVel, 10)), 1);
-					newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), new double[] { speed, turnSpeed, Math.Max(newSpeed, (wp.MinSpeed > 0 ? wp.MinSpeed : 3)) }.Min());
+					newSpeed = Math.Max(newSpeed - Math.Abs(headingErr), new double[] { maxSpeed, turnSpeed, Math.Max(newSpeed, (wp.MinSpeed > 0 ? wp.MinSpeed : 3)) }.Min());
 					// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
-        				if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
-	        				newSpeed = new [] { newSpeed, (distance < radius * 0.8 ? 0 : 1) }.Min();
-	        				// ^ limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
-        					if (loopWaypoints) {
-        						WaypointIndex = 0;
-        					}
-        					else {
-	        					controlHeading = false;
-	        					newSpeed = -0.5;
-	        					tgtSpeed.force(newSpeed);
-	        					if (curSpeed < 0.85) {
-	        						WaypointIndex = -1;
-	        						ControlSpeed = false;
-	        					}
-        					}
-        				}
-        				else {
-        					WaypointIndex++;
-        					newSpeed = speed = (Waypoints[WaypointIndex].MaxSpeed > 0 ? Waypoints[WaypointIndex].MaxSpeed : speed);       					
-        				}
-        			}
+						if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
+							newSpeed = new [] { newSpeed, (distance < radius * 0.8 ? 0 : 1) }.Min();
+							// ^ limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
+							if (loopWaypoints) {
+								WaypointIndex = 0;
+							}
+							else {
+								controlHeading = false;
+								newSpeed = -0.5;
+								tgtSpeed.force(newSpeed);
+								if (curSpeed < 0.85) {
+									WaypointIndex = -1;
+									ControlSpeed = false;
+								}
+							}
+						}
+						else {
+							WaypointIndex++;
+						}
+					}
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || (s.wheelThrottle == 0 && curSpeed < 0.85 && newSpeed < 0.85));
-    				// ^ brake if needed to prevent rolling, hopefully
+					// ^ brake if needed to prevent rolling, hopefully
 					tgtSpeed.value = Math.Round(newSpeed, 1);
-                }
-            }
+				}
+			}
 
             if (controlHeading)
             {
