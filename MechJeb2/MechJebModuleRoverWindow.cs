@@ -139,6 +139,7 @@ namespace MuMech
 		private GUIStyle inactive;
 		private string titleAdd = "";
 		private bool waitingForPick = false;
+		private bool pickingTerrain = false;
 		private MechJebRoverPathRenderer renderer;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
@@ -168,6 +169,19 @@ namespace MuMech
 		public override string GetName()
 		{
 			return "Rover Waypoints" + (ap.Waypoints.Count > 0 && titleAdd != "" ? " - " + titleAdd : "");
+		}
+		
+		public static Coordinates GetMouseFlightCoordinates()
+		{
+			var body = FlightGlobals.currentMainBody;
+			Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit raycast;
+			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 5, ~(1 << 1))) {
+				return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
+			}
+			else {
+				return null;
+			}
 		}
 
 		public override GUILayoutOption[] WindowOptions()
@@ -244,10 +258,15 @@ namespace MuMech
 			GUILayout.EndScrollView();
 			
 			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Add from Flight")) {
+				pickingTerrain = true;
+				string message = "Click on the terrain to set a waypoint.\n(Leave to map view to cancel.)";
+				ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
+			}
 			if (GUILayout.Button("Add from Map")) {
+				waitingForPick = true;
 				core.target.Unset();
 				core.target.PickPositionTargetOnMap();
-				waitingForPick = true;
 			}
 			if (GUILayout.Button("Remove")) {
 				if (alt) {
@@ -312,14 +331,30 @@ namespace MuMech
 					waitingForPick = false;
 				}
 			}
+
+			if (MapView.MapIsEnabled) pickingTerrain = false; //stop picking on leaving map view
+			if (pickingTerrain && vessel.isActiveVessel) {
+				if (!GuiUtils.MouseIsOverWindow(core)) {
+					Coordinates mouseCoords = GetMouseFlightCoordinates();
+					if (mouseCoords != null) {
+						if (Input.GetMouseButtonDown(0)) {
+							ap.Waypoints.Add(new MechJebRoverWaypoint(mouseCoords.latitude, mouseCoords.longitude));
+							pickingTerrain = false;
+						}
+					}
+				}
+			}
 		}
 	}
-	
+
 	public class MechJebRoverPathRenderer : MonoBehaviour {
 		private MechJebModuleRoverController ap;
 		private LineRenderer pastPath;
 		private LineRenderer currPath;
 		private LineRenderer nextPath;
+		private Color pastPathColor = new Color(0f, 0f, 1f, 0.5f);
+		private Color currPathColor = new Color(0f, 1f, 0f, 0.5f);
+		private Color nextPathColor = new Color(1f, 1f, 0f, 0.5f);
 		
 		public static MechJebRoverPathRenderer AttachToMapView(MechJebCore Core) {
 			var renderer = MapView.MapCamera.gameObject.GetComponent<MechJebRoverPathRenderer>();
@@ -341,9 +376,6 @@ namespace MuMech
 			Line.material = new Material (Shader.Find ("Particles/Additive"));
 			Line.SetWidth(10.0f, 10.0f);
 			Line.SetVertexCount(2);
-			Line.SetPosition(0, Vector3.zero);
-			Line.SetPosition(1, Vector3.zero);
-			Line.SetColors(Color.blue, Color.blue);
 			return true;
 		}
 
@@ -365,9 +397,9 @@ namespace MuMech
 		}
 		
 		public void UpdatePath() {
-			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(Color.blue, Color.blue); }
-			if (NewLineRenderer(ref currPath)) { currPath.SetColors(Color.green, Color.green); }
-			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(Color.yellow, Color.yellow); }
+			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(pastPathColor, pastPathColor); }
+			if (NewLineRenderer(ref currPath)) { currPath.SetColors(currPathColor, currPathColor); }
+			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(nextPathColor, nextPathColor); }
 			
 			//Debug.Log(ap.vessel.vesselName);
 			
