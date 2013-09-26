@@ -74,7 +74,7 @@ namespace MuMech
     	public List<MechJebRoverWaypoint> Waypoints = new List<MechJebRoverWaypoint>();
     	public int WaypointIndex = -1;
     	private CelestialBody lastBody = null;
-        public bool loopWaypoints = false;
+        public bool LoopWaypoints = false;
     	
         public float debug1;
         
@@ -131,7 +131,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
         	headingPID = new PIDController(0.05, 0.000001, 0.005);
-            speedPID = new PIDController(10, 0.001, 0.01);
+            speedPID = new PIDController(3, 0.001, 0.01);
             lastBody = orbit.referenceBody;
             base.OnStart(state);
         }
@@ -175,7 +175,7 @@ namespace MuMech
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // use waypoints maxSpeed if set or just stick with the set speed
-					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 ? maxSpeed / 2 : 0));
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : 0));
 					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
 					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) - Math.Abs(headingErr), new double[] { maxSpeed, turnSpeed, Math.Max(newSpeed, 3) }.Min());
@@ -185,7 +185,7 @@ namespace MuMech
 						if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
 							newSpeed = new [] { newSpeed, (distance < radius * 0.8 ? 0 : 1) }.Min();
 							// ^ limit speed so it'll only go from 1m/s to full stop when braking to prevent accidents on moons
-							if (loopWaypoints) {
+							if (LoopWaypoints) {
 								WaypointIndex = 0;
 							}
 							else {
