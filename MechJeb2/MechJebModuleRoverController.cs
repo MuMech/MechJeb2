@@ -125,7 +125,7 @@ namespace MuMech
         public PIDController headingPID;
         public PIDController speedPID;
         
-        [EditableInfoItem("Turn speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
+        [EditableInfoItem("Safe turnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
         public EditableDouble turnSpeed = 5;
 
         public override void OnStart(PartModule.StartState state)

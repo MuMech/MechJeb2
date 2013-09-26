@@ -30,6 +30,7 @@ namespace MuMech
 		protected override void WindowGUI(int windowID)
 		{
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+			bool alt = Input.GetKey(KeyCode.LeftAlt);
 
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.heading").DrawItem();
@@ -63,7 +64,7 @@ namespace MuMech
 					autopilot.WaypointIndex = 0;
 					autopilot.ControlHeading = autopilot.ControlSpeed = true;
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
-					autopilot.LoopWaypoints = Input.GetKey(KeyCode.LeftAlt);
+					autopilot.LoopWaypoints = alt;
 					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex = -1;
 				}
 
@@ -81,7 +82,7 @@ namespace MuMech
 					if (GUILayout.Button("Follow")) {
 						autopilot.WaypointIndex = 0;
 						autopilot.ControlHeading = autopilot.ControlSpeed = true;
-						autopilot.LoopWaypoints = Input.GetKey(KeyCode.LeftAlt);
+						autopilot.LoopWaypoints = alt;
 					}
 				}
 				else {
@@ -148,7 +149,7 @@ namespace MuMech
 			ap = core.GetComputerModule<MechJebModuleRoverController>();
 			if (vessel.isActiveVessel) {
 				renderer = MechJebRoverPathRenderer.AttachToMapView(core);
-				renderer.enabled = enabled; 
+				renderer.enabled = enabled;
 			}
 		}
 		
@@ -185,7 +186,9 @@ namespace MuMech
 				//active.alignment = TextAnchor.UpperLeft;
 				active = new GUIStyle(inactive);
 				active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
-			}
+			} // for some reason MJ's skin sometimes isn't loaded at OnStart so this has to be done here
+			
+			bool alt = Input.GetKey(KeyCode.LeftAlt);
 
 			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
 			
@@ -206,12 +209,12 @@ namespace MuMech
 					                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
 					if (GUILayout.Button(str, (i == selIndex ? active : inactive))) {
-						if (selIndex == i) {
-							selIndex = -1;
+						if (alt) {
+							ap.WaypointIndex = i;
 						}
 						else {
-							if (Input.GetKey(KeyCode.LeftAlt)) {
-								ap.WaypointIndex = i;
+							if (selIndex == i) {
+								selIndex = -1;
 							}
 							else {
 								selIndex = i;
@@ -247,7 +250,7 @@ namespace MuMech
 				waitingForPick = true;
 			}
 			if (GUILayout.Button("Remove")) {
-				if (Input.GetKey(KeyCode.LeftAlt)) {
+				if (alt) {
 					ap.WaypointIndex = -1;
 					ap.Waypoints.Clear();
 				}
@@ -259,28 +262,40 @@ namespace MuMech
 				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
 			if (GUILayout.Button("Move Up", GUILayout.Width(80))) {
-				if (selIndex > 0) {
-					ap.Waypoints.Swap(selIndex, selIndex - 1);
-					if (ap.WaypointIndex == selIndex) {
+				do {
+					if (selIndex > 0) {
+						ap.Waypoints.Swap(selIndex, selIndex - 1);
+						/*if (ap.WaypointIndex == selIndex) {
 						ap.WaypointIndex--;
 					}
 					else if (ap.WaypointIndex == selIndex - 1) {
 						ap.WaypointIndex++;
+					} /**/
+						selIndex--;
 					}
-					selIndex--;
+					else {
+						break;
+					}
 				}
+				while (alt);
 			}
 			if (GUILayout.Button("Move Down", GUILayout.Width(80))) {
-				if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
-					ap.Waypoints.Swap(selIndex, selIndex + 1);
-					if (ap.WaypointIndex == selIndex) {
+				do {
+					if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
+						ap.Waypoints.Swap(selIndex, selIndex + 1);
+						/*if (ap.WaypointIndex == selIndex) {
 						ap.WaypointIndex++;
 					}
 					else if (ap.WaypointIndex == selIndex + 1) {
 						ap.WaypointIndex--;
+					} /**/
+						selIndex++;
 					}
-					selIndex++;
+					else {
+						break;
+					}
 				}
+				while (alt);
 			}
 //			if (GUILayout.Button("Settings", GUILayout.ExpandWidth(false))) {
 //			}
@@ -419,7 +434,7 @@ namespace MuMech
 		
 		public void OnPreRender() {
 			//if (MapView.MapIsEnabled) {
-				UpdatePath();
+			UpdatePath();
 			//}
 		}
 		
