@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MuMech
 {
 	public class MechJebModuleRoverWindow : DisplayModule
-	{		
+	{
 		public MechJebModuleRoverController autopilot;
 
 		public MechJebModuleRoverWindow(MechJebCore core) : base(core) { }
@@ -74,7 +74,7 @@ namespace MuMech
 				}
 			}
 			GUILayout.EndHorizontal();
-						
+			
 			GUILayout.BeginHorizontal();
 			if (autopilot.WaypointIndex == -1) {
 				if (autopilot.Waypoints.Count > 0) {
@@ -119,6 +119,12 @@ namespace MuMech
 				}
 			}
 		}
+		
+		public override void OnModuleDisabled()
+		{
+			core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled = false;
+			base.OnModuleDisabled();
+		}
 	}
 
 	public class MechJebModuleRoverWaypointWindow : DisplayModule {
@@ -132,23 +138,18 @@ namespace MuMech
 		private GUIStyle inactive;
 		private string titleAdd = "";
 		private bool waitingForPick = false;
+		private MechJebRoverPathRenderer renderer;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
-
+		
 		public override void OnStart(PartModule.StartState state)
 		{
-			this.hidden = true;
+			hidden = true;
 			ap = core.GetComputerModule<MechJebModuleRoverController>();
-			active = new GUIStyle(GuiUtils.skin.button);
-			inactive = new GUIStyle(GuiUtils.skin.button);
-			active.alignment = inactive.alignment = TextAnchor.UpperLeft;
-			active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
-            if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
-            {
-            	RenderingManager.AddToPostDrawQueue(1, DrawWaypoints);
-            }
+			renderer = MechJebRoverPathRenderer.AttachToMapView(core);
+			renderer.enabled = true;
 		}
-
+		
 		public override string GetName()
 		{
 			return "Rover Waypoints" + (ap.Waypoints.Count > 0 && titleAdd != "" ? " - " + titleAdd : "");
@@ -161,6 +162,17 @@ namespace MuMech
 
 		protected override void WindowGUI(int windowID)
 		{
+			if (inactive == null) {
+				inactive = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
+				inactive.alignment = TextAnchor.UpperLeft;
+			}
+			if (active == null) {
+				//active = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
+				//active.alignment = TextAnchor.UpperLeft;
+				active = new GUIStyle(inactive);
+				active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
+			}
+
 			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
 			
 			scroll = GUILayout.BeginScrollView(scroll);//, new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) });
@@ -174,8 +186,10 @@ namespace MuMech
 						eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
 						dist += Vector3.Distance((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
+					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (i < ap.Waypoints.Count - 1 ? maxSpeed / 2 : 0));
 					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
-					                           wp.MinSpeed, (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val), MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
+					                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
 					if (GUILayout.Button(str, (i == selIndex ? active : inactive))) {
 						if (selIndex == i) {
@@ -225,9 +239,10 @@ namespace MuMech
 				}
 				else {
 					ap.Waypoints.RemoveAt(selIndex);
+					if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
 				}
 				selIndex = -1;
-				if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
+				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
 			if (GUILayout.Button("Move Up", GUILayout.Width(80))) {
 				if (selIndex > 0) {
@@ -270,18 +285,143 @@ namespace MuMech
 			}
 		}
 		
-		public void DrawWaypoints() {
-			if (MapView.MapIsEnabled && this.enabled && ap.Waypoints.Count > 0) {
-//				for (int i = 0; i < ap.Waypoints.Count; i++) {
-//					var wp = ap.Waypoints[i];
-//					var col = (i < ap.WaypointIndex ? Color.blue : (i == ap.WaypointIndex ? Color.green : Color.yellow));
-//				}
-			}
+		public override void OnModuleEnabled()
+		{
+			renderer = MechJebRoverPathRenderer.AttachToMapView(core);
+			renderer.enabled = true;
+			base.OnModuleEnabled();
+		}
+		
+		public override void OnModuleDisabled()
+		{
+			if (renderer != null) { renderer.enabled = false; }
+			base.OnModuleDisabled();
 		}
 
-		public override void OnFixedUpdate()
+		public override void OnDestroy()
 		{
-			if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled) { enabled = false; }
+			base.OnDestroy();
+		}
+	}
+	
+	public class MechJebRoverPathRenderer : MonoBehaviour {
+		private MechJebModuleRoverController ap;
+		private LineRenderer pastPath;
+		private LineRenderer currPath;
+		private LineRenderer nextPath;
+		
+		public static MechJebRoverPathRenderer AttachToMapView(MechJebCore Core) {
+			var renderer = MapView.MapCamera.gameObject.GetComponent<MechJebRoverPathRenderer>();
+			if (renderer) Destroy(renderer);
+			renderer = MapView.MapCamera.gameObject.AddComponent<MechJebRoverPathRenderer>();
+			renderer.ap = Core.GetComputerModule<MechJebModuleRoverController>();
+			//if (NewLineRenderer(ref renderer.pastPath)) { renderer.pastPath.SetColors(Color.blue, Color.blue); }
+			//if (NewLineRenderer(ref renderer.currPath)) { renderer.currPath.SetColors(Color.green, Color.green); }
+			//if (NewLineRenderer(ref renderer.nextPath)) { renderer.nextPath.SetColors(Color.yellow, Color.yellow); }
+			return renderer;
+		}
+		
+		public static bool NewLineRenderer(ref LineRenderer Line) {
+			if (Line != null) { return false; }
+			GameObject obj = new GameObject("LineRenderer");
+			Line = obj.AddComponent<LineRenderer>();
+			Line.useWorldSpace = true;
+			Line.material = new Material (Shader.Find ("Particles/Additive"));
+			Line.SetWidth(10.0f, 10.0f);
+			Line.SetVertexCount(2);
+			Line.SetPosition(0, Vector3.zero);
+			Line.SetPosition(1, Vector3.zero);
+			Line.SetColors(Color.blue, Color.blue);
+			return true;
+		}
+
+		public static Vector3 RaisePositionOverTerrain(Vector3 Position, float HeightOffset) {
+			var body = FlightGlobals.ActiveVessel.mainBody;
+			if (MapView.MapIsEnabled) {
+				return ScaledSpace.LocalToScaledSpace(body.position + (body.Radius + HeightOffset) * body.GetSurfaceNVector(body.GetLatitude(Position), body.GetLongitude(Position)));
+			}
+			else {
+				return body.GetWorldSurfacePosition(body.GetLatitude(Position), body.GetLongitude(Position), body.GetAltitude(Position) + HeightOffset);
+			}
+		}
+		
+		public void UpdatePath() {
+			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(Color.blue, Color.blue); }
+			if (NewLineRenderer(ref currPath)) { currPath.SetColors(Color.green, Color.green); }
+			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(Color.yellow, Color.yellow); }
+			
+			Debug.Log(ap.ToString());
+			if (ap != null) { Debug.Log(ap.Waypoints.Count); }
+			
+			if (ap != null && ap.Waypoints.Count > 0) {
+				float targetHeight = (MapView.MapIsEnabled ? 100f : 2f);
+				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 1);
+				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
+				
+				pastPath.SetWidth(width, width);
+				currPath.SetWidth(width, width);
+				nextPath.SetWidth(width, width);
+				pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
+				
+				if (ap.WaypointIndex > 0) {
+					Debug.Log("drawing pastPath");
+					pastPath.enabled = true;
+					pastPath.SetVertexCount(ap.WaypointIndex + 1);
+					for (int i = 0; i < ap.WaypointIndex; i++) {
+						Debug.Log("vert " + i.ToString());
+						pastPath.SetPosition(i, RaisePositionOverTerrain(ap.Waypoints[i].Position, targetHeight));
+					}
+					pastPath.SetPosition(ap.WaypointIndex, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
+					Debug.Log("pastPath drawn");
+				}
+				else {
+					Debug.Log("no pastPath");
+					pastPath.enabled = false;
+				}
+				
+				if (ap.WaypointIndex > -1) {
+					Debug.Log("drawing currPath");
+					currPath.enabled = true;
+					currPath.SetPosition(0, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
+					currPath.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex].Position, targetHeight));
+					Debug.Log("currPath drawn");
+				}
+				else {
+					Debug.Log("no currPath");
+					currPath.enabled = false;
+				}
+				
+				var nextCount = ap.Waypoints.Count - ap.WaypointIndex;
+				if (nextCount > 1) {
+					Debug.Log("drawing nextPath of " + nextCount + " verts");
+					nextPath.enabled = true;
+					nextPath.SetVertexCount(nextCount);
+					nextPath.SetPosition(0, RaisePositionOverTerrain((ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position), targetHeight));
+					for (int i = 0; i < nextCount - 1; i++) {
+						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
+						nextPath.SetPosition(i + 1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex + 1 + i].Position, targetHeight));
+					}
+					Debug.Log("nextPath drawn");
+				}
+				else {
+					Debug.Log("no nextPath");
+					nextPath.enabled = false;
+				}
+			}
+			else {
+				Debug.Log("moo");
+				pastPath.enabled = currPath.enabled = nextPath.enabled = false;
+			}
+		}
+		
+		public void OnPreRender() {
+			//if (MapView.MapIsEnabled) {
+				UpdatePath();
+			//}
+		}
+		
+		public void OnUpdate() {
+			//if (!MapView.MapIsEnabled) { UpdatePath(); }
 		}
 	}
 }
