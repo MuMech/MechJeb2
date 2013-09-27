@@ -360,9 +360,11 @@ namespace MuMech
 		private LineRenderer pastPath;
 		private LineRenderer currPath;
 		private LineRenderer nextPath;
+		private LineRenderer selWP;
 		private Color pastPathColor = new Color(0f, 0f, 1f, 0.5f);
 		private Color currPathColor = new Color(0f, 1f, 0f, 0.5f);
 		private Color nextPathColor = new Color(1f, 1f, 0f, 0.5f);
+		private Color selWPColor = new Color(1f, 0f, 0f, 0.5f);
 		private Material material = new Material (Shader.Find ("Particles/Additive"));
 		
 		public static MechJebRoverPathRenderer AttachToMapView(MechJebCore Core) {
@@ -409,17 +411,27 @@ namespace MuMech
 			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(pastPathColor, pastPathColor); }
 			if (NewLineRenderer(ref currPath)) { currPath.SetColors(currPathColor, currPathColor); }
 			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(nextPathColor, nextPathColor); }
+			if (NewLineRenderer(ref selWP)) { selWP.SetColors(selWPColor, selWPColor); }
 			
 			//Debug.Log(ap.vessel.vesselName);
 			
 			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight) {
 				float targetHeight = (MapView.MapIsEnabled ? 100f : 2f);
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 1);
+				float width2 = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 2);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 				
+				int sel = ap.core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex;
+				selWP.enabled = sel > -1;
+				if (selWP.enabled) {
+					selWP.SetWidth(0f, width * 10f);
+					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 2f));
+					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + width * 15f));
+				}
+				
 				pastPath.SetWidth(width, width);
-				currPath.SetWidth(width, width);
-				nextPath.SetWidth(width, width);
+				currPath.SetWidth(width, width2);
+				nextPath.SetWidth(width2, width2);
 				pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 				
 				if (ap.WaypointIndex > 0) {
