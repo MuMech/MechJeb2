@@ -268,27 +268,23 @@ namespace MuMech
 		
 		public override void OnFixedUpdate()
 		{
-			if (!core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled) {
+			if (!core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled) { // update waypoints unless the waypoint window is (hopefully) doing that already
 				Waypoints.ForEach(wp => wp.Update());
 			}
 		}
 		
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-			Debug.Log(local);
 			if (local != null) {
 				ConfigNode wps = local.GetNode("Waypoints");
 				if (wps != null && wps.HasNode("Waypoint")) {
 					int.TryParse(wps.GetValue("Index"), out WaypointIndex);
 					Waypoints.Clear();
 					foreach (ConfigNode cn in wps.GetNodes("Waypoint")) {
-						Debug.Log(cn);
 						Waypoints.Add(new MechJebRoverWaypoint(cn));
-						Debug.Log(Waypoints[Waypoints.Count - 1].ToConfigNode());
 					}
 				}
 			}
-			Debug.Log(Waypoints.Count);
 			base.OnLoad(local, type, global);
 		}
 		
@@ -299,11 +295,9 @@ namespace MuMech
 				ConfigNode cn = local.AddNode("Waypoints");
 				cn.AddValue("Index", WaypointIndex);
 				foreach (MechJebRoverWaypoint wp in Waypoints) {
-					Debug.Log(wp);
 					cn.AddNode(wp.ToConfigNode());
 				}
 			}
-			Debug.Log(local);
 			base.OnSave(local, type, global);
 		}
 

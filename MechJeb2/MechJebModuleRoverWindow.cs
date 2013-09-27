@@ -93,7 +93,7 @@ namespace MuMech
 			else {
 				if (GUILayout.Button("Stop")) {
 					autopilot.WaypointIndex = -1;
-					autopilot.LoopWaypoints = false;
+					autopilot.ControlHeading = autopilot.ControlSpeed = autopilot.LoopWaypoints = false;
 				}
 			}
 			if (GUILayout.Button("Waypoints")) {
@@ -140,7 +140,8 @@ namespace MuMech
 		private string titleAdd = "";
 		private bool waitingForPick = false;
 		private bool pickingTerrain = false;
-		private MechJebRoverPathRenderer renderer;
+		private static MechJebRoverPathRenderer renderer;
+//		private Rect[] waypointRects;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
 		
@@ -208,6 +209,7 @@ namespace MuMech
 			
 			scroll = GUILayout.BeginScrollView(scroll);//, new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) });
 			if (ap.Waypoints.Count > 0) {
+//				waypointRects = new Rect[ap.Waypoints.Count];
 				GUILayout.BeginVertical();
 				double eta = 0;
 				double dist = 0;
@@ -238,7 +240,12 @@ namespace MuMech
 							}
 						}
 					}
+//					if(Event.current.type == EventType.Repaint) {
+//						waypointRects[i] = GUILayoutUtility.GetLastRect();
+//						if (i == ap.WaypointIndex) { Debug.Log(waypointRects[i].ToString() + " - " + scroll.ToString()); }
+//					}
 					GUI.backgroundColor = Color.white;
+					
 					if (selIndex > -1 && selIndex == i) {
 						GUILayout.BeginHorizontal();
 						GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
@@ -351,12 +358,13 @@ namespace MuMech
 		
 		public override void OnFixedUpdate()
 		{
+			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRoverPathRenderer.AttachToMapView(core); } //MechJebRoverPathRenderer.AttachToMapView(core); }
 			ap.Waypoints.ForEach(wp => wp.Update());
 		}
 	}
 
 	public class MechJebRoverPathRenderer : MonoBehaviour {
-		private MechJebModuleRoverController ap;
+		public MechJebModuleRoverController ap;
 		private LineRenderer pastPath;
 		private LineRenderer currPath;
 		private LineRenderer nextPath;
@@ -432,7 +440,7 @@ namespace MuMech
 				pastPath.SetWidth(width, width);
 				currPath.SetWidth(width, width2);
 				nextPath.SetWidth(width2, width2);
-				pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
+				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 				
 				if (ap.WaypointIndex > 0) {
 					//Debug.Log("drawing pastPath");
