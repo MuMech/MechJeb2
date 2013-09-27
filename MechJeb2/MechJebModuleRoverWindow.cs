@@ -320,8 +320,6 @@ namespace MuMech
 //			}
 			GUILayout.EndHorizontal();
 			
-			base.WindowGUI(windowID);
-			
 			if (waitingForPick) {
 				if (core.target.pickingPositionTarget == false) {
 					if (core.target.PositionTargetExists) {
@@ -343,7 +341,17 @@ namespace MuMech
 						}
 					}
 				}
+				else {
+					if (Input.GetMouseButtonDown(0)) { pickingTerrain = false; }
+				}
 			}
+			
+			base.WindowGUI(windowID);
+		}
+		
+		public override void OnFixedUpdate()
+		{
+			ap.Waypoints.ForEach(wp => wp.Update());
 		}
 	}
 
@@ -355,6 +363,7 @@ namespace MuMech
 		private Color pastPathColor = new Color(0f, 0f, 1f, 0.5f);
 		private Color currPathColor = new Color(0f, 1f, 0f, 0.5f);
 		private Color nextPathColor = new Color(1f, 1f, 0f, 0.5f);
+		private Material material = new Material (Shader.Find ("Particles/Additive"));
 		
 		public static MechJebRoverPathRenderer AttachToMapView(MechJebCore Core) {
 			var renderer = MapView.MapCamera.gameObject.GetComponent<MechJebRoverPathRenderer>();
@@ -362,9 +371,6 @@ namespace MuMech
 				renderer = MapView.MapCamera.gameObject.AddComponent<MechJebRoverPathRenderer>();
 			}
 			renderer.ap = Core.GetComputerModule<MechJebModuleRoverController>();
-			//if (NewLineRenderer(ref renderer.pastPath)) { renderer.pastPath.SetColors(Color.blue, Color.blue); }
-			//if (NewLineRenderer(ref renderer.currPath)) { renderer.currPath.SetColors(Color.green, Color.green); }
-			//if (NewLineRenderer(ref renderer.nextPath)) { renderer.nextPath.SetColors(Color.yellow, Color.yellow); }
 			return renderer;
 		}
 		
@@ -373,7 +379,7 @@ namespace MuMech
 			GameObject obj = new GameObject("LineRenderer");
 			Line = obj.AddComponent<LineRenderer>();
 			Line.useWorldSpace = true;
-			Line.material = new Material (Shader.Find ("Particles/Additive"));
+			Line.material = material;
 			Line.SetWidth(10.0f, 10.0f);
 			Line.SetVertexCount(2);
 			return true;
@@ -392,18 +398,21 @@ namespace MuMech
 		public new bool enabled {
 			get { return base.enabled; }
 			set {
-				pastPath.enabled = currPath.enabled = nextPath.enabled = base.enabled = value;
+				base.enabled = value;
+				if (pastPath != null) { pastPath.enabled = value; }
+				if (currPath != null) { currPath.enabled = value; }
+				if (nextPath != null) { nextPath.enabled = value; }
 			}
 		}
 		
-		public void UpdatePath() {
+		public void OnPreRender() {
 			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(pastPathColor, pastPathColor); }
 			if (NewLineRenderer(ref currPath)) { currPath.SetColors(currPathColor, currPathColor); }
 			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(nextPathColor, nextPathColor); }
 			
 			//Debug.Log(ap.vessel.vesselName);
 			
-			if (ap != null && ap.Waypoints.Count > 0) {
+			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight) {
 				float targetHeight = (MapView.MapIsEnabled ? 100f : 2f);
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 1);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
@@ -462,16 +471,6 @@ namespace MuMech
 				//Debug.Log("moo");
 				pastPath.enabled = currPath.enabled = nextPath.enabled = false;
 			}
-		}
-		
-		public void OnPreRender() {
-			//if (MapView.MapIsEnabled) {
-			UpdatePath();
-			//}
-		}
-		
-		public void OnUpdate() {
-			//if (!MapView.MapIsEnabled) { UpdatePath(); }
 		}
 	}
 }
