@@ -154,7 +154,9 @@ namespace MuMech
 		{
 			headingPID = new PIDController(0.05, 0.00001, 0.005);
 			speedPID = new PIDController(3, 0.001, 0.01);
-			lastBody = orbit.referenceBody;
+			if (HighLogic.LoadedSceneIsFlight && orbit != null) {
+				lastBody = orbit.referenceBody;
+			}
 			base.OnStart(state);
 		}
 
@@ -271,6 +273,7 @@ namespace MuMech
 			if (!core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled) { // update waypoints unless the waypoint window is (hopefully) doing that already
 				Waypoints.ForEach(wp => wp.Update());
 			}
+			if (orbit != null && lastBody != orbit.referenceBody) { lastBody = orbit.referenceBody; }
 		}
 		
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)

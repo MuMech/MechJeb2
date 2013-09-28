@@ -58,14 +58,14 @@ namespace MuMech
 				var vssl = core.target.Target.GetVessel();
 				
 				if (GUILayout.Button("To Target")) {
+					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex = -1;
+					autopilot.WaypointIndex = 0;
 					autopilot.Waypoints.Clear();
 					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl)); }
 					else { autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition())); }
-					autopilot.WaypointIndex = 0;
 					autopilot.ControlHeading = autopilot.ControlSpeed = true;
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
 					autopilot.LoopWaypoints = alt;
-					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex = -1;
 				}
 
 				if (GUILayout.Button("Add Target")) {
@@ -140,8 +140,9 @@ namespace MuMech
 		private string titleAdd = "";
 		private bool waitingForPick = false;
 		private bool pickingTerrain = false;
+		private bool leftWindow = false;
 		private static MechJebRoverPathRenderer renderer;
-		private Rect[] waypointRects;
+		private Rect[] waypointRects = new Rect[0];
 		private int lastIndex = -1;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
@@ -150,10 +151,11 @@ namespace MuMech
 		{
 			hidden = true;
 			ap = core.GetComputerModule<MechJebModuleRoverController>();
-			if (vessel.isActiveVessel) {
+			if (HighLogic.LoadedSceneIsFlight && vessel.isActiveVessel) {
 				renderer = MechJebRoverPathRenderer.AttachToMapView(core);
 				renderer.enabled = enabled;
 			}
+			base.OnStart(state);
 		}
 		
 		public override void OnModuleEnabled()
@@ -206,11 +208,6 @@ namespace MuMech
 			
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 
-			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
-			if (ap.WaypointIndex > -1 && lastIndex != ap.WaypointIndex && selIndex == -1) {
-				scroll.y = waypointRects[ap.WaypointIndex].y - 160;
-			}
-			
 			scroll = GUILayout.BeginScrollView(scroll);//, new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) });
 			if (ap.Waypoints.Count > 0) {
 				waypointRects = new Rect[ap.Waypoints.Count];
@@ -246,7 +243,7 @@ namespace MuMech
 					}
 					if(Event.current.type == EventType.Repaint) {
 						waypointRects[i] = GUILayoutUtility.GetLastRect();
-						if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
+						//if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
 					}
 					GUI.backgroundColor = Color.white;
 					
@@ -271,6 +268,7 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add from Flight")) {
 				pickingTerrain = true;
+				leftWindow = false;
 				string message = "Click on the terrain to set a waypoint.\n(Leave to map view to cancel.)";
 				ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
 			}
@@ -344,6 +342,7 @@ namespace MuMech
 			if (MapView.MapIsEnabled) pickingTerrain = false; //stop picking on leaving map view
 			if (pickingTerrain && vessel.isActiveVessel) {
 				if (!GuiUtils.MouseIsOverWindow(core)) {
+					leftWindow = true;
 					Coordinates mouseCoords = GetMouseFlightCoordinates();
 					if (mouseCoords != null) {
 						if (Input.GetMouseButtonDown(0)) {
@@ -353,11 +352,16 @@ namespace MuMech
 					}
 				}
 				else {
-					if (Input.GetMouseButtonDown(0)) { pickingTerrain = false; }
+					if (leftWindow && Input.GetMouseButtonDown(0)) { pickingTerrain = false; }
 				}
 			}
 			
+			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
+			if (waypointRects.Length > 0 && ap.WaypointIndex > -1 && lastIndex != ap.WaypointIndex && selIndex == -1) {
+				scroll.y = waypointRects[ap.WaypointIndex].y - 160;
+			}
 			lastIndex = ap.WaypointIndex;
+			
 			base.WindowGUI(windowID);
 		}
 		
@@ -365,6 +369,7 @@ namespace MuMech
 		{
 			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRoverPathRenderer.AttachToMapView(core); } //MechJebRoverPathRenderer.AttachToMapView(core); }
 			ap.Waypoints.ForEach(wp => wp.Update());
+			base.OnFixedUpdate();
 		}
 	}
 
