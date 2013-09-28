@@ -141,7 +141,8 @@ namespace MuMech
 		private bool waitingForPick = false;
 		private bool pickingTerrain = false;
 		private static MechJebRoverPathRenderer renderer;
-//		private Rect[] waypointRects;
+		private Rect[] waypointRects;
+		private int lastIndex = -1;
 
 		public MechJebModuleRoverWaypointWindow(MechJebCore core) : base(core) { }
 		
@@ -206,10 +207,13 @@ namespace MuMech
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 
 			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
+			if (ap.WaypointIndex > -1 && lastIndex != ap.WaypointIndex && selIndex == -1) {
+				scroll.y = waypointRects[ap.WaypointIndex].y - 160;
+			}
 			
 			scroll = GUILayout.BeginScrollView(scroll);//, new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) });
 			if (ap.Waypoints.Count > 0) {
-//				waypointRects = new Rect[ap.Waypoints.Count];
+				waypointRects = new Rect[ap.Waypoints.Count];
 				GUILayout.BeginVertical();
 				double eta = 0;
 				double dist = 0;
@@ -240,10 +244,10 @@ namespace MuMech
 							}
 						}
 					}
-//					if(Event.current.type == EventType.Repaint) {
-//						waypointRects[i] = GUILayoutUtility.GetLastRect();
-//						if (i == ap.WaypointIndex) { Debug.Log(waypointRects[i].ToString() + " - " + scroll.ToString()); }
-//					}
+					if(Event.current.type == EventType.Repaint) {
+						waypointRects[i] = GUILayoutUtility.GetLastRect();
+						if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
+					}
 					GUI.backgroundColor = Color.white;
 					
 					if (selIndex > -1 && selIndex == i) {
@@ -353,6 +357,7 @@ namespace MuMech
 				}
 			}
 			
+			lastIndex = ap.WaypointIndex;
 			base.WindowGUI(windowID);
 		}
 		
@@ -429,6 +434,11 @@ namespace MuMech
 				float width2 = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 2);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 				
+				pastPath.SetWidth(width, width);
+				currPath.SetWidth(width, width2);
+				nextPath.SetWidth(width2, width2);
+				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
+				
 				int sel = ap.core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex;
 				selWP.enabled = sel > -1;
 				if (selWP.enabled) {
@@ -436,11 +446,6 @@ namespace MuMech
 					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 2f));
 					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + width * 15f));
 				}
-				
-				pastPath.SetWidth(width, width);
-				currPath.SetWidth(width, width2);
-				nextPath.SetWidth(width2, width2);
-				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 				
 				if (ap.WaypointIndex > 0) {
 					//Debug.Log("drawing pastPath");
@@ -489,7 +494,7 @@ namespace MuMech
 			}
 			else {
 				//Debug.Log("moo");
-				pastPath.enabled = currPath.enabled = nextPath.enabled = false;
+				selWP.enabled = pastPath.enabled = currPath.enabled = nextPath.enabled = false;
 			}
 		}
 	}

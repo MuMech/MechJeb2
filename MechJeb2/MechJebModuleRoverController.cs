@@ -152,8 +152,8 @@ namespace MuMech
 
 		public override void OnStart(PartModule.StartState state)
 		{
-			headingPID = new PIDController(0.05, 0.000001, 0.005);
-			speedPID = new PIDController(5, 0.001, 0.01);
+			headingPID = new PIDController(0.05, 0.00001, 0.005);
+			speedPID = new PIDController(3, 0.001, 0.01);
 			lastBody = orbit.referenceBody;
 			base.OnStart(state);
 		}
