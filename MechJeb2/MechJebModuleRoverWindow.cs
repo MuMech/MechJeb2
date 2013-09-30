@@ -140,7 +140,6 @@ namespace MuMech
 		private string titleAdd = "";
 		private bool waitingForPick = false;
 		private bool pickingTerrain = false;
-		private bool leftWindow = false;
 		private static MechJebRoverPathRenderer renderer;
 		private Rect[] waypointRects = new Rect[0];
 		private int lastIndex = -1;
@@ -178,13 +177,22 @@ namespace MuMech
 		public static Coordinates GetMouseFlightCoordinates()
 		{
 			var body = FlightGlobals.currentMainBody;
-			Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+			Ray mouseRay = FlightCamera.fetch.mainCamera.ScreenPointToRay(Input.mousePosition);
 			RaycastHit raycast;
-			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 5, ~(1 << 1))) {
+			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
 				return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
 			}
 			else {
-				return null;
+				Vector3d hit;
+				//body.pqsController.RayIntersection(mouseRay.origin, mouseRay.direction, out hit);
+				PQS.LineSphereIntersection(mouseRay.origin - body.position, mouseRay.direction, body.Radius, out hit);
+				Debug.Log(hit);
+				if (hit != Vector3d.zero) {
+					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
+				}
+				else {
+					return null;
+				}
 			}
 		}
 
@@ -216,9 +224,11 @@ namespace MuMech
 				double dist = 0;
 				for (int i = 0; i < ap.Waypoints.Count; i++) {
 					var wp = ap.Waypoints[i];
-					if (ap.WaypointIndex > -1 && i >= ap.WaypointIndex) {
-						eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
-						dist += Vector3.Distance((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
+					if (i >= ap.WaypointIndex) {
+						if (ap.WaypointIndex > -1) {
+							eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
+						}
+						dist += Vector3.Distance((i == ap.WaypointIndex || ap.WaypointIndex == -1 ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (i < ap.Waypoints.Count - 1 || ap.LoopWaypoints ? maxSpeed / 2 : 0));
@@ -266,16 +276,20 @@ namespace MuMech
 			GUILayout.EndScrollView();
 			
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("Add from Flight")) {
-				pickingTerrain = true;
-				leftWindow = false;
-				string message = "Click on the terrain to set a waypoint.\n(Leave to map view to cancel.)";
-				ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
-			}
-			if (GUILayout.Button("Add from Map")) {
-				waitingForPick = true;
-				core.target.Unset();
-				core.target.PickPositionTargetOnMap();
+			if (GUILayout.Button(!waitingForPick && !pickingTerrain ? "Add Waypoint" : "Abort Adding")) {
+				if (!waitingForPick && !pickingTerrain) {
+					if (MapView.MapIsEnabled) {
+						waitingForPick = true;
+						core.target.Unset();
+						core.target.PickPositionTargetOnMap();
+					}
+					else {
+						pickingTerrain = true;
+					}
+				}
+				else {
+					waitingForPick = pickingTerrain = false;
+				}
 			}
 			if (GUILayout.Button("Remove")) {
 				if (alt) {
@@ -289,7 +303,7 @@ namespace MuMech
 				selIndex = -1;
 				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
-			if (GUILayout.Button("Move Up", GUILayout.Width(80))) {
+			if (GUILayout.Button("Move Up", GUILayout.Width(85))) {
 				do {
 					if (selIndex > 0) {
 						ap.Waypoints.Swap(selIndex, selIndex - 1);
@@ -307,7 +321,7 @@ namespace MuMech
 				}
 				while (alt);
 			}
-			if (GUILayout.Button("Move Down", GUILayout.Width(80))) {
+			if (GUILayout.Button("Move Down", GUILayout.Width(85))) {
 				do {
 					if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
 						ap.Waypoints.Swap(selIndex, selIndex + 1);
@@ -342,7 +356,6 @@ namespace MuMech
 			if (MapView.MapIsEnabled) pickingTerrain = false; //stop picking on leaving map view
 			if (pickingTerrain && vessel.isActiveVessel) {
 				if (!GuiUtils.MouseIsOverWindow(core)) {
-					leftWindow = true;
 					Coordinates mouseCoords = GetMouseFlightCoordinates();
 					if (mouseCoords != null) {
 						if (Input.GetMouseButtonDown(0)) {
@@ -352,7 +365,7 @@ namespace MuMech
 					}
 				}
 				else {
-					if (leftWindow && Input.GetMouseButtonDown(0)) { pickingTerrain = false; }
+					//if (leftWindow && Input.GetMouseButtonDown(0)) { pickingTerrain = false; }
 				}
 			}
 			
@@ -434,7 +447,7 @@ namespace MuMech
 			//Debug.Log(ap.vessel.vesselName);
 			
 			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight) {
-				float targetHeight = (MapView.MapIsEnabled ? 100f : 2f);
+				float targetHeight = (MapView.MapIsEnabled ? 300f : 3f);
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 1);
 				float width2 = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : 2);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
@@ -448,7 +461,7 @@ namespace MuMech
 				selWP.enabled = sel > -1;
 				if (selWP.enabled) {
 					selWP.SetWidth(0f, width * 10f);
-					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 2f));
+					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
 					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + width * 15f));
 				}
 				
