@@ -148,12 +148,26 @@ namespace MuMech
 		public PIDController speedPID;
 		
 		[EditableInfoItem("Safe turnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
-		public EditableDouble turnSpeed = 5;
+		public EditableDouble turnSpeed = 3;
 
+		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble hPIDp = 0.15;
+		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble hPIDi = 0.0005;
+		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble hPIDd = 0.05;
+		
+		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble sPIDp = 4;
+		[EditableInfoItem("Speed PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble sPIDi = 0.0025;
+		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble sPIDd = 0.025;
+		
 		public override void OnStart(PartModule.StartState state)
 		{
-			headingPID = new PIDController(0.05, 0.00001, 0.005);
-			speedPID = new PIDController(3, 0.001, 0.01);
+			headingPID = new PIDController(hPIDp, hPIDi, hPIDd);
+			speedPID = new PIDController(sPIDp, sPIDi, sPIDd);
 			if (HighLogic.LoadedSceneIsFlight && orbit != null) {
 				lastBody = orbit.referenceBody;
 			}
@@ -213,12 +227,11 @@ namespace MuMech
 								WaypointIndex = 0;
 							}
 							else {
-								controlHeading = false;
-								newSpeed = -0.5;
+								newSpeed = -0.25;
 								tgtSpeed.force(newSpeed);
 								if (curSpeed < 0.85) {
 									WaypointIndex = -1;
-									ControlSpeed = false;
+									controlHeading = controlSpeed = false;
 								}
 							}
 						}
@@ -226,7 +239,7 @@ namespace MuMech
 							WaypointIndex++;
 						}
 					}
-					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || (s.wheelThrottle == 0 && curSpeed < 0.85 && newSpeed < 0.85));
+					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < 0.85 && newSpeed < 0.85));
 					// ^ brake if needed to prevent rolling, hopefully
 					tgtSpeed.value = Math.Round(newSpeed, 1);
 				}
