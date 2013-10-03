@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MuMech
 {
 	public class MechJebRoverWaypoint {
-		public const float defaultRadius = 50;
+		public const float defaultRadius = 5;
 		public double Latitude;
 		public double Longitude;
 		public Vector3d Position;
@@ -66,6 +66,7 @@ namespace MuMech
 			if (Target != null) {
 				cn.AddValue("Target", Target.id);
 			}
+			if (Name != "") { cn.AddValue("Name", Name); }
 			cn.AddValue("Latitude", Latitude);
 			cn.AddValue("Longitude", Longitude);
 			cn.AddValue("Radius", Radius);
@@ -151,14 +152,14 @@ namespace MuMech
 		public EditableDouble turnSpeed = 3;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDp = 0.15;
+		public EditableDouble hPIDp = 0.05;
 		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDi = 0.0005;
+		public EditableDouble hPIDi = 0.001;
 		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDd = 0.05;
+		public EditableDouble hPIDd = 0.001;
 		
 		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble sPIDp = 4;
+		public EditableDouble sPIDp = 3;
 		[EditableInfoItem("Speed PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDi = 0.0025;
 		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
@@ -216,7 +217,7 @@ namespace MuMech
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : 0));
 					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
-					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) - Math.Abs(headingErr), new double[] { maxSpeed, turnSpeed, Math.Max(newSpeed, 3) }.Min());
+					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) - Math.Abs(headingErr), new double[] { maxSpeed, minSpeed, turnSpeed, Math.Max(newSpeed, 2) }.Min());
 					// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
@@ -287,18 +288,22 @@ namespace MuMech
 				Waypoints.ForEach(wp => wp.Update());
 			}
 			if (orbit != null && lastBody != orbit.referenceBody) { lastBody = orbit.referenceBody; }
+			headingPID.Kp = hPIDp;
+			headingPID.Ki = hPIDi;
+			headingPID.Kd = hPIDd;
+			speedPID.Kp = sPIDp;
+			speedPID.Ki = sPIDi;
+			speedPID.Kd = sPIDd;
 		}
 		
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-			if (local != null) {
-				ConfigNode wps = local.GetNode("Waypoints");
-				if (wps != null && wps.HasNode("Waypoint")) {
-					int.TryParse(wps.GetValue("Index"), out WaypointIndex);
-					Waypoints.Clear();
-					foreach (ConfigNode cn in wps.GetNodes("Waypoint")) {
-						Waypoints.Add(new MechJebRoverWaypoint(cn));
-					}
+			var wps = local.GetNode("Waypoints");
+			if (wps != null && wps.HasNode("Waypoint")) {
+				int.TryParse(wps.GetValue("Index"), out WaypointIndex);
+				Waypoints.Clear();
+				foreach (ConfigNode cn in wps.GetNodes("Waypoint")) {
+					Waypoints.Add(new MechJebRoverWaypoint(cn));
 				}
 			}
 			base.OnLoad(local, type, global);
