@@ -321,7 +321,7 @@ namespace MuMech
 			}
 			base.OnSave(local, type, global);
 		}
-
+		
 		public MechJebModuleRoverController(MechJebCore core) : base(core) { }
 	}
 }

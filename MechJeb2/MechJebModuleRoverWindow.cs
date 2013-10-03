@@ -206,6 +206,38 @@ namespace MuMech
 	public class MechJebModuleRoverWaypointWindow : DisplayModule {
 		public MechJebModuleRoverController ap;
 		public static List<MechJebRoverRoute> Routes;
+		[EditableInfoItem("Moho Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble MohoMapdist = 5000;
+		[EditableInfoItem("Eve Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble EveMapdist = 5000;
+		[EditableInfoItem("Gilly Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble GillyMapdist = -500;
+		[EditableInfoItem("Kerbin Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble KerbinMapdist = 500;
+		[EditableInfoItem("Mun Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble MunMapdist = 4000;
+		[EditableInfoItem("Minmus Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble MinmusMapdist = 3500;
+		[EditableInfoItem("Duna Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble DunaMapdist = 5000;
+		[EditableInfoItem("Ike Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble IkeMapdist = 4000;
+		[EditableInfoItem("Dres Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble DresMapdist = 1500;
+		[EditableInfoItem("Eeloo Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble EelooMapdist = 2000;
+		[EditableInfoItem("Jool Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble JoolMapdist = 30000;
+		[EditableInfoItem("Tylo Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble TyloMapdist = 5000;
+		[EditableInfoItem("Laythe Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble LaytheMapdist = 1000;
+		[EditableInfoItem("Pol Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble PolMapdist = 500;
+		[EditableInfoItem("Bop Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble BopMapdist = 1000;
+		[EditableInfoItem("Vall Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble VallMapdist = 5000;
 		internal int selIndex = -1;
 		internal int saveIndex = -1;
 		internal string tmpRadius = "";
@@ -347,7 +379,7 @@ namespace MuMech
 		}
 		
 		private int SortRoutes(MechJebRoverRoute a, MechJebRoverRoute b) {
-			var bn = string.Compare(a.Body.bodyName, b.Body.bodyName, true); 
+			var bn = string.Compare(a.Body.bodyName, b.Body.bodyName, true);
 			if (bn != 0) {
 				return bn;
 			}
@@ -506,13 +538,41 @@ namespace MuMech
 					titleAdd = "Settings";
 					scroll = GUILayout.BeginScrollView(scroll);
 					MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+					GUILayout.BeginHorizontal();
+					GUILayout.BeginVertical();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
+					GUILayout.EndVertical();
+					GUILayout.BeginVertical();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
+					GUILayout.EndVertical();
+					GUILayout.EndHorizontal();
 					ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
+					GUILayout.BeginHorizontal();
+					GUILayout.BeginVertical();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MohoMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EveMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.GillyMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.KerbinMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MunMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MinmusMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DunaMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.IkeMapdist").DrawItem();
+					GUILayout.EndVertical();
+					GUILayout.BeginVertical();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DresMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.JoolMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.LaytheMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.VallMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.TyloMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.BopMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.PolMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EelooMapdist").DrawItem();
+					GUILayout.EndVertical();
+					GUILayout.EndHorizontal();
 					GUILayout.EndScrollView();
 
 					GUILayout.BeginHorizontal();
@@ -642,6 +702,7 @@ namespace MuMech
 	}
 
 	public class MechJebRoverPathRenderer : MonoBehaviour {
+		public readonly Material material = new Material (Shader.Find ("Particles/Additive"));
 		public MechJebModuleRoverController ap;
 		private LineRenderer pastPath;
 		private LineRenderer currPath;
@@ -651,7 +712,7 @@ namespace MuMech
 		private Color currPathColor = new Color(0f, 1f, 0f, 0.5f);
 		private Color nextPathColor = new Color(1f, 1f, 0f, 0.5f);
 		private Color selWPColor = new Color(1f, 0f, 0f, 0.5f);
-		public readonly Material material = new Material (Shader.Find ("Particles/Additive"));
+		private double addHeight;
 		
 		public static MechJebRoverPathRenderer AttachToMapView(MechJebCore Core) {
 			var renderer = MapView.MapCamera.gameObject.GetComponent<MechJebRoverPathRenderer>();
@@ -676,7 +737,9 @@ namespace MuMech
 		public static Vector3 RaisePositionOverTerrain(Vector3 Position, float HeightOffset) {
 			var body = FlightGlobals.ActiveVessel.mainBody;
 			if (MapView.MapIsEnabled) {
-				return ScaledSpace.LocalToScaledSpace(body.position + (body.Radius + HeightOffset) * body.GetSurfaceNVector(body.GetLatitude(Position), body.GetLongitude(Position)));
+				var lat = body.GetLatitude(Position);
+				var lon = body.GetLongitude(Position);
+				return ScaledSpace.LocalToScaledSpace(body.position + (body.Radius + HeightOffset + body.TerrainAltitude(lat, lon)) * body.GetSurfaceNVector(lat, lon));
 			}
 			else {
 				return body.GetWorldSurfacePosition(body.GetLatitude(Position), body.GetLongitude(Position), body.GetAltitude(Position) + HeightOffset);
@@ -700,10 +763,29 @@ namespace MuMech
 			if (NewLineRenderer(ref selWP)) { selWP.SetColors(selWPColor, selWPColor); }
 			
 			//Debug.Log(ap.vessel.vesselName);
+			var body = ap.core.GetComputerModule<MechJebModuleRoverWaypointWindow>();
+			switch (ap.vessel.mainBody.bodyName) {
+					case "Moho" : addHeight = body.MohoMapdist; break;
+					case "Eve" : addHeight = body.EveMapdist; break;
+					case "Gilly" : addHeight = body.GillyMapdist; break;
+					case "Kerbin" : addHeight = body.KerbinMapdist; break;
+					case "Mun" : addHeight = body.MunMapdist; break;
+					case "Minmus" : addHeight = body.MinmusMapdist; break;
+					case "Duna" : addHeight = body.DunaMapdist; break;
+					case "Ike" : addHeight = body.IkeMapdist; break;
+					case "Dres" : addHeight = body.DresMapdist; break;
+					case "Jool" : addHeight = body.JoolMapdist; break;
+					case "Laythe" : addHeight = body.LaytheMapdist; break;
+					case "Vall" : addHeight = body.VallMapdist; break;
+					case "Tylo" : addHeight = body.TyloMapdist; break;
+					case "Bop" : addHeight = body.BopMapdist; break;
+					case "Pol" : addHeight = body.PolMapdist; break;
+					case "Eeloo" : addHeight = body.EelooMapdist; break;
+			}
 			
 			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight) {
 				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.vessel.CoM) / 900f;
-				float targetHeight = (MapView.MapIsEnabled ? 1000f : 3f);
+				float targetHeight = (MapView.MapIsEnabled ? (float)addHeight : 3f);
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 				
