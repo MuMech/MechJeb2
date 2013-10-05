@@ -474,19 +474,26 @@ namespace MuMech
 					GUILayout.EndScrollView();
 
 					GUILayout.BeginHorizontal();
-					if (GUILayout.Button(!waitingForPick ? "Add Waypoint" : "Abort Adding")) {
-						if (!waitingForPick) {
-							waitingForPick = true;
-							if (MapView.MapIsEnabled) {
-								core.target.Unset();
-								core.target.PickPositionTargetOnMap();
-							}
+					if (GUILayout.Button(alt ? "Reverse" : (!waitingForPick ? "Add Waypoint" : "Abort Adding"), GUILayout.Width(130))) {
+						if (alt) {
+							ap.Waypoints.Reverse();
+							if (ap.WaypointIndex > -1) { ap.WaypointIndex = ap.Waypoints.Count - 1 - ap.WaypointIndex; }
+							if (selIndex > -1) { selIndex = ap.Waypoints.Count - 1 - selIndex; }
 						}
 						else {
-							waitingForPick = false;
+							if (!waitingForPick) {
+								waitingForPick = true;
+								if (MapView.MapIsEnabled) {
+									core.target.Unset();
+									core.target.PickPositionTargetOnMap();
+								}
+							}
+							else {
+								waitingForPick = false;
+							}
 						}
 					}
-					if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(60))) {
+					if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65))) {
 						if (alt) {
 							ap.WaypointIndex = -1;
 							ap.Waypoints.Clear();
