@@ -179,7 +179,7 @@ namespace MuMech
 		public double headingErr;
 		[ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
 		public double speedErr;
-		public MuMech.MovingAverage tgtSpeed = new MovingAverage(10);
+		public MuMech.MovingAverage tgtSpeed = new MovingAverage(150);
 		public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
 
 		protected double headingLast, speedLast;
@@ -216,8 +216,8 @@ namespace MuMech
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // use waypoints maxSpeed if set or just stick with the set speed
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					var brakeFactor = curSpeed * 0.75 - minSpeed;
-					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius) / (brakeFactor > 2.0 ? brakeFactor : 2.0)); // brake when getting closer
+					var brakeFactor = Math.Max((curSpeed - minSpeed) * 0.75, 2);
+					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius) / brakeFactor); // brake when getting closer
 					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) / (Math.Abs(headingErr) / 4 > 1 ? Math.Abs(headingErr) / 4 : 1), turnSpeed); // reduce speed when turning a lot
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
