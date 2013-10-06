@@ -179,7 +179,7 @@ namespace MuMech
 		public double headingErr;
 		[ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
 		public double speedErr;
-		public MuMech.MovingAverage tgtSpeed = new MovingAverage(300);
+		public MuMech.MovingAverage tgtSpeed = new MovingAverage(10);
 		public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
 
 		protected double headingLast, speedLast;
@@ -192,10 +192,10 @@ namespace MuMech
 			var diff = toLon - fromLon;
 			if (diff < -180) { diff += 360; }
 			if (diff >  180) { diff -= 360; }
-			Vector3d myPos  = fromPos - body.transform.position;
-			Vector3d north  = body.transform.position + (body.Radius * (Vector3d)body.transform.up) - fromPos;
-			Vector3d tgtPos = toPos - fromPos;
-			return (diff < 0 ? -1 : 1) * Vector3d.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3d.Exclude(myPos.normalized, tgtPos.normalized));
+			Vector3 myPos  = fromPos - body.transform.position;
+			Vector3 north  = body.transform.position + (body.transform.up.Multiply(body.Radius)) - fromPos;
+			Vector3 tgtPos = toPos - fromPos;
+			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.Exclude(myPos.normalized, tgtPos.normalized));
 		}
 
 		public override void Drive(FlightCtrlState s)
@@ -214,11 +214,11 @@ namespace MuMech
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // use waypoints maxSpeed if set or just stick with the set speed
-					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : 0));
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius - (curSpeed * curSpeed))); //  * (vesselState.localg / 9.81)
-					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) - Math.Abs(headingErr), new double[] { maxSpeed, minSpeed, turnSpeed, Math.Max(newSpeed, 2) }.Min());
-					// ^ limit speed for approaching waypoints and turning but also allow going to 0 when getting very close to the waypoint for following a target
+					var brakeFactor = curSpeed * 0.75 - minSpeed;
+					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius) / (brakeFactor > 2.0 ? brakeFactor : 2.0)); // brake when getting closer
+					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) / (Math.Abs(headingErr) / 4 > 1 ? Math.Abs(headingErr) / 4 : 1), turnSpeed); // reduce speed when turning a lot
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
 						if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint

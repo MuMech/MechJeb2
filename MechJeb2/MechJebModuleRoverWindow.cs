@@ -136,7 +136,7 @@ namespace MuMech
 					core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex = -1;
 					autopilot.WaypointIndex = 0;
 					autopilot.Waypoints.Clear();
-					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl)); }
+					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl, 25f)); }
 					else { autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition())); }
 					autopilot.ControlHeading = autopilot.ControlSpeed = true;
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
@@ -144,7 +144,7 @@ namespace MuMech
 				}
 
 				if (GUILayout.Button("Add Target")) {
-					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl)); }
+					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebRoverWaypoint(vssl, 25f)); }
 					else { autopilot.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition())); }
 //					if (autopilot.WaypointIndex < 0) { autopilot.WaypointIndex = autopilot.Waypoints.Count - 1; }
 				}
@@ -474,7 +474,7 @@ namespace MuMech
 					GUILayout.EndScrollView();
 
 					GUILayout.BeginHorizontal();
-					if (GUILayout.Button(alt ? "Reverse" : (!waitingForPick ? "Add Waypoint" : "Abort Adding"), GUILayout.Width(130))) {
+					if (GUILayout.Button(alt ? "Reverse" : (!waitingForPick ? "Add Waypoint" : "Abort Adding"), GUILayout.Width(110))) {
 						if (alt) {
 							ap.Waypoints.Reverse();
 							if (ap.WaypointIndex > -1) { ap.WaypointIndex = ap.Waypoints.Count - 1 - ap.WaypointIndex; }
@@ -517,7 +517,7 @@ namespace MuMech
 						}
 						while (alt);
 					}
-					if (GUILayout.Button((alt ? "Buttom" : "Down"), GUILayout.Width(57))) {
+					if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57))) {
 						do {
 							if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
 								ap.Waypoints.Swap(selIndex, selIndex + 1);
