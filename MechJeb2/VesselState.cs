@@ -258,7 +258,7 @@ namespace MuMech
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
 
-            EngineInfo einfo = new EngineInfo(forward, CoM);
+            EngineInfo einfo = new EngineInfo(CoM);
             IntakeInfo iinfo = new IntakeInfo();
 
             var rcsbal = vessel.GetMasterMechJeb().rcsbal;
@@ -453,14 +453,12 @@ namespace MuMech
             }
             public Dictionary<int, FuelRequirement> resourceRequired = new Dictionary<int, FuelRequirement>();
 
-            Vector3d forward;
             Vector3d CoM;
             float atmP0; // pressure now
             float atmP1; // pressure after one timestep
 
-            public EngineInfo(Vector3d fwd, Vector3d c)
+            public EngineInfo(Vector3d c)
             {
-                forward = fwd;
                 CoM = c;
                 atmP0 = (float)FlightGlobals.getStaticPressure();
                 float alt1 = (float)(FlightGlobals.ship_altitude + TimeWarp.fixedDeltaTime * FlightGlobals.ship_verticalSpeed);
@@ -503,9 +501,12 @@ namespace MuMech
                         thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1);
                     }
 
-                    // double usableFraction = 1; // TODO: handle jets, which have a velocity curve.
-                    var eMaxThrust = e.maxThrust;
-                    var eMinThrust = e.throttleLocked ? eMaxThrust : e.minThrust;
+                    double usableFraction = 1;
+                    if (e.useVelocityCurve) {
+                        usableFraction = e.velocityCurve.Evaluate((float)FlightGlobals.ship_srfVelocity.magnitude);
+                    }
+                    var eMaxThrust = e.maxThrust * usableFraction;
+                    var eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction);
                     var eCurrentThrust = eMaxThrust * e.currentThrottle;
 
                     thrustCurrent += eCurrentThrust * thrustDirectionVector;
