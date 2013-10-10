@@ -33,7 +33,12 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public float windowProgr = 0;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public float windowVPos = -185;
+
         public bool firstDraw = true;
+
+        bool movingButton = false;
 
         protected override void WindowGUI(int windowID)
         {
@@ -99,18 +104,25 @@ namespace MuMech
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (GUI.Button(new Rect(-185, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            if (GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
             {
-                if (windowStat == WindowStat.HIDDEN)
+                if (Event.current.button == 0)
                 {
-                    windowStat = WindowStat.OPENING;
-                    windowProgr = 0;
-                    firstDraw = true;
+                    if (windowStat == WindowStat.HIDDEN)
+                    {
+                        windowStat = WindowStat.OPENING;
+                        windowProgr = 0;
+                        firstDraw = true;
+                    }
+                    else if (windowStat == WindowStat.NORMAL)
+                    {
+                        windowStat = WindowStat.CLOSING;
+                        windowProgr = 1;
+                    }
                 }
-                else if (windowStat == WindowStat.NORMAL)
+                else if (!movingButton && Event.current.button == 1)
                 {
-                    windowStat = WindowStat.CLOSING;
-                    windowProgr = 1;
+                    movingButton = true;
                 }
             }
             GUI.matrix = Matrix4x4.identity;
@@ -120,7 +132,7 @@ namespace MuMech
             if (windowStat != WindowStat.HIDDEN)
             {
                 windowVector.x = Screen.width - windowProgr * 200;
-                windowVector.y = 85;
+                windowVector.y = Mathf.Clamp(- 100 - windowVPos, 0, Screen.height - windowPos.height) ;
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
@@ -136,6 +148,19 @@ namespace MuMech
                 GUI.FocusControl("MechJebOpen");
                 firstDraw = false;
             }
+        }
+
+        public override void OnUpdate()
+        {
+            if (movingButton)
+                if (Input.GetMouseButton(1))
+                {
+                    windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, - Screen.height, -100);
+                }
+                else if (Input.GetMouseButtonUp(1))
+                {
+                    movingButton = false;
+                }
         }
 
         class DisplayOrder : IComparer<DisplayModule>
