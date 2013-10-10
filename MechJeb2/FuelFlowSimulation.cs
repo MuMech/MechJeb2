@@ -244,7 +244,10 @@ namespace MuMech
         Dictionary<int, float> resourceConsumptions = new Dictionary<int, float>();                   //the resources this part consumes per unit time when active at full throttle
         DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
 
-        const float DRAINED = 0.1f; //if a resource amount falls below this amount we say that the resource has been drained
+        // if a resource amount falls below this amount we say that the resource has been drained
+        // set to the smallest amount that the user can see is non-zero in the resource tab or by
+        // right-clicking.
+        const float DRAINED = 0.005f;
 
         FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
         Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
