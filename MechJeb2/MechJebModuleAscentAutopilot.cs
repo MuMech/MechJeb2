@@ -324,19 +324,45 @@ namespace MuMech
         public EditableDouble turnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult turnShapeExponent = new EditableDoubleMult(0.4, 0.01);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool autoPath = true;
+
+        public double autoTurnStartAltitude
+        {
+            get
+            {
+                var vessel = FlightGlobals.ActiveVessel;
+                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() / 10 : vessel.terrainAltitude + 20);
+            }
+        }
+
+        public double autoTurnEndAltitude
+        {
+            get
+            {
+                var vessel = FlightGlobals.ActiveVessel;
+                var targetAlt = vessel.GetMasterMechJeb().GetComputerModule<MechJebModuleAscentAutopilot>().desiredOrbitAltitude;
+                return Math.Max(Math.Min(30000, targetAlt * 0.85), vessel.mainBody.RealMaxAtmosphereAltitude());
+            }
+        }
 
         public double VerticalAscentEnd()
         {
-            return turnStartAltitude;
+            if (autoPath)
+                return autoTurnStartAltitude;
+            else
+                return turnStartAltitude;
         }
 
         public double FlightPathAngle(double altitude)
         {
-            if (altitude < turnStartAltitude) return 90.0;
+            var turnEnd = (autoPath ? autoTurnEndAltitude : turnEndAltitude );
 
-            if (altitude > turnEndAltitude) return turnEndAngle;
+            if (altitude < VerticalAscentEnd()) return 90.0;
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - turnStartAltitude) / (turnEndAltitude - turnStartAltitude), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
+            if (altitude > turnEnd) return turnEndAngle;
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - VerticalAscentEnd()) / (turnEnd - VerticalAscentEnd()), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
         }
     }
 
