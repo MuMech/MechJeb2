@@ -28,6 +28,14 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
+            // GetReferenceTransformPart is null after undocking ...
+            if (vessel.GetReferenceTransformPart() == null || !vessel.GetReferenceTransformPart().Modules.Contains("ModuleDockingNode"))
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label("Warning: You need to control the vessel from a docking port. Right click a docking port and select \"Control from here\"",s);
+            }
+
             if (!(core.target.Target is ModuleDockingNode))
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
@@ -54,6 +62,18 @@ namespace MuMech
 
             bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
             GuiUtils.SimpleTextBox("Speed limit", autopilot.speedLimit, "m/s");
+			
+            if (autopilot.speedLimit < 0)
+                autopilot.speedLimit = 0;
+
+
+            GUILayout.BeginHorizontal();
+            autopilot.forceRol = GUILayout.Toggle(autopilot.forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
+
+            autopilot.rol.text = GUILayout.TextField(autopilot.rol.text, GUILayout.Width(30));
+            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
             if (autopilot.enabled != active)
             {
                 if (active)

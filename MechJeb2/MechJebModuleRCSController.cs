@@ -15,7 +15,7 @@ namespace MuMech
         public double Kp = 0.5, Ki = 0, Kd = 0;
 
         [ToggleInfoItem("Conserve RCS fuel", InfoItem.Category.Thrust)]
-        public bool conserveFuel = true;
+        public bool conserveFuel = false;
 
         [EditableInfoItem("Conserve RCS fuel threshold", InfoItem.Category.Thrust, rightLabel = "m/s")]
         public EditableDouble conserveThreshold = 0.05;

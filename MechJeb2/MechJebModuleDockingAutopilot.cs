@@ -10,27 +10,25 @@ namespace MuMech
     {
         public string status = "";
 
-        public double approachSpeedMult = 1; // Approach speed will be approachSpeedMult * available thrust/mass on each axis.
-
-        public double Kp = 0.2, Ki = 0, Kd = 0.02;
-
-        public PIDController lateralPID;
+        public double approachSpeedMult = 0.3; // Approach speed will be approachSpeedMult * maximum safe speed on each axis.
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
-        public EditableDouble speedLimit = 0;
+        public EditableDouble speedLimit = 1;
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble rol = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean forceRol = false;
 
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
         {
-            lateralPID = new PIDController(Kp, Ki, Kd);
         }
 
         public override void OnModuleEnabled()
         {
             core.rcs.users.Add(this);
             core.attitude.users.Add(this);
-            lateralPID = new PIDController(Kp, Ki, Kd);
         }
 
         public override void OnModuleDisabled()
@@ -57,7 +55,10 @@ namespace MuMech
                 return;
             }
 
-            core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+            if (forceRol)
+                core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.forward), AttitudeReference.TARGET_ORIENTATION, this);
+            else
+                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             Vector3d targetVel = core.target.Orbit.GetVel();
 
@@ -67,11 +68,15 @@ namespace MuMech
             double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             Vector3d lateralSep = Vector3d.Exclude(zAxis, separation);
 
-            double zApproachSpeed = FixSpeed(vesselState.rcsThrustAvailable.GetMagnitude(-zAxis) * approachSpeedMult / vesselState.mass);
-            double latApproachSpeed = FixSpeed(vesselState.rcsThrustAvailable.GetMagnitude(-lateralSep) * approachSpeedMult / vesselState.mass);
+            // v2 = u2 + 2 * a * s
+            // initial speed v - final speed u = 0  - distance s
+            // Maximum speed to brake in time = sqrt( 2 * a * s )
+            double zApproachSpeed   = FixSpeed( approachSpeedMult * Math.Sqrt( 2 * Math.Abs(zSep) * vesselState.rcsThrustAvailable.GetMagnitude(-zAxis) / vesselState.mass ));
+            double latApproachSpeed = FixSpeed( approachSpeedMult * Math.Sqrt( 2 * lateralSep.magnitude * vesselState.rcsThrustAvailable.GetMagnitude(-lateralSep) / vesselState.mass));
 
             if (zSep < 0)  //we're behind the target
             {
+                // TODO : Compare to the vessels size to move around it safely
                 if (lateralSep.magnitude < 10) //and we'll hit the target if we back up
                 {
                     core.rcs.SetTargetWorldVelocity(targetVel + zApproachSpeed * lateralSep.normalized); //move away from the docking axis
@@ -83,18 +88,14 @@ namespace MuMech
                     core.rcs.SetTargetWorldVelocity(targetVel + backUpSpeed * zAxis); //back up
                     status = "Backing up at " + backUpSpeed.ToString("F2") + " m/s to get on the correct side of the target to dock.";
                 }
-                lateralPID.Reset();
             }
             else //we're in front of the target
             {
                 //move laterally toward the docking axis
-                lateralPID.max = latApproachSpeed * lateralSep.magnitude / 200;
-                lateralPID.min = -lateralPID.max;
-                Vector3d lateralVelocityNeeded = -lateralSep.normalized * lateralPID.Compute(lateralSep.magnitude);
-                if (lateralVelocityNeeded.magnitude > latApproachSpeed) lateralVelocityNeeded *= (latApproachSpeed / lateralVelocityNeeded.magnitude);
+                Vector3d lateralVelocityNeeded = -lateralSep.normalized * latApproachSpeed;
 
-                double zVelocityNeeded = 0.1 + Math.Min(zApproachSpeed, zApproachSpeed * zSep / 200);
-
+                double zVelocityNeeded = zApproachSpeed;
+                
                 if (lateralSep.magnitude > 0.2 && lateralSep.magnitude * 10 > zSep)
                 {
                     //we're very far off the docking axis
@@ -106,9 +107,9 @@ namespace MuMech
                     }
                     else
                     {
-                        //we're not extremely close in z, so just stay at this z distance while we fix the lateral separation
-                        zVelocityNeeded = 0;
-                        status = "Holding still in Z and moving toward the docking axis at " + lateralVelocityNeeded.magnitude.ToString("F2") + " m/s.";
+                        //we're not extremely close in z, so keep moving in z but slow enough that we are on docking axis before contact
+                        zVelocityNeeded = Math.Min(zVelocityNeeded, ( Math.Max(zSep,1) * lateralVelocityNeeded.magnitude) / lateralSep.magnitude);
+                        status = "Moving toward the docking axis at " + lateralVelocityNeeded.magnitude.ToString("F2") + " m/s.";
                     }
                 }
                 else
@@ -123,11 +124,12 @@ namespace MuMech
                     {
                         // close enough, turn it off and let the magnetic dock work
                         users.Clear();
+                        enabled = false;
                         return;
                     }
                 }
 
-                Vector3d adjustment = lateralVelocityNeeded + zVelocityNeeded * zAxis;
+                Vector3d adjustment = lateralVelocityNeeded + zVelocityNeeded * zAxis.normalized;
                 double magnitude = adjustment.magnitude;
                 if (magnitude > 0) adjustment *= FixSpeed(magnitude) / magnitude;
                 core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
