@@ -93,7 +93,6 @@ namespace MuMech
             {
                 //move laterally toward the docking axis
                 Vector3d lateralVelocityNeeded = -lateralSep.normalized * latApproachSpeed;
-                if (lateralVelocityNeeded.magnitude > latApproachSpeed) lateralVelocityNeeded *= (latApproachSpeed / lateralVelocityNeeded.magnitude);
 
                 double zVelocityNeeded = zApproachSpeed;
                 
