@@ -148,7 +148,10 @@ namespace MuMech
             //However, if you press ctrl-Z, a new PartModule object gets created, on which the
             //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
             //check whether we have loaded any computer modules.
-            if (state == StartState.Editor && computerModules.Count == 0)
+            
+            //if (state == StartState.Editor && computerModules.Count == 0)
+            // Seems to happend when launching without comming from the VAB too.
+            if (computerModules.Count == 0)
             {
                 OnLoad(null);
             }
