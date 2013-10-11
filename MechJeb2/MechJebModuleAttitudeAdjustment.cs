@@ -8,19 +8,13 @@ namespace MuMech
 {
     public class MechJebModuleAttitudeAdjustment : DisplayModule
     {
-        public EditableDouble Kp, Ki, Kd, Tf, factor, Ki_limit;
+        public EditableDouble Tf;
 
         public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) { }
 
         public override void OnStart(PartModule.StartState state)
         {
-            Kp = new EditableDouble(core.attitude.Kp);
-            Ki = new EditableDouble(core.attitude.Ki);
-            Kd = new EditableDouble(core.attitude.Kd);
             Tf = new EditableDouble(core.attitude.Tf);
-            Ki_limit = new EditableDouble(core.attitude.Ki_limit);
-            factor = new EditableDouble(core.attitude.drive_factor);
-
             base.OnStart(state);
         }
 
@@ -28,37 +22,42 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            GuiUtils.SimpleTextBox("Kp", Kp);
-            GuiUtils.SimpleTextBox("Ki", Ki);
-            GuiUtils.SimpleTextBox("Kd", Kd);
-            GuiUtils.SimpleTextBox("Tf", Tf);
-            GuiUtils.SimpleTextBox("Ki_limit", Ki_limit);
-            GuiUtils.SimpleTextBox("Factor", factor);
+            GUILayout.Label("Larger ship do better with a larger Tf");
+            GuiUtils.SimpleTextBox("Tf (s)", Tf);
+            Tf = Math.Max(0.01, Tf);
+
+            core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");         
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("prevError", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.prevError), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Kp, Ki, Kd", GUILayout.ExpandWidth(true));
+            GUILayout.Label(core.attitude.pid.Kp.ToString("F3") + ", " + 
+                            core.attitude.pid.Ki.ToString("F3") + ", " +
+                            core.attitude.pid.Kd.ToString("F3") , GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("|prevError|", GUILayout.ExpandWidth(true));
-            GUILayout.Label(core.attitude.pid.prevError.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("prop. action.", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.propAct), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("intAccum", GUILayout.ExpandWidth(true));
+            GUILayout.Label("deriv. action", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.derivativeAct), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+         
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("integral action.", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.intAccum), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("|intAccum|", GUILayout.ExpandWidth(true));
-            GUILayout.Label(core.attitude.pid.intAccum.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("PID Action", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pidAction), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
-            double precision = Math.Max(0.5, Math.Min(10.0, (Math.Min(vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle) * 20.0 / vesselState.MoI.magnitude));
             GUILayout.BeginHorizontal();
-            GUILayout.Label("precision", GUILayout.ExpandWidth(true));
-            GUILayout.Label(precision.ToString("F3"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("AttitudeRollMatters ", GUILayout.ExpandWidth(true));
+            GUILayout.Label(core.attitude.attitudeRollMatters?"true":"false", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             Vector3d torque = new Vector3d(
@@ -95,18 +94,14 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            if ((Kp != core.attitude.Kp) || (Ki != core.attitude.Ki) || (Kd != core.attitude.Kd))
+            if ( (core.attitude.Tf != Tf) )
             {
-                core.attitude.Kp = Kp;
-                core.attitude.Ki = Ki;
-                core.attitude.Kd = Kd;
-                core.attitude.Ki_limit = Ki_limit;
-                core.attitude.pid = new PIDControllerV(Kp, Ki, Kd, Ki_limit, -Ki_limit);
+                core.attitude.Tf = Tf;
+                double Kd = 0.53 / Tf;
+                double Kp = Kd / (3 * Math.Sqrt(2) * Tf);
+                double Ki = Kp / (12 * Math.Sqrt(2) * Tf);
+                core.attitude.pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
             }
-
-            core.attitude.drive_factor = factor;
-            core.attitude.Tf = Tf;
-
             base.WindowGUI(windowID);
         }
 

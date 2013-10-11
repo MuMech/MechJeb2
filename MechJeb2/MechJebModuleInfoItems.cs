@@ -112,13 +112,20 @@ namespace MuMech
             if (orbit.PeA > 0) return "N/A";
 
             double impactTime = vesselState.time;
-
-            for (int iter = 0; iter < 10; iter++)
+            try
             {
-                Vector3d impactPosition = orbit.SwappedAbsolutePositionAtUT(impactTime);
-                double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
-                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+                for (int iter = 0; iter < 10; iter++)
+                {
+                    Vector3d impactPosition = orbit.SwappedAbsolutePositionAtUT(impactTime);
+                    double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
+                    impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+                }
             }
+            catch (ArgumentException)
+            {
+                return GuiUtils.TimeToDHMS(0);
+            }
+
 
             return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
         }
@@ -139,8 +146,15 @@ namespace MuMech
 
             Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vesselState.velocityVesselSurface;
             double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingSite);
-            double impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
-
+            double impactTime = 0;
+            try
+            {
+                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+            }
+            catch (ArgumentException)
+            {
+                return GuiUtils.TimeToDHMS(0);
+            }
             return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 

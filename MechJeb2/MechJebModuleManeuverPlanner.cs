@@ -8,9 +8,23 @@ namespace MuMech
 {
     public class MechJebModuleManeuverPlanner : DisplayModule
     {
-        public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }
+        public MechJebModuleManeuverPlanner(MechJebCore core) : base(core)
+        {
+            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW };
+            references[Operation.PERIAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
+            references[Operation.APOAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
+            references[Operation.ELLIPTICIZE] = new TimeReference[] { TimeReference.X_FROM_NOW };
+            references[Operation.INCLINATION] = new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW };
+            references[Operation.PLANE] = new TimeReference[] { TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
+            references[Operation.TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.MOON_RETURN] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.INTERPLANETARY_TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.COURSE_CORRECTION] = new TimeReference[] { TimeReference.COMPUTED };
+            references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
+            references[Operation.KILL_RELVEL] = new TimeReference[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
+        }
 
-        enum Operation
+        public enum Operation
         {
             CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER, MOON_RETURN,
             INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL
@@ -20,7 +34,7 @@ namespace MuMech
                   "change inclination", "match planes with target", "Hohmann transfer to target", "return from a moon",
                   "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target"};
 
-        enum TimeReference
+        public enum TimeReference
         {
             COMPUTED, X_FROM_NOW, APOAPSIS, PERIAPSIS, ALTITUDE, EQ_ASCENDING, EQ_DESCENDING,
             REL_ASCENDING, REL_DESCENDING, CLOSEST_APPROACH
@@ -47,6 +61,8 @@ namespace MuMech
         public EditableDoubleMult circularizeAltitude = new EditableDoubleMult(150000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime interceptInterval = 3600;
+
+        Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
 
         string errorMessage = "";
 
@@ -236,54 +252,49 @@ namespace MuMech
             }
         }
 
-        double DoChooseTimeGUI()
+        double DoChooseTimeGUI() // function to maintain 'legacy' use
         {
-            Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
-            references[Operation.CIRCULARIZE] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW };
-            references[Operation.PERIAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
-            references[Operation.APOAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
-            references[Operation.ELLIPTICIZE] = new TimeReference[] { TimeReference.X_FROM_NOW };
-            references[Operation.INCLINATION] = new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW };
-            references[Operation.PLANE] = new TimeReference[] { TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
-            references[Operation.TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
-            references[Operation.MOON_RETURN] = new TimeReference[] { TimeReference.COMPUTED };
-            references[Operation.INTERPLANETARY_TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
-            references[Operation.COURSE_CORRECTION] = new TimeReference[] { TimeReference.COMPUTED };
-            references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
-            references[Operation.KILL_RELVEL] = new TimeReference[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
+        	string error;
+        	return DoChooseTimeGUI(operation, TimeReference.COMPUTED, out error, true);
+        }
 
-            TimeReference[] allowedReferences = references[operation];
+        double DoChooseTimeGUI(Operation op, TimeReference timeRef, out string timeErrorMessage, bool InvolveGUI = true, double leadingTime = 0)
+        {
+            if (InvolveGUI) {
+	            TimeReference[] allowedReferences = references[op];
 
-            int referenceIndex = 0;
-            if (allowedReferences.Contains(timeReference)) referenceIndex = Array.IndexOf(allowedReferences, timeReference);
+	            int referenceIndex = 0;
+	            if (allowedReferences.Contains(timeReference)) referenceIndex = Array.IndexOf(allowedReferences, timeReference);
 
-            referenceIndex = GuiUtils.ArrowSelector(referenceIndex, allowedReferences.Length, () =>
-                {
-                    switch (timeReference)
-                    {
-                        case TimeReference.APOAPSIS: GUILayout.Label("at the next apoapsis"); break;
-                        case TimeReference.CLOSEST_APPROACH: GUILayout.Label("at closest approach to target"); break;
-                        case TimeReference.EQ_ASCENDING: GUILayout.Label("at the equatorial AN"); break;
-                        case TimeReference.EQ_DESCENDING: GUILayout.Label("at the equatorial DN"); break;
-                        case TimeReference.PERIAPSIS: GUILayout.Label("at the next periapsis"); break;
-                        case TimeReference.REL_ASCENDING: GUILayout.Label("at the next AN with the target."); break;
-                        case TimeReference.REL_DESCENDING: GUILayout.Label("at the next DN with the target."); break;
+	            referenceIndex = GuiUtils.ArrowSelector(referenceIndex, allowedReferences.Length, () =>
+	                {
+	                    switch (timeReference)
+	                    {
+	                        case TimeReference.APOAPSIS: GUILayout.Label("at the next apoapsis"); break;
+	                        case TimeReference.CLOSEST_APPROACH: GUILayout.Label("at closest approach to target"); break;
+	                        case TimeReference.EQ_ASCENDING: GUILayout.Label("at the equatorial AN"); break;
+	                        case TimeReference.EQ_DESCENDING: GUILayout.Label("at the equatorial DN"); break;
+	                        case TimeReference.PERIAPSIS: GUILayout.Label("at the next periapsis"); break;
+	                        case TimeReference.REL_ASCENDING: GUILayout.Label("at the next AN with the target."); break;
+	                        case TimeReference.REL_DESCENDING: GUILayout.Label("at the next DN with the target."); break;
+	
+	                        case TimeReference.X_FROM_NOW:
+	                            leadTime.text = GUILayout.TextField(leadTime.text, GUILayout.Width(50));
+	                            GUILayout.Label(" from now");
+	                            break;
+	
+	                        case TimeReference.ALTITUDE:
+	                            GuiUtils.SimpleTextBox("at an altitude of", circularizeAltitude, "km");
+	                            break;
+	                    }
+	                });
 
-                        case TimeReference.X_FROM_NOW:
-                            leadTime.text = GUILayout.TextField(leadTime.text, GUILayout.Width(50));
-                            GUILayout.Label(" from now");
-                            break;
+	            timeReference = allowedReferences[referenceIndex];
+            }
 
-                        case TimeReference.ALTITUDE:
-                            GuiUtils.SimpleTextBox("at an altitude of", circularizeAltitude, "km");
-                            break;
-                    }
-                });
-
-            timeReference = allowedReferences[referenceIndex];
+            timeErrorMessage = "";
 
             bool error = false;
-            string timeErrorMessage = "";
 
             double UT = vesselState.time;
 
@@ -292,16 +303,16 @@ namespace MuMech
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
             if (maneuverNodes.Count() > 0)
             {
-                GUILayout.Label("after the last maneuver node.");
+            	if (InvolveGUI) { GUILayout.Label("after the last maneuver node."); }
                 ManeuverNode last = maneuverNodes.Last();
                 UT = last.UT;
                 o = last.nextPatch;
             }
 
-            switch (timeReference)
+            switch (InvolveGUI ? timeReference : timeRef)
             {
                 case TimeReference.X_FROM_NOW:
-                    UT += leadTime;
+            		UT += (InvolveGUI ? leadTime.val : leadingTime);
                     break;
 
                 case TimeReference.APOAPSIS:
@@ -333,7 +344,7 @@ namespace MuMech
                     break;
 
                 case TimeReference.ALTITUDE:
-                    if (circularizeAltitude > o.PeA && circularizeAltitude < o.ApA)
+                    if (circularizeAltitude > o.PeA && (circularizeAltitude < o.ApA || o.eccentricity >= 1))
                     {
                         UT = o.NextTimeOfRadius(UT, o.referenceBody.Radius + circularizeAltitude);
                     }
@@ -370,7 +381,7 @@ namespace MuMech
 
             }
 
-            if (operation == Operation.COURSE_CORRECTION && core.target.NormalTargetExists)
+            if (op == Operation.COURSE_CORRECTION && core.target.NormalTargetExists)
             {
                 Orbit correctionPatch = o;
                 while (correctionPatch != null)
@@ -385,7 +396,7 @@ namespace MuMech
                 }
             }
 
-            if (error)
+            if (error && InvolveGUI)
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;
@@ -397,12 +408,17 @@ namespace MuMech
 
         bool CheckPreconditions(Orbit o, double UT)
         {
+        	return CheckPreconditions(o, UT, operation, newPeA, newApA, newInc);
+        }
+        
+        bool CheckPreconditions(Orbit o, double UT, Operation op, double newPeA, double newApA, double newInc)
+        {
             errorMessage = "";
             bool error = false;
 
             string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
 
-            switch (operation)
+            switch (op)
             {
                 case Operation.CIRCULARIZE:
                     break;
@@ -608,11 +624,23 @@ namespace MuMech
 
         void MakeNodeForOperation(Orbit o, double UT)
         {
+        	MakeNodeForOperation(o, UT, operation, newPeA, newApA, newInc, courseCorrectFinalPeA, moonReturnAltitude, interceptInterval);
+        }
+        
+        void MakeNodeForOperation(Orbit o, double UT, Operation op, double newPeA, double newApA, double newInc, double courseCorrectFinalPeA, double moonReturnAltitude, double interceptInterval)
+        {
             Vector3d dV = Vector3d.zero;
 
             double bodyRadius = o.referenceBody.Radius;
+            
+//            print(newPeA + " - " + this.newPeA + "\n" + 
+//                  newApA + " - " + this.newApA + "\n" + 
+//                  newInc + " - " + this.newInc + "\n" + 
+//                  courseCorrectFinalPeA + " - " + this.courseCorrectFinalPeA + "\n" + 
+//                  moonReturnAltitude + " - " + this.moonReturnAltitude + "\n" + 
+//                  interceptInterval + " - " + this.interceptInterval);
 
-            switch (operation)
+            switch (op)
             {
                 case Operation.CIRCULARIZE:
                     dV = OrbitalManeuverCalculator.DeltaVToCircularize(o, UT);
@@ -681,6 +709,30 @@ namespace MuMech
             vessel.PlaceManeuverNode(o, dV, UT);
         }
 
+        public struct NodePlanningResult
+        {
+        	public bool Success;
+        	public string Error;
+        	public string TimeError;
+        }
+        
+        public NodePlanningResult PlanNode(Operation op, TimeReference timeRef, double leadingTime, double newPeA, double newApA, double newInc, double courseCorrectFinalPeA, double moonReturnAltitude, double interceptInterval, bool planLast = false)
+        {
+        	NodePlanningResult result = new MechJebModuleManeuverPlanner.NodePlanningResult();
+        	result.Success = true;
+        	var UT = DoChooseTimeGUI(op, timeRef, out result.TimeError, false, leadingTime);
+        	if (result.TimeError == "" && CheckPreconditions(vessel.GetPatchAtUT(UT), UT, op, newPeA, newApA, newInc)) {
+       			MakeNodeForOperation(vessel.GetPatchAtUT(UT), UT, op, newPeA, newApA, newInc, courseCorrectFinalPeA, moonReturnAltitude, interceptInterval);
+        	}
+        	else {
+        		result.Success = false;
+        	}
+       		result.Error = errorMessage;
+       		errorMessage = "";
+       		result.Success = (result.Success == true && result.Error == "" && result.TimeError == "");
+        	return result;
+        }
+        
         public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
