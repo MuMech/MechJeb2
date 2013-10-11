@@ -239,8 +239,11 @@ namespace MuMech
             //Once we get above the atmosphere, plan and execute the circularization maneuver.
             //For orbits near the edge of the atmosphere, we can't wait until we break the atmosphere
             //to start the burn, so we also compare the timeToAp with the expected circularization burn time.
-            if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
-                || (vesselState.limitedMaxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
+            //if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+            //    || (vesselState.limitedMaxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
+
+            // Sarbian : removed the special case for now. Some ship where turning whil still in atmosphere
+            if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
