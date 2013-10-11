@@ -65,6 +65,15 @@ namespace MuMech
 			
             if (autopilot.speedLimit < 0)
                 autopilot.speedLimit = 0;
+
+
+            GUILayout.BeginHorizontal();
+            autopilot.forceRol = GUILayout.Toggle(autopilot.forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
+
+            autopilot.rol.text = GUILayout.TextField(autopilot.rol.text, GUILayout.Width(30));
+            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
             if (autopilot.enabled != active)
             {
                 if (active)
