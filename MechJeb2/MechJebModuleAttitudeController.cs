@@ -261,6 +261,7 @@ namespace MuMech
                     attitudeKILLROT = false;
                 }
                 pid.Reset();
+                lastAct = Vector3d.zero;
 
                 attitudeChanged = false;
             }
