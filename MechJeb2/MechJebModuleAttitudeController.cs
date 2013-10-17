@@ -99,12 +99,26 @@ namespace MuMech
             }
         }
 
+        [Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
+        public bool useSAS = false;
+
+        protected Quaternion lastSAS = new Quaternion();
+
         public double attitudeError;
 
         public MechJebModuleAttitudeController(MechJebCore core)
             : base(core)
         {
             priority = 800;
+        }
+
+        public override void OnModuleDisabled()
+        {
+            if (useSAS)
+            {
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+            }
+            base.OnModuleDisabled();
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -269,56 +283,78 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            // Direction we want to be facing
-            Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
-            Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
+            if (useSAS)
+            {
+                Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Quaternion.Euler(90, 0, 0);
+                if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
+                {
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+                    part.vessel.VesselSAS.LockHeading(target);
+                    lastSAS = target;
+                }
+                else if (Quaternion.Angle(lastSAS, target) > 10)
+                {
+                    part.vessel.VesselSAS.LockHeading(target);
+                    lastSAS = target;
+                }
+                else
+                {
+                    part.vessel.VesselSAS.LockHeading(target, true);
+                }
+            }
+            else
+            {
+                // Direction we want to be facing
+                Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
+                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
 
-            Vector3d deltaEuler = new Vector3d(
-                                                    (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
-                                                    -((delta.eulerAngles.y > 180) ? (delta.eulerAngles.y - 360.0F) : delta.eulerAngles.y),
-                                                    (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
+                Vector3d deltaEuler = new Vector3d(
+                                                        (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
+                                                        -((delta.eulerAngles.y > 180) ? (delta.eulerAngles.y - 360.0F) : delta.eulerAngles.y),
+                                                        (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
+                                                    );
+
+                Vector3d torque = new Vector3d(
+                                                        vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * s.mainThrottle,
+                                                        vesselState.torqueAvailable.y,
+                                                        vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * s.mainThrottle
                                                 );
 
-            Vector3d torque = new Vector3d(
-                                                    vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * s.mainThrottle,
-                                                    vesselState.torqueAvailable.y,
-                                                    vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * s.mainThrottle
-                                            );
+                Vector3d inertia = Vector3d.Scale(
+                                                        vesselState.angularMomentum.Sign(),
+                                                        Vector3d.Scale(
+                                                            Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
+                                                            Vector3d.Scale(torque, vesselState.MoI).Invert()
+                                                        )
+                                                    );
 
-            Vector3d inertia = Vector3d.Scale(
-                                                    vesselState.angularMomentum.Sign(),
-                                                    Vector3d.Scale(
-                                                        Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                                                        Vector3d.Scale(torque, vesselState.MoI).Invert()
-                                                    )
-                                                );
+                // ( MoI / avaiable torque ) factor:
+                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
 
-            // ( MoI / avaiable torque ) factor:
-            Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
-            
-            // angular error:
-            Vector3d err = deltaEuler * Math.PI / 180.0F;
-            err += inertia.Reorder(132) / 2;
-            err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
-                               Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
-                               Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
-            err.Scale(NormFactor);
+                // angular error:
+                Vector3d err = deltaEuler * Math.PI / 180.0F;
+                err += inertia.Reorder(132) / 2;
+                err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
+                                   Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
+                                   Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
+                err.Scale(NormFactor);
 
-            // angular velocity:
-            Vector3d omega;
-            omega.x = vessel.angularVelocity.x; 
-            omega.y = vessel.angularVelocity.z; // y <=> z 
-            omega.z = vessel.angularVelocity.y; // z <=> y 
-            omega.Scale(NormFactor);
-            
-            pidAction = pid.Compute(err, omega);
+                // angular velocity:
+                Vector3d omega;
+                omega.x = vessel.angularVelocity.x;
+                omega.y = vessel.angularVelocity.z; // y <=> z 
+                omega.z = vessel.angularVelocity.y; // z <=> y 
+                omega.Scale(NormFactor);
 
-            // low pass filter,  wf = 1/Tf:
-            Vector3d act = lastAct + (pidAction - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));                      
-            lastAct = act;
+                pidAction = pid.Compute(err, omega);
 
-            SetFlightCtrlState(act, deltaEuler, s, 1);
-            act = new Vector3d(s.pitch, s.yaw, s.roll);
+                // low pass filter,  wf = 1/Tf:
+                Vector3d act = lastAct + (pidAction - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));
+                lastAct = act;
+
+                SetFlightCtrlState(act, deltaEuler, s, 1);
+                act = new Vector3d(s.pitch, s.yaw, s.roll);
+            }
         }
 
         private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, float drive_limit)
