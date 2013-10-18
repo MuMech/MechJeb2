@@ -27,9 +27,9 @@ namespace MuMech
         protected float timeCount = 0;
 
         public bool RCS_auto = false;
-        public bool attitudeRCScontrol = true; 
+        public bool attitudeRCScontrol = true;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public double Tf = 0.3;
 
         [Persistent(pass = (int)Pass.Global)]
