@@ -124,7 +124,9 @@ namespace MuMech
 
         public Vector6 ctrlTorqueAvailable;
 
-
+        // List of parachutes
+        public List<ModuleParachute> parachutes;
+        
         // Resource information keyed by resource Id.
         public Dictionary<int, ResourceInfo> resources;
 
@@ -250,6 +252,8 @@ namespace MuMech
             EngineInfo einfo = new EngineInfo(forward, CoM);
             IntakeInfo iinfo = new IntakeInfo();
 
+            parachutes = new  List<ModuleParachute>();
+
             var rcsbal = vessel.GetMasterMechJeb().rcsbal;
             if (vessel.ActionGroups[KSPActionGroup.RCS] && rcsbal.enabled)
             {
@@ -340,6 +344,10 @@ namespace MuMech
                     else if (pm is ModuleResourceIntake)
                     {
                         iinfo.addIntake(pm as ModuleResourceIntake);
+                    }
+                    else if (pm is ModuleParachute)
+                    {
+                        parachutes.Add(pm as ModuleParachute);
                     }
                 }
             }

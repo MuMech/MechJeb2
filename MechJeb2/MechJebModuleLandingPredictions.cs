@@ -18,6 +18,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool makeAerobrakeNodes = false;
 
+        public bool deployChutes = false;        
+        public int limitChutesStage = 0;
+
         //simulation inputs:
         public double endAltitudeASL = 0; //end simulations when they reach this altitude above sea level
         public IDescentSpeedPolicy descentSpeedPolicy = null; //simulate this descent speed policy
@@ -81,8 +84,14 @@ namespace MuMech
 
             stopwatch.Start(); //starts a timer that times how long the simulation takes
 
+            List<SimulatedParachute> usableChutes = new List<SimulatedParachute>();
+            foreach (ModuleParachute p in vesselState.parachutes)
+                if (deployChutes && p.part.inverseStage >= limitChutesStage)
+                    usableChutes.Add(new SimulatedParachute(p));
+
+
             Orbit patch = GetReenteringPatch() ?? orbit;
-            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, vesselState.massDrag / vesselState.mass, descentSpeedPolicy, endAltitudeASL, vesselState.limitedMaxThrustAccel);
+            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, vesselState.massDrag / vesselState.mass, usableChutes, vesselState.mass, descentSpeedPolicy, endAltitudeASL, vesselState.limitedMaxThrustAccel);
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);

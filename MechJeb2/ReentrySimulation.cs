@@ -14,7 +14,8 @@ namespace MuMech
         double scaleHeight;
         double bodyRadius;
         double gravParameter;
-        double dragCoefficient; //massDrag / mass
+        double dragCoefficient; //massDrag / mass        
+        double mass;
         Vector3d bodyAngularVelocity;
         IDescentSpeedPolicy descentSpeedPolicy;
         double landedRadius;
@@ -30,6 +31,7 @@ namespace MuMech
         double dt = 0.2; //in seconds
         const double maxSimulatedTime = 2000; //in seconds
 
+        List<SimulatedParachute> parachutes;
 
         //Dynamical variables 
         Vector3d x; //coordinate system used is centered on main body
@@ -41,7 +43,7 @@ namespace MuMech
         double deltaVExpended;
         List<AbsoluteVector> trajectory;
 
-        public ReentrySimulation(Orbit initialOrbit, double UT, double dragCoefficient,
+        public ReentrySimulation(Orbit initialOrbit, double UT, double dragCoefficient, List<SimulatedParachute> parachuteList, double mass,
             IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double maxThrustAccel)
         {
             CelestialBody body = initialOrbit.referenceBody;
@@ -51,6 +53,10 @@ namespace MuMech
             bodyRadius = body.Radius;
             gravParameter = body.gravParameter;
             this.dragCoefficient = dragCoefficient;
+
+            this.parachutes = parachuteList;
+
+            this.mass = mass;
             bodyAngularVelocity = body.angularVelocity;
             this.descentSpeedPolicy = descentSpeedPolicy;
             landedRadius = bodyRadius + endAltitudeASL;
@@ -89,6 +95,7 @@ namespace MuMech
 
                 RK4Step();
                 LimitSpeed();
+                OpenParachutes(x);
                 RecordTrajectory();
             }
 
@@ -240,8 +247,34 @@ namespace MuMech
         {
             if (!bodyHasAtmosphere) return Vector3d.zero;
             Vector3d airVel = SurfaceVelocity(pos, vel);
-            return -0.5 * FlightGlobals.DragMultiplier * dragCoefficient * AirDensity(pos) * airVel.sqrMagnitude * airVel.normalized;
+
+            double realDragCoefficient = dragCoefficient;
+            double alt = pos.magnitude - bodyRadius; // bodyRadius or landedRadius ?
+            foreach (SimulatedParachute p in parachutes)
+                realDragCoefficient += p.AddedDragCoeff(alt) / mass;
+
+            return -0.5 * FlightGlobals.DragMultiplier * realDragCoefficient * AirDensity(pos) * airVel.sqrMagnitude * airVel.normalized;
         }
+
+        void OpenParachutes(Vector3d pos)
+        {
+            double alt = pos.magnitude - landedRadius;
+            double pressure = Pressure(pos);
+            if (bodyHasAtmosphere)
+            {
+                foreach (SimulatedParachute p in parachutes)
+                    p.Simulate(alt, pressure);
+            }
+        }
+
+        double Pressure(Vector3d pos)
+        {
+            double ratio = Math.Exp(-(pos.magnitude - bodyRadius) / scaleHeight);
+            if (ratio < 1e-6) return 0; //this is not a fudge, this is faithfully simulating the game, which
+            //pretends the pressure is zero if it is less than 1e-6 times the sea level pressure
+            return seaLevelAtmospheres * ratio;
+        }
+
 
         Vector3d SurfaceVelocity(Vector3d pos, Vector3d vel)
         {
@@ -417,6 +450,48 @@ namespace MuMech
             double now = Planetarium.GetUniversalTime();
             double unrotatedLongitude = MuUtils.ClampDegrees360(absolute.longitude - 360 * (now - absolute.UT) / referenceBody.rotationPeriod);
             return absolute.radius * referenceBody.GetSurfaceNVector(absolute.latitude, unrotatedLongitude);
+        }
+    }
+
+    public class SimulatedParachute
+    {
+        ModuleParachute p;
+
+        ModuleParachute.deploymentStates state;
+
+        public SimulatedParachute(ModuleParachute p)
+        {
+            this.p = p;
+            state = p.deploymentState;
+        }
+
+        public double AddedDragCoeff(double alt)
+        {
+            if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+                return p.part.mass * p.semiDeployedDrag;
+            else if (state == ModuleParachute.deploymentStates.DEPLOYED)
+                return p.part.mass * p.fullyDeployedDrag;
+            else
+                return 0;
+        }
+
+        public void Simulate(double alt, double pressure)
+        {            
+            switch (state)
+            {
+                case ModuleParachute.deploymentStates.STOWED:
+                    if (alt < 3 * p.deployAltitude)
+                        state = ModuleParachute.deploymentStates.ACTIVE;
+                    break;
+                case ModuleParachute.deploymentStates.ACTIVE:
+                    if (pressure >= p.minAirPressureToOpen)
+                        state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                    break;
+                case ModuleParachute.deploymentStates.SEMIDEPLOYED:
+                    if (alt < p.deployAltitude)
+                        state = ModuleParachute.deploymentStates.DEPLOYED;
+                    break;
+            }
         }
     }
 }

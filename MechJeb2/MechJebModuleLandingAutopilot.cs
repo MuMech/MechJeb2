@@ -64,6 +64,15 @@ namespace MuMech
         bool lowDeorbitEndOnLandingSiteNearer = false;
         bool deployedGears = false;
 
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public bool deployGears = true;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public EditableInt limitGearsStage = 0;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public bool deployChutes = true;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public EditableInt limitChutesStage = 0;
+
         double lowDeorbitBurnTriggerFactor = 2;
 
         //Landing prediction data:
@@ -193,6 +202,7 @@ namespace MuMech
                 default:
                     break;
             }
+            DeployParachutes();
         }
 
         void DriveUntargetedDeorbit(FlightCtrlState s)
@@ -714,7 +724,7 @@ namespace MuMech
 
             double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
 
-            if (!deployedGears && (minalt < 1000)) DeployLandingGears();
+            if ( deployGears && !deployedGears && (minalt < 1000)) DeployLandingGears();
 
             if (vesselState.limitedMaxThrustAccel < vesselState.gravityForce.magnitude)
             {
@@ -787,14 +797,31 @@ namespace MuMech
             status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
         }
 
+        void DeployParachutes()
+        {
+            if (vesselState.mainBody.atmosphere && deployChutes)
+                foreach (ModuleParachute p in vesselState.parachutes)
+                {
+                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && p.deployAltitude * 3 > vesselState.altitudeASL )
+                    {
+                        p.DeployAction(null);
+                    }
+                }
+        }
+
         void DeployLandingGears()
         {
             //new-style landing legs are activated by an event:
-            vessel.rootPart.SendEvent("LowerLeg");
+            //vessel.rootPart.SendEvent("LowerLeg");
 
             //old-style landings legs are activated on part activation:
             foreach (Part p in vessel.parts)
             {
+                if (p.HasModule<ModuleLandingLeg>()) 
+                    if ( p.inverseStage >= limitGearsStage )
+                        foreach (ModuleLandingLeg l in p.FindModulesImplementing<ModuleLandingLeg>())
+                            l.LowerLeg();
+
                 if (p is LandingLeg)
                 {
                     LandingLeg l = (LandingLeg)p;
