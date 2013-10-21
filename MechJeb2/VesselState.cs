@@ -537,7 +537,7 @@ namespace MuMech
                     if (gimbal != null && !gimbal.gimbalLock)
                     {
                         double gimbalRange = gimbal.gimbalRange;
-                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * e.maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
+                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * eCurrentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
                     }
                 }
             }
