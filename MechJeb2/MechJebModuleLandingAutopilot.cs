@@ -802,7 +802,7 @@ namespace MuMech
             if (vesselState.mainBody.atmosphere && deployChutes)
                 foreach (ModuleParachute p in vesselState.parachutes)
                 {
-                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && p.deployAltitude * 3 > vesselState.altitudeASL )
+                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && p.deployAltitude * 3 > vesselState.altitudeTrue )
                     {
                         p.DeployAction(null);
                     }
