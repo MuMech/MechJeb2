@@ -29,6 +29,8 @@ namespace MuMech
         ReferenceFrame referenceFrame;
 
         double dt = 0.2; //in seconds
+        double max_dt = 0.2; //in seconds
+        double min_dt = 0.01; //in seconds
         const double maxSimulatedTime = 2000; //in seconds
 
         List<SimulatedParachute> parachutes;
@@ -189,26 +191,54 @@ namespace MuMech
         //one time step of RK4:
         void RK4Step()
         {
+            bool repeatWithSmallerStep = false;
+            Vector3d dx;
+            Vector3d dv;
+
             maxDragGees = Math.Max(maxDragGees, DragAccel(x, v).magnitude / 9.81f);
 
-            Vector3d dv1 = dt * TotalAccel(x, v);
-            Vector3d dx1 = dt * v;
+            do
+            {
+                Vector3d dv1 = dt * TotalAccel(x, v);
+                Vector3d dx1 = dt * v;
 
-            Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
-            Vector3d dx2 = dt * (v + 0.5 * dv1);
+                Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
+                Vector3d dx2 = dt * (v + 0.5 * dv1);
 
-            Vector3d dv3 = dt * TotalAccel(x + 0.5 * dx2, v + 0.5 * dv2);
-            Vector3d dx3 = dt * (v + 0.5 * dv2);
+                Vector3d dv3 = dt * TotalAccel(x + 0.5 * dx2, v + 0.5 * dv2);
+                Vector3d dx3 = dt * (v + 0.5 * dv2);
 
-            Vector3d dv4 = dt * TotalAccel(x + dx3, v + dv3);
-            Vector3d dx4 = dt * (v + dv3);
+                Vector3d dv4 = dt * TotalAccel(x + dx3, v + dv3);
+                Vector3d dx4 = dt * (v + dv3);
 
-            Vector3d dx = (dx1 + 2 * dx2 + 2 * dx3 + dx4) / 6.0;
-            Vector3d dv = (dv1 + 2 * dv2 + 2 * dv3 + dv4) / 6.0;
+                dx = (dx1 + 2 * dx2 + 2 * dx3 + dx4) / 6.0;
+                dv = (dv1 + 2 * dv2 + 2 * dv3 + dv4) / 6.0;
+
+                // If the change in velocity it more than half the current velocity, then we need to try again with a smaller delta-t
+                // or if dt is already small enough then continue anyway.
+                if (v.magnitude < dv.magnitude * 2 && dt >= min_dt * 2) 
+                {
+                    dt = dt / 2;
+                    repeatWithSmallerStep = true;
+                    //Debug.Log("Repeating RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) +"m");
+                }
+                else
+                {
+                    repeatWithSmallerStep = false;
+                }
+            }
+            while (repeatWithSmallerStep);
 
             x += dx;
             v += dv;
             t += dt;
+
+            // Finally - if dt has been reduced, try increasing it, but only by one step.
+            if (dt < max_dt)
+            {
+                dt = Math.Min(dt * 2, max_dt);
+                //Debug.Log("Increasing RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) + "m");
+            }
         }
 
         //enforce the descent speed policy
@@ -251,7 +281,7 @@ namespace MuMech
             double realDragCoefficient = dragCoefficient;
             double alt = pos.magnitude - bodyRadius; // bodyRadius or landedRadius ?
             foreach (SimulatedParachute p in parachutes)
-                realDragCoefficient += p.AddedDragCoeff(alt) / mass;
+                realDragCoefficient += p.AddedDragCoeff(alt, t) / mass;
 
             return -0.5 * FlightGlobals.DragMultiplier * realDragCoefficient * AirDensity(pos) * airVel.sqrMagnitude * airVel.normalized;
         }
@@ -263,7 +293,7 @@ namespace MuMech
             if (bodyHasAtmosphere)
             {
                 foreach (SimulatedParachute p in parachutes)
-                    p.Simulate(alt, pressure);
+                    p.Simulate(alt, pressure, t);
             }
         }
 
@@ -459,23 +489,28 @@ namespace MuMech
 
         ModuleParachute.deploymentStates state;
 
+        double openningTime;
+
         public SimulatedParachute(ModuleParachute p)
         {
             this.p = p;
             state = p.deploymentState;
         }
 
-        public double AddedDragCoeff(double alt)
+        public double AddedDragCoeff(double alt, double time)
         {
             if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
-                return p.part.mass * p.semiDeployedDrag;
+                // Need to substract stowedDrag since its already in the totaldrag of the ship
+                return p.part.mass * Mathf.Lerp(-p.stowedDrag, p.semiDeployedDrag - p.stowedDrag,
+                    (float)Math.Min((time - openningTime) / p.semiDeploymentSpeed, 1)); 
             else if (state == ModuleParachute.deploymentStates.DEPLOYED)
-                return p.part.mass * p.fullyDeployedDrag;
+                return p.part.mass * Mathf.Lerp(p.semiDeployedDrag - p.stowedDrag, p.fullyDeployedDrag - p.stowedDrag,
+                    (float)Math.Min((time - openningTime) / p.deploymentSpeed, 1));
             else
                 return 0;
         }
 
-        public void Simulate(double alt, double pressure)
+        public void Simulate(double alt, double pressure, double time)
         {            
             switch (state)
             {
@@ -485,11 +520,18 @@ namespace MuMech
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
                     if (pressure >= p.minAirPressureToOpen)
+                    {
                         state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                        openningTime = time;
+                    }
+
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     if (alt < p.deployAltitude)
+                    {
                         state = ModuleParachute.deploymentStates.DEPLOYED;
+                        openningTime = time;
+                    }
                     break;
             }
         }
