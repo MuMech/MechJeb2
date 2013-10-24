@@ -36,6 +36,9 @@ namespace MuMech
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
+        [KSPField]
+        public ConfigNode partSettings;
+
         private bool weLockedEditor = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
@@ -148,7 +151,10 @@ namespace MuMech
             //However, if you press ctrl-Z, a new PartModule object gets created, on which the
             //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
             //check whether we have loaded any computer modules.
-            if (state == StartState.Editor && computerModules.Count == 0)
+            
+            //if (state == StartState.Editor && computerModules.Count == 0)
+            // Seems to happend when launching without comming from the VAB too.
+            if (computerModules.Count == 0)
             {
                 OnLoad(null);
             }
@@ -314,6 +320,21 @@ namespace MuMech
                 }
             }
 
+            if (ResearchAndDevelopment.Instance != null && computerModules.Any(a => !a.unlockChecked))
+            {
+                foreach (ComputerModule module in computerModules)
+                {
+                    try
+                    {
+                        module.UnlockCheck();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in UnlockCheck: " + e);
+                    }
+                }
+            }
+
             if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
 
             foreach (ComputerModule module in computerModules)
@@ -331,21 +352,39 @@ namespace MuMech
 
         void LoadComputerModules()
         {
-            if (moduleRegistry == null)
-            {
-                moduleRegistry = (from ass in AppDomain.CurrentDomain.GetAssemblies() from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList();
-            }
+        	if (moduleRegistry == null)
+        	{
+        		moduleRegistry = new List<Type>();
+        		foreach (var ass in AppDomain.CurrentDomain.GetAssemblies())
+        		{
+        			try
+        			{
+        				moduleRegistry.AddRange((from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList());
+        			}
+        			catch (Exception e)
+        			{
+        				Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
+        			}
+        		}
+        	}
 
-            System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
+        	System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
             version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
 
-            foreach (Type t in moduleRegistry)
+            try
             {
-                if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
-                    && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
-                {
-                    AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
-                }
+            	foreach (Type t in moduleRegistry)
+            	{
+            		if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
+            		    && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
+            		{
+            			AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
+            		}
+            	}
+            }
+            catch (Exception e)
+            {
+            	Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
             }
 
             attitude = GetComputerModule<MechJebModuleAttitudeController>();
@@ -371,6 +410,11 @@ namespace MuMech
                 bool generateDefaultWindows = false;
 
                 base.OnLoad(sfsNode); //is this necessary?
+
+                if (partSettings == null && sfsNode != null)
+                {
+                    partSettings = sfsNode;
+                }
 
                 LoadComputerModules();
 
@@ -409,6 +453,10 @@ namespace MuMech
                 if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
                 {
                     local = sfsNode.GetNode("MechJebLocalSettings");
+                }
+                else if (partSettings != null && partSettings.HasNode("MechJebLocalSettings"))
+                {
+                    local = partSettings.GetNode("MechJebLocalSettings");
                 }
                 else if (sfsNode == null) // capture current Local settings
                 {

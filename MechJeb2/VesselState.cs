@@ -122,7 +122,11 @@ namespace MuMech
         public Vector6 rcsThrustAvailable;
         public Vector6 rcsTorqueAvailable;
 
+        public Vector6 ctrlTorqueAvailable;
 
+        // List of parachutes
+        public List<ModuleParachute> parachutes;
+        
         // Resource information keyed by resource Id.
         public Dictionary<int, ResourceInfo> resources;
 
@@ -243,9 +247,12 @@ namespace MuMech
             torqueAvailable = new Vector3d();
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
+            ctrlTorqueAvailable = new Vector6();
 
             EngineInfo einfo = new EngineInfo(forward, CoM);
             IntakeInfo iinfo = new IntakeInfo();
+
+            parachutes = new  List<ModuleParachute>();
 
             var rcsbal = vessel.GetMasterMechJeb().rcsbal;
             if (vessel.ActionGroups[KSPActionGroup.RCS] && rcsbal.enabled)
@@ -299,6 +306,20 @@ namespace MuMech
                         }
                     }
                 }
+
+                if (p is ControlSurface)
+                {
+                    Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
+                    ControlSurface cs = (p as ControlSurface);
+                    // Air Speed is velocityVesselSurface
+                    // AddForceAtPosition seems to need the airspeed vector rotated with the flap rotation x its surface
+                    Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * cs.pivotAxis);
+                    Vector3 ctrlTroquePos =  vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector( airSpeedRot * velocityVesselSurface )));
+                    Vector3 ctrlTroqueNeg =  vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector( Quaternion.Inverse(airSpeedRot) * velocityVesselSurface )));
+                    ctrlTorqueAvailable.Add(ctrlTroquePos);
+                    ctrlTorqueAvailable.Add(ctrlTroqueNeg);
+                }
+
                 if (p is CommandPod)
                 {
                     torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
@@ -311,11 +332,11 @@ namespace MuMech
                     if (pm is ModuleReactionWheel)
                     {
                         ModuleReactionWheel rw = (ModuleReactionWheel)pm;
-                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active)
-                        {
+                        // It seems a RW with no electricity is still "Active" so we need to test for something else...
+                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
                             torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
-                        }
                     }
+
                     if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
@@ -324,10 +345,15 @@ namespace MuMech
                     {
                         iinfo.addIntake(pm as ModuleResourceIntake);
                     }
+                    else if (pm is ModuleParachute)
+                    {
+                        parachutes.Add(pm as ModuleParachute);
+                    }
                 }
             }
 
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
+            torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative); // Should we use Max or Min ?            
 
             thrustAvailable += einfo.thrustAvailable;
             thrustMinimum += einfo.thrustMinimum;
@@ -471,7 +497,8 @@ namespace MuMech
                 float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
                 float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
                 double Isp = Math.Min(Isp0, Isp1);
-                double udot = e.maxThrust / (Isp * 9.81 * e.mixtureDensity);
+                //double udot = e.maxThrust / (Isp * 9.81 * e.mixtureDensity);
+                double udot = e.maxThrust / (Isp * 9.82 * e.mixtureDensity); // Tavert Issue #163
                 foreach (var propellant in e.propellants)
                 {
                     double maxreq = udot * propellant.ratio;

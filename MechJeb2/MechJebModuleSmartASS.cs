@@ -54,9 +54,14 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble srfRol = new EditableDouble(0);
         [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble rol = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
         public AttitudeReference advReference = AttitudeReference.INERTIAL;
         [Persistent(pass = (int)Pass.Local)]
         public Vector6.Direction advDirection = Vector6.Direction.FORWARD;
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean forceRol = false;
+
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
 
@@ -76,6 +81,19 @@ namespace MuMech
                 Engage();
             }
         }
+
+        protected void ForceRoll()
+        {
+            GUILayout.BeginHorizontal();
+            forceRol = GUILayout.Toggle(forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
+            {
+                Engage();
+            }
+            rol.text = GUILayout.TextField(rol.text, GUILayout.Width(30));
+            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
 
         protected override void WindowGUI(int windowID)
         {
@@ -133,6 +151,9 @@ namespace MuMech
                         TargetButton(Target.NORMAL_MINUS);
                         TargetButton(Target.RADIAL_MINUS);
                         GUILayout.EndHorizontal();
+
+                        ForceRoll();
+
                         break;
                     case Mode.SURFACE:
                         GuiUtils.SimpleTextBox("HDG:", srfHdg);
@@ -158,6 +179,8 @@ namespace MuMech
                             TargetButton(Target.RELATIVE_MINUS);
                             TargetButton(Target.PARALLEL_MINUS);
                             GUILayout.EndHorizontal();
+
+                            ForceRoll();
                         }
                         else
                         {
@@ -189,64 +212,95 @@ namespace MuMech
 
         public void Engage()
         {
+            Quaternion attitude = new Quaternion();
+            Vector3d direction = Vector3d.zero;
+            AttitudeReference reference = AttitudeReference.ORBIT;
             switch (target)
             {
                 case Target.OFF:
                     core.attitude.attitudeDeactivate();
-                    break;
+                    return;
                 case Target.KILLROT:
                     core.attitude.attitudeKILLROT = true;
-                    core.attitude.attitudeTo(Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward), AttitudeReference.INERTIAL, this);
+                    attitude = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
+                    reference = AttitudeReference.INERTIAL;
                     break;
                 case Target.NODE:
-                    core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
+                    direction = Vector3d.forward;
+                    reference = AttitudeReference.MANEUVER_NODE;
                     break;
                 case Target.SURFACE:
-                    Quaternion r = Quaternion.AngleAxis( (float)srfHdg, Vector3.up)
+                    attitude = Quaternion.AngleAxis((float)srfHdg, Vector3.up)
                                  * Quaternion.AngleAxis(-(float)srfPit, Vector3.right)
                                  * Quaternion.AngleAxis(-(float)srfRol, Vector3.forward);
-                    core.attitude.attitudeTo(r, AttitudeReference.SURFACE_NORTH, this);
+                    reference = AttitudeReference.SURFACE_NORTH;
                     break;
                 case Target.PROGRADE:
-                    core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+                    direction = Vector3d.forward;
+                    reference = AttitudeReference.ORBIT;
                     break;
                 case Target.RETROGRADE:
-                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, this);
+                    direction = Vector3d.back;
+                    reference = AttitudeReference.ORBIT;
                     break;
                 case Target.NORMAL_PLUS:
-                    core.attitude.attitudeTo(Vector3d.left, AttitudeReference.ORBIT, this);
+                    direction = Vector3d.left;
+                    reference = AttitudeReference.ORBIT;
                     break;
                 case Target.NORMAL_MINUS:
-                    core.attitude.attitudeTo(Vector3d.right, AttitudeReference.ORBIT, this);
+                    direction = Vector3d.right;
+                    reference = AttitudeReference.ORBIT;
                     break;
                 case Target.RADIAL_PLUS:
-                    core.attitude.attitudeTo(Vector3d.up, AttitudeReference.ORBIT, this);
+                    direction = Vector3d.up;
+                    reference = AttitudeReference.ORBIT;
                     break;
                 case Target.RADIAL_MINUS:
-                    core.attitude.attitudeTo(Vector3d.down, AttitudeReference.ORBIT, this);
+                    direction = Vector3d.down;
+                    reference = AttitudeReference.ORBIT;
                     break;
                 case Target.RELATIVE_PLUS:
-                    core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.RELATIVE_VELOCITY, this);
+                    direction = Vector3d.forward;
+                    reference = AttitudeReference.RELATIVE_VELOCITY;
                     break;
                 case Target.RELATIVE_MINUS:
-                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.RELATIVE_VELOCITY, this);
+                    direction = Vector3d.back;
+                    reference = AttitudeReference.RELATIVE_VELOCITY;
                     break;
                 case Target.TARGET_PLUS:
-                    core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.TARGET, this);
+                    direction = Vector3d.forward;
+                    reference = AttitudeReference.TARGET;
                     break;
                 case Target.TARGET_MINUS:
-                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET, this);
+                    direction = Vector3d.back;
+                    reference = AttitudeReference.TARGET;
                     break;
                 case Target.PARALLEL_PLUS:
-                    core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.TARGET_ORIENTATION, this);
+                    direction = Vector3d.forward;
+                    reference = AttitudeReference.TARGET_ORIENTATION;
                     break;
                 case Target.PARALLEL_MINUS:
-                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+                    direction = Vector3d.back;
+                    reference = AttitudeReference.TARGET_ORIENTATION;
                     break;
                 case Target.ADVANCED:
-                    core.attitude.attitudeTo(Vector6.directions[advDirection], advReference, this);
+                    direction = Vector6.directions[advDirection];
+                    reference = advReference;
                     break;
+                default:
+                    return;
             }
+
+            if (forceRol && direction != Vector3d.zero)
+            {
+                attitude = Quaternion.LookRotation(direction, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.forward);
+                direction = Vector3d.zero;
+            }
+
+            if (direction != Vector3d.zero)
+                core.attitude.attitudeTo(direction, reference, this);
+            else
+                core.attitude.attitudeTo(attitude, reference, this);
         }
 
         public override GUILayoutOption[] WindowOptions()
