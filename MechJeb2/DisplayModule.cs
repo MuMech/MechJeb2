@@ -115,6 +115,21 @@ namespace MuMech
             }
         }
 
+        public override void UnlockCheck()
+        {
+            if (!unlockChecked)
+            {
+                bool prevEn = enabled;
+                enabled = true;
+                base.UnlockCheck();
+                if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0)
+                {
+                    hidden = !enabled;
+                }
+                enabled = prevEn;
+            }
+        }
+
         public virtual string GetName()
         {
             return "Display Module";
