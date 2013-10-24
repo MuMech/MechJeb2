@@ -48,7 +48,8 @@ namespace MuMech
         {
             return p.ActivatesEvenIfDisconnected 
                 && p.IsEngine() 
-                && p.IsDecoupledInStage(p.inverseStage);
+                && p.IsDecoupledInStage(p.inverseStage)
+                && !p.isControlSource;
         }
 
         public static bool IsSRB(this Part p)
