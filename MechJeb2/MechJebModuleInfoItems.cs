@@ -884,7 +884,29 @@ namespace MuMech
         }
 
 
-
+        [ValueInfoItem("Current Biome", InfoItem.Category.Misc)]
+        public string CurrentBiome()
+        {            
+            string biome = mainBody.BiomeMap.GetAtt(vessel.latitude * Math.PI / 180, vessel.longitude * Math.PI / 180).name;
+            switch (vessel.situation)
+            {
+                case Vessel.Situations.LANDED:
+                case Vessel.Situations.PRELAUNCH:
+                    return mainBody.name + "'s " + biome == "" ? "surface" : biome;
+                case Vessel.Situations.SPLASHED:
+                    return mainBody.name + "'s " + biome == "" ? "oceans" : biome;
+                case Vessel.Situations.FLYING:
+                    if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
+                        return "Flying over " + mainBody.name + (biome == "" ? "" : "'s " + biome);
+                    else
+                        return "Upper atmosphere of " + mainBody.name + (biome == "" ? "" : "'s " + biome);
+                default:
+                    if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
+                        return "Space just above " + mainBody.name + (biome == "" ? "" : "'s " + biome);
+                    else
+                        return "Space high over " + mainBody.name + (biome == "" ? "" : "'s " + biome);
+            }
+        }
 
         static GUIStyle _separatorStyle;
         static GUIStyle separatorStyle

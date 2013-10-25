@@ -501,7 +501,7 @@ namespace MuMech
         {
             if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
                 // Need to substract stowedDrag since its already in the totaldrag of the ship
-                return p.part.mass * Mathf.Lerp(-p.stowedDrag, p.semiDeployedDrag - p.stowedDrag,
+                return p.part.mass * Mathf.Lerp(0, p.semiDeployedDrag - p.stowedDrag,
                     (float)Math.Min((time - openningTime) / p.semiDeploymentSpeed, 1)); 
             else if (state == ModuleParachute.deploymentStates.DEPLOYED)
                 return p.part.mass * Mathf.Lerp(p.semiDeployedDrag - p.stowedDrag, p.fullyDeployedDrag - p.stowedDrag,
