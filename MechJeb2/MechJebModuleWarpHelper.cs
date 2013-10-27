@@ -8,8 +8,8 @@ namespace MuMech
 {
     public class MechJebModuleWarpHelper : DisplayModule
     {
-        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI }
-        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition" };
+        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Encounter, Escape }
+        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "encounter", "escape" };
         static readonly int numWarpTargets = Enum.GetNames(typeof(WarpTarget)).Length;
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
@@ -77,6 +77,15 @@ namespace MuMech
                 case WarpTarget.Node:
                     if (vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
                     break;
+        
+                case WarpTarget.Enounter:
+                    if (orbit.patchEndTransition == Orbit.PatchTransitionType.ENCOUNTER) targetUT = orbit.EndUT;
+                    break;
+
+                case WarpTarget.Escape:
+                    if (orbit.patchEndTransition == Orbit.PatchTransitionType.ESCAPE) targetUT = orbit.EndUT;
+                    break;
+        
             }
 
             targetUT -= leadTime;
