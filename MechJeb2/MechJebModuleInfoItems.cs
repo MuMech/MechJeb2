@@ -889,18 +889,18 @@ namespace MuMech
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]
         public string CurrentBiome()
         {
-            string biome = MuUtils.CBAttributeMapGetAtt(mainBody.BiomeMap, vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
             if (vessel.landedAt != string.Empty)
-                biome = vessel.landedAt;            
+                return vessel.landedAt;
+            string biome = MuUtils.CBAttributeMapGetAtt(mainBody.BiomeMap, vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
             switch (vessel.situation)
             {
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.theName + "'s " + biome == "" ? "surface" : biome;
+                    return mainBody.theName + "'s " + (biome == "" ? "surface" : biome);
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.theName + "'s " + biome == "" ? "oceans" : biome;
+                    return mainBody.theName + "'s " + (biome == "" ? "oceans" : biome);
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)                        
                         //ExperimentSituations.FlyingLow
