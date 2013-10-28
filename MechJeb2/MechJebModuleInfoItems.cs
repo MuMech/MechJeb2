@@ -271,14 +271,13 @@ namespace MuMech
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {
-            return vesselState.ThrustAccel(FlightInputHandler.state.mainThrottle);
+            return CurrentThrust() / VesselMass();
         }
 
         [ValueInfoItem("Current thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kN")]
         public double CurrentThrust()
         {
-            double throttle = FlightInputHandler.state.mainThrottle;
-            return vesselState.thrustAvailable * throttle + vesselState.thrustMinimum * (1 - throttle);
+            return vesselState.thrustCurrent;
         }
 
         [ValueInfoItem("Time to SoI switch", InfoItem.Category.Orbit)]
