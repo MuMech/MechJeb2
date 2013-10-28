@@ -112,6 +112,8 @@ namespace MuMech
         public double atmosphericDensityGrams;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
+        [ValueInfoItem("Intake air (all intakes open)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
+        public double intakeAirAllIntakes;
         [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAirNeeded;
         [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
@@ -377,9 +379,11 @@ namespace MuMech
             intakeAir = 0;
             intakeAirNeeded = 0;
             intakeAirAtMax = 0;
+            intakeAirAllIntakes = 0;
             if (resources.ContainsKey(intakeAirId))
             {
                 intakeAir = resources[intakeAirId].intakeProvided;
+                intakeAirAllIntakes = resources[intakeAirId].intakeAvailable;
                 intakeAirNeeded = resources[intakeAirId].required;
                 intakeAirAtMax = resources[intakeAirId].requiredAtMaxThrottle;
             }
@@ -588,6 +592,7 @@ namespace MuMech
 
             public double required = 0;              // kg/s
             public double requiredAtMaxThrottle = 0; // kg/s
+            public double intakeAvailable = 0;       // kg/s
             public double intakeProvided
             {           // kg/s for currently-open intakes
                 get
@@ -724,6 +729,7 @@ namespace MuMech
 
                     intakes[idx].intake = intake;
                     intakes[idx].predictedMassFlow = mass;
+                    intakeAvailable += mass;
                     idx++;
                 }
             }
