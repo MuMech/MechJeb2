@@ -53,7 +53,7 @@ namespace MuMech
         {
             Stats stats = new Stats();
             stats.startMass = VesselMass();
-            stats.startThrust = VesselThrust(throttle);
+            stats.startThrust = VesselThrust(throttle, atmospheres);
             stats.endMass = stats.startMass;
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.deltaTime = 0;
@@ -87,7 +87,7 @@ namespace MuMech
             foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres);
 
             stats.startMass = VesselMass();
-            stats.startThrust = VesselThrust(throttle);
+            stats.startThrust = VesselThrust(throttle, atmospheres); // NK
 
             List<FuelNode> engines = FindActiveEngines();
 
@@ -183,9 +183,9 @@ namespace MuMech
             return nodes.Sum(n => n.Mass);
         }
 
-        public float VesselThrust(float throttle)
+        public float VesselThrust(float throttle, float atmospheres)
         {
-            return throttle * FindActiveEngines().Sum(eng => eng.maxThrust);
+            return throttle * FindActiveEngines().Sum(eng => (eng.maxThrust * (eng.correctThrust ? (eng.ispCurve.Evaluate(atmospheres) / eng.ispCurve.Evaluate(0)) : 1f)));
         }
 
         //Returns a list of engines that fire during the current simulated stage.
@@ -246,7 +246,8 @@ namespace MuMech
 
         const float DRAINED = 0.1f; //if a resource amount falls below this amount we say that the resource has been drained
 
-        FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
+        public FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
+        public bool correctThrust = false;              // does the engine use a fixed ISP / Variable Thrust
         Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
         float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
@@ -303,6 +304,14 @@ namespace MuMech
                     isEngine = true;
 
                     maxThrust = engine.maxThrust;
+                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
+                    {
+                        correctThrust = true;
+                        if (HighLogic.LoadedSceneIsFlight && engine.realIsp > 0.0f)
+                            maxThrust = maxThrust * engine.atmosphereCurve.Evaluate(0) / engine.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
+                    }
+                    else
+                        correctThrust = false;
                     ispCurve = engine.atmosphereCurve;
 
                     propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
@@ -331,7 +340,8 @@ namespace MuMech
             if (isEngine)
             {
                 float Isp = ispCurve.Evaluate(atmospheres);
-                float massFlowRate = (throttle * maxThrust) / (Isp * 9.81f);
+                float massFlowRate = throttle * maxThrust / (Isp * 9.81f);
+                if (correctThrust) massFlowRate = massFlowRate * Isp / ispCurve.Evaluate(0); // scale thrust
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
                 resourceConsumptions = propellantRatios.Keys.ToDictionary(id => id, id => propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);
