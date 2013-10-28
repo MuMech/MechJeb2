@@ -287,7 +287,7 @@ namespace MuMech
             //note which resources this part has stored
             foreach (PartResource r in part.Resources)
             {
-                if (r.info.name != "ElectricCharge" && r.info.name != "Megajoules") resources[r.info.id] = (float)r.amount;
+                if (r.info.density > 0) resources[r.info.id] = (float)r.amount;
                 resourcesUnobtainableFromParent.Add(r.info.id);
             }
 
@@ -315,7 +315,7 @@ namespace MuMech
                     ispCurve = engine.atmosphereCurve;
 
                     propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
-                    propellantRatios = engine.propellants.Where(prop => prop.name != "ElectricCharge" && prop.name != "Megajoules").ToDictionary(prop => prop.id, prop => prop.ratio);
+                    propellantRatios = engine.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0).ToDictionary(prop => prop.id, prop => prop.ratio);
                 }
             }
 
