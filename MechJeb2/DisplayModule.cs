@@ -126,6 +126,7 @@ namespace MuMech
                 {
                     hidden = !enabled;
                 }
+                if (hidden) { prevEn = false; }
                 enabled = prevEn;
             }
         }
