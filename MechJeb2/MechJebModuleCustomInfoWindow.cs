@@ -717,6 +717,7 @@ Value:InfoItems.CrewCapacity
 @"--- MechJeb Custom Window ---
 Name: Delta-V Stats
 Show in: flight editor
+Toggle:StageStats.dVLinearThrust
 Value:InfoItems.StageDeltaVAtmosphereAndVac
 Value:InfoItems.TotalDeltaVAtmosphereAndVac
 General:InfoItems.AllStageStats

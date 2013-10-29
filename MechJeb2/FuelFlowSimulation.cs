@@ -13,11 +13,11 @@ namespace MuMech
         public float t;
 
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
-        public FuelFlowSimulation(List<Part> parts)
+        public FuelFlowSimulation(List<Part> parts, bool dVLinearThrust)
         {
             //Initialize the simulation
             nodes = new List<FuelNode>();
-            Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p));
+            Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p, dVLinearThrust));
             nodes = nodeLookup.Values.ToList();
 
             foreach (Part p in parts) nodeLookup[p].FindSourceNodes(p, nodeLookup);
@@ -185,7 +185,7 @@ namespace MuMech
 
         public float VesselThrust(float throttle, float atmospheres)
         {
-            return throttle * FindActiveEngines().Sum(eng => (eng.maxThrust * (eng.correctThrust ? (eng.ispCurve.Evaluate(atmospheres) / eng.ispCurve.Evaluate(0)) : 1f)));
+            return throttle * FindActiveEngines().Sum(eng => (eng.maxThrust * eng.fwdThrustRatio * (eng.correctThrust ? (eng.ispCurve.Evaluate(atmospheres) / eng.ispCurve.Evaluate(0)) : 1f)));
         }
 
         //Returns a list of engines that fire during the current simulated stage.
@@ -244,7 +244,10 @@ namespace MuMech
         Dictionary<int, float> resourceConsumptions = new Dictionary<int, float>();                   //the resources this part consumes per unit time when active at full throttle
         DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
 
-        const float DRAINED = 0.1f; //if a resource amount falls below this amount we say that the resource has been drained
+        // if a resource amount falls below this amount we say that the resource has been drained
+        // set to the smallest amount that the user can see is non-zero in the resource tab or by
+        // right-clicking.
+        const float DRAINED = 0.005f;
 
         public FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
         public bool correctThrust = false;              // does the engine use a fixed ISP / Variable Thrust
@@ -257,6 +260,7 @@ namespace MuMech
         bool surfaceMounted;
 
         public float maxThrust = 0;     //max thrust of this part
+        public float fwdThrustRatio = 1; // % of thrust moving the ship forwad
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
@@ -268,7 +272,7 @@ namespace MuMech
 
         public string partName; //for debugging
 
-        public FuelNode(Part part)
+        public FuelNode(Part part, bool dVLinearThrust)
         {
             bool physicallySignificant = (part.physicalSignificance != Part.PhysicalSignificance.NONE);
             if (part.HasModule<ModuleLandingGear>() || part.HasModule<LaunchClamp>())
@@ -303,7 +307,19 @@ namespace MuMech
 
                     isEngine = true;
 
+                    // If we take into account the engine rotation 
+                    if (dVLinearThrust)
+                    {
+                        Vector3 thrust = Vector3d.zero;
+                        foreach (var t in engine.thrustTransforms)
+                            thrust -= t.forward / engine.thrustTransforms.Count;
+
+                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.transform.up);
+                        fwdThrustRatio = Vector3.Dot(fwd, thrust);
+                    }
+
                     maxThrust = engine.maxThrust;
+
                     if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
                     {
                         correctThrust = true;
