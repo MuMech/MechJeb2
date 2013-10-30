@@ -125,6 +125,10 @@ namespace MuMech
                 if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0)
                 {
                     hidden = !enabled;
+                    if (hidden)
+                    {
+                        prevEn = false;
+                    }
                 }
                 enabled = prevEn;
             }
