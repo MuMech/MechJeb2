@@ -36,6 +36,9 @@ namespace MuMech
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
+        [KSPField]
+        public ConfigNode partSettings;
+
         private bool weLockedEditor = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
@@ -317,6 +320,21 @@ namespace MuMech
                 }
             }
 
+            if (ResearchAndDevelopment.Instance != null && computerModules.Any(a => !a.unlockChecked))
+            {
+                foreach (ComputerModule module in computerModules)
+                {
+                    try
+                    {
+                        module.UnlockCheck();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in UnlockCheck: " + e);
+                    }
+                }
+            }
+
             if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
 
             foreach (ComputerModule module in computerModules)
@@ -393,6 +411,11 @@ namespace MuMech
 
                 base.OnLoad(sfsNode); //is this necessary?
 
+                if (partSettings == null && sfsNode != null)
+                {
+                    partSettings = sfsNode;
+                }
+
                 LoadComputerModules();
 
                 ConfigNode global = new ConfigNode("MechJebGlobalSettings");
@@ -430,6 +453,10 @@ namespace MuMech
                 if (sfsNode != null && sfsNode.HasNode("MechJebLocalSettings"))
                 {
                     local = sfsNode.GetNode("MechJebLocalSettings");
+                }
+                else if (partSettings != null && partSettings.HasNode("MechJebLocalSettings"))
+                {
+                    local = partSettings.GetNode("MechJebLocalSettings");
                 }
                 else if (sfsNode == null) // capture current Local settings
                 {

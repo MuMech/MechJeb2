@@ -20,6 +20,12 @@ namespace MuMech
 
         public int priority = 0;
 
+        [Persistent(pass = (int)Pass.Local)]
+        public string unlockParts = "";
+        [Persistent(pass = (int)Pass.Local)]
+        public string unlockTechs = "";
+        public bool unlockChecked = false;
+
         public int CompareTo(ComputerModule other)
         {
             if (other == null) return 1;
@@ -136,6 +142,51 @@ namespace MuMech
 
         public virtual void OnDestroy()
         {
+        }
+
+        public virtual void UnlockCheck()
+        {
+            if (!unlockChecked && ResearchAndDevelopment.Instance != null)
+            {
+                bool unlock = true;
+
+                string[] parts = unlockParts.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                {
+                    unlock = false;
+                    foreach (string p in parts)
+                    {
+                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 && ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.Where(a => a.name == p).First()))
+                        {
+                            unlock = true;
+                            break;
+                        }
+                    }
+                }
+
+                string[] techs = unlockTechs.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                if (techs.Length > 0)
+                {
+                    if (parts.Length == 0)
+                    {
+                        unlock = false;
+                    }
+                    foreach (string t in techs)
+                    {
+                        if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
+                        {
+                            unlock = true;
+                            break;
+                        }
+                    }
+                }
+
+                unlockChecked = true;
+                if (!unlock)
+                {
+                    enabled = false;
+                }
+            }
         }
 
         public void print(object message)

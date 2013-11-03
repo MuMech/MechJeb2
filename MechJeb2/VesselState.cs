@@ -112,6 +112,8 @@ namespace MuMech
         public double atmosphericDensityGrams;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
+        [ValueInfoItem("Intake air (all intakes open)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
+        public double intakeAirAllIntakes;
         [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAirNeeded;
         [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
@@ -377,9 +379,11 @@ namespace MuMech
             intakeAir = 0;
             intakeAirNeeded = 0;
             intakeAirAtMax = 0;
+            intakeAirAllIntakes = 0;
             if (resources.ContainsKey(intakeAirId))
             {
                 intakeAir = resources[intakeAirId].intakeProvided;
+                intakeAirAllIntakes = resources[intakeAirId].intakeAvailable;
                 intakeAirNeeded = resources[intakeAirId].required;
                 intakeAirAtMax = resources[intakeAirId].requiredAtMaxThrottle;
             }
@@ -507,18 +511,29 @@ namespace MuMech
 
                 if (!e.getFlameoutState)
                 {
-                    double usableFraction = 1; // Vector3d.Dot((p.transform.rotation * e.thrustTransform.forward).normalized, forward); // TODO: Fix usableFraction
+                    var thrustDirectionVector = new Vector3d();
+
+                    foreach (var xform in e.thrustTransforms) {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1 / e.thrustTransforms.Count);
+                    }
+
+                    double usableFraction = Vector3d.Dot(thrustDirectionVector, e.part.vessel.transform.up);
+                    
                     thrustAvailable += e.maxThrust * usableFraction;
 
                     if (e.throttleLocked) thrustMinimum += e.maxThrust * usableFraction;
                     else thrustMinimum += e.minThrust * usableFraction;
 
+                    double currentThrust = thrustAvailable * e.currentThrottle + thrustMinimum * (1 - e.currentThrottle);
+                    
                     Part p = e.part;
                     ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
                     if (gimbal != null && !gimbal.gimbalLock)
                     {
                         double gimbalRange = gimbal.gimbalRange;
-                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * e.maxThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
+                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * currentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
                     }
                 }
             }
@@ -588,6 +603,7 @@ namespace MuMech
 
             public double required = 0;              // kg/s
             public double requiredAtMaxThrottle = 0; // kg/s
+            public double intakeAvailable = 0;       // kg/s
             public double intakeProvided
             {           // kg/s for currently-open intakes
                 get
@@ -724,6 +740,7 @@ namespace MuMech
 
                     intakes[idx].intake = intake;
                     intakes[idx].predictedMassFlow = mass;
+                    intakeAvailable += mass;
                     idx++;
                 }
             }

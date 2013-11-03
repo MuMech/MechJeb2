@@ -42,16 +42,12 @@ namespace MuMech
 
         protected AttitudeReference _oldAttitudeReference = AttitudeReference.INERTIAL;
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
+        
         public override void OnModuleEnabled()
         {
             timeCount = 50;
         }
-        protected void onFlightStartAtLaunchPad()
-        //protected void onFlightStart()
-        {
-            pid.Reset();
-            lastAct = Vector3d.zero;
-        }
+        
         public AttitudeReference attitudeReference
         {
             get
@@ -127,6 +123,7 @@ namespace MuMech
             double Kp = Kd / (3 * Math.Sqrt(2) * Tf);
             double Ki = Kp / (12 * Math.Sqrt(2) * Tf);
             pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+            lastAct = Vector3d.zero;
             base.OnStart(state);
         }
 

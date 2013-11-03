@@ -418,21 +418,29 @@ namespace MuMech
                 data[intake] = intakeData;
                 if (groupIds.ContainsKey(intake)) { continue; }
 
-                var intakes = new List<ModuleResourceIntake>();
-                intakes.Add(intake);
-                foreach (var part in intake.part.symmetryCounterparts)
-                {
-                    foreach (var symintake in part.Modules.OfType<ModuleResourceIntake>())
-                    {
-                        intakes.Add(symintake);
-                    }
-                }
-
+                // Create a group for this symmetry
                 int grpId = groups.Count;
+                var intakes = new List<ModuleResourceIntake>();
                 groups.Add(intakes);
-                foreach (var member in intakes)
-                {
-                    groupIds[member] = grpId;
+
+                // In DFS order, get all the symmetric parts.
+                // We can't rely on symmetryCounterparts; see bug #52 by tavert:
+                // https://github.com/MuMech/MechJeb2/issues/52
+                var stack = new Stack<Part>();
+                stack.Push(intake.part);
+                while(stack.Count > 0) {
+                    var part = stack.Pop();
+                    var partIntake = part.Modules.OfType<ModuleResourceIntake>().FirstOrDefault();
+                    if (partIntake == null || groupIds.ContainsKey(partIntake)) {
+                        continue;
+                    }
+
+                    groupIds[partIntake] = grpId;
+                    intakes.Add(partIntake);
+
+                    foreach (var sympart in part.symmetryCounterparts) {
+                        stack.Push(sympart);
+                    }
                 }
             }
 

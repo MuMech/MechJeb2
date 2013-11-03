@@ -151,6 +151,49 @@ namespace MuMech
                 P.SetValue(null, value, null);
             }
         }
+
+        // With help from Toadicus VOID
+        public static CBAttributeMap.MapAttribute CBAttributeMapGetAtt(CBAttributeMap cbmap, double lat, double lon)
+        {
+            if (cbmap.Map == null)
+            {
+                return cbmap.defaultAttribute;
+            }
+
+            lon -= Math.PI / 2d;
+            if (lon < 0d)
+            {
+                lon += 2d * Math.PI;
+            }
+
+            float v = (float)(lat / Math.PI) + 0.5f;
+            float u = (float)(lon / (2d * Math.PI));
+
+            Color pixelBilinear = cbmap.Map.GetPixelBilinear(u, v);
+            CBAttributeMap.MapAttribute defaultAttribute = cbmap.defaultAttribute;
+            if (!cbmap.exactSearch)
+            {
+                float maxValue = float.MaxValue;
+                for (int i = 0; i < cbmap.Attributes.Length; i++)
+                {
+                    Vector4 vector = (Vector4)(cbmap.Attributes[i].mapColor - pixelBilinear);
+                    float sqrMagnitude = vector.sqrMagnitude;
+                    if ((sqrMagnitude < maxValue) && ((cbmap.nonExactThreshold == -1f) || (sqrMagnitude < cbmap.nonExactThreshold)))
+                    {
+                        defaultAttribute = cbmap.Attributes[i];
+                        maxValue = sqrMagnitude;
+                    }
+                }
+            }
+            else
+                for (int j = 0; j < cbmap.Attributes.Length; j++)
+                    if (pixelBilinear == cbmap.Attributes[j].mapColor)
+                    {
+                        defaultAttribute = cbmap.Attributes[j];
+                        break;
+                    }
+            return defaultAttribute;
+        }
     }
 
     public class MovingAverage
