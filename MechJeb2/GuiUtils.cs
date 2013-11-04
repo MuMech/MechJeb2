@@ -451,15 +451,44 @@ namespace MuMech
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
             Vector3d relOrigin = mouseRay.origin - body.position;
             Vector3d relSurfacePosition;
-            if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, body.Radius, out relSurfacePosition))
+            double curRadius = body.pqsController.radiusMax;
+            double lastRadius = 0;
+            double error = 0;
+            int loops = 0;
+            float st = Time.time;
+            while (loops < 50)
             {
-                Vector3d surfacePoint = body.position + relSurfacePosition;
-                return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
+                {
+                    Vector3d surfacePoint = body.position + relSurfacePosition;
+                    double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) * QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) * Vector3d.right);
+                    error = Math.Abs(curRadius - alt);
+                    if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
+                    {
+                        return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+                    }
+                    else
+                    {
+                        lastRadius = curRadius;
+                        curRadius = alt;
+                        loops++;
+                    }
+                }
+                else
+                {
+                    if (loops == 0)
+                    {
+                        break;
+                    }
+                    else
+                    { // Went too low, needs to try higher
+                        curRadius = (lastRadius * 9 + curRadius) / 10;
+                        loops++;
+                    }
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
     }

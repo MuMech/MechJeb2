@@ -21,7 +21,7 @@ namespace MuMech
         public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
-            Vector3d center = body.position + body.Radius * up;
+            Vector3d center = body.position + body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right) * up;
 
             if (IsOccluded(center, body)) return;
 
