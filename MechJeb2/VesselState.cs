@@ -134,6 +134,13 @@ namespace MuMech
 
         public CelestialBody mainBody;
 
+
+        // Callbacks for external module
+        public delegate void VesselStatePartExtension(Part p);
+        public delegate void VesselStatePartModuleExtension(PartModule pm);
+        public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
+        public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
+
         public void Update(Vessel vessel)
         {
             if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
@@ -327,6 +334,11 @@ namespace MuMech
                     torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
                 }
 
+                foreach (VesselStatePartExtension vspe in vesselStatePartExtensions)
+                {
+                    vspe(p);
+                }
+
                 foreach (PartModule pm in p.Modules)
                 {
                     if (!pm.isEnabled) continue;
@@ -337,9 +349,8 @@ namespace MuMech
                         // It seems a RW with no electricity is still "Active" so we need to test for something else...
                         if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
                             torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
-                    }
-
-                    if (pm is ModuleEngines)
+                    } 
+                    else if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
                     }
@@ -350,6 +361,13 @@ namespace MuMech
                     else if (pm is ModuleParachute)
                     {
                         parachutes.Add(pm as ModuleParachute);
+                    }
+                    else
+                    {
+                        foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
+                        {
+                            vspme(pm);
+                        }
                     }
                 }
             }
