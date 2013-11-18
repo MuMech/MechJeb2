@@ -362,12 +362,10 @@ namespace MuMech
                     {
                         parachutes.Add(pm as ModuleParachute);
                     }
-                    else
+
+                    foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
                     {
-                        foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
-                        {
-                            vspme(pm);
-                        }
+                        vspme(pm);
                     }
                 }
             }
