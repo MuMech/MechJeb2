@@ -612,11 +612,6 @@ namespace MuMech
             Drive(s);
 
             CheckFlightCtrlState(s);
-
-            if (vessel == FlightGlobals.ActiveVessel)
-            {
-                FlightInputHandler.state.mainThrottle = s.mainThrottle; //so that the on-screen throttle gauge reflects the autopilot throttle
-            }
         }
 
         private void Drive(FlightCtrlState s)
