@@ -25,9 +25,19 @@ namespace MuMech
             return (from part in parts from module in part.Modules.OfType<T>() select module).ToList();
         }
 
+        private static float lastFixedTime = 0;
+        private static Dictionary<Vessel,MechJebCore> masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
-            return vessel.GetModules<MechJebCore>().Max();
+            if (lastFixedTime != Time.fixedTime)
+            {
+                masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+                lastFixedTime = Time.fixedTime;
+            }
+            if (!masterMechjebs.ContainsKey(vessel))
+                masterMechjebs.Add(vessel, vessel.GetModules<MechJebCore>().Max());
+            return masterMechjebs[vessel];
         }
 
         public static double TotalResourceMass(this Vessel vessel, string resourceName)

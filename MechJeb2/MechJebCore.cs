@@ -175,7 +175,7 @@ namespace MuMech
                 }
             }
 
-            if (vessel != null)
+            if (vessel != null && this != vessel.GetMasterMechJeb())
             {
                 vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
                 vessel.OnFlyByWire += OnFlyByWire;
