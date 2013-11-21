@@ -213,8 +213,8 @@ namespace MuMech
 
         public bool attitudeTo(Vector3d direction, AttitudeReference reference, object controller)
         {
-            bool ok = false;
-            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
+            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
+
             Vector3 up, dir = direction;
 
             if (!enabled || (ang_diff > 45))
@@ -226,16 +226,9 @@ namespace MuMech
                 up = attitudeWorldToReference(attitudeReferenceToWorld(attitudeTarget * Vector3d.up, attitudeReference), reference);
             }
             Vector3.OrthoNormalize(ref dir, ref up);
-            ok = attitudeTo(Quaternion.LookRotation(dir, up), reference, controller);
-            if (ok)
-            {
-                _attitudeRollMatters = false;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            attitudeTo(Quaternion.LookRotation(dir, up), reference, controller);
+            _attitudeRollMatters = false;
+            return true;
         }
 
         public bool attitudeTo(double heading, double pitch, double roll, object controller)
@@ -373,7 +366,7 @@ namespace MuMech
                 }
             }
 
-            if ( !attitudeRollMatters && userCommandingRoll )
+            if (!attitudeRollMatters && !userCommandingRoll)
             {
                 attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
                 _attitudeRollMatters = false;
