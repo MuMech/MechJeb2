@@ -30,13 +30,20 @@ namespace MuMech
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
+            if (vessel == null)
+                return null;
             if (lastFixedTime != Time.fixedTime)
             {
                 masterMechjebs = new Dictionary<Vessel,MechJebCore>();
                 lastFixedTime = Time.fixedTime;
             }
             if (!masterMechjebs.ContainsKey(vessel))
-                masterMechjebs.Add(vessel, vessel.GetModules<MechJebCore>().Max());
+            {
+                MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
+                if (mj != null)
+                    masterMechjebs.Add(vessel, mj);
+                return mj;
+            }
             return masterMechjebs[vessel];
         }
 
