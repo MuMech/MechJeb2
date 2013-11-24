@@ -314,7 +314,7 @@ namespace MuMech
                         foreach (var t in engine.thrustTransforms)
                             thrust -= t.forward / engine.thrustTransforms.Count;
 
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.transform.up);
+                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.GetTransform().up);
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 

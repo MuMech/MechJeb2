@@ -535,7 +535,7 @@ namespace MuMech
                         thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1 / e.thrustTransforms.Count);
                     }
 
-                    double usableFraction = Vector3d.Dot(thrustDirectionVector, e.part.vessel.transform.up);
+                    double usableFraction = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);                    
                     
                     thrustAvailable += e.maxThrust * usableFraction;
 
