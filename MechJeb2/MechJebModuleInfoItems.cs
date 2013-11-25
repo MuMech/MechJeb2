@@ -294,7 +294,7 @@ namespace MuMech
             return mainBody.GeeASL * 9.81;
         }
 
-        [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F2", units = "t", showInEditor = true)]
+        [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList
@@ -302,7 +302,7 @@ namespace MuMech
             else return vesselState.mass;
         }
 
-        [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]
+        [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
             return parts.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.mass);
