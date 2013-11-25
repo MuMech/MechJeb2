@@ -37,6 +37,7 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
             ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
+            ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
 
             base.WindowGUI(windowID);
         }

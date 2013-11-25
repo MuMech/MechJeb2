@@ -16,7 +16,7 @@ namespace MuMech
             set
             {
                 controlHeading = value;
-                if (controlHeading || controlSpeed)
+                if (controlHeading || controlSpeed || brakeOnEject)
                 {
                     users.Add(this);
                 }
@@ -38,7 +38,26 @@ namespace MuMech
             set
             {
                 controlSpeed = value;
-                if (controlHeading || controlSpeed)
+                if (controlHeading || controlSpeed || brakeOnEject)
+                {
+                    users.Add(this);
+                }
+                else
+                {
+                    users.Remove(this);
+                }
+            }
+        }
+
+        protected bool brakeOnEject = false;
+        [ToggleInfoItem("Brake on Pilot Eject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+        public bool BrakeOnEject
+        {
+            get { return brakeOnEject; }
+            set
+            {
+                brakeOnEject = value;
+                if (controlHeading || controlSpeed || brakeOnEject)
                 {
                     users.Add(this);
                 }
@@ -87,7 +106,13 @@ namespace MuMech
                     s.wheelSteer = Mathf.Clamp((float)act, -1, 1);
                 }
             }
-            if (controlSpeed)
+            // Brake if there is no controler (Pilot eject from seat)
+            if (brakeOnEject && vessel.GetReferenceTransformPart() == null)
+            {
+                s.wheelThrottle = 0;
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+            }
+            else if (controlSpeed)
             {
                 if (speed != speedLast)
                 {
