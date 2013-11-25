@@ -225,15 +225,59 @@ namespace MuMech
             }
         }
 
-        public enum SkinType { Default, MechJeb1 }
+        public enum SkinType { Default, MechJeb1, Compact }
         public static GUISkin skin;
         public static GUISkin defaultSkin;
+        public static GUISkin compactSkin;
 
         public static void CopyDefaultSkin()
         {
             GUI.skin = null;
             defaultSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
         }
+
+        public static void CopyCompactSkin()
+        {
+            GUI.skin = null;
+            compactSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+
+            GuiUtils.skin.name = "KSP Compact";
+            
+            compactSkin.label.margin.top = 0;
+            compactSkin.label.margin.bottom = 0;
+            compactSkin.label.padding.top = 0;
+            compactSkin.label.padding.bottom = 1;
+
+            //compactSkin.button.margin.top = 0;
+            //compactSkin.button.margin.bottom = 0;
+            //compactSkin.button.padding.top = 0;
+            //compactSkin.button.padding.bottom = 1;
+
+            compactSkin.toggle.margin.top = 0;
+            compactSkin.toggle.margin.bottom = 0;
+            compactSkin.toggle.padding.top = 0;
+            compactSkin.toggle.padding.bottom = 1;
+
+            compactSkin.textField.margin.top = 0;
+            compactSkin.textField.margin.bottom = 0;
+            compactSkin.textField.padding.top = 0;
+            compactSkin.textField.padding.bottom = 1;
+
+            compactSkin.textArea.margin.top = 0;
+            compactSkin.textArea.margin.bottom = 0;
+            compactSkin.textArea.padding.top = 0;
+            compactSkin.textArea.padding.bottom = 1;
+
+            compactSkin.window.margin.top = 2;
+            compactSkin.window.margin.bottom = 2;            
+            compactSkin.window.margin.left = 2;
+            compactSkin.window.margin.right = 2;
+            
+            compactSkin.window.padding.bottom = 4;
+            compactSkin.window.padding.left = 4;
+            compactSkin.window.padding.right = 4;
+        }
+
 
         public static void LoadSkin(SkinType skinType)
         {
@@ -246,6 +290,11 @@ namespace MuMech
 
                 case SkinType.MechJeb1:
                     skin = AssetBase.GetGUISkin("KSP window 2");
+                    break;
+
+                case SkinType.Compact:
+                    if (compactSkin == null) CopyCompactSkin();
+                    skin = compactSkin;
                     break;
             }
         }
