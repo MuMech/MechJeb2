@@ -543,7 +543,7 @@ namespace MuMech
                     foreach (var xform in e.thrustTransforms) {
                         // The rotation makes a +z vector point in the direction that molecules are ejected
                         // from the engine.  The resulting thrust force is in the opposite direction.
-                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1 / e.thrustTransforms.Count);
+                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
                     }
 
                     double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
