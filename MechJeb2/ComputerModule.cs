@@ -217,7 +217,7 @@ namespace MuMech
 
         public new void Add(object user)
         {
-            if (!base.Contains(user))
+            if (user != null && !base.Contains(user))
             {
                 base.Add(user);
             }
@@ -226,7 +226,7 @@ namespace MuMech
 
         public new void Remove(object user)
         {
-            if (base.Contains(user))
+            if (user != null && base.Contains(user))
             {
                 base.Remove(user);
             }
