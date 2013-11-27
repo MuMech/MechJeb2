@@ -366,7 +366,7 @@ namespace MuMech
                 }
             }
 
-            if (!attitudeRollMatters && !userCommandingRoll)
+            if (!attitudeRollMatters)
             {
                 attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
                 _attitudeRollMatters = false;

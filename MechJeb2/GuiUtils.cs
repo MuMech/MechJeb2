@@ -242,40 +242,24 @@ namespace MuMech
             compactSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
 
             GuiUtils.skin.name = "KSP Compact";
-            
-            compactSkin.label.margin.top = 0;
-            compactSkin.label.margin.bottom = 0;
-            compactSkin.label.padding.top = 0;
-            compactSkin.label.padding.bottom = 1;
 
-            //compactSkin.button.margin.top = 0;
-            //compactSkin.button.margin.bottom = 0;
-            //compactSkin.button.padding.top = 0;
-            //compactSkin.button.padding.bottom = 1;
+            compactSkin.label.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.label.padding = new RectOffset(0, 0, 2, 2);
 
-            compactSkin.toggle.margin.top = 0;
-            compactSkin.toggle.margin.bottom = 0;
-            compactSkin.toggle.padding.top = 0;
-            compactSkin.toggle.padding.bottom = 1;
+            compactSkin.button.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.button.padding = new RectOffset(4, 4, 2, 2);
 
-            compactSkin.textField.margin.top = 0;
-            compactSkin.textField.margin.bottom = 0;
-            compactSkin.textField.padding.top = 0;
-            compactSkin.textField.padding.bottom = 1;
+            compactSkin.toggle.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.toggle.padding = new RectOffset(15, 0, 2, 0);
 
-            compactSkin.textArea.margin.top = 0;
-            compactSkin.textArea.margin.bottom = 0;
-            compactSkin.textArea.padding.top = 0;
-            compactSkin.textArea.padding.bottom = 1;
+            compactSkin.textField.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.textField.padding = new RectOffset(2, 2, 2, 2);
 
-            compactSkin.window.margin.top = 2;
-            compactSkin.window.margin.bottom = 2;            
-            compactSkin.window.margin.left = 2;
-            compactSkin.window.margin.right = 2;
-            
-            compactSkin.window.padding.bottom = 4;
-            compactSkin.window.padding.left = 4;
-            compactSkin.window.padding.right = 4;
+            compactSkin.textArea.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.textArea.padding = new RectOffset(2, 2, 2, 2);
+
+            compactSkin.window.margin = new RectOffset(0, 0, 0, 0);
+            compactSkin.window.padding = new RectOffset(5, 5, 20, 5);
         }
 
 

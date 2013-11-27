@@ -26,12 +26,13 @@ namespace MuMech
                 skinId = 1;
                 useOldSkin = false;
             }
-
-            GuiUtils.LoadSkin((GuiUtils.SkinType)skinId);
         }
 
         protected override void WindowGUI(int windowID)
         {
+
+            GuiUtils.LoadSkin((GuiUtils.SkinType)skinId);
+
             GUILayout.BeginVertical();
 
             if (GUILayout.Button("\nRestore factory default settings\n"))
