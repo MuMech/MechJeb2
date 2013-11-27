@@ -657,6 +657,9 @@ namespace MuMech
         {
             if (!showGui) return;
 
+            if (GuiUtils.skin == null)
+                GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
+
             GuiUtils.CheckSkin();
 
             GUI.skin = GuiUtils.skin;
