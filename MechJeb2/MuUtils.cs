@@ -9,7 +9,7 @@ namespace MuMech
 {
     public static class MuUtils
     {
-        public static float ResourceDensity(int type)
+		public static float ResourceDensity(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).density;
         }
@@ -151,6 +151,15 @@ namespace MuMech
                 P.SetValue(null, value, null);
             }
         }
+ 
+		public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
+		{
+			T tmp = list[indexA];
+			list[indexA] = list[indexB];
+			list[indexB] = tmp;
+			return list;
+		}
+	}
 
         // With help from Toadicus VOID
         public static CBAttributeMap.MapAttribute CBAttributeMapGetAtt(CBAttributeMap cbmap, double lat, double lon)
@@ -158,7 +167,7 @@ namespace MuMech
             if (cbmap.Map == null)
             {
                 return cbmap.defaultAttribute;
-            }
+			}
 
             lon -= Math.PI / 2d;
             if (lon < 0d)
