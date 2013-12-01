@@ -662,7 +662,7 @@ namespace MuMech
 			}
 			lastIndex = ap.WaypointIndex;
 			
-			if (waitingForPick && vessel.isActiveVessel) {
+			if (waitingForPick && vessel.isActiveVessel && Event.current.type != EventType.Layout) {
 				if (MapView.MapIsEnabled) {
 					if (core.target.pickingPositionTarget == false) {
 						if (core.target.PositionTargetExists) {
@@ -673,7 +673,7 @@ namespace MuMech
 								ap.Waypoints.Add(new MechJebRoverWaypoint(core.target.GetPositionTargetPosition()));
 							}
 							core.target.Unset();
-							waitingForPick = false;
+							waitingForPick = alt;
 						}
 						else {
 							core.target.PickPositionTargetOnMap();
@@ -691,7 +691,7 @@ namespace MuMech
 								else {
 									ap.Waypoints.Add(new MechJebRoverWaypoint(mouseCoords.latitude, mouseCoords.longitude));
 								}
-								waitingForPick = false;
+								waitingForPick = alt;
 							}
 						}
 					}
@@ -811,47 +811,47 @@ namespace MuMech
 				}
 				
 				if (ap.WaypointIndex > 0) {
-					Debug.Log("drawing pastPath");
+//					Debug.Log("drawing pastPath");
 					pastPath.enabled = true;
 					pastPath.SetVertexCount(ap.WaypointIndex + 1);
 					for (int i = 0; i < ap.WaypointIndex; i++) {
-						Debug.Log("vert " + i.ToString());
+//						Debug.Log("vert " + i.ToString());
 						pastPath.SetPosition(i, RaisePositionOverTerrain(ap.Waypoints[i].Position, targetHeight));
 					}
 					pastPath.SetPosition(ap.WaypointIndex, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
-					Debug.Log("pastPath drawn");
+//					Debug.Log("pastPath drawn");
 				}
 				else {
-					Debug.Log("no pastPath");
+//					Debug.Log("no pastPath");
 					pastPath.enabled = false;
 				}
 				
 				if (ap.WaypointIndex > -1) {
-					Debug.Log("drawing currPath");
+//					Debug.Log("drawing currPath");
 					currPath.enabled = true;
 					currPath.SetPosition(0, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
 					currPath.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex].Position, targetHeight));
-					Debug.Log("currPath drawn");
+//					Debug.Log("currPath drawn");
 				}
 				else {
-					Debug.Log("no currPath");
+//					Debug.Log("no currPath");
 					currPath.enabled = false;
 				}
 				
 				var nextCount = ap.Waypoints.Count - ap.WaypointIndex;
 				if (nextCount > 1) {
-					Debug.Log("drawing nextPath of " + nextCount + " verts");
+//					Debug.Log("drawing nextPath of " + nextCount + " verts");
 					nextPath.enabled = true;
 					nextPath.SetVertexCount(nextCount);
 					nextPath.SetPosition(0, RaisePositionOverTerrain((ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position), targetHeight));
 					for (int i = 0; i < nextCount - 1; i++) {
-						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
+//						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
 						nextPath.SetPosition(i + 1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex + 1 + i].Position, targetHeight));
 					}
-					Debug.Log("nextPath drawn");
+//					Debug.Log("nextPath drawn");
 				}
 				else {
-					Debug.Log("no nextPath");
+//					Debug.Log("no nextPath");
 					nextPath.enabled = false;
 				}
 			}
