@@ -159,7 +159,6 @@ namespace MuMech
 			list[indexB] = tmp;
 			return list;
 		}
-	}
 
         // With help from Toadicus VOID
         public static CBAttributeMap.MapAttribute CBAttributeMapGetAtt(CBAttributeMap cbmap, double lat, double lon)

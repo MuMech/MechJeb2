@@ -220,7 +220,7 @@ namespace MuMech
 		public override void Drive(FlightCtrlState s)
 		{
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
-			MechJebRoverWaypoint wp = (WaypointIndex > -1 ? Waypoints[WaypointIndex] : null);
+			MechJebRoverWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
 			var curSpeed = vesselState.speedSurface;
 			etaSpeed.value = curSpeed;
@@ -236,8 +236,8 @@ namespace MuMech
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 0.75, 2);
-					var newSpeed = Math.Min(maxSpeed, (distance - wp.Radius) / brakeFactor); // brake when getting closer
-					newSpeed = Math.Max(Math.Max(newSpeed, minSpeed) / (Math.Abs(headingErr) / 4 > 1 ? Math.Abs(headingErr) / 4 : 1), turnSpeed); // reduce speed when turning a lot
+					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
+					newSpeed = (newSpeed > turnSpeed ? Math.Max(newSpeed / (Math.Abs(headingErr) / 4 > 1 ? Math.Abs(headingErr) / 4 : 1), turnSpeed) : newSpeed); // reduce speed when turning a lot
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
 						if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
@@ -253,10 +253,11 @@ namespace MuMech
 									WaypointIndex = -1;
 									controlHeading = controlSpeed = false;
 								}
-								else {
-									WaypointIndex++;
+//								else {
+//									Debug.Log("Is this even getting called?");
+//									WaypointIndex++;
+//								}
 							}
-						}
 						}
 						else {
 							WaypointIndex++;
@@ -286,14 +287,14 @@ namespace MuMech
 					s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
 				}
 			}
-            // Brake if there is no controler (Pilot eject from seat)
-            if (brakeOnEject && vessel.GetReferenceTransformPart() == null)
+			// Brake if there is no controler (Pilot eject from seat)
+			if (brakeOnEject && vessel.GetReferenceTransformPart() == null)
 			{
-                s.wheelThrottle = 0;
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-            }
-            else if (controlSpeed)
-            {
+				s.wheelThrottle = 0;
+				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+			}
+			else if (controlSpeed)
+			{
 				if (speed != speedLast)
 				{
 					speedPID.Reset();
