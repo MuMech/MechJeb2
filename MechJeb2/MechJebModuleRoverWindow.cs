@@ -662,7 +662,7 @@ namespace MuMech
 			}
 			lastIndex = ap.WaypointIndex;
 			
-			if (waitingForPick && vessel.isActiveVessel && Event.current.type != EventType.Layout) {
+			if (waitingForPick && vessel.isActiveVessel && Event.current.type == EventType.Repaint) {
 				if (MapView.MapIsEnabled) {
 					if (core.target.pickingPositionTarget == false) {
 						if (core.target.PositionTargetExists) {

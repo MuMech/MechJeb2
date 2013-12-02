@@ -16,6 +16,7 @@ namespace MuMech
 		public Vessel Target;
 		public float MinSpeed;
 		public float MaxSpeed;
+		public bool QuickSave;
 		
 		public CelestialBody Body  {
 			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
@@ -217,6 +218,10 @@ namespace MuMech
 			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.Exclude(myPos.normalized, tgtPos.normalized));
 		}
 
+		public float TurningSpeed(double speed, double error) {
+			return (float)Math.Max(speed / (Math.Abs(error) / 4 > 1 ? Math.Abs(error) / 4 : 1), turnSpeed);
+		}
+		
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
 		{
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
@@ -230,14 +235,17 @@ namespace MuMech
 					heading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
 				}
 				if (controlSpeed) {
+					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
-					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // use waypoints maxSpeed if set or just stick with the set speed
-					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (WaypointIndex < Waypoints.Count - 1 || LoopWaypoints ? maxSpeed / 2 : (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
-					// ^ use half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					var brakeFactor = Math.Max((curSpeed - minSpeed) * 0.75, 2);
+					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
+					                (nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
+					                 (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
+					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
+					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
-					newSpeed = (newSpeed > turnSpeed ? Math.Max(newSpeed / (Math.Abs(headingErr) / 4 > 1 ? Math.Abs(headingErr) / 4 : 1), turnSpeed) : newSpeed); // reduce speed when turning a lot
+					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
 					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
 					if (distance < radius) {
 						if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
