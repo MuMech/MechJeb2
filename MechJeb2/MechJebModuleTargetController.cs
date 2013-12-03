@@ -184,8 +184,8 @@ namespace MuMech
             //Restore the saved target when we are made active vessel
             if (!wasActiveVessel && vessel.isActiveVessel)
             {
-                if (target != null)
-                {
+                if (target != null && target.GetVessel() != null)
+                {                    
                     FlightGlobals.fetch.SetVesselTarget(target);
                 }
             }
