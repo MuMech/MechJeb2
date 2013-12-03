@@ -16,7 +16,7 @@ namespace MuMech
 		public Vessel Target;
 		public float MinSpeed;
 		public float MaxSpeed;
-		public bool QuickSave;
+		public bool Quicksave;
 		
 		public CelestialBody Body  {
 			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
@@ -59,6 +59,7 @@ namespace MuMech
 			this.Name = (Node.HasValue("Name") ? Node.GetValue("Name") : "");
 			if (Node.HasValue("MinSpeed")) { float.TryParse(Node.GetValue("MinSpeed"), out this.MinSpeed); }
 			if (Node.HasValue("MaxSpeed")) { float.TryParse(Node.GetValue("MaxSpeed"), out this.MaxSpeed); }
+			if (Node.HasValue("Quicksave")) { bool.TryParse(Node.GetValue("Quicksave"), out this.Quicksave); }
 			Update();
 		}
 		
@@ -73,6 +74,7 @@ namespace MuMech
 			cn.AddValue("Radius", Radius);
 			cn.AddValue("MinSpeed", MinSpeed);
 			cn.AddValue("MaxSpeed", MaxSpeed);
+			cn.AddValue("Quicksave", Quicksave);
 			return cn;
 		}
 		
@@ -242,6 +244,7 @@ namespace MuMech
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
 					                (nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
 					                 (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
+					minSpeed = (wp.Quicksave ? 0 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
@@ -258,8 +261,17 @@ namespace MuMech
 								newSpeed = -0.25;
 								tgtSpeed.force(newSpeed);
 								if (curSpeed < 0.85) {
-									WaypointIndex = -1;
-									controlHeading = controlSpeed = false;
+									if (wp.Quicksave) {
+										if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR) {
+											WaypointIndex = -1;
+											controlHeading = controlSpeed = false;
+											QuickSaveLoad.QuickSave();
+										}
+									}
+									else {
+										WaypointIndex = -1;
+										controlHeading = controlSpeed = false;
+									}
 								}
 //								else {
 //									Debug.Log("Is this even getting called?");
@@ -268,7 +280,19 @@ namespace MuMech
 							}
 						}
 						else {
-							WaypointIndex++;
+							if (wp.Quicksave) {
+								newSpeed = -0.25;
+								tgtSpeed.force(newSpeed);
+								if (curSpeed < 0.85) {
+									if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR) {
+										WaypointIndex++;
+										QuickSaveLoad.QuickSave();
+									}
+								}
+							}
+							else {
+								WaypointIndex++;
+							}
 						}
 					}
 					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < 0.85 && newSpeed < 0.85));

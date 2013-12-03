@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -245,8 +246,9 @@ namespace MuMech
 		internal string tmpMinSpeed = "";
 		internal string tmpMaxSpeed = "";
 		private Vector2 scroll;
-		private GUIStyle active;
-		private GUIStyle inactive;
+		private GUIStyle styleActive;
+		private GUIStyle styleInactive;
+		private GUIStyle styleQuicksave;
 		private string titleAdd = "";
 		private string saveName = "";
 		private bool waitingForPick = false;
@@ -396,14 +398,18 @@ namespace MuMech
 
 		protected override void WindowGUI(int windowID)
 		{
-			if (inactive == null) {
-				inactive = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
-				inactive.alignment = TextAnchor.UpperLeft;
+			if (styleInactive == null) {
+				styleInactive = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
+				styleInactive.alignment = TextAnchor.UpperLeft;
 			}
-			if (active == null) {
-				active = new GUIStyle(inactive);
-				active.active.textColor = active.focused.textColor = active.hover.textColor = active.normal.textColor = Color.green;
+			if (styleActive == null) {
+				styleActive = new GUIStyle(styleInactive);
+				styleActive.active.textColor = styleActive.focused.textColor = styleActive.hover.textColor = styleActive.normal.textColor = Color.green;
 			} // for some reason MJ's skin sometimes isn't loaded at OnStart so this has to be done here
+			if (styleQuicksave == null) {
+				styleQuicksave = new GUIStyle(styleActive);
+				styleQuicksave.active.textColor = styleQuicksave.focused.textColor = styleQuicksave.hover.textColor = styleQuicksave.normal.textColor = Color.yellow;
+			}
 			
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 			
@@ -428,7 +434,7 @@ namespace MuMech
 							string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
 							                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 							GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
-							if (GUILayout.Button(str, (i == selIndex ? active : inactive))) {
+							if (GUILayout.Button(str, (i == selIndex ? styleActive : (wp.Quicksave ? styleQuicksave : styleInactive)))) {
 								if (alt) {
 									ap.WaypointIndex = i;
 								}
@@ -463,6 +469,15 @@ namespace MuMech
 								tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
 								float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
 								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
+								GUILayout.FlexibleSpace();
+								if (GUILayout.Button("QS", (wp.Quicksave ? styleQuicksave : styleInactive), GUILayout.ExpandWidth(false))) {
+									if (alt) {
+										ap.Waypoints.ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
+									}
+									else {
+										wp.Quicksave = !wp.Quicksave;
+									}
+								}
 								GUILayout.EndHorizontal();
 							}
 						}
@@ -605,7 +620,7 @@ namespace MuMech
 					for (int i = 0; i < bodyWPs.Count; i++) {
 						GUILayout.BeginHorizontal();
 						var str = bodyWPs[i].Name + " - " + bodyWPs[i].Stats;
-						if (GUILayout.Button(str, (i == saveIndex ? active : inactive))) {
+						if (GUILayout.Button(str, (i == saveIndex ? styleActive : styleInactive))) {
 							saveIndex = (saveIndex == i ? -1 : i);
 						}
 						if (i == saveIndex) {
