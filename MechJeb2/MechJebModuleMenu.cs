@@ -40,8 +40,15 @@ namespace MuMech
 
         bool movingButton = false;
 
+        public bool hideButton = false;
+
         protected override void WindowGUI(int windowID)
         {
+            if (hideButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
+            {
+                ShowHideWindow();
+            }
+
             GUIStyle toggleInactive = new GUIStyle(GUI.skin.toggle);
             toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
@@ -104,21 +111,11 @@ namespace MuMech
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            if (!hideButton && GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
             {
                 if (Event.current.button == 0)
                 {
-                    if (windowStat == WindowStat.HIDDEN)
-                    {
-                        windowStat = WindowStat.OPENING;
-                        windowProgr = 0;
-                        firstDraw = true;
-                    }
-                    else if (windowStat == WindowStat.NORMAL)
-                    {
-                        windowStat = WindowStat.CLOSING;
-                        windowProgr = 1;
-                    }
+                    ShowHideWindow();
                 }
                 else if (!movingButton && Event.current.button == 1)
                 {
@@ -147,6 +144,21 @@ namespace MuMech
             {
                 GUI.FocusControl("MechJebOpen");
                 firstDraw = false;
+            }
+        }
+
+        public void ShowHideWindow()
+        {
+            if (windowStat == WindowStat.HIDDEN)
+            {
+                windowStat = WindowStat.OPENING;
+                windowProgr = 0;
+                firstDraw = true;
+            }
+            else if (windowStat == WindowStat.NORMAL)
+            {
+                windowStat = WindowStat.CLOSING;
+                windowProgr = 1;
             }
         }
 
