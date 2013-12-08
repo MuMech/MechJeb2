@@ -156,6 +156,10 @@ namespace MuMech
             targetThrottle = 0;
             vessel.ctrlState.mainThrottle = 0;
             tmode = TMode.OFF;
+            if (vessel == FlightGlobals.ActiveVessel)
+            {
+                FlightInputHandler.state.mainThrottle = 0; //so that the on-screen throttle gauge reflects the autopilot throttle
+            }
         }
 
         public override void Drive(FlightCtrlState s)
