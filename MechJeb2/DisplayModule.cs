@@ -44,11 +44,19 @@ namespace MuMech
             }
         }
 
-        //public void SetPos(float x, float y)
-        //{
-        //    windowVector.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
-        //    windowVector.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
-        //}
+        public void SetPos(float x, float y)
+        {
+            if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+            {
+                windowVector.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
+                windowVector.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
+            }
+            else
+            {
+                windowVectorEditor.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
+                windowVectorEditor.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
+            }
+        }
 
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects

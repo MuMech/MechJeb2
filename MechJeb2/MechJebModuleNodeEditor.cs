@@ -79,6 +79,7 @@ namespace MuMech
                 if (gizmo != null) gizmo.OnGizmoUpdated += GizmoUpdateHandler;
             }
 
+
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Prograde:", prograde, "m/s", 60);
             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
@@ -127,14 +128,33 @@ namespace MuMech
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Set delta to:", GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("0.01", GUILayout.ExpandWidth(true)))
+                progradeDelta = radialPlusDelta = normalPlusDelta = 0.01;
+            if (GUILayout.Button("0.1", GUILayout.ExpandWidth(true)))
+                progradeDelta = radialPlusDelta = normalPlusDelta = 0.1;
+            if (GUILayout.Button("1", GUILayout.ExpandWidth(true)))
+                progradeDelta = radialPlusDelta = normalPlusDelta = 1;
+            if (GUILayout.Button("10", GUILayout.ExpandWidth(true)))
+                progradeDelta = radialPlusDelta = normalPlusDelta = 10;
+            if (GUILayout.Button("100", GUILayout.ExpandWidth(true)))
+                progradeDelta = radialPlusDelta = normalPlusDelta = 100;
+            GUILayout.EndHorizontal();
+
             if (GUILayout.Button("Update")) node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Shift time by", GUILayout.ExpandWidth(true)))
+            GUILayout.Label("Shift time", GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                node.OnGizmoUpdated(node.DeltaV, node.UT - timeOffset);
+            }
+            timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 node.OnGizmoUpdated(node.DeltaV, node.UT + timeOffset);
             }
-            timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

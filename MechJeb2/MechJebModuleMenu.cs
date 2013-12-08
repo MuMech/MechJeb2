@@ -128,14 +128,12 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                windowVector.x = Screen.width - windowProgr * 200;
-                windowVector.y = Mathf.Clamp(- 100 - windowVPos, 0, Screen.height - windowPos.height) ;
+                SetPos(Screen.width - windowProgr * 200, Mathf.Clamp(- 100 - windowVPos, 0, Screen.height - windowPos.height) );
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
             {
-                windowVector.x = Screen.width + 100;
-                windowVector.y = Screen.height + 100;
+                SetPos(Screen.width + 100, windowVector.y = Screen.height + 100);
             }
 
             GUI.depth = -98;
