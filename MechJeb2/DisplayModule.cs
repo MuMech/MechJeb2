@@ -12,27 +12,50 @@ namespace MuMech
 
         public Rect windowPos
         {
-            get { return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w); }
+            get
+            {
+                if (HighLogic.LoadedScene == GameScenes.FLIGHT)                
+                    return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w);                
+                else
+                    return new Rect(windowVectorEditor.x, windowVectorEditor.y, windowVectorEditor.z, windowVectorEditor.w);
+            }
             set
             {
-                windowVector = new Vector4(
-                    Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
-                    Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
-                    value.width, value.height
-                );
-                windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, Screen.width - 10);
-                windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, Screen.height - 10);
+                if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                {
+                    windowVector = new Vector4(
+                        Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
+                        Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
+                        value.width, value.height
+                    );
+                    windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, Screen.width - 10);
+                    windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, Screen.height - 10);
+                }
+                else
+                {
+                    windowVectorEditor = new Vector4(
+                        Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
+                        Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
+                        value.width, value.height
+                    );
+                    windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, Screen.width - 10);
+                    windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, Screen.height - 10);
+                }
             }
         }
 
-        public void SetPos(float x, float y)
-        {
-            windowVector.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
-            windowVector.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
-        }
+        //public void SetPos(float x, float y)
+        //{
+        //    windowVector.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
+        //    windowVector.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
+        //}
 
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+
+        [Persistent(pass = (int)Pass.Global)]
+        public Vector4 windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
