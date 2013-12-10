@@ -22,17 +22,18 @@ namespace MuMech
             references[Operation.COURSE_CORRECTION] = new TimeReference[] { TimeReference.COMPUTED };
             references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
             references[Operation.KILL_RELVEL] = new TimeReference[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
+            references[Operation.RESONANT_ORBIT] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW };
         }
 
         public enum Operation
         {
             CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER, MOON_RETURN,
-            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL
+            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL, RESONANT_ORBIT
         };
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
         string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap",
                   "change inclination", "match planes with target", "Hohmann transfer to target", "return from a moon",
-                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target"};
+                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target", "resonant orbit"};
 
         public enum TimeReference
         {
@@ -61,6 +62,10 @@ namespace MuMech
         public EditableDoubleMult circularizeAltitude = new EditableDoubleMult(150000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime interceptInterval = 3600;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableInt resonanceNumerator = 2;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableInt resonanceDenominator = 3;
 
         Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
 
@@ -248,6 +253,16 @@ namespace MuMech
 
                 case Operation.KILL_RELVEL:
                     GUILayout.Label("Schedule the burn");
+                    break;
+
+                case Operation.RESONANT_ORBIT:
+                    GUILayout.Label("Change your orbital period to " + resonanceNumerator.val + "/" + resonanceDenominator.val + " of your current orbital period");
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("New orbital period ratio :", GUILayout.ExpandWidth(true));
+                    resonanceNumerator.text = GUILayout.TextField(resonanceNumerator.text, GUILayout.Width(30));
+                    GUILayout.Label("/", GUILayout.ExpandWidth(false));
+                    resonanceDenominator.text = GUILayout.TextField(resonanceDenominator.text, GUILayout.Width(30));
+                    GUILayout.EndHorizontal();
                     break;
             }
         }
@@ -703,6 +718,10 @@ namespace MuMech
 
                 case Operation.KILL_RELVEL:
                     dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, UT, core.target.Orbit);
+                    break;
+
+                case Operation.RESONANT_ORBIT:
+                    dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, UT, (double)resonanceNumerator.val / resonanceDenominator.val);
                     break;
             }
 

@@ -9,7 +9,7 @@ namespace MuMech
     public class MechJebModuleWarpHelper : DisplayModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT }
-        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle to target" };
+        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle" };
         static readonly int numWarpTargets = Enum.GetNames(typeof(WarpTarget)).Length;
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
@@ -23,6 +23,7 @@ namespace MuMech
 
         double targetUT = 0;
 
+        [Persistent(pass = (int)(Pass.Local|Pass.Type|Pass.Global))]
         EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
