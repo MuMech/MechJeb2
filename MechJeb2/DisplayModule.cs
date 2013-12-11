@@ -14,14 +14,14 @@ namespace MuMech
         {
             get
             {
-                if (HighLogic.LoadedScene == GameScenes.FLIGHT)                
+                if (!HighLogic.LoadedSceneIsEditor)                
                     return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w);                
                 else
                     return new Rect(windowVectorEditor.x, windowVectorEditor.y, windowVectorEditor.z, windowVectorEditor.w);
             }
             set
             {
-                if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                if (!HighLogic.LoadedSceneIsEditor)
                 {
                     windowVector = new Vector4(
                         Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
@@ -41,20 +41,6 @@ namespace MuMech
                     windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, Screen.width - 10);
                     windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, Screen.height - 10);
                 }
-            }
-        }
-
-        public void SetPos(float x, float y)
-        {
-            if (HighLogic.LoadedScene == GameScenes.FLIGHT)
-            {
-                windowVector.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
-                windowVector.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
-            }
-            else
-            {
-                windowVectorEditor.x = Math.Min(Math.Max(x, 0), Screen.width - windowVector.z);
-                windowVectorEditor.y = Math.Min(Math.Max(y, 0), Screen.height - windowVector.w);
             }
         }
 

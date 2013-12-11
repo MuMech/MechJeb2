@@ -16,6 +16,7 @@ namespace MuMech
             hidden = true;
             showInFlight = true;
             showInEditor = true;
+            useIcon = true;
         }
 
         public enum WindowStat
@@ -128,12 +129,12 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                SetPos(Screen.width - windowProgr * 200, Mathf.Clamp(- 100 - windowVPos, 0, Screen.height - windowPos.height) );
-                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
+                Rect pos = new Rect(Screen.width - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, Screen.height - windowPos.height), windowPos.width, windowPos.height );
+                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
             {
-                SetPos(Screen.width + 100, windowVector.y = Screen.height + 100);
+                windowPos = new Rect(Screen.width + 100, Screen.height + 100, windowPos.width, windowPos.height);
             }
 
             GUI.depth = -98;
