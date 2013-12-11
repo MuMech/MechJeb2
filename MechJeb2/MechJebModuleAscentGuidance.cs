@@ -98,6 +98,7 @@ namespace MuMech
             core.thrust.LimitToPreventOverheatsInfoItem();
             core.thrust.LimitToTerminalVelocityInfoItem();
             core.thrust.LimitAccelerationInfoItem();
+            core.thrust.LimitThrottleInfoItem();
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
