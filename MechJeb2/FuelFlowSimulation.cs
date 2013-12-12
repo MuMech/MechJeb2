@@ -165,6 +165,37 @@ namespace MuMech
                 }
             }
 
+            // We are not allowed to stage if the stage does not decouple anything, and there is an active engine that still has access to resources
+            {
+                bool activeEnginesWorking = false;
+                bool partDecoupledInNextStage = false;
+
+                foreach (FuelNode n in nodes)
+                {
+                    if (activeEngines.Contains(n))
+                    {
+                        if (n.CanDrawNeededResources(nodes))
+                        {
+                            //Debug.Log("Part " + n.partName + " is an active engine that still has resources to draw on.");
+                            activeEnginesWorking = true;
+                        }
+                    }
+
+                    if (n.decoupledInStage == (simStage - 1))
+                    {
+                        //Debug.Log("Part " + n.partName + " is decoupled in the next stage.");
+
+                        partDecoupledInNextStage = true; 
+                    }
+                }
+
+                if (!partDecoupledInNextStage && activeEnginesWorking)
+                {
+                    //Debug.Log("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
+                    return false;
+                }
+            }
+
             //if this isn't the last stage, we're allowed to stage because doing so wouldn't drop anything important
             if (simStage > 0)
             {
