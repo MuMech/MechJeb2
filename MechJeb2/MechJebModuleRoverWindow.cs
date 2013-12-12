@@ -423,11 +423,14 @@ namespace MuMech
 						double dist = 0;
 						for (int i = 0; i < ap.Waypoints.Count; i++) {
 							var wp = ap.Waypoints[i];
+							if (MapView.MapIsEnabled && i == selIndex) {
+								MuMech.GLUtils.DrawMapViewGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 250);
+							}
 							if (i >= ap.WaypointIndex) {
 								if (ap.WaypointIndex > -1) {
 									eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
 								}
-								dist += Vector3.Distance((i == ap.WaypointIndex || ap.WaypointIndex == -1 ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
+								dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 							}
 							var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
 							var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (i < ap.Waypoints.Count - 1 || ap.LoopWaypoints ? maxSpeed / 2 : 0));
@@ -786,24 +789,24 @@ namespace MuMech
 			if (NewLineRenderer(ref selWP)) { selWP.SetColors(selWPColor, selWPColor); }
 			
 			//Debug.Log(ap.vessel.vesselName);
-			var body = ap.core.GetComputerModule<MechJebModuleRoverWaypointWindow>();
+			var window = ap.core.GetComputerModule<MechJebModuleRoverWaypointWindow>();
 			switch (ap.vessel.mainBody.bodyName) {
-					case "Moho" : addHeight = body.MohoMapdist; break;
-					case "Eve" : addHeight = body.EveMapdist; break;
-					case "Gilly" : addHeight = body.GillyMapdist; break;
-					case "Kerbin" : addHeight = body.KerbinMapdist; break;
-					case "Mun" : addHeight = body.MunMapdist; break;
-					case "Minmus" : addHeight = body.MinmusMapdist; break;
-					case "Duna" : addHeight = body.DunaMapdist; break;
-					case "Ike" : addHeight = body.IkeMapdist; break;
-					case "Dres" : addHeight = body.DresMapdist; break;
-					case "Jool" : addHeight = body.JoolMapdist; break;
-					case "Laythe" : addHeight = body.LaytheMapdist; break;
-					case "Vall" : addHeight = body.VallMapdist; break;
-					case "Tylo" : addHeight = body.TyloMapdist; break;
-					case "Bop" : addHeight = body.BopMapdist; break;
-					case "Pol" : addHeight = body.PolMapdist; break;
-					case "Eeloo" : addHeight = body.EelooMapdist; break;
+					case "Moho" : addHeight = window.MohoMapdist; break;
+					case "Eve" : addHeight = window.EveMapdist; break;
+					case "Gilly" : addHeight = window.GillyMapdist; break;
+					case "Kerbin" : addHeight = window.KerbinMapdist; break;
+					case "Mun" : addHeight = window.MunMapdist; break;
+					case "Minmus" : addHeight = window.MinmusMapdist; break;
+					case "Duna" : addHeight = window.DunaMapdist; break;
+					case "Ike" : addHeight = window.IkeMapdist; break;
+					case "Dres" : addHeight = window.DresMapdist; break;
+					case "Jool" : addHeight = window.JoolMapdist; break;
+					case "Laythe" : addHeight = window.LaytheMapdist; break;
+					case "Vall" : addHeight = window.VallMapdist; break;
+					case "Tylo" : addHeight = window.TyloMapdist; break;
+					case "Bop" : addHeight = window.BopMapdist; break;
+					case "Pol" : addHeight = window.PolMapdist; break;
+					case "Eeloo" : addHeight = window.EelooMapdist; break;
 			}
 			
 			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight) {
@@ -818,11 +821,12 @@ namespace MuMech
 				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 				
 				int sel = ap.core.GetComputerModule<MechJebModuleRoverWaypointWindow>().selIndex;
-				selWP.enabled = sel > -1;
+				selWP.enabled = sel > -1 && !MapView.MapIsEnabled;
 				if (selWP.enabled) {
-					selWP.SetWidth(0f, width * 10f);
+					float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Waypoints[sel].Position) / 600f + 0.1f;
+					selWP.SetWidth(0f, w * 10f);
 					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
-					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + width * 15f));
+					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
 				}
 				
 				if (ap.WaypointIndex > 0) {
