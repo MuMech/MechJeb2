@@ -47,7 +47,7 @@ namespace MuMech
             {
                 if (GUILayout.Button("Target KSC"))
                 {
-                    core.target.SetPositionTarget(mainBody, -0.10267, -74.57538);
+                    core.target.SetPositionTarget(mainBody, -0.09694444, -74.5575);
                 }
             }
 
