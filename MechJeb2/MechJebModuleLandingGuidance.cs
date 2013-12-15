@@ -47,7 +47,7 @@ namespace MuMech
             {
                 if (GUILayout.Button("Target KSC"))
                 {
-                    core.target.SetPositionTarget(mainBody, -0.09694444, -74.5575);
+                    core.target.SetPositionTarget(mainBody, -0.10267, -74.57538);
                 }
             }
 
@@ -121,7 +121,6 @@ namespace MuMech
                                                          mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
                         GUILayout.Label("Difference from target = " + MuUtils.ToSI(error, 0) + "m");
                         if (result.maxDragGees > 0) GUILayout.Label("Predicted max drag gees: " + result.maxDragGees.ToString("F1"));
-
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
