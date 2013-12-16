@@ -50,7 +50,7 @@ namespace MuMech
         enum LandStep
         {
             PLANE_CHANGE, LOW_DEORBIT_BURN, DEORBIT_BURN, COURSE_CORRECTIONS, COAST_TO_DECELERATION,
-            DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, UNTARGETED_DEORBIT, OFF
+            DECELERATING, KILLING_HORIZONTAL_VELOCITY, UNTARGETED_LANDING, FINAL_DESCENT, UNTARGETED_DEORBIT, OFF
         }
         LandStep landStep = LandStep.OFF;
 
@@ -74,6 +74,9 @@ namespace MuMech
         public EditableInt limitChutesStage = 0;
 
         double lowDeorbitBurnTriggerFactor = 2;
+
+        PIDControllerV final_descent_pid = new PIDControllerV(0.5, 0.0, 0.02);
+        Vector3d final_descent_last_speed_target;
 
         //Landing prediction data:
         MechJebModuleLandingPredictions predictor;
@@ -165,8 +168,12 @@ namespace MuMech
                     DriveKillHorizontalVelocity(s);
                     break;
 
-                case LandStep.FINAL_DESCENT:
+                case LandStep.UNTARGETED_LANDING:
                     DriveUntargetedLanding(s);
+                    break;
+
+                case LandStep.FINAL_DESCENT:
+                    DriveFinalDescent(s);
                     break;
 
                 default:
@@ -210,7 +217,9 @@ namespace MuMech
             if (orbit.PeA < -0.1 * mainBody.Radius)
             {
                 core.thrust.targetThrottle = 0;
-                landStep = LandStep.FINAL_DESCENT;
+                final_descent_pid.Reset();
+                final_descent_last_speed_target = new Vector3d();
+                landStep = LandStep.UNTARGETED_LANDING;
                 return;
             }
 
@@ -554,7 +563,7 @@ namespace MuMech
         {
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
 
-            if (currentError < 150)
+            if (currentError < 300)
             {
                 core.thrust.targetThrottle = 0;
                 landStep = LandStep.COAST_TO_DECELERATION;
@@ -683,6 +692,8 @@ namespace MuMech
             {
                 core.thrust.targetThrottle = 0;
                 core.attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, this);
+                final_descent_pid.Reset();
+                final_descent_last_speed_target = new Vector3d();
                 landStep = LandStep.FINAL_DESCENT;
                 return;
             }
@@ -710,6 +721,96 @@ namespace MuMech
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
 
             status = "Killing horizontal velocity before final descent";
+        }
+
+        public void DriveFinalDescent(FlightCtrlState s)
+        {
+            if (vessel.LandedOrSplashed)
+            {
+                core.thrust.ThrustOff();
+                core.thrust.users.Remove(this);
+                StopLanding();
+                return;
+            }
+
+            double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+
+            if (!deployedGears && (minalt < 1000)) DeployLandingGears();
+
+            if (vesselState.limitedMaxThrustAccel < vesselState.gravityForce.magnitude)
+            {
+                //if we have TWR < 1, just try as hard as we can to decelerate:
+                //(we need this special case because otherwise the calculations spit out NaN's)
+                core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
+                core.thrust.trans_kill_h = true;
+                core.thrust.trans_spd_act = 0;
+
+                status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain\nWarning: TWR < 1";
+            }
+            else
+            {
+                Vector3d target_surface_speed;
+                if (minalt > DecelerationEndAltitude() && UseAtmosphereToBrake())
+                {
+                    core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
+                    core.thrust.trans_spd_act = 0;
+                    core.attitude.attitudeTo(-vesselState.velocityVesselSurface, AttitudeReference.INERTIAL, null);
+                    status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain, burn will start " + DecelerationEndAltitude().ToString("F0") + "m above terrain";
+                    return;
+                }
+                else if (minalt > 200)
+                {
+                    Vector3d estimatedLandingPosition = vesselState.CoM + vesselState.velocityVesselSurface.sqrMagnitude / (2 * vesselState.limitedMaxThrustAccel) * vesselState.velocityVesselSurfaceUnit;
+                    double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
+                    IDescentSpeedPolicy aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
+
+                    target_surface_speed = -vesselState.up * aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface);
+                }
+                else
+                {
+                    float trans_spd_act = -Mathf.Lerp(0, (float)Math.Sqrt((vesselState.limitedMaxThrustAccel - vesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
+                    trans_spd_act = (float)Math.Min(-touchdownSpeed, trans_spd_act);
+                    target_surface_speed = vesselState.up * trans_spd_act;
+                }
+
+                Vector3d horizontal_error = minalt < 10 ? Vector3d.Exclude(vesselState.up, vesselState.CoM - core.target.GetPositionTargetPosition()) :
+                                                          Vector3d.Exclude(vesselState.up, LandingSite - core.target.GetPositionTargetPosition());
+                if (horizontal_error.magnitude > 50)
+                    horizontal_error = horizontal_error.normalized * 50;
+
+                target_surface_speed -= horizontal_error * 0.2;
+
+
+                Vector3d target_acceleration = final_descent_pid.Compute(target_surface_speed - vesselState.velocityVesselSurface) - vesselState.gravityForce + (target_surface_speed - final_descent_last_speed_target) / vesselState.deltaT;
+                final_descent_last_speed_target = target_surface_speed;
+                if (Vector3d.Dot(target_acceleration, vesselState.up) < 0)
+                {
+                    target_acceleration = Vector3d.Exclude(vesselState.up, target_acceleration);
+                    if (target_acceleration.sqrMagnitude < 25)
+                        target_acceleration = new Vector3d();
+                }
+
+                core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
+
+                if (target_acceleration.sqrMagnitude < 1e-4)
+                    core.attitude.attitudeTo(vesselState.up, AttitudeReference.INERTIAL, null);
+                else
+                    core.attitude.attitudeTo(target_acceleration.normalized, AttitudeReference.INERTIAL, null);
+
+                if (Vector3d.Dot(target_acceleration.normalized, vesselState.forward) < 0.8)
+                    core.thrust.trans_spd_act = 0;
+                else
+                    core.thrust.trans_spd_act = (float)(100.0 * target_acceleration.magnitude / vesselState.maxThrustAccel);
+
+                status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
+                //status += "\nangle error: " + Vector3d.Angle(target_acceleration, vesselState.forward).ToString() + "°\n";
+                //status += "surface speed: " + core.attitude.attitudeWorldToReference(vesselState.velocityVesselSurface, AttitudeReference.SURFACE_NORTH).ToString() + "\n\n";
+                //status += "target speed: " + core.attitude.attitudeWorldToReference(target_surface_speed, AttitudeReference.SURFACE_NORTH).ToString() + "\n\n";
+                //status += "speed error: " + core.attitude.attitudeWorldToReference(vesselState.velocityVesselSurface - target_surface_speed, AttitudeReference.SURFACE_NORTH).ToString() + "\n\n";
+                //status += "target acceleration: " + core.attitude.attitudeWorldToReference(target_acceleration, AttitudeReference.SURFACE_NORTH).ToString() + "\n\n";
+                //status += "forward vector: " + core.attitude.attitudeWorldToReference(vesselState.forward, AttitudeReference.SURFACE_NORTH).ToString();
+
+            }
         }
 
         public void DriveUntargetedLanding(FlightCtrlState s)
@@ -794,7 +895,7 @@ namespace MuMech
                 }
             }
 
-            status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
+            status = "Untargeted landing: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
         }
 
         void DeployParachutes()
