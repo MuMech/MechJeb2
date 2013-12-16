@@ -191,7 +191,7 @@ namespace MuMech
 
         public void print(object message)
         {
-            MonoBehaviour.print(message);
+            MonoBehaviour.print("[MechJeb2] " + message);
         }
     }
 
