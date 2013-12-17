@@ -225,7 +225,7 @@ namespace MuMech
 		}
 		
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
-		{
+		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
 			MechJebRoverWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
