@@ -479,6 +479,7 @@ namespace MuMech
                 if (m.enabled && m.showInCurrentScene
                     && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
                 {
+                    //MonoBehaviour.print(m.GetName() + " " + m.windowPos.x.ToString("F2") + " " + m.windowPos.y.ToString("F2") + " " + m.windowPos.width.ToString("F2") + " " + m.windowPos.height.ToString("F2"));
                     return true;
                 }
             }

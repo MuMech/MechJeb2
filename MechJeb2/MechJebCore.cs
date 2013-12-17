@@ -691,10 +691,7 @@ namespace MuMech
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
         void PreventEditorClickthrough()
         {
-            //bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-
-            bool mouseOverWindow = false; // until I find out why it return true for all windows
-
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             if (!weLockedEditor && mouseOverWindow)
             {
                 EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");

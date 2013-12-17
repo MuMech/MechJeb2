@@ -130,7 +130,9 @@ namespace MuMech
             if (windowStat != WindowStat.HIDDEN)
             {
                 Rect pos = new Rect(Screen.width - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, Screen.height - windowPos.height), windowPos.width, windowPos.height );
+                MonoBehaviour.print("A " + windowPos.x.ToString("F2") + " " + windowPos.y.ToString("F2") + " " + windowPos.width.ToString("F2") + " " + windowPos.height.ToString("F2"));
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
+                MonoBehaviour.print("B " + windowPos.x.ToString("F2") + " " + windowPos.y.ToString("F2") + " " + windowPos.width.ToString("F2") + " " + windowPos.height.ToString("F2"));
             }
             else
             {
