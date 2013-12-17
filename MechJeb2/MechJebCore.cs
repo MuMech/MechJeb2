@@ -692,16 +692,16 @@ namespace MuMech
         void PreventEditorClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (mouseOverWindow && !EditorLogic.editorLocked)
+            if (!weLockedEditor && mouseOverWindow)
             {
-                EditorLogic.fetch.Lock(true, true, true);
+                EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
                 weLockedEditor = true;
             }
-            if (weLockedEditor && !mouseOverWindow && EditorLogic.editorLocked)
+            if (weLockedEditor && !mouseOverWindow)
             {
-                EditorLogic.fetch.Unlock();
+                EditorLogic.fetch.Unlock("MechJeb_noclick");
+                weLockedEditor = false;
             }
-            if (!EditorLogic.editorLocked) weLockedEditor = false;
         }
     }
 }

@@ -130,9 +130,9 @@ namespace MuMech
         {
             try
             {
-                if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global).CopyTo(global);
-                if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type).CopyTo(type);
-                if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local).CopyTo(local);
+                if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global);
+                if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type);
+                if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local);
             }
             catch (Exception e)
             {
