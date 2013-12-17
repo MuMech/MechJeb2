@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing.Text;
 using System.Linq;
@@ -108,6 +109,12 @@ namespace MuMech
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 
+			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover)) {
+				var help = core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>();
+				help.selTopic = ((IList)help.topics).IndexOf("Controller");
+				help.enabled = help.selTopic > -1 || help.enabled;
+			}
+			
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.heading").DrawItem();
 			ed.registry.Find(i => i.id == "Value:RoverController.headingErr").DrawItem();
@@ -398,6 +405,12 @@ namespace MuMech
 
 		protected override void WindowGUI(int windowID)
 		{
+			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover)) {
+				var help = core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>();
+				help.selTopic = ((IList)help.topics).IndexOf("Waypoints");
+				help.enabled = help.selTopic > -1 || help.enabled;
+			}
+			
 			if (styleInactive == null) {
 				styleInactive = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
 				styleInactive.alignment = TextAnchor.UpperLeft;
@@ -611,6 +624,9 @@ namespace MuMech
 						showPage = pages.routes;
 						scroll = Vector2.zero;
 					}
+					if (GUILayout.Button("Help")) {
+						core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>().enabled = !core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>().enabled;
+					}
 					GUILayout.EndHorizontal();
 					break;
 					
@@ -724,6 +740,95 @@ namespace MuMech
 			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRoverPathRenderer.AttachToMapView(core); } //MechJebRoverPathRenderer.AttachToMapView(core); }
 			ap.Waypoints.ForEach(wp => wp.Update());
 			base.OnFixedUpdate();
+		}
+	}
+
+	public class MechJebModuleRoverWaypointHelpWindow : DisplayModule {
+		public int selTopic = 0;
+		public string[] topics = {"Controller", "Waypoints", "Routes", "Settings"};
+		string selSubTopic = "";
+		GUIStyle btnActive;
+		GUIStyle btnInactive;
+		
+		void HelpTopic(string title, string text) {
+			GUILayout.BeginVertical();
+			if (GUILayout.Button(title, (selSubTopic == title ? btnActive : btnInactive))) {
+				selSubTopic = (selSubTopic != title ? title : "");
+				windowPos = new Rect(windowPos.x, windowPos.y, windowPos.width, 0);
+			}
+			if (selSubTopic == title) {
+				GUILayout.Label(text);
+			}
+			GUILayout.EndVertical();
+		}
+		
+		public MechJebModuleRoverWaypointHelpWindow(MechJebCore core) : base(core) { }
+
+		public override void OnStart(PartModule.StartState state)
+		{
+			btnInactive = new GUIStyle(GuiUtils.skin.button);
+			btnInactive.alignment = TextAnchor.MiddleLeft;
+			btnActive = new GUIStyle(btnInactive);
+			btnActive.active.textColor = btnActive.hover.textColor = btnActive.focused.textColor = btnActive.normal.textColor = Color.green;
+			hidden = true;
+			base.OnStart(state);
+		}
+		
+		protected override void WindowGUI(int windowID)
+		{			
+		 	selTopic = GUILayout.SelectionGrid(selTopic, topics, topics.Length);
+		 	
+		 	switch (topics[selTopic]) {
+		 		case "Controller":
+		 			HelpTopic("Target Speed", "Current speed the AP tries to achieve.");
+		 			HelpTopic("Waypoints", "Overview of waypoints and which the AP is currently driving to.");
+		 			HelpTopic("Button 'Waypoints'", "Opens the waypoint list to set up a route.");
+		 			HelpTopic("Button 'Follow' / 'Stop'", "This sets the AP to drive along the set route starting at the first waypoint. Only visible when atleast one waypoint is set." +
+		 			          "\n\nAlt click will set the AP to 'Loop Mode' which will make it go for the first waypoint again after reaching the last." +
+		 			          "If the only waypoint happens to be a target it will keep following that instead of only going to it once." +
+		 			          "\n\nIf the AP is already active the 'Follow' button will turn into the 'Stop' button which will obviously stop it when pressed.");
+		 			HelpTopic("Button 'To Target'", "Clears the route, adds the target as only waypoint and starts the AP. Only visible with a selected target." +
+		 			          "\n\nAlt click will set the AP to 'Loop Mode' which will make it continue to follow the target, pausing when near it instead of turning off then.");
+		 			HelpTopic("Button 'Add Target'", "Adds the selected target as a waypoint either at the end of the route or before the selected waypoint. Only visible with a selected target.");
+		 			break;
+		 			
+		 		case "Waypoints":
+		 			HelpTopic("Button 'Add Waypoint'", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
+		 			          "simply click the terrain or somewhere on the body in Mapview." +
+		 			          "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
+		 			HelpTopic("Button 'Remove'", "Removes the currently selected waypoint." +
+		 			          "\n\nAlt clicking will remove all waypoints.");
+		 			HelpTopic("Button 'Up' / 'Down' / 'Top' / 'Bottom'", "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
+		 			HelpTopic("Waypoint Radius", "Radius defines the distance to the center of the waypoint after which the waypoint will be considered 'reached'." +
+		 			          "\n\nA radius of 5m (default) simply means that when you're 5m from the waypoint away the AP will jump to the next or turn off if it was the last." +
+		 			          "\n\nThe 'A' button behind the textfield will set the entered radius for all waypoints.");
+		 			HelpTopic("Waypoint Speed", "The two speed textfields represent the minimum and maximum speed for the waypoint." +
+		 			          "\n\nThe maximum speed is the speed the AP tries to reach to get to the waypoint." +
+		 			          "\n\nThe minimum speed was before used to set the speed with which the AP will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
+		 			          "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
+		 			          "\n\nThe 'A' buttons set their respective speed for all waypoints.");
+		 			HelpTopic("Waypoint QuickSave", "Clicking the 'QS' button will turn on QuickSave for that waypoint." +
+		 			          "\n\nThis will make the AP stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
+		 			          "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the AP at that point until interefered with. (Discovered by Greys)" +
+		 			          "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
+		 			HelpTopic("Waypoint Alt Click", "Alt clicking a waypoint will mark it as the current target waypoint. The active waypoint has a green tinted background.");
+		 			break;
+		 			
+		 		case "Routes":
+		 			HelpTopic("Routes Help", "The empty textfield is for saving routes, enter a name there before clicking 'Save'." + 
+		 			          "\n\nTo load a route simply select one from the list and click 'Load'." +
+		 			          "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
+		 			break;
+		 			
+		 		case "Settings":
+		 			HelpTopic("Heading / Speed PID", "These parameters control the behaviour of the heading's / speed's PID. Saved globally so NO TOUCHING unless you know what you're doing (or atleast know how to write down numbers to restore it if you mess up)");
+		 			HelpTopic("Safe Turn Speed", "This value tells the AP which speed the rover can usually go full turn through corners without tipping over." +
+		 			          "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
+		 			HelpTopic("Bunch of numbers for the different Bodies", "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
+		 			break;
+		 	}
+		 	
+			base.WindowGUI(windowID);
 		}
 	}
 
