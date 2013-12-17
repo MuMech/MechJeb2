@@ -358,15 +358,21 @@ namespace MuMech
 		
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-			var wps = local.GetNode("Waypoints");
-			if (wps != null && wps.HasNode("Waypoint")) {
-				int.TryParse(wps.GetValue("Index"), out WaypointIndex);
-				Waypoints.Clear();
-				foreach (ConfigNode cn in wps.GetNodes("Waypoint")) {
-					Waypoints.Add(new MechJebRoverWaypoint(cn));
-				}
-			}
-			base.OnLoad(local, type, global);
+            base.OnLoad(local, type, global);
+
+            if (local != null)
+            {
+                var wps = local.GetNode("Waypoints");
+                if (wps != null && wps.HasNode("Waypoint"))
+                {
+                    int.TryParse(wps.GetValue("Index"), out WaypointIndex);
+                    Waypoints.Clear();
+                    foreach (ConfigNode cn in wps.GetNodes("Waypoint"))
+                    {
+                        Waypoints.Add(new MechJebRoverWaypoint(cn));
+                    }
+                }
+            }
 		}
 		
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
