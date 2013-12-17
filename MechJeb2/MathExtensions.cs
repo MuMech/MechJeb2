@@ -12,19 +12,7 @@ namespace MuMech
         {
             return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
         }
-
-    	public static Vector3 Multiply(this Vector3 Vector, double Length) {
-        	return new Vector3(Vector.x * (float)Length, Vector.y * (float)Length, Vector.z * (float)Length);
-    	}
-    	
-    	public static Vector3 Multiply(this Vector3 Vector, float Length) {
-        	return new Vector3(Vector.x * Length, Vector.y * Length, Vector.z * Length);
-    	}
-    	
-    	public static Vector3 Multiply(this Vector3 Vector, int Length) {
-        	return new Vector3(Vector.x * (float)Length, Vector.y * (float)Length, Vector.z * (float)Length);
-    	}
-    	
+            	    	
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)
