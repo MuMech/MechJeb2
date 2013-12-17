@@ -18,7 +18,7 @@ namespace MuMech
             }
         }
 
-        public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0)
+        public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0, double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
             Vector3d center = body.position + body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right) * up;
@@ -27,7 +27,7 @@ namespace MuMech
 
             Vector3d north = Vector3d.Exclude(up, body.transform.up).normalized;
 
-            double radius = body.Radius / 15;
+            if (radius <= 0) { radius = body.Radius / 15; }
 
             GLTriangleMap(new Vector3d[]{
                 center,
