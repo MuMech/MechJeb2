@@ -920,7 +920,7 @@ namespace MuMech
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
-            string biome = MuUtils.CBAttributeMapGetAtt(mainBody.BiomeMap, vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt(vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
             switch (vessel.situation)
             {
                 //ExperimentSituations.SrfLanded
