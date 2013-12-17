@@ -130,13 +130,11 @@ namespace MuMech
             if (windowStat != WindowStat.HIDDEN)
             {
                 Rect pos = new Rect(Screen.width - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, Screen.height - windowPos.height), windowPos.width, windowPos.height );
-                MonoBehaviour.print("A " + windowPos.x.ToString("F2") + " " + windowPos.y.ToString("F2") + " " + windowPos.width.ToString("F2") + " " + windowPos.height.ToString("F2"));
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
-                MonoBehaviour.print("B " + windowPos.x.ToString("F2") + " " + windowPos.y.ToString("F2") + " " + windowPos.width.ToString("F2") + " " + windowPos.height.ToString("F2"));
             }
             else
             {
-                windowPos = new Rect(Screen.width + 100, Screen.height + 100, windowPos.width, windowPos.height);
+                windowPos = new Rect(Screen.width, Screen.height, 0, 0); // make it small so the mouse can't hoover it
             }
 
             GUI.depth = -98;
@@ -163,6 +161,8 @@ namespace MuMech
             }
         }
 
+
+        // The button won't move in the editor since OnUpdate is never called...
         public override void OnUpdate()
         {
             if (movingButton)
