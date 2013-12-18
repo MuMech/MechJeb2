@@ -14,6 +14,7 @@ namespace MuMech
         enum LightColor { NEITHER, GREEN, RED };
         LightColor litLight = 0;
         Shader originalLensShader;
+        Shader lightShader;
         Color originalLensColor = new Color(0, 0, 0, 0);
         Light greenLight;
         Light redLight;
@@ -39,6 +40,8 @@ namespace MuMech
         {
             greenLightTransform = null;
             redLightTransform = null;
+
+            lightShader = new Material(Encoding.ASCII.GetString(Properties.Resources.shader)).shader;
 
             foreach (Transform t in GetComponentsInChildren<Transform>())
             {
@@ -133,7 +136,7 @@ namespace MuMech
                 case LightColor.GREEN:
                     if (greenLightTransform != null)
                     {
-                        greenLightTransform.renderer.material.shader = Shader.Find("Self-Illumin/Specular");
+                        greenLightTransform.renderer.material.shader = lightShader;                        
                         greenLightTransform.renderer.material.color = Color.green;
                         greenLight.enabled = true;
                     }
@@ -142,7 +145,7 @@ namespace MuMech
                 case LightColor.RED:
                     if (redLightTransform != null)
                     {
-                        redLightTransform.renderer.material.shader = Shader.Find("Self-Illumin/Specular");
+                        redLightTransform.renderer.material.shader = lightShader;                        
                         redLightTransform.renderer.material.color = Color.red;
                         redLight.enabled = true;
                     }
