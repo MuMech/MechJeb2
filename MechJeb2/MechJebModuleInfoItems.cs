@@ -330,7 +330,12 @@ namespace MuMech
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                return engines.Sum(e => e.maxThrust);
+                var enginesfx = (from part in EditorLogic.SortedShipList
+                               where part.inverseStage == Staging.lastStage
+                               from engine in part.Modules.OfType<ModuleEnginesFX>()
+                                 where engine.isEnabled
+                               select engine);
+                return engines.Sum(e => e.thrustPercentage / 100f * e.maxThrust) + enginesfx.Sum(e => e.thrustPercentage / 100f * e.maxThrust);
             }
             else
             {
@@ -347,7 +352,13 @@ namespace MuMech
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                return engines.Sum(e => (e.throttleLocked ? e.maxThrust : e.minThrust));
+                var enginesfx = (from part in EditorLogic.SortedShipList
+                                 where part.inverseStage == Staging.lastStage
+                                 from engine in part.Modules.OfType<ModuleEnginesFX>()
+                                 where engine.isEnabled
+                                 select engine);
+                return engines.Sum(e => (e.throttleLocked ? e.thrustPercentage / 100f * e.maxThrust : e.thrustPercentage * e.minThrust))
+                    + enginesfx.Sum(e => (e.throttleLocked ? e.thrustPercentage / 100f * e.maxThrust : e.thrustPercentage * e.minThrust));
             }
             else
             {

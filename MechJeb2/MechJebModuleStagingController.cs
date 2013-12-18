@@ -133,7 +133,8 @@ namespace MuMech
         {
             var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First());
-            var burnedPropellants = engineModules.SelectMany(eng => eng.propellants);
+            var enginefxModules = activeEngines.Select(p => p.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).First());
+            var burnedPropellants = engineModules.SelectMany(eng => eng.propellants).Union(enginefxModules.SelectMany(eng => eng.propellants)) ;
             List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
             return propellantIDs;
         }

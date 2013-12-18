@@ -349,7 +349,7 @@ namespace MuMech
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 
-                    maxThrust = engine.maxThrust;
+                    maxThrust = engine.thrustPercentage / 100f * engine.maxThrust;
 
                     if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
                     {
@@ -365,6 +365,49 @@ namespace MuMech
                     propellantRatios = engine.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir" ).ToDictionary(prop => prop.id, prop => prop.ratio);
                 }
             }
+
+
+            // And do the same for ModuleEnginesFX :(
+            ModuleEnginesFX enginefx = part.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).FirstOrDefault();
+            if (enginefx != null)
+            {
+                //Only count engines that either are ignited or will ignite in the future:
+                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState)
+                {
+                    //if an engine has been activated early, pretend it is in the current stage:
+                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+
+                    isEngine = true;
+
+                    // If we take into account the engine rotation 
+                    if (dVLinearThrust)
+                    {
+                        Vector3 thrust = Vector3d.zero;
+                        foreach (var t in enginefx.thrustTransforms)
+                            thrust -= t.forward / enginefx.thrustTransforms.Count;
+
+                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)enginefx.part.vessel.GetTransform().up);
+                        fwdThrustRatio = Vector3.Dot(fwd, thrust);
+                    }
+
+                    maxThrust = enginefx.thrustPercentage / 100f * enginefx.maxThrust;
+
+                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
+                    {
+                        correctThrust = true;
+                        if (HighLogic.LoadedSceneIsFlight && enginefx.realIsp > 0.0f)
+                            maxThrust = maxThrust * enginefx.atmosphereCurve.Evaluate(0) / enginefx.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
+                    }
+                    else
+                        correctThrust = false;
+                    ispCurve = enginefx.atmosphereCurve;
+
+                    propellantSumRatioTimesDensity = enginefx.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
+                    propellantRatios = enginefx.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir").ToDictionary(prop => prop.id, prop => prop.ratio);
+                }
+            }
+
+
 
             //figure out when this part gets decoupled. We do this by looking through this part and all this part's ancestors
             //and noting which one gets decoupled earliest (i.e., has the highest inverseStage). Some parts never get decoupled

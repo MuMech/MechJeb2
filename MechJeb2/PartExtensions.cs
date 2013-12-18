@@ -30,6 +30,10 @@ namespace MuMech
             {
                 return !p.Modules.OfType<ModuleEngines>().First().getFlameoutState;
             }
+            else if (p.HasModule<ModuleEnginesFX>())
+            {
+                return !p.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).First().getFlameoutState;
+            }
             else return false;
         }
 
@@ -57,8 +61,11 @@ namespace MuMech
             if (p is SolidRocket) return true;
 
             //new-style SRBs:
-            if (!p.HasModule<ModuleEngines>()) return false; //sepratrons are motors
-            return p.Modules.OfType<ModuleEngines>().First().throttleLocked; //throttleLocked signifies an SRB
+            if (p.HasModule<ModuleEngines>())  //sepratrons are motors
+                return p.Modules.OfType<ModuleEngines>().First().throttleLocked; //throttleLocked signifies an SRB
+            if (p.HasModule<ModuleEnginesFX>())
+                return p.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).First().throttleLocked; 
+            return false;
         }
 
 
@@ -68,7 +75,8 @@ namespace MuMech
                 p is LiquidEngine ||
                 p is LiquidFuelEngine ||
                 p is AtmosphericEngine ||
-                p.HasModule<ModuleEngines>());
+                p.HasModule<ModuleEngines>() ||
+                p.HasModule<ModuleEnginesFX>());
         }
 
         public static bool IsParachute(this Part p)

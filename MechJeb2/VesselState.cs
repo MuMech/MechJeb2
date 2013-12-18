@@ -368,6 +368,10 @@ namespace MuMech
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
                     }
+                    else if (pm is ModuleEnginesFX)
+                    {
+                        einfo.AddNewEngine(pm as ModuleEnginesFX);
+                    }
                     else if (pm is ModuleResourceIntake)
                     {
                         iinfo.addIntake(pm as ModuleResourceIntake);
@@ -548,8 +552,71 @@ namespace MuMech
 
                     double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
 
-                    double usableFraction = 1;
+                    double usableFraction = e.thrustPercentage / 100f;
                     if (e.useVelocityCurve) {
+                        usableFraction = e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
+                    }
+                    double eMaxThrust = e.maxThrust * usableFraction * cosineLosses;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction * cosineLosses);
+                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+
+                    thrustCurrent += eCurrentThrust * thrustDirectionVector;
+                    thrustMax += eMaxThrust * thrustDirectionVector;
+                    thrustMin += eMinThrust * thrustDirectionVector;
+
+                    Part p = e.part;
+                    ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
+                    if (gimbal != null && !gimbal.gimbalLock)
+                    {
+                        double gimbalRange = gimbal.gimbalRange;
+                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * eCurrentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
+                    }
+                }
+            }
+
+            // Support for the new ModuleEnginesFX - lack of common interface between the 2 engins type is not fun
+            // I can't even just copy  ModuleEngines to a ModuleEnginesFX and use the same function since some field are readonly
+            public void AddNewEngine(ModuleEnginesFX e)
+            {
+                if ((!e.EngineIgnited) || (!e.isEnabled))
+                {
+                    return;
+                }
+
+                // Compute the resource requirement at full thrust.
+                //   mdot = maxthrust / (Isp * g0) in tonnes per second
+                //   udot = mdot / mixdensity in units per second of propellant per ratio unit
+                //   udot * ratio_i : units per second of propellant i
+                // Choose the worse Isp between now and after one timestep.
+                // TODO: actually, pressure should be for the engine part, not for the spacecraft.
+                // The pressure can easily vary by 1% from top to bottom of a spacecraft.
+                // We'd need to compute the position of the part, which seems like a pain.
+                float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
+                float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
+                double Isp = Math.Min(Isp0, Isp1);
+                double udot = e.maxThrust / (Isp * 9.82 * e.mixtureDensity); // Tavert Issue #163
+                foreach (var propellant in e.propellants)
+                {
+                    double maxreq = udot * propellant.ratio;
+                    addResource(propellant.id, propellant.currentRequirement, maxreq);
+                }
+
+                if (!e.getFlameoutState)
+                {
+                    var thrustDirectionVector = new Vector3d();
+
+                    foreach (var xform in e.thrustTransforms)
+                    {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
+                    }
+
+                    double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
+
+                    double usableFraction = e.thrustPercentage / 100f;
+                    if (e.useVelocityCurve)
+                    {
                         usableFraction = e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
                     }
                     double eMaxThrust = e.maxThrust * usableFraction * cosineLosses;
