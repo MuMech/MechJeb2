@@ -185,6 +185,7 @@ namespace MuMech
                 if (!unlock)
                 {
                     enabled = false;
+                    core.someModuleAreLocked = true;
                 }
             }
         }

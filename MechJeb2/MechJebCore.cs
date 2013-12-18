@@ -46,6 +46,8 @@ namespace MuMech
         protected bool wasMasterAndFocus = false;
         protected static Vessel lastFocus = null;
 
+        public bool someModuleAreLocked = false; // True if any module was locked by the R&D system
+
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()

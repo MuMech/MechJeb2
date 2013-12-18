@@ -79,6 +79,10 @@ namespace MuMech
                 }
             }
 
+            if (core.someModuleAreLocked)
+                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree");
+
+
             if (GUILayout.Button("Online Manual"))
             {
                 Application.OpenURL("http://wiki.mechjeb.com/index.php?title=Manual");
