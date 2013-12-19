@@ -32,7 +32,7 @@ namespace MuMech
             }
             else if (p.HasModule<ModuleEnginesFX>())
             {
-                return !p.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).First().getFlameoutState;
+                return !p.Modules.OfType<ModuleEnginesFX>().First(e => e.isEnabled).getFlameoutState;
             }
             else return false;
         }
@@ -64,7 +64,7 @@ namespace MuMech
             if (p.HasModule<ModuleEngines>())  //sepratrons are motors
                 return p.Modules.OfType<ModuleEngines>().First().throttleLocked; //throttleLocked signifies an SRB
             if (p.HasModule<ModuleEnginesFX>())
-                return p.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).First().throttleLocked; 
+                return p.Modules.OfType<ModuleEnginesFX>().First(e => e.isEnabled).throttleLocked;  // Will fail if they are all !isEnabled. Can this happend ?
             return false;
         }
 

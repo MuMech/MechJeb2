@@ -131,11 +131,18 @@ namespace MuMech
 
         public List<int> FindBurnedResources()
         {
-            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
-            var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First());
-            var enginefxModules = activeEngines.Select(p => p.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).First());
-            var burnedPropellants = engineModules.SelectMany(eng => eng.propellants).Union(enginefxModules.SelectMany(eng => eng.propellants)) ;
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());   
+            HashSet<Propellant> burnedPropellants = new HashSet<Propellant>();
+            foreach(Part p in activeEngines)
+            {
+                foreach (ModuleEngines m in p.Modules.OfType<ModuleEngines>())
+                    burnedPropellants.UnionWith(m.propellants);
+                foreach (ModuleEnginesFX m in p.Modules.OfType<ModuleEnginesFX>())
+                    if (m.isEnabled)
+                        burnedPropellants.UnionWith(m.propellants);                    
+            }
             List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
+
             return propellantIDs;
         }
 
