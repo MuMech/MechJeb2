@@ -190,7 +190,7 @@ namespace MuMech
             }
         }
 
-        public void print(object message)
+        public static void print(object message)
         {
             MonoBehaviour.print("[MechJeb2] " + message);
         }

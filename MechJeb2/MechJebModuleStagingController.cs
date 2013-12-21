@@ -136,9 +136,10 @@ namespace MuMech
             foreach(Part p in activeEngines)
             {
                 foreach (ModuleEngines m in p.Modules.OfType<ModuleEngines>())
+                    if (!m.getFlameoutState)
                     burnedPropellants.UnionWith(m.propellants);
                 foreach (ModuleEnginesFX m in p.Modules.OfType<ModuleEnginesFX>())
-                    if (m.isEnabled)
+                    if (m.isEnabled && !m.getFlameoutState)
                         burnedPropellants.UnionWith(m.propellants);                    
             }
             List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
