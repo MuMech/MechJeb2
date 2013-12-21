@@ -329,6 +329,10 @@ namespace MuMech
 		
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
+            base.OnSave(local, type, global);
+
+            if (global == null) return;
+
 			if (global.HasNode("Routes")) { global.RemoveNode("Routes"); }
 			if (Routes.Count > 0) {
 				var cn = global.AddNode(new ConfigNode("Routes"));
@@ -336,8 +340,7 @@ namespace MuMech
 				foreach (MechJebRoverRoute r in Routes) {
 					cn.AddNode(r.ToConfigNode());
 				}
-			}
-			base.OnSave(local, type, global);
+			}			
 		}
 		
 		public override string GetName()

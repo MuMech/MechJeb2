@@ -377,6 +377,10 @@ namespace MuMech
 		
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
+            base.OnSave(local, type, global);
+
+            if (local == null) return;
+
 			if (local.HasNode("Waypoints")) { local.RemoveNode("Waypoints"); }
 			if (Waypoints.Count > 0) {
 				ConfigNode cn = local.AddNode("Waypoints");
@@ -384,8 +388,7 @@ namespace MuMech
 				foreach (MechJebRoverWaypoint wp in Waypoints) {
 					cn.AddNode(wp.ToConfigNode());
 				}
-			}
-			base.OnSave(local, type, global);
+			}			
 		}
 		
 		public MechJebModuleRoverController(MechJebCore core) : base(core) { }
