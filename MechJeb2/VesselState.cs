@@ -359,9 +359,13 @@ namespace MuMech
 
                     if (pm is ModuleReactionWheel)
                     {
-                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
-                        // It seems a RW with no electricity is still "Active" so we need to test for something else...
-                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
+                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;                        
+                        // I had to remove the test for active in .23 since the new ressource system reply to the RW that 
+                        // there is no energy available when the RW do tiny adjustement.
+                        // I replaceed it with a test that check if there is electricity anywhere on the ship. 
+                        // Let's hope we don't get reaction wheel that use something else
+                        //if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
+                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active && vessel.HasElectricCharge())
                             torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
                     } 
                     else if (pm is ModuleEngines)
