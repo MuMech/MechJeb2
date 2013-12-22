@@ -71,13 +71,17 @@ namespace MuMech
             PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
             if (definition == null) return false;
 
+            PartResource r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
             // check the command pod first since most have their batteries
-            if (vessel.GetReferenceTransformPart().Resources.Get(definition.id).amount > 0)
+            if (r != null && r.amount > 0)
                 return true;
 
             foreach (Part p in parts)
-                if (p.Resources.Get(definition.id).amount > 0)
+            {
+                r = p.Resources.Get(definition.id);
+                if (r != null && r.amount > 0)
                     return true;
+            }
             return false;
         }
 
