@@ -67,6 +67,9 @@ namespace MuMech
 
         public static bool HasElectricCharge(this Vessel vessel)
         {
+            if (vessel == null || vessel.GetReferenceTransformPart() == null)
+                return false;
+
             List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
             PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
             if (definition == null) return false;
