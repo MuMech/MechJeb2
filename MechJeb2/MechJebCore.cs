@@ -439,15 +439,16 @@ namespace MuMech
                 }
 
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg"))
+                String vesselName = vessel != null?string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())):""; // Strip illegal char from the filename
+                if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vesselName + ".cfg"))
                 {
                     try
                     {
-                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vessel.vesselName + ".cfg"));
+                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vessel.vesselName + ".cfg: " + e);
+                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vesselName + ".cfg: " + e);
                     }
                 }
 
@@ -470,7 +471,7 @@ namespace MuMech
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnSave: " + e);
+                            Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnLoad: " + e);
                         }
                     }
                 }
@@ -566,6 +567,7 @@ namespace MuMech
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
                 string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
+                vesselName = string.Join("_", vesselName.Split(System.IO.Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
                 type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
 
                 if (lastFocus == vessel)
