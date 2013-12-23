@@ -477,6 +477,28 @@ namespace MuMech
         {
             return target.SwappedOrbitalVelocityAtUT(UT) - o.SwappedOrbitalVelocityAtUT(UT);
         }
+
+        // Compute the delta-V of the burn at the givent time required to enter an orbit with a period of (resonanceDivider-1)/resonanceDivider of the starting orbit period        
+        public static Vector3d DeltaVToResonantOrbit(Orbit o, double UT, double  f) 
+        {
+            double a = o.ApR;
+            double p = o.PeR;
+
+            // Thanks wolframAlpha for the Math 
+            // x = (a^3 f^2 + 3 a^2 f^2 p + 3 a f^2 p^2 + f^2 p^3)^(1/3)-a
+            double x = Math.Pow( Math.Pow(a,3)*Math.Pow(f,2) + 3*Math.Pow(a,2)*Math.Pow(f,2)*p + 3* a * Math.Pow(f,2)*Math.Pow(p,2)  +  Math.Pow(f,2)*Math.Pow(p,3) ,1d/3) - a;
+
+            if (x < 0)
+                return Vector3d.zero;
+            
+            if (f>1)
+                return OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, x);
+            else
+                return OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, x);
+        }
+
+
+
     }
 
 }

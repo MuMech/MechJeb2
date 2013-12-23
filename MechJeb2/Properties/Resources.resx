@@ -127,9 +127,11 @@
   <data name="default_toggle_on" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>default_toggle_on;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lightning" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>lightning.unity3d;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="shader" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>shader;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="troll" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>troll;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

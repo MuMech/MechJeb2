@@ -176,7 +176,7 @@ namespace MuMech
             foreach (MechJebModuleCustomInfoWindow window in core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
                 string name = typeof(MechJebModuleCustomInfoWindow).Name;
-                ConfigNode windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.Global);
+                ConfigNode windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.Global, null);
                 windowNode.AddValue("enabled", window.enabled);
                 windowNode.CopyTo(global.AddNode(name));
             }

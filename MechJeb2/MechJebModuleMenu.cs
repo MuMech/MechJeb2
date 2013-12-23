@@ -16,6 +16,7 @@ namespace MuMech
             hidden = true;
             showInFlight = true;
             showInEditor = true;
+            useIcon = true;
         }
 
         public enum WindowStat
@@ -40,8 +41,15 @@ namespace MuMech
 
         bool movingButton = false;
 
+        public bool hideButton = false;
+
         protected override void WindowGUI(int windowID)
         {
+            if (hideButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
+            {
+                ShowHideWindow();
+            }
+
             GUIStyle toggleInactive = new GUIStyle(GUI.skin.toggle);
             toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
@@ -70,6 +78,10 @@ namespace MuMech
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
                 }
             }
+
+            if (core.someModuleAreLocked)
+                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree");
+
 
             if (GUILayout.Button("Online Manual"))
             {
@@ -104,21 +116,11 @@ namespace MuMech
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            if (!hideButton && GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
             {
                 if (Event.current.button == 0)
                 {
-                    if (windowStat == WindowStat.HIDDEN)
-                    {
-                        windowStat = WindowStat.OPENING;
-                        windowProgr = 0;
-                        firstDraw = true;
-                    }
-                    else if (windowStat == WindowStat.NORMAL)
-                    {
-                        windowStat = WindowStat.CLOSING;
-                        windowProgr = 1;
-                    }
+                    ShowHideWindow();
                 }
                 else if (!movingButton && Event.current.button == 1)
                 {
@@ -131,14 +133,12 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                windowVector.x = Screen.width - windowProgr * 200;
-                windowVector.y = Mathf.Clamp(- 100 - windowVPos, 0, Screen.height - windowPos.height) ;
-                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), windowPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
+                Rect pos = new Rect(Screen.width - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, Screen.height - windowPos.height), windowPos.width, windowPos.height );
+                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
             {
-                windowVector.x = Screen.width + 100;
-                windowVector.y = Screen.height + 100;
+                windowPos = new Rect(Screen.width, Screen.height, 0, 0); // make it small so the mouse can't hoover it
             }
 
             GUI.depth = -98;
@@ -150,6 +150,23 @@ namespace MuMech
             }
         }
 
+        public void ShowHideWindow()
+        {
+            if (windowStat == WindowStat.HIDDEN)
+            {
+                windowStat = WindowStat.OPENING;
+                windowProgr = 0;
+                firstDraw = true;
+            }
+            else if (windowStat == WindowStat.NORMAL)
+            {
+                windowStat = WindowStat.CLOSING;
+                windowProgr = 1;
+            }
+        }
+
+
+        // The button won't move in the editor since OnUpdate is never called...
         public override void OnUpdate()
         {
             if (movingButton)

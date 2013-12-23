@@ -225,15 +225,43 @@ namespace MuMech
             }
         }
 
-        public enum SkinType { Default, MechJeb1 }
+        public enum SkinType { Default, MechJeb1, Compact }
         public static GUISkin skin;
         public static GUISkin defaultSkin;
+        public static GUISkin compactSkin;
 
         public static void CopyDefaultSkin()
         {
             GUI.skin = null;
             defaultSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
         }
+
+        public static void CopyCompactSkin()
+        {
+            GUI.skin = null;
+            compactSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+
+            GuiUtils.skin.name = "KSP Compact";
+
+            compactSkin.label.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.label.padding = new RectOffset(0, 0, 2, 2);
+
+            compactSkin.button.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.button.padding = new RectOffset(4, 4, 2, 2);
+
+            compactSkin.toggle.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.toggle.padding = new RectOffset(15, 0, 2, 0);
+
+            compactSkin.textField.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.textField.padding = new RectOffset(2, 2, 2, 2);
+
+            compactSkin.textArea.margin = new RectOffset(1, 1, 1, 1);
+            compactSkin.textArea.padding = new RectOffset(2, 2, 2, 2);
+
+            compactSkin.window.margin = new RectOffset(0, 0, 0, 0);
+            compactSkin.window.padding = new RectOffset(5, 5, 20, 5);
+        }
+
 
         public static void LoadSkin(SkinType skinType)
         {
@@ -246,6 +274,11 @@ namespace MuMech
 
                 case SkinType.MechJeb1:
                     skin = AssetBase.GetGUISkin("KSP window 2");
+                    break;
+
+                case SkinType.Compact:
+                    if (compactSkin == null) CopyCompactSkin();
+                    skin = compactSkin;
                     break;
             }
         }
@@ -429,6 +462,14 @@ namespace MuMech
 
             return parsedSomething;
         }
+        
+        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
+        	double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
+        	double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
+        	double c = Vector3d.Distance(From, To);
+        	double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+        }
 
         public static bool MouseIsOverWindow(MechJebCore core)
         {
@@ -451,15 +492,44 @@ namespace MuMech
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
             Vector3d relOrigin = mouseRay.origin - body.position;
             Vector3d relSurfacePosition;
-            if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, body.Radius, out relSurfacePosition))
+            double curRadius = body.pqsController.radiusMax;
+            double lastRadius = 0;
+            double error = 0;
+            int loops = 0;
+            float st = Time.time;
+            while (loops < 50)
             {
-                Vector3d surfacePoint = body.position + relSurfacePosition;
-                return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
+                {
+                    Vector3d surfacePoint = body.position + relSurfacePosition;
+                    double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) * QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) * Vector3d.right);
+                    error = Math.Abs(curRadius - alt);
+                    if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
+                    {
+                        return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+                    }
+                    else
+                    {
+                        lastRadius = curRadius;
+                        curRadius = alt;
+                        loops++;
+                    }
+                }
+                else
+                {
+                    if (loops == 0)
+                    {
+                        break;
+                    }
+                    else
+                    { // Went too low, needs to try higher
+                        curRadius = (lastRadius * 9 + curRadius) / 10;
+                        loops++;
+                    }
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
     }

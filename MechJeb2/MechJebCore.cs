@@ -46,6 +46,8 @@ namespace MuMech
         protected bool wasMasterAndFocus = false;
         protected static Vessel lastFocus = null;
 
+        public bool someModuleAreLocked = false; // True if any module was locked by the R&D system
+
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
@@ -175,7 +177,7 @@ namespace MuMech
                 }
             }
 
-            if (vessel != null)
+            if (vessel != null && this != vessel.GetMasterMechJeb())
             {
                 vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
                 vessel.OnFlyByWire += OnFlyByWire;
@@ -437,15 +439,16 @@ namespace MuMech
                 }
 
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg"))
+                String vesselName = vessel != null?string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())):""; // Strip illegal char from the filename
+                if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vesselName + ".cfg"))
                 {
                     try
                     {
-                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vessel.vesselName + ".cfg"));
+                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vessel.vesselName + ".cfg: " + e);
+                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vesselName + ".cfg: " + e);
                     }
                 }
 
@@ -468,7 +471,7 @@ namespace MuMech
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnSave: " + e);
+                            Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnLoad: " + e);
                         }
                     }
                 }
@@ -564,6 +567,7 @@ namespace MuMech
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
                 string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
+                vesselName = string.Join("_", vesselName.Split(System.IO.Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
                 type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
 
                 if (lastFocus == vessel)
@@ -612,11 +616,6 @@ namespace MuMech
             Drive(s);
 
             CheckFlightCtrlState(s);
-
-            if (vessel == FlightGlobals.ActiveVessel)
-            {
-                FlightInputHandler.state.mainThrottle = s.mainThrottle; //so that the on-screen throttle gauge reflects the autopilot throttle
-            }
         }
 
         private void Drive(FlightCtrlState s)
@@ -662,6 +661,8 @@ namespace MuMech
         {
             if (!showGui) return;
 
+            GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
+
             GuiUtils.CheckSkin();
 
             GUI.skin = GuiUtils.skin;
@@ -695,16 +696,16 @@ namespace MuMech
         void PreventEditorClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (mouseOverWindow && !EditorLogic.editorLocked)
+            if (!weLockedEditor && mouseOverWindow)
             {
-                EditorLogic.fetch.Lock(true, true, true);
+                EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
                 weLockedEditor = true;
             }
-            if (weLockedEditor && !mouseOverWindow && EditorLogic.editorLocked)
+            if (weLockedEditor && !mouseOverWindow)
             {
-                EditorLogic.fetch.Unlock();
+                EditorLogic.fetch.Unlock("MechJeb_noclick");
+                weLockedEditor = false;
             }
-            if (!EditorLogic.editorLocked) weLockedEditor = false;
         }
     }
 }

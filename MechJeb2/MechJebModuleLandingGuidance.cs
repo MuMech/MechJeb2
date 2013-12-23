@@ -121,7 +121,6 @@ namespace MuMech
                                                          mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
                         GUILayout.Label("Difference from target = " + MuUtils.ToSI(error, 0) + "m");
                         if (result.maxDragGees > 0) GUILayout.Label("Predicted max drag gees: " + result.maxDragGees.ToString("F1"));
-
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:

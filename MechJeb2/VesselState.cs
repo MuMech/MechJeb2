@@ -98,12 +98,23 @@ namespace MuMech
         public double radius;  //distance from planet center
 
         public double mass;
-        public double thrustAvailable;
-        public double thrustMinimum;
-        public double maxThrustAccel; //thrustAvailable / mass
+
+        // Thrust is a vector.  These are in the same frame of reference as forward and other vectors.
+        public Vector3d thrustVectorLastFrame = new Vector3d();
+        public Vector3d thrustVectorMaxThrottle = new Vector3d();
+        public Vector3d thrustVectorMinThrottle = new Vector3d();
+
+        // Thrust in the forward direction (for historical reasons).
+        public double thrustAvailable { get { return Vector3d.Dot(thrustVectorMaxThrottle, forward); } }
+        public double thrustMinimum { get { return Vector3d.Dot(thrustVectorMinThrottle, forward); } }
+        public double thrustCurrent { get { return Vector3d.Dot(thrustVectorLastFrame, forward); } }
+
+        // Acceleration in the forward direction, for when dividing by mass is too complicated.
+        public double maxThrustAccel { get { return thrustAvailable / mass; } }
+        public double minThrustAccel { get { return thrustMinimum / mass; } }
+
         public float throttleLimit = 1;
-        public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit; } }
-        public double minThrustAccel;      //some engines (particularly SRBs) have a minimum thrust so this may be nonzero
+        public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit + minThrustAccel * (1 - throttleLimit); } }
         public Vector3d torqueAvailable;
         public double torqueThrustPYAvailable;
         public double massDrag;
@@ -133,6 +144,13 @@ namespace MuMech
         public Dictionary<int, ResourceInfo> resources;
 
         public CelestialBody mainBody;
+
+
+        // Callbacks for external module
+        public delegate void VesselStatePartExtension(Part p);
+        public delegate void VesselStatePartModuleExtension(PartModule pm);
+        public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
+        public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
 
         public void Update(Vessel vessel)
         {
@@ -245,13 +263,16 @@ namespace MuMech
 
             radius = (CoM - vessel.mainBody.position).magnitude;
 
-            mass = thrustAvailable = thrustMinimum = massDrag = torqueThrustPYAvailable = 0;
+            mass = massDrag = torqueThrustPYAvailable = 0;
+            thrustVectorLastFrame = new Vector3d();
+            thrustVectorMaxThrottle = new Vector3d();
+            thrustVectorMinThrottle = new Vector3d();
             torqueAvailable = new Vector3d();
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
             ctrlTorqueAvailable = new Vector6();
 
-            EngineInfo einfo = new EngineInfo(forward, CoM);
+            EngineInfo einfo = new EngineInfo(CoM);
             IntakeInfo iinfo = new IntakeInfo();
 
             parachutes = new  List<ModuleParachute>();
@@ -327,21 +348,33 @@ namespace MuMech
                     torqueAvailable += Vector3d.one * Math.Abs(((CommandPod)p).rotPower);
                 }
 
+                foreach (VesselStatePartExtension vspe in vesselStatePartExtensions)
+                {
+                    vspe(p);
+                }
+
                 foreach (PartModule pm in p.Modules)
                 {
                     if (!pm.isEnabled) continue;
 
                     if (pm is ModuleReactionWheel)
                     {
-                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
-                        // It seems a RW with no electricity is still "Active" so we need to test for something else...
-                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
+                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;                        
+                        // I had to remove the test for active in .23 since the new ressource system reply to the RW that 
+                        // there is no energy available when the RW do tiny adjustement.
+                        // I replaceed it with a test that check if there is electricity anywhere on the ship. 
+                        // Let's hope we don't get reaction wheel that use something else
+                        //if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
+                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active && vessel.HasElectricCharge())
                             torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
-                    }
-
-                    if (pm is ModuleEngines)
+                    } 
+                    else if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
+                    }
+                    else if (pm is ModuleEnginesFX)
+                    {
+                        einfo.AddNewEngine(pm as ModuleEnginesFX);
                     }
                     else if (pm is ModuleResourceIntake)
                     {
@@ -351,14 +384,20 @@ namespace MuMech
                     {
                         parachutes.Add(pm as ModuleParachute);
                     }
+
+                    foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
+                    {
+                        vspme(pm);
+                    }
                 }
             }
 
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
             torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative); // Should we use Max or Min ?            
 
-            thrustAvailable += einfo.thrustAvailable;
-            thrustMinimum += einfo.thrustMinimum;
+            thrustVectorMaxThrottle += einfo.thrustMax;
+            thrustVectorMinThrottle += einfo.thrustMin;
+            thrustVectorLastFrame += einfo.thrustCurrent;
             torqueThrustPYAvailable += einfo.torqueThrustPYAvailable;
 
             // Convert the resource information from the einfo and iinfo format
@@ -389,9 +428,6 @@ namespace MuMech
             }
 
             angularMomentum = new Vector3d(angularVelocity.x * MoI.x, angularVelocity.y * MoI.y, angularVelocity.z * MoI.z);
-
-            maxThrustAccel = thrustAvailable / mass;
-            minThrustAccel = thrustMinimum / mass;
 
             inertiaTensor = new Matrix3x3();
             foreach (Part p in vessel.parts)
@@ -458,8 +494,10 @@ namespace MuMech
         // variables later.
         public class EngineInfo
         {
-            public double thrustAvailable = 0;
-            public double thrustMinimum = 0;
+            public Vector3d thrustCurrent = new Vector3d(); // thrust at throttle achieved last frame
+            public Vector3d thrustMax = new Vector3d(); // thrust at full throttle
+            public Vector3d thrustMin = new Vector3d(); // thrust at zero throttle
+
             public double torqueThrustPYAvailable = 0;
 
             public class FuelRequirement
@@ -469,16 +507,14 @@ namespace MuMech
             }
             public Dictionary<int, FuelRequirement> resourceRequired = new Dictionary<int, FuelRequirement>();
 
-            Vector3d forward;
             Vector3d CoM;
             float atmP0; // pressure now
             float atmP1; // pressure after one timestep
 
-            public EngineInfo(Vector3d fwd, Vector3d c)
+            public EngineInfo(Vector3d c)
             {
-                forward = fwd;
                 CoM = c;
-                atmP0 = (float)FlightGlobals.getStaticPressure();
+                atmP0 = (float)FlightGlobals.getStaticPressure();  // TODO : more FlightGlobals call to remove
                 float alt1 = (float)(FlightGlobals.ship_altitude + TimeWarp.fixedDeltaTime * FlightGlobals.ship_verticalSpeed);
                 atmP1 = (float)FlightGlobals.getStaticPressure(alt1);
             }
@@ -501,7 +537,6 @@ namespace MuMech
                 float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
                 float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
                 double Isp = Math.Min(Isp0, Isp1);
-                //double udot = e.maxThrust / (Isp * 9.81 * e.mixtureDensity);
                 double udot = e.maxThrust / (Isp * 9.82 * e.mixtureDensity); // Tavert Issue #163
                 foreach (var propellant in e.propellants)
                 {
@@ -516,24 +551,92 @@ namespace MuMech
                     foreach (var xform in e.thrustTransforms) {
                         // The rotation makes a +z vector point in the direction that molecules are ejected
                         // from the engine.  The resulting thrust force is in the opposite direction.
-                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1 / e.thrustTransforms.Count);
+                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
                     }
 
-                    double usableFraction = Vector3d.Dot(thrustDirectionVector, e.part.vessel.transform.up);
-                    
-                    thrustAvailable += e.maxThrust * usableFraction;
+                    double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
 
-                    if (e.throttleLocked) thrustMinimum += e.maxThrust * usableFraction;
-                    else thrustMinimum += e.minThrust * usableFraction;
+                    double usableFraction = e.thrustPercentage / 100f;
+                    if (e.useVelocityCurve) {
+                        usableFraction = e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
+                    }
+                    double eMaxThrust = e.maxThrust * usableFraction * cosineLosses;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction * cosineLosses);
+                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
-                    double currentThrust = thrustAvailable * e.currentThrottle + thrustMinimum * (1 - e.currentThrottle);
-                    
+                    thrustCurrent += eCurrentThrust * thrustDirectionVector;
+                    thrustMax += eMaxThrust * thrustDirectionVector;
+                    thrustMin += eMinThrust * thrustDirectionVector;
+
                     Part p = e.part;
                     ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
                     if (gimbal != null && !gimbal.gimbalLock)
                     {
                         double gimbalRange = gimbal.gimbalRange;
-                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * currentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
+                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * eCurrentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
+                    }
+                }
+            }
+
+            // Support for the new ModuleEnginesFX - lack of common interface between the 2 engins type is not fun
+            // I can't even just copy  ModuleEngines to a ModuleEnginesFX and use the same function since some field are readonly
+            public void AddNewEngine(ModuleEnginesFX e)
+            {
+                if ((!e.EngineIgnited) || (!e.isEnabled))
+                {
+                    return;
+                }
+
+                // Compute the resource requirement at full thrust.
+                //   mdot = maxthrust / (Isp * g0) in tonnes per second
+                //   udot = mdot / mixdensity in units per second of propellant per ratio unit
+                //   udot * ratio_i : units per second of propellant i
+                // Choose the worse Isp between now and after one timestep.
+                // TODO: actually, pressure should be for the engine part, not for the spacecraft.
+                // The pressure can easily vary by 1% from top to bottom of a spacecraft.
+                // We'd need to compute the position of the part, which seems like a pain.
+                float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
+                float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
+                double Isp = Math.Min(Isp0, Isp1);
+                double udot = e.maxThrust / (Isp * 9.82 * e.mixtureDensity); // Tavert Issue #163
+                foreach (var propellant in e.propellants)
+                {
+                    double maxreq = udot * propellant.ratio;
+                    addResource(propellant.id, propellant.currentRequirement, maxreq);
+                }
+
+                if (!e.getFlameoutState)
+                {
+                    var thrustDirectionVector = new Vector3d();
+
+                    foreach (var xform in e.thrustTransforms)
+                    {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
+                    }
+
+                    double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
+
+                    double usableFraction = e.thrustPercentage / 100f;
+                    if (e.useVelocityCurve)
+                    {
+                        usableFraction = e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
+                    }
+                    double eMaxThrust = e.maxThrust * usableFraction * cosineLosses;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction * cosineLosses);
+                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+
+                    thrustCurrent += eCurrentThrust * thrustDirectionVector;
+                    thrustMax += eMaxThrust * thrustDirectionVector;
+                    thrustMin += eMinThrust * thrustDirectionVector;
+
+                    Part p = e.part;
+                    ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
+                    if (gimbal != null && !gimbal.gimbalLock)
+                    {
+                        double gimbalRange = gimbal.gimbalRange;
+                        torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * eCurrentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
                     }
                 }
             }

@@ -156,20 +156,14 @@ namespace MuMech
             targetThrottle = 0;
             vessel.ctrlState.mainThrottle = 0;
             tmode = TMode.OFF;
+            if (vessel == FlightGlobals.ActiveVessel)
+            {
+                FlightInputHandler.state.mainThrottle = 0; //so that the on-screen throttle gauge reflects the autopilot throttle
+            }
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            //detect user input:
-            if (s.mainThrottle < 1e-4 && lastThrottle > 1e-4)
-            {
-                targetThrottle = 0; //detect player pressing 'x'
-            }
-            else if (Mathf.Abs(s.mainThrottle - lastThrottle) > 1e-4)
-            {
-                targetThrottle = Mathf.Clamp01((s.mainThrottle - lastThrottle) + targetThrottle);
-            }
-
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
                 double spd = 0;
@@ -241,7 +235,10 @@ namespace MuMech
                 }
             }
 
-            s.mainThrottle = targetThrottle;
+            // Only set throttle if a module need it. Othewise let the user or other mods set it
+            // There is always at least 1 user : the module itself (why ?)
+            if (users.Count() > 1)
+                s.mainThrottle = targetThrottle;
 
             float throttleLimit = 1;
 
