@@ -515,6 +515,13 @@ namespace MuMech
             return core.target.Orbit.LAN.ToString("F2") + "º";
         }
 
+        [ValueInfoItem("Target AoP", InfoItem.Category.Target)]
+        public string TargetAoP()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return core.target.Orbit.argumentOfPeriapsis.ToString("F2") + "º";
+        }
+
         [ValueInfoItem("Target eccentricity", InfoItem.Category.Target)]
         public string TargetEccentricity()
         {
