@@ -12,7 +12,7 @@ namespace MuMech
         {
             return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
         }
-
+            	    	
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)

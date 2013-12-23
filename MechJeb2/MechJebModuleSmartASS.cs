@@ -116,7 +116,8 @@ namespace MuMech
                 btAuto.onActive = btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
             }
 
-            if (core.attitude.enabled && !core.attitude.users.Contains(this))
+            // If any other module use the attitude controler then let them do it
+            if (core.attitude.enabled && core.attitude.users.Count(u => !this.Equals(u)) > 0)
             {
                 GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }

@@ -10,17 +10,15 @@ namespace MuMech
     {
         public Vector3d targetVelocity = Vector3d.zero;
 
-        public PIDControllerV2 pid;
+        public PIDControllerV pid;
 
-        public double Kp, Ki, Kd;
+        public double Kp = 0.2, Ki = 0, Kd = 0.02;
 
-        public double Tf = 0.5;         
-
-        public Vector3d lastAct = Vector3d.zero;
+        Vector3d lastAct = Vector3d.zero;
 
 
         [ToggleInfoItem("Conserve RCS fuel", InfoItem.Category.Thrust)]
-        public bool conserveFuel = false;
+        public bool conserveFuel = true;
 
         [EditableInfoItem("Conserve RCS fuel threshold", InfoItem.Category.Thrust, rightLabel = "m/s")]
         public EditableDouble conserveThreshold = 0.05;
@@ -29,18 +27,12 @@ namespace MuMech
             : base(core)
         {
             priority = 600;
-
-            Kd = 0.53 / Tf;
-            Kp = Kd / (3 * Math.Sqrt(2) * Tf);
-            Ki = Kp / (12 * Math.Sqrt(2) * Tf);
-            
-            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
-
+            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
         }
 
         public override void OnModuleEnabled()
         {
-            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+            pid = new PIDControllerV(Kp, Ki, Kd, 1, -1);
             lastAct = Vector3d.zero;
             base.OnModuleEnabled();
         }
@@ -88,15 +80,15 @@ namespace MuMech
                     }
                 }
 
-                rcs = pid.Compute(rcs, (rcs - lastAct) / TimeWarp.fixedDeltaTime);
+                //rcs = pid.Compute(rcs, rcs - lastAct); // Having an Omega would be nice but each test made it worse
+                rcs = pid.Compute(rcs);
 
-                // low pass filter,  wf = 1/Tf:
-                Vector3d act = lastAct + (rcs - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));                      
-                lastAct = act;
+                //rcs = lastAct + (rcs - lastAct) * (1 / ((0.5 / TimeWarp.fixedDeltaTime) + 1));
+                lastAct = rcs;
 
-                s.X = Mathf.Clamp((float)act.x, -1, 1);
-                s.Y = Mathf.Clamp((float)act.z, -1, 1); //note that z and
-                s.Z = Mathf.Clamp((float)act.y, -1, 1); //y must be swapped
+                s.X = Mathf.Clamp((float)rcs.x, -1, 1);
+                s.Y = Mathf.Clamp((float)rcs.z, -1, 1); //note that z and
+                s.Z = Mathf.Clamp((float)rcs.y, -1, 1); //y must be swapped
             }
             else if (conserveFuel)
             {

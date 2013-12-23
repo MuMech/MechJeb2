@@ -130,9 +130,9 @@ namespace MuMech
         {
             try
             {
-                if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global).CopyTo(global);
-                if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type).CopyTo(type);
-                if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local).CopyTo(local);
+                if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global);
+                if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type);
+                if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local);
             }
             catch (Exception e)
             {
@@ -185,13 +185,14 @@ namespace MuMech
                 if (!unlock)
                 {
                     enabled = false;
+                    core.someModuleAreLocked = true;
                 }
             }
         }
 
-        public void print(object message)
+        public static void print(object message)
         {
-            MonoBehaviour.print(message);
+            MonoBehaviour.print("[MechJeb2] " + message);
         }
     }
 
@@ -217,7 +218,7 @@ namespace MuMech
 
         public new void Add(object user)
         {
-            if (!base.Contains(user))
+            if (user != null && !base.Contains(user))
             {
                 base.Add(user);
             }
@@ -226,7 +227,7 @@ namespace MuMech
 
         public new void Remove(object user)
         {
-            if (base.Contains(user))
+            if (user != null && base.Contains(user))
             {
                 base.Remove(user);
             }

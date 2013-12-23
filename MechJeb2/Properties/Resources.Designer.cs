@@ -9,8 +9,7 @@
 //------------------------------------------------------------------------------
 
 namespace MuMech.Properties {
-    using System;
-    
+    using System;    
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -91,6 +90,15 @@ namespace MuMech.Properties {
         internal static byte[] troll {
             get {
                 object obj = ResourceManager.GetObject("troll", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+
+        internal static byte[] shader
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("shader", resourceCulture);
                 return ((byte[])(obj));
             }
         }

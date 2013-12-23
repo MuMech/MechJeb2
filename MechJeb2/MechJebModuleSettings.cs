@@ -10,14 +10,22 @@ namespace MuMech
             showInFlight = true;
         }
 
+        // Kept for old conf compatibility
         [Persistent(pass = (int)Pass.Global)]
         public bool useOldSkin = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int skinId = 0;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
 
-            if (useOldSkin) GuiUtils.LoadSkin(GuiUtils.SkinType.MechJeb1);
+            if (useOldSkin)
+            {
+                skinId = 1;
+                useOldSkin = false;
+            }
         }
 
         protected override void WindowGUI(int windowID)
@@ -31,22 +39,29 @@ namespace MuMech
                 core.ReloadAllComputerModules();
             }
 
-            if (GuiUtils.skin == null || GuiUtils.skin.name != "KSP window 2")
-            {
-                GUILayout.Label("Current skin: MechJeb 2");
+            GUILayout.Label("Current skin: " + (GuiUtils.SkinType)skinId );
+            if (GuiUtils.skin == null || skinId != 1)
+            {                
                 if (GUILayout.Button("Use MechJeb 1 GUI skin"))
                 {
                     GuiUtils.LoadSkin(GuiUtils.SkinType.MechJeb1);
-                    useOldSkin = true;
+                    skinId = 1;
                 }
             }
-            else
+            if (GuiUtils.skin == null || skinId != 0)
             {
-                GUILayout.Label("Current skin: MechJeb 1");
                 if (GUILayout.Button("Use MechJeb 2 GUI skin"))
                 {
                     GuiUtils.LoadSkin(GuiUtils.SkinType.Default);
-                    useOldSkin = false;
+                    skinId = 0;
+                }
+            }
+            if (GuiUtils.skin == null || skinId != 2)
+            {
+                if (GUILayout.Button("Use MJ2 Compact GUI skin"))
+                {
+                    GuiUtils.LoadSkin(GuiUtils.SkinType.Compact);
+                    skinId = 2;
                 }
             }
 

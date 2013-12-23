@@ -147,7 +147,8 @@ namespace MuMech
             int minStage = Staging.lastStage;
             foreach (Part child in part.vessel.parts)
             {
-                if ((child is LiquidEngine) || (child is LiquidFuelEngine) || (child is SolidRocket) || (child is AtmosphericEngine) || child.Modules.Contains("ModuleEngines"))
+                // TODO Sarbian : Cleanup - not sure if any mod still use those and they are not supported in other part of the code
+                if ((child is LiquidEngine) || (child is LiquidFuelEngine) || (child is SolidRocket) || (child is AtmosphericEngine) || child.Modules.Contains("ModuleEngines") || child.Modules.Contains("ModuleEnginesFX"))
                 {
                     if (child.inverseStage < minStage)
                     {

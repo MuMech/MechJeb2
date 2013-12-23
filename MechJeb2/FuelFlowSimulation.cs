@@ -13,11 +13,11 @@ namespace MuMech
         public float t;
 
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
-        public FuelFlowSimulation(List<Part> parts)
+        public FuelFlowSimulation(List<Part> parts, bool dVLinearThrust)
         {
             //Initialize the simulation
             nodes = new List<FuelNode>();
-            Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p));
+            Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p, dVLinearThrust));
             nodes = nodeLookup.Values.ToList();
 
             foreach (Part p in parts) nodeLookup[p].FindSourceNodes(p, nodeLookup);
@@ -53,7 +53,7 @@ namespace MuMech
         {
             Stats stats = new Stats();
             stats.startMass = VesselMass();
-            stats.startThrust = VesselThrust(throttle);
+            stats.startThrust = VesselThrust(throttle, atmospheres);
             stats.endMass = stats.startMass;
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.deltaTime = 0;
@@ -87,7 +87,7 @@ namespace MuMech
             foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres);
 
             stats.startMass = VesselMass();
-            stats.startThrust = VesselThrust(throttle);
+            stats.startThrust = VesselThrust(throttle, atmospheres); // NK
 
             List<FuelNode> engines = FindActiveEngines();
 
@@ -165,6 +165,37 @@ namespace MuMech
                 }
             }
 
+            // We are not allowed to stage if the stage does not decouple anything, and there is an active engine that still has access to resources
+            {
+                bool activeEnginesWorking = false;
+                bool partDecoupledInNextStage = false;
+
+                foreach (FuelNode n in nodes)
+                {
+                    if (activeEngines.Contains(n))
+                    {
+                        if (n.CanDrawNeededResources(nodes))
+                        {
+                            //Debug.Log("Part " + n.partName + " is an active engine that still has resources to draw on.");
+                            activeEnginesWorking = true;
+                        }
+                    }
+
+                    if (n.decoupledInStage == (simStage - 1))
+                    {
+                        //Debug.Log("Part " + n.partName + " is decoupled in the next stage.");
+
+                        partDecoupledInNextStage = true; 
+                    }
+                }
+
+                if (!partDecoupledInNextStage && activeEnginesWorking)
+                {
+                    //Debug.Log("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
+                    return false;
+                }
+            }
+
             //if this isn't the last stage, we're allowed to stage because doing so wouldn't drop anything important
             if (simStage > 0)
             {
@@ -183,9 +214,9 @@ namespace MuMech
             return nodes.Sum(n => n.Mass);
         }
 
-        public float VesselThrust(float throttle)
+        public float VesselThrust(float throttle, float atmospheres)
         {
-            return throttle * FindActiveEngines().Sum(eng => eng.maxThrust);
+            return throttle * FindActiveEngines().Sum(eng => (eng.maxThrust * eng.fwdThrustRatio * (eng.correctThrust ? (eng.ispCurve.Evaluate(atmospheres) / eng.ispCurve.Evaluate(0)) : 1f)));
         }
 
         //Returns a list of engines that fire during the current simulated stage.
@@ -244,9 +275,13 @@ namespace MuMech
         Dictionary<int, float> resourceConsumptions = new Dictionary<int, float>();                   //the resources this part consumes per unit time when active at full throttle
         DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
 
-        const float DRAINED = 0.1f; //if a resource amount falls below this amount we say that the resource has been drained
+        // if a resource amount falls below this amount we say that the resource has been drained
+        // set to the smallest amount that the user can see is non-zero in the resource tab or by
+        // right-clicking.
+        const float DRAINED = 0.005f;
 
-        FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
+        public FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
+        public bool correctThrust = false;              // does the engine use a fixed ISP / Variable Thrust
         Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
         float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
@@ -256,6 +291,7 @@ namespace MuMech
         bool surfaceMounted;
 
         public float maxThrust = 0;     //max thrust of this part
+        public float fwdThrustRatio = 1; // % of thrust moving the ship forwad
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
@@ -267,7 +303,7 @@ namespace MuMech
 
         public string partName; //for debugging
 
-        public FuelNode(Part part)
+        public FuelNode(Part part, bool dVLinearThrust)
         {
             bool physicallySignificant = (part.physicalSignificance != Part.PhysicalSignificance.NONE);
             if (part.HasModule<ModuleLandingGear>() || part.HasModule<LaunchClamp>())
@@ -286,7 +322,7 @@ namespace MuMech
             //note which resources this part has stored
             foreach (PartResource r in part.Resources)
             {
-                if (r.info.name != "ElectricCharge") resources[r.info.id] = (float)r.amount;
+                if (r.info.density > 0 && r.name != "IntakeAir") resources[r.info.id] = (float)r.amount;
                 resourcesUnobtainableFromParent.Add(r.info.id);
             }
 
@@ -302,13 +338,76 @@ namespace MuMech
 
                     isEngine = true;
 
-                    maxThrust = engine.maxThrust;
+                    // If we take into account the engine rotation 
+                    if (dVLinearThrust)
+                    {
+                        Vector3 thrust = Vector3d.zero;
+                        foreach (var t in engine.thrustTransforms)
+                            thrust -= t.forward / engine.thrustTransforms.Count;
+
+                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.GetTransform().up);
+                        fwdThrustRatio = Vector3.Dot(fwd, thrust);
+                    }
+
+                    maxThrust = engine.thrustPercentage / 100f * engine.maxThrust;
+
+                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
+                    {
+                        correctThrust = true;
+                        if (HighLogic.LoadedSceneIsFlight && engine.realIsp > 0.0f)
+                            maxThrust = maxThrust * engine.atmosphereCurve.Evaluate(0) / engine.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
+                    }
+                    else
+                        correctThrust = false;
                     ispCurve = engine.atmosphereCurve;
 
                     propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
-                    propellantRatios = engine.propellants.Where(prop => prop.name != "ElectricCharge").ToDictionary(prop => prop.id, prop => prop.ratio);
+                    propellantRatios = engine.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir" ).ToDictionary(prop => prop.id, prop => prop.ratio);
                 }
             }
+
+
+            // And do the same for ModuleEnginesFX :(
+            ModuleEnginesFX enginefx = part.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).FirstOrDefault();
+            if (enginefx != null)
+            {
+                //Only count engines that either are ignited or will ignite in the future:
+                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState)
+                {
+                    //if an engine has been activated early, pretend it is in the current stage:
+                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+
+                    isEngine = true;
+
+                    // If we take into account the engine rotation 
+                    if (dVLinearThrust)
+                    {
+                        Vector3 thrust = Vector3d.zero;
+                        foreach (var t in enginefx.thrustTransforms)
+                            thrust -= t.forward / enginefx.thrustTransforms.Count;
+
+                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)enginefx.part.vessel.GetTransform().up);
+                        fwdThrustRatio = Vector3.Dot(fwd, thrust);
+                    }
+
+                    maxThrust = enginefx.thrustPercentage / 100f * enginefx.maxThrust;
+
+                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
+                    {
+                        correctThrust = true;
+                        if (HighLogic.LoadedSceneIsFlight && enginefx.realIsp > 0.0f)
+                            maxThrust = maxThrust * enginefx.atmosphereCurve.Evaluate(0) / enginefx.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
+                    }
+                    else
+                        correctThrust = false;
+                    ispCurve = enginefx.atmosphereCurve;
+
+                    propellantSumRatioTimesDensity = enginefx.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
+                    propellantRatios = enginefx.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir").ToDictionary(prop => prop.id, prop => prop.ratio);
+                }
+            }
+
+
 
             //figure out when this part gets decoupled. We do this by looking through this part and all this part's ancestors
             //and noting which one gets decoupled earliest (i.e., has the highest inverseStage). Some parts never get decoupled
@@ -331,7 +430,8 @@ namespace MuMech
             if (isEngine)
             {
                 float Isp = ispCurve.Evaluate(atmospheres);
-                float massFlowRate = (throttle * maxThrust) / (Isp * 9.81f);
+                float massFlowRate = throttle * maxThrust / (Isp * 9.81f);
+                if (correctThrust) massFlowRate = massFlowRate * Isp / ispCurve.Evaluate(0); // scale thrust
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
                 resourceConsumptions = propellantRatios.Keys.ToDictionary(id => id, id => propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);

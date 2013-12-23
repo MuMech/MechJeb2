@@ -15,6 +15,9 @@ namespace MuMech
     {
         public MechJebModuleStageStats(MechJebCore core) : base(core) { }
 
+        [ToggleInfoItem("ΔV include cosine losses", InfoItem.Category.Thrust, showInEditor = true)]
+        public bool dVLinearThrust = true;
+
         public FuelFlowSimulation.Stats[] atmoStats = { };
         public FuelFlowSimulation.Stats[] vacStats = { };
 
@@ -82,7 +85,7 @@ namespace MuMech
 
             //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
             List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
-            FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts), new FuelFlowSimulation(parts) };
+            FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts, dVLinearThrust), new FuelFlowSimulation(parts, dVLinearThrust) };
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sims);

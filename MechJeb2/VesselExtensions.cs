@@ -25,9 +25,26 @@ namespace MuMech
             return (from part in parts from module in part.Modules.OfType<T>() select module).ToList();
         }
 
+        private static float lastFixedTime = 0;
+        private static Dictionary<Vessel,MechJebCore> masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
-            return vessel.GetModules<MechJebCore>().Max();
+            if (vessel == null) // there will be no cache in the editor, but thats not as usefull as in flight
+                return vessel.GetModules<MechJebCore>().Max();
+            if (lastFixedTime != Time.fixedTime)
+            {
+                masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+                lastFixedTime = Time.fixedTime;
+            }
+            if (!masterMechjebs.ContainsKey(vessel))
+            {
+                MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
+                if (mj != null)
+                    masterMechjebs.Add(vessel, mj);
+                return mj;
+            }
+            return masterMechjebs[vessel];
         }
 
         public static double TotalResourceMass(this Vessel vessel, string resourceName)
@@ -46,6 +63,29 @@ namespace MuMech
             }
 
             return amount * definition.density;
+        }
+
+        public static bool HasElectricCharge(this Vessel vessel)
+        {
+            if (vessel == null || vessel.GetReferenceTransformPart() == null)
+                return false;
+
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
+            if (definition == null) return false;
+
+            PartResource r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
+            // check the command pod first since most have their batteries
+            if (r != null && r.amount > 0)
+                return true;
+
+            foreach (Part p in parts)
+            {
+                r = p.Resources.Get(definition.id);
+                if (r != null && r.amount > 0)
+                    return true;
+            }
+            return false;
         }
 
 

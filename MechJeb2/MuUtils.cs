@@ -9,7 +9,7 @@ namespace MuMech
 {
     public static class MuUtils
     {
-        public static float ResourceDensity(int type)
+		public static float ResourceDensity(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).density;
         }
@@ -150,6 +150,14 @@ namespace MuMech
                 PropertyInfo P = GetSystemCopyBufferProperty();
                 P.SetValue(null, value, null);
             }
+        }
+ 
+		public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
+		{
+			T tmp = list[indexA];
+			list[indexA] = list[indexB];
+			list[indexB] = tmp;
+			return list;
         }
     }
 
