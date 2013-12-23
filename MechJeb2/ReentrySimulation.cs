@@ -51,6 +51,9 @@ namespace MuMech
         public ReentrySimulation(Orbit initialOrbit, double UT, double _dragMassExcludingUsedParachutes, List<SimulatedParachute> parachuteList, double mass,
             IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt)
         {
+            // TODO remove debugging
+            //Debug.Log("UT:" + UT + " _dragMassExcludingUsedParachutes" + _dragMassExcludingUsedParachutes + " mass:" + mass + " endAltitudeASL:" + endAltitudeASL + " maxThrustAccel:" + maxThrustAccel + " _probableLandingSiteASL: " + _probableLandingSiteASL + " _multiplierHasError:" + _multiplierHasError + " _dt:" + _dt);
+
             max_dt = _dt;
             dt = max_dt;             
 
@@ -203,10 +206,25 @@ namespace MuMech
             return false;
         }
 
+        // Function to call Simulate and rollback on all of the parachutes to see if any of them are expected to open in the current iteration.
+        bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double t, double parachuteSemiDeployMultiplier)
+        {
+            foreach (SimulatedParachute p in parachutes)
+            {
+                if (p.SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations. Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to give more precision over the point of deployment.  
         void RK4Step()
         {
             bool repeatWithSmallerStep = false;
+            bool parachutesDeploying = false;
+
             Vector3d dx;
             Vector3d dv;
 
@@ -234,13 +252,13 @@ namespace MuMech
                     dv = (dv1 + 2 * dv2 + 2 * dv3 + dv4) / 6.0;
                 }
 
-                // If the change in velocity it more than half the current velocity, then we need to try again with a smaller delta-t
+                // If the change in velocity is more than half the current velocity, then we need to try again with a smaller delta-t
                 // or if dt is already small enough then continue anyway.
                 if (v.magnitude < dv.magnitude * 2 && dt >= min_dt * 2)
                 {
                     dt = dt / 2;
                     repeatWithSmallerStep = true;
-                    //Debug.Log("Repeating RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) +"m");
+                    // Debug.Log("Repeating RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) +"m");
                 }
                 else
                 {
@@ -249,29 +267,21 @@ namespace MuMech
                     double altASL = xForChuteSim.magnitude - bodyRadius;
                     double altAGL = altASL - probableLandingSiteASL;
                     double pressure = Pressure(xForChuteSim);
+                    bool willChutesOpen = WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
 
-                    if (bodyHasAtmosphere) 
+                    // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
+                    if (willChutesOpen && dt > min_dt) // TODO test to see if we are better off just setting a minimum dt of the physics rame rate.
                     {
-                        // If this is a pass with the minimum dt then do it for real, but if not try opining the parchutes and rollback. If any are opened then we will need to reduce dt to minimum first and try again.
-                        if (dt <= min_dt)
+                        // TODO remove debugging
+                        // Debug.Log("a parachute will open this iteration, but dt is:" + dt +" setting it to be " + min_dt +" and retrying");
+                        dt = Math.Max(dt/2,min_dt);
+                        repeatWithSmallerStep = true;
+                    }
+                    else
+                    {
+                        foreach (SimulatedParachute p in parachutes)
                         {
-                            foreach (SimulatedParachute p in parachutes)
-                            {
-                                bool parachuteOpened = p.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
-                            }
-                        }
-                        else
-                        {
-                            foreach (SimulatedParachute p in parachutes)
-                            {
-                                bool parachuteOpened = p.SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
-                                if (parachuteOpened)
-                                {
-                                    // parachute opened. Set the flag to run the whole thing again with a smaller dt. 
-                                    dt = min_dt;
-                                    repeatWithSmallerStep = true;
-                                }
-                            }
+                            p.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
                         }
                     }
                 }
@@ -281,13 +291,34 @@ namespace MuMech
             x += dx;
             v += dv;
             t += dt;
+           
+            // decide what the dt needs to be for the next iteration 
+            // Is there a parachute in the process of opening? If so then we follow special rules - fix the dt at the physics frame rate. This is because the rate for deployment depends on the frame rate for stock parachutes.
+            parachutesDeploying = this.ParachutesDeploying();
 
-            // Finally - if dt has been reduced, try increasing it, but only by one step.
-            if (dt < max_dt)
+            // If parachutes are part way through deploying then we need to use the physics frame rate for the next step of the simulation
+            if (parachutesDeploying)
+            {
+                dt = Time.fixedDeltaTime; // TODO There is a potential problem here. If the physics frame rate is so large that is causes too large a change in velocity, then we could get stuck in an infinte loop.
+                
+                // TODO remove debugging
+                //Debug.Log("Parachute(s) are deploying. Setting dt to be physic frame rate:" + dt);
+                
+            }
+            // If dt has been reduced, try increasing it, but only by one step. (but not if there is a parachute being deployed)
+            else if(dt < max_dt)
             {
                 dt = Math.Min(dt * 2, max_dt);
                 //Debug.Log("Increasing RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) + "m");
             }
+
+            // TODO remove debugging.
+            /*
+            foreach (SimulatedParachute p in parachutes)
+            {
+                Debug.Log(p.GetDebugOutput());
+            }
+            */
         }
 
         //enforce the descent speed policy
@@ -331,7 +362,7 @@ namespace MuMech
 
             foreach (SimulatedParachute p in parachutes)
             {
-                realDragMass += p.AddedDragMass(t);
+                realDragMass += p.AddedDragMass();
             }
 
             double realDragCoefficient = realDragMass / this.mass;
@@ -351,6 +382,20 @@ namespace MuMech
                     p.Simulate(altAGL, altASL, probableLandingSiteASL , pressure, t, this.parachuteSemiDeployMultiplier);
                 }
             }
+        }
+
+        bool ParachutesDeploying()
+        {
+
+            foreach (SimulatedParachute p in parachutes)
+            {
+                if (p.deploying)
+                {
+                    return true;
+                }
+            }
+            return false;
+
         }
 
         double Pressure(Vector3d pos)
@@ -596,6 +641,9 @@ namespace MuMech
         double fullDeployAGL = 0;
         double targetASLAtSemiDeploy = 0;
         double targetASLAtFullDeploy = 0;
+        double parachuteDrag = 0;
+        double targetDrag = 0;
+        public bool deploying = false;
 
         public SimulatedParachute(ModuleParachute p)
         {
@@ -605,16 +653,26 @@ namespace MuMech
             // Work out when the chute was put into its current state based on the current drag as compared to the stoed, semi deployed and fully deployed drag
 
             double timeSinceDeployment = 0;
+            this.targetDrag = p.targetDrag;
+            this.parachuteDrag = p.parachuteDrag;
+
             switch (p.deploymentState)
             {
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     // If the parachute is semi deployed calculate when it was semideployed by comparing the actual drag with the stowed drag and the semideployed drag.
-                    timeSinceDeployment = (p.parachuteDrag - p.stowedDrag) / (p.semiDeployedDrag - p.stowedDrag) * p.semiDeploymentSpeed;
+                    timeSinceDeployment = (p.parachuteDrag - p.stowedDrag) / (p.semiDeployedDrag - p.stowedDrag) * p.semiDeploymentSpeed; // TODO there is an error in this, because the (semi)deployment does not increase the drag in a linear way. However this will only cause a problem for simulations run during the deployment and in unlikely to cause an error in the landing location.
                     break;
 
                 case ModuleParachute.deploymentStates.DEPLOYED:
                     // If the parachute is deployed calculate when it was deployed by comparing the actual drag with the semideployed drag and the deployed drag.
-                    timeSinceDeployment = (p.parachuteDrag - p.semiDeployedDrag) / (p.fullyDeployedDrag - p.semiDeployedDrag) * p.deploymentSpeed;
+                    timeSinceDeployment = (p.parachuteDrag - p.semiDeployedDrag) / (p.fullyDeployedDrag - p.semiDeployedDrag) * p.deploymentSpeed; // TODO there is an error in this, because the (semi)deployment does not increase the drag in a linear way. However this will only cause a problem for simulations run during the deployment and in unlikely to cause an error in the landing location.
+                    break;
+
+                case ModuleParachute.deploymentStates.STOWED:
+                case ModuleParachute.deploymentStates.ACTIVE:
+                    // If the parachute is stowed then for some reason p.parachuteDrag does not reflect the stowed drag. set this up by hand. 
+                    this.parachuteDrag = this.targetDrag = p.stowedDrag;
+                    timeSinceDeployment = 10000000;
                     break;
 
                 default:
@@ -622,33 +680,25 @@ namespace MuMech
                     timeSinceDeployment = 10000000;
                     break;
             }
-            //Debug.Log("Parachute " + p.name + " parachuteDrag:" + p.parachuteDrag + " targetDrag:" + p.targetDrag +" stowedDrag:" + p.stowedDrag + " semiDeployedDrag:" + p.semiDeployedDrag + " fullyDeployedDrag:" + p.fullyDeployedDrag + " part.maximum_drag:" + p.part.maximum_drag + " part.minimum_drag:" + p.part.minimum_drag + " semiDeploymentSpeed:" + p.semiDeploymentSpeed + " deploymentSpeed:" + p.deploymentSpeed + " deploymentState:" + p.deploymentState + " timeSinceDeployment:" + timeSinceDeployment);       
-            
+           
             this.openningTime = -timeSinceDeployment;
 
+            // Debug.Log("Parachute " + p.name + " parachuteDrag:" + p.parachuteDrag + " targetDrag:" + p.targetDrag + " stowedDrag:" + p.stowedDrag + " semiDeployedDrag:" + p.semiDeployedDrag + " fullyDeployedDrag:" + p.fullyDeployedDrag + " part.maximum_drag:" + p.part.maximum_drag + " part.minimum_drag:" + p.part.minimum_drag + " semiDeploymentSpeed:" + p.semiDeploymentSpeed + " deploymentSpeed:" + p.deploymentSpeed + " deploymentState:" + p.deploymentState + " timeSinceDeployment:" + timeSinceDeployment);       
         }
 
         public string GetDebugOutput()
         {
-            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy; 
+            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy + " this.targetDrag:" + this.targetDrag + " this.parachuteDrag:" + this.parachuteDrag + " p.part.minimum_drag:" + p.part.minimum_drag + " p.part.maximum_drag:" + p.part.maximum_drag; ; 
             return DebugOutput;
         }
 
-        public double AddedDragMass(double time)
+        public double AddedDragMass()
         {
-            // Depending of the state, calculate the mass drag of this part. The general rule is that the drag is minimum_drag for the part + drag for the parachute in its stowed, semideployed, fully deployed or cut state.
+            double totalDrag;
 
-            if (state == ModuleParachute.deploymentStates.STOWED || state == ModuleParachute.deploymentStates.ACTIVE)
-                return p.part.mass * (p.stowedDrag + p.part.minimum_drag); 
-            else if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
-                return p.part.mass * (Mathf.Lerp(p.stowedDrag,p.semiDeployedDrag,(float)Math.Min((time - openningTime) / p.semiDeploymentSpeed, 1)) + p.part.minimum_drag); 
-            else if (state == ModuleParachute.deploymentStates.DEPLOYED)
-                return p.part.mass * (Mathf.Lerp(p.semiDeployedDrag, p.fullyDeployedDrag, (float)Math.Min((time - openningTime) / p.deploymentSpeed, 1)) + p.part.minimum_drag);
-            else if (state == ModuleParachute.deploymentStates.CUT)
-                return p.part.mass * (Mathf.Lerp(p.fullyDeployedDrag, 0, (float)Math.Min((time - openningTime) / p.autoCutSpeed, 1)) + p.part.minimum_drag);
-            else
-                return p.part.mass *  p.part.minimum_drag; 
+            totalDrag = p.part.minimum_drag + this.parachuteDrag;
 
+            return p.part.mass * totalDrag;
         }
 
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
@@ -701,6 +751,7 @@ namespace MuMech
                             semiDeployAGL = altATGL;
                             semiDeployASL = altASL;
                             targetASLAtSemiDeploy = endASL;
+                            this.targetDrag = p.semiDeployedDrag;
                         }
                     }
                     break;
@@ -713,8 +764,8 @@ namespace MuMech
                         semiDeployAGL = altATGL;
                         semiDeployASL = altASL;
                         targetASLAtSemiDeploy = endASL;
+                        this.targetDrag = p.semiDeployedDrag;
                     }
-
 
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
@@ -726,9 +777,44 @@ namespace MuMech
                         fullDeployAGL = altATGL;
                         fullDeployASL = altASL;
                         targetASLAtFullDeploy = endASL;
+                        this.targetDrag = p.fullyDeployedDrag;
                     }
                     break;
             }
+
+            // Now that we have potentially changed states calculate the current drag or the parachute in whatever state (or transition to a state) that it is in.
+            float normalizedTime;
+
+            // Depending on the state that we are in consider if we are part way through a deployment.
+            if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+            {
+                normalizedTime = (float)Math.Min((time - openningTime) / p.semiDeploymentSpeed, 1);
+            }
+            else if (state == ModuleParachute.deploymentStates.DEPLOYED)
+            {
+                normalizedTime = (float)Math.Min((time - openningTime) / p.deploymentSpeed, 1);
+            }
+            else
+            {
+                normalizedTime = 1;
+            }
+
+            // Are we deploying in any way? We know if we are deploying or not if normalized time is less than 1
+            if (normalizedTime < 1)
+            {
+                this.deploying = true;
+            }
+            else
+            {
+                this.deploying = false;
+            }
+
+            // If we are deploying or semi deploying then use Lerp to replicate the way the game increases the drag as we deploy.
+            if (state == ModuleParachute.deploymentStates.DEPLOYED || state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+            {
+                this.parachuteDrag = Mathf.Lerp((float)this.parachuteDrag, (float)this.targetDrag, normalizedTime);
+            }
+
             return (stateChanged);
         }
     }

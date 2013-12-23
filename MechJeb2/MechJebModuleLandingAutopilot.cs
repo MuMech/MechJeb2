@@ -60,7 +60,7 @@ namespace MuMech
         enum LandStep
         {
             PLANE_CHANGE, LOW_DEORBIT_BURN, DEORBIT_BURN, COURSE_CORRECTIONS, COAST_TO_DECELERATION,
-            DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, UNTARGETED_DEORBIT, OFF, PARACHUTE_CONTROL
+            DECELERATING, KILLING_HORIZONTAL_VELOCITY, FINAL_DESCENT, UNTARGETED_DEORBIT, OFF
         }
         LandStep landStep = LandStep.OFF;
 
@@ -221,10 +221,6 @@ namespace MuMech
 
                 case LandStep.DECELERATING:
                     FixedUpdateDecelerationBurn();
-                    break;
-
-                case LandStep.PARACHUTE_CONTROL:
-                    FixedUpdateParachuteControl();
                     break;
 
                 default:
@@ -585,13 +581,9 @@ namespace MuMech
             {
                 if (ParachutesDeployable())
                 {
-                    core.warp.MinimumWarp();
-                    core.thrust.targetThrottle = 0;
-                    landStep = LandStep.PARACHUTE_CONTROL;
-                    return;
+                    ControlParachutes();
                 }
             }
-
 
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
 
@@ -622,17 +614,12 @@ namespace MuMech
         {
             core.thrust.targetThrottle = 0;
 
-            // If the atmospheric drag is too large then we will be unlikely to be able to control our attitude. Move the the parachute control step
-            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 1)
+            // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
+            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.10)
             {
                 if(ParachutesDeployable() && !parachuteControlAbandoned)
                 {
-                    Debug.Log("There are deployable parachutes - moving to parchute control mode ");
-
-                    core.warp.MinimumWarp();
-                    core.thrust.targetThrottle = 0;
-                    landStep = LandStep.PARACHUTE_CONTROL;
-                    return;
+                    ControlParachutes();
                 }
             }
 
@@ -651,7 +638,15 @@ namespace MuMech
                 landStep = LandStep.COURSE_CORRECTIONS;
                 return;
             }
-            
+
+            // Sometimes (on bodies with a thick atmosphere) there is no need for a decleration burn. Check for this so that it is possible to transition into the final decent step.
+            if ((vesselState.altitudeASL < DecelerationEndAltitude() + 5) && UseAtmosphereToBrake())
+            {
+                landStep = LandStep.FINAL_DESCENT;
+                core.warp.MinimumWarp();
+                return;
+            }
+                        
             if (core.attitude.attitudeAngleFromTarget() < 1) { warpReady = true; } // less warp start warp stop jumping
             if (core.attitude.attitudeAngleFromTarget() > 5) { warpReady = false; } // hopefully
 
@@ -905,6 +900,52 @@ namespace MuMech
             status = "Targeting by timing parachute deployment. Multipler:" + parachutePlan.GetMultiplier().ToString("F4");
         }
 
+        public void ControlParachutes()
+        {
+            // Firstly - do we have a parchute plan? If not then we had better get one quick!
+            if (null == parachutePlan)
+            {
+                parachutePlan = new ParachutePlan(this);
+            }
+
+            // Are there any deployable parachutes? If not then there is no point in us being here. Lets switch to cruising to the deceleration burn instead.
+            if (!ParachutesDeployable())
+            {
+                predictor.runErrorSimulations = false;
+                parachutePlan.ClearData();
+                return;
+            }
+            else
+            {
+                predictor.runErrorSimulations = true;
+            }
+
+            // Is there an error prediction available? If so add that into the mix
+            if (this.ErrorPredictionReady)
+            {
+                if (parachutePlan.AddResult(errorPrediction))
+                {
+                    // The parachute plan has told us to give up. Clear the data and start again
+                    parachutePlan.ClearData();
+                    return;
+                }
+            }
+
+            // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
+            if (this.PredictionReady)
+            {
+                if (parachutePlan.AddResult(prediction))
+                {
+                    // The parachute plan has told us to give up. Clear the data and start again
+                    parachutePlan.ClearData();
+                    return;
+                }
+            }
+
+            // Update the status to make it look like something interesting is going on under the covers!
+            status = "Targeting by timing parachute deployment. Multipler:" + parachutePlan.GetMultiplier().ToString("F4");
+        }
+
         void DeployParachutes()
         {
             if (vesselState.mainBody.atmosphere && deployChutes)
@@ -983,9 +1024,10 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                //if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
-                //should end a safe height above the landing site in order to allow braking from terminal velocity
-                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselState.massDrag / vesselState.mass);
+                // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
+                // should end a safe height above the landing site in order to allow braking from terminal velocity
+                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, (vesselState.massDrag + ParachuteAddedDragMass()) / vesselState.mass);
+
                 return 2 * landingSiteDragLength + LandingAltitude;
             }
             else
@@ -1002,14 +1044,44 @@ namespace MuMech
         //to see if there is an altitude within the atmosphere for which the characteristic distance
         //over which drag slows the ship is smaller than the altitude above the terrain. If so, we can
         //expect to get slowed to near terminal velocity before impacting the ground. 
-        bool UseAtmosphereToBrake()
+        public bool UseAtmosphereToBrake()
         {
             //The air density goes like exp(-h/(scale height)), so the drag length goes like exp(+h/(scale height)).
             //Some math shows that if (scale height) > e * (surface drag length) then 
             //there is an altitude at which (altitude) > (drag length at that altitude).
-            double seaLevelDragLength = mainBody.DragLength(0, vesselState.massDrag / vesselState.mass);
+            double seaLevelDragLength = mainBody.DragLength(0, (vesselState.massDrag + ParachuteAddedDragMass()) / vesselState.mass);
             return (1000 * mainBody.atmosphereScaleHeight > 2.71828 * seaLevelDragLength);
         }
+
+        // This is not the exact number, but it's good enough for our use
+        public double ParachuteAddedDragMass()
+        {
+            double addedDragMass = 0;
+            if (vesselState.mainBody.atmosphere && deployChutes)
+            {
+                foreach (ModuleParachute p in vesselState.parachutes)
+                {
+                    if (p.part.inverseStage >= limitChutesStage)
+                        switch (p.deploymentState)
+                        {
+                            case ModuleParachute.deploymentStates.STOWED:
+                            case ModuleParachute.deploymentStates.ACTIVE:
+                                addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.stowedDrag;
+                                break;
+                            case ModuleParachute.deploymentStates.SEMIDEPLOYED:
+                                addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.semiDeployedDrag;
+                                break;
+                        }
+
+                }
+            }
+            return addedDragMass;
+        }
+
+
+
+
+
 
         bool UseLowDeorbitStrategy()
         {

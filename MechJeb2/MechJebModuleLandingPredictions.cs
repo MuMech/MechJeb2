@@ -222,9 +222,16 @@ namespace MuMech
                 //set the delay before the next simulation
                 millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
 
-                // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second.
-                dt = (newResult.maxdt * ((double)millisecondsToCompletion/(double)1000) ) /  ((double)1 / ((double)3 * (double)interationsPerSecond)) ;
-                dt = Math.Max(dt, Time.fixedDeltaTime);
+                // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
+                if (newResult.outcome == ReentrySimulation.Outcome.AEROBRAKED || newResult.outcome == ReentrySimulation.Outcome.LANDED)
+                {
+                    dt = (newResult.maxdt * ((double)millisecondsToCompletion / (double)1000)) / ((double)1 / ((double)3 * (double)interationsPerSecond));
+                    // There is no point in having a dt that is smaller than the physics frame rate as we would be trying to be more precise than the game.
+                    dt = Math.Max(dt, (double)Time.fixedDeltaTime);
+                    // Set a sensible upper limit to dt as well. - in this case 10 seconds
+                    dt = Math.Min(dt, 10);
+                }
+                
                 // TODO remove debugging 
                 //Debug.Log("Time to run: " + millisecondsToCompletion + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime);
 
