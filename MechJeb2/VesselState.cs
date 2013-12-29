@@ -158,10 +158,24 @@ namespace MuMech
             TerminalVelocityCall = TerminalVelocityStockKSP;
         }
 
+        static int counter = 0;
+
         public void Update(Vessel vessel)
         {
             if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
             //if (vessel.packed) return;
+
+            // To investigate some strange error 
+            if ((vessel.mainBody == null || (object)(vessel.mainBody) == null) && counter == 0)
+            {
+                if ((object)(vessel.mainBody) == null )
+                    MechJebCore.print("vessel.mainBody is proper null");
+                else
+                    MechJebCore.print("vessel.mainBody is Unity null");
+
+                counter = counter++ % 100;
+            }
+
 
             time = Planetarium.GetUniversalTime();
             deltaT = TimeWarp.fixedDeltaTime;
