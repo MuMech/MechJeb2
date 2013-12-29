@@ -151,6 +151,12 @@ namespace MuMech
         public delegate void VesselStatePartModuleExtension(PartModule pm);
         public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
+        public delegate double DTerminalVelocity();
+
+        public VesselState()
+        {
+            TerminalVelocityCall = TerminalVelocityStockKSP;
+        }
 
         public void Update(Vessel vessel)
         {
@@ -473,6 +479,13 @@ namespace MuMech
         //probably this should call a more general terminal velocity method
         [ValueInfoItem("Terminal velocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
         public double TerminalVelocity()
+        {
+            return TerminalVelocityCall();
+        }
+        
+        public DTerminalVelocity TerminalVelocityCall;
+                      
+        public double TerminalVelocityStockKSP()
         {
             if (altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
