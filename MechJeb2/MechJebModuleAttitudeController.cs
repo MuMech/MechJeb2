@@ -142,7 +142,7 @@ namespace MuMech
                                     torque.z != 0 ? vesselState.MoI.z / torque.z : 0
                 );
 
-            Tf = Mathf.Clamp((float)ratio.magnitude / 10f, 2 * TimeWarp.fixedDeltaTime, 2f);
+            Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
 
             setPIDParameters();
         }
