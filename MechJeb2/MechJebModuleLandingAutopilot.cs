@@ -22,7 +22,11 @@ namespace MuMech
             lowDeorbitEndConditionSet = false;
             planeChangeTriggered = false;
 
-            if (orbit.PeA < 0) landStep = LandStep.COURSE_CORRECTIONS;
+            // Create a new parachute plan
+            this.parachutePlan = new ParachutePlan(this);
+            this.parachutePlan.StartPlanning();
+
+            if (orbit.PeA < 0) landStep = LandStep.COURSE_CORRECTIONS; 
             else if (UseLowDeorbitStrategy()) landStep = LandStep.PLANE_CHANGE;
             else landStep = LandStep.DEORBIT_BURN;
         }
@@ -32,6 +36,10 @@ namespace MuMech
             users.Add(controller);
 
             deployedGears = false;
+
+            // Create a new parachute plan
+            this.parachutePlan = new ParachutePlan(this);
+            this.parachutePlan.StartPlanning();
 
             landStep = LandStep.UNTARGETED_DEORBIT;
         }
@@ -75,24 +83,62 @@ namespace MuMech
 
         double lowDeorbitBurnTriggerFactor = 2;
 
+        ParachutePlan parachutePlan = null;  // This is used to adjest the height at which the parachutes semi deploy as a means of targeting the landing in an atmosphere where it is not possible to control atitude to perform corse correction burns.
+        
         //Landing prediction data:
         MechJebModuleLandingPredictions predictor;
         ReentrySimulation.Result prediction;
+        ReentrySimulation.Result errorPrediction;
         bool warpReady = false;
         bool PredictionReady //We shouldn't do any autopilot stuff until this is true
         {
             get
             {
-                return (prediction != null) &&
-                       (prediction.outcome == ReentrySimulation.Outcome.LANDED);
+                // Check that there is a prediction and that it is a landing prediction.
+                if (prediction == null)
+                {
+                    return false;
+                }
+                else if (prediction.outcome != ReentrySimulation.Outcome.LANDED)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+        bool ErrorPredictionReady // We shouldn't try to use an ErrorPrediction until this is true.
+        {
+            get
+            {
+                return (errorPrediction != null) &&
+                       (errorPrediction.outcome == ReentrySimulation.Outcome.LANDED);
             }
         }
         double LandingAltitude //the altitude above sea level of the terrain at the landing site
         {
             get
             {
-                if (PredictionReady) return mainBody.TerrainAltitude(prediction.endPosition.latitude, prediction.endPosition.longitude);
-                else return 0;
+                if (PredictionReady)
+                {
+                    // Although we know the landingASL as it is in the prediciton, we suspect that it might sometimes be incorrect. So to check we will calculate it again here, and if the two differ log an error. It seems that this terrain ASL calls when made from the simulatiuon thread are regularly incorrect, but are OK when made from this thread. At the time of writting (KSP0.23) there seem to be several other things going wrong witht he terrain system, such as visual glitches as we as the occasional exceptions being thrown when calls to the CelestialBody object are made. I suspect a bug or some sort - for now this hack improves the landing results.
+                    {
+                        double checkASL = prediction.body.TerrainAltitude(prediction.endPosition.latitude, prediction.endPosition.longitude);
+                        if (checkASL != prediction.endASL)
+                        {
+                            // I know that this check is not required as we might as well always make the asignment. However this allows for some debug monitoring of how often this is occuring.
+                            prediction.endASL = checkASL;
+                        }
+                    }
+
+                    return prediction.endASL;
+                }
+                else
+                {
+                    return 0;
+                }
             }
         }
         Vector3d LandingSite //the current position of the landing site
@@ -106,6 +152,21 @@ namespace MuMech
         Vector3d RotatedLandingSite //the position where the landing site will be when we land at it
         {
             get { return prediction.WorldEndPosition(); }
+        }
+
+        public string ParachuteControlInfo
+        {
+            get
+            {
+                if (this.ParachutesDeployable())
+                {
+                    return ("Parachute Multiplier:" + this.parachutePlan.GetMultiplier().ToString("F7") );
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public override void OnModuleEnabled()
@@ -129,12 +190,33 @@ namespace MuMech
         {
             if (landStep == LandStep.OFF) return;
 
+            // If the latest prediction is a landing, aerobrake or no-reentry prediciton then keep it. However if it is any other sort or result it is not much use to us, so do not bother!
+            {
+                ReentrySimulation.Result result = predictor.GetResult();
+                if (null != result)
+                {
+                    if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
+                    {
+                        this.prediction = result;
+                    }
+                }
+            }
+            {
+                ReentrySimulation.Result result = predictor.GetErrorResult();
+                if (null != result)
+                {
+                    if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
+                    {
+                        this.errorPrediction = result;
+                    }
+                }
+            }
+
             descentSpeedPolicy = PickDescentSpeedPolicy();
 
             predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
-            predictor.endAltitudeASL = DecelerationEndAltitude();
-
-            prediction = predictor.GetResult(); //grab a reference to the current result, in case a new one comes in while we're doing stuff
+            predictor.decelEndAltitudeASL = DecelerationEndAltitude();
+            predictor.parachuteSemiDeployMultiplier = this.parachutePlan.GetMultiplier();
 
             if (!PredictionReady && landStep != LandStep.DEORBIT_BURN && landStep != LandStep.PLANE_CHANGE && landStep != LandStep.LOW_DEORBIT_BURN
                 && landStep != LandStep.UNTARGETED_DEORBIT && landStep != LandStep.FINAL_DESCENT) return;
@@ -177,32 +259,39 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            switch (landStep)
+            try
             {
-                case LandStep.PLANE_CHANGE:
-                    FixedUpdatePlaneChange();
-                    break;
+                switch (landStep)
+                {
+                    case LandStep.PLANE_CHANGE:
+                        FixedUpdatePlaneChange();
+                        break;
 
-                case LandStep.LOW_DEORBIT_BURN:
-                    FixedUpdateLowDeorbitBurn();
-                    break;
+                    case LandStep.LOW_DEORBIT_BURN:
+                        FixedUpdateLowDeorbitBurn();
+                        break;
 
-                case LandStep.DEORBIT_BURN:
-                    FixedUpdateDeorbitBurn();
-                    break;
+                    case LandStep.DEORBIT_BURN:
+                        FixedUpdateDeorbitBurn();
+                        break;
 
-                case LandStep.COAST_TO_DECELERATION:
-                    FixedUpdateCoastToDeceleration();
-                    break;
+                    case LandStep.COAST_TO_DECELERATION:
+                        FixedUpdateCoastToDeceleration();
+                        break;
 
-                case LandStep.DECELERATING:
-                    FixedUpdateDecelerationBurn();
-                    break;
+                    case LandStep.DECELERATING:
+                        FixedUpdateDecelerationBurn();
+                        break;
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+                DeployParachutes();
             }
-            DeployParachutes();
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
         }
 
         void DriveUntargetedDeorbit(FlightCtrlState s)
@@ -552,9 +641,26 @@ namespace MuMech
 
         void DriveCourseCorrections(FlightCtrlState s)
         {
+            // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
+            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.1)
+            {
+                if (ParachutesDeployable())
+                {
+                    ControlParachutes();
+                }
+            }
+
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
 
             if (currentError < 150)
+            {
+                core.thrust.targetThrottle = 0;
+                landStep = LandStep.COAST_TO_DECELERATION;
+                return;
+            }
+
+            // If a parachute has already been deployed then we will not be able to control attitude anyway, so move back to the coast to deceleration step.
+            if (vesselState.parachuteDeployed)
             {
                 core.thrust.targetThrottle = 0;
                 landStep = LandStep.COAST_TO_DECELERATION;
@@ -581,6 +687,15 @@ namespace MuMech
         {
             core.thrust.targetThrottle = 0;
 
+            // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
+            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.10)
+            {
+                if(ParachutesDeployable())
+                {
+                    ControlParachutes();
+                }
+            }
+
             double maxAllowedSpeed = MaxAllowedSpeed();
             if (vesselState.speedSurface > 0.9 * maxAllowedSpeed)
             {
@@ -592,11 +707,22 @@ namespace MuMech
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
             if (currentError > 600)
             {
+                if (!vesselState.parachuteDeployed) // However if there is already a parachute deployed, then do not bother trying to correct the course as we will not have any attitude control anyway.
+                {
+                    core.warp.MinimumWarp();
+                    landStep = LandStep.COURSE_CORRECTIONS;
+                    return;
+                }
+            }
+
+            // Sometimes (on bodies with a thick atmosphere) there is no need for a decleration burn. Check for this so that it is possible to transition into the final decent step.
+            if ((vesselState.altitudeASL < DecelerationEndAltitude() + 5) && UseAtmosphereToBrake())
+            {
+                landStep = LandStep.FINAL_DESCENT;
                 core.warp.MinimumWarp();
-                landStep = LandStep.COURSE_CORRECTIONS;
                 return;
             }
-            
+                        
             if (core.attitude.attitudeAngleFromTarget() < 1) { warpReady = true; } // less warp start warp stop jumping
             if (core.attitude.attitudeAngleFromTarget() > 5) { warpReady = false; } // hopefully
 
@@ -676,6 +802,7 @@ namespace MuMech
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
         }
 
+        // TODO I think that this function could be better rewritten to much more agressively kill the horizontal velocity. At present on low gravity bodies such as Bop, the craft will hover and slowly drift sideways, loosing the prescion of the landing. 
         public void DriveKillHorizontalVelocity(FlightCtrlState s)
         {
             Vector3d horizontalPointingDirection = Vector3d.Exclude(vesselState.up, vesselState.forward).normalized;
@@ -721,6 +848,8 @@ namespace MuMech
                 StopLanding();
                 return;
             }
+
+            // TODO perhaps we should pop the parachutes at this point, or at least consider it depending on the altitude.
 
             double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
 
@@ -797,17 +926,147 @@ namespace MuMech
             status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
         }
 
+        public void FixedUpdateParachuteControl()
+        {
+            // Are there any deployable parachutes? If not then there is no point in us being here. Lets switch to cruising to the deceleration burn instead.
+            if (!ParachutesDeployable())
+            {
+                predictor.runErrorSimulations = false;
+                parachutePlan.ClearData();
+                landStep = LandStep.FINAL_DESCENT;
+                return;
+            }
+            else
+            {
+                predictor.runErrorSimulations = true;
+            }
+
+            // Firstly - do we have a parchute plan? If not then we had better get one quick!
+            if (null == parachutePlan)
+            {
+                parachutePlan = new ParachutePlan(this);
+            }
+
+            // Is there an error prediction available? If so add that into the mix
+            if (this.ErrorPredictionReady)
+            {
+                if (parachutePlan.AddResult(errorPrediction))
+                {
+                    // The parachute plan has told us to give up. 
+                    predictor.runErrorSimulations = false;
+                    parachutePlan.ClearData();
+                    landStep = LandStep.FINAL_DESCENT;
+                    return;
+                }
+            }
+
+            // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
+            if (this.PredictionReady)
+            {
+                if (parachutePlan.AddResult(prediction))
+                {
+                    // The parachute plan has told us to give up. 
+                    predictor.runErrorSimulations = false;
+                    parachutePlan.ClearData();
+                    landStep = LandStep.FINAL_DESCENT;
+                    return;
+                }
+            }
+
+            // Update the status to make it look like something interesting is going on under the covers!
+            status = "Targeting by timing parachute deployment. Multipler:" + parachutePlan.GetMultiplier().ToString("F4");
+        }
+
+        public void ControlParachutes()
+        {
+            // Firstly - do we have a parchute plan? If not then we had better get one quick!
+            if (null == parachutePlan)
+            {
+                parachutePlan = new ParachutePlan(this);
+            }
+
+            // Are there any deployable parachutes? If not then there is no point in us being here. Lets switch to cruising to the deceleration burn instead.
+            if (!ParachutesDeployable())
+            {
+                predictor.runErrorSimulations = false;
+                parachutePlan.ClearData();
+                return;
+            }
+            else
+            {
+                predictor.runErrorSimulations = true;
+            }
+
+            // Is there an error prediction available? If so add that into the mix
+            if (this.ErrorPredictionReady)
+            {
+                if (parachutePlan.AddResult(errorPrediction))
+                {
+                    // The parachute plan has told us to give up. Clear the data and start again
+                    parachutePlan.ClearData();
+                    return;
+                }
+            }
+
+            // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
+            if (this.PredictionReady)
+            {
+                if (parachutePlan.AddResult(prediction))
+                {
+                    // The parachute plan has told us to give up. Clear the data and start again
+                    parachutePlan.ClearData();
+                    return;
+                }
+            }
+
+            // Update the status to make it look like something interesting is going on under the covers!
+            status = "Targeting by timing parachute deployment. Multipler:" + parachutePlan.GetMultiplier().ToString("F4");
+        }
+
         void DeployParachutes()
         {
             if (vesselState.mainBody.atmosphere && deployChutes)
+            {
                 foreach (ModuleParachute p in vesselState.parachutes)
                 {
-                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && p.deployAltitude * 3 > vesselState.altitudeTrue )
+                    // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
+                    double LandingSiteASL = LandingAltitude;
+                    double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.GetMultiplier();
+
+                    double ASLDeployAltitude = ParachuteDeployAboveGroundAtLandingSite + LandingSiteASL;
+
+                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && ASLDeployAltitude > vesselState.altitudeASL)
                     {
                         p.DeployAction(null);
+                        // Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
                     }
                 }
+            }
         }
+
+        // This methods works out if there are any parachutes that are capable of being deployed
+        bool ParachutesDeployable()
+        {
+            if (!vesselState.mainBody.atmosphere) return false;
+            if (!deployChutes) return false;
+
+            foreach (ModuleParachute p in vesselState.parachutes)
+            {
+                if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // This methods works out if there are any parachutes that have already been deployed (or semi deployed)
+        bool ParachutesDeployed()
+        {
+            return vesselState.parachuteDeployed;
+        }
+
 
         void DeployLandingGears()
         {
@@ -839,7 +1098,7 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                return new CoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude());
+                return new PWBCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude()); // TODO this decent policy has been changed for experimentation.
             }
 
             return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
@@ -849,9 +1108,10 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                //if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
-                //should end a safe height above the landing site in order to allow braking from terminal velocity
-                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselState.massDrag / vesselState.mass);
+                // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
+                // should end a safe height above the landing site in order to allow braking from terminal velocity
+                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, (vesselState.massDrag + ParachuteAddedDragMass()) / vesselState.mass);
+
                 return 2 * landingSiteDragLength + LandingAltitude;
             }
             else
@@ -868,14 +1128,44 @@ namespace MuMech
         //to see if there is an altitude within the atmosphere for which the characteristic distance
         //over which drag slows the ship is smaller than the altitude above the terrain. If so, we can
         //expect to get slowed to near terminal velocity before impacting the ground. 
-        bool UseAtmosphereToBrake()
+        public bool UseAtmosphereToBrake()
         {
             //The air density goes like exp(-h/(scale height)), so the drag length goes like exp(+h/(scale height)).
             //Some math shows that if (scale height) > e * (surface drag length) then 
             //there is an altitude at which (altitude) > (drag length at that altitude).
-            double seaLevelDragLength = mainBody.DragLength(0, vesselState.massDrag / vesselState.mass);
+            double seaLevelDragLength = mainBody.DragLength(0, (vesselState.massDrag + ParachuteAddedDragMass()) / vesselState.mass);
             return (1000 * mainBody.atmosphereScaleHeight > 2.71828 * seaLevelDragLength);
         }
+
+        // This is not the exact number, but it's good enough for our use
+        public double ParachuteAddedDragMass()
+        {
+            double addedDragMass = 0;
+            if (vesselState.mainBody.atmosphere && deployChutes)
+            {
+                foreach (ModuleParachute p in vesselState.parachutes)
+                {
+                    if (p.part.inverseStage >= limitChutesStage)
+                        switch (p.deploymentState)
+                        {
+                            case ModuleParachute.deploymentStates.STOWED:
+                            case ModuleParachute.deploymentStates.ACTIVE:
+                                addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.stowedDrag;
+                                break;
+                            case ModuleParachute.deploymentStates.SEMIDEPLOYED:
+                                addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.semiDeployedDrag;
+                                break;
+                        }
+
+                }
+            }
+            return addedDragMass;
+        }
+
+
+
+
+
 
         bool UseLowDeorbitStrategy()
         {
@@ -938,7 +1228,22 @@ namespace MuMech
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
             if (pos.magnitude > endCoastRadius) return double.MaxValue;
-            else return 0;
+            else return 0; 
+        }
+    }
+
+    class PWBCoastDescentSpeedPolicy : IDescentSpeedPolicy
+    {
+        double endCoastRadius;
+        public PWBCoastDescentSpeedPolicy(double endCoastRadius)
+        {
+            this.endCoastRadius = endCoastRadius;
+        }
+
+        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
+        {
+            if (pos.magnitude > endCoastRadius) return double.MaxValue;
+            else return 1; //  It is a bit silly to set this at 0 because then the simulation times out as it never reaches the ground.
         }
     }
 
@@ -993,5 +1298,269 @@ namespace MuMech
 
             return startRadius - endRadius;
         }
+    }
+
+    // Class to hold all the information about the planned deployment of parachutes.
+    class ParachutePlan
+    {
+        // We use a linear regresion to calculate the best place to deploy based on previous predictions
+        LinearRegression regression;
+        ReentrySimulation.Result lastResult; //  store the last result so that we can check if any new result is actually a new one, or the same one again.
+        ReentrySimulation.Result lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
+        CelestialBody body;
+        MechJebModuleLandingAutopilot autoPilot;
+        bool abandoned; // TODO reconsider if this is a good policy, or if we should just clear the data and start again if the dataset does not correlate
+        bool parachutePresent = false;
+        double maxSemiDeployHeight;
+        double minSemiDeployHeight;
+        double maxMultiplier;
+        double currentMultiplier;  // This is multiplied with the parachutes fulldeploy height to give the height at which the parachutes will be semideployed.
+
+        public double GetMultiplier()
+        {
+            return currentMultiplier;
+        }
+
+        // Incorporates a new simulation result into the simulation data set and calculate a new semi deployment multiplier. If the data set has a poor correlation, then it might just leave the mutiplier. If the correlation becomes positive then it will give up on trying to control the parachutes and return true to mean adandon trying to control the chutes.
+        public bool AddResult(ReentrySimulation.Result newResult)
+        {
+            // check that this parachute plan has not already beenn abandoned
+            if (this.abandoned) { return abandoned; }
+
+            // if this result is the same as the old result, then it is not new!
+            if (newResult.multiplierHasError)
+            {
+                if (lastErrorResult != null)
+                {
+                    if (newResult.id == lastErrorResult.id) { return abandoned; }
+                }
+                lastErrorResult = newResult;
+            }
+            else
+            {
+                if (lastResult != null)
+                {
+                    if (newResult.id == lastResult.id) { return abandoned; }
+                }
+                lastResult = newResult;
+            }
+
+            // What was the overshoot for this new result?
+            double overshoot = newResult.GetOvershoot(this.autoPilot.core.target.targetLatitude, this.autoPilot.core.target.targetLongitude);
+
+            // Debug.Log("overshoot: " + overshoot + " multiplier: " + newResult.parachuteMultiplier + " hasError:" + newResult.multiplierHasError);
+
+            // Add the new result to the linear regression
+            regression.Add(overshoot, newResult.parachuteMultiplier);
+
+            // What is the correlation coefficent of the data. If it is weak a correlation then we will dismiss the dataset and use it to change the current multiplier
+            double correlation =regression.CorrelationCoefficent;
+            if (correlation > -0.2) // TODO this is the best value to test for non-correlation?
+            {
+                // If the correlation is less that 0 then we will give up controlling the parachutes and throw away the dataset. Also check that we have got several bits of data, just in case we get two datapoints that are badly correlated.
+                if (correlation > 0 && this.regression.dataSetSize > 5)
+                {
+                    abandoned = true;
+                    regression = new LinearRegression(20);
+                    // Debug.Log("Giving up control of the parachutes as the data does not correlate: " + correlation);
+                }
+                else
+                {
+                    // Debug.Log("Ignoring the simulation dataset because the correlation is not significant enough: " + correlation);
+                }
+            }
+            else
+            {
+                // Use the linear regression to give us a new prediciton for when to open the parachutes
+                try
+                {
+                    this.currentMultiplier = regression.yIntercept;
+                }
+                catch (Exception e)
+                {
+                    // If there is not enough data then we expect an exception. However we need to vary the multiplier everso slightly so that we get different data in order to start generating data.
+                    this.currentMultiplier *= 0.99;
+                }
+
+                // Impose sensible limits on the multiplier
+                if (this.currentMultiplier < 1) { this.currentMultiplier = 1; }
+                if (this.currentMultiplier > this.maxMultiplier) { this.currentMultiplier = this.maxMultiplier; }
+            }
+
+            return abandoned;
+        }
+
+        public ParachutePlan(MechJebModuleLandingAutopilot _autopliot)
+        {
+            // Create the linear regression for storing previous prediction results
+            this.regression = new LinearRegression(20); // Stored the previous 20 predictions
+
+            // Take a reference to the landing autopilot module that we are working for.
+            this.autoPilot = _autopliot;
+
+            // Take a note of which body this parachute plan is for. If we go to a different body, we will need a new plan!
+            this.body = _autopliot.vessel.orbit.referenceBody;
+         }
+
+        // Throw away any old data, and create a new empty dataset
+        public void ClearData()
+        {
+            // Create the linear regression for storing previous prediction results
+            this.regression = new LinearRegression(20); // Stored the previous 20 predictions
+        }
+
+        public void StartPlanning()
+        {
+            // what is the highest point at which we could semi deploy? - look at all the parachutes in the craft, and consider the lowest semi deployment pressure.
+            float minSemiDeployPressure = 0; 
+            float maxFullDeployHeight = 0;
+            parachutePresent = false; // First assume that there are no parachutes.
+
+            // TODO should we check if each of these parachutes is withing the staging limit?
+            foreach (ModuleParachute p in autoPilot.vesselState.parachutes)
+            {
+                if (p.minAirPressureToOpen > minSemiDeployPressure) // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
+                {
+                    minSemiDeployPressure = p.minAirPressureToOpen;
+                }
+                if (p.deployAltitude > maxFullDeployHeight)
+                {
+                    maxFullDeployHeight = p.deployAltitude;
+                }
+
+                parachutePresent = true;
+            }
+
+            // If parachtes are present on the craft then work out the max / min semideployment heights and the starting value.
+            if(true == parachutePresent)
+            {
+                // TODO is there benefit in running an intial simulation to calculate the height at which the ratio between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
+
+                // At what ASL height does the reference body have this pressure?
+                maxSemiDeployHeight = (this.body.atmosphereScaleHeight *1000) * -1 * Math.Log(minSemiDeployPressure / this.body.atmosphereMultiplier);
+                
+                // We have to have semi deployed by the time we fully deploy.
+                minSemiDeployHeight = maxFullDeployHeight;
+
+                maxMultiplier = maxSemiDeployHeight / minSemiDeployHeight;
+
+                // Set the inital mutiplier to be the mid point.
+                currentMultiplier = maxMultiplier / 2;
+            }
+        }
+    }
+
+    // A class to hold a set of x,y data and perform linear regression analysis on it
+    class LinearRegression
+    {
+        double[] x;
+        double[] y;
+        int maxDataPoints;
+        int dataPointCount;
+        int currentDataPoint;
+        double sumX;
+        double sumY;
+        double sumXX;
+        double sumXY;
+        double sumYY;
+
+        public LinearRegression(int _maxDataPoints)
+        {
+            this.maxDataPoints = _maxDataPoints;
+            this.dataPointCount = 0;
+            this.currentDataPoint = -1;
+
+            this.x = new double[_maxDataPoints];
+            this.y = new double[_maxDataPoints];
+        }
+
+        // Add a new data point. It might be that this will replace an old data point, or it might be that this is the first or second datapoints
+        public void Add(double _x, double _y)
+        {
+            currentDataPoint++;
+            dataPointCount++;
+
+            // wrap back to the begining if we have got the end of the array
+            if (currentDataPoint >= maxDataPoints)
+            {
+                currentDataPoint = 0;
+            }
+
+            // If we have maxed out the number of data points then we need to remove the old values from the running totals
+            if (dataPointCount > maxDataPoints)
+            {
+                dataPointCount = maxDataPoints;
+            }
+
+            x[currentDataPoint] = _x;
+            y[currentDataPoint] = _y;
+
+            // Calculate the new totals
+            sumX = 0;
+            sumY = 0;
+            sumXX = 0;
+            sumXY = 0;
+            sumYY = 0;
+
+            for (int i = 0; i < dataPointCount; i++)
+            {
+                double thisx = x[i];
+                double thisy = y[i];
+
+                sumX += thisx;
+                sumXX += thisx * thisx;
+                sumY += thisy;
+                sumYY += thisy * thisy;
+                sumXY += thisx * thisy;
+            }
+        }
+
+        public double slope
+        {
+            get
+            {
+                // Require at least half the datapoints in the datset 
+                if(this.dataPointCount <2)
+                {
+                    throw new Exception("Not enough data to calculate trend line");
+                }
+
+                double result = (sumXY - ((sumX*sumY)/dataPointCount)) / (sumXX - ((sumX* sumX)/dataPointCount));
+
+                return result;
+            }
+        }
+
+        public double yIntercept
+        {
+            get
+            {
+                double result = (sumY/dataPointCount) - (slope * (sumX / dataPointCount));
+
+                return result;
+            }
+        }
+
+        public int dataSetSize
+        {
+            get
+            {
+                return this.dataPointCount;
+            }
+        }
+
+        // Calculation the Pearson product-moment correlation coefficient
+        public double CorrelationCoefficent
+        {
+            get
+            {
+                double stdX = Math.Sqrt(sumXX / dataPointCount - sumX * sumX / dataPointCount / dataPointCount);
+                double stdY = Math.Sqrt(sumYY / dataPointCount - sumY * sumY / dataPointCount / dataPointCount);
+                double covariance = (sumXY / dataPointCount - sumX * sumY / dataPointCount / dataPointCount);
+
+                return covariance / stdX / stdY;
+            }
+        }
+
     }
 }

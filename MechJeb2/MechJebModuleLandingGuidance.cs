@@ -32,6 +32,9 @@ namespace MuMech
 
                 core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
                 core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
+
+                // Display the ASL of the taget location
+                GUILayout.Label("\nASL:" + MuUtils.ToSI(core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude), -1, 4) + "m");
             }
             else
             {
@@ -48,6 +51,10 @@ namespace MuMech
                 if (GUILayout.Button("Target KSC"))
                 {
                     core.target.SetPositionTarget(mainBody, -0.09694444, -74.5575);
+                }
+                if (GUILayout.Button("Target VAB"))
+                {
+                    core.target.SetPositionTarget(mainBody, -0.09694444, -74.617);
                 }
             }
 
@@ -99,7 +106,16 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Stage Limit:", autopilot.limitChutesStage, "", 35);
                 predictor.limitChutesStage = autopilot.limitChutesStage;
 
-                if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+                if (autopilot.enabled)
+                {
+                    GUILayout.Label("Status: " + autopilot.status);
+
+                    string parachuteInfo = autopilot.ParachuteControlInfo;
+                    if (null != parachuteInfo)
+                    {
+                        GUILayout.Label(parachuteInfo);
+                    }
+                }
             }
 
             GUILayout.EndVertical();
@@ -116,11 +132,12 @@ namespace MuMech
                 {
                     case ReentrySimulation.Outcome.LANDED:
                         GUILayout.Label("Predicted landing site:");
-                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude));
+                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + MuUtils.ToSI(result.endASL,-1, 4) + "m");
                         double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0),
                                                          mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
-                        GUILayout.Label("Difference from target = " + MuUtils.ToSI(error, 0) + "m");
-                        if (result.maxDragGees > 0) GUILayout.Label("Predicted max drag gees: " + result.maxDragGees.ToString("F1"));
+                        GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m");
+                        GUILayout.Label("Predicted max drag: " + result.maxDragGees.ToString("F1") +"g");
+                        GUILayout.Label("Predicted dv needed: " + result.deltaVExpended.ToString("F1") + "m/s");
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
