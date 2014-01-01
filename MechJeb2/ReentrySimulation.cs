@@ -8,6 +8,20 @@ namespace MuMech
 {
     public class ReentrySimulation
     {
+        // Input values
+         Orbit input_initialOrbit;
+         double input_UT; 
+         double input_dragMassExcludingUsedParachutes; 
+         List<SimulatedParachute> input_parachuteList; 
+         double input_mass;
+         IDescentSpeedPolicy input_descentSpeedPolicy; 
+         double input_decelEndAltitudeASL; 
+         double input_maxThrustAccel; 
+         double input_parachuteSemiDeployMultiplier; 
+         double input_probableLandingSiteASL; 
+         bool input_multiplierHasError;
+         double input_dt;
+
         //parameters of the problem:
         bool bodyHasAtmosphere;
         double seaLevelAtmospheres;
@@ -18,12 +32,13 @@ namespace MuMech
         double mass;
         Vector3d bodyAngularVelocity;
         IDescentSpeedPolicy descentSpeedPolicy;
-        double landedRadius;
+        double decelRadius;
         double aerobrakedRadius;
         double startUT;
         CelestialBody mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
         double maxThrustAccel;
         double probableLandingSiteASL; // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
+        double probableLandingSiteRadius; // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
 
         bool orbitReenters;
 
@@ -48,16 +63,28 @@ namespace MuMech
         double deltaVExpended;
         List<AbsoluteVector> trajectory;
 
-        public ReentrySimulation(Orbit initialOrbit, double UT, double _dragMassExcludingUsedParachutes, List<SimulatedParachute> parachuteList, double mass,
-            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt)
+        public ReentrySimulation(Orbit _initialOrbit, double _UT, double _dragMassExcludingUsedParachutes, List<SimulatedParachute> _parachuteList, double _mass,
+            IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt)
         {
-            // TODO remove debugging
-            //Debug.Log("UT:" + UT + " _dragMassExcludingUsedParachutes" + _dragMassExcludingUsedParachutes + " mass:" + mass + " endAltitudeASL:" + endAltitudeASL + " maxThrustAccel:" + maxThrustAccel + " _probableLandingSiteASL: " + _probableLandingSiteASL + " _multiplierHasError:" + _multiplierHasError + " _dt:" + _dt);
+            // Store all the input values as they were given
+            input_initialOrbit = _initialOrbit;
+            input_UT = _UT;
+            input_dragMassExcludingUsedParachutes = _dragMassExcludingUsedParachutes;
+            input_parachuteList = _parachuteList;
+            input_mass = _mass;
+            input_descentSpeedPolicy = _descentSpeedPolicy;
+            input_decelEndAltitudeASL = _decelEndAltitudeASL;
+            input_maxThrustAccel = _maxThrustAccel;
+            input_parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
+            input_probableLandingSiteASL = _probableLandingSiteASL;
+            input_multiplierHasError = _multiplierHasError;
+            input_dt = _dt;
+
 
             max_dt = _dt;
             dt = max_dt;             
 
-            CelestialBody body = initialOrbit.referenceBody;
+            CelestialBody body = _initialOrbit.referenceBody;
             bodyHasAtmosphere = body.atmosphere;
             seaLevelAtmospheres = body.atmosphereMultiplier;
             scaleHeight = 1000 * body.atmosphereScaleHeight;
@@ -65,28 +92,29 @@ namespace MuMech
             gravParameter = body.gravParameter;
             this.dragMassExcludingUsedParachutes = _dragMassExcludingUsedParachutes;
 
-            this.parachutes = parachuteList;
+            this.parachutes = _parachuteList;
             this.parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
             this.multiplierHasError = _multiplierHasError;
 
-            this.mass = mass;
+            this.mass = _mass;
             bodyAngularVelocity = body.angularVelocity;
-            this.descentSpeedPolicy = descentSpeedPolicy;
-            landedRadius = bodyRadius + endAltitudeASL; // TODO I wonder if we should use _probableLandingSiteASL here instead. I am not sure.
+            this.descentSpeedPolicy = _descentSpeedPolicy;
+            decelRadius = bodyRadius + _decelEndAltitudeASL; 
             aerobrakedRadius = bodyRadius + body.RealMaxAtmosphereAltitude();
             mainBody = body;
-            this.maxThrustAccel = maxThrustAccel;
+            this.maxThrustAccel = _maxThrustAccel;
             this.probableLandingSiteASL = _probableLandingSiteASL;
+            this.probableLandingSiteRadius = _probableLandingSiteASL + bodyRadius;
 
-            referenceFrame = ReferenceFrame.CreateAtCurrentTime(initialOrbit.referenceBody);
+            referenceFrame = ReferenceFrame.CreateAtCurrentTime(_initialOrbit.referenceBody);
 
-            orbitReenters = OrbitReenters(initialOrbit);
+            orbitReenters = OrbitReenters(_initialOrbit);
 
             if (orbitReenters)
             {
-                startUT = UT;
+                startUT = _UT;
                 t = startUT;
-                AdvanceToFreefallEnd(initialOrbit);
+                AdvanceToFreefallEnd(_initialOrbit);
             }
 
             maxDragGees = 0;
@@ -97,47 +125,85 @@ namespace MuMech
         public Result RunSimulation()
         {
             Result result = new Result();
-
-            if (!orbitReenters) { result.outcome = Outcome.NO_REENTRY; return result; }
-
-            result.startPosition = referenceFrame.ToAbsolute(x,t);
-
-            double maxT = t + maxSimulatedTime;
-            while (true)
+            try
             {
-                if (Landed()) { result.outcome = Outcome.LANDED; break; }
-                if (Aerobraked()) { result.outcome = Outcome.AEROBRAKED; break; }
-                if (t > maxT) { result.outcome = Outcome.TIMED_OUT; break; }
+                // First put all the problem parameters into the result, to aid debugging.
+                result.input_probableLandingSiteASL = this.probableLandingSiteASL;
+                result.input_decelEndAltitudeASL = this.decelRadius - this.bodyRadius;
+                
 
-                RK4Step();
-                LimitSpeed();
-                RecordTrajectory();
+
+                result.input_initialOrbit = this.input_initialOrbit;
+                result.input_UT = this.input_UT;
+                result.input_dragMassExcludingUsedParachutes = this.input_dragMassExcludingUsedParachutes;
+                result.input_parachuteList = this.input_parachuteList;
+                result.input_mass = this.input_mass;
+                result.input_descentSpeedPolicy = this.input_descentSpeedPolicy;
+                result.input_decelEndAltitudeASL = this.input_decelEndAltitudeASL;
+                result.input_maxThrustAccel = this.input_maxThrustAccel;
+                result.input_parachuteSemiDeployMultiplier = this.input_parachuteSemiDeployMultiplier;
+                result.input_probableLandingSiteASL = this.input_probableLandingSiteASL;
+                result.input_multiplierHasError = this.input_multiplierHasError;
+                result.input_dt = this.input_dt;
+ 
+
+
+
+
+
+
+
+
+                if (!orbitReenters) 
+                {
+                    result.outcome = Outcome.NO_REENTRY; return result; 
+                }
+
+                result.startPosition = referenceFrame.ToAbsolute(x, t);
+
+                double maxT = t + maxSimulatedTime;
+                while (true)
+                {
+                    if (Landed()) { result.outcome = Outcome.LANDED; break; }
+                    if (Aerobraked()) { result.outcome = Outcome.AEROBRAKED; break; }
+                    if (t > maxT) { result.outcome = Outcome.TIMED_OUT; break; }
+
+                    RK4Step();
+                    LimitSpeed();
+                    RecordTrajectory();
+                }
+
+                result.id = System.Guid.NewGuid();
+                result.body = mainBody;
+                result.referenceFrame = referenceFrame;
+                result.endUT = t;
+                result.timeToComplete = t - input_UT;
+                result.maxDragGees = maxDragGees;
+                result.deltaVExpended = deltaVExpended;
+                result.endPosition = referenceFrame.ToAbsolute(x, t);
+                result.endVelocity = referenceFrame.ToAbsolute(v, t);
+                result.trajectory = trajectory;
+                result.parachuteMultiplier = this.parachuteSemiDeployMultiplier;
+                result.multiplierHasError = this.multiplierHasError;
+                result.maxdt = this.max_dt;
+                result.endASL = Math.Max(0, result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude));
             }
-
-            result.id = System.Guid.NewGuid();
-            result.body = mainBody;
-            result.referenceFrame = referenceFrame;
-            result.endUT = t;
-            result.maxDragGees = maxDragGees;
-            result.deltaVExpended = deltaVExpended;
-            result.endPosition = referenceFrame.ToAbsolute(x, t);
-            result.endVelocity = referenceFrame.ToAbsolute(v, t);
-            result.trajectory = trajectory;
-            result.parachuteMultiplier = this.parachuteSemiDeployMultiplier;
-            result.multiplierHasError = this.multiplierHasError;
-            result.maxdt = this.max_dt;
-
+            catch (Exception ex)
+            {
+                Debug.LogError("Exception thrown during Rentry Simulation" + ex.StackTrace + ex.Message);
+                result.outcome = Outcome.ERROR;
+            }
             return result;
         }
 
         bool OrbitReenters(Orbit initialOrbit)
         {
-            return (initialOrbit.PeR < landedRadius || initialOrbit.PeR < aerobrakedRadius);
+            return (initialOrbit.PeR < decelRadius || initialOrbit.PeR < aerobrakedRadius);
         }
 
         bool Landed()
         {
-            return x.magnitude < landedRadius;
+            return x.magnitude < this.probableLandingSiteRadius;
         }
 
         bool Aerobraked()
@@ -201,7 +267,7 @@ namespace MuMech
 
             if (pos.magnitude < aerobrakedRadius) return true;
             if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;
-            if (pos.magnitude < landedRadius) return true;
+            if (pos.magnitude < decelRadius) return true; // TODO should this be landed, not decelerated?
             if (descentSpeedPolicy != null && surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
             return false;
         }
@@ -258,7 +324,6 @@ namespace MuMech
                 {
                     dt = dt / 2;
                     repeatWithSmallerStep = true;
-                    // Debug.Log("Repeating RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) +"m");
                 }
                 else
                 {
@@ -272,8 +337,6 @@ namespace MuMech
                     // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
                     if (willChutesOpen && dt > min_dt) // TODO test to see if we are better off just setting a minimum dt of the physics rame rate.
                     {
-                        // TODO remove debugging
-                        // Debug.Log("a parachute will open this iteration, but dt is:" + dt +" setting it to be " + min_dt +" and retrying");
                         dt = Math.Max(dt/2,min_dt);
                         repeatWithSmallerStep = true;
                     }
@@ -300,25 +363,12 @@ namespace MuMech
             if (parachutesDeploying)
             {
                 dt = Time.fixedDeltaTime; // TODO There is a potential problem here. If the physics frame rate is so large that is causes too large a change in velocity, then we could get stuck in an infinte loop.
-                
-                // TODO remove debugging
-                //Debug.Log("Parachute(s) are deploying. Setting dt to be physic frame rate:" + dt);
-                
             }
             // If dt has been reduced, try increasing it, but only by one step. (but not if there is a parachute being deployed)
             else if(dt < max_dt)
             {
                 dt = Math.Min(dt * 2, max_dt);
-                //Debug.Log("Increasing RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) + "m");
             }
-
-            // TODO remove debugging.
-            /*
-            foreach (SimulatedParachute p in parachutes)
-            {
-                Debug.Log(p.GetDebugOutput());
-            }
-            */
         }
 
         //enforce the descent speed policy
@@ -422,14 +472,15 @@ namespace MuMech
             return FlightGlobals.getAtmDensity(pressure);
         }
 
-        public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY }
+        public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY, ERROR }
 
         public class Result
         {
             public double maxdt;
+
             public double timeToComplete;
 
-            public System.Guid id; // give ach set of results a new GUID so we can check to see if the result has changed.
+            public System.Guid id; // give each set of results a new GUID so we can check to see if the result has changed.
             public Outcome outcome;
 
             public CelestialBody body;
@@ -439,6 +490,7 @@ namespace MuMech
             public AbsoluteVector startPosition;
             public AbsoluteVector endPosition;
             public AbsoluteVector endVelocity;
+            public double endASL;
             public List<AbsoluteVector> trajectory;
 
             public double maxDragGees;
@@ -446,6 +498,20 @@ namespace MuMech
 
             public bool multiplierHasError;
             public double parachuteMultiplier;
+
+            // Provide all the input paramaters to the simulation in the result to aid debugging
+            public Orbit input_initialOrbit;
+            public double input_UT;
+            public double input_dragMassExcludingUsedParachutes;
+            public List<SimulatedParachute> input_parachuteList;
+            public double input_mass;
+            public IDescentSpeedPolicy input_descentSpeedPolicy;
+            public double input_decelEndAltitudeASL;
+            public double input_maxThrustAccel;
+            public double input_parachuteSemiDeployMultiplier;
+            public double input_probableLandingSiteASL;
+            public bool input_multiplierHasError;
+            public double input_dt;
 
             public Vector3d RelativeEndPosition()
             {
@@ -467,7 +533,7 @@ namespace MuMech
                 return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
             }
 
-            public List<Vector3d> WorldTrajectory(double timeStep)
+            public List<Vector3d> WorldTrajectory(double timeStep) 
             {
                 if (trajectory.Count() == 0) return new List<Vector3d>();
 
@@ -490,12 +556,10 @@ namespace MuMech
             {
                 // Get the start, end and target positions as a set of 3d vectors that we can work with
                 Vector3 end = this.body.GetRelSurfacePosition(endPosition.latitude, endPosition.longitude, 0);
-                // TODO - does it help to do this on the plane? 
-                // Vector3 target = this.body.GetRelSurfacePosition(targetLatitude, targetLongitude, this.body.TerrainAltitude(targetLatitude, targetLongitude)); // TODO perhaps we should give up on altitude and do everything on the flat.
                 Vector3 target = this.body.GetRelSurfacePosition(targetLatitude, targetLongitude, 0); 
                 Vector3 start = this.body.GetRelSurfacePosition(startPosition.latitude, startPosition.longitude, 0);
 
-                // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target
+                // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target. TODO can we simplify this code by using Vector3.Exclude?
                 Vector3 start2Target = target - start;
                 Vector3 orthog1 = Vector3.Cross(start2Target,Vector3.up);
                 // check for the spaecial case where start2target is parrallel to up. If it is then the result will be zero,and we need to try again
@@ -514,6 +578,50 @@ namespace MuMech
                 double overshootLength = (start2Target+overshoot).magnitude - start2Target.magnitude;
 
                 return overshootLength;
+            }
+
+            public override string ToString()
+            {
+                string resultText = "Simulation result\n{";
+
+                resultText += "Inputs:\n{";
+                if (null != input_initialOrbit) { resultText += "\n input_initialOrbit: " + input_initialOrbit.ToString(); }
+                resultText += "\n input_UT: " + input_UT;
+                resultText += "\n input_dragMassExcludingUsedParachutes: " + input_dragMassExcludingUsedParachutes;
+                resultText += "\n input_mass: " + input_mass;
+                if (null != input_descentSpeedPolicy) { resultText += "\n input_descentSpeedPolicy: " + input_descentSpeedPolicy.ToString(); }
+                resultText += "\n input_decelEndAltitudeASL: " + input_decelEndAltitudeASL;
+                resultText += "\n input_maxThrustAccel: " + input_maxThrustAccel;
+                resultText += "\n input_parachuteSemiDeployMultiplier: " + input_parachuteSemiDeployMultiplier;
+                resultText += "\n input_probableLandingSiteASL: " + input_probableLandingSiteASL;
+                resultText += "\n input_multiplierHasError: " + input_multiplierHasError;
+                resultText += "\n input_dt: " + input_dt;
+                resultText += "\n}";
+
+                if (null != id) { resultText += "\nid: " + id; }
+                
+                resultText += "\noutcome: " + outcome; 
+                resultText += "\nmaxdt: " + maxdt;
+                resultText += "\ntimeToComplete: " + timeToComplete;
+                resultText += "\nendUT: " + endUT;
+                if (null != referenceFrame) { resultText += "\nstartPosition: " + referenceFrame.WorldPositionAtCurrentTime(startPosition); }
+                if (null != referenceFrame) { resultText += "\nendPosition: " + referenceFrame.WorldPositionAtCurrentTime(endPosition); }
+                resultText += "\nendASL: " + endASL;
+                resultText += "\nendVelocity: " + endVelocity.longitude + "," + endVelocity.latitude + "," + endVelocity.radius; 
+                resultText += "\nmaxDragGees: " + maxDragGees;
+                resultText += "\ndeltaVExpended: " + deltaVExpended;
+                resultText += "\nmultiplierHasError: " + multiplierHasError;
+                resultText += "\nparachuteMultiplier: " + parachuteMultiplier;
+                resultText += "\n}";
+
+/*
+            public CelestialBody body;
+            public ReferenceFrame referenceFrame;
+            public List<AbsoluteVector> trajectory;
+                */
+
+                return (resultText);
+
             }
         }
     }

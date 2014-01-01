@@ -25,9 +25,8 @@ namespace MuMech
             // Create a new parachute plan
             this.parachutePlan = new ParachutePlan(this);
             this.parachutePlan.StartPlanning();
-            this.parachuteControlAbandoned = false;
 
-            if (orbit.PeA < 0) landStep = LandStep.COURSE_CORRECTIONS; // TODO, I wonder if this should be is the PeA is less htat the edge of the atmosphere, in order to avoid wasting fuel pringing the PeA too low, and then more fuel for the corse correction. I suppose the De orbit burn really need to be only until there is a landing solution.
+            if (orbit.PeA < 0) landStep = LandStep.COURSE_CORRECTIONS; 
             else if (UseLowDeorbitStrategy()) landStep = LandStep.PLANE_CHANGE;
             else landStep = LandStep.DEORBIT_BURN;
         }
@@ -41,7 +40,6 @@ namespace MuMech
             // Create a new parachute plan
             this.parachutePlan = new ParachutePlan(this);
             this.parachutePlan.StartPlanning();
-            this.parachuteControlAbandoned = true;
 
             landStep = LandStep.UNTARGETED_DEORBIT;
         }
@@ -73,7 +71,6 @@ namespace MuMech
         bool lowDeorbitEndConditionSet = false;
         bool lowDeorbitEndOnLandingSiteNearer = false;
         bool deployedGears = false;
-        bool parachuteControlAbandoned = false;
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public bool deployGears = true;
@@ -97,8 +94,19 @@ namespace MuMech
         {
             get
             {
-                return (prediction != null) &&
-                       (prediction.outcome == ReentrySimulation.Outcome.LANDED);
+                // Check that there is a prediction and that it is a landing prediction.
+                if (prediction == null)
+                {
+                    return false;
+                }
+                else if (prediction.outcome != ReentrySimulation.Outcome.LANDED)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
             }
         }
         bool ErrorPredictionReady // We shouldn't try to use an ErrorPrediction until this is true.
@@ -113,8 +121,24 @@ namespace MuMech
         {
             get
             {
-                if (PredictionReady) return mainBody.TerrainAltitude(prediction.endPosition.latitude, prediction.endPosition.longitude);
-                else return 0;
+                if (PredictionReady)
+                {
+                    // Although we know the landingASL as it is in the prediciton, we suspect that it might sometimes be incorrect. So to check we will calculate it again here, and if the two differ log an error. It seems that this terrain ASL calls when made from the simulatiuon thread are regularly incorrect, but are OK when made from this thread. At the time of writting (KSP0.23) there seem to be several other things going wrong witht he terrain system, such as visual glitches as we as the occasional exceptions being thrown when calls to the CelestialBody object are made. I suspect a bug or some sort - for now this hack improves the landing results.
+                    {
+                        double checkASL = prediction.body.TerrainAltitude(prediction.endPosition.latitude, prediction.endPosition.longitude);
+                        if (checkASL != prediction.endASL)
+                        {
+                            // I know that this check is not required as we might as well always make the asignment. However this allows for some debug monitoring of how often this is occuring.
+                            prediction.endASL = checkASL;
+                        }
+                    }
+
+                    return prediction.endASL;
+                }
+                else
+                {
+                    return 0;
+                }
             }
         }
         Vector3d LandingSite //the current position of the landing site
@@ -128,6 +152,21 @@ namespace MuMech
         Vector3d RotatedLandingSite //the position where the landing site will be when we land at it
         {
             get { return prediction.WorldEndPosition(); }
+        }
+
+        public string ParachuteControlInfo
+        {
+            get
+            {
+                if (this.ParachutesDeployable())
+                {
+                    return ("Parachute Multiplier:" + this.parachutePlan.GetMultiplier().ToString("F7") );
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public override void OnModuleEnabled()
@@ -151,14 +190,33 @@ namespace MuMech
         {
             if (landStep == LandStep.OFF) return;
 
+            // If the latest prediction is a landing, aerobrake or no-reentry prediciton then keep it. However if it is any other sort or result it is not much use to us, so do not bother!
+            {
+                ReentrySimulation.Result result = predictor.GetResult();
+                if (null != result)
+                {
+                    if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
+                    {
+                        this.prediction = result;
+                    }
+                }
+            }
+            {
+                ReentrySimulation.Result result = predictor.GetErrorResult();
+                if (null != result)
+                {
+                    if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
+                    {
+                        this.errorPrediction = result;
+                    }
+                }
+            }
+
             descentSpeedPolicy = PickDescentSpeedPolicy();
 
             predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
-            predictor.endAltitudeASL = DecelerationEndAltitude();
+            predictor.decelEndAltitudeASL = DecelerationEndAltitude();
             predictor.parachuteSemiDeployMultiplier = this.parachutePlan.GetMultiplier();
-
-            prediction = predictor.GetResult(); //grab a reference to the current result, in case a new one comes in while we're doing stuff
-            errorPrediction = predictor.GetErrorResult(); //grab a reference to the current error result, in case a new one comes in while we're doing stuff
 
             if (!PredictionReady && landStep != LandStep.DEORBIT_BURN && landStep != LandStep.PLANE_CHANGE && landStep != LandStep.LOW_DEORBIT_BURN
                 && landStep != LandStep.UNTARGETED_DEORBIT && landStep != LandStep.FINAL_DESCENT) return;
@@ -201,32 +259,39 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            switch (landStep)
+            try
             {
-                case LandStep.PLANE_CHANGE:
-                    FixedUpdatePlaneChange();
-                    break;
+                switch (landStep)
+                {
+                    case LandStep.PLANE_CHANGE:
+                        FixedUpdatePlaneChange();
+                        break;
 
-                case LandStep.LOW_DEORBIT_BURN:
-                    FixedUpdateLowDeorbitBurn();
-                    break;
+                    case LandStep.LOW_DEORBIT_BURN:
+                        FixedUpdateLowDeorbitBurn();
+                        break;
 
-                case LandStep.DEORBIT_BURN:
-                    FixedUpdateDeorbitBurn();
-                    break;
+                    case LandStep.DEORBIT_BURN:
+                        FixedUpdateDeorbitBurn();
+                        break;
 
-                case LandStep.COAST_TO_DECELERATION:
-                    FixedUpdateCoastToDeceleration();
-                    break;
+                    case LandStep.COAST_TO_DECELERATION:
+                        FixedUpdateCoastToDeceleration();
+                        break;
 
-                case LandStep.DECELERATING:
-                    FixedUpdateDecelerationBurn();
-                    break;
+                    case LandStep.DECELERATING:
+                        FixedUpdateDecelerationBurn();
+                        break;
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+                DeployParachutes();
             }
-            DeployParachutes();
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
         }
 
         void DriveUntargetedDeorbit(FlightCtrlState s)
@@ -576,8 +641,8 @@ namespace MuMech
 
         void DriveCourseCorrections(FlightCtrlState s)
         {
-            // If the atomospheric drag is too large them we will be unlikely to be able to control our attitude. Move the the parachute control step
-            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 1)
+            // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
+            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.1)
             {
                 if (ParachutesDeployable())
                 {
@@ -588,6 +653,14 @@ namespace MuMech
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
 
             if (currentError < 150)
+            {
+                core.thrust.targetThrottle = 0;
+                landStep = LandStep.COAST_TO_DECELERATION;
+                return;
+            }
+
+            // If a parachute has already been deployed then we will not be able to control attitude anyway, so move back to the coast to deceleration step.
+            if (vesselState.parachuteDeployed)
             {
                 core.thrust.targetThrottle = 0;
                 landStep = LandStep.COAST_TO_DECELERATION;
@@ -617,7 +690,7 @@ namespace MuMech
             // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
             if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.10)
             {
-                if(ParachutesDeployable() && !parachuteControlAbandoned)
+                if(ParachutesDeployable())
                 {
                     ControlParachutes();
                 }
@@ -634,9 +707,12 @@ namespace MuMech
             double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), LandingSite);
             if (currentError > 600)
             {
-                core.warp.MinimumWarp();
-                landStep = LandStep.COURSE_CORRECTIONS;
-                return;
+                if (!vesselState.parachuteDeployed) // However if there is already a parachute deployed, then do not bother trying to correct the course as we will not have any attitude control anyway.
+                {
+                    core.warp.MinimumWarp();
+                    landStep = LandStep.COURSE_CORRECTIONS;
+                    return;
+                }
             }
 
             // Sometimes (on bodies with a thick atmosphere) there is no need for a decleration burn. Check for this so that it is possible to transition into the final decent step.
@@ -726,6 +802,7 @@ namespace MuMech
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
         }
 
+        // TODO I think that this function could be better rewritten to much more agressively kill the horizontal velocity. At present on low gravity bodies such as Bop, the craft will hover and slowly drift sideways, loosing the prescion of the landing. 
         public void DriveKillHorizontalVelocity(FlightCtrlState s)
         {
             Vector3d horizontalPointingDirection = Vector3d.Exclude(vesselState.up, vesselState.forward).normalized;
@@ -984,6 +1061,13 @@ namespace MuMech
             return false;
         }
 
+        // This methods works out if there are any parachutes that have already been deployed (or semi deployed)
+        bool ParachutesDeployed()
+        {
+            return vesselState.parachuteDeployed;
+        }
+
+
         void DeployLandingGears()
         {
             //new-style landing legs are activated by an event:
@@ -1014,7 +1098,7 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                return new CoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude());
+                return new PWBCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude()); // TODO this decent policy has been changed for experimentation.
             }
 
             return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
@@ -1144,7 +1228,22 @@ namespace MuMech
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
             if (pos.magnitude > endCoastRadius) return double.MaxValue;
-            else return 0;
+            else return 0; 
+        }
+    }
+
+    class PWBCoastDescentSpeedPolicy : IDescentSpeedPolicy
+    {
+        double endCoastRadius;
+        public PWBCoastDescentSpeedPolicy(double endCoastRadius)
+        {
+            this.endCoastRadius = endCoastRadius;
+        }
+
+        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
+        {
+            if (pos.magnitude > endCoastRadius) return double.MaxValue;
+            else return 1; //  It is a bit silly to set this at 0 because then the simulation times out as it never reaches the ground.
         }
     }
 
@@ -1210,7 +1309,7 @@ namespace MuMech
         ReentrySimulation.Result lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
         CelestialBody body;
         MechJebModuleLandingAutopilot autoPilot;
-        bool abandoned;
+        bool abandoned; // TODO reconsider if this is a good policy, or if we should just clear the data and start again if the dataset does not correlate
         bool parachutePresent = false;
         double maxSemiDeployHeight;
         double minSemiDeployHeight;
@@ -1335,9 +1434,7 @@ namespace MuMech
             // If parachtes are present on the craft then work out the max / min semideployment heights and the starting value.
             if(true == parachutePresent)
             {
-                // TODO is there benefit in running an intial simulation to calculat the height at which the ration between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
-
-                // Debug.Log("ParachutePlan::StartPlanning - atmosphereScaleHeight:" + this.body.atmosphereScaleHeight + " minSemiDeployPressure:" + minSemiDeployPressure + " atmosphereMultiplier:" + this.body.atmosphereMultiplier);
+                // TODO is there benefit in running an intial simulation to calculate the height at which the ratio between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
 
                 // At what ASL height does the reference body have this pressure?
                 maxSemiDeployHeight = (this.body.atmosphereScaleHeight *1000) * -1 * Math.Log(minSemiDeployPressure / this.body.atmosphereMultiplier);
@@ -1349,8 +1446,6 @@ namespace MuMech
 
                 // Set the inital mutiplier to be the mid point.
                 currentMultiplier = maxMultiplier / 2;
-
-                // Debug.Log("ParachutePlan::StartPlanning - maxSemiDeployHeight:" + maxSemiDeployHeight + " minSemiDeployHeight:" + minSemiDeployHeight + " currentMultiplier:" + currentMultiplier);
             }
         }
     }

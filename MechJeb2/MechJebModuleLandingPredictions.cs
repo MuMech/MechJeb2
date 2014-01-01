@@ -23,7 +23,7 @@ namespace MuMech
         public int limitChutesStage = 0;
 
         //simulation inputs:
-        public double endAltitudeASL = 0; //end simulations when they reach this altitude above sea level
+        public double decelEndAltitudeASL = 0; // The altitude at which we need to have killed velocity - NOTE that this is not the same as the height of the predicted landing site.
         public IDescentSpeedPolicy descentSpeedPolicy = null; //simulate this descent speed policy
         public double parachuteSemiDeployMultiplier = 3; // this will get updated by the autopilot.
         public bool runErrorSimulations = false; // This will be set by the autopilot to turn error simulations on or off.
@@ -45,6 +45,8 @@ namespace MuMech
 
         protected int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
         protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run.
+        // TODO - decide if variable for fixed dt results in a more stable result
+        protected bool variabledt = true; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -70,26 +72,33 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (vessel.isActiveVessel)
+            try
             {
-                // We should be running simulations periodically. If one is not running right now,
-                // check if enough time has passed since the last one to start a new one:
-                if (!simulationRunning && stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                if (vessel.isActiveVessel)
                 {
-                    stopwatch.Stop();
-                    stopwatch.Reset();
+                    // We should be running simulations periodically. If one is not running right now,
+                    // check if enough time has passed since the last one to start a new one:
+                    if (!simulationRunning && stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                    {
+                        stopwatch.Stop();
+                        stopwatch.Reset();
 
-                    StartSimulation(false);
+                        StartSimulation(false);
+                    }
+
+                    // We also periodically run simulations containing deliberate errors if we have been asked to do so by the landing autopilot.
+                    if (this.runErrorSimulations && !errorSimulationRunning && errorStopwatch.ElapsedMilliseconds >= millisecondsBetweenErrorSimulations)
+                    {
+                        errorStopwatch.Stop();
+                        errorStopwatch.Reset();
+
+                        StartSimulation(true);
+                    }
                 }
-
-                // We also periodically run simulations containing deliberate errors if we have been asked to do so by the landing autopilot.
-                if (this.runErrorSimulations && !errorSimulationRunning && errorStopwatch.ElapsedMilliseconds >= millisecondsBetweenErrorSimulations)
-                {
-                    errorStopwatch.Stop();
-                    errorStopwatch.Reset();
-
-                    StartSimulation(true);
-                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
         }
 
@@ -171,7 +180,7 @@ namespace MuMech
             {
                 if(result.outcome == ReentrySimulation.Outcome.LANDED &&  null != result.body)
                 {
-                    altitudeOfPreviousPrediction = this.result.body.TerrainAltitude(this.result.endPosition.latitude, this.result.endPosition.longitude);
+                    altitudeOfPreviousPrediction = this.result.endASL;
                 }
             }
 
@@ -182,7 +191,7 @@ namespace MuMech
                 parachuteMultiplierForThisSimulation *= ((double)1 + ((double)(random.Next(500000) - 250000) / (double)10000000));
             }
 
-            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, dragMassExcludingUsedParachutes, usableChutes, totalMass, descentSpeedPolicy, endAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction,addParachuteError, dt);
+            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, dragMassExcludingUsedParachutes, usableChutes, totalMass, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt); 
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
@@ -190,54 +199,72 @@ namespace MuMech
 
         protected void RunSimulation(object o)
         {
-            ReentrySimulation sim = (ReentrySimulation)o;
-
-            ReentrySimulation.Result newResult = sim.RunSimulation();
-
-            if (newResult.multiplierHasError)
+            try
             {
-                errorResult = newResult;
+                ReentrySimulation sim = (ReentrySimulation)o;
+                ReentrySimulation.Result newResult = sim.RunSimulation();
 
-                //see how long the simulation took
-                errorStopwatch.Stop();
-                long millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
-
-                errorStopwatch.Reset();
-
-                //set the delay before the next simulation
-                millisecondsBetweenErrorSimulations = 4 * millisecondsToCompletion; // Note that we are going to run the simualtions with error in less often that the real simulations
-
-                //start the stopwatch that will count off this delay
-                errorStopwatch.Start();
-                errorSimulationRunning = false;
-            }
-            else
-            {
-                result = newResult;
-                //see how long the simulation took
-                stopwatch.Stop();
-                long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
-                stopwatch.Reset();
-
-                //set the delay before the next simulation
-                millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
-
-                // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
-                if (newResult.outcome == ReentrySimulation.Outcome.AEROBRAKED || newResult.outcome == ReentrySimulation.Outcome.LANDED)
+                if (newResult.multiplierHasError)
                 {
-                    dt = (newResult.maxdt * ((double)millisecondsToCompletion / (double)1000)) / ((double)1 / ((double)3 * (double)interationsPerSecond));
-                    // There is no point in having a dt that is smaller than the physics frame rate as we would be trying to be more precise than the game.
-                    dt = Math.Max(dt, (double)Time.fixedDeltaTime);
-                    // Set a sensible upper limit to dt as well. - in this case 10 seconds
-                    dt = Math.Min(dt, 10);
-                }
-                
-                // TODO remove debugging 
-                //Debug.Log("Time to run: " + millisecondsToCompletion + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime);
+                    // If running the simualtion resulted in an error then just ignore it.
+                    if (ReentrySimulation.Outcome.ERROR != newResult.outcome)
+                    {
+                        errorResult = newResult;
+                    }
 
-                //start the stopwatch that will count off this delay
-                stopwatch.Start();
-                simulationRunning = false;
+                    //see how long the simulation took
+                    errorStopwatch.Stop();
+                    long millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
+
+                    errorStopwatch.Reset();
+
+                    //set the delay before the next simulation
+                    millisecondsBetweenErrorSimulations = Math.Min(Math.Max(4 * millisecondsToCompletion, 400), 5); // Note that we are going to run the simualtions with error in less often that the real simulations
+
+                    //start the stopwatch that will count off this delay
+                    errorStopwatch.Start();
+                    errorSimulationRunning = false;
+                }
+                else
+                {
+                    // If running the simualtion resulted in an error then just ignore it.
+                    if (ReentrySimulation.Outcome.ERROR != newResult.outcome)
+                    {
+                        result = newResult;
+                    }
+                    //see how long the simulation took
+                    stopwatch.Stop();
+                    long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+                    stopwatch.Reset();
+
+                    //set the delay before the next simulation
+                    millisecondsBetweenSimulations = Math.Min(Math.Max(2 * millisecondsToCompletion, 200), 5); // Do not wait for too long before running another simulation, but also give the processor a rest. 
+
+                    // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
+                    if (newResult.outcome == ReentrySimulation.Outcome.AEROBRAKED || newResult.outcome == ReentrySimulation.Outcome.LANDED)
+                    {
+                        if (this.variabledt)
+                        {
+                            dt = (newResult.maxdt * ((double)millisecondsToCompletion / (double)1000)) / ((double)1 / ((double)3 * (double)interationsPerSecond));
+                            // There is no point in having a dt that is smaller than the physics frame rate as we would be trying to be more precise than the game.
+                            dt = Math.Max(dt, (double)Time.fixedDeltaTime);
+                            // Set a sensible upper limit to dt as well. - in this case 10 seconds
+                            dt = Math.Min(dt, 10);
+                        }
+                    }
+
+                    // TODO remove debugging 
+                    Debug.Log("Result:" + newResult.outcome + " Time to run: " + millisecondsToCompletion + " millisecondsBetweenSimulations: " + millisecondsBetweenSimulations + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime + "\n" + newResult.ToString());
+
+                    //start the stopwatch that will count off this delay
+                    stopwatch.Start();
+                    simulationRunning = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Log("Exception in MechJebModuleLandingPredictions.RunSimulation\n" + ex.StackTrace); 
+                Debug.LogException(ex);
             }
         }
 
