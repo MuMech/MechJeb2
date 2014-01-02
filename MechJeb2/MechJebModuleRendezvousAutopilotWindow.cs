@@ -15,16 +15,19 @@ namespace MuMech
                 return;
             }
 
+            MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+
             if (core.target.Orbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
+                if (autopilot.enabled)
+                    autopilot.users.Remove(this);
                 base.WindowGUI(windowID);
                 return;
             }
 
             GUILayout.BeginVertical();
-
-            MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+            
             if (autopilot != null)
             {
                 GuiUtils.SimpleLabel("Rendezvous target", core.target.Name);
