@@ -13,6 +13,7 @@ namespace MuMech
         //Call this function and use the returned object in case this.result changes while you
         //are doing your calculations:
         public ReentrySimulation.Result GetResult() { return result; }
+        public ReentrySimulation.Result GetErrorResult() { return errorResult; }
 
         //inputs:
         [Persistent(pass = (int)Pass.Global)]
@@ -22,18 +23,30 @@ namespace MuMech
         public int limitChutesStage = 0;
 
         //simulation inputs:
-        public double endAltitudeASL = 0; //end simulations when they reach this altitude above sea level
+        public double decelEndAltitudeASL = 0; // The altitude at which we need to have killed velocity - NOTE that this is not the same as the height of the predicted landing site.
         public IDescentSpeedPolicy descentSpeedPolicy = null; //simulate this descent speed policy
-
+        public double parachuteSemiDeployMultiplier = 3; // this will get updated by the autopilot.
+        public bool runErrorSimulations = false; // This will be set by the autopilot to turn error simulations on or off.
 
         //internal data:
+      
+        protected bool errorSimulationRunning = false; // the predictor can run two types of simulation - 1) simulations of the current situation. 2) simulations of the current situation with deliberate error introduced into the parachute multiplier to aid the statistical analysis of these results.
+        protected System.Diagnostics.Stopwatch errorStopwatch = new System.Diagnostics.Stopwatch();
+        protected long millisecondsBetweenErrorSimulations;
+  
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
         protected long millisecondsBetweenSimulations;
 
-        protected ReentrySimulation.Result result;
+        protected ReentrySimulation.Result result = null;
+        protected ReentrySimulation.Result errorResult = null;
 
         public ManeuverNode aerobrakeNode = null;
+
+        protected int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
+        protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run.
+        // TODO - decide if variable for fixed dt results in a more stable result
+        protected bool variabledt = true; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -45,28 +58,47 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            StartSimulation();
+            StartSimulation(false);
         }
 
         public override void OnModuleDisabled()
         {
             stopwatch.Stop();
             stopwatch.Reset();
+
+            errorStopwatch.Stop();
+            errorStopwatch.Reset();
         }
 
         public override void OnFixedUpdate()
         {
-            if (vessel.isActiveVessel)
+            try
             {
-                //We should be running simulations periodically. If one is not running right now,
-                //check if enough time has passed since the last one to start a new one:
-                if (!simulationRunning && stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                if (vessel.isActiveVessel)
                 {
-                    stopwatch.Stop();
-                    stopwatch.Reset();
+                    // We should be running simulations periodically. If one is not running right now,
+                    // check if enough time has passed since the last one to start a new one:
+                    if (!simulationRunning && stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                    {
+                        stopwatch.Stop();
+                        stopwatch.Reset();
 
-                    StartSimulation();
+                        StartSimulation(false);
+                    }
+
+                    // We also periodically run simulations containing deliberate errors if we have been asked to do so by the landing autopilot.
+                    if (this.runErrorSimulations && !errorSimulationRunning && errorStopwatch.ElapsedMilliseconds >= millisecondsBetweenErrorSimulations)
+                    {
+                        errorStopwatch.Stop();
+                        errorStopwatch.Reset();
+
+                        StartSimulation(true);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
         }
 
@@ -78,20 +110,88 @@ namespace MuMech
             }
         }
 
-        protected void StartSimulation()
+        protected void StartSimulation(bool addParachuteError)
         {
-            simulationRunning = true;
+            double altitudeOfPreviousPrediction = 0;
+            double parachuteMultiplierForThisSimulation = this.parachuteSemiDeployMultiplier;
 
-            stopwatch.Start(); //starts a timer that times how long the simulation takes
+            if (addParachuteError)
+            {
+                errorSimulationRunning = true;
+                errorStopwatch.Start(); //starts a timer that times how long the simulation takes
+            }
+            else
+            {
+                simulationRunning = true;
+                stopwatch.Start(); //starts a timer that times how long the simulation takes
+            }
 
+            // Work out a mass for the total ship, a DragMass for everything except the parachutes that will be used (including the stowed parachutes that will not be used) and list of parchutes that will be used.
+            double totalMass =0;
+            double dragMassExcludingUsedParachutes = 0;
             List<SimulatedParachute> usableChutes = new List<SimulatedParachute>();
-            foreach (ModuleParachute p in vesselState.parachutes)
-                if (deployChutes && p.part.inverseStage >= limitChutesStage)
-                    usableChutes.Add(new SimulatedParachute(p));
+            
+            foreach (Part p in vessel.parts)
+            {
+                if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
+                {
+                    bool partIsParachute = false;
+                    double partDrag =0;
+                    double partMass = p.TotalMass();
 
+                    totalMass += partMass;
+
+                    // Is this part a parachute?
+                    foreach (PartModule pm in p.Modules)
+                    {
+                        if (!pm.isEnabled) continue;
+
+                        if (pm is ModuleParachute)
+                        {
+                            ModuleParachute chute = (ModuleParachute)pm;
+                            partIsParachute = true;
+                            // This is a parachute, but is it one that will be used in the landing / rentry simulation?
+                            if (deployChutes && p.inverseStage >= limitChutesStage)
+                            {
+                                // This chute will be used in the simualtion. Add it to the list of useage parachutes.
+                                usableChutes.Add(new SimulatedParachute(chute));
+                            }
+                            else
+                            {
+                                partDrag = p.maximum_drag;
+                            }
+                        }
+                    }
+
+                    if (false == partIsParachute)
+                    {
+                        // Part is not a parachute. Just use its drag value.
+                        partDrag = p.maximum_drag;
+                    }
+
+                    dragMassExcludingUsedParachutes += partDrag * partMass;
+                }
+            }
 
             Orbit patch = GetReenteringPatch() ?? orbit;
-            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, vesselState.massDrag / vesselState.mass, usableChutes, vesselState.mass, descentSpeedPolicy, endAltitudeASL, vesselState.limitedMaxThrustAccel);
+
+            // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
+            if(null !=this.result)
+            {
+                if(result.outcome == ReentrySimulation.Outcome.LANDED &&  null != result.body)
+                {
+                    altitudeOfPreviousPrediction = this.result.endASL;
+                }
+            }
+
+            // Is this a simulation run with errors added? If so then add some error to the parachute multiple
+            if (addParachuteError)
+            {
+                System.Random random = new System.Random();
+                parachuteMultiplierForThisSimulation *= ((double)1 + ((double)(random.Next(500000) - 250000) / (double)10000000));
+            }
+
+            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, dragMassExcludingUsedParachutes, usableChutes, totalMass, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt); 
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
@@ -99,24 +199,73 @@ namespace MuMech
 
         protected void RunSimulation(object o)
         {
-            ReentrySimulation sim = (ReentrySimulation)o;
+            try
+            {
+                ReentrySimulation sim = (ReentrySimulation)o;
+                ReentrySimulation.Result newResult = sim.RunSimulation();
 
-            ReentrySimulation.Result newResult = sim.RunSimulation();
+                if (newResult.multiplierHasError)
+                {
+                    // If running the simualtion resulted in an error then just ignore it.
+                    if (ReentrySimulation.Outcome.ERROR != newResult.outcome)
+                    {
+                        errorResult = newResult;
+                    }
 
-            result = newResult;
+                    //see how long the simulation took
+                    errorStopwatch.Stop();
+                    long millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
 
-            //see how long the simulation took
-            stopwatch.Stop();
-            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
-            stopwatch.Reset();
+                    errorStopwatch.Reset();
 
-            //set the delay before the next simulation
-            millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
+                    //set the delay before the next simulation
+                    millisecondsBetweenErrorSimulations = Math.Min(Math.Max(4 * millisecondsToCompletion, 400), 5); // Note that we are going to run the simualtions with error in less often that the real simulations
 
-            //start the stopwatch that will count off this delay
-            stopwatch.Start();
+                    //start the stopwatch that will count off this delay
+                    errorStopwatch.Start();
+                    errorSimulationRunning = false;
+                }
+                else
+                {
+                    // If running the simualtion resulted in an error then just ignore it.
+                    if (ReentrySimulation.Outcome.ERROR != newResult.outcome)
+                    {
+                        result = newResult;
+                    }
+                    //see how long the simulation took
+                    stopwatch.Stop();
+                    long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+                    stopwatch.Reset();
 
-            simulationRunning = false;
+                    //set the delay before the next simulation
+                    millisecondsBetweenSimulations = Math.Min(Math.Max(2 * millisecondsToCompletion, 200), 5); // Do not wait for too long before running another simulation, but also give the processor a rest. 
+
+                    // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
+                    if (newResult.outcome == ReentrySimulation.Outcome.AEROBRAKED || newResult.outcome == ReentrySimulation.Outcome.LANDED)
+                    {
+                        if (this.variabledt)
+                        {
+                            dt = (newResult.maxdt * ((double)millisecondsToCompletion / (double)1000)) / ((double)1 / ((double)3 * (double)interationsPerSecond));
+                            // There is no point in having a dt that is smaller than the physics frame rate as we would be trying to be more precise than the game.
+                            dt = Math.Max(dt, (double)Time.fixedDeltaTime);
+                            // Set a sensible upper limit to dt as well. - in this case 10 seconds
+                            dt = Math.Min(dt, 10);
+                        }
+                    }
+
+                    // TODO remove debugging 
+                    Debug.Log("Result:" + newResult.outcome + " Time to run: " + millisecondsToCompletion + " millisecondsBetweenSimulations: " + millisecondsBetweenSimulations + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime + "\n" + newResult.ToString());
+
+                    //start the stopwatch that will count off this delay
+                    stopwatch.Start();
+                    simulationRunning = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Log("Exception in MechJebModuleLandingPredictions.RunSimulation\n" + ex.StackTrace); 
+                Debug.LogException(ex);
+            }
         }
 
         protected Orbit GetReenteringPatch()

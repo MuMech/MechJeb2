@@ -139,6 +139,8 @@ namespace MuMech
 
         // List of parachutes
         public List<ModuleParachute> parachutes;
+
+        public bool parachuteDeployed;
         
         // Resource information keyed by resource Id.
         public Dictionary<int, ResourceInfo> resources;
@@ -295,7 +297,7 @@ namespace MuMech
             EngineInfo einfo = new EngineInfo(CoM);
             IntakeInfo iinfo = new IntakeInfo();
 
-            parachutes = new  List<ModuleParachute>();
+            parachutes = new List<ModuleParachute>();
 
             var rcsbal = vessel.GetMasterMechJeb().rcsbal;
             if (vessel.ActionGroups[KSPActionGroup.RCS] && rcsbal.enabled)
@@ -380,7 +382,7 @@ namespace MuMech
 
                     if (pm is ModuleReactionWheel)
                     {
-                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;                        
+                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
                         // I had to remove the test for active in .23 since the new ressource system reply to the RW that 
                         // there is no energy available when the RW do tiny adjustement.
                         // I replaceed it with a test that check if there is electricity anywhere on the ship. 
@@ -388,7 +390,7 @@ namespace MuMech
                         //if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
                         if (rw.wheelState == ModuleReactionWheel.WheelState.Active && vessel.HasElectricCharge())
                             torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
-                    } 
+                    }
                     else if (pm is ModuleEngines)
                     {
                         einfo.AddNewEngine(pm as ModuleEngines);
@@ -426,6 +428,20 @@ namespace MuMech
                         vspme(pm);
                     }
                 }
+            }
+
+            // Consider all the parachutes
+            {
+                bool tempParachuteDeployed = false;
+                foreach (ModuleParachute p in parachutes)
+                {
+                    if (p.deploymentState == ModuleParachute.deploymentStates.DEPLOYED || p.deploymentState == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+                    {
+                        tempParachuteDeployed = true;
+                        break;
+                    }
+                }
+                this.parachuteDeployed = tempParachuteDeployed;
             }
 
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
