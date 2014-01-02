@@ -202,7 +202,7 @@ namespace MuMech
             horizontalSurface = Vector3d.Exclude(up, velocityVesselSurface).normalized;
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
-
+             
             radialPlusSurface = Vector3d.Exclude(velocityVesselSurface, up).normalized;
             radialPlus = Vector3d.Exclude(velocityVesselOrbit, up).normalized;
             normalPlusSurface = -Vector3d.Cross(radialPlusSurface, velocityVesselSurfaceUnit);
@@ -354,11 +354,12 @@ namespace MuMech
                 {
                     Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
                     ControlSurface cs = (p as ControlSurface);
+                    Vector3d airSpeed = velocityVesselSurface + Vector3.Cross(cs.Rigidbody.angularVelocity, cs.transform.position - cs.Rigidbody.position);
                     // Air Speed is velocityVesselSurface
                     // AddForceAtPosition seems to need the airspeed vector rotated with the flap rotation x its surface
                     Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * cs.pivotAxis);
-                    Vector3 ctrlTroquePos =  vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector( airSpeedRot * velocityVesselSurface )));
-                    Vector3 ctrlTroqueNeg =  vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector( Quaternion.Inverse(airSpeedRot) * velocityVesselSurface )));
+                    Vector3 ctrlTroquePos = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(airSpeedRot * airSpeed)));
+                    Vector3 ctrlTroqueNeg = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(Quaternion.Inverse(airSpeedRot) * airSpeed)));
                     ctrlTorqueAvailable.Add(ctrlTroquePos);
                     ctrlTorqueAvailable.Add(ctrlTroqueNeg);
                 }
@@ -403,6 +404,21 @@ namespace MuMech
                     else if (pm is ModuleParachute)
                     {
                         parachutes.Add(pm as ModuleParachute);
+                    }
+                    else if (pm is ModuleControlSurface)
+                    {
+                        // TODO : Tweakable for ignorePitch / ignoreYaw  / ignoreRoll 
+                        ModuleControlSurface cs = (pm as ModuleControlSurface);
+                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
+                        
+                        Vector3d airSpeed = velocityVesselSurface + Vector3.Cross(cs.part.Rigidbody.angularVelocity, cs.transform.position - cs.part.Rigidbody.position);
+
+                        Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * Vector3.right);
+
+                        Vector3 ctrlTroquePos = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(airSpeedRot * airSpeed)));
+                        Vector3 ctrlTroqueNeg = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(Quaternion.Inverse(airSpeedRot) * airSpeed)));
+                        ctrlTorqueAvailable.Add(ctrlTroquePos);
+                        ctrlTorqueAvailable.Add(ctrlTroqueNeg);
                     }
 
                     foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
