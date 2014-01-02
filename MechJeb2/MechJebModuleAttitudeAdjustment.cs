@@ -26,9 +26,21 @@ namespace MuMech
 
             if (!core.attitude.useSAS)
             {
-                GUILayout.Label("Larger ship do better with a larger Tf");
-                GuiUtils.SimpleTextBox("Tf (s)", Tf);
-                Tf = Math.Max(0.01, Tf);
+                core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto tunning");
+                
+                if (!core.attitude.Tf_autoTune)
+                {
+                    GUILayout.Label("Larger ship do better with a larger Tf");
+                    GuiUtils.SimpleTextBox("Tf (s)", Tf);
+                    Tf = Math.Max(0.01, Tf);
+                }
+                else
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(core.attitude.Tf.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+                }
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
 
@@ -95,17 +107,29 @@ namespace MuMech
                 GUILayout.Label("|inertia|", GUILayout.ExpandWidth(true));
                 GUILayout.Label(inertia.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
+
+                Vector3d ratio = Vector3d.Scale(vesselState.MoI, torque.Invert());
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("|MOI| / |Torque|", GUILayout.ExpandWidth(true));
+                GUILayout.Label(ratio.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("fixedDeltaTime", GUILayout.ExpandWidth(true));
+                GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+
+
+
             }
 
             GUILayout.EndVertical();
 
-            if ((core.attitude.Tf != Tf))
+            if (!core.attitude.Tf_autoTune && core.attitude.Tf != Tf)
             {
                 core.attitude.Tf = Tf;
-                double Kd = 0.53 / Tf;
-                double Kp = Kd / (3 * Math.Sqrt(2) * Tf);
-                double Ki = Kp / (12 * Math.Sqrt(2) * Tf);
-                core.attitude.pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+                core.attitude.setPIDParameters();                
             }
             base.WindowGUI(windowID);
         }

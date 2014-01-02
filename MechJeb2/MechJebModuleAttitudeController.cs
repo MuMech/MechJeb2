@@ -29,6 +29,9 @@ namespace MuMech
         public bool RCS_auto = false;
         public bool attitudeRCScontrol = true;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool Tf_autoTune = true;
+
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public double Tf = 0.3;
 
@@ -118,13 +121,37 @@ namespace MuMech
         }
 
         public override void OnStart(PartModule.StartState state)
-        {
-            double Kd = 0.53 / Tf;
-            double Kp = Kd / (3 * Math.Sqrt(2) * Tf);
-            double Ki = Kp / (12 * Math.Sqrt(2) * Tf);
-            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+        {            
+            pid = new PIDControllerV2(0, 0, 0, 1, -1);
+            setPIDParameters();
             lastAct = Vector3d.zero;
             base.OnStart(state);
+        }
+
+        public void tuneTf()
+        {
+            Vector3d torque = new Vector3d(
+                                    vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
+                                    vesselState.torqueAvailable.y,
+                                    vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
+                                          );
+
+            Vector3d ratio = new Vector3d(
+                                    torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
+                                    torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
+                                    torque.z != 0 ? vesselState.MoI.z / torque.z : 0
+                );
+
+            Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
+
+            setPIDParameters();
+        }
+
+        public void setPIDParameters()
+        {
+            pid.Kd = 0.53 / Tf;
+            pid.Kp = pid.Kd / (3 * Math.Sqrt(2) * Tf);
+            pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
@@ -269,6 +296,10 @@ namespace MuMech
 
                 attitudeChanged = false;
             }
+
+            if (Tf_autoTune)
+                tuneTf();
+
         }
 
         public override void Drive(FlightCtrlState s)
