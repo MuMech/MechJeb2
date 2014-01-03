@@ -80,7 +80,6 @@ namespace MuMech
             input_multiplierHasError = _multiplierHasError;
             input_dt = _dt;
 
-
             max_dt = _dt;
             dt = max_dt;             
 
@@ -128,11 +127,6 @@ namespace MuMech
             try
             {
                 // First put all the problem parameters into the result, to aid debugging.
-                result.input_probableLandingSiteASL = this.probableLandingSiteASL;
-                result.input_decelEndAltitudeASL = this.decelRadius - this.bodyRadius;
-                
-
-
                 result.input_initialOrbit = this.input_initialOrbit;
                 result.input_UT = this.input_UT;
                 result.input_dragMassExcludingUsedParachutes = this.input_dragMassExcludingUsedParachutes;
@@ -146,13 +140,6 @@ namespace MuMech
                 result.input_multiplierHasError = this.input_multiplierHasError;
                 result.input_dt = this.input_dt;
  
-
-
-
-
-
-
-
 
                 if (!orbitReenters) 
                 {
@@ -186,7 +173,9 @@ namespace MuMech
                 result.parachuteMultiplier = this.parachuteSemiDeployMultiplier;
                 result.multiplierHasError = this.multiplierHasError;
                 result.maxdt = this.max_dt;
-                result.endASL = Math.Max(0, result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude));
+
+                // TODO I suspect we are not allowed to do this from this thread. commenting it out for testing.
+                // result.endASL = Math.Max(0, result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude));
             }
             catch (Exception ex)
             {
@@ -613,12 +602,6 @@ namespace MuMech
                 resultText += "\nmultiplierHasError: " + multiplierHasError;
                 resultText += "\nparachuteMultiplier: " + parachuteMultiplier;
                 resultText += "\n}";
-
-/*
-            public CelestialBody body;
-            public ReferenceFrame referenceFrame;
-            public List<AbsoluteVector> trajectory;
-                */
 
                 return (resultText);
 
