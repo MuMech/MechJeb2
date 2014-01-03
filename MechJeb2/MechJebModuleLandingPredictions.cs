@@ -12,8 +12,30 @@ namespace MuMech
         //publicly available output:
         //Call this function and use the returned object in case this.result changes while you
         //are doing your calculations:
-        public ReentrySimulation.Result GetResult() { return result; }
-        public ReentrySimulation.Result GetErrorResult() { return errorResult; }
+        // TODO does calculating the ASL at this point work? We are doing this here to avoid making a call in the CelestialBody object from the reentrysimulation thread
+        public ReentrySimulation.Result GetResult() 
+        {
+            if (null != result)
+            {
+                if (null != result.body)
+                {
+                    result.endASL = result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude);
+                }
+            }
+            return result; 
+        }
+        public ReentrySimulation.Result GetErrorResult() 
+        {
+            if (null != errorResult)
+            {
+                if (null != errorResult.body)
+                {
+                    errorResult.endASL = errorResult.body.TerrainAltitude(errorResult.endPosition.latitude, errorResult.endPosition.longitude);
+                }
+            }
+            
+            return errorResult;
+        }
 
         //inputs:
         [Persistent(pass = (int)Pass.Global)]
@@ -180,7 +202,7 @@ namespace MuMech
             {
                 if(result.outcome == ReentrySimulation.Outcome.LANDED &&  null != result.body)
                 {
-                    altitudeOfPreviousPrediction = this.result.endASL;
+                    altitudeOfPreviousPrediction = this.GetResult().endASL; // Note that we are caling GetResult here to force the it to calculate the endASL, if it has not already done this. It is not allowed to do this previously as we are only allowed to do it from this thread, not the reentry simulation thread.
                 }
             }
 
@@ -254,7 +276,7 @@ namespace MuMech
                     }
 
                     // TODO remove debugging 
-                    Debug.Log("Result:" + newResult.outcome + " Time to run: " + millisecondsToCompletion + " millisecondsBetweenSimulations: " + millisecondsBetweenSimulations + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime + "\n" + newResult.ToString());
+                    //Debug.Log("Result:" + this.result.outcome + " Time to run: " + millisecondsToCompletion + " millisecondsBetweenSimulations: " + millisecondsBetweenSimulations + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime + "\n" + this.result.ToString()); // Note the endASL will be zero as it has not yet been calculated, and we are not allowed to calculate it from this thread :(
 
                     //start the stopwatch that will count off this delay
                     stopwatch.Start();
