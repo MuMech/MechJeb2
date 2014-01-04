@@ -533,7 +533,7 @@ namespace MuMech
             if (computerModules.Count == 0) return;
 
             // .23 added a call to OnSave for undocking/decoupling vessel before they are properly init ...
-            if (vessel.vesselName == null)
+            if (HighLogic.LoadedSceneIsFlight && vessel.vesselName == null)
                 return;
 
             try
