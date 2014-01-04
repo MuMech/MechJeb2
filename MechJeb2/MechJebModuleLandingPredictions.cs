@@ -210,7 +210,7 @@ namespace MuMech
             if (addParachuteError)
             {
                 System.Random random = new System.Random();
-                parachuteMultiplierForThisSimulation *= ((double)1 + ((double)(random.Next(500000) - 250000) / (double)10000000));
+                parachuteMultiplierForThisSimulation *= ((double)1 + ((double)(random.Next(1000000) - 500000) / (double)10000000));
             }
 
             ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, dragMassExcludingUsedParachutes, usableChutes, totalMass, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt); 
