@@ -26,7 +26,7 @@ namespace MuMech
         }
 
         private static float lastFixedTime = 0;
-        private static Dictionary<Vessel,MechJebCore> masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+        private static Dictionary<Guid, MechJebCore> masterMechjebs = new Dictionary<Guid, MechJebCore>();
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
@@ -34,17 +34,17 @@ namespace MuMech
                 return vessel.GetModules<MechJebCore>().Max();
             if (lastFixedTime != Time.fixedTime)
             {
-                masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+                masterMechjebs = new Dictionary<Guid, MechJebCore>();
                 lastFixedTime = Time.fixedTime;
             }
-            if (!masterMechjebs.ContainsKey(vessel))
+            if (!masterMechjebs.ContainsKey(vessel.id))
             {
                 MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
                 if (mj != null)
-                    masterMechjebs.Add(vessel, mj);
+                    masterMechjebs.Add(vessel.id, mj);
                 return mj;
             }
-            return masterMechjebs[vessel];
+            return masterMechjebs[vessel.id];
         }
 
         public static double TotalResourceMass(this Vessel vessel, string resourceName)

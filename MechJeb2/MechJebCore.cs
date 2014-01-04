@@ -532,6 +532,10 @@ namespace MuMech
             //Defend against saving empty settings.
             if (computerModules.Count == 0) return;
 
+            // .23 added a call to OnSave for undocking/decoupling vessel before they are properly init ...
+            if (vessel.vesselName == null)
+                return;
+
             try
             {
                 //Add any to-be-loaded modules so they get saved properly
