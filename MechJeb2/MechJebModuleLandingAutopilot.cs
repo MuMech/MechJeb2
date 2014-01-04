@@ -160,7 +160,11 @@ namespace MuMech
             {
                 if (this.ParachutesDeployable())
                 {
-                    return ("Parachute Multiplier:" + this.parachutePlan.GetMultiplier().ToString("F7") );
+                    string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
+                    retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") +"%";
+                    retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
+
+                    return ( retVal );
                 }
                 else
                 {
@@ -216,7 +220,13 @@ namespace MuMech
 
             predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
             predictor.decelEndAltitudeASL = DecelerationEndAltitude();
-            predictor.parachuteSemiDeployMultiplier = this.parachutePlan.GetMultiplier();
+            predictor.parachuteSemiDeployMultiplier = this.parachutePlan.Multiplier;
+
+            // Consider lowering the langing gear
+            {
+                double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+                if (deployGears && !deployedGears && (minalt < 1000)) DeployLandingGears();
+            }
 
             if (!PredictionReady && landStep != LandStep.DEORBIT_BURN && landStep != LandStep.PLANE_CHANGE && landStep != LandStep.LOW_DEORBIT_BURN
                 && landStep != LandStep.UNTARGETED_DEORBIT && landStep != LandStep.FINAL_DESCENT) return;
@@ -852,9 +862,7 @@ namespace MuMech
             // TODO perhaps we should pop the parachutes at this point, or at least consider it depending on the altitude.
 
             double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
-
-            if ( deployGears && !deployedGears && (minalt < 1000)) DeployLandingGears();
-
+              
             if (vesselState.limitedMaxThrustAccel < vesselState.gravityForce.magnitude)
             {
                 //if we have TWR < 1, just try as hard as we can to decelerate:
@@ -926,57 +934,6 @@ namespace MuMech
             status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
         }
 
-        public void FixedUpdateParachuteControl()
-        {
-            // Are there any deployable parachutes? If not then there is no point in us being here. Lets switch to cruising to the deceleration burn instead.
-            if (!ParachutesDeployable())
-            {
-                predictor.runErrorSimulations = false;
-                parachutePlan.ClearData();
-                landStep = LandStep.FINAL_DESCENT;
-                return;
-            }
-            else
-            {
-                predictor.runErrorSimulations = true;
-            }
-
-            // Firstly - do we have a parchute plan? If not then we had better get one quick!
-            if (null == parachutePlan)
-            {
-                parachutePlan = new ParachutePlan(this);
-            }
-
-            // Is there an error prediction available? If so add that into the mix
-            if (this.ErrorPredictionReady)
-            {
-                if (parachutePlan.AddResult(errorPrediction))
-                {
-                    // The parachute plan has told us to give up. 
-                    predictor.runErrorSimulations = false;
-                    parachutePlan.ClearData();
-                    landStep = LandStep.FINAL_DESCENT;
-                    return;
-                }
-            }
-
-            // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
-            if (this.PredictionReady)
-            {
-                if (parachutePlan.AddResult(prediction))
-                {
-                    // The parachute plan has told us to give up. 
-                    predictor.runErrorSimulations = false;
-                    parachutePlan.ClearData();
-                    landStep = LandStep.FINAL_DESCENT;
-                    return;
-                }
-            }
-
-            // Update the status to make it look like something interesting is going on under the covers!
-            status = "Targeting by timing parachute deployment. Multipler:" + parachutePlan.GetMultiplier().ToString("F4");
-        }
-
         public void ControlParachutes()
         {
             // Firstly - do we have a parchute plan? If not then we had better get one quick!
@@ -1000,27 +957,14 @@ namespace MuMech
             // Is there an error prediction available? If so add that into the mix
             if (this.ErrorPredictionReady)
             {
-                if (parachutePlan.AddResult(errorPrediction))
-                {
-                    // The parachute plan has told us to give up. Clear the data and start again
-                    parachutePlan.ClearData();
-                    return;
-                }
+                parachutePlan.AddResult(errorPrediction);
             }
 
             // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
             if (this.PredictionReady)
             {
-                if (parachutePlan.AddResult(prediction))
-                {
-                    // The parachute plan has told us to give up. Clear the data and start again
-                    parachutePlan.ClearData();
-                    return;
-                }
+                parachutePlan.AddResult(prediction);
             }
-
-            // Update the status to make it look like something interesting is going on under the covers!
-            status = "Targeting by timing parachute deployment. Multipler:" + parachutePlan.GetMultiplier().ToString("F4");
         }
 
         void DeployParachutes()
@@ -1031,7 +975,7 @@ namespace MuMech
                 {
                     // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
                     double LandingSiteASL = LandingAltitude;
-                    double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.GetMultiplier();
+                    double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.Multiplier;
 
                     double ASLDeployAltitude = ParachuteDeployAboveGroundAtLandingSite + LandingSiteASL;
 
@@ -1309,30 +1253,43 @@ namespace MuMech
         ReentrySimulation.Result lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
         CelestialBody body;
         MechJebModuleLandingAutopilot autoPilot;
-        bool abandoned; // TODO reconsider if this is a good policy, or if we should just clear the data and start again if the dataset does not correlate
         bool parachutePresent = false;
         double maxSemiDeployHeight;
         double minSemiDeployHeight;
         double maxMultiplier;
         double currentMultiplier;  // This is multiplied with the parachutes fulldeploy height to give the height at which the parachutes will be semideployed.
+        double correlation; // This is the correlation coefficent of the dataset, and is used to tell if the data set is providing helpful information or not. It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
+        int dataSetSize = 40;
 
-        public double GetMultiplier()
+        public double Multiplier
         {
-            return currentMultiplier;
+            get {return currentMultiplier;}
         }
 
-        // Incorporates a new simulation result into the simulation data set and calculate a new semi deployment multiplier. If the data set has a poor correlation, then it might just leave the mutiplier. If the correlation becomes positive then it will give up on trying to control the parachutes and return true to mean adandon trying to control the chutes.
-        public bool AddResult(ReentrySimulation.Result newResult)
+        public int MultiplierDataAmount
         {
-            // check that this parachute plan has not already beenn abandoned
-            if (this.abandoned) { return abandoned; }
+            get { return this.regression.dataSetSize; }
+        }
 
+        public double MultiplierQuality
+        {
+            get 
+            { 
+                double corr = this.correlation;
+                if (Double.IsNaN(corr)) return 0;
+                return Math.Max(0, corr * -100); 
+            }
+        }
+        
+        // Incorporates a new simulation result into the simulation data set and calculate a new semi deployment multiplier. If the data set has a poor correlation, then it might just leave the mutiplier. If the correlation becomes positive then it will clear the dataset and start again.
+        public void AddResult(ReentrySimulation.Result newResult)
+        {
             // if this result is the same as the old result, then it is not new!
             if (newResult.multiplierHasError)
             {
                 if (lastErrorResult != null)
                 {
-                    if (newResult.id == lastErrorResult.id) { return abandoned; }
+                    if (newResult.id == lastErrorResult.id) { return; }
                 }
                 lastErrorResult = newResult;
             }
@@ -1340,7 +1297,7 @@ namespace MuMech
             {
                 if (lastResult != null)
                 {
-                    if (newResult.id == lastResult.id) { return abandoned; }
+                    if (newResult.id == lastResult.id) { return; }
                 }
                 lastResult = newResult;
             }
@@ -1354,14 +1311,13 @@ namespace MuMech
             regression.Add(overshoot, newResult.parachuteMultiplier);
 
             // What is the correlation coefficent of the data. If it is weak a correlation then we will dismiss the dataset and use it to change the current multiplier
-            double correlation =regression.CorrelationCoefficent;
+            correlation = regression.CorrelationCoefficent;
             if (correlation > -0.2) // TODO this is the best value to test for non-correlation?
             {
                 // If the correlation is less that 0 then we will give up controlling the parachutes and throw away the dataset. Also check that we have got several bits of data, just in case we get two datapoints that are badly correlated.
                 if (correlation > 0 && this.regression.dataSetSize > 5)
                 {
-                    abandoned = true;
-                    regression = new LinearRegression(20);
+                    ClearData();
                     // Debug.Log("Giving up control of the parachutes as the data does not correlate: " + correlation);
                 }
                 else
@@ -1371,15 +1327,28 @@ namespace MuMech
             }
             else
             {
-                // Use the linear regression to give us a new prediciton for when to open the parachutes
-                try
+                // How much data is there? If just one datapoint then we need to slightly vary the multplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!  
+                int dataSetSize = regression.dataSetSize;
+                if (dataSetSize == 1)
                 {
-                    this.currentMultiplier = regression.yIntercept;
+                    this.currentMultiplier *= 0.99999;
                 }
-                catch (Exception e)
+                else if (dataSetSize == 2)
                 {
-                    // If there is not enough data then we expect an exception. However we need to vary the multiplier everso slightly so that we get different data in order to start generating data.
-                    this.currentMultiplier *= 0.99;
+                    // Doing nothing
+                }
+                else
+                {
+                    // Use the linear regression to give us a new prediciton for when to open the parachutes
+                    try
+                    {
+                        this.currentMultiplier = regression.yIntercept;
+                    }
+                    catch (Exception e)
+                    {
+                        // If there is not enough data then we expect an exception. However we need to vary the multiplier everso slightly so that we get different data in order to start generating data. This should never happen as we have already checked the size of the dataset.
+                        this.currentMultiplier *= 0.99999;
+                    }
                 }
 
                 // Impose sensible limits on the multiplier
@@ -1387,13 +1356,13 @@ namespace MuMech
                 if (this.currentMultiplier > this.maxMultiplier) { this.currentMultiplier = this.maxMultiplier; }
             }
 
-            return abandoned;
+            return;
         }
 
         public ParachutePlan(MechJebModuleLandingAutopilot _autopliot)
         {
             // Create the linear regression for storing previous prediction results
-            this.regression = new LinearRegression(20); // Stored the previous 20 predictions
+            this.regression = new LinearRegression(dataSetSize); // Store the previous however many predictions
 
             // Take a reference to the landing autopilot module that we are working for.
             this.autoPilot = _autopliot;
@@ -1406,7 +1375,7 @@ namespace MuMech
         public void ClearData()
         {
             // Create the linear regression for storing previous prediction results
-            this.regression = new LinearRegression(20); // Stored the previous 20 predictions
+            this.regression = new LinearRegression(dataSetSize); // Stored the previous 20 predictions
         }
 
         public void StartPlanning()
