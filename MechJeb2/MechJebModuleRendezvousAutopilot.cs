@@ -32,7 +32,9 @@ namespace MuMech
                 return;
             }
 
-            core.node.autowarp = core.target.Distance > 1000; //don't warp when close to target, because warping introduces small perturbations
+            //don't warp when close to target, because warping introduces small perturbations
+            if (core.target.Distance < 1000)
+                core.warp.MinimumWarp();
 
             //If we get within the target distance and then next maneuver node is still 
             //far in the future, delete it and we will create a new one to match velocities immediately.

@@ -45,6 +45,8 @@ namespace MuMech
 
                 if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
             }
+            
+            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
             GUILayout.EndVertical();
 
