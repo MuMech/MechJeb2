@@ -567,7 +567,11 @@ namespace MuMech
 
             //orbitLandingPosition is the point where our current orbit intersects the planet
             double endRadius = mainBody.Radius + DecelerationEndAltitude() - 100;
-            Vector3d orbitLandingPosition = orbit.SwappedRelativePositionAtUT(orbit.NextTimeOfRadius(vesselState.time, endRadius));
+            Vector3d orbitLandingPosition;
+            if (orbit.PeR < endRadius)
+                orbitLandingPosition = orbit.SwappedRelativePositionAtUT(orbit.NextTimeOfRadius(vesselState.time, endRadius));
+            else
+                orbitLandingPosition = orbit.SwappedRelativePositionAtUT(orbit.NextPeriapsisTime(vesselState.time));
 
             //convertOrbitToActual is a rotation that rotates orbitLandingPosition on actualLandingPosition
             Quaternion convertOrbitToActual = Quaternion.FromToRotation(orbitLandingPosition, actualLandingPosition);
