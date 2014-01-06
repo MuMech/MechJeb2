@@ -91,6 +91,19 @@ namespace MuMech
 			}
 			else {
 				Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
+				if (Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM) < 200) {
+					var dir = (Position - Body.position).normalized;
+					var rayPos = Body.position + dir * (Body.Radius + 50000);
+					dir = (Vector3d)(Body.position - rayPos).normalized;
+					RaycastHit hit;
+					var raycast = Physics.Raycast(rayPos, dir, out hit, (float)Body.Radius, 1 << 15);
+					if (raycast) {
+						dir = (hit.point - Body.position);
+						Position = Body.position + dir.normalized * (dir.magnitude + 0.5);
+//						Latitude = Body.GetLatitude(Position);
+//						Longitude = Body.GetLongitude(Position);
+					}
+				}
 			}
 			if (MinSpeed > 0 && MaxSpeed > 0 && MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
 			else if (MinSpeed > 0 && MaxSpeed > 0 && MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }

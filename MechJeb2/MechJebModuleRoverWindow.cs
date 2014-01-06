@@ -356,7 +356,8 @@ namespace MuMech
 			RaycastHit raycast;
 //			greenLine.SetPosition(0, ray.origin);
 //			greenLine.SetPosition(1, (Vector3d)ray.direction * body.Radius / 2);
-			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
+//			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
+			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, 1 << 15)) {
 				return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
 			}
 			else {
