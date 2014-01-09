@@ -396,7 +396,7 @@ namespace MuMech
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
             string ret = "";
-            bool showSecondsDecimals = decimalPlaces > 0 && seconds < 60;
+            bool showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
@@ -416,8 +416,8 @@ namespace MuMech
                     if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
                     {
                         if (!first) ret += " ";
-                        
-                        if (showSecondsDecimals) ret += seconds.ToString("0." + new string('0', decimalPlaces));
+
+                        if (showSecondsDecimals && seconds < 60) ret += seconds.ToString("0." + new string('0', decimalPlaces));
                         else if (first) ret += n.ToString();
                         else ret += n.ToString("00");
 
