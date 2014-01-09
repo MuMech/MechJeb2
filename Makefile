@@ -15,7 +15,17 @@ ZIP     := /usr/bin/zip
 
 all: build
 
-build:
+info:
+	@echo "== MechJeb2 Build Information =="
+	@echo "  resgen2: ${RESGEN2}"
+	@echo "  gmcs:    ${GMCS}"
+	@echo "  git:     ${GIT}"
+	@echo "  tar:     ${TAR}"
+	@echo "  zip:     ${ZIP}"
+	@echo "  KSP Data: ${KSPDIR}"
+	@echo "================================"
+
+build: info
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
 	${GMCS} -t:library -lib:${KSPDIR}/${MANAGED} \
@@ -36,6 +46,17 @@ zip: package
 	${ZIP} -9 -r MechJeb2-0.$(shell ${GIT} rev-list --count HEAD).g$(shell ${GIT} log -1 --format="%h").zip package/MechJeb2
 
 clean:
+	@echo "Cleaning up build and package directories..."
 	rm -rf build/ package/
 
-.PHONY : all build package tar.gz zip clean
+install: build
+	mkdir -p ${KSPDIR}/GameData/MechJeb2/Plugins
+	cp -r Parts ${KSPDIR}/GameData/MechJeb2/
+	cp build/MechJeb2.dll ${KSPDIR}/GameData/MechJeb2/Plugins/
+
+uninstall: info
+	rm -rf ${KSPDIR}/GameData/MechJeb2/Plugins
+	rm -rf ${KSPDIR}/GameData/MechJeb2/Parts
+
+
+.PHONY : all info build package tar.gz zip clean install uninstall
