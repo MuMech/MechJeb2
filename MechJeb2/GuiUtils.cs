@@ -417,7 +417,7 @@ namespace MuMech
                     {
                         if (!first) ret += " ";
 
-                        if (showSecondsDecimals && seconds < 60) ret += seconds.ToString("0." + new string('0', decimalPlaces));
+                        if (showSecondsDecimals && seconds < 60 && i == units.Length -1) ret += seconds.ToString("0." + new string('0', decimalPlaces));
                         else if (first) ret += n.ToString();
                         else ret += n.ToString("00");
 
