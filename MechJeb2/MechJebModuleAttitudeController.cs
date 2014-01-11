@@ -240,9 +240,12 @@ namespace MuMech
 
         public bool attitudeTo(Vector3d direction, AttitudeReference reference, object controller)
         {
-            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
-
+            //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
+            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
+            
             Vector3 up, dir = direction;
+
+            // TODO : Fix that so it does not roll when it should not. Current fix is a "hack" that set required roll to 0 if !attitudeRollMatters
 
             if (!enabled || (ang_diff > 45))
             {
@@ -351,9 +354,23 @@ namespace MuMech
 
                 // ( MoI / avaiable torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
+                
+                // Find out the real shorter way to turn were we wan to.
+                // Thanks to HoneyFox
 
-                // angular error:
-                Vector3d err = deltaEuler * Math.PI / 180.0F;
+                Vector3d tgtLocalUp =  vessel.transform.rotation.Inverse() * target * Vector3d.forward;
+                Vector3d curLocalUp =  vessel.transform.InverseTransformDirection(vesselState.forward);
+
+                double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
+                Vector2d rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
+                rotDirection = rotDirection.normalized * turnAngle / 180.0f;
+
+                Vector3d err = new Vector3d(
+                                                -rotDirection.y * Math.PI,
+                                                rotDirection.x * Math.PI,
+                                                attitudeRollMatters?((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
+                                            );
+
                 err += inertia.Reorder(132) / 2;
                 err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
                                    Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
