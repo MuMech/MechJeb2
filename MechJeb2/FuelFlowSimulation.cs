@@ -24,6 +24,13 @@ namespace MuMech
 
             simStage = Staging.lastStage + 1;
 
+            // Add a fake stage if we are beyond the first one
+            // Mostly usefull for the Node Executor who use the last stage info
+            // and fail to get proper info when the ship was never staged and 
+            // some engine were activated manualy
+            if (Staging.CurrentStage > Staging.lastStage) 
+                simStage++;
+
             t = 0;
         }
 
@@ -334,7 +341,8 @@ namespace MuMech
                 if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState)
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
+                        inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
 
@@ -375,7 +383,8 @@ namespace MuMech
                 if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState)
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage)
+                        inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
 
