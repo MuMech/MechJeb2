@@ -358,8 +358,8 @@ namespace MuMech
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox
 
-                Vector3d tgtLocalUp =  vessel.transform.rotation.Inverse() * target * Vector3d.forward;
-                Vector3d curLocalUp =  vessel.transform.InverseTransformDirection(vesselState.forward);
+                Vector3d tgtLocalUp = vessel.ReferenceTransform.transform.rotation.Inverse() * target * Vector3d.forward;
+                Vector3d curLocalUp = Vector3d.up;
 
                 double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
                 Vector2d rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
