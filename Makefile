@@ -40,10 +40,10 @@ package: build
 	cp build/MechJeb2.dll package/MechJeb2/Plugins/
 
 tar.gz: package
-	${TAR} zcf MechJeb2-0.$(shell ${GIT} rev-list --count HEAD).g$(shell ${GIT} log -1 --format="%h").tar.gz package/MechJeb2
+	${TAR} zcf MechJeb2-$(shell ${GIT} describe --tags --long --always).tar.gz package/MechJeb2
 
 zip: package
-	${ZIP} -9 -r MechJeb2-0.$(shell ${GIT} rev-list --count HEAD).g$(shell ${GIT} log -1 --format="%h").zip package/MechJeb2
+	${ZIP} -9 -r MechJeb2-$(shell ${GIT} describe --tags --long --always).zip package/MechJeb2
 
 clean:
 	@echo "Cleaning up build and package directories..."
