@@ -658,6 +658,8 @@ namespace MuMech
         public bool showAtmoDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoTime = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public int TWRbody = 1;
 
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
@@ -673,6 +675,20 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
+
+            double geeASL;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                // We're in the VAB/SPH
+                TWRbody = (int)GuiUtils.ArrowSelector(TWRbody, FlightGlobals.Bodies.Count, FlightGlobals.Bodies[(int)TWRbody].GetName());
+                geeASL = FlightGlobals.Bodies[TWRbody].GeeASL;
+            }
+            else
+            {
+                // We're in flight
+                geeASL = mainBody.GeeASL;
+            }
+
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
 
@@ -695,8 +711,6 @@ namespace MuMech
                 }
             }
             GUILayout.EndHorizontal();
-
-            double geeASL = (HighLogic.LoadedSceneIsEditor ? 1 : mainBody.GeeASL);
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
