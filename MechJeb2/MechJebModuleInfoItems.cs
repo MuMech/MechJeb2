@@ -68,6 +68,36 @@ namespace MuMech
             return Coordinates.ToStringDMS(vesselState.latitude, vesselState.longitude, true);
         }
 
+        [ValueInfoItem("Coordinates of\nNext Apoapsis", InfoItem.Category.Orbit)]
+        public string GetApCoordinateString()
+        {
+            // Get the location underneath the apoapsis at the current moment.
+            // Note that this does NOT account for the rotation of the body that will happen between now
+            // and when the vessel reaches the apoapsis.
+            Vector3d pos = orbit.SwappedAbsolutePositionAtUT (orbit.NextApoapsisTime (vesselState.time));
+
+            // Back out the rotation of the body
+            double degreeRotationToAp = orbit.timeToAp * 360.0 / mainBody.rotationPeriod;
+            double ApLongitude = mainBody.GetLongitude(pos) - degreeRotationToAp;
+
+            return Coordinates.ToStringDMS (mainBody.GetLatitude (pos), ApLongitude, true);
+        }
+
+        [ValueInfoItem("Coordinates of\nNext Periapsis", InfoItem.Category.Orbit)]
+        public string GetPeCoordinateString()
+        {
+            // Get the location underneath the apoapsis at the current moment.
+            // Note that this does NOT account for the rotation of the body that will happen between now
+            // and when the vessel reaches the apoapsis.
+            Vector3d pos = orbit.SwappedAbsolutePositionAtUT (orbit.NextPeriapsisTime (vesselState.time));
+
+            // Back out the rotation of the body
+            double degreeRotationToPe = orbit.timeToPe * 360.0 / mainBody.rotationPeriod;
+            double PeLongitude = mainBody.GetLongitude(pos) - degreeRotationToPe;
+
+            return Coordinates.ToStringDMS (mainBody.GetLatitude (pos), PeLongitude, true);
+        }
+
         public string OrbitSummary(Orbit o)
         {
             if (o.eccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(o.PeA, 2) + "m";
