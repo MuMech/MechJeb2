@@ -672,6 +672,8 @@ Value:VesselState.orbitTimeToPe
 Value:VesselState.orbitInclination
 Value:VesselState.orbitEccentricity
 Value:VesselState.angleToPrograde
+Value:InfoItems.GetApCoordinateString
+Value:InfoItems.GetPeCoordinateString
 -----------------------------"
             },
 
