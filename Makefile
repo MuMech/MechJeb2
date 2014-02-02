@@ -1,7 +1,7 @@
 # Makefile for building MechJeb
 
 KSPDIR  := ${HOME}/.local/share/Steam/SteamApps/common/Kerbal\ Space\ Program
-MANAGED := KSP_Data/Managed/
+MANAGED := ${KSPDIR}/KSP_Data/Managed/
 
 MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
 	$(wildcard MechJeb2/Properties/*.cs) \
@@ -28,7 +28,7 @@ info:
 build: info
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${GMCS} -t:library -lib:${KSPDIR}/${MANAGED} \
+	${GMCS} -t:library -lib:${MANAGED} \
 		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine \
 		-out:build/MechJeb2.dll \
 		${MECHJEBFILES} \
