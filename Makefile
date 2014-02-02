@@ -7,11 +7,11 @@ MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
 	$(wildcard MechJeb2/Properties/*.cs) \
 	$(wildcard MechJeb2/alglib/*.cs)
 
-RESGEN2 := /usr/bin/resgen2
-GMCS    := /usr/bin/gmcs
-GIT     := /usr/bin/git
-TAR     := /usr/bin/tar
-ZIP     := /usr/bin/zip
+RESGEN2 := resgen2
+GMCS    := gmcs
+GIT     := git
+TAR     := tar
+ZIP     := zip
 
 all: build
 
