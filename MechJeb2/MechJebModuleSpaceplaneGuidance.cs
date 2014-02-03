@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleSpaceplaneGuidance : DisplayModule
+    public class MechJebModuleSpaceplaneGuidance : DisplayModule
     {
         MechJebModuleSpaceplaneAutopilot autopilot;
 

@@ -2,7 +2,7 @@
 
 namespace MuMech
 {
-    class MechJebModuleRendezvousAutopilotWindow : DisplayModule
+    public class MechJebModuleRendezvousAutopilotWindow : DisplayModule
     {
         public MechJebModuleRendezvousAutopilotWindow(MechJebCore core) : base(core) { }
 

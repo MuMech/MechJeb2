@@ -2,7 +2,7 @@
 
 namespace MuMech
 {
-    class MechJebModuleSettings : DisplayModule
+    public class MechJebModuleSettings : DisplayModule
     {
         public MechJebModuleSettings(MechJebCore core) : base(core) 
         { 

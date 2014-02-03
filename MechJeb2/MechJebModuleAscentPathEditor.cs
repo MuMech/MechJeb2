@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleAscentPathEditor : DisplayModule
+    public class MechJebModuleAscentPathEditor : DisplayModule
     {
         public MechJebModuleAscentPathEditor(MechJebCore core)
             : base(core)
