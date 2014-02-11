@@ -251,6 +251,8 @@ namespace MuMech
 		internal string tmpRadius = "";
 		internal string tmpMinSpeed = "";
 		internal string tmpMaxSpeed = "";
+		internal string tmpLat = "";
+		internal string tmpLon = "";
 		private Vector2 scroll;
 		private GUIStyle styleActive;
 		private GUIStyle styleInactive;
@@ -308,30 +310,30 @@ namespace MuMech
 		
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-            base.OnLoad(local, type, global);
-            if (local != null)
-            {
-                var wps = global.GetNode("Routes");
-                if (wps != null)
-                {
-                    if (wps.HasNode("Waypoints"))
-                    {
-                        Routes.Clear();
-                        foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
-                        {
-                            Routes.Add(new MechJebRoverRoute(cn));
-                        }
-                        Routes.Sort(SortRoutes);
-                    }
-                }
-            }
+			base.OnLoad(local, type, global);
+			if (local != null)
+			{
+				var wps = global.GetNode("Routes");
+				if (wps != null)
+				{
+					if (wps.HasNode("Waypoints"))
+					{
+						Routes.Clear();
+						foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
+						{
+							Routes.Add(new MechJebRoverRoute(cn));
+						}
+						Routes.Sort(SortRoutes);
+					}
+				}
+			}
 		}
 		
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-            base.OnSave(local, type, global);
+			base.OnSave(local, type, global);
 
-            if (global == null) return;
+			if (global == null) return;
 
 			if (global.HasNode("Routes")) { global.RemoveNode("Routes"); }
 			if (Routes.Count > 0) {
@@ -340,7 +342,7 @@ namespace MuMech
 				foreach (MechJebRoverRoute r in Routes) {
 					cn.AddNode(r.ToConfigNode());
 				}
-			}			
+			}
 		}
 		
 		public override string GetName()
@@ -350,51 +352,124 @@ namespace MuMech
 		
 		public static Coordinates GetMouseFlightCoordinates()
 		{
-			var body = FlightGlobals.currentMainBody;
-			var cam = FlightCamera.fetch.mainCamera;
-			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+			CelestialBody body = FlightGlobals.currentMainBody;
+			Ray mouseRay = FlightCamera.fetch.mainCamera.ScreenPointToRay(Input.mousePosition);
 			RaycastHit raycast;
-//			greenLine.SetPosition(0, ray.origin);
-//			greenLine.SetPosition(1, (Vector3d)ray.direction * body.Radius / 2);
-//			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
-			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, 1 << 15)) {
+//			mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
+			Vector3d relOrigin = mouseRay.origin - body.position;
+			Vector3d relSurfacePosition;
+			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, 1 << 15)) {
 				return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
 			}
 			else {
-				Vector3d hit;
-				//body.pqsController.RayIntersection(ray.origin, ray.direction, out hit);
-				PQS.LineSphereIntersection(ray.origin - body.position, ray.direction, body.Radius, out hit);
-				if (hit != Vector3d.zero) {
-					hit = body.position + hit;
-					Vector3d start = ray.origin;
-					Vector3d end = hit;
-					Vector3d point = Vector3d.zero;
-					for (int i = 0; i < 16; i++) {
-						point = (start + end) / 2;
-						//var lat = body.GetLatitude(point);
-						//var lon = body.GetLongitude(point);
-						//var surf = body.GetWorldSurfacePosition(lat, lon, body.TerrainAltitude(lat, lon));
-						var alt = body.GetAltitude(point) - body.TerrainAltitude(point);
-						//Debug.Log(alt);
-						if (alt > 0) {
-							start = point;
+				double curRadius = body.pqsController.radiusMax;
+				double lastRadius = 0;
+				double error = 0;
+				int loops = 0;
+				float st = Time.time;
+				while (loops < 50)
+				{
+					if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
+					{
+						Vector3d surfacePoint = body.position + relSurfacePosition;
+						double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) * QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) * Vector3d.right);
+						error = Math.Abs(curRadius - alt);
+						if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
+						{
+							return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
 						}
-						else if (alt < 0) {
-							end = point;
-						}
-						else {
-							break;
+						else
+						{
+							lastRadius = curRadius;
+							curRadius = alt;
+							loops++;
 						}
 					}
-					hit = point;
-//					redLine.SetPosition(0, ray.origin);
-//					redLine.SetPosition(1, hit);
-					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
-				}
-				else {
-					return null;
+					else
+					{
+						if (loops == 0)
+						{
+							break;
+						}
+						else
+						{ // Went too low, needs to try higher
+							curRadius = (lastRadius * 9 + curRadius) / 10;
+							loops++;
+						}
+					}
 				}
 			}
+
+			return null;
+
+//			var cam = FlightCamera.fetch.mainCamera;
+//			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+////			greenLine.SetPosition(0, ray.origin);
+////			greenLine.SetPosition(1, (Vector3d)ray.direction * body.Radius / 2);
+////			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
+//				Vector3d hit;
+//				//body.pqsController.RayIntersection(ray.origin, ray.direction, out hit);
+//				PQS.LineSphereIntersection(ray.origin - body.position, ray.direction, body.Radius, out hit);
+//				if (hit != Vector3d.zero) {
+//					hit = body.position + hit;
+//					Vector3d start = ray.origin;
+//					Vector3d end = hit;
+//					Vector3d point = Vector3d.zero;
+//					for (int i = 0; i < 16; i++) {
+//						point = (start + end) / 2;
+//						//var lat = body.GetLatitude(point);
+//						//var lon = body.GetLongitude(point);
+//						//var surf = body.GetWorldSurfacePosition(lat, lon, body.TerrainAltitude(lat, lon));
+//						var alt = body.GetAltitude(point) - body.TerrainAltitude(point);
+//						//Debug.Log(alt);
+//						if (alt > 0) {
+//							start = point;
+//						}
+//						else if (alt < 0) {
+//							end = point;
+//						}
+//						else {
+//							break;
+//						}
+//					}
+//					hit = point;
+////					redLine.SetPosition(0, ray.origin);
+////					redLine.SetPosition(1, hit);
+//					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
+//				}
+//				else {
+//					return null;
+//				}
+		}
+		
+		public static string LatToString(double Lat) {
+			string ns = (Lat >= 0 ? "N" : "S");
+			Lat = Math.Abs(Lat);
+			
+			int h = (int)Lat;
+			Lat -= h; Lat *= 60;
+			
+			int m = (int)Lat;
+			Lat -= m; Lat *= 60;
+			
+			float s = (float)Lat;
+			
+			return string.Format("{0} {1}° {2}' {3:F3}\"", ns, h, m, s);
+		}
+		
+		public static string LonToString(double Lon) {
+			string ew = (Lon >= 0 ? "E" : "W");
+			Lon = Math.Abs(Lon);
+			
+			int h = (int)Lon;
+			Lon -= h; Lon *= 60;
+			
+			int m = (int)Lon;
+			Lon -= m; Lon *= 60;
+			
+			float s = (float)Lon;
+			
+			return string.Format("{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
 		}
 		
 		private int SortRoutes(MechJebRoverRoute a, MechJebRoverRoute b) {
@@ -472,6 +547,8 @@ namespace MuMech
 										tmpRadius = wp.Radius.ToString();
 										tmpMinSpeed = wp.MinSpeed.ToString();
 										tmpMaxSpeed = wp.MaxSpeed.ToString();
+										tmpLat = LatToString(wp.Latitude);
+										tmpLon = LonToString(wp.Longitude);
 									}
 								}
 							}
@@ -483,17 +560,22 @@ namespace MuMech
 							
 							if (selIndex > -1 && selIndex == i) {
 								GUILayout.BeginHorizontal();
+								
 								GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
 								tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(50));
 								float.TryParse(tmpRadius, out wp.Radius);
 								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.Radius = wp.Radius); }
-								GUILayout.Label("Speed: ", GUILayout.ExpandWidth(false));
+								
+								GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
 								tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(40));
 								float.TryParse(tmpMinSpeed, out wp.MinSpeed);
 								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
+								
+								GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
 								tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
 								float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
 								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
+								
 								GUILayout.FlexibleSpace();
 								if (GUILayout.Button("QS", (wp.Quicksave ? styleQuicksave : styleInactive), GUILayout.ExpandWidth(false))) {
 									if (alt) {
@@ -503,6 +585,18 @@ namespace MuMech
 										wp.Quicksave = !wp.Quicksave;
 									}
 								}
+								
+								GUILayout.EndHorizontal();
+								
+
+								GUILayout.BeginHorizontal();
+								
+								GUILayout.Label("Lat ", GUILayout.ExpandWidth(false));
+								tmpLat = GUILayout.TextField(tmpLat, GUILayout.Width(175));
+								
+								GUILayout.Label(" - Lon ", GUILayout.ExpandWidth(false));
+								tmpLon = GUILayout.TextField(tmpLon, GUILayout.Width(175));
+
 								GUILayout.EndHorizontal();
 							}
 						}
