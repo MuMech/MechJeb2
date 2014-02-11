@@ -187,14 +187,14 @@ namespace MuMech
 		public EditableDouble turnSpeed = 3;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDp = 0.05;
+		public EditableDouble hPIDp = 0.25;
 		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDi = 0.001;
+		public EditableDouble hPIDi = 0.0001;
 		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble hPIDd = 0.001;
 		
 		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble sPIDp = 3;
+		public EditableDouble sPIDp = 2;
 		[EditableInfoItem("Speed PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDi = 0.0025;
 		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
@@ -234,7 +234,7 @@ namespace MuMech
 		}
 
 		public float TurningSpeed(double speed, double error) {
-			return (float)Math.Max(speed / (Math.Abs(error) / 4 > 1 ? Math.Abs(error) / 4 : 1), turnSpeed);
+			return (float)Math.Max(speed / (Math.Abs(error) / 3 > 1 ? Math.Abs(error) / 3 : 1), turnSpeed);
 		}
 		
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
@@ -262,7 +262,7 @@ namespace MuMech
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					var radius = Math.Max(wp.Radius, 10 / 0.8); // alternative radius so negative radii can still make it go full speed through waypoints for navigation reasons
+					var radius = Math.Max(wp.Radius, 10 / 0.8);
 					if (distance < radius) {
 						if (WaypointIndex + 1 >= Waypoints.Count) { // last waypoint
 							newSpeed = new [] { newSpeed, (distance < radius * 0.8 ? 0 : 1) }.Min();
@@ -271,10 +271,11 @@ namespace MuMech
 								WaypointIndex = 0;
 							}
 							else {
-								newSpeed = -0.25;
+								newSpeed = 0;
 								tgtSpeed.force(newSpeed);
-								if (curSpeed < 0.85) {
+								if (curSpeed < 0.8) {
 									if (wp.Quicksave) {
+										//if (s.mainThrottle > 0) { s.mainThrottle = 0; }
 										if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR) {
 											WaypointIndex = -1;
 											controlHeading = controlSpeed = false;
@@ -294,9 +295,10 @@ namespace MuMech
 						}
 						else {
 							if (wp.Quicksave) {
-								newSpeed = -0.25;
+								//if (s.mainThrottle > 0) { s.mainThrottle = 0; }
+								newSpeed = 0;
 								tgtSpeed.force(newSpeed);
-								if (curSpeed < 0.85) {
+								if (curSpeed < 0.8) {
 									if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR) {
 										WaypointIndex++;
 										QuickSaveLoad.QuickSave();
@@ -308,7 +310,7 @@ namespace MuMech
 							}
 						}
 					}
-					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < 0.85 && newSpeed < 0.85));
+					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < 0.8 && newSpeed < 0.8));
 					// ^ brake if needed to prevent rolling, hopefully
 					tgtSpeed.value = Math.Round(newSpeed, 1);
 				}
