@@ -38,6 +38,7 @@ package: build
 	mkdir -p package/MechJeb2/Plugins
 	cp -r Parts package/MechJeb2/
 	cp build/MechJeb2.dll package/MechJeb2/Plugins/
+	cp LICENCE.md README.md package/MechJeb2/
 
 tar.gz: package
 	${TAR} zcf MechJeb2-$(shell ${GIT} describe --tags --long --always).tar.gz package/MechJeb2
