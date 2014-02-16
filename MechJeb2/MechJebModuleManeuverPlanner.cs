@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,17 +24,18 @@ namespace MuMech
             references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
             references[Operation.KILL_RELVEL] = new TimeReference[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
             references[Operation.RESONANT_ORBIT] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW };
+            references[Operation.LAN] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW };
         }
 
         public enum Operation
         {
             CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, SEMI_MAJOR, INCLINATION, PLANE, TRANSFER, MOON_RETURN,
-            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL, RESONANT_ORBIT
+            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL, RESONANT_ORBIT, LAN
         };
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
         string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap", "change semi-major axis",
                   "change inclination", "match planes with target", "Hohmann transfer to target", "return from a moon",
-                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target", "resonant orbit"};
+                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target", "resonant orbit", "change longitude of ascending node"};
 
         public enum TimeReference
         {
@@ -69,6 +70,8 @@ namespace MuMech
         public EditableInt resonanceNumerator = 2;
         [Persistent(pass = (int)Pass.Global)]
         public EditableInt resonanceDenominator = 3;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble newLAN = 0;
 
         Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
 
@@ -268,10 +271,16 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                     break;
 
-            case Operation.SEMI_MAJOR:
-                GuiUtils.SimpleTextBox ("New Semi-Major Axis:", newSMA, "km");
-                GUILayout.Label ("Schedule the burn");
-                break;
+	            case Operation.SEMI_MAJOR:
+    	            GuiUtils.SimpleTextBox ("New Semi-Major Axis:", newSMA, "km");
+        	        GUILayout.Label ("Schedule the burn");
+            	    break;
+				
+                case Operation.LAN:
+                    GUILayout.Label("Schedule the burn");
+                    GUILayout.Label("New Longitude of Ascending Node:");
+                    core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
+                    break;
             }
         }
 
@@ -639,15 +648,22 @@ namespace MuMech
                     }
                     break;
 
-            case Operation.SEMI_MAJOR:
-                if(o.Radius(UT) > 2*newSMA) {
-                    error = true;
-                    errorMessage = "cannot make Semi-Major Axis less than twice the burn altitude plus the radius of " + o.referenceBody.theName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)";
-                }
-                else if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence) {
-                    errorMessage = "Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit";
-                }
-                break;
+	            case Operation.SEMI_MAJOR:
+   	            	if(o.Radius(UT) > 2*newSMA) {
+   	            		error = true;
+   	                 	errorMessage = "cannot make Semi-Major Axis less than twice the burn altitude plus the radius of " + o.referenceBody.theName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)";
+   	             	}
+   	             	else if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence) {
+   	                 	errorMessage = "Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit";
+   	             	}
+   	             	break;
+				
+                case Operation.LAN:
+                    if (o.inclination < 10)
+                    {
+                        errorMessage = "Warning: orbital plane has a low inclination of " + o.inclination + "º (recommend > 10º) and so maneuver may not be accurate";
+                    }
+                    break;
             }
 
             if (error) errorMessage = "Couldn't plot maneuver: " + errorMessage;
@@ -742,9 +758,13 @@ namespace MuMech
                     dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, UT, (double)resonanceNumerator.val / resonanceDenominator.val);
                     break;
 
-            case Operation.SEMI_MAJOR:
-                dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA);
-                break;
+           		 case Operation.SEMI_MAJOR:
+                	dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA);
+                	break;
+					
+                case Operation.LAN:
+                    dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, UT, core.target.targetLongitude);
+                    break;
             }
 
             vessel.PlaceManeuverNode(o, dV, UT);
