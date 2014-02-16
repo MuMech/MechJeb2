@@ -4,6 +4,11 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
+static class Constants
+{
+      public const double g0 = 9.82;
+}
+
 namespace MuMech
 {
     //Copied verbatim from old VesselState. Should this class be reorganized at all?
@@ -603,7 +608,7 @@ namespace MuMech
                 float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
                 float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
                 double Isp = Math.Min(Isp0, Isp1);
-                double udot = e.maxThrust / (Isp * 9.82 * e.mixtureDensity); // Tavert Issue #163
+                double udot = e.maxThrust / (Isp * Constants.g0 * e.mixtureDensity); // Tavert Issue #163
                 foreach (var propellant in e.propellants)
                 {
                     double maxreq = udot * propellant.ratio;
@@ -664,7 +669,7 @@ namespace MuMech
                 float Isp0 = e.atmosphereCurve.Evaluate(atmP0);
                 float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
                 double Isp = Math.Min(Isp0, Isp1);
-                double udot = e.maxThrust / (Isp * 9.82 * e.mixtureDensity); // Tavert Issue #163
+                double udot = e.maxThrust / (Isp * Constants.g0 * e.mixtureDensity); // Tavert Issue #163
                 foreach (var propellant in e.propellants)
                 {
                     double maxreq = udot * propellant.ratio;
