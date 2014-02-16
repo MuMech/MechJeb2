@@ -318,7 +318,7 @@ namespace MuMech
                             if (throttles[i] > 0)
                             {
                                 Vector3d force = thrusters[i].GetThrust(dir, rot);
-                                rcsThrustAvailable.Add(dir * Vector3d.Dot(force * throttles[i], dir));
+                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[i], dir)));
                             }
                         }
                     }
