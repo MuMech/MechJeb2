@@ -497,8 +497,43 @@ namespace MuMech
                 return OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, x);
         }
 
+        public static Vector3d DeltaVForSemiMajorAxis(Orbit o, double UT, double newSMA)
+        {
+            bool raising = o.semiMajorAxis < newSMA;
+            Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde (UT);
 
+            double minDeltaV = 0;
+            double maxDeltaV;
+            if (raising) {
+                //put an upper bound on the required deltaV:
+                maxDeltaV = 0.25;
+                while (o.PerturbedOrbit (UT, maxDeltaV * burnDirection).semiMajorAxis < newSMA) {
+                  maxDeltaV *= 2;
+                  if (maxDeltaV > 100000)
+                    break; //a safety precaution
+                }
+            } else {
+                //when lowering the SMA, we burn horizontally, and max possible deltaV is the deltaV required to kill all horizontal velocity
+                maxDeltaV = Math.Abs (Vector3d.Dot (o.SwappedOrbitalVelocityAtUT (UT), burnDirection));
+            }
 
+            // Debug.Log (String.Format ("We are {0} SMA to {1}", raising ? "raising" : "lowering", newSMA));
+            // Debug.Log (String.Format ("Starting SMA iteration with maxDeltaV of {0}", maxDeltaV));
+            //now do a binary search to find the needed delta-v
+            while (maxDeltaV - minDeltaV > 0.01) {
+                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
+                double testSMA = o.PerturbedOrbit (UT, testDeltaV * burnDirection).semiMajorAxis;
+                // Debug.Log (String.Format ("Testing dV of {0} gave an SMA of {1}", testDeltaV, testSMA));
+
+                if ((testSMA < 0) || (testSMA > newSMA && raising) || (testSMA < newSMA && !raising)) {
+                    maxDeltaV = testDeltaV;
+                } else {
+                    minDeltaV = testDeltaV;
+                }
+            }
+
+            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+        }
     }
 
 }
