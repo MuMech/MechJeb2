@@ -147,6 +147,8 @@ namespace MuMech
 
         public CelestialBody mainBody;
 
+        // is there a Modular Fuel Engine installed
+        public bool hasMFE = false;
 
         // Callbacks for external module
         public delegate void VesselStatePartExtension(Part p);
@@ -323,6 +325,8 @@ namespace MuMech
                 }
             }
 
+            hasMFE = false;
+
             foreach (Part p in vessel.parts)
             {
                 if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
@@ -422,6 +426,9 @@ namespace MuMech
                         ctrlTorqueAvailable.Add(ctrlTroquePos);
                         ctrlTorqueAvailable.Add(ctrlTroqueNeg);
                     }
+
+                    if (pm.ClassName == "ModuleEngineConfigs" || pm.ClassName == "ModuleHybridEngine" || pm.ClassName == "ModuleHybridEngines")
+                        hasMFE = true;
 
                     foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
                     {
