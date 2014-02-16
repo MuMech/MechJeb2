@@ -46,12 +46,12 @@ namespace MuMech
 
         public static string PrettyPrint(Vector3d vector, string format = "F3")
         {
-            return "[" + vector.x.ToString(format) + ", " + vector.y.ToString(format) + ", " + vector.z.ToString(format) + "]";
+            return "[" + (vector.x >= 0 ? " " : "") + vector.x.ToString(format) + ", " + (vector.y >= 0 ? " " : "") + vector.y.ToString(format) + ", " + (vector.z >= 0 ? " " : "") + vector.z.ToString(format) + "]";
         }
 
         public static string PrettyPrint(Quaternion quaternion, string format = "F3")
         {
-            return "[" + quaternion.x.ToString(format) + ", " + quaternion.y.ToString(format) + ", " + quaternion.z.ToString(format) + ", " + quaternion.w.ToString(format) + "]";
+            return "[" + (quaternion.x >= 0 ? " " : "") + quaternion.x.ToString(format) + ", " + (quaternion.y >= 0 ? " " : "") + quaternion.y.ToString(format) + ", " + (quaternion.z >= 0 ? " " : "") + quaternion.z.ToString(format) + ", " + (quaternion.w >= 0 ? " " : "") + quaternion.w.ToString(format) + "]";
         }
 
         //For some reason, Math doesn't have the inverse hyperbolic trigonometric functions:
