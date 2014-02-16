@@ -62,6 +62,9 @@ namespace MuMech
 
             bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
             GuiUtils.SimpleTextBox("Speed limit", autopilot.speedLimit, "m/s");
+
+            GUILayout.Label("safeDistance " + autopilot.safeDistance.ToString("F2"), GUILayout.ExpandWidth(false));
+            GUILayout.Label("targetSize   " + autopilot.targetSize.ToString("F2"), GUILayout.ExpandWidth(false));
 			
             if (autopilot.speedLimit < 0)
                 autopilot.speedLimit = 0;
@@ -96,6 +99,10 @@ namespace MuMech
                 GUILayout.Label("Error X: " + error_x.ToString("F2") + " m/s  [L/J]");
                 GUILayout.Label("Error Y: " + error_y.ToString("F2") + " m/s  [I/K]");
                 GUILayout.Label("Error Z: " + error_z.ToString("F2") + " m/s  [H/N]");
+
+                GUILayout.Label("Distance Dock: " + autopilot.zSep.ToString("F2") + "m");
+                GUILayout.Label("Distance Axe Dock: " + autopilot.lateralSep.magnitude.ToString("F2") + "m");
+
             }
 
             GUILayout.EndVertical();
