@@ -182,9 +182,15 @@ namespace MuMech
 
 		public PIDController headingPID;
 		public PIDController speedPID;
+
+		private LineRenderer line;
 		
 		[EditableInfoItem("Safe turnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
 		public EditableDouble turnSpeed = 3;
+		[ToggleInfoItem("Self Align Torque", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
+		public bool selfAlignTorque = false;
+		[EditableInfoItem("Terrain Look Ahead", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		public EditableDouble terrainLookAhead = 0.6;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble hPIDp = 0.25;
@@ -207,6 +213,8 @@ namespace MuMech
 			if (HighLogic.LoadedSceneIsFlight && orbit != null) {
 				lastBody = orbit.referenceBody;
 			}
+			MechJebRoverPathRenderer.NewLineRenderer(ref line);
+			line.enabled = false;
 			base.OnStart(state);
 		}
 
@@ -238,7 +246,7 @@ namespace MuMech
 		}
 		
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
-		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up
+		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up -- should be done now?
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
 			MechJebRoverWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
@@ -315,6 +323,27 @@ namespace MuMech
 					tgtSpeed.value = Math.Round(newSpeed, 1);
 				}
 			}
+			
+			if (selfAlignTorque) {
+				if (!core.attitude.users.Contains(this)) {
+					core.attitude.users.Add(this);
+//					line.enabled = true;
+				}
+				RaycastHit hit;
+				Physics.Raycast(vessel.CoM + vessel.srf_velocity * 1.5 + vesselState.up * 100, -vesselState.up, out hit, 200, 1 << 15);
+//				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
+//				line.SetPosition(0, vessel.CoM);
+//				line.SetPosition(1, vessel.CoM + hit.normal * 5);
+//				line.SetWidth(0, scale + 0.1f);
+				var quat = Quaternion.LookRotation(vessel.srf_velocity, hit.normal);
+				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+//				core.attitude.attitudeTo(HeadingToPos(vessel.CoM, vessel.CoM + vessel.srf_velocity), quat.Pitch(), quat.Roll(), this);
+			}
+			else if (core.attitude.users.Contains(this)) {
+				line.enabled = false;
+				core.attitude.attitudeDeactivate();
+				core.attitude.users.Remove(this);
+			}
 
 			if (controlHeading)
 			{
@@ -329,7 +358,7 @@ namespace MuMech
 				if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
 				{
 					float spd = Mathf.Min((float)speed, (float)turnSpeed); // if a slower speed than the turnspeed is used also be more careful with the steering
-					float limit = (curSpeed <= turnSpeed ? 1 : Mathf.Clamp((float)((spd * spd) / (curSpeed * curSpeed)), 0.2f, 1f));
+					float limit = (curSpeed <= turnSpeed ? 1 : Mathf.Clamp((float)(spd / curSpeed), 0.35f, 1f));
 					double act = headingPID.Compute(headingErr);
 					s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
 				}

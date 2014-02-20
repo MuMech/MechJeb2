@@ -121,6 +121,7 @@ namespace MuMech
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
 			ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
+            ed.registry.Find(i => i.id == "Toggle:RoverController.selfAlignTorque").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
 
 			GUILayout.BeginVertical();
@@ -194,7 +195,7 @@ namespace MuMech
 		{
 			if (autopilot != null)
 			{
-				if (autopilot.ControlHeading || autopilot.ControlSpeed)
+				if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.selfAlignTorque)
 				{
 					autopilot.users.Add(this);
 				}
@@ -296,6 +297,7 @@ namespace MuMech
 //			greenLine.SetWidth(10.0f, 10.0f);
 //			greenLine.SetColors(Color.green, Color.green);
 //			greenLine.SetVertexCount(2);
+//			MechJebRoverPathRenderer.NewLineRenderer(ref greenLine);
 			base.OnStart(state);
 		}
 		
@@ -724,20 +726,28 @@ namespace MuMech
 					titleAdd = "Settings";
 					scroll = GUILayout.BeginScrollView(scroll);
 					MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+					
 					GUILayout.BeginHorizontal();
+					
 					GUILayout.BeginVertical();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
 					GUILayout.EndVertical();
+					
 					GUILayout.BeginVertical();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
-					GUILayout.EndVertical();
-					GUILayout.EndHorizontal();
 					ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
+					GUILayout.EndVertical();
+					
+					GUILayout.EndHorizontal();
+					
+					
 					GUILayout.BeginHorizontal();
+					
 					GUILayout.BeginVertical();
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MohoMapdist").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EveMapdist").DrawItem();
@@ -748,6 +758,7 @@ namespace MuMech
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DunaMapdist").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.IkeMapdist").DrawItem();
 					GUILayout.EndVertical();
+					
 					GUILayout.BeginVertical();
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DresMapdist").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.JoolMapdist").DrawItem();
@@ -758,7 +769,9 @@ namespace MuMech
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.PolMapdist").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EelooMapdist").DrawItem();
 					GUILayout.EndVertical();
+					
 					GUILayout.EndHorizontal();
+					
 					GUILayout.EndScrollView();
 
 					GUILayout.BeginHorizontal();
@@ -890,6 +903,10 @@ namespace MuMech
 		{
 			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRoverPathRenderer.AttachToMapView(core); } //MechJebRoverPathRenderer.AttachToMapView(core); }
 			ap.Waypoints.ForEach(wp => wp.Update());
+//			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
+//			greenLine.SetPosition(0, vessel.CoM);
+//			greenLine.SetPosition(1, vessel.CoM + ap.norm * 5);
+//			greenLine.SetWidth(scale + 0.1f, scale + 0.1f);
 			base.OnFixedUpdate();
 		}
 	}
@@ -1001,7 +1018,7 @@ namespace MuMech
 	}
 
 	public class MechJebRoverPathRenderer : MonoBehaviour {
-		public readonly Material material = new Material (Shader.Find ("Particles/Additive"));
+		public static readonly Material material = new Material (Shader.Find ("Particles/Additive"));
 		public MechJebModuleRoverController ap;
 		private LineRenderer pastPath;
 		private LineRenderer currPath;
@@ -1022,7 +1039,7 @@ namespace MuMech
 			return renderer;
 		}
 		
-		public bool NewLineRenderer(ref LineRenderer Line) {
+		public static bool NewLineRenderer(ref LineRenderer Line) {
 			if (Line != null) { return false; }
 			GameObject obj = new GameObject("LineRenderer");
 			Line = obj.AddComponent<LineRenderer>();
