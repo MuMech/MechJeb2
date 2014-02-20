@@ -183,7 +183,7 @@ namespace MuMech
 		public PIDController headingPID;
 		public PIDController speedPID;
 
-		private LineRenderer line;
+//		private LineRenderer line;
 		
 		[EditableInfoItem("Safe turnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
 		public EditableDouble turnSpeed = 3;
@@ -213,8 +213,8 @@ namespace MuMech
 			if (HighLogic.LoadedSceneIsFlight && orbit != null) {
 				lastBody = orbit.referenceBody;
 			}
-			MechJebRoverPathRenderer.NewLineRenderer(ref line);
-			line.enabled = false;
+//			MechJebRoverPathRenderer.NewLineRenderer(ref line);
+//			line.enabled = false;
 			base.OnStart(state);
 		}
 
@@ -341,7 +341,7 @@ namespace MuMech
 				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
 			}
 			else if (core.attitude.users.Contains(this)) {
-				line.enabled = false;
+//				line.enabled = false;
 				core.attitude.attitudeDeactivate();
 				core.attitude.users.Remove(this);
 			}
