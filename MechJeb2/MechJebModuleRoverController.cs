@@ -187,10 +187,10 @@ namespace MuMech
 		
 		[EditableInfoItem("Safe turnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
 		public EditableDouble turnSpeed = 3;
-		[ToggleInfoItem("Self Align Torque", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
+		[ToggleInfoItem("Self Align Torque", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
 		public bool selfAlignTorque = false;
 		[EditableInfoItem("Terrain Look Ahead", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble terrainLookAhead = 0.6;
+		public EditableDouble terrainLookAhead = 1.0;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble hPIDp = 0.25;
@@ -330,14 +330,15 @@ namespace MuMech
 //					line.enabled = true;
 				}
 				RaycastHit hit;
-				Physics.Raycast(vessel.CoM + vessel.srf_velocity * 1.5 + vesselState.up * 100, -vesselState.up, out hit, 200, 1 << 15);
+				Physics.Raycast(vessel.CoM + vessel.srf_velocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
 //				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
 //				line.SetPosition(0, vessel.CoM);
 //				line.SetPosition(1, vessel.CoM + hit.normal * 5);
 //				line.SetWidth(0, scale + 0.1f);
-				var quat = Quaternion.LookRotation(vessel.srf_velocity, hit.normal);
+				Vector3 norm = hit.normal, fwd = vessel.srf_velocity;
+				Vector3.OrthoNormalize(ref norm, ref fwd);
+				var quat = Quaternion.LookRotation(fwd, norm);
 				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
-//				core.attitude.attitudeTo(HeadingToPos(vessel.CoM, vessel.CoM + vessel.srf_velocity), quat.Pitch(), quat.Roll(), this);
 			}
 			else if (core.attitude.users.Contains(this)) {
 				line.enabled = false;
