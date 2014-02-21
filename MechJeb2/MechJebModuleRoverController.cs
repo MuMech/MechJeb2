@@ -245,6 +245,7 @@ namespace MuMech
 			return (float)Math.Max(speed / (Math.Abs(error) / 3 > 1 ? Math.Abs(error) / 3 : 1), turnSpeed);
 		}
 		
+		public override void OnModuleDisabled()
 		{
 			if (core.attitude.users.Contains(this)) {
 //				line.enabled = false;
