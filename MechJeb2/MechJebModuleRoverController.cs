@@ -245,6 +245,15 @@ namespace MuMech
 			return (float)Math.Max(speed / (Math.Abs(error) / 3 > 1 ? Math.Abs(error) / 3 : 1), turnSpeed);
 		}
 		
+		{
+			if (core.attitude.users.Contains(this)) {
+//				line.enabled = false;
+				core.attitude.attitudeDeactivate();
+				core.attitude.users.Remove(this);
+			}
+			base.OnModuleDisabled();
+		}
+		
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
 		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up -- should be done now?
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
