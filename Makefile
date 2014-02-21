@@ -13,6 +13,8 @@ GIT     := git
 TAR     := tar
 ZIP     := zip
 
+VERSION := $(shell ${GIT} describe --tags --always)
+
 all: build
 
 info:
@@ -25,26 +27,33 @@ info:
 	@echo "  KSP Data: ${KSPDIR}"
 	@echo "================================"
 
-build: info
+build: build/MechJeb2.dll
+
+build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
 	${GMCS} -t:library -lib:${MANAGED} \
 		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine \
-		-out:build/MechJeb2.dll \
+		-out:$@ \
 		${MECHJEBFILES} \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
 
-package: build
+package: build ${MECHJEBFILES}
 	mkdir -p package/MechJeb2/Plugins
 	cp -r Parts package/MechJeb2/
 	cp build/MechJeb2.dll package/MechJeb2/Plugins/
-	cp LICENCE.md README.md package/MechJeb2/
+	cp LICENSE.md README.md package/MechJeb2/
 
-tar.gz: package
-	${TAR} zcf MechJeb2-$(shell ${GIT} describe --tags --long --always).tar.gz package/MechJeb2
+%.tar.gz:
+	${TAR} zcf $@ package/MechJeb2
 
-zip: package
-	${ZIP} -9 -r MechJeb2-$(shell ${GIT} describe --tags --long --always).zip package/MechJeb2
+tar.gz: package MechJeb-${VERSION}.tar.gz
+
+%.zip:
+	${ZIP} -9 -r $@ package/MechJeb2
+
+zip: package MechJeb-${VERSION}.zip
+
 
 clean:
 	@echo "Cleaning up build and package directories..."
