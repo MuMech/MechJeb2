@@ -574,7 +574,7 @@ namespace MuMech
 								dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 							}
 							var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
-							var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : (i < ap.Waypoints.Count - 1 || ap.LoopWaypoints ? maxSpeed / 2 : 0));
+							var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : 0);
 							string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
 							                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 							GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
@@ -726,6 +726,7 @@ namespace MuMech
 					titleAdd = "Settings";
 					scroll = GUILayout.BeginScrollView(scroll);
 					MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+					if (!ap.enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
 					
 					GUILayout.BeginHorizontal();
 					
@@ -741,6 +742,7 @@ namespace MuMech
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
+					ed.registry.Find(i => i.id == "Value:RoverController.traction").DrawItem();
 					GUILayout.EndVertical();
 					
 					GUILayout.EndHorizontal();

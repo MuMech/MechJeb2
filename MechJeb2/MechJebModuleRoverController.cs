@@ -206,6 +206,13 @@ namespace MuMech
 		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDd = 0.025;
 		
+		[ValueInfoItem("Traction", InfoItem.Category.Rover, format = "F0", units = "%")]
+		public float traction = 0;
+		
+		public List<Part> wheels = new List<Part>();
+		public List<WheelCollider> colliders = new List<WheelCollider>();
+		public Vector3 norm = Vector3.zero;
+		
 		public override void OnStart(PartModule.StartState state)
 		{
 			headingPID = new PIDController(hPIDp, hPIDi, hPIDd);
@@ -213,6 +220,10 @@ namespace MuMech
 			if (HighLogic.LoadedSceneIsFlight && orbit != null) {
 				lastBody = orbit.referenceBody;
 			}
+			colliders.Clear();
+			vessel.Parts.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
+			wheels.Clear();
+			wheels.AddRange(vessel.Parts.FindAll(p => p.FindModelComponent<WheelCollider>() != null));
 //			MechJebRoverPathRenderer.NewLineRenderer(ref line);
 //			line.enabled = false;
 			base.OnStart(state);
@@ -245,6 +256,25 @@ namespace MuMech
 			return (float)Math.Max(speed / (Math.Abs(error) / 3 > 1 ? Math.Abs(error) / 3 : 1), turnSpeed);
 		}
 		
+		public void CalculateTraction() {
+			RaycastHit hit;
+			Physics.Raycast(vessel.CoM + vessel.srf_velocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
+			norm = hit.normal;
+			traction = 0;
+//			foreach (var c in colliders) {
+//				//WheelHit hit;
+//				//if (c.GetGroundHit(out hit)) { traction += 1; }
+//				if (Physics.Raycast(c.transform.position + c.center, -(vesselState.up + norm.normalized) / 2, out hit, c.radius + 1.5f, 1 << 15)) {
+//					traction += (1.5f - (hit.distance - c.radius)) * 100;
+//				}
+//			}
+			
+			foreach (var w in wheels) {
+				if (w.GroundContact) { traction += 100; }
+			}
+			traction /= colliders.Count;
+		}
+		
 		public override void OnModuleDisabled()
 		{
 			if (core.attitude.users.Contains(this)) {
@@ -262,6 +292,8 @@ namespace MuMech
 			
 			var curSpeed = vesselState.speedSurface;
 			etaSpeed.value = curSpeed;
+			
+			CalculateTraction();
 			
 			if (wp != null && wp.Body == orbit.referenceBody) {
 				if (controlHeading) {
@@ -339,13 +371,15 @@ namespace MuMech
 					core.attitude.users.Add(this);
 //					line.enabled = true;
 				}
-				RaycastHit hit;
-				Physics.Raycast(vessel.CoM + vessel.srf_velocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
 //				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
 //				line.SetPosition(0, vessel.CoM);
 //				line.SetPosition(1, vessel.CoM + hit.normal * 5);
 //				line.SetWidth(0, scale + 0.1f);
-				Vector3 norm = hit.normal, fwd = vessel.srf_velocity;
+				Vector3 fwd = (traction > 0 || speed <= turnSpeed ?
+				               (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel ?
+				                (WaypointIndex > -1 ? (Vector3)wp.Position - vessel.CoM : (Vector3)vessel.srf_velocity) :
+				                -vessel.transform.right * s.wheelSteer) :
+				               (Vector3)vessel.srf_velocity);
 				Vector3.OrthoNormalize(ref norm, ref fwd);
 				var quat = Quaternion.LookRotation(fwd, norm);
 				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
