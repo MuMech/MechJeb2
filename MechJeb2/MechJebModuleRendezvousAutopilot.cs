@@ -23,7 +23,7 @@ namespace MuMech
         {
             core.node.Abort(); //make sure we turn off node executor if we get disabled suddenly
         }
-
+        
         public override void Drive(FlightCtrlState s)
         {
             if (!core.target.NormalTargetExists)
@@ -32,9 +32,7 @@ namespace MuMech
                 return;
             }
 
-            //don't warp when close to target, because warping introduces small perturbations
-            if (core.target.Distance < 1000)
-                core.warp.MinimumWarp();
+            core.node.autowarp = core.node.autowarp && core.target.Distance > 1000; 
 
             //If we get within the target distance and then next maneuver node is still 
             //far in the future, delete it and we will create a new one to match velocities immediately.
