@@ -121,7 +121,7 @@ namespace MuMech
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
 			ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
-            ed.registry.Find(i => i.id == "Toggle:RoverController.selfAlignTorque").DrawItem();
+            ed.registry.Find(i => i.id == "Toggle:RoverController.stabilityControl").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
 
 			GUILayout.BeginVertical();
@@ -195,7 +195,7 @@ namespace MuMech
 		{
 			if (autopilot != null)
 			{
-				if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.selfAlignTorque)
+				if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.stabilityControl)
 				{
 					autopilot.users.Add(this);
 				}
@@ -530,7 +530,305 @@ namespace MuMech
 		{
 			return new GUILayoutOption[] { GUILayout.Width(500), GUILayout.Height(400) };
 		}
+		
+		public void DrawPageWaypoints() {
+			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			scroll = GUILayout.BeginScrollView(scroll);
+			if (ap.Waypoints.Count > 0) {
+				waypointRects = new Rect[ap.Waypoints.Count];
+				GUILayout.BeginVertical();
+				double eta = 0;
+				double dist = 0;
+				for (int i = 0; i < ap.Waypoints.Count; i++) {
+					var wp = ap.Waypoints[i];
+					if (MapView.MapIsEnabled && i == selIndex) {
+						MuMech.GLUtils.DrawMapViewGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 250);
+					}
+					if (i >= ap.WaypointIndex) {
+						if (ap.WaypointIndex > -1) {
+							eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
+						}
+						dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
+					}
+					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : 0);
+					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
+					                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
+					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
+					if (GUILayout.Button(str, (i == selIndex ? styleActive : (wp.Quicksave ? styleQuicksave : styleInactive)))) {
+						if (alt) {
+							ap.WaypointIndex = i;
+						}
+						else {
+							if (selIndex == i) {
+								selIndex = -1;
+							}
+							else {
+								selIndex = i;
+								tmpRadius = wp.Radius.ToString();
+								tmpMinSpeed = wp.MinSpeed.ToString();
+								tmpMaxSpeed = wp.MaxSpeed.ToString();
+								tmpLat = LatToString(wp.Latitude);
+								tmpLon = LonToString(wp.Longitude);
+							}
+						}
+					}
+					if(Event.current.type == EventType.Repaint) {
+						waypointRects[i] = GUILayoutUtility.GetLastRect();
+						//if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
+					}
+					GUI.backgroundColor = Color.white;
+					
+					if (selIndex > -1 && selIndex == i) {
+						GUILayout.BeginHorizontal();
+						
+						GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
+						tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(50));
+						float.TryParse(tmpRadius, out wp.Radius);
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.Radius = wp.Radius); }
+						
+						GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
+						tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(40));
+						float.TryParse(tmpMinSpeed, out wp.MinSpeed);
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
+						
+						GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
+						tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
+						float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
+						
+						GUILayout.FlexibleSpace();
+						if (GUILayout.Button("QS", (wp.Quicksave ? styleQuicksave : styleInactive), GUILayout.ExpandWidth(false))) {
+							if (alt) {
+								ap.Waypoints.ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
+							}
+							else {
+								wp.Quicksave = !wp.Quicksave;
+							}
+						}
+						
+						GUILayout.EndHorizontal();
+						
 
+						GUILayout.BeginHorizontal();
+						
+						GUILayout.Label("Lat ", GUILayout.ExpandWidth(false));
+						tmpLat = GUILayout.TextField(tmpLat, GUILayout.Width(125));
+						wp.Latitude = ParseCoord(tmpLat);
+						
+						GUILayout.Label(" -  Lon ", GUILayout.ExpandWidth(false));
+						tmpLon = GUILayout.TextField(tmpLon, GUILayout.Width(125));
+						wp.Longitude = ParseCoord(tmpLon, true);
+
+						GUILayout.EndHorizontal();
+					}
+				}
+				titleAdd = "Distance: " + MuUtils.ToSI(dist, -1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
+				GUILayout.EndVertical();
+			}
+			else {
+				titleAdd = "";
+			}
+			GUILayout.EndScrollView();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button(alt ? "Reverse" : (!waitingForPick ? "Add Waypoint" : "Abort Adding"), GUILayout.Width(110))) {
+				if (alt) {
+					ap.Waypoints.Reverse();
+					if (ap.WaypointIndex > -1) { ap.WaypointIndex = ap.Waypoints.Count - 1 - ap.WaypointIndex; }
+					if (selIndex > -1) { selIndex = ap.Waypoints.Count - 1 - selIndex; }
+				}
+				else {
+					if (!waitingForPick) {
+						waitingForPick = true;
+						if (MapView.MapIsEnabled) {
+							core.target.Unset();
+							core.target.PickPositionTargetOnMap();
+						}
+					}
+					else {
+						waitingForPick = false;
+					}
+				}
+			}
+			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65))) {
+				if (alt) {
+					ap.WaypointIndex = -1;
+					ap.Waypoints.Clear();
+				}
+				else {
+					ap.Waypoints.RemoveAt(selIndex);
+					if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
+				}
+				selIndex = -1;
+				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
+			}
+			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57))) {
+				do {
+					if (selIndex > 0) {
+						ap.Waypoints.Swap(selIndex, selIndex - 1);
+						selIndex--;
+					}
+					else {
+						break;
+					}
+				}
+				while (alt);
+			}
+			if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57))) {
+				do {
+					if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
+						ap.Waypoints.Swap(selIndex, selIndex + 1);
+						selIndex++;
+					}
+					else {
+						break;
+					}
+				}
+				while (alt);
+			}
+			if (GUILayout.Button("Routes")) {
+				showPage = pages.routes;
+				scroll = Vector2.zero;
+			}
+			if (GUILayout.Button("Settings")) {
+				showPage = pages.settings;
+				scroll = Vector2.zero;
+			}
+			GUILayout.EndHorizontal();
+		}
+
+		public void DrawPageSettings() {
+			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			titleAdd = "Settings";
+			scroll = GUILayout.BeginScrollView(scroll);
+			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+			if (!ap.enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
+			
+			GUILayout.BeginHorizontal();
+			
+			GUILayout.BeginVertical();
+			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
+			ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
+			GUILayout.EndVertical();
+			
+			GUILayout.BeginVertical();
+			ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
+			ed.registry.Find(i => i.id == "Value:RoverController.traction").DrawItem();
+			GUILayout.EndVertical();
+			
+			GUILayout.EndHorizontal();
+			
+			
+			GUILayout.BeginHorizontal();
+			
+			GUILayout.BeginVertical();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MohoMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EveMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.GillyMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.KerbinMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MunMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MinmusMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DunaMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.IkeMapdist").DrawItem();
+			GUILayout.EndVertical();
+			
+			GUILayout.BeginVertical();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DresMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.JoolMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.LaytheMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.VallMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.TyloMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.BopMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.PolMapdist").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EelooMapdist").DrawItem();
+			GUILayout.EndVertical();
+			
+			GUILayout.EndHorizontal();
+			
+			GUILayout.EndScrollView();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Waypoints")) {
+				showPage = pages.waypoints;
+				scroll = Vector2.zero;
+				lastIndex = -1;
+			}
+			if (GUILayout.Button("Routes")) {
+				showPage = pages.routes;
+				scroll = Vector2.zero;
+			}
+			if (GUILayout.Button("Help")) {
+				core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>().enabled = !core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>().enabled;
+			}
+			GUILayout.EndHorizontal();
+		}
+		
+		public void DrawPageRoutes() {
+			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			titleAdd = "Routes for " + vessel.mainBody.bodyName;
+			
+			scroll = GUILayout.BeginScrollView(scroll);
+			var bodyWPs = Routes.FindAll(wp => wp.Body == vessel.mainBody);
+			for (int i = 0; i < bodyWPs.Count; i++) {
+				GUILayout.BeginHorizontal();
+				var str = bodyWPs[i].Name + " - " + bodyWPs[i].Stats;
+				if (GUILayout.Button(str, (i == saveIndex ? styleActive : styleInactive))) {
+					saveIndex = (saveIndex == i ? -1 : i);
+				}
+				if (i == saveIndex) {
+					if (GUILayout.Button("Delete", GUILayout.Width(70))) {
+						Routes.RemoveAll(wp => wp.Name == bodyWPs[i].Name && wp.Body == vessel.mainBody);
+						saveIndex = -1;
+					}
+				}
+				GUILayout.EndHorizontal();
+			}
+			GUILayout.EndScrollView();
+			
+			GUILayout.BeginHorizontal();
+			saveName = GUILayout.TextField(saveName, GUILayout.Width(150));
+			if (GUILayout.Button("Save", GUILayout.Width(50))) {
+				if (saveName != "" && ap.Waypoints.Count > 0) {
+					var old = Routes.Find(list => list.Name == saveName && list.Body == vessel.mainBody);
+					var wps = new MechJebRoverRoute(saveName, vessel.mainBody);
+					ap.Waypoints.ForEach(wp => wps.Add(wp));
+					if (old == null) {
+						Routes.Add(wps);
+					}
+					else {
+						Routes[Routes.IndexOf(old)] = wps;
+					}
+					Routes.Sort(SortRoutes);
+				}
+			}
+			if (GUILayout.Button((alt ? "Add" : "Load"), GUILayout.Width(50))) {
+				if (saveIndex > -1) {
+					if (!alt) {
+						ap.WaypointIndex = -1;
+						ap.Waypoints.Clear();
+					}
+					Routes[saveIndex].ForEach(wp => ap.Waypoints.Add(wp));
+				}
+			}
+			if (GUILayout.Button("Waypoints")) {
+				showPage = pages.waypoints;
+				scroll = Vector2.zero;
+				lastIndex = -1;
+			}
+			if (GUILayout.Button("Settings")) {
+				showPage = pages.settings;
+				scroll = Vector2.zero;
+			}
+			GUILayout.EndHorizontal();
+		}
+		
 		protected override void WindowGUI(int windowID)
 		{
 			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover)) {
@@ -555,301 +853,9 @@ namespace MuMech
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 			
 			switch (showPage) {
-				case pages.waypoints:
-					scroll = GUILayout.BeginScrollView(scroll);
-					if (ap.Waypoints.Count > 0) {
-						waypointRects = new Rect[ap.Waypoints.Count];
-						GUILayout.BeginVertical();
-						double eta = 0;
-						double dist = 0;
-						for (int i = 0; i < ap.Waypoints.Count; i++) {
-							var wp = ap.Waypoints[i];
-							if (MapView.MapIsEnabled && i == selIndex) {
-								MuMech.GLUtils.DrawMapViewGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 250);
-							}
-							if (i >= ap.WaypointIndex) {
-								if (ap.WaypointIndex > -1) {
-									eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
-								}
-								dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
-							}
-							var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
-							var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : 0);
-							string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
-							                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
-							GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
-							if (GUILayout.Button(str, (i == selIndex ? styleActive : (wp.Quicksave ? styleQuicksave : styleInactive)))) {
-								if (alt) {
-									ap.WaypointIndex = i;
-								}
-								else {
-									if (selIndex == i) {
-										selIndex = -1;
-									}
-									else {
-										selIndex = i;
-										tmpRadius = wp.Radius.ToString();
-										tmpMinSpeed = wp.MinSpeed.ToString();
-										tmpMaxSpeed = wp.MaxSpeed.ToString();
-										tmpLat = LatToString(wp.Latitude);
-										tmpLon = LonToString(wp.Longitude);
-									}
-								}
-							}
-							if(Event.current.type == EventType.Repaint) {
-								waypointRects[i] = GUILayoutUtility.GetLastRect();
-								//if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
-							}
-							GUI.backgroundColor = Color.white;
-							
-							if (selIndex > -1 && selIndex == i) {
-								GUILayout.BeginHorizontal();
-								
-								GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
-								tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(50));
-								float.TryParse(tmpRadius, out wp.Radius);
-								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.Radius = wp.Radius); }
-								
-								GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
-								tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(40));
-								float.TryParse(tmpMinSpeed, out wp.MinSpeed);
-								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
-								
-								GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
-								tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
-								float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
-								if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
-								
-								GUILayout.FlexibleSpace();
-								if (GUILayout.Button("QS", (wp.Quicksave ? styleQuicksave : styleInactive), GUILayout.ExpandWidth(false))) {
-									if (alt) {
-										ap.Waypoints.ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
-									}
-									else {
-										wp.Quicksave = !wp.Quicksave;
-									}
-								}
-								
-								GUILayout.EndHorizontal();
-								
-
-								GUILayout.BeginHorizontal();
-								
-								GUILayout.Label("Lat ", GUILayout.ExpandWidth(false));
-								tmpLat = GUILayout.TextField(tmpLat, GUILayout.Width(125));
-								wp.Latitude = ParseCoord(tmpLat);
-								
-								GUILayout.Label(" -  Lon ", GUILayout.ExpandWidth(false));
-								tmpLon = GUILayout.TextField(tmpLon, GUILayout.Width(125));
-								wp.Longitude = ParseCoord(tmpLon, true);
-
-								GUILayout.EndHorizontal();
-							}
-						}
-						titleAdd = "Distance: " + MuUtils.ToSI(dist, -1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
-						GUILayout.EndVertical();
-					}
-					else {
-						titleAdd = "";
-					}
-					GUILayout.EndScrollView();
-
-					GUILayout.BeginHorizontal();
-					if (GUILayout.Button(alt ? "Reverse" : (!waitingForPick ? "Add Waypoint" : "Abort Adding"), GUILayout.Width(110))) {
-						if (alt) {
-							ap.Waypoints.Reverse();
-							if (ap.WaypointIndex > -1) { ap.WaypointIndex = ap.Waypoints.Count - 1 - ap.WaypointIndex; }
-							if (selIndex > -1) { selIndex = ap.Waypoints.Count - 1 - selIndex; }
-						}
-						else {
-							if (!waitingForPick) {
-								waitingForPick = true;
-								if (MapView.MapIsEnabled) {
-									core.target.Unset();
-									core.target.PickPositionTargetOnMap();
-								}
-							}
-							else {
-								waitingForPick = false;
-							}
-						}
-					}
-					if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65))) {
-						if (alt) {
-							ap.WaypointIndex = -1;
-							ap.Waypoints.Clear();
-						}
-						else {
-							ap.Waypoints.RemoveAt(selIndex);
-							if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
-						}
-						selIndex = -1;
-						//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
-					}
-					if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57))) {
-						do {
-							if (selIndex > 0) {
-								ap.Waypoints.Swap(selIndex, selIndex - 1);
-								selIndex--;
-							}
-							else {
-								break;
-							}
-						}
-						while (alt);
-					}
-					if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57))) {
-						do {
-							if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1) {
-								ap.Waypoints.Swap(selIndex, selIndex + 1);
-								selIndex++;
-							}
-							else {
-								break;
-							}
-						}
-						while (alt);
-					}
-					if (GUILayout.Button("Routes")) {
-						showPage = pages.routes;
-						scroll = Vector2.zero;
-					}
-					if (GUILayout.Button("Settings")) {
-						showPage = pages.settings;
-						scroll = Vector2.zero;
-					}
-					GUILayout.EndHorizontal();
-					break;
-					
-					
-				case pages.settings:
-					titleAdd = "Settings";
-					scroll = GUILayout.BeginScrollView(scroll);
-					MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-					if (!ap.enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
-					
-					GUILayout.BeginHorizontal();
-					
-					GUILayout.BeginVertical();
-					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
-					GUILayout.EndVertical();
-					
-					GUILayout.BeginVertical();
-					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
-					ed.registry.Find(i => i.id == "Value:RoverController.traction").DrawItem();
-					GUILayout.EndVertical();
-					
-					GUILayout.EndHorizontal();
-					
-					
-					GUILayout.BeginHorizontal();
-					
-					GUILayout.BeginVertical();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MohoMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EveMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.GillyMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.KerbinMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MunMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.MinmusMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DunaMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.IkeMapdist").DrawItem();
-					GUILayout.EndVertical();
-					
-					GUILayout.BeginVertical();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.DresMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.JoolMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.LaytheMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.VallMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.TyloMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.BopMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.PolMapdist").DrawItem();
-					ed.registry.Find(i => i.id == "Editable:RoverWaypointWindow.EelooMapdist").DrawItem();
-					GUILayout.EndVertical();
-					
-					GUILayout.EndHorizontal();
-					
-					GUILayout.EndScrollView();
-
-					GUILayout.BeginHorizontal();
-					if (GUILayout.Button("Waypoints")) {
-						showPage = pages.waypoints;
-						scroll = Vector2.zero;
-						lastIndex = -1;
-					}
-					if (GUILayout.Button("Routes")) {
-						showPage = pages.routes;
-						scroll = Vector2.zero;
-					}
-					if (GUILayout.Button("Help")) {
-						core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>().enabled = !core.GetComputerModule<MechJebModuleRoverWaypointHelpWindow>().enabled;
-					}
-					GUILayout.EndHorizontal();
-					break;
-					
-					
-				case pages.routes:
-					titleAdd = "Routes for " + vessel.mainBody.bodyName;
-					
-					scroll = GUILayout.BeginScrollView(scroll);
-					var bodyWPs = Routes.FindAll(wp => wp.Body == vessel.mainBody);
-					for (int i = 0; i < bodyWPs.Count; i++) {
-						GUILayout.BeginHorizontal();
-						var str = bodyWPs[i].Name + " - " + bodyWPs[i].Stats;
-						if (GUILayout.Button(str, (i == saveIndex ? styleActive : styleInactive))) {
-							saveIndex = (saveIndex == i ? -1 : i);
-						}
-						if (i == saveIndex) {
-							if (GUILayout.Button("Delete", GUILayout.Width(70))) {
-								Routes.RemoveAll(wp => wp.Name == bodyWPs[i].Name && wp.Body == vessel.mainBody);
-								saveIndex = -1;
-							}
-						}
-						GUILayout.EndHorizontal();
-					}
-					GUILayout.EndScrollView();
-					
-					GUILayout.BeginHorizontal();
-					saveName = GUILayout.TextField(saveName, GUILayout.Width(150));
-					if (GUILayout.Button("Save", GUILayout.Width(50))) {
-						if (saveName != "" && ap.Waypoints.Count > 0) {
-							var old = Routes.Find(list => list.Name == saveName && list.Body == vessel.mainBody);
-							var wps = new MechJebRoverRoute(saveName, vessel.mainBody);
-							ap.Waypoints.ForEach(wp => wps.Add(wp));
-							if (old == null) {
-								Routes.Add(wps);
-							}
-							else {
-								Routes[Routes.IndexOf(old)] = wps;
-							}
-							Routes.Sort(SortRoutes);
-						}
-					}
-					if (GUILayout.Button((alt ? "Add" : "Load"), GUILayout.Width(50))) {
-						if (saveIndex > -1) {
-							if (!alt) {
-								ap.WaypointIndex = -1;
-								ap.Waypoints.Clear();
-							}
-							Routes[saveIndex].ForEach(wp => ap.Waypoints.Add(wp));
-						}
-					}
-					if (GUILayout.Button("Waypoints")) {
-						showPage = pages.waypoints;
-						scroll = Vector2.zero;
-						lastIndex = -1;
-					}
-					if (GUILayout.Button("Settings")) {
-						showPage = pages.settings;
-						scroll = Vector2.zero;
-					}
-					GUILayout.EndHorizontal();
-					break;
+					case pages.waypoints: DrawPageWaypoints(); break;
+					case pages.settings: DrawPageSettings(); break;
+					case pages.routes: DrawPageRoutes(); break;
 			}
 			
 			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
