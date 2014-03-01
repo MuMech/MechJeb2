@@ -463,6 +463,18 @@ namespace MuMech
             surfaceMounted = true;
             if (part.parent != null) this.parent = nodeLookup[part.parent];
 
+            ModuleDockingNode dockNode;
+            // In-flight docked ports attach only one way. This finds the docked port in the other direction.
+            // However, this doesn't work in the VAB/SPH (as there is no vessel), and isn't needed there anyway.
+            if (part.vessel && (dockNode = part.Modules.OfType<ModuleDockingNode>().FirstOrDefault()))
+            {
+                uint dockedPartUId = dockNode.dockedPartUId;
+                Part p = part.vessel[dockedPartUId];
+                //Debug.Log (String.Format("[MJ] docking port {0} {1}", part, p));
+                if (p)
+                    sourceNodes.Add(nodeLookup[p]);
+            }
+
             //we can (sometimes) draw fuel from stacked parts
             foreach (AttachNode attachNode in part.attachNodes)
             {
