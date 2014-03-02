@@ -30,7 +30,7 @@ namespace MuMech
 
         
         float dockingcorridorRadius = 1;
-        double acquireRange = 0.4;
+        double acquireRange = 0.25;
 
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
@@ -80,26 +80,24 @@ namespace MuMech
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
             
-            if (forceRol)
-                core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
-            else
-                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
-
             Vector3d targetVel = core.target.Orbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
             double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
 
+            bool align = true;
+
             switch (dockingStep)
             {
                 case DockingStep.WRONG_SIDE:
-                    if (-zSep < safeDistance && lateralSep.magnitude < safeDistance)  // near the target but on the wrong side. Back up before moving on the side
+                    if (-zSep <= safeDistance && lateralSep.magnitude <= safeDistance)  // near the target but on the wrong side. Back up before moving on the side
                     {
                         zApproachSpeed = MaxSpeedForDistance(safeDistance + zSep + 2.0, -zAxis);
                         latApproachSpeed = 0;
+                        align = false;
                         status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side";
                     }
-                    else if (-zSep > safeDistance && lateralSep.magnitude < safeDistance)
+                    else if (-zSep > safeDistance && lateralSep.magnitude <= safeDistance)
                     {
                         zApproachSpeed = 0;
                         latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, lateralSep);
@@ -116,6 +114,7 @@ namespace MuMech
                 case DockingStep.BACKING_UP:
                     latApproachSpeed = 0;
                     zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, -zAxis);
+                    align = false;
                     status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s";
                     break;
 
@@ -144,6 +143,15 @@ namespace MuMech
                 default:
                     break;
             }
+
+            if (!align)
+                core.attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, this);
+            else
+                if (forceRol)
+                    core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
+                else
+                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+            
 
             Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
             core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
@@ -220,9 +228,9 @@ namespace MuMech
 
 
                 if (core.target.Target is ModuleDockingNode)
-                    acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.9;
+                    acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.5;
                 else
-                    acquireRange = 0.4;
+                    acquireRange = 0.25;
 
             }
             catch (Exception e)
