@@ -16,6 +16,9 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public int skinId = 0;
+        
+        [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        public bool hideBrakeOnEject = false;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -64,6 +67,9 @@ namespace MuMech
                     skinId = 2;
                 }
             }
+            
+			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+			ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
             GUILayout.EndVertical();
 

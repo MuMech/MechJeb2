@@ -122,7 +122,10 @@ namespace MuMech
 			ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
 			ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.stabilityControl").DrawItem();
-            ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
+            if (!core.GetComputerModule<MechJebModuleSettings>().hideBrakeOnEject) {
+            	ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
+            }
+            ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEnergyDepletion").DrawItem();
 
 			GUILayout.BeginVertical();
 			
