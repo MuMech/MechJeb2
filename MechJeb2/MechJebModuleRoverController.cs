@@ -6,113 +6,9 @@ using UnityEngine;
 
 namespace MuMech
 {
-	public class MechJebRoverWaypoint {
-		public const float defaultRadius = 5;
-		public double Latitude;
-		public double Longitude;
-		public Vector3d Position;
-		public float Radius;
-		public string Name;
-		public Vessel Target;
-		public float MinSpeed;
-		public float MaxSpeed;
-		public bool Quicksave;
-		
-		public CelestialBody Body  {
-			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
-		}
-		
-		public MechJebRoverWaypoint(double Latitude, double Longitude, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
-			this.Latitude = Latitude;
-			this.Longitude = Longitude;
-			this.Radius = Radius;
-			this.Name = (Name == null ? "" : Name);
-			this.MinSpeed = MinSpeed;
-			this.MaxSpeed = MaxSpeed;
-			Update();
-		}
-		
-		public MechJebRoverWaypoint(Vector3d Position, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
-			this.Latitude = Body.GetLatitude(Position);
-			this.Longitude = Body.GetLongitude(Position);
-			this.Radius = Radius;
-			this.Name = (Name == null ? "" : Name);
-			this.MinSpeed = MinSpeed;
-			this.MaxSpeed = MaxSpeed;
-			Update();
-		}
-		
-		public MechJebRoverWaypoint(Vessel Target, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) {
-			this.Target = Target;
-			this.Radius = Radius;
-			this.Name = (Name == null ? "" : Name);
-			this.MinSpeed = MinSpeed;
-			this.MaxSpeed = MaxSpeed;
-			Update();
-		}
-		
-		public MechJebRoverWaypoint(ConfigNode Node) {
-			if (Node.HasValue("Latitude")) { double.TryParse(Node.GetValue("Latitude"), out this.Latitude); }
-			if (Node.HasValue("Longitude")) { double.TryParse(Node.GetValue("Longitude"), out this.Longitude); }
-			this.Target = (Node.HasValue("Target") ? FlightGlobals.Vessels.Find(v => v.id.ToString() == Node.GetValue("Target")) : null);
-			if (Node.HasValue("Radius")) { float.TryParse(Node.GetValue("Radius"), out this.Radius); } else { this.Radius = defaultRadius; }
-			this.Name = (Node.HasValue("Name") ? Node.GetValue("Name") : "");
-			if (Node.HasValue("MinSpeed")) { float.TryParse(Node.GetValue("MinSpeed"), out this.MinSpeed); }
-			if (Node.HasValue("MaxSpeed")) { float.TryParse(Node.GetValue("MaxSpeed"), out this.MaxSpeed); }
-			if (Node.HasValue("Quicksave")) { bool.TryParse(Node.GetValue("Quicksave"), out this.Quicksave); }
-			Update();
-		}
-		
-		public ConfigNode ToConfigNode() {
-			ConfigNode cn = new ConfigNode("Waypoint");
-			if (Target != null) {
-				cn.AddValue("Target", Target.id);
-			}
-			if (Name != "") { cn.AddValue("Name", Name); }
-			cn.AddValue("Latitude", Latitude);
-			cn.AddValue("Longitude", Longitude);
-			cn.AddValue("Radius", Radius);
-			cn.AddValue("MinSpeed", MinSpeed);
-			cn.AddValue("MaxSpeed", MaxSpeed);
-			cn.AddValue("Quicksave", Quicksave);
-			return cn;
-		}
-		
-		public string GetNameWithCoords() {
-			return (Name != "" ? Name : (Target != null ? Target.vesselName : "Waypoint")) + " - " + Coordinates.ToStringDMS(Latitude, Longitude, false);
-//				((Latitude >= 0 ? "N " : "S ") + Math.Abs(Math.Round(Latitude, 3)) + ", " + (Longitude >= 0 ? "E " : "W ") + Math.Abs(Math.Round(Longitude, 3)));
-		}
-		
-		public void Update() {
-			if (Target != null) {
-				Position = Target.CoM;
-				Latitude = Body.GetLatitude(Position);
-				Longitude = Body.GetLongitude(Position);
-			}
-			else {
-				Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
-				if (Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM) < 200) {
-					var dir = (Position - Body.position).normalized;
-					var rayPos = Body.position + dir * (Body.Radius + 50000);
-					dir = (Vector3d)(Body.position - rayPos).normalized;
-					RaycastHit hit;
-					var raycast = Physics.Raycast(rayPos, dir, out hit, (float)Body.Radius, 1 << 15);
-					if (raycast) {
-						dir = (hit.point - Body.position);
-						Position = Body.position + dir.normalized * (dir.magnitude + 0.5);
-//						Latitude = Body.GetLatitude(Position);
-//						Longitude = Body.GetLongitude(Position);
-					}
-				}
-			}
-			if (MinSpeed > 0 && MaxSpeed > 0 && MinSpeed > MaxSpeed) { MinSpeed = MaxSpeed; }
-			else if (MinSpeed > 0 && MaxSpeed > 0 && MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
-		}
-	}
-	
 	public class MechJebModuleRoverController : ComputerModule
 	{
-		public List<MechJebRoverWaypoint> Waypoints = new List<MechJebRoverWaypoint>();
+		public List<MechJebWaypoint> Waypoints = new List<MechJebWaypoint>();
 		public int WaypointIndex = -1;
 		private CelestialBody lastBody = null;
 		public bool LoopWaypoints = false;
@@ -201,12 +97,12 @@ namespace MuMech
 		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble hPIDi = 0.005;
 		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDd = 0.05;
+		public EditableDouble hPIDd = 0.025;
 		
 		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble sPIDp = 2;
+		public EditableDouble sPIDp = 2.0;
 		[EditableInfoItem("Speed PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble sPIDi = 0.0025;
+		public EditableDouble sPIDi = 1.0;
 		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDd = 0.025;
 		
@@ -226,7 +122,7 @@ namespace MuMech
 			if (HighLogic.LoadedSceneIsFlight && orbit != null) {
 				lastBody = orbit.referenceBody;
 			}
-//			MechJebRoverPathRenderer.NewLineRenderer(ref line);
+//			MechJebRouteRenderer.NewLineRenderer(ref line);
 //			line.enabled = false;
 			GameEvents.onVesselWasModified.Add(OnVesselModified);
 			base.OnStart(state);
@@ -300,7 +196,7 @@ namespace MuMech
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
 		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up -- should be done now?
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
-			MechJebRoverWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
+			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
 			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
 			if (vessel.isActiveVessel) {
@@ -391,7 +287,7 @@ namespace MuMech
 			
 			if (controlHeading)
 			{
-				headingPID.intAccum = Mathf.Clamp((float)headingPID.intAccum, -10, 10);
+				headingPID.intAccum = Mathf.Clamp((float)headingPID.intAccum, -2, 2);
 
 				double instantaneousHeading = vesselState.rotationVesselSurface.eulerAngles.y;
 				headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
@@ -413,7 +309,7 @@ namespace MuMech
 			}
 			else if (controlSpeed)
 			{
-				speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -100, 100);
+				speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -10, 10);
 
 				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed.value) - Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
@@ -496,9 +392,9 @@ namespace MuMech
 					{
 						vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
 						                                                                         p.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED).ForEach(p => p.Retract());
-					}
+		}
 				}
-				
+		
 				brake = brake || openSolars || (curSpeed < 1 && energyDown);
 			}
 			
@@ -507,8 +403,7 @@ namespace MuMech
 		
 		public override void OnFixedUpdate()
 		{
-			if (!core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled) // update waypoints unless the waypoint window is (hopefully) doing that already
-			{
+			if (!core.GetComputerModule<MechJebModuleWaypointWindow>().enabled) { // update waypoints unless the waypoint window is (hopefully) doing that already
 				Waypoints.ForEach(wp => wp.Update());
 			}
 			
@@ -534,7 +429,7 @@ namespace MuMech
                     Waypoints.Clear();
                     foreach (ConfigNode cn in wps.GetNodes("Waypoint"))
                     {
-                        Waypoints.Add(new MechJebRoverWaypoint(cn));
+                        Waypoints.Add(new MechJebWaypoint(cn));
                     }
                 }
             }
@@ -550,10 +445,12 @@ namespace MuMech
 			if (Waypoints.Count > 0) {
 				ConfigNode cn = local.AddNode("Waypoints");
 				cn.AddValue("Index", WaypointIndex);
-				foreach (MechJebRoverWaypoint wp in Waypoints) {
+				foreach (MechJebWaypoint wp in Waypoints) {
 					cn.AddNode(wp.ToConfigNode());
 				}
-			}			
+			}
+			
+			core.GetComputerModule<MechJebModuleWaypointWindow>().OnSave(local, type, global); // to save routes if they might not have been saved yet and the window got closed
 		}
 		
 		public MechJebModuleRoverController(MechJebCore core) : base(core) { }
