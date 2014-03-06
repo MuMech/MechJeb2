@@ -193,6 +193,8 @@ namespace MuMech
 		public EditableDouble terrainLookAhead = 1.0;
 		[EditableInfoItem("Brake Speed Limit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
 		public EditableDouble brakeSpeedLimit = 0.7;
+		[ToggleInfoItem("Brake on Energy Depletion", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		public bool BrakeOnEnergyDepletion = false;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble hPIDp = 0.5;
@@ -300,6 +302,16 @@ namespace MuMech
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
 			MechJebRoverWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
+			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
+			if (vessel.isActiveVessel) {
+				if (GameSettings.BRAKES.GetKeyUp()) {
+					brake = false; // release the brakes if the user lets go of them
+				}
+				if (GameSettings.BRAKES.GetKey()) {
+					brake = true; // brake if the user brakes
+				}
+			}
+			
 			var curSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
 			etaSpeed.value = curSpeed;
 			
@@ -371,7 +383,7 @@ namespace MuMech
 							}
 						}
 					}
-					vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel) || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < brakeSpeedLimit && newSpeed < brakeSpeedLimit));
+					brake = brake || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < brakeSpeedLimit && newSpeed < brakeSpeedLimit);
 					// ^ brake if needed to prevent rolling, hopefully
 					tgtSpeed.value = Math.Round(newSpeed, 1);
 				}
@@ -396,7 +408,8 @@ namespace MuMech
 			if (brakeOnEject && vessel.GetReferenceTransformPart() == null)
 			{
 				s.wheelThrottle = 0;
-				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+//				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+				brake = true;
 			}
 			else if (controlSpeed)
 			{
@@ -408,7 +421,8 @@ namespace MuMech
 					double act = speedPID.Compute(speedErr);
 					s.wheelThrottle = Mathf.Clamp((float)act, -1, 1);
 					if (stabilityControl && traction > 50 && speedErr < -1 && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) {
-						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+//						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+						brake = true;
 					}
 //					else if (!stabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
 //						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
@@ -416,8 +430,10 @@ namespace MuMech
 				}
 			}
 			
-			if (stabilityControl) {
-				if (!core.attitude.users.Contains(this)) {
+			if (stabilityControl)
+			{
+				if (!core.attitude.users.Contains(this))
+				{
 					core.attitude.users.Add(this);
 //					line.enabled = true;
 				}
@@ -456,18 +472,46 @@ namespace MuMech
 				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
 //				}
 			}
-			else if (core.attitude.users.Contains(this)) {
+			else if (core.attitude.users.Contains(this))
+			{
 //				line.enabled = false;
 				core.attitude.attitudeDeactivate();
 				core.attitude.users.Remove(this);
 			}
+			
+			brake = brake && (s.wheelThrottle == 0); // release brake if the user or AP want to drive
+			
+			if (BrakeOnEnergyDepletion)
+			{
+				var energyDown = vessel.Parts.FindAll(p => p.Resources.Contains("ElectricCharge") && p.Resources["ElectricCharge"].flowState && p.Resources["ElectricCharge"].amount > 0).Count == 0;
+				var openSolars = vessel.mainBody.atmosphere &&
+					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable && p.panelState != ModuleDeployableSolarPanel.panelStates.BROKEN &&
+					                                                                         p.panelState != ModuleDeployableSolarPanel.panelStates.RETRACTED).Count > 0;
+				
+				if (openSolars)
+				{
+					s.wheelThrottle = 0;
+					if (vessel.Parts.FindAll(p => p.Resources.Contains("ElectricCharge") && p.Resources["ElectricCharge"].flowState && 
+					                         p.Resources["ElectricCharge"].amount < p.Resources["ElectricCharge"].maxAmount).Count == 0)
+					{
+						vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
+						                                                                         p.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED).ForEach(p => p.Retract());
+					}
+				}
+				
+				brake = brake || openSolars || (curSpeed < 1 && energyDown);
+			}
+			
+			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake);
 		}
 		
 		public override void OnFixedUpdate()
 		{
-			if (!core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled) { // update waypoints unless the waypoint window is (hopefully) doing that already
+			if (!core.GetComputerModule<MechJebModuleRoverWaypointWindow>().enabled) // update waypoints unless the waypoint window is (hopefully) doing that already
+			{
 				Waypoints.ForEach(wp => wp.Update());
 			}
+			
 			if (orbit != null && lastBody != orbit.referenceBody) { lastBody = orbit.referenceBody; }
 			headingPID.Kp = hPIDp;
 			headingPID.Ki = hPIDi;
