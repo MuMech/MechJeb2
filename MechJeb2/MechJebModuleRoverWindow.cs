@@ -34,7 +34,8 @@ namespace MuMech
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 
-			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover)) {
+			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
+			{
 				var help = core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
 				help.selTopic = ((IList)help.topics).IndexOf("Controller");
 				help.enabled = help.selTopic > -1 || help.enabled;
@@ -46,11 +47,18 @@ namespace MuMech
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
 			ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
-            ed.registry.Find(i => i.id == "Toggle:RoverController.stabilityControl").DrawItem();
-            if (!core.GetComputerModule<MechJebModuleSettings>().hideBrakeOnEject) {
+            ed.registry.Find(i => i.id == "Toggle:RoverController.StabilityControl").DrawItem();
+            
+            if (!core.GetComputerModule<MechJebModuleSettings>().hideBrakeOnEject)
+            {
             	ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
             }
+            
             ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEnergyDepletion").DrawItem();
+            if (autopilot.BrakeOnEnergyDepletion)
+            {
+            	ed.registry.Find(i => i.id == "Toggle:RoverController.WarpToDaylight").DrawItem();
+            }
 
 			GUILayout.BeginVertical();
 			
@@ -67,10 +75,12 @@ namespace MuMech
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 			
 			GUILayout.BeginHorizontal();
-			if (core.target != null && core.target.Target != null) {// && (core.target.targetBody == orbit.referenceBody || (core.target.Orbit != null ? core.target.Orbit.referenceBody == orbit.referenceBody : false))) {
+			if (core.target != null && core.target.Target != null) // && (core.target.targetBody == orbit.referenceBody || (core.target.Orbit != null ? core.target.Orbit.referenceBody == orbit.referenceBody : false))) {
+			{
 				var vssl = core.target.Target.GetVessel();
 				
-				if (GUILayout.Button("To Target")) {
+				if (GUILayout.Button("To Target"))
+				{
 					core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex = -1;
 					autopilot.WaypointIndex = 0;
 					autopilot.Waypoints.Clear();
@@ -81,7 +91,8 @@ namespace MuMech
 					autopilot.LoopWaypoints = alt;
 				}
 
-				if (GUILayout.Button("Add Target")) {
+				if (GUILayout.Button("Add Target"))
+				{
 					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
 					else { autopilot.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition())); }
 //					if (autopilot.WaypointIndex < 0) { autopilot.WaypointIndex = autopilot.Waypoints.Count - 1; }
@@ -127,7 +138,7 @@ namespace MuMech
 		{
 			if (autopilot != null)
 			{
-				if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.stabilityControl)
+				if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.StabilityControl || autopilot.BrakeOnEnergyDepletion || autopilot.BrakeOnEject)
 				{
 					autopilot.users.Add(this);
 				}

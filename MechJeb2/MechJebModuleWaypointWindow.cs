@@ -304,21 +304,27 @@ namespace MuMech
 		{
 			base.OnLoad(local, type, global);
 			
-			if (global != null)
+			ConfigNode wps = new ConfigNode("Routes");
+			if (KSP.IO.File.Exists<MechJebCore>("mechjeb_routes.cfg"))
 			{
-				var wps = global.GetNode("Routes");
-				if (wps != null)
+				try
 				{
-					if (wps.HasNode("Waypoints"))
-					{
-						Routes.Clear();
-						foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
-						{
-							Routes.Add(new MechJebWaypointRoute(cn));
-						}
-						Routes.Sort(SortRoutes);
-					}
+					wps = ConfigNode.Load(KSP.IO.IOUtils.GetFilePathFor(this.GetType(), "mechjeb_routes.cfg"));
 				}
+				catch (Exception e)
+				{
+					Debug.LogError("MechJebModuleWaypointWindow.OnLoad caught an exception trying to load mechjeb_routes.cfg: " + e);
+				}
+			}
+
+			if (wps.HasNode("Waypoints"))
+			{
+				Routes.Clear();
+				foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
+				{
+					Routes.Add(new MechJebWaypointRoute(cn));
+				}
+				Routes.Sort(SortRoutes);
 			}
 		}
 		
@@ -326,16 +332,16 @@ namespace MuMech
 		{
 			base.OnSave(local, type, global);
 
-			if (global == null) return;
-
-			if (global.HasNode("Routes")) { global.RemoveNode("Routes"); }
+			var cn = new ConfigNode("Routes");
+			
 			if (Routes.Count > 0) {
-				var cn = global.AddNode(new ConfigNode("Routes"));
 				Routes.Sort(SortRoutes);
 				foreach (MechJebWaypointRoute r in Routes) {
 					cn.AddNode(r.ToConfigNode());
 				}
 			}
+			
+			cn.Save(KSP.IO.IOUtils.GetFilePathFor(this.GetType(), "mechjeb_routes.cfg"));
 		}
 		
 		public override string GetName()
@@ -683,6 +689,12 @@ namespace MuMech
 				scroll = Vector2.zero;
 			}
 			GUILayout.EndHorizontal();
+
+			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
+			if (selIndex == -1 && ap.WaypointIndex > -1 && lastIndex != ap.WaypointIndex && waypointRects.Length > 0) {
+				scroll.y = waypointRects[ap.WaypointIndex].y - 160;
+			}
+			lastIndex = ap.WaypointIndex;
 		}
 
 		public void DrawPageSettings() {
@@ -699,7 +711,8 @@ namespace MuMech
 			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
 			ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
-			ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
+//			ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
+			ed.registry.Find(i => i.id == "Editable:RoverController.tractionLimit").DrawItem();
 			GUILayout.EndVertical();
 			
 			GUILayout.BeginVertical();
@@ -818,70 +831,87 @@ namespace MuMech
 		
 		protected override void WindowGUI(int windowID)
 		{
-			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover)) {
+			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
+			{
 				var help = core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
-				help.selTopic = ((IList)help.topics).IndexOf("Waypoints");
+				switch (showPage)
+				{
+						case pages.waypoints: help.selTopic = ((IList)help.topics).IndexOf("Waypoints"); break;
+						case pages.settings: help.selTopic = ((IList)help.topics).IndexOf("Settings"); break;
+						case pages.routes: help.selTopic = ((IList)help.topics).IndexOf("Routes"); break;
+				}
 				help.enabled = help.selTopic > -1 || help.enabled;
 			}
 			
-			if (styleInactive == null) {
+			if (styleInactive == null)
+			{
 				styleInactive = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
 				styleInactive.alignment = TextAnchor.UpperLeft;
 			}
-			if (styleActive == null) {
+			if (styleActive == null)
+			{
 				styleActive = new GUIStyle(styleInactive);
 				styleActive.active.textColor = styleActive.focused.textColor = styleActive.hover.textColor = styleActive.normal.textColor = Color.green;
 			} // for some reason MJ's skin sometimes isn't loaded at OnStart so this has to be done here
-			if (styleQuicksave == null) {
+			if (styleQuicksave == null)
+			{
 				styleQuicksave = new GUIStyle(styleActive);
 				styleQuicksave.active.textColor = styleQuicksave.focused.textColor = styleQuicksave.hover.textColor = styleQuicksave.normal.textColor = Color.yellow;
 			}
 			
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 			
-			switch (showPage) {
+			switch (showPage)
+			{
 					case pages.waypoints: DrawPageWaypoints(); break;
 					case pages.settings: DrawPageSettings(); break;
 					case pages.routes: DrawPageRoutes(); break;
 			}
 			
-			if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
-			if (selIndex == -1 && ap.WaypointIndex > -1 && lastIndex != ap.WaypointIndex && waypointRects.Length > 0) {
-				scroll.y = waypointRects[ap.WaypointIndex].y - 160;
-			}
-			lastIndex = ap.WaypointIndex;
-			
-			if (waitingForPick && vessel.isActiveVessel && Event.current.type == EventType.Repaint) {
-				if (MapView.MapIsEnabled) {
-					if (core.target.pickingPositionTarget == false) {
-						if (core.target.PositionTargetExists) {
-							if (selIndex > -1 && selIndex < ap.Waypoints.Count) {
+			if (waitingForPick && vessel.isActiveVessel && Event.current.type == EventType.Repaint)
+			{
+				if (MapView.MapIsEnabled)
+				{
+					if (core.target.pickingPositionTarget == false)
+					{
+						if (core.target.PositionTargetExists)
+						{
+							if (selIndex > -1 && selIndex < ap.Waypoints.Count)
+							{
 								ap.Waypoints.Insert(selIndex, new MechJebWaypoint(core.target.GetPositionTargetPosition()));
 								tmpLat = LatToString(ap.Waypoints[selIndex].Latitude);
 								tmpLon = LonToString(ap.Waypoints[selIndex].Longitude);
 							}
-							else {
+							else
+							{
 								ap.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition()));
 							}
 							core.target.Unset();
 							waitingForPick = alt;
 						}
-						else {
+						else
+						{
 							core.target.PickPositionTargetOnMap();
 						}
 					}
 				}
-				else {
-					if (!GuiUtils.MouseIsOverWindow(core)) {
+				else
+				{
+					if (!GuiUtils.MouseIsOverWindow(core))
+					{
 						Coordinates mouseCoords = GetMouseFlightCoordinates();
-						if (mouseCoords != null) {
-							if (Input.GetMouseButtonDown(0)) {
-								if (selIndex > -1 && selIndex < ap.Waypoints.Count) {
+						if (mouseCoords != null)
+						{
+							if (Input.GetMouseButtonDown(0))
+							{
+								if (selIndex > -1 && selIndex < ap.Waypoints.Count)
+								{
 									ap.Waypoints.Insert(selIndex, new MechJebWaypoint(mouseCoords.latitude, mouseCoords.longitude));
 									tmpLat = LatToString(ap.Waypoints[selIndex].Latitude);
 									tmpLon = LonToString(ap.Waypoints[selIndex].Longitude);
 								}
-								else {
+								else
+								{
 									ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.latitude, mouseCoords.longitude));
 								}
 								waitingForPick = alt;
@@ -906,20 +936,24 @@ namespace MuMech
 		}
 	}
 
-	public class MechJebModuleWaypointHelpWindow : DisplayModule {
+	public class MechJebModuleWaypointHelpWindow : DisplayModule
+	{
 		public int selTopic = 0;
 		public string[] topics = {"Rover Controller", "Waypoints", "Routes", "Settings"};
 		string selSubTopic = "";
 		GUIStyle btnActive;
 		GUIStyle btnInactive;
 		
-		void HelpTopic(string title, string text) {
+		void HelpTopic(string title, string text)
+		{
 			GUILayout.BeginVertical();
-			if (GUILayout.Button(title, (selSubTopic == title ? btnActive : btnInactive))) {
+			if (GUILayout.Button(title, (selSubTopic == title ? btnActive : btnInactive)))
+			{
 				selSubTopic = (selSubTopic != title ? title : "");
 				windowPos = new Rect(windowPos.x, windowPos.y, windowPos.width, 0);
 			}
-			if (selSubTopic == title) {
+			if (selSubTopic == title)
+			{
 				GUILayout.Label(text);
 			}
 			GUILayout.EndVertical();
@@ -940,18 +974,22 @@ namespace MuMech
 		
 		protected override void WindowGUI(int windowID)
 		{
-			if (btnInactive == null) {
+			if (btnInactive == null)
+			{
 				btnInactive = new GUIStyle(GuiUtils.skin.button);
 				btnInactive.alignment = TextAnchor.MiddleLeft;
 			}
-			if (btnActive == null) {
+			
+			if (btnActive == null)
+			{
 				btnActive = new GUIStyle(btnInactive);
 				btnActive.active.textColor = btnActive.hover.textColor = btnActive.focused.textColor = btnActive.normal.textColor = Color.green;
 			}
 			
 		 	selTopic = GUILayout.SelectionGrid(selTopic, topics, topics.Length);
 		 	
-		 	switch (topics[selTopic]) {
+		 	switch (topics[selTopic])
+		 	{
 		 		case "Rover Controller":
 		 			HelpTopic("Holding a set Heading", "To hold a specific heading just tick the box next to 'Heading control' and the autopilot will try to keep going for the entered heading." +
 		 			          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
@@ -959,6 +997,11 @@ namespace MuMech
 		 			HelpTopic("Holding a set Speed", "To hold a specific speed just tick the box next to 'Speed control' and the autopilot will try to keep going at the entered speed." +
 		 			          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
 		 			          "'Speed Error' simply shows the error between current speed and target speed.");
+		 			HelpTopic("More stability while driving and nice landings", "If you turn on 'Stability Control' then the autopilot will use the reaction wheel's torque to keep the rover aligned with the surface." +
+		 			          "\nThis means that if you make a jump the autopilot will try to align the rover in the best possible way to land as straight and flat as possible given the available time and torque." +
+		 			          "\nBe aware that this doesn't make your rover indestructible, only relatively unlikely to land in a bad way." +
+		 			          "\n\n'Stability Control' will also limit the brake to reduce the chances of flipping over from too much braking power." +
+		 			          "\nSee 'Settings' -> 'Traction and Braking'. This setting is also saved per vessel.");
 		 			HelpTopic("Brake on Pilot Eject", "With this option enabled the rover will stop if the pilot (on manned rovers) should get thrown out of his seat.");
 		 			HelpTopic("Target Speed", "Current speed the autopilot tries to achieve.");
 		 			HelpTopic("Waypoint Index", "Overview of waypoints and which the autopilot is currently driving to.");
@@ -1002,8 +1045,13 @@ namespace MuMech
 		 			
 		 		case "Settings":
 		 			HelpTopic("Heading / Speed PID", "These parameters control the behaviour of the heading's / speed's PID. Saved globally so NO TOUCHING unless you know what you're doing (or atleast know how to write down numbers to restore it if you mess up)");
-		 			HelpTopic("Safe Turn Speed", "This value tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
+		 			HelpTopic("Safe Turn Speed", "'Safe Turn Speed' tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
 		 			          "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
+		 			HelpTopic("Traction and Braking", "'Traction' shows in % how many wheels have ground contact." +
+		 			          "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
+		 			          "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
+		 			          "\n'Traction Brake Limit' is saved per vessel type." +
+		 			          "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
 		 			HelpTopic("Changing the route height in Mapview", "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
 		 			break;
 		 	}
@@ -1012,7 +1060,8 @@ namespace MuMech
 		}
 	}
 
-	public class MechJebRouteRenderer : MonoBehaviour {
+	public class MechJebRouteRenderer : MonoBehaviour
+	{
 		public static readonly Material material = new Material (Shader.Find ("Particles/Additive"));
 		public MechJebModuleRoverController ap;
 		private LineRenderer pastPath;
@@ -1025,16 +1074,19 @@ namespace MuMech
 		private Color selWPColor = new Color(1f, 0f, 0f, 0.5f);
 		private double addHeight;
 		
-		public static MechJebRouteRenderer AttachToMapView(MechJebCore Core) {
+		public static MechJebRouteRenderer AttachToMapView(MechJebCore Core)
+		{
 			var renderer = MapView.MapCamera.gameObject.GetComponent<MechJebRouteRenderer>();
-			if (!renderer) { //Destroy(renderer); }
+			if (!renderer)
+			{
 				renderer = MapView.MapCamera.gameObject.AddComponent<MechJebRouteRenderer>();
 			}
 			renderer.ap = Core.GetComputerModule<MechJebModuleRoverController>();
 			return renderer;
 		}
 		
-		public static bool NewLineRenderer(ref LineRenderer Line) {
+		public static bool NewLineRenderer(ref LineRenderer Line)
+		{
 			if (Line != null) { return false; }
 			GameObject obj = new GameObject("LineRenderer");
 			Line = obj.AddComponent<LineRenderer>();
@@ -1045,9 +1097,11 @@ namespace MuMech
 			return true;
 		}
 
-		public static Vector3 RaisePositionOverTerrain(Vector3 Position, float HeightOffset) {
+		public static Vector3 RaisePositionOverTerrain(Vector3 Position, float HeightOffset)
+		{
 			var body = FlightGlobals.ActiveVessel.mainBody;
-			if (MapView.MapIsEnabled) {
+			if (MapView.MapIsEnabled)
+			{
 				var lat = body.GetLatitude(Position);
 				var lon = body.GetLongitude(Position);
 				return ScaledSpace.LocalToScaledSpace(body.position + (body.Radius + HeightOffset + body.TerrainAltitude(lat, lon)) * body.GetSurfaceNVector(lat, lon));
@@ -1057,9 +1111,11 @@ namespace MuMech
 			}
 		}
 		
-		public new bool enabled {
+		public new bool enabled
+		{
 			get { return base.enabled; }
-			set {
+			set
+			{
 				base.enabled = value;
 				if (pastPath != null) { pastPath.enabled = value; }
 				if (currPath != null) { currPath.enabled = value; }
@@ -1067,7 +1123,8 @@ namespace MuMech
 			}
 		}
 		
-		public void OnPreRender() {
+		public void OnPreRender()
+		{
 			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(pastPathColor, pastPathColor); }
 			if (NewLineRenderer(ref currPath)) { currPath.SetColors(currPathColor, currPathColor); }
 			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(nextPathColor, nextPathColor); }
@@ -1075,7 +1132,8 @@ namespace MuMech
 			
 			//Debug.Log(ap.vessel.vesselName);
 			var window = ap.core.GetComputerModule<MechJebModuleWaypointWindow>();
-			switch (ap.vessel.mainBody.bodyName) {
+			switch (ap.vessel.mainBody.bodyName)
+			{
 					case "Moho" : addHeight = window.MohoMapdist; break;
 					case "Eve" : addHeight = window.EveMapdist; break;
 					case "Gilly" : addHeight = window.GillyMapdist; break;
@@ -1094,9 +1152,10 @@ namespace MuMech
 					case "Eeloo" : addHeight = window.EelooMapdist; break;
 			}
 			
-			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight) {
+			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
+			{
 				float targetHeight = (MapView.MapIsEnabled ? (float)addHeight : 3f);
-				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.vessel.CoM) / 900f;
+				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.vessel.CoM) / 700f;
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 				
@@ -1107,59 +1166,69 @@ namespace MuMech
 				
 				int sel = ap.core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
 				selWP.enabled = sel > -1 && !MapView.MapIsEnabled;
-				if (selWP.enabled) {
+				if (selWP.enabled)
+				{
 					float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Waypoints[sel].Position) / 600f + 0.1f;
 					selWP.SetWidth(0f, w * 10f);
 					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
 					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
 				}
 				
-				if (ap.WaypointIndex > 0) {
+				if (ap.WaypointIndex > 0)
+				{
 //					Debug.Log("drawing pastPath");
 					pastPath.enabled = true;
 					pastPath.SetVertexCount(ap.WaypointIndex + 1);
-					for (int i = 0; i < ap.WaypointIndex; i++) {
+					for (int i = 0; i < ap.WaypointIndex; i++)
+					{
 //						Debug.Log("vert " + i.ToString());
 						pastPath.SetPosition(i, RaisePositionOverTerrain(ap.Waypoints[i].Position, targetHeight));
 					}
 					pastPath.SetPosition(ap.WaypointIndex, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
 //					Debug.Log("pastPath drawn");
 				}
-				else {
+				else
+				{
 //					Debug.Log("no pastPath");
 					pastPath.enabled = false;
 				}
 				
-				if (ap.WaypointIndex > -1) {
+				if (ap.WaypointIndex > -1)
+				{
 //					Debug.Log("drawing currPath");
 					currPath.enabled = true;
 					currPath.SetPosition(0, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
 					currPath.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex].Position, targetHeight));
 //					Debug.Log("currPath drawn");
 				}
-				else {
+				else
+				{
 //					Debug.Log("no currPath");
 					currPath.enabled = false;
 				}
 				
 				var nextCount = ap.Waypoints.Count - ap.WaypointIndex;
-				if (nextCount > 1) {
+				if (nextCount > 1)
+				{
 //					Debug.Log("drawing nextPath of " + nextCount + " verts");
 					nextPath.enabled = true;
 					nextPath.SetVertexCount(nextCount);
 					nextPath.SetPosition(0, RaisePositionOverTerrain((ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position), targetHeight));
-					for (int i = 0; i < nextCount - 1; i++) {
+					for (int i = 0; i < nextCount - 1; i++)
+					{
 //						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
 						nextPath.SetPosition(i + 1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex + 1 + i].Position, targetHeight));
 					}
 //					Debug.Log("nextPath drawn");
 				}
-				else {
+				else
+				{
 //					Debug.Log("no nextPath");
 					nextPath.enabled = false;
 				}
 			}
-			else {
+			else
+			{
 				//Debug.Log("moo");
 				selWP.enabled = pastPath.enabled = currPath.enabled = nextPath.enabled = false;
 			}
