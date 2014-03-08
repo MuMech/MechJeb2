@@ -215,6 +215,7 @@ namespace MuMech
 				if (ControlSpeed) {
 					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
+					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
 					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
@@ -423,7 +424,7 @@ namespace MuMech
 			}
 
 			tractionLimit = (double)Mathf.Clamp((float)tractionLimit, 0, 100);
-			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake && (StabilityControl ? traction >= tractionLimit : true));
+			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake && (StabilityControl && curSpeed > brakeSpeedLimit ? traction >= tractionLimit : true));
 			// ^ brake but hopefully prevent flipping over, assuming the user set up the limit right
 			if (brake && curSpeed < 0.1) { s.wheelThrottle = 0; }
 		}
