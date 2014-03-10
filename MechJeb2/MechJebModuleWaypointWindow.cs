@@ -938,6 +938,7 @@ namespace MuMech
 							if (selIndex > -1 && selIndex < ap.Waypoints.Count)
 							{
 								ap.Waypoints.Insert(selIndex, new MechJebWaypoint(core.target.GetPositionTargetPosition()));
+								tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
 								tmpLat = LatToString(ap.Waypoints[selIndex].Latitude);
 								tmpLon = LonToString(ap.Waypoints[selIndex].Longitude);
 							}
@@ -966,6 +967,7 @@ namespace MuMech
 								if (selIndex > -1 && selIndex < ap.Waypoints.Count)
 								{
 									ap.Waypoints.Insert(selIndex, new MechJebWaypoint(mouseCoords.latitude, mouseCoords.longitude));
+									tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
 									tmpLat = LatToString(ap.Waypoints[selIndex].Latitude);
 									tmpLon = LonToString(ap.Waypoints[selIndex].Longitude);
 								}
