@@ -97,7 +97,7 @@ namespace MuMech
                         align = false;
                         status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side";
                     }
-                    else if (-zSep > safeDistance && lateralSep.magnitude <= safeDistance)
+                    else if (-zSep > safeDistance && lateralSep.magnitude <= safeDistance * 1.1)
                     {
                         zApproachSpeed = 0;
                         latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, lateralSep);
