@@ -140,8 +140,10 @@ namespace MuMech
 		public double headingErr;
 		[ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
 		public double speedErr;
-		public MuMech.MovingAverage tgtSpeed = new MovingAverage(150);
+		public MuMech.MovingAverage tgtSpeed = new MovingAverage(50);
 		public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
+		private double lastETA = 0;
+		double curSpeed;
 
 		public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
 		{
@@ -202,8 +204,7 @@ namespace MuMech
 			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
 			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are			
-			var curSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
-			etaSpeed.value = curSpeed;
+			curSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
 			
 			CalculateTraction();
 			speedIntAcc = speedPID.intAccum;
@@ -215,17 +216,18 @@ namespace MuMech
 				if (ControlSpeed) {
 					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
+					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
 					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
 					                (nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
 					                 (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
-					minSpeed = (wp.Quicksave ? 0 : minSpeed);
+					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					var radius = Math.Max(wp.Radius, 10 / 0.8);
+					var radius = Math.Max(wp.Radius, 10);
 					if (distance < radius) {
 						if (WaypointIndex + 1 >= Waypoints.Count) // last waypoint
 						{
@@ -238,7 +240,7 @@ namespace MuMech
 							else
 							{
 								newSpeed = 0;
-								tgtSpeed.force(newSpeed);
+//								tgtSpeed.force(newSpeed);
 								if (curSpeed < brakeSpeedLimit)
 								{
 									if (wp.Quicksave)
@@ -269,7 +271,7 @@ namespace MuMech
 							{
 								//if (s.mainThrottle > 0) { s.mainThrottle = 0; }
 								newSpeed = 0;
-								tgtSpeed.force(newSpeed);
+//								tgtSpeed.force(newSpeed);
 								if (curSpeed < brakeSpeedLimit)
 								{
 									if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
@@ -423,7 +425,7 @@ namespace MuMech
 			}
 
 			tractionLimit = (double)Mathf.Clamp((float)tractionLimit, 0, 100);
-			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake && (StabilityControl ? traction >= tractionLimit : true));
+			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake && (StabilityControl && curSpeed > brakeSpeedLimit ? traction >= tractionLimit : true));
 			// ^ brake but hopefully prevent flipping over, assuming the user set up the limit right
 			if (brake && curSpeed < 0.1) { s.wheelThrottle = 0; }
 		}
@@ -436,12 +438,18 @@ namespace MuMech
 			}
 			
 			if (orbit != null && lastBody != orbit.referenceBody) { lastBody = orbit.referenceBody; }
+
 			headingPID.Kp = hPIDp;
 			headingPID.Ki = hPIDi;
 			headingPID.Kd = hPIDd;
 			speedPID.Kp = sPIDp;
 			speedPID.Ki = sPIDi;
 			speedPID.Kd = sPIDd;
+			if (lastETA + 0.1 < DateTime.Now.TimeOfDay.TotalSeconds)
+			{
+				etaSpeed.value = curSpeed;
+				lastETA = DateTime.Now.TimeOfDay.TotalSeconds + 0.1;
+			}
 			
 			if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled)
 			{
@@ -462,7 +470,7 @@ namespace MuMech
 					{
 						waitingForDaylight = false;
 					}
-					core.warp.WarpRegularAtRate(energyLeft < 0.9 ? (energyLeft < 0.1 ? 10000 : 1000) : 50);
+					core.warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
 					if (energyLeft > 0.99)
 					{
 						waitingForDaylight = false;
