@@ -195,6 +195,7 @@ namespace MuMech
 				core.attitude.attitudeDeactivate();
 				core.attitude.users.Remove(this);
 			}
+
 			base.OnModuleDisabled();
 		}
 		

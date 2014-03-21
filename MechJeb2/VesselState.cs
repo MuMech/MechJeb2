@@ -29,10 +29,10 @@ namespace MuMech
         public Quaternion rotationVesselSurface;
 
         public Vector3d velocityMainBodySurface;
-        public Vector3d velocityVesselSurface;
-        public Vector3d velocityVesselSurfaceUnit;
-        public Vector3d velocityVesselOrbit;
-        public Vector3d velocityVesselOrbitUnit;
+//        public Vector3d velocityVesselSurface;
+//        public Vector3d velocityVesselSurfaceUnit;
+//        public Vector3d velocityVesselOrbit;
+//        public Vector3d velocityVesselOrbitUnit;
 
         public Vector3d angularVelocity;
         public Vector3d angularMomentum;
@@ -196,30 +196,30 @@ namespace MuMech
             rotationSurface = Quaternion.LookRotation(north, up);
             rotationVesselSurface = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * rotationSurface);
 
-            velocityVesselOrbit = vessel.orbit.GetVel();
-            velocityVesselOrbitUnit = velocityVesselOrbit.normalized;
-            velocityVesselSurface = velocityVesselOrbit - vessel.mainBody.getRFrmVel(CoM);
-            velocityVesselSurfaceUnit = velocityVesselSurface.normalized;
-            velocityMainBodySurface = rotationSurface * velocityVesselSurface;
+//            velocityVesselOrbit = vessel.orbit.GetVel();
+//            velocityVesselOrbitUnit = velocityVesselOrbit.normalized;
+//            velocityVesselSurface = velocityVesselOrbit - vessel.mainBody.getRFrmVel(CoM);
+//            velocityVesselSurfaceUnit = velocityVesselSurface.normalized;
+            velocityMainBodySurface = rotationSurface * vessel.srf_velocity;
 
-            horizontalOrbit = Vector3d.Exclude(up, velocityVesselOrbit).normalized;
-            horizontalSurface = Vector3d.Exclude(up, velocityVesselSurface).normalized;
+            horizontalOrbit = Vector3d.Exclude(up, vessel.obt_velocity).normalized;
+            horizontalSurface = Vector3d.Exclude(up, vessel.srf_velocity).normalized;
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
              
-            radialPlusSurface = Vector3d.Exclude(velocityVesselSurface, up).normalized;
-            radialPlus = Vector3d.Exclude(velocityVesselOrbit, up).normalized;
-            normalPlusSurface = -Vector3d.Cross(radialPlusSurface, velocityVesselSurfaceUnit);
-            normalPlus = -Vector3d.Cross(radialPlus, velocityVesselOrbitUnit);
+            radialPlusSurface = Vector3d.Exclude(vessel.srf_velocity, up).normalized;
+            radialPlus = Vector3d.Exclude(vessel.obt_velocity, up).normalized;
+            normalPlusSurface = -Vector3d.Cross(radialPlusSurface, vessel.srf_velocity.normalized);
+            normalPlus = -Vector3d.Cross(radialPlus, vessel.obt_velocity.normalized);
 
             gravityForce = FlightGlobals.getGeeForceAtPosition(CoM);
             localg = gravityForce.magnitude;
 
-            speedOrbital.value = velocityVesselOrbit.magnitude;
-            speedSurface.value = velocityVesselSurface.magnitude;
-            speedVertical.value = Vector3d.Dot(velocityVesselSurface, up);
-            speedSurfaceHorizontal.value = (velocityVesselSurface - (speedVertical * up)).magnitude;
-            speedOrbitHorizontal = (velocityVesselOrbit - (speedVertical * up)).magnitude;
+            speedOrbital.value = vessel.obt_velocity.magnitude;
+            speedSurface.value = vessel.srf_velocity.magnitude;
+            speedVertical.value = Vector3d.Dot(vessel.srf_velocity, up);
+            speedSurfaceHorizontal.value = Vector3d.Exclude(up, vessel.srf_velocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
+            speedOrbitHorizontal = (vessel.obt_velocity - (speedVertical * up)).magnitude;
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
@@ -360,7 +360,7 @@ namespace MuMech
                 {
                     Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
                     ControlSurface cs = (p as ControlSurface);
-                    Vector3d airSpeed = velocityVesselSurface + Vector3.Cross(cs.Rigidbody.angularVelocity, cs.transform.position - cs.Rigidbody.position);
+                    Vector3d airSpeed = vessel.srf_velocity + Vector3.Cross(cs.Rigidbody.angularVelocity, cs.transform.position - cs.Rigidbody.position);
                     // Air Speed is velocityVesselSurface
                     // AddForceAtPosition seems to need the airspeed vector rotated with the flap rotation x its surface
                     Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * cs.pivotAxis);
@@ -417,7 +417,7 @@ namespace MuMech
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
                         Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
                         
-                        Vector3d airSpeed = velocityVesselSurface + Vector3.Cross(cs.part.Rigidbody.angularVelocity, cs.transform.position - cs.part.Rigidbody.position);
+                        Vector3d airSpeed = vessel.srf_velocity + Vector3.Cross(cs.part.Rigidbody.angularVelocity, cs.transform.position - cs.part.Rigidbody.position);
 
                         Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * Vector3.right);
 

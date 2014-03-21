@@ -174,16 +174,16 @@ namespace MuMech
             switch (reference)
             {
                 case AttitudeReference.ORBIT:
-                    rotRef = Quaternion.LookRotation(vesselState.velocityVesselOrbitUnit, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vessel.obt_velocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.velocityVesselOrbitUnit), vesselState.up);
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.obt_velocity.normalized), vesselState.up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = vesselState.rotationSurface;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = Quaternion.LookRotation(vesselState.velocityVesselSurfaceUnit, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vessel.srf_velocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (core.target.Position - vessel.GetTransform().position).normalized;
