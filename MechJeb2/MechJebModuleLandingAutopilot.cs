@@ -325,7 +325,7 @@ namespace MuMech
             Vector3d targetRadialVector = mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
             Vector3d currentRadialVector = vesselState.CoM - mainBody.position;
             double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
-            bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, vesselState.velocityVesselOrbit) > 0;
+            bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, vessel.obt_velocity) > 0;
 
             if (!planeChangeTriggered && approaching && (angleToTarget > 80) && (angleToTarget < 90))
             {
@@ -336,12 +336,12 @@ namespace MuMech
             if (planeChangeTriggered)
             {
                 Vector3d horizontalToTarget = ComputePlaneChange();
-                Vector3d finalVelocity = Quaternion.FromToRotation(vesselState.horizontalOrbit, horizontalToTarget) * vesselState.velocityVesselOrbit;
+                Vector3d finalVelocity = Quaternion.FromToRotation(vesselState.horizontalOrbit, horizontalToTarget) * vessel.obt_velocity;
 
-                Vector3d deltaV = finalVelocity - vesselState.velocityVesselOrbit;
+                Vector3d deltaV = finalVelocity - vessel.obt_velocity;
                 //burn normal+ or normal- to avoid dropping the Pe:
-                Vector3d burnDir = Vector3d.Exclude(vesselState.up, Vector3d.Exclude(vesselState.velocityVesselOrbit, deltaV));
-                planeChangeDVLeft = Math.PI / 180 * Vector3d.Angle(finalVelocity, vesselState.velocityVesselOrbit) * vesselState.speedOrbitHorizontal;
+                Vector3d burnDir = Vector3d.Exclude(vesselState.up, Vector3d.Exclude(vessel.obt_velocity, deltaV));
+                planeChangeDVLeft = Math.PI / 180 * Vector3d.Angle(finalVelocity, vessel.obt_velocity) * vesselState.speedOrbitHorizontal;
                 core.attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, this);
                 if (planeChangeDVLeft < 0.1F)
                 {
@@ -412,7 +412,7 @@ namespace MuMech
             if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
 
             //By default, thrust straight back at max throttle
-            Vector3d thrustDirection = -vesselState.velocityVesselSurfaceUnit;
+            Vector3d thrustDirection = -vessel.srf_velocity.normalized;
             lowDeorbitBurnMaxThrottle = 1;
 
             //If we are burning, we watch the predicted landing site and switch to the braking
@@ -450,7 +450,7 @@ namespace MuMech
                         }
 
                         double maxAllowedSpeedAfterDt = MaxAllowedSpeedAfterDt(vesselState.deltaT);
-                        double speedAfterDt = vesselState.speedSurface + vesselState.deltaT * Vector3d.Dot(vesselState.gravityForce, vesselState.velocityVesselSurfaceUnit);
+                        double speedAfterDt = vesselState.speedSurface + vesselState.deltaT * Vector3d.Dot(vesselState.gravityForce, vessel.srf_velocity.normalized);
                         double throttleToMaintainLandingSite;
                         if (vesselState.speedSurface < maxAllowedSpeed) throttleToMaintainLandingSite = 0;
                         else throttleToMaintainLandingSite = (speedAfterDt - maxAllowedSpeedAfterDt) / (vesselState.deltaT * vesselState.maxThrustAccel);
@@ -512,7 +512,7 @@ namespace MuMech
             Vector3d freefallEndTargetRadialVector = freefallPlanetRotation * currentTargetRadialVector;                               //Use this quaternion to find what the vector from the planet center to the target will be when we hit the ground
             Vector3d freefallEndTargetPosition = mainBody.position + freefallEndTargetRadialVector;                                    //Then find the actual position of the target at that time
             Vector3d freefallEndHorizontalToTarget = Vector3d.Exclude(vesselState.up, freefallEndTargetPosition - vesselState.CoM).normalized; //Find a horizontal unit vector that points toward where the target will be when we hit the ground
-            Vector3d currentHorizontalVelocity = Vector3d.Exclude(vesselState.up, vesselState.velocityVesselOrbit); //Find our current horizontal velocity
+            Vector3d currentHorizontalVelocity = Vector3d.Exclude(vesselState.up, vessel.obt_velocity); //Find our current horizontal velocity
             double finalHorizontalSpeed = (currentHorizontalVelocity + horizontalDV).magnitude;                     //Find the desired horizontal speed after the deorbit burn
             Vector3d finalHorizontalVelocity = finalHorizontalSpeed * freefallEndHorizontalToTarget;                //Combine the desired speed and direction to get the desired velocity after the deorbi burn
 
@@ -577,7 +577,7 @@ namespace MuMech
             Quaternion convertOrbitToActual = Quaternion.FromToRotation(orbitLandingPosition, actualLandingPosition);
 
             //Consider the effect small changes in the velocity in each of these three directions
-            Vector3d[] perturbationDirections = { vesselState.velocityVesselSurfaceUnit, vesselState.radialPlusSurface, vesselState.normalPlusSurface };
+            Vector3d[] perturbationDirections = { vessel.srf_velocity.normalized, vesselState.radialPlusSurface, vesselState.normalPlusSurface };
 
             //Compute the effect burns in these directions would
             //have on the landing position, where we approximate the landing position as the place
@@ -656,7 +656,7 @@ namespace MuMech
         void DriveCourseCorrections(FlightCtrlState s)
         {
             // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
-            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.1)
+            if (mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude > 0.1)
             {
                 if (ParachutesDeployable())
                 {
@@ -702,7 +702,7 @@ namespace MuMech
             core.thrust.targetThrottle = 0;
 
             // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
-            if (mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude > 0.10)
+            if (mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude > 0.10)
             {
                 if(ParachutesDeployable())
                 {
@@ -785,14 +785,14 @@ namespace MuMech
                 return;
             }
 
-            Vector3d desiredThrustVector = -vesselState.velocityVesselSurfaceUnit;
+            Vector3d desiredThrustVector = -vessel.srf_velocity.normalized;
 
             Vector3d courseCorrection = ComputeCourseCorrection(false);
             double correctionAngle = courseCorrection.magnitude / (2.0 * vesselState.limitedMaxThrustAccel);
             correctionAngle = Math.Min(0.1, correctionAngle);
             desiredThrustVector = (desiredThrustVector + correctionAngle * courseCorrection.normalized).normalized;
 
-            if (Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) > 0
+            if (Vector3d.Dot(vessel.srf_velocity, vesselState.up) > 0
                      || Vector3d.Dot(vesselState.forward, desiredThrustVector) < 0.75)
             {
                 core.thrust.targetThrottle = 0;
@@ -800,11 +800,11 @@ namespace MuMech
             }
             else
             {
-                double controlledSpeed = vesselState.speedSurface * Math.Sign(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up)); //positive if we are ascending, negative if descending
+                double controlledSpeed = vesselState.speedSurface * Math.Sign(Vector3d.Dot(vessel.srf_velocity, vesselState.up)); //positive if we are ascending, negative if descending
                 double desiredSpeed = -MaxAllowedSpeed();
                 double desiredSpeedAfterDt = -MaxAllowedSpeedAfterDt(vesselState.deltaT);
-                double minAccel = -vesselState.localg * Math.Abs(Vector3d.Dot(vesselState.velocityVesselSurfaceUnit, vesselState.up));
-                double maxAccel = vesselState.maxThrustAccel * Vector3d.Dot(vesselState.forward, -vesselState.velocityVesselSurfaceUnit) - vesselState.localg * Math.Abs(Vector3d.Dot(vesselState.velocityVesselSurfaceUnit, vesselState.up));
+                double minAccel = -vesselState.localg * Math.Abs(Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.up));
+                double maxAccel = vesselState.maxThrustAccel * Vector3d.Dot(vesselState.forward, -vessel.srf_velocity.normalized) - vesselState.localg * Math.Abs(Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.up));
                 double speedCorrectionTimeConstant = 0.3;
                 double speedError = desiredSpeed - controlledSpeed;
                 double desiredAccel = speedError / speedCorrectionTimeConstant + (desiredSpeedAfterDt - desiredSpeed) / vesselState.deltaT;
@@ -820,7 +820,7 @@ namespace MuMech
         public void DriveKillHorizontalVelocity(FlightCtrlState s)
         {
             Vector3d horizontalPointingDirection = Vector3d.Exclude(vesselState.up, vesselState.forward).normalized;
-            if (Vector3d.Dot(horizontalPointingDirection, vesselState.velocityVesselSurface) > 0)
+            if (Vector3d.Dot(horizontalPointingDirection, vessel.srf_velocity) > 0)
             {
                 core.thrust.targetThrottle = 0;
                 core.attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, this);
@@ -830,7 +830,7 @@ namespace MuMech
 
             //control thrust to control vertical speed:
             double desiredSpeed = 0; //hover until horizontal velocity is killed
-            double controlledSpeed = Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up);
+            double controlledSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.up);
             double speedError = desiredSpeed - controlledSpeed;
             double speedCorrectionTimeConstant = 1.0;
             double desiredAccel = speedError / speedCorrectionTimeConstant;
@@ -877,14 +877,14 @@ namespace MuMech
             }
             else if (minalt > 200)
             {
-                if ((vesselState.velocityVesselSurface.magnitude > 5) && (Vector3d.Angle(vesselState.velocityVesselSurface, vesselState.up) < 80))
+                if ((vessel.srf_velocity.magnitude > 5) && (Vector3d.Angle(vessel.srf_velocity, vesselState.up) < 80))
                 {
                     //if we have positive vertical velocity, point up and don't thrust:
                     core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
                     core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
                     core.thrust.trans_spd_act = 0;
                 }
-                else if ((vesselState.velocityVesselSurface.magnitude > 5) && (Vector3d.Angle(vesselState.forward, -vesselState.velocityVesselSurface) > 45))
+                else if ((vessel.srf_velocity.magnitude > 5) && (Vector3d.Angle(vesselState.forward, -vessel.srf_velocity) > 45))
                 {
                     //if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
                     core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
@@ -899,10 +899,10 @@ namespace MuMech
                     core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
                     
                     //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
-                    Vector3d estimatedLandingPosition = vesselState.CoM + vesselState.velocityVesselSurface.sqrMagnitude / (2 * vesselState.limitedMaxThrustAccel) * vesselState.velocityVesselSurfaceUnit;
+                    Vector3d estimatedLandingPosition = vesselState.CoM + vessel.srf_velocity.sqrMagnitude / (2 * vesselState.limitedMaxThrustAccel) * vessel.srf_velocity.normalized;
                     double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
                     IDescentSpeedPolicy aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
-                    core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface));
+                    core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vessel.srf_velocity));
                 }
             }
             else
@@ -916,7 +916,7 @@ namespace MuMech
 //                core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
 //                core.thrust.trans_kill_h = true;
                 
-//                if (Math.Abs(Vector3d.Angle(-vesselState.velocityVesselSurface, vesselState.up)) < 10)
+//                if (Math.Abs(Vector3d.Angle(-vessel.srf_velocity, vesselState.up)) < 10)
                 if (vesselState.speedSurfaceHorizontal < 5)
                 {
                     //if we're falling more or less straight down, control vertical speed and 
@@ -1127,13 +1127,13 @@ namespace MuMech
 
         double MaxAllowedSpeed()
         {
-            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.velocityVesselSurface);
+            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vessel.srf_velocity);
         }
 
         double MaxAllowedSpeedAfterDt(double dt)
         {
-            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM + vesselState.velocityVesselOrbit * dt - mainBody.position,
-                vesselState.velocityVesselSurface + dt * vesselState.gravityForce);
+            return descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM + vessel.obt_velocity * dt - mainBody.position,
+                vessel.srf_velocity + dt * vesselState.gravityForce);
         }
 
         public override void OnStart(PartModule.StartState state)
