@@ -296,6 +296,8 @@ namespace MuMech
 
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
+            
+            if (s.Z == 0 && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
             lastThrottle = s.mainThrottle;
         }
