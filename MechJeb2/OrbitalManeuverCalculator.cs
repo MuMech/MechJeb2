@@ -376,6 +376,25 @@ namespace MuMech
             return deltaV;
         }
 
+        public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, double caDistance, out double burnUT)
+        {
+            Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
+            Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
+            double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
+            Vector3d position = o.SwappedAbsolutePositionAtUT(collisionUT);
+            Vector3d targetPos = target.SwappedAbsolutePositionAtUT(collisionUT);
+            Vector3d direction = targetPos - position;
+
+            Vector3d interceptTarget = targetPos + target.NormalPlus(collisionUT) * caDistance;
+
+            Vector3d velAfterBurn;
+            Vector3d arrivalVel;
+            LambertSolver.Solve(o.SwappedRelativePositionAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionUT - burnUT, o.referenceBody, true, out velAfterBurn, out arrivalVel);
+
+            Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
+            return deltaV;
+        }
+        
         //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another. 
         //It's assumed that the initial orbit around the first planet is circular, and that this orbit
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that

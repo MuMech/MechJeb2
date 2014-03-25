@@ -57,6 +57,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult courseCorrectFinalPeA = new EditableDoubleMult(200000, 1000);
         [Persistent(pass = (int)Pass.Global)]
+        public EditableDoubleMult interceptDistance = new EditableDoubleMult(200, 1);
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult moonReturnAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
@@ -153,6 +155,7 @@ namespace MuMech
 
             if (GUILayout.Button("Remove ALL nodes"))
             {
+            	errorMessage = ""; // remove error messages meant for nodes that just got removed and therefore shouldn't show their error anymore
                 vessel.RemoveAllManeuverNodes();
             }
 
@@ -248,7 +251,10 @@ namespace MuMech
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
+                    if (core.target.Target is CelestialBody)
+                    	GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
+                    else
+                    	GuiUtils.SimpleTextBox("Closest approach distance", interceptDistance, "m");
                     GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 
@@ -738,7 +744,7 @@ namespace MuMech
                     }
                     else
                     {
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, interceptDistance, out UT);
                     }
                     break;
 

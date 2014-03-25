@@ -113,6 +113,7 @@ namespace MuMech
         public double maxThrustAccel { get { return thrustAvailable / mass; } }
         public double minThrustAccel { get { return thrustMinimum / mass; } }
 
+        public bool rcsThrust = false;
         public float throttleLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit + minThrustAccel * (1 - throttleLimit); } }
         public Vector3d torqueAvailable;
@@ -458,6 +459,15 @@ namespace MuMech
             thrustVectorMinThrottle += einfo.thrustMin;
             thrustVectorLastFrame += einfo.thrustCurrent;
             torqueThrustPYAvailable += einfo.torqueThrustPYAvailable;
+
+            if (thrustVectorMaxThrottle.magnitude == 0 && vessel.ActionGroups[KSPActionGroup.RCS])
+            {
+            	rcsThrust = true;
+            	thrustVectorMaxThrottle += (Vector3d)(vessel.transform.up) * rcsThrustAvailable.down;
+            }
+            else {
+            	rcsThrust = false;
+            }
 
             // Convert the resource information from the einfo and iinfo format
             // to the more useful ResourceInfo format.
