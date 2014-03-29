@@ -256,6 +256,8 @@ namespace MuMech
 		private static MechJebRouteRenderer renderer;
 		private Rect[] waypointRects = new Rect[0];
 		private int lastIndex = -1;
+		private int settingPageIndex = 0;
+		private string[] settingPages = new string[] { "Rover", "Waypoints" };
 //		private static LineRenderer redLine;
 //		private static LineRenderer greenLine;
 
@@ -581,7 +583,7 @@ namespace MuMech
 					{
 						if (ap.WaypointIndex > -1)
 						{
-							eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)ap.etaSpeed : wp.MaxSpeed));
+							eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)Math.Round(ap.etaSpeed, 1) : wp.MaxSpeed));
 						}
 						dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
@@ -771,57 +773,67 @@ namespace MuMech
 		{
 			bool alt = Input.GetKey(KeyCode.LeftAlt);
 			titleAdd = "Settings";
-			scroll = GUILayout.BeginScrollView(scroll);
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 			if (!ap.enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
 			
-			GUILayout.BeginHorizontal();
+			scroll = GUILayout.BeginScrollView(scroll);
 			
-			GUILayout.BeginVertical();
-			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
-//			ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.tractionLimit").DrawItem();
-			GUILayout.EndVertical();
+			settingPageIndex = GUILayout.SelectionGrid(settingPageIndex, settingPages, settingPages.Length);
 			
-			GUILayout.BeginVertical();
-			ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
-			ed.registry.Find(i => i.id == "Value:RoverController.traction").DrawItem();
-			GUILayout.EndVertical();
-			
-			GUILayout.EndHorizontal();
-			
-			
-			GUILayout.BeginHorizontal();
-			
-			GUILayout.BeginVertical();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.MohoMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.EveMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.GillyMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.KerbinMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.MunMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.MinmusMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.DunaMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.IkeMapdist").DrawItem();
-			GUILayout.EndVertical();
-			
-			GUILayout.BeginVertical();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.DresMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.JoolMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.LaytheMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.VallMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.TyloMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.BopMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.PolMapdist").DrawItem();
-			ed.registry.Find(i => i.id == "Editable:WaypointWindow.EelooMapdist").DrawItem();
-			GUILayout.EndVertical();
-			
-			GUILayout.EndHorizontal();
+			switch (settingPageIndex)
+			{
+				case 0:
+					GUILayout.BeginHorizontal();
+					
+					GUILayout.BeginVertical();
+					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
+		//			ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.tractionLimit").DrawItem();
+					ed.registry.Find(i => i.id == "Toggle:RoverController.LimitAcceleration").DrawItem();
+					GUILayout.EndVertical();
+					
+					GUILayout.BeginVertical();
+					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
+					ed.registry.Find(i => i.id == "Value:RoverController.traction").DrawItem();
+					GUILayout.EndVertical();
+					
+					GUILayout.EndHorizontal();
+					break;
+					
+				case 1:
+					GUILayout.BeginHorizontal();
+					
+					GUILayout.BeginVertical();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.MohoMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.EveMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.GillyMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.KerbinMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.MunMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.MinmusMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.DunaMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.IkeMapdist").DrawItem();
+					GUILayout.EndVertical();
+					
+					GUILayout.BeginVertical();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.DresMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.JoolMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.LaytheMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.VallMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.TyloMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.BopMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.PolMapdist").DrawItem();
+					ed.registry.Find(i => i.id == "Editable:WaypointWindow.EelooMapdist").DrawItem();
+					GUILayout.EndVertical();
+					
+					GUILayout.EndHorizontal();
+					break;
+			}
 			
 			GUILayout.EndScrollView();
 

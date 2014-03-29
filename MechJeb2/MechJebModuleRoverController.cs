@@ -66,9 +66,12 @@ namespace MuMech
 
 		[ToggleInfoItem("Stability Control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
 		public bool StabilityControl = false;
-			
+
 		[EditableInfoItem("Speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
 		public EditableDouble speed = 10;
+
+		[ToggleInfoItem("Limit Acceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		public bool LimitAcceleration = true;
 
 		public PIDController headingPID;
 		public PIDController speedPID;
@@ -126,7 +129,8 @@ namespace MuMech
 			base.OnStart(state);
 		}
 		
-		public void OnVesselModified(Vessel v) {
+		public void OnVesselModified(Vessel v)
+		{
 			try {
 				wheels.Clear();
 				wheels.AddRange(vessel.Parts.FindAll(p => !p.HasModule<ModuleLandingLeg>() && p.FindModelComponent<WheelCollider>() != null));
@@ -140,9 +144,10 @@ namespace MuMech
 		public double headingErr;
 		[ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
 		public double speedErr;
-		public MuMech.MovingAverage tgtSpeed = new MovingAverage(50);
+		public double tgtSpeed;
 		public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
 		private double lastETA = 0;
+		private float lastThrottle = 0;
 		double curSpeed;
 
 		public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
@@ -190,7 +195,8 @@ namespace MuMech
 		
 		public override void OnModuleDisabled()
 		{
-			if (core.attitude.users.Contains(this)) {
+			if (core.attitude.users.Contains(this))
+			{
 //				line.enabled = false;
 				core.attitude.attitudeDeactivate();
 				core.attitude.users.Remove(this);
@@ -210,11 +216,14 @@ namespace MuMech
 			CalculateTraction();
 			speedIntAcc = speedPID.intAccum;
 			
-			if (wp != null && wp.Body == orbit.referenceBody) {
-				if (ControlHeading) {
+			if (wp != null && wp.Body == orbit.referenceBody)
+			{
+				if (ControlHeading)
+				{
 					heading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
 				}
-				if (ControlSpeed) {
+				if (ControlSpeed)
+				{
 					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
@@ -228,8 +237,11 @@ namespace MuMech
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
+					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
+//					newSpeed = tgtSpeed + Mathf.Clamp((float)(newSpeed - tgtSpeed), -Time.deltaTime * 8f, Time.deltaTime * 2f);
 					var radius = Math.Max(wp.Radius, 10);
-					if (distance < radius) {
+					if (distance < radius)
+					{
 						if (WaypointIndex + 1 >= Waypoints.Count) // last waypoint
 						{
 							newSpeed = new [] { newSpeed, (distance < radius * 0.8 ? 0 : 1) }.Min();
@@ -290,7 +302,7 @@ namespace MuMech
 					}
 					brake = brake || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < brakeSpeedLimit && newSpeed < brakeSpeedLimit);
 					// ^ brake if needed to prevent rolling, hopefully
-					tgtSpeed.value = Math.Round(newSpeed, 1);
+					tgtSpeed = (newSpeed >= 0 ? newSpeed : 0);
 				}
 			}
 			
@@ -320,18 +332,22 @@ namespace MuMech
 			{
 				speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -5, 5);
 
-				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed.value) - Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
+				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
 				{
-					double act = speedPID.Compute(speedErr);
-					s.wheelThrottle = Mathf.Clamp((float)act, -1, 1);
-					if (speedErr < -1 && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
+					float act = (float)speedPID.Compute(speedErr);
+					s.wheelThrottle = !LimitAcceleration ? Mathf.Clamp((float)act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
+						(traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.005f, 0.005f)) * (traction < tractionLimit ? -1 : 1)));
+					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
+//					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
+					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
 //						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
 						brake = true;
 					}
 //					else if (!stabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
 //						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
 //					}
+					lastThrottle = s.wheelThrottle;
 				}
 			}
 			
@@ -393,7 +409,7 @@ namespace MuMech
 				}
 				
 				if (energyLeft < 0.05 && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) { s.wheelThrottle = 0; } // save remaining energy by not using it for acceleration
-				if (openSolars || energyLeft < 0.03) { tgtSpeed.force(0); }
+				if (openSolars || energyLeft < 0.03) { tgtSpeed = 0; }
 				
 				if (curSpeed < brakeSpeedLimit && (energyLeft < 0.05 || openSolars))
 				{
@@ -446,10 +462,10 @@ namespace MuMech
 			speedPID.Kp = sPIDp;
 			speedPID.Ki = sPIDi;
 			speedPID.Kd = sPIDd;
-			if (lastETA + 0.1 < DateTime.Now.TimeOfDay.TotalSeconds)
+			if (lastETA + 0.2 < DateTime.Now.TimeOfDay.TotalSeconds)
 			{
 				etaSpeed.value = curSpeed;
-				lastETA = DateTime.Now.TimeOfDay.TotalSeconds + 0.1;
+				lastETA = DateTime.Now.TimeOfDay.TotalSeconds;
 			}
 			
 			if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled)
