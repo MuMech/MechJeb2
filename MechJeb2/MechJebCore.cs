@@ -359,18 +359,18 @@ namespace MuMech
         		moduleRegistry = new List<Type>();
         		foreach (var ass in AppDomain.CurrentDomain.GetAssemblies())
         		{
-        			foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList())
+        			try
         			{
-        				try
+        				foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList())
         				{
         					moduleRegistry.Add(module);
         				}
-        				catch (Exception e)
-        				{
-        					Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
-        				}
         			}
-        		}
+					catch (Exception e)
+					{
+						Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
+					}
+				}
         	}
 
         	System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
