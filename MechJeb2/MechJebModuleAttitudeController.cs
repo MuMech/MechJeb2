@@ -34,6 +34,16 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public double Tf = 0.3;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public double TfMin = 0.1;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public double TfMax = 0.75;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public double kpFactor = 3;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public double kiFactor = 12;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public double kdFactor = 0.53;
 
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
@@ -143,15 +153,16 @@ namespace MuMech
                 );
 
             Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
-
+            Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
             setPIDParameters();
         }
 
         public void setPIDParameters()
         {
-            pid.Kd = 0.53 / Tf;
-            pid.Kp = pid.Kd / (3 * Math.Sqrt(2) * Tf);
-            pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
+            pid.Kd = kdFactor / Tf;
+            pid.Kp = pid.Kd / (kpFactor * Math.Sqrt(2) * Tf);
+            pid.Ki = pid.Kp / (kiFactor * Math.Sqrt(2) * Tf);
+            pid.intAccum = Vector3.ClampMagnitude(pid.intAccum, 5);
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)

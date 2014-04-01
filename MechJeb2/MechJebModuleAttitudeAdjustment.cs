@@ -9,12 +9,22 @@ namespace MuMech
     public class MechJebModuleAttitudeAdjustment : DisplayModule
     {
         public EditableDouble Tf;
+        public EditableDouble TfMin;
+        public EditableDouble TfMax;
+        public EditableDouble kpFactor;
+        public EditableDouble kiFactor;
+        public EditableDouble kdFactor;
 
         public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) { }
 
         public override void OnStart(PartModule.StartState state)
         {
             Tf = new EditableDouble(core.attitude.Tf);
+            TfMin = new EditableDouble(core.attitude.TfMin);
+            TfMax = new EditableDouble(core.attitude.TfMax);
+            kpFactor = new EditableDouble(core.attitude.kpFactor);
+            kiFactor = new EditableDouble(core.attitude.kiFactor);
+            kdFactor = new EditableDouble(core.attitude.kdFactor);
             base.OnStart(state);
         }
 
@@ -36,10 +46,24 @@ namespace MuMech
                 }
                 else
                 {
+//            pid.Kd = kpFactor / Tf;
+//            pid.Kp = pid.Kd / (kiFactor * Math.Sqrt(2) * Tf);
+//            pid.Ki = pid.Kp / (kpFactor * Math.Sqrt(2) * Tf);
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
                     GUILayout.Label(core.attitude.Tf.ToString("F3"), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Tf range");
+                    GuiUtils.SimpleTextBox("min", TfMin, "", 50);
+                    GuiUtils.SimpleTextBox("max", TfMax, "", 50);
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.Label("PID factors");
+                    GuiUtils.SimpleTextBox("Kd = kdFactor / Tf", kdFactor, "", 50);
+                    GuiUtils.SimpleTextBox("Kp = pid.Kd / (kpFactor * Math.Sqrt(2) * Tf)", kpFactor, "", 50);
+                    GuiUtils.SimpleTextBox("Ki = pid.Kp / (kiFactor * Math.Sqrt(2) * Tf)", kiFactor, "", 50);
                 }
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
@@ -126,10 +150,29 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            if (!core.attitude.Tf_autoTune && core.attitude.Tf != Tf)
+            if (!core.attitude.Tf_autoTune)
             {
-                core.attitude.Tf = Tf;
-                core.attitude.setPIDParameters();                
+            	if (core.attitude.Tf != Tf)
+            	{
+            		core.attitude.Tf = Tf;
+            		core.attitude.setPIDParameters();
+            	}
+            }
+            else
+            {
+            	if (core.attitude.TfMin != TfMin || core.attitude.TfMax != TfMax)
+            	{
+            		core.attitude.TfMin = TfMin;
+            		core.attitude.TfMax = TfMax;
+            		core.attitude.setPIDParameters();
+            	}
+            	if (core.attitude.kpFactor != kpFactor || core.attitude.kiFactor != kiFactor || core.attitude.kdFactor != kdFactor)
+            	{
+            		core.attitude.kpFactor = kpFactor;
+            		core.attitude.kiFactor = kiFactor;
+            		core.attitude.kdFactor = kdFactor;
+            		core.attitude.setPIDParameters();
+            	}
             }
             base.WindowGUI(windowID);
         }

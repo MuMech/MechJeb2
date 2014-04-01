@@ -70,8 +70,8 @@ namespace MuMech
 		[EditableInfoItem("Speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
 		public EditableDouble speed = 10;
 
-		[ToggleInfoItem("Limit Acceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
-		public bool LimitAcceleration = true;
+		[ToggleInfoItem("Limit Acceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local | (int)Pass.Type)]
+		public bool LimitAcceleration = false;
 
 		public PIDController headingPID;
 		public PIDController speedPID;
