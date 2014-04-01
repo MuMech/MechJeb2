@@ -133,7 +133,7 @@ namespace MuMech
 				colliders.Clear();
 				wheels.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
 			}
-			catch (Exception ex) {}
+			catch (Exception) {}
 		}
 		
 		[ValueInfoItem("Heading error", InfoItem.Category.Rover, format = "F1", units = "º")]

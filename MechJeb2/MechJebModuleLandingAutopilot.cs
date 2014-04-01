@@ -1348,7 +1348,7 @@ namespace MuMech
                     {
                         this.currentMultiplier = regression.yIntercept;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // If there is not enough data then we expect an exception. However we need to vary the multiplier everso slightly so that we get different data in order to start generating data. This should never happen as we have already checked the size of the dataset.
                         this.currentMultiplier *= 0.99999;

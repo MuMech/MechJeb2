@@ -306,6 +306,7 @@ namespace MuMech
         public Vector3 GetSrfVelocity() { return Vector3.zero; }
         public Transform GetTransform() { return g.transform; }
         public Vessel GetVessel() { return null; }
+        public VesselTargetModes GetTargetingMode() { return VesselTargetModes.Direction ; }
     }
 
     public class DirectionTarget : PositionTarget
