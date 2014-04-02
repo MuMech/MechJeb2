@@ -164,7 +164,9 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
+        	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden) { return; }
+        	
+        	if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
                 double spd = 0;
 
@@ -485,6 +487,8 @@ namespace MuMech
 
         public override void OnUpdate()
         {
+        	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden) { return; }
+        	
             if (tmode_changed)
             {
                 if (trans_kill_h && (tmode == TMode.OFF))
