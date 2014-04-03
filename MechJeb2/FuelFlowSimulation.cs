@@ -466,13 +466,14 @@ namespace MuMech
             //we can draw fuel from any fuel lines that point to this part
             foreach (Part p in nodeLookup.Keys)
             {
-                if (p is FuelLine)
-                    print("FuelLine ");
-                if (p is FuelLine && ((FuelLine)p).target == part)
-                {
-                    sourceNodes.Add(nodeLookup[p]);
+            	try
+            	{
+	                if (p is FuelLine && ((FuelLine)p).target == part)
+	                {
+	                    sourceNodes.Add(nodeLookup[p]);
                     print("FuelLine " + nodeLookup[p].partName + "_" + p.uid);
-                }
+	                }
+            	} catch (Exception e) { Debug.Log("MJ FindSourceNodes Step #1:\n" + e.Message); }
             }
 
             surfaceMounted = true;
@@ -483,40 +484,45 @@ namespace MuMech
             // However, this doesn't work in the VAB/SPH (as there is no vessel), and isn't needed there anyway.
             if (part.vessel && (dockNode = part.Modules.OfType<ModuleDockingNode>().FirstOrDefault()))
             {
-                uint dockedPartUId = dockNode.dockedPartUId;
-                Part p = part.vessel[dockedPartUId];
+            	try
+            	{
+	                uint dockedPartUId = dockNode.dockedPartUId;
+	                Part p = part.vessel[dockedPartUId];
                 print(String.Format("docking port {0} {1}", part, p));
-                if (p)
-                    sourceNodes.Add(nodeLookup[p]);
+	                if (p)
+	                    sourceNodes.Add(nodeLookup[p]);
+            	} catch (Exception e) { Debug.Log("MJ FindSourceNodes Step #2:\n" + e.Message); }
             }
 
             //we can (sometimes) draw fuel from stacked parts
             foreach (AttachNode attachNode in part.attachNodes)
             {
-                //decide if it's possible to draw fuel through this node:
-                if (attachNode.attachedPart != null                            //if there is a part attached here            
-                    && attachNode.nodeType == AttachNode.NodeType.Stack        //and the attached part is stacked (rather than surface mounted)
+            	try
+            	{
+	                //decide if it's possible to draw fuel through this node:
+	                if (attachNode.attachedPart != null                            //if there is a part attached here            
+	                    && attachNode.nodeType == AttachNode.NodeType.Stack        //and the attached part is stacked (rather than surface mounted)
                     && attachNode.id != "Strut"                                //and it's not a Strut
-                    && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
-                         && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
-                {
+	                    && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
+	                         && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
+	                {
                     print("attachNode.id " + attachNode.id);
                     if (part.fuelCrossFeed)
                     {
                         sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
                         print("AttachedPart " + nodeLookup[attachNode.attachedPart].partName + "_" + attachNode.attachedPart.uid);
                     }
-                    if (attachNode.attachedPart == part.parent) surfaceMounted = false;
-                }
+	                    if (attachNode.attachedPart == part.parent) surfaceMounted = false;
+	                }
+            	} catch (Exception e) { Debug.Log("MJ FindSourceNodes Step #3:\n" + e.Message); }
             }
 
             //Parts can draw resources from their parents
             //(exception: surface mounted fuel tanks cannot)
-            if (part.parent != null && part.fuelCrossFeed)
+            try
             {
-                sourceNodes.Add(nodeLookup[part.parent]);
-                print("Parent Part " + nodeLookup[part.parent].partName + "_" + part.parent.uid);
-            }
+            	if (part.parent != null && part.fuelCrossFeed) sourceNodes.Add(nodeLookup[part.parent]);
+            } catch (Exception e) { Debug.Log("MJ FindSourceNodes Step #4:\n" + e.Message); }
 
             print("source nodes for part " + partName);
             foreach (FuelNode n in sourceNodes) print("    " + n.partName);
