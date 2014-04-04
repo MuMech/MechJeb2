@@ -554,6 +554,7 @@ namespace MuMech
                         if (resources[type] < DRAINED) return false;
                         break;
 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:  // TODO : this is a lazy fix. Need to do the proper one later
                     case ResourceFlowMode.ALL_VESSEL:
                         //check if any part contains the needed resource:
                         if (!vessel.Any(n => n.resources[type] > DRAINED)) return false;
