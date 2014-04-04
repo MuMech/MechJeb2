@@ -592,6 +592,7 @@ namespace MuMech
                         resourceDrains[type] += amount;
                         break;
 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:  // TODO : this is a lazy fix. Need to do the proper one later
                     case ResourceFlowMode.ALL_VESSEL:
                         AssignFuelDrainRateAllVessel(type, amount, vessel);
                         break;
