@@ -32,18 +32,18 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool Tf_autoTune = true;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)Pass.Global)]
         public double Tf = 0.3;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)Pass.Global)]
         public double TfMin = 0.1;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public double TfMax = 0.75;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)Pass.Global)]
+        public double TfMax = 0.5;
+        [Persistent(pass = (int)Pass.Global)]
         public double kpFactor = 3;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public double kiFactor = 12;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public double kdFactor = 0.53;
+        [Persistent(pass = (int)Pass.Global)]
+        public double kiFactor = 6;
+        [Persistent(pass = (int)Pass.Global)]
+        public double kdFactor = 0.5;
 
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]

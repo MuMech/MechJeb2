@@ -57,13 +57,18 @@ namespace MuMech
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Tf range");
                     GuiUtils.SimpleTextBox("min", TfMin, "", 50);
-                    GuiUtils.SimpleTextBox("max", TfMax, "", 50);
+                    TfMin = Math.Max(TfMin, 0.01);
+                    GuiUtils.SimpleTextBox("min", TfMax, "", 50);
+                    TfMax = Math.Max(TfMax, 0.01);
                     GUILayout.EndHorizontal();
 
                     GUILayout.Label("PID factors");
-                    GuiUtils.SimpleTextBox("Kd = kdFactor / Tf", kdFactor, "", 50);
-                    GuiUtils.SimpleTextBox("Kp = pid.Kd / (kpFactor * Math.Sqrt(2) * Tf)", kpFactor, "", 50);
-                    GuiUtils.SimpleTextBox("Ki = pid.Kp / (kiFactor * Math.Sqrt(2) * Tf)", kiFactor, "", 50);
+                    GuiUtils.SimpleTextBox("Kd = ", kdFactor, " / Tf", 50);
+                    kdFactor = Math.Max(kdFactor, 0.01);
+                    GuiUtils.SimpleTextBox("Kp = pid.Kd / (", kpFactor, " * Math.Sqrt(2) * Tf)", 50);
+                    kpFactor = Math.Max(kpFactor, 0.01);
+                    GuiUtils.SimpleTextBox("Ki = pid.Kp / (", kiFactor, " * Math.Sqrt(2) * Tf)", 50);
+                    kiFactor = Math.Max(kiFactor, 0.01);
                 }
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");

@@ -329,13 +329,15 @@ namespace MuMech
         public EditableDoubleMult turnShapeExponent = new EditableDoubleMult(0.4, 0.01);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoPath = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public float autoTurnPerc = 0.1f;
 
         public double autoTurnStartAltitude
         {
             get
             {
                 var vessel = FlightGlobals.ActiveVessel;
-                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() / 10 : vessel.terrainAltitude + 20);
+                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() * autoTurnPerc : vessel.terrainAltitude + 25);
             }
         }
 
