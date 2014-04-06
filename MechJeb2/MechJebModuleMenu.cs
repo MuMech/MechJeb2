@@ -16,7 +16,12 @@ namespace MuMech
             hidden = true;
             showInFlight = true;
             showInEditor = true;
-            useIcon = true;
+
+            if (toolbarButtons == null)
+                toolbarButtons = new Dictionary<string, IButton>();
+
+            if (missingIcons == null)
+                missingIcons = new HashSet<string>();
         }
 
         public enum WindowStat
@@ -43,8 +48,14 @@ namespace MuMech
 
         public bool hideButton = false;
 
+        private static Dictionary<string, IButton> toolbarButtons;
+        private static HashSet<string> missingIcons;
+
+        IButton menuButton;
+
         protected override void WindowGUI(int windowID)
         {
+            SetupMainToolbarButton();
             if (hideButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
             {
                 ShowHideWindow();
@@ -76,6 +87,8 @@ namespace MuMech
                     if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
                     if (module is MechJebModuleThrustWindow && core.thrust.limiter != MechJebModuleThrustController.LimitMode.None) active = true;
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
+
+                    SetupToolbarButton(module, active);
                 }
             }
 
@@ -91,6 +104,94 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+
+        public void SetupMainToolbarButton()
+        {
+            if (menuButton == null)
+            {
+                menuButton = ToolbarManager.Instance.add("MechJeb2", "MechJeb2MenuButton");
+                menuButton.ToolTip = "MechJeb2";
+                menuButton.TexturePath = "MechJeb2/Plugins/Icons/MJ2";
+                menuButton.OnClick += (b) =>
+                {
+                    MechJebModuleMenu mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
+                    mod.ShowHideWindow();
+                    //print("Change MechJebModuleMenu ");                
+                };
+            }
+            menuButton.Visible = true;
+        }
+
+        public void SetupToolbarButton(DisplayModule module, bool active)
+        {
+            if (!module.hidden)
+            {
+                IButton button;
+                String name = CleanName(module.GetName());
+                if (!toolbarButtons.ContainsKey(name))
+                {
+                    print("Adding button for " + name);
+                    button = ToolbarManager.Instance.add("MechJeb2", name);
+                    toolbarButtons[name] = button;
+                    button.ToolTip = "MechJeb " + module.GetName();                    
+                    //button.Visibility = new MJButtonVisibility(this);
+                    button.OnClick += (b) =>
+                    {
+                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModules<DisplayModule>().FirstOrDefault(m => m.GetName() == module.GetName());
+                        if (mod != null)
+                        {
+                            mod.enabled = !mod.enabled;
+                            //print("Change " + module.GetName() + " to " + module.enabled);
+                        }
+                    };
+                }
+                else
+                {
+                    button = toolbarButtons[name];
+                    //if (button.Visible != module.showInCurrentScene)
+                }
+                button.Visible = module.showInCurrentScene;
+                String TexturePath = "MechJeb2/Plugins/Icons/" + name;
+                String TexturePathActive = TexturePath + "_active";
+                if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
+                {
+                    TexturePath = "MechJeb2/Plugins/Icons/QMark";
+                    if (!missingIcons.Contains(name))
+                    {
+                        missingIcons.Add(name);
+                        print("No icon for " + name);
+                    }
+                }
+                if (active & GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
+                {
+                    TexturePathActive = TexturePath;
+                    if (!missingIcons.Contains(name + "_active"))
+                    {
+                        missingIcons.Add(name + "_active");
+                        print("No icon for " + name + "_active");
+                    }
+                }
+                button.TexturePath = active ? TexturePathActive : TexturePath;
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            foreach( Button b in toolbarButtons.Values)
+            {
+                b.Destroy();
+            }
+            toolbarButtons = new Dictionary<string, IButton>();
+            menuButton.Destroy();
+
+            base.OnDestroy();
+        }
+
+        public static string CleanName(String name)
+        {
+            return name.Replace('.', '_').Replace(' ', '_').Replace(':', '_').Replace('/', '_');
+        }
+        
         public override void DrawGUI(bool inEditor)
         {
             switch (windowStat)
