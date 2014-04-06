@@ -33,6 +33,7 @@ namespace MuMech
                 core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
                 core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
 
+                GUILayout.Label(ScienceUtil.GetExperimentBiome(core.target.targetBody, core.target.targetLatitude, core.target.targetLongitude));
                 // Display the ASL of the taget location
                 GUILayout.Label("Target ASL: " + MuUtils.ToSI(core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude), -1, 4) + "m");
             }
@@ -136,6 +137,7 @@ namespace MuMech
                     case ReentrySimulation.Outcome.LANDED:
                         GUILayout.Label("Landing Predictions:");
                         GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + MuUtils.ToSI(result.endASL,-1, 4) + "m");
+                        GUILayout.Label(ScienceUtil.GetExperimentBiome(result.body, result.endPosition.latitude, result.endPosition.longitude));
                         double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0),
                                                          mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
                         GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
