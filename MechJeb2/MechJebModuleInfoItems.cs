@@ -249,6 +249,7 @@ namespace MuMech
             // Use the average specific impulse of all RCS parts.
             double totalIsp = 0;
             int numThrusters = 0;
+            float gForRCS;
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
             
@@ -256,6 +257,7 @@ namespace MuMech
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
                 numThrusters++;
+                gForRCS = pm.G;
             }
 
             double m0 = (HighLogic.LoadedSceneIsEditor)

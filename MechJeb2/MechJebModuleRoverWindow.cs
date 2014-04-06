@@ -64,7 +64,7 @@ namespace MuMech
 			
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Target Speed", GUILayout.ExpandWidth(true));
-			GUILayout.Label(autopilot.tgtSpeed.value.ToString("F1"), GUILayout.ExpandWidth(false));
+			GUILayout.Label(autopilot.tgtSpeed.ToString("F1"), GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();

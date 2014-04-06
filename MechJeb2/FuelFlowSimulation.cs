@@ -306,6 +306,7 @@ namespace MuMech
 
         public float maxThrust = 0;     //max thrust of this part
         public float fwdThrustRatio = 1; // % of thrust moving the ship forwad
+        public float g;                  // value of g used for engine flow rate / isp
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
@@ -353,6 +354,8 @@ namespace MuMech
 
                     isEngine = true;
 
+                    g = engine.g;
+
                     // If we take into account the engine rotation 
                     if (dVLinearThrust)
                     {
@@ -394,6 +397,8 @@ namespace MuMech
                         inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
+
+                    g = engine.g;
 
                     // If we take into account the engine rotation 
                     if (dVLinearThrust)
@@ -451,7 +456,7 @@ namespace MuMech
             if (isEngine)
             {
                 float Isp = ispCurve.Evaluate(atmospheres);
-                float massFlowRate = throttle * maxThrust / (Isp * 9.81f);
+                float massFlowRate = throttle * maxThrust / (Isp * g);
                 if (correctThrust) massFlowRate = massFlowRate * Isp / ispCurve.Evaluate(0); // scale thrust
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)

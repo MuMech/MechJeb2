@@ -57,10 +57,6 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
 
-        // Used for the Blizzy Toolbar-Plugin
-        [Persistent(pass = (int)Pass.Global)]
-        public bool useIcon = false;
-
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
         public int ID;
@@ -83,11 +79,6 @@ namespace MuMech
             if (GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
             {
                 enabled = false;
-            }
-
-            if (GUI.Button(new Rect(windowPos.width - 33, 0, 13, 20), "T", GuiUtils.yellowOnHover))
-            {
-                useIcon = !useIcon;
             }
 
             GUI.DragWindow();

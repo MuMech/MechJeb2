@@ -20,7 +20,7 @@ namespace MuMech
 
         enum DockingStep
         {
-            INIT, WRONG_SIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
+            INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
         }
         DockingStep dockingStep = DockingStep.OFF;
 
@@ -89,26 +89,23 @@ namespace MuMech
 
             switch (dockingStep)
             {
-                case DockingStep.WRONG_SIDE:
-                    if (-zSep <= safeDistance && lateralSep.magnitude <= safeDistance)  // near the target but on the wrong side. Back up before moving on the side
-                    {
-                        zApproachSpeed = MaxSpeedForDistance(safeDistance + zSep + 2.0, -zAxis);
-                        latApproachSpeed = 0;
-                        align = false;
-                        status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side";
-                    }
-                    else if (-zSep > safeDistance && lateralSep.magnitude <= safeDistance * 1.1)
-                    {
-                        zApproachSpeed = 0;
-                        latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, lateralSep);
-                        status = "Moving away from docking axis at " + latApproachSpeed.ToString("F2") + " m/s to avoid hitting target on backing up";
-                    }
-                    else
-                    {
-                        zApproachSpeed = -MaxSpeedForDistance(-zSep + targetSize, -zAxis);
-                        latApproachSpeed = 0;
-                        status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s to get on the correct side of the target.";
-                    }
+                case DockingStep.WRONG_SIDE_BACKING_UP:
+                    zApproachSpeed = MaxSpeedForDistance(safeDistance + zSep + 2.0, -zAxis);
+                    latApproachSpeed = 0;
+                    align = false;
+                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side";
+                    break;
+
+                case DockingStep.WRONG_SIDE_LATERAL:
+                    zApproachSpeed = 0;
+                    latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, lateralSep);
+                    status = "Moving away from docking axis at " + latApproachSpeed.ToString("F2") + " m/s to avoid hitting target on backing up";
+                    break;
+
+                case DockingStep.WRONG_SIDE_SWITCHSIDE:
+                    zApproachSpeed = -MaxSpeedForDistance(-zSep + targetSize, -zAxis);
+                    latApproachSpeed = 0;
+                    status = "Moving at " + zApproachSpeed.ToString("F2") + " m/s to get on the correct side of the target.";
                     break;
 
                 case DockingStep.BACKING_UP:
@@ -119,7 +116,6 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-
                     if (zSep < targetSize)
                         zApproachSpeed = 0;
                     else
@@ -175,7 +171,17 @@ namespace MuMech
                     InitDocking();
                     break;
 
-                case DockingStep.WRONG_SIDE:
+                case DockingStep.WRONG_SIDE_BACKING_UP:
+                    if (-zSep > safeDistance)
+                        dockingStep = DockingStep.WRONG_SIDE_LATERAL;
+                    break;
+
+                case DockingStep.WRONG_SIDE_LATERAL:
+                    if (lateralSep.magnitude > safeDistance)
+                        dockingStep = DockingStep.WRONG_SIDE_SWITCHSIDE;
+                    break;
+
+                case DockingStep.WRONG_SIDE_SWITCHSIDE:
                     if (zSep > 0)
                         dockingStep = DockingStep.BACKING_UP;
                     break;
@@ -239,7 +245,7 @@ namespace MuMech
             }
 
             if (zSep < 0)  //we're behind the target
-                dockingStep = DockingStep.WRONG_SIDE;
+                dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
             else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
                 if (zSep < targetSize) 
                     dockingStep = DockingStep.BACKING_UP;

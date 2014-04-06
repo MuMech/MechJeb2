@@ -227,22 +227,26 @@ namespace MuMech
             vesselRoll.value = (rotationVesselSurface.eulerAngles.z > 180) ? (rotationVesselSurface.eulerAngles.z - 360.0) : rotationVesselSurface.eulerAngles.z;
 
             altitudeASL.value = vessel.mainBody.GetAltitude(CoM);
-            RaycastHit sfc;
-            if (Physics.Raycast(CoM, -up, out sfc, (float)altitudeASL + 10000.0F, 1 << 15))
-            {
-                altitudeTrue.value = sfc.distance;
-            }
-            else if (vessel.mainBody.pqsController != null)
-            {
-                // from here: http://kerbalspaceprogram.com/forum/index.php?topic=10324.msg161923#msg161923
-                altitudeTrue.value = vessel.mainBody.GetAltitude(CoM) - (vessel.mainBody.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(vessel.mainBody.GetLongitude(CoM), Vector3d.down) * QuaternionD.AngleAxis(vessel.mainBody.GetLatitude(CoM), Vector3d.forward) * Vector3d.right) - vessel.mainBody.pqsController.radius);
-            }
-            else
-            {
-                altitudeTrue.value = vessel.mainBody.GetAltitude(CoM);
-            }
+            //RaycastHit sfc;
+            //if (Physics.Raycast(CoM, -up, out sfc, (float)altitudeASL + 10000.0F, 1 << 15))
+            //{
+            //    altitudeTrue.value = sfc.distance;
+            //}
+            //else if (vessel.mainBody.pqsController != null)
+            //{
+            //    // from here: http://kerbalspaceprogram.com/forum/index.php?topic=10324.msg161923#msg161923
+            //    altitudeTrue.value = vessel.mainBody.GetAltitude(CoM) - (vessel.mainBody.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(vessel.mainBody.GetLongitude(CoM), Vector3d.down) * QuaternionD.AngleAxis(vessel.mainBody.GetLatitude(CoM), Vector3d.forward) * Vector3d.right) - vessel.mainBody.pqsController.radius);
+            //}
+            //else
+            //{
+            //    altitudeTrue.value = vessel.mainBody.GetAltitude(CoM);
+            //}
 
-            double surfaceAltitudeASL = altitudeASL - altitudeTrue;
+            //double surfaceAltitudeASL = altitudeASL - altitudeTrue;
+
+            double surfaceAltitudeASL = vessel.mainBody.pqsController != null ? vessel.pqsAltitude : 0d;
+            altitudeTrue.value = altitudeASL - surfaceAltitudeASL;
+
             altitudeBottom = altitudeTrue;
             foreach (Part p in vessel.parts)
             {
