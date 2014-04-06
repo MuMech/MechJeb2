@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +14,7 @@ namespace MuMech
             references[Operation.PERIAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
             references[Operation.APOAPSIS] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
             references[Operation.ELLIPTICIZE] = new TimeReference[] { TimeReference.X_FROM_NOW };
+            references[Operation.SEMI_MAJOR] = new TimeReference[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
             references[Operation.INCLINATION] = new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW };
             references[Operation.PLANE] = new TimeReference[] { TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
             references[Operation.TRANSFER] = new TimeReference[] { TimeReference.COMPUTED };
@@ -23,17 +24,18 @@ namespace MuMech
             references[Operation.LAMBERT] = new TimeReference[] { TimeReference.X_FROM_NOW };
             references[Operation.KILL_RELVEL] = new TimeReference[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
             references[Operation.RESONANT_ORBIT] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW };
+            references[Operation.LAN] = new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW };
         }
 
         public enum Operation
         {
-            CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, INCLINATION, PLANE, TRANSFER, MOON_RETURN,
-            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL, RESONANT_ORBIT
+            CIRCULARIZE, PERIAPSIS, APOAPSIS, ELLIPTICIZE, SEMI_MAJOR, INCLINATION, PLANE, TRANSFER, MOON_RETURN,
+            INTERPLANETARY_TRANSFER, COURSE_CORRECTION, LAMBERT, KILL_RELVEL, RESONANT_ORBIT, LAN
         };
         static int numOperations = Enum.GetNames(typeof(Operation)).Length;
-        string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap",
+        string[] operationStrings = new string[]{"circularize", "change periapsis", "change apoapsis", "change both Pe and Ap", "change semi-major axis",
                   "change inclination", "match planes with target", "Hohmann transfer to target", "return from a moon",
-                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target", "resonant orbit"};
+                  "transfer to another planet", "fine tune closest approach to target", "intercept target at chosen time", "match velocities with target", "resonant orbit", "change longitude of ascending node"};
 
         public enum TimeReference
         {
@@ -51,7 +53,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
         [Persistent(pass = (int)Pass.Global)]
+        public EditableDoubleMult newSMA = new EditableDoubleMult(800000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult courseCorrectFinalPeA = new EditableDoubleMult(200000, 1000);
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDoubleMult interceptDistance = new EditableDoubleMult(200, 1);
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult moonReturnAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)Pass.Global)]
@@ -66,6 +72,8 @@ namespace MuMech
         public EditableInt resonanceNumerator = 2;
         [Persistent(pass = (int)Pass.Global)]
         public EditableInt resonanceDenominator = 3;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble newLAN = 0;
 
         Dictionary<Operation, TimeReference[]> references = new Dictionary<Operation, TimeReference[]>();
 
@@ -147,6 +155,7 @@ namespace MuMech
 
             if (GUILayout.Button("Remove ALL nodes"))
             {
+            	errorMessage = ""; // remove error messages meant for nodes that just got removed and therefore shouldn't show their error anymore
                 vessel.RemoveAllManeuverNodes();
             }
 
@@ -242,7 +251,10 @@ namespace MuMech
                     break;
 
                 case Operation.COURSE_CORRECTION:
-                    if (core.target.Target is CelestialBody) GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
+                    if (core.target.Target is CelestialBody)
+                    	GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
+                    else
+                    	GuiUtils.SimpleTextBox("Closest approach distance", interceptDistance, "m");
                     GUILayout.Label("Schedule the burn to minimize the required ΔV.");
                     break;
 
@@ -263,6 +275,17 @@ namespace MuMech
                     GUILayout.Label("/", GUILayout.ExpandWidth(false));
                     resonanceDenominator.text = GUILayout.TextField(resonanceDenominator.text, GUILayout.Width(30));
                     GUILayout.EndHorizontal();
+                    break;
+
+	            case Operation.SEMI_MAJOR:
+    	            GuiUtils.SimpleTextBox ("New Semi-Major Axis:", newSMA, "km");
+        	        GUILayout.Label ("Schedule the burn");
+            	    break;
+				
+                case Operation.LAN:
+                    GUILayout.Label("Schedule the burn");
+                    GUILayout.Label("New Longitude of Ascending Node:");
+                    core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
                     break;
             }
         }
@@ -630,6 +653,23 @@ namespace MuMech
                         errorMessage = "target must be in the same sphere of influence.";
                     }
                     break;
+
+	            case Operation.SEMI_MAJOR:
+   	            	if(o.Radius(UT) > 2*newSMA) {
+   	            		error = true;
+   	                 	errorMessage = "cannot make Semi-Major Axis less than twice the burn altitude plus the radius of " + o.referenceBody.theName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)";
+   	             	}
+   	             	else if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence) {
+   	                 	errorMessage = "Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit";
+   	             	}
+   	             	break;
+				
+                case Operation.LAN:
+                    if (o.inclination < 10)
+                    {
+                        errorMessage = "Warning: orbital plane has a low inclination of " + o.inclination + "º (recommend > 10º) and so maneuver may not be accurate";
+                    }
+                    break;
             }
 
             if (error) errorMessage = "Couldn't plot maneuver: " + errorMessage;
@@ -704,7 +744,7 @@ namespace MuMech
                     }
                     else
                     {
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, interceptDistance, out UT);
                     }
                     break;
 
@@ -722,6 +762,14 @@ namespace MuMech
 
                 case Operation.RESONANT_ORBIT:
                     dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, UT, (double)resonanceNumerator.val / resonanceDenominator.val);
+                    break;
+
+           		 case Operation.SEMI_MAJOR:
+                	dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA);
+                	break;
+					
+                case Operation.LAN:
+                    dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, UT, core.target.targetLongitude);
                     break;
             }
 

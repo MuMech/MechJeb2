@@ -140,7 +140,7 @@ namespace MuMech
 
                     double launchTime = vesselState.time + tMinus;
 
-                    core.warp.WarpToUT(launchTime);
+                    //core.warp.WarpToUT(launchTime);
 
                     if (launchingToPlane)
                     {
@@ -148,7 +148,7 @@ namespace MuMech
                         desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                     }
 
-                    if (autopilot.enabled) core.warp.WarpToUT(launchTime);
+                    if (autopilot.enabled && core.node.autowarp) core.warp.WarpToUT(launchTime);
 
                     GUILayout.Label("Launching to " + (launchingToPlane ? "target plane" : "rendezvous") + ": T-" + MuUtils.ToSI(tMinus, 0) + "s");
                     if (tMinus < 3 * vesselState.deltaT)

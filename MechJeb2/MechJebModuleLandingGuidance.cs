@@ -32,6 +32,9 @@ namespace MuMech
 
                 core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
                 core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
+
+                // Display the ASL of the taget location
+                GUILayout.Label("Target ASL: " + MuUtils.ToSI(core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude), -1, 4) + "m");
             }
             else
             {
@@ -45,14 +48,19 @@ namespace MuMech
 
             if (mainBody.bodyName.ToLower().Contains("kerbin"))
             {
-                if (GUILayout.Button("Target KSC"))
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("KSC Pad"))
                 {
                     core.target.SetPositionTarget(mainBody, -0.09694444, -74.5575);
                 }
+                if (GUILayout.Button("VAB"))
+                {
+                    core.target.SetPositionTarget(mainBody, -0.09694444, -74.617);
+                }
+                GUILayout.EndHorizontal();
             }
 
-            if (autopilot != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
-
+            
             bool active = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
             if (predictor.enabled != active)
             {
@@ -92,6 +100,8 @@ namespace MuMech
 
                 GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s", 35);
 
+                if (autopilot != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+
                 autopilot.deployGears = GUILayout.Toggle(autopilot.deployGears, "Deploy Landing Gear");
                 GuiUtils.SimpleTextBox("Stage Limit:", autopilot.limitGearsStage, "", 35);
                 autopilot.deployChutes = GUILayout.Toggle(autopilot.deployChutes, "Deploy Parachutes");
@@ -99,7 +109,16 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Stage Limit:", autopilot.limitChutesStage, "", 35);
                 predictor.limitChutesStage = autopilot.limitChutesStage;
 
-                if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+                if (autopilot.enabled)
+                {
+                    GUILayout.Label("Status: " + autopilot.status);
+
+                    string parachuteInfo = autopilot.ParachuteControlInfo;
+                    if (null != parachuteInfo)
+                    {
+                        GUILayout.Label(parachuteInfo);
+                    }
+                }
             }
 
             GUILayout.EndVertical();
@@ -115,12 +134,14 @@ namespace MuMech
                 switch (result.outcome)
                 {
                     case ReentrySimulation.Outcome.LANDED:
-                        GUILayout.Label("Predicted landing site:");
-                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude));
+                        GUILayout.Label("Landing Predictions:");
+                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + MuUtils.ToSI(result.endASL,-1, 4) + "m");
                         double error = Vector3d.Distance(mainBody.GetRelSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0),
                                                          mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
-                        GUILayout.Label("Difference from target = " + MuUtils.ToSI(error, 0) + "m");
-                        if (result.maxDragGees > 0) GUILayout.Label("Predicted max drag gees: " + result.maxDragGees.ToString("F1"));
+                        GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
+                                       +"\nMax drag: " + result.maxDragGees.ToString("F1") +"g"
+                                       +"\nDelta-v needed: " + result.deltaVExpended.ToString("F1") + "m/s"
+                                       +"\nTime to land: " + GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1));                        
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
@@ -128,11 +149,13 @@ namespace MuMech
                         Orbit o = result.EndOrbit();
                         if (o.eccentricity > 1) GUILayout.Label("Hyperbolic, eccentricity = " + o.eccentricity.ToString("F2"));
                         else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + "m x " + MuUtils.ToSI(o.ApA, 3) + "m");
+                        GUILayout.Label("Max drag: " + result.maxDragGees.ToString("F1") + "g"
+                                       +"\nExit atmosphere in: " + GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1));                        
                         break;
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
-                        GUILayout.Label("Orbit does not reenter:");
-                        GUILayout.Label(MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + "m atmosphere height");
+                        GUILayout.Label("Orbit does not reenter:\n"
+                                      + MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + "m atmosphere height");
                         break;
 
                     case ReentrySimulation.Outcome.TIMED_OUT:

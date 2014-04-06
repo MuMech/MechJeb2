@@ -164,7 +164,9 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
+        	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden) { return; }
+        	
+        	if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
                 double spd = 0;
 
@@ -181,7 +183,7 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
-                            Vector3 hsdir = Vector3.Exclude(vesselState.up, vesselState.velocityVesselSurface);
+                            Vector3 hsdir = Vector3.Exclude(vesselState.up, vessel.srf_velocity);
                             Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
                             if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
@@ -199,8 +201,8 @@ namespace MuMech
                 }
 
                 double t_err = (trans_spd_act - spd) / vesselState.maxThrustAccel;
-                if ((tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(vesselState.forward, vesselState.velocityVesselOrbit) < 0) ||
-                   (tmode == TMode.KEEP_SURFACE && Vector3d.Dot(vesselState.forward, vesselState.velocityVesselSurface) < 0))
+                if ((tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(vesselState.forward, vessel.obt_velocity) < 0) ||
+                   (tmode == TMode.KEEP_SURFACE && Vector3d.Dot(vesselState.forward, vessel.srf_velocity) < 0))
                 {
                     //allow thrust to declerate 
                     t_err *= -1;
@@ -296,6 +298,8 @@ namespace MuMech
 
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
+            
+            if (s.Z == 0 && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
             lastThrottle = s.mainThrottle;
         }
@@ -305,7 +309,7 @@ namespace MuMech
         {
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return 1.0F;
 
-            double velocityRatio = Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) / vesselState.TerminalVelocity();
+            double velocityRatio = Vector3d.Dot(vessel.srf_velocity, vesselState.up) / vesselState.TerminalVelocity();
 
             if (velocityRatio < 1.0) return 1.0F; //full throttle if under terminal velocity
 
@@ -483,6 +487,8 @@ namespace MuMech
 
         public override void OnUpdate()
         {
+        	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden) { return; }
+        	
             if (tmode_changed)
             {
                 if (trans_kill_h && (tmode == TMode.OFF))

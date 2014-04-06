@@ -6,10 +6,9 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleAscentPathEditor : DisplayModule
+    public class MechJebModuleAscentPathEditor : DisplayModule
     {
-        public MechJebModuleAscentPathEditor(MechJebCore core)
-            : base(core)
+        public MechJebModuleAscentPathEditor(MechJebCore core) : base(core)
         {
             hidden = true;
         }
@@ -43,13 +42,16 @@ namespace MuMech
             double oldTurnShapeExponent = path.turnShapeExponent;
             double oldTurnEndAngle = path.turnEndAngle;
 
+            GUILayout.BeginHorizontal();
             path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
+            if (path.autoPath) path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc, 0.01f, 1.05f) * 200f + 0.5f) / 200f;
+            GUILayout.EndHorizontal();
 
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn start altitude: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude,-1,2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight });
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude,-1,2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn end altitude: ");

@@ -26,7 +26,7 @@ namespace MuMech
         }
 
         private static float lastFixedTime = 0;
-        private static Dictionary<Vessel,MechJebCore> masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+        private static Dictionary<Guid, MechJebCore> masterMechjebs = new Dictionary<Guid, MechJebCore>();
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
@@ -34,17 +34,17 @@ namespace MuMech
                 return vessel.GetModules<MechJebCore>().Max();
             if (lastFixedTime != Time.fixedTime)
             {
-                masterMechjebs = new Dictionary<Vessel,MechJebCore>();
+                masterMechjebs = new Dictionary<Guid, MechJebCore>();
                 lastFixedTime = Time.fixedTime;
             }
-            if (!masterMechjebs.ContainsKey(vessel))
+            if (!masterMechjebs.ContainsKey(vessel.id))
             {
                 MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
                 if (mj != null)
-                    masterMechjebs.Add(vessel, mj);
+                    masterMechjebs.Add(vessel.id, mj);
                 return mj;
             }
-            return masterMechjebs[vessel];
+            return masterMechjebs[vessel.id];
         }
 
         public static double TotalResourceMass(this Vessel vessel, string resourceName)
@@ -67,17 +67,21 @@ namespace MuMech
 
         public static bool HasElectricCharge(this Vessel vessel)
         {
-            if (vessel == null || vessel.GetReferenceTransformPart() == null)
+            if (vessel == null)
                 return false;
 
             List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
             PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
             if (definition == null) return false;
 
-            PartResource r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
-            // check the command pod first since most have their batteries
-            if (r != null && r.amount > 0)
-                return true;
+            PartResource r;
+            if (vessel.GetReferenceTransformPart() != null)
+            {
+                r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
+                // check the command pod first since most have their batteries
+                if (r != null && r.amount > 0)
+                    return true;
+            }
 
             foreach (Part p in parts)
             {
@@ -167,5 +171,50 @@ namespace MuMech
                 vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
             }
         }
+
+
+        // From FAR with ferram4 authorisation
+        public static Vector3Pair GetBoundingBox(this Vessel vessel)
+        {
+            Vector3 minBounds = new Vector3();
+            Vector3 maxBounds = new Vector3();
+
+            foreach (Part p in vessel.parts)
+            {
+                foreach (Transform t in p.FindModelComponents<Transform>())
+                {
+                    MeshFilter mf = t.GetComponent<MeshFilter>();
+                    if (mf == null)
+                        continue;
+                    Mesh m = mf.mesh;
+
+                    if (m == null)
+                        continue;
+
+                    var matrix = vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
+
+                    foreach (Vector3 vertex in m.vertices)
+                    {
+                        Vector3 v = matrix.MultiplyPoint3x4(vertex);
+
+                        maxBounds.x = Mathf.Max(maxBounds.x, v.x);
+                        minBounds.x = Mathf.Min(minBounds.x, v.x);
+                        maxBounds.y = Mathf.Max(maxBounds.y, v.y);
+                        minBounds.y = Mathf.Min(minBounds.y, v.y);
+                        maxBounds.z = Mathf.Max(maxBounds.z, v.z);
+                        minBounds.z = Mathf.Min(minBounds.z, v.z);
+                    }
+                }
+            }
+
+            return new Vector3Pair(minBounds, maxBounds);
+        }
+        
+
+
+        
+
+
+
     }
 }

@@ -8,32 +8,50 @@ namespace MuMech
 {
     public class ReentrySimulation
     {
+        // Input values
+         Orbit input_initialOrbit;
+         double input_UT; 
+         double input_dragMassExcludingUsedParachutes; 
+         List<SimulatedParachute> input_parachuteList; 
+         double input_mass;
+         IDescentSpeedPolicy input_descentSpeedPolicy; 
+         double input_decelEndAltitudeASL; 
+         double input_maxThrustAccel; 
+         double input_parachuteSemiDeployMultiplier; 
+         double input_probableLandingSiteASL; 
+         bool input_multiplierHasError;
+         double input_dt;
+
         //parameters of the problem:
         bool bodyHasAtmosphere;
         double seaLevelAtmospheres;
         double scaleHeight;
         double bodyRadius;
         double gravParameter;
-        double dragCoefficient; //massDrag / mass        
+        double dragMassExcludingUsedParachutes;         
         double mass;
         Vector3d bodyAngularVelocity;
         IDescentSpeedPolicy descentSpeedPolicy;
-        double landedRadius;
+        double decelRadius;
         double aerobrakedRadius;
         double startUT;
         CelestialBody mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
         double maxThrustAccel;
+        double probableLandingSiteASL; // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
+        double probableLandingSiteRadius; // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
 
         bool orbitReenters;
 
         ReferenceFrame referenceFrame;
-
-        double dt = 0.2; //in seconds
-        double max_dt = 0.2; //in seconds
+        
+        double dt;
+        double max_dt;
         double min_dt = 0.01; //in seconds
         const double maxSimulatedTime = 2000; //in seconds
 
         List<SimulatedParachute> parachutes;
+        double parachuteSemiDeployMultiplier;
+        bool multiplierHasError;
 
         //Dynamical variables 
         Vector3d x; //coordinate system used is centered on main body
@@ -45,36 +63,57 @@ namespace MuMech
         double deltaVExpended;
         List<AbsoluteVector> trajectory;
 
-        public ReentrySimulation(Orbit initialOrbit, double UT, double dragCoefficient, List<SimulatedParachute> parachuteList, double mass,
-            IDescentSpeedPolicy descentSpeedPolicy, double endAltitudeASL, double maxThrustAccel)
+        public ReentrySimulation(Orbit _initialOrbit, double _UT, double _dragMassExcludingUsedParachutes, List<SimulatedParachute> _parachuteList, double _mass,
+            IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt)
         {
-            CelestialBody body = initialOrbit.referenceBody;
+            // Store all the input values as they were given
+            input_initialOrbit = _initialOrbit;
+            input_UT = _UT;
+            input_dragMassExcludingUsedParachutes = _dragMassExcludingUsedParachutes;
+            input_parachuteList = _parachuteList;
+            input_mass = _mass;
+            input_descentSpeedPolicy = _descentSpeedPolicy;
+            input_decelEndAltitudeASL = _decelEndAltitudeASL;
+            input_maxThrustAccel = _maxThrustAccel;
+            input_parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
+            input_probableLandingSiteASL = _probableLandingSiteASL;
+            input_multiplierHasError = _multiplierHasError;
+            input_dt = _dt;
+
+            max_dt = _dt;
+            dt = max_dt;             
+
+            CelestialBody body = _initialOrbit.referenceBody;
             bodyHasAtmosphere = body.atmosphere;
             seaLevelAtmospheres = body.atmosphereMultiplier;
             scaleHeight = 1000 * body.atmosphereScaleHeight;
             bodyRadius = body.Radius;
             gravParameter = body.gravParameter;
-            this.dragCoefficient = dragCoefficient;
+            this.dragMassExcludingUsedParachutes = _dragMassExcludingUsedParachutes;
 
-            this.parachutes = parachuteList;
+            this.parachutes = _parachuteList;
+            this.parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
+            this.multiplierHasError = _multiplierHasError;
 
-            this.mass = mass;
+            this.mass = _mass;
             bodyAngularVelocity = body.angularVelocity;
-            this.descentSpeedPolicy = descentSpeedPolicy;
-            landedRadius = bodyRadius + endAltitudeASL;
+            this.descentSpeedPolicy = _descentSpeedPolicy;
+            decelRadius = bodyRadius + _decelEndAltitudeASL; 
             aerobrakedRadius = bodyRadius + body.RealMaxAtmosphereAltitude();
             mainBody = body;
-            this.maxThrustAccel = maxThrustAccel;
+            this.maxThrustAccel = _maxThrustAccel;
+            this.probableLandingSiteASL = _probableLandingSiteASL;
+            this.probableLandingSiteRadius = _probableLandingSiteASL + bodyRadius;
 
-            referenceFrame = ReferenceFrame.CreateAtCurrentTime(initialOrbit.referenceBody);
+            referenceFrame = ReferenceFrame.CreateAtCurrentTime(_initialOrbit.referenceBody);
 
-            orbitReenters = OrbitReenters(initialOrbit);
+            orbitReenters = OrbitReenters(_initialOrbit);
 
             if (orbitReenters)
             {
-                startUT = UT;
+                startUT = _UT;
                 t = startUT;
-                AdvanceToFreefallEnd(initialOrbit);
+                AdvanceToFreefallEnd(_initialOrbit);
             }
 
             maxDragGees = 0;
@@ -85,41 +124,75 @@ namespace MuMech
         public Result RunSimulation()
         {
             Result result = new Result();
-
-            if (!orbitReenters) { result.outcome = Outcome.NO_REENTRY; return result; }
-
-            double maxT = t + maxSimulatedTime;
-            while (true)
+            try
             {
-                if (Landed()) { result.outcome = Outcome.LANDED; break; }
-                if (Aerobraked()) { result.outcome = Outcome.AEROBRAKED; break; }
-                if (t > maxT) { result.outcome = Outcome.TIMED_OUT; break; }
+                // First put all the problem parameters into the result, to aid debugging.
+                result.input_initialOrbit = this.input_initialOrbit;
+                result.input_UT = this.input_UT;
+                result.input_dragMassExcludingUsedParachutes = this.input_dragMassExcludingUsedParachutes;
+                result.input_parachuteList = this.input_parachuteList;
+                result.input_mass = this.input_mass;
+                result.input_descentSpeedPolicy = this.input_descentSpeedPolicy;
+                result.input_decelEndAltitudeASL = this.input_decelEndAltitudeASL;
+                result.input_maxThrustAccel = this.input_maxThrustAccel;
+                result.input_parachuteSemiDeployMultiplier = this.input_parachuteSemiDeployMultiplier;
+                result.input_probableLandingSiteASL = this.input_probableLandingSiteASL;
+                result.input_multiplierHasError = this.input_multiplierHasError;
+                result.input_dt = this.input_dt;
+ 
 
-                RK4Step();
-                LimitSpeed();
-                OpenParachutes(x);
-                RecordTrajectory();
+                if (!orbitReenters) 
+                {
+                    result.outcome = Outcome.NO_REENTRY; return result; 
+                }
+
+                result.startPosition = referenceFrame.ToAbsolute(x, t);
+
+                double maxT = t + maxSimulatedTime;
+                while (true)
+                {
+                    if (Landed()) { result.outcome = Outcome.LANDED; break; }
+                    if (Aerobraked()) { result.outcome = Outcome.AEROBRAKED; break; }
+                    if (t > maxT) { result.outcome = Outcome.TIMED_OUT; break; }
+
+                    RK4Step();
+                    LimitSpeed();
+                    RecordTrajectory();
+                }
+
+                result.id = System.Guid.NewGuid();
+                result.body = mainBody;
+                result.referenceFrame = referenceFrame;
+                result.endUT = t;
+                result.timeToComplete = t - input_UT;
+                result.maxDragGees = maxDragGees;
+                result.deltaVExpended = deltaVExpended;
+                result.endPosition = referenceFrame.ToAbsolute(x, t);
+                result.endVelocity = referenceFrame.ToAbsolute(v, t);
+                result.trajectory = trajectory;
+                result.parachuteMultiplier = this.parachuteSemiDeployMultiplier;
+                result.multiplierHasError = this.multiplierHasError;
+                result.maxdt = this.max_dt;
+
+                // TODO I suspect we are not allowed to do this from this thread. commenting it out for testing.
+                // result.endASL = Math.Max(0, result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude));
             }
-
-            result.body = mainBody;
-            result.referenceFrame = referenceFrame;
-            result.endUT = t;
-            result.maxDragGees = maxDragGees;
-            result.deltaVExpended = deltaVExpended;
-            result.endPosition = referenceFrame.ToAbsolute(x, t);
-            result.endVelocity = referenceFrame.ToAbsolute(v, t);
-            result.trajectory = trajectory;
+            catch (Exception ex)
+            {
+                Debug.LogError("Exception thrown during Rentry Simulation" + ex.StackTrace + ex.Message);
+                result.outcome = Outcome.ERROR;
+            }
             return result;
         }
 
         bool OrbitReenters(Orbit initialOrbit)
         {
-            return (initialOrbit.PeR < landedRadius || initialOrbit.PeR < aerobrakedRadius);
+            return (initialOrbit.PeR < decelRadius || initialOrbit.PeR < aerobrakedRadius);
         }
 
         bool Landed()
         {
-            return x.magnitude < landedRadius;
+            return x.magnitude < this.probableLandingSiteRadius;
         }
 
         bool Aerobraked()
@@ -183,15 +256,30 @@ namespace MuMech
 
             if (pos.magnitude < aerobrakedRadius) return true;
             if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;
-            if (pos.magnitude < landedRadius) return true;
+            if (pos.magnitude < decelRadius) return true; // TODO should this be landed, not decelerated?
             if (descentSpeedPolicy != null && surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
             return false;
         }
 
-        //one time step of RK4:
+        // Function to call Simulate and rollback on all of the parachutes to see if any of them are expected to open in the current iteration.
+        bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double t, double parachuteSemiDeployMultiplier)
+        {
+            foreach (SimulatedParachute p in parachutes)
+            {
+                if (p.SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations. Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to give more precision over the point of deployment.  
         void RK4Step()
         {
             bool repeatWithSmallerStep = false;
+            bool parachutesDeploying = false;
+
             Vector3d dx;
             Vector3d dv;
 
@@ -199,32 +287,55 @@ namespace MuMech
 
             do
             {
-                Vector3d dv1 = dt * TotalAccel(x, v);
-                Vector3d dx1 = dt * v;
+                repeatWithSmallerStep = false;
 
-                Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
-                Vector3d dx2 = dt * (v + 0.5 * dv1);
+                // Perform the RK4 calculation
+                {
+                    Vector3d dv1 = dt * TotalAccel(x, v);
+                    Vector3d dx1 = dt * v;
 
-                Vector3d dv3 = dt * TotalAccel(x + 0.5 * dx2, v + 0.5 * dv2);
-                Vector3d dx3 = dt * (v + 0.5 * dv2);
+                    Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
+                    Vector3d dx2 = dt * (v + 0.5 * dv1);
 
-                Vector3d dv4 = dt * TotalAccel(x + dx3, v + dv3);
-                Vector3d dx4 = dt * (v + dv3);
+                    Vector3d dv3 = dt * TotalAccel(x + 0.5 * dx2, v + 0.5 * dv2);
+                    Vector3d dx3 = dt * (v + 0.5 * dv2);
 
-                dx = (dx1 + 2 * dx2 + 2 * dx3 + dx4) / 6.0;
-                dv = (dv1 + 2 * dv2 + 2 * dv3 + dv4) / 6.0;
+                    Vector3d dv4 = dt * TotalAccel(x + dx3, v + dv3);
+                    Vector3d dx4 = dt * (v + dv3);
 
-                // If the change in velocity it more than half the current velocity, then we need to try again with a smaller delta-t
+                    dx = (dx1 + 2 * dx2 + 2 * dx3 + dx4) / 6.0;
+                    dv = (dv1 + 2 * dv2 + 2 * dv3 + dv4) / 6.0;
+                }
+
+                // If the change in velocity is more than half the current velocity, then we need to try again with a smaller delta-t
                 // or if dt is already small enough then continue anyway.
-                if (v.magnitude < dv.magnitude * 2 && dt >= min_dt * 2) 
+                if (v.magnitude < dv.magnitude * 2 && dt >= min_dt * 2)
                 {
                     dt = dt / 2;
                     repeatWithSmallerStep = true;
-                    //Debug.Log("Repeating RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) +"m");
                 }
                 else
                 {
-                    repeatWithSmallerStep = false;
+                    // Consider opening the parachutes. If we do open them, and the dt is not as small as it could me, make it smaller and repeat,
+                    Vector3 xForChuteSim = x + dx;
+                    double altASL = xForChuteSim.magnitude - bodyRadius;
+                    double altAGL = altASL - probableLandingSiteASL;
+                    double pressure = Pressure(xForChuteSim);
+                    bool willChutesOpen = WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
+
+                    // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
+                    if (willChutesOpen && dt > min_dt) // TODO test to see if we are better off just setting a minimum dt of the physics rame rate.
+                    {
+                        dt = Math.Max(dt/2,min_dt);
+                        repeatWithSmallerStep = true;
+                    }
+                    else
+                    {
+                        foreach (SimulatedParachute p in parachutes)
+                        {
+                            p.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
+                        }
+                    }
                 }
             }
             while (repeatWithSmallerStep);
@@ -232,12 +343,20 @@ namespace MuMech
             x += dx;
             v += dv;
             t += dt;
+           
+            // decide what the dt needs to be for the next iteration 
+            // Is there a parachute in the process of opening? If so then we follow special rules - fix the dt at the physics frame rate. This is because the rate for deployment depends on the frame rate for stock parachutes.
+            parachutesDeploying = this.ParachutesDeploying();
 
-            // Finally - if dt has been reduced, try increasing it, but only by one step.
-            if (dt < max_dt)
+            // If parachutes are part way through deploying then we need to use the physics frame rate for the next step of the simulation
+            if (parachutesDeploying)
+            {
+                dt = Time.fixedDeltaTime; // TODO There is a potential problem here. If the physics frame rate is so large that is causes too large a change in velocity, then we could get stuck in an infinte loop.
+            }
+            // If dt has been reduced, try increasing it, but only by one step. (but not if there is a parachute being deployed)
+            else if(dt < max_dt)
             {
                 dt = Math.Min(dt * 2, max_dt);
-                //Debug.Log("Increasing RK4Step - delta-t=" + dt + " at " + (x.magnitude - bodyRadius) + "m");
             }
         }
 
@@ -278,23 +397,44 @@ namespace MuMech
             if (!bodyHasAtmosphere) return Vector3d.zero;
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
-            double realDragCoefficient = dragCoefficient;
-            double alt = pos.magnitude - bodyRadius; // bodyRadius or landedRadius ?
+            double realDragMass = this.dragMassExcludingUsedParachutes;
+
             foreach (SimulatedParachute p in parachutes)
-                realDragCoefficient += p.AddedDragCoeff(alt, t) / mass;
+            {
+                realDragMass += p.AddedDragMass();
+            }
+
+            double realDragCoefficient = realDragMass / this.mass;
 
             return -0.5 * FlightGlobals.DragMultiplier * realDragCoefficient * AirDensity(pos) * airVel.sqrMagnitude * airVel.normalized;
         }
 
         void OpenParachutes(Vector3d pos)
         {
-            double alt = pos.magnitude - landedRadius;
+            double altASL = pos.magnitude - bodyRadius;
+            double altAGL = altASL - probableLandingSiteASL;
             double pressure = Pressure(pos);
             if (bodyHasAtmosphere)
             {
                 foreach (SimulatedParachute p in parachutes)
-                    p.Simulate(alt, pressure, t);
+                {
+                    p.Simulate(altAGL, altASL, probableLandingSiteASL , pressure, t, this.parachuteSemiDeployMultiplier);
+                }
             }
+        }
+
+        bool ParachutesDeploying()
+        {
+
+            foreach (SimulatedParachute p in parachutes)
+            {
+                if (p.deploying)
+                {
+                    return true;
+                }
+            }
+            return false;
+
         }
 
         double Pressure(Vector3d pos)
@@ -321,21 +461,46 @@ namespace MuMech
             return FlightGlobals.getAtmDensity(pressure);
         }
 
-        public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY }
+        public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY, ERROR }
 
         public class Result
         {
+            public double maxdt;
+
+            public double timeToComplete;
+
+            public System.Guid id; // give each set of results a new GUID so we can check to see if the result has changed.
             public Outcome outcome;
 
             public CelestialBody body;
             public ReferenceFrame referenceFrame;
             public double endUT;
+
+            public AbsoluteVector startPosition;
             public AbsoluteVector endPosition;
             public AbsoluteVector endVelocity;
+            public double endASL;
             public List<AbsoluteVector> trajectory;
 
             public double maxDragGees;
             public double deltaVExpended;
+
+            public bool multiplierHasError;
+            public double parachuteMultiplier;
+
+            // Provide all the input paramaters to the simulation in the result to aid debugging
+            public Orbit input_initialOrbit;
+            public double input_UT;
+            public double input_dragMassExcludingUsedParachutes;
+            public List<SimulatedParachute> input_parachuteList;
+            public double input_mass;
+            public IDescentSpeedPolicy input_descentSpeedPolicy;
+            public double input_decelEndAltitudeASL;
+            public double input_maxThrustAccel;
+            public double input_parachuteSemiDeployMultiplier;
+            public double input_probableLandingSiteASL;
+            public bool input_multiplierHasError;
+            public double input_dt;
 
             public Vector3d RelativeEndPosition()
             {
@@ -357,7 +522,7 @@ namespace MuMech
                 return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
             }
 
-            public List<Vector3d> WorldTrajectory(double timeStep)
+            public List<Vector3d> WorldTrajectory(double timeStep) 
             {
                 if (trajectory.Count() == 0) return new List<Vector3d>();
 
@@ -373,6 +538,73 @@ namespace MuMech
                     }
                 }
                 return ret;
+            }
+
+            // A method to calculate the overshoot (length of the component of the vector from the target to the actual landing position that is parallel to the vector from the start position to the target site.)
+            public double GetOvershoot(EditableAngle targetLatitude,EditableAngle targetLongitude)
+            {
+                // Get the start, end and target positions as a set of 3d vectors that we can work with
+                Vector3 end = this.body.GetRelSurfacePosition(endPosition.latitude, endPosition.longitude, 0);
+                Vector3 target = this.body.GetRelSurfacePosition(targetLatitude, targetLongitude, 0); 
+                Vector3 start = this.body.GetRelSurfacePosition(startPosition.latitude, startPosition.longitude, 0);
+
+                // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target. TODO can we simplify this code by using Vector3.Exclude?
+                Vector3 start2Target = target - start;
+                Vector3 orthog1 = Vector3.Cross(start2Target,Vector3.up);
+                // check for the spaecial case where start2target is parrallel to up. If it is then the result will be zero,and we need to try again
+                if(orthog1 == Vector3.up)
+                {
+                    orthog1 = Vector3.Cross(start2Target,Vector3.forward);
+                }
+                Vector3 orthog2 = Vector3.Cross(start2Target,orthog1);
+
+                // Now that we have those two orthogonal vectors, we can project any vector onto the two planes defined by them to give us the vector component that is parallel to start2Target.
+                Vector3 target2end = end - target;
+
+                Vector3 overshoot = target2end.ProjectIntoPlane(orthog1).ProjectIntoPlane(orthog2);
+
+                // finally how long is it? We know it is parrallel to start2target, so if we add it to start2target, and then get the difference of the lengths, that should give us a positive or negative
+                double overshootLength = (start2Target+overshoot).magnitude - start2Target.magnitude;
+
+                return overshootLength;
+            }
+
+            public override string ToString()
+            {
+                string resultText = "Simulation result\n{";
+
+                resultText += "Inputs:\n{";
+                if (null != input_initialOrbit) { resultText += "\n input_initialOrbit: " + input_initialOrbit.ToString(); }
+                resultText += "\n input_UT: " + input_UT;
+                resultText += "\n input_dragMassExcludingUsedParachutes: " + input_dragMassExcludingUsedParachutes;
+                resultText += "\n input_mass: " + input_mass;
+                if (null != input_descentSpeedPolicy) { resultText += "\n input_descentSpeedPolicy: " + input_descentSpeedPolicy.ToString(); }
+                resultText += "\n input_decelEndAltitudeASL: " + input_decelEndAltitudeASL;
+                resultText += "\n input_maxThrustAccel: " + input_maxThrustAccel;
+                resultText += "\n input_parachuteSemiDeployMultiplier: " + input_parachuteSemiDeployMultiplier;
+                resultText += "\n input_probableLandingSiteASL: " + input_probableLandingSiteASL;
+                resultText += "\n input_multiplierHasError: " + input_multiplierHasError;
+                resultText += "\n input_dt: " + input_dt;
+                resultText += "\n}";
+
+                if (null != id) { resultText += "\nid: " + id; }
+                
+                resultText += "\noutcome: " + outcome; 
+                resultText += "\nmaxdt: " + maxdt;
+                resultText += "\ntimeToComplete: " + timeToComplete;
+                resultText += "\nendUT: " + endUT;
+                if (null != referenceFrame) { resultText += "\nstartPosition: " + referenceFrame.WorldPositionAtCurrentTime(startPosition); }
+                if (null != referenceFrame) { resultText += "\nendPosition: " + referenceFrame.WorldPositionAtCurrentTime(endPosition); }
+                resultText += "\nendASL: " + endASL;
+                resultText += "\nendVelocity: " + endVelocity.longitude + "," + endVelocity.latitude + "," + endVelocity.radius; 
+                resultText += "\nmaxDragGees: " + maxDragGees;
+                resultText += "\ndeltaVExpended: " + deltaVExpended;
+                resultText += "\nmultiplierHasError: " + multiplierHasError;
+                resultText += "\nparachuteMultiplier: " + parachuteMultiplier;
+                resultText += "\n}";
+
+                return (resultText);
+
             }
         }
     }
@@ -491,49 +723,190 @@ namespace MuMech
 
         double openningTime;
 
+        // Store some data about when and how the parachute opened during the simulation which will be useful for debugging
+        double activatedASL = 0;
+        double activatedAGL = 0;
+        double semiDeployASL = 0;
+        double semiDeployAGL = 0;
+        double fullDeployASL = 0;
+        double fullDeployAGL = 0;
+        double targetASLAtSemiDeploy = 0;
+        double targetASLAtFullDeploy = 0;
+        double parachuteDrag = 0;
+        double targetDrag = 0;
+        public bool deploying = false;
+
         public SimulatedParachute(ModuleParachute p)
         {
             this.p = p;
-            state = p.deploymentState;
+            this.state = p.deploymentState;
+
+            // Work out when the chute was put into its current state based on the current drag as compared to the stoed, semi deployed and fully deployed drag
+
+            double timeSinceDeployment = 0;
+            this.targetDrag = p.targetDrag;
+            this.parachuteDrag = p.parachuteDrag;
+
+            switch (p.deploymentState)
+            {
+                case ModuleParachute.deploymentStates.SEMIDEPLOYED:
+                    // If the parachute is semi deployed calculate when it was semideployed by comparing the actual drag with the stowed drag and the semideployed drag.
+                    timeSinceDeployment = (p.parachuteDrag - p.stowedDrag) / (p.semiDeployedDrag - p.stowedDrag) * p.semiDeploymentSpeed; // TODO there is an error in this, because the (semi)deployment does not increase the drag in a linear way. However this will only cause a problem for simulations run during the deployment and in unlikely to cause an error in the landing location.
+                    break;
+
+                case ModuleParachute.deploymentStates.DEPLOYED:
+                    // If the parachute is deployed calculate when it was deployed by comparing the actual drag with the semideployed drag and the deployed drag.
+                    timeSinceDeployment = (p.parachuteDrag - p.semiDeployedDrag) / (p.fullyDeployedDrag - p.semiDeployedDrag) * p.deploymentSpeed; // TODO there is an error in this, because the (semi)deployment does not increase the drag in a linear way. However this will only cause a problem for simulations run during the deployment and in unlikely to cause an error in the landing location.
+                    break;
+
+                case ModuleParachute.deploymentStates.STOWED:
+                case ModuleParachute.deploymentStates.ACTIVE:
+                    // If the parachute is stowed then for some reason p.parachuteDrag does not reflect the stowed drag. set this up by hand. 
+                    this.parachuteDrag = this.targetDrag = p.stowedDrag;
+                    timeSinceDeployment = 10000000;
+                    break;
+
+                default:
+                    // otherwise set the time since deployment to be a very large number to indcate that it has been in that state for a long time (although we do not know how long!
+                    timeSinceDeployment = 10000000;
+                    break;
+            }
+           
+            this.openningTime = -timeSinceDeployment;
+
+            // Debug.Log("Parachute " + p.name + " parachuteDrag:" + p.parachuteDrag + " targetDrag:" + p.targetDrag + " stowedDrag:" + p.stowedDrag + " semiDeployedDrag:" + p.semiDeployedDrag + " fullyDeployedDrag:" + p.fullyDeployedDrag + " part.maximum_drag:" + p.part.maximum_drag + " part.minimum_drag:" + p.part.minimum_drag + " semiDeploymentSpeed:" + p.semiDeploymentSpeed + " deploymentSpeed:" + p.deploymentSpeed + " deploymentState:" + p.deploymentState + " timeSinceDeployment:" + timeSinceDeployment);       
         }
 
-        public double AddedDragCoeff(double alt, double time)
+        public string GetDebugOutput()
         {
-            if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
-                // Need to substract stowedDrag since its already in the totaldrag of the ship
-                return p.part.mass * Mathf.Lerp(0, p.semiDeployedDrag - p.stowedDrag,
-                    (float)Math.Min((time - openningTime) / p.semiDeploymentSpeed, 1)); 
-            else if (state == ModuleParachute.deploymentStates.DEPLOYED)
-                return p.part.mass * Mathf.Lerp(p.semiDeployedDrag - p.stowedDrag, p.fullyDeployedDrag - p.stowedDrag,
-                    (float)Math.Min((time - openningTime) / p.deploymentSpeed, 1));
-            else
-                return 0;
+            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy + " this.targetDrag:" + this.targetDrag + " this.parachuteDrag:" + this.parachuteDrag + " p.part.minimum_drag:" + p.part.minimum_drag + " p.part.maximum_drag:" + p.part.maximum_drag; ; 
+            return DebugOutput;
         }
 
-        public void Simulate(double alt, double pressure, double time)
-        {            
+        public double AddedDragMass()
+        {
+            double totalDrag;
+
+            totalDrag = p.part.minimum_drag + this.parachuteDrag;
+
+            return p.part.mass * totalDrag;
+        }
+
+        // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
+        public bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        {
+            bool stateChanged = false;
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
-                    if (alt < 3 * p.deployAltitude)
+                    if (altATGL < semiDeployMultiplier * p.deployAltitude)
+                    {
+                        stateChanged = true;
+                    }
+                    break;
+                case ModuleParachute.deploymentStates.ACTIVE:
+                    if (pressure >= p.minAirPressureToOpen)
+                    {
+                        stateChanged = true;
+                    }
+                    break;
+                case ModuleParachute.deploymentStates.SEMIDEPLOYED:
+                    if (altATGL < p.deployAltitude)
+                    {
+                        stateChanged = true;
+                    }
+                    break;
+            }
+            return (stateChanged);
+        }
+
+
+        // Consider activating, semi deploying or deploying a parachute. returns true if the state has changed
+        public bool Simulate(double altATGL, double altASL, double endASL ,double pressure, double time, double semiDeployMultiplier)
+        {
+            bool stateChanged = false;
+            switch (state)
+            {
+                case ModuleParachute.deploymentStates.STOWED:
+                    if (altATGL < semiDeployMultiplier * p.deployAltitude)
+                    {
                         state = ModuleParachute.deploymentStates.ACTIVE;
+                        stateChanged = true;
+                        activatedAGL = altATGL;
+                        activatedASL = altASL;
+                        // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
+                        if (pressure >= p.minAirPressureToOpen)
+                        {
+                            state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                            openningTime = time;
+                            semiDeployAGL = altATGL;
+                            semiDeployASL = altASL;
+                            targetASLAtSemiDeploy = endASL;
+                            this.targetDrag = p.semiDeployedDrag;
+                        }
+                    }
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
                     if (pressure >= p.minAirPressureToOpen)
                     {
                         state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                        stateChanged = true;
                         openningTime = time;
+                        semiDeployAGL = altATGL;
+                        semiDeployASL = altASL;
+                        targetASLAtSemiDeploy = endASL;
+                        this.targetDrag = p.semiDeployedDrag;
                     }
 
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                    if (alt < p.deployAltitude)
+                    if (altATGL < p.deployAltitude)
                     {
                         state = ModuleParachute.deploymentStates.DEPLOYED;
+                        stateChanged = true;
                         openningTime = time;
+                        fullDeployAGL = altATGL;
+                        fullDeployASL = altASL;
+                        targetASLAtFullDeploy = endASL;
+                        this.targetDrag = p.fullyDeployedDrag;
                     }
                     break;
             }
+
+            // Now that we have potentially changed states calculate the current drag or the parachute in whatever state (or transition to a state) that it is in.
+            float normalizedTime;
+
+            // Depending on the state that we are in consider if we are part way through a deployment.
+            if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+            {
+                normalizedTime = (float)Math.Min((time - openningTime) / p.semiDeploymentSpeed, 1);
+            }
+            else if (state == ModuleParachute.deploymentStates.DEPLOYED)
+            {
+                normalizedTime = (float)Math.Min((time - openningTime) / p.deploymentSpeed, 1);
+            }
+            else
+            {
+                normalizedTime = 1;
+            }
+
+            // Are we deploying in any way? We know if we are deploying or not if normalized time is less than 1
+            if (normalizedTime < 1)
+            {
+                this.deploying = true;
+            }
+            else
+            {
+                this.deploying = false;
+            }
+
+            // If we are deploying or semi deploying then use Lerp to replicate the way the game increases the drag as we deploy.
+            if (state == ModuleParachute.deploymentStates.DEPLOYED || state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+            {
+                this.parachuteDrag = Mathf.Lerp((float)this.parachuteDrag, (float)this.targetDrag, normalizedTime);
+            }
+
+            return (stateChanged);
         }
     }
 }

@@ -187,8 +187,8 @@ namespace MuMech
             double verticalSpeedForDesiredApoapsis = Math.Sqrt(2 * potentialDifferenceWithApoapsis);
             double referenceFrameBlend = Mathf.Clamp((float)(vesselState.speedOrbital / verticalSpeedForDesiredApoapsis), 0.0F, 1.0F);
 
-            Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.velocityVesselSurfaceUnit
-                                               + referenceFrameBlend * vesselState.velocityVesselOrbitUnit).normalized;
+            Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vessel.srf_velocity.normalized
+                                               + referenceFrameBlend * vessel.obt_velocity.normalized).normalized;
 
             double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
@@ -206,7 +206,7 @@ namespace MuMech
                 const double Kp = 5.0; //control gain
 
                 //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-                double difficulty = vesselState.velocityVesselSurface.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
+                double difficulty = vessel.srf_velocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
                 if (difficulty > 5) difficulty = 5;
 
                 if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
@@ -329,13 +329,15 @@ namespace MuMech
         public EditableDoubleMult turnShapeExponent = new EditableDoubleMult(0.4, 0.01);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoPath = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public float autoTurnPerc = 0.1f;
 
         public double autoTurnStartAltitude
         {
             get
             {
                 var vessel = FlightGlobals.ActiveVessel;
-                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() / 10 : vessel.terrainAltitude + 20);
+                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() * autoTurnPerc : vessel.terrainAltitude + 25);
             }
         }
 

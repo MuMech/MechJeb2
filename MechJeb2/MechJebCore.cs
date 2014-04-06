@@ -361,13 +361,16 @@ namespace MuMech
         		{
         			try
         			{
-        				moduleRegistry.AddRange((from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList());
+        				foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList())
+        				{
+        					moduleRegistry.Add(module);
+        				}
         			}
-        			catch (Exception e)
-        			{
-        				Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
-        			}
-        		}
+					catch (Exception e)
+					{
+						Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
+					}
+				}
         	}
 
         	System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
@@ -531,6 +534,10 @@ namespace MuMech
             //KSP calls OnSave *before* OnLoad when the first command pod is created in the editor. 
             //Defend against saving empty settings.
             if (computerModules.Count == 0) return;
+
+            // .23 added a call to OnSave for undocking/decoupling vessel before they are properly init ...
+            if (HighLogic.LoadedSceneIsFlight && vessel.vesselName == null)
+                return;
 
             try
             {

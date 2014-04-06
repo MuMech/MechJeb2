@@ -202,6 +202,11 @@ namespace MuMech
                 }
             }
 
+
+            // .23 temp fix until I understand better what's going on
+            if (targetBody == null)
+                targetBody = vessel.mainBody;
+            
             //Update targets that need updating:
             if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
             else if (target is PositionTarget) ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
@@ -301,6 +306,7 @@ namespace MuMech
         public Vector3 GetSrfVelocity() { return Vector3.zero; }
         public Transform GetTransform() { return g.transform; }
         public Vessel GetVessel() { return null; }
+        public VesselTargetModes GetTargetingMode() { return VesselTargetModes.Direction ; }
     }
 
     public class DirectionTarget : PositionTarget

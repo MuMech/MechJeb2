@@ -24,6 +24,13 @@ namespace MuMech
 
             simStage = Staging.lastStage + 1;
 
+            // Add a fake stage if we are beyond the first one
+            // Mostly usefull for the Node Executor who use the last stage info
+            // and fail to get proper info when the ship was never staged and 
+            // some engine were activated manualy
+            if (Staging.CurrentStage > Staging.lastStage) 
+                simStage++;
+
             t = 0;
         }
 
@@ -33,20 +40,27 @@ namespace MuMech
         {
             Stats[] stages = new Stats[simStage];
 
-            //Debug.Log("SimulateAllStages starting from stage " + simStage);
+            print("SimulateAllStages starting from stage " + simStage);
             SimulateStageActivation();
 
             while (simStage >= 0)
             {
-                //Debug.Log("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
+                print("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
                 stages[simStage] = SimulateStage(throttle, atmospheres);
-                //Debug.Log("Staging at t = " + t);
+                print("Staging at t = " + t);
                 SimulateStageActivation();
             }
+
+            print("SimulateAllStages ended");
 
             return stages;
         }
 
+        public static void print(object message)
+        {
+            //MonoBehaviour.print("[MechJeb2] " + message);
+        }
+        
         //Simulate (the rest of) the current stage of the simulated rocket,
         //and return stats for the stage
         public Stats SimulateStage(float throttle, float atmospheres)
@@ -70,7 +84,7 @@ namespace MuMech
                 stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, atmospheres, out dt));
             }
 
-            //Debug.Log("Finished stage " + simStage + " after " + step + " steps");
+            print("Finished stage " + simStage + " after " + step + " steps");
             if (step == maxSteps) throw new Exception("FuelFlowSimulation.SimulateStage reached max step count of " + maxSteps);
 
             return stats;
@@ -94,12 +108,12 @@ namespace MuMech
             if (engines.Count > 0)
             {
                 foreach (FuelNode n in engines) n.AssignResourceDrainRates(nodes);
-                //foreach (FuelNode n in nodes) n.DebugDrainRates();
+                foreach (FuelNode n in nodes) n.DebugDrainRates();
 
                 float maxDt = nodes.Min(n => n.MaxTimeStep());
                 dt = Mathf.Min(desiredDt, maxDt);
 
-                //Debug.Log("Simulating time step of " + dt);
+                print("Simulating time step of " + dt);
 
                 foreach (FuelNode n in nodes) n.DrainResources(dt);
             }
@@ -136,16 +150,16 @@ namespace MuMech
         //Whether we've used up the current stage
         public bool AllowedToStage()
         {
-            //Debug.Log("Checking whether allowed to stage at t = " + t);
+            print("Checking whether allowed to stage at t = " + t);
 
             List<FuelNode> activeEngines = FindActiveEngines();
 
-            //Debug.Log("  activeEngines.Count = " + activeEngines.Count);
+            print("  activeEngines.Count = " + activeEngines.Count);
 
             //if no engines are active, we can always stage
             if (activeEngines.Count == 0)
             {
-                //Debug.Log("Allowed to stage because no active engines");
+                print("Allowed to stage because no active engines");
                 return true;
             }
 
@@ -154,12 +168,12 @@ namespace MuMech
             //if staging would decouple an active engine or non-empty fuel tank, we're not allowed to stage
             foreach (FuelNode n in nodes)
             {
-                //Debug.Log(n.partName + " is sepratron? " + n.isSepratron);
+                print(n.partName + " is sepratron? " + n.isSepratron);
                 if (n.decoupledInStage == (simStage - 1) && !n.isSepratron)
                 {
                     if (activeEngines.Contains(n) || n.ContainsResources(burnedResources))
                     {
-                        //Debug.Log("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
+                        print("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
                         return false;
                     }
                 }
@@ -176,14 +190,14 @@ namespace MuMech
                     {
                         if (n.CanDrawNeededResources(nodes))
                         {
-                            //Debug.Log("Part " + n.partName + " is an active engine that still has resources to draw on.");
+                            print("Part " + n.partName + " is an active engine that still has resources to draw on.");
                             activeEnginesWorking = true;
                         }
                     }
 
                     if (n.decoupledInStage == (simStage - 1))
                     {
-                        //Debug.Log("Part " + n.partName + " is decoupled in the next stage.");
+                        print("Part " + n.partName + " is decoupled in the next stage.");
 
                         partDecoupledInNextStage = true; 
                     }
@@ -191,7 +205,7 @@ namespace MuMech
 
                 if (!partDecoupledInNextStage && activeEnginesWorking)
                 {
-                    //Debug.Log("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
+                    print("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
                     return false;
                 }
             }
@@ -199,11 +213,11 @@ namespace MuMech
             //if this isn't the last stage, we're allowed to stage because doing so wouldn't drop anything important
             if (simStage > 0)
             {
-                //Debug.Log("Allowed to stage because this isn't the last stage");
+                print("Allowed to stage because this isn't the last stage");
                 return true;
             }
 
-            //Debug.Log("Not allowed to stage because there are active engines and this is the last stage");
+            print("Not allowed to stage because there are active engines and this is the last stage");
 
             //if this is the last stage, we're not allowed to stage while there are still active engines
             return false;
@@ -222,7 +236,7 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         public List<FuelNode> FindActiveEngines()
         {
-            //Debug.Log("Finding active engines: excluding resource considerations, there are " + nodes.Where(n => n.isEngine && n.inverseStage >= simStage).Count());
+            print("Finding active engines: excluding resource considerations, there are " + nodes.Where(n => n.isEngine && n.inverseStage >= simStage).Count());
             return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
 
@@ -292,6 +306,7 @@ namespace MuMech
 
         public float maxThrust = 0;     //max thrust of this part
         public float fwdThrustRatio = 1; // % of thrust moving the ship forwad
+        public float g;                  // value of g used for engine flow rate / isp
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
@@ -334,9 +349,12 @@ namespace MuMech
                 if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState)
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
+                        inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
+
+                    g = engine.g;
 
                     // If we take into account the engine rotation 
                     if (dVLinearThrust)
@@ -375,9 +393,12 @@ namespace MuMech
                 if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState)
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage)
+                        inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
+
+                    g = engine.g;
 
                     // If we take into account the engine rotation 
                     if (dVLinearThrust)
@@ -425,12 +446,17 @@ namespace MuMech
             }
         }
 
+        public static void print(object message)
+        {
+            //MonoBehaviour.print("[MechJeb2] " + message);
+        }
+
         public void SetConsumptionRates(float throttle, float atmospheres)
         {
             if (isEngine)
             {
                 float Isp = ispCurve.Evaluate(atmospheres);
-                float massFlowRate = throttle * maxThrust / (Isp * 9.81f);
+                float massFlowRate = throttle * maxThrust / (Isp * g);
                 if (correctThrust) massFlowRate = massFlowRate * Isp / ispCurve.Evaluate(0); // scale thrust
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
@@ -445,14 +471,29 @@ namespace MuMech
             //we can draw fuel from any fuel lines that point to this part
             foreach (Part p in nodeLookup.Keys)
             {
+                if (p is FuelLine)
+                    print("FuelLine ");
                 if (p is FuelLine && ((FuelLine)p).target == part)
                 {
                     sourceNodes.Add(nodeLookup[p]);
+                    print("FuelLine " + nodeLookup[p].partName + "_" + p.uid);
                 }
             }
 
             surfaceMounted = true;
             if (part.parent != null) this.parent = nodeLookup[part.parent];
+
+            ModuleDockingNode dockNode;
+            // In-flight docked ports attach only one way. This finds the docked port in the other direction.
+            // However, this doesn't work in the VAB/SPH (as there is no vessel), and isn't needed there anyway.
+            if (part.vessel && (dockNode = part.Modules.OfType<ModuleDockingNode>().FirstOrDefault()))
+            {
+                uint dockedPartUId = dockNode.dockedPartUId;
+                Part p = part.vessel[dockedPartUId];
+                print(String.Format("docking port {0} {1}", part, p));
+                if (p)
+                    sourceNodes.Add(nodeLookup[p]);
+            }
 
             //we can (sometimes) draw fuel from stacked parts
             foreach (AttachNode attachNode in part.attachNodes)
@@ -460,20 +501,30 @@ namespace MuMech
                 //decide if it's possible to draw fuel through this node:
                 if (attachNode.attachedPart != null                            //if there is a part attached here            
                     && attachNode.nodeType == AttachNode.NodeType.Stack        //and the attached part is stacked (rather than surface mounted)
+                    && attachNode.id != "Strut"                                //and it's not a Strut
                     && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
                          && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
                 {
-                    if (part.fuelCrossFeed) sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
+                    print("attachNode.id " + attachNode.id);
+                    if (part.fuelCrossFeed)
+                    {
+                        sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
+                        print("AttachedPart " + nodeLookup[attachNode.attachedPart].partName + "_" + attachNode.attachedPart.uid);
+                    }
                     if (attachNode.attachedPart == part.parent) surfaceMounted = false;
                 }
             }
 
             //Parts can draw resources from their parents
             //(exception: surface mounted fuel tanks cannot)
-            if (part.parent != null && part.fuelCrossFeed) sourceNodes.Add(nodeLookup[part.parent]);
+            if (part.parent != null && part.fuelCrossFeed)
+            {
+                sourceNodes.Add(nodeLookup[part.parent]);
+                print("Parent Part " + nodeLookup[part.parent].partName + "_" + part.parent.uid);
+            }
 
-            //Debug.Log("source nodes for part " + partName);
-            //foreach (FuelNode n in sourceNodes) Debug.Log("    " + n.partName);
+            print("source nodes for part " + partName);
+            foreach (FuelNode n in sourceNodes) print("    " + n.partName);
         }
 
         //call this when a node no longer exists, so that this node knows that it's no longer a valid source
@@ -506,7 +557,7 @@ namespace MuMech
         public float MaxTimeStep()
         {
             if (resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() == 0) return float.MaxValue;
-            //Debug.Log("resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() = " + resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count());
+            print("resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() = " + resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count());
             return resourceDrains.Keys.Where(id => resources[id] > DRAINED).Min(id => resources[id] / resourceDrains[id]);
         }
 
@@ -533,6 +584,7 @@ namespace MuMech
                         if (resources[type] < DRAINED) return false;
                         break;
 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:  // TODO : this is a lazy fix. Need to do the proper one later
                     case ResourceFlowMode.ALL_VESSEL:
                         //check if any part contains the needed resource:
                         if (!vessel.Any(n => n.resources[type] > DRAINED)) return false;
@@ -554,7 +606,7 @@ namespace MuMech
         {
             foreach (int type in resourceDrains.Keys)
             {
-                Debug.Log(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
+                print(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
             }
         }
 
@@ -570,6 +622,7 @@ namespace MuMech
                         resourceDrains[type] += amount;
                         break;
 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:  // TODO : this is a lazy fix. Need to do the proper one later
                     case ResourceFlowMode.ALL_VESSEL:
                         AssignFuelDrainRateAllVessel(type, amount, vessel);
                         break;

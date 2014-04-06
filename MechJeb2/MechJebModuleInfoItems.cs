@@ -135,7 +135,7 @@ namespace MuMech
         {
             if (orbit.PeA > 0) return "N/A";
 
-            double angleFromHorizontal = 90 - Vector3d.Angle(-vesselState.velocityVesselSurface, vesselState.up);
+            double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
             double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
             double g = vesselState.localg;
@@ -144,7 +144,7 @@ namespace MuMech
             double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
             double decelTime = vesselState.speedSurface / effectiveDecel;
 
-            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vesselState.velocityVesselSurface;
+            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vessel.srf_velocity;
             double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingSite);
             double impactTime = 0;
             try
@@ -249,6 +249,7 @@ namespace MuMech
             // Use the average specific impulse of all RCS parts.
             double totalIsp = 0;
             int numThrusters = 0;
+            float gForRCS;
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
             
@@ -256,6 +257,7 @@ namespace MuMech
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
                 numThrusters++;
+                gForRCS = pm.G;
             }
 
             double m0 = (HighLogic.LoadedSceneIsEditor)
@@ -543,6 +545,13 @@ namespace MuMech
             return core.target.Orbit.LAN.ToString("F2") + "º";
         }
 
+        [ValueInfoItem("Target AoP", InfoItem.Category.Target)]
+        public string TargetAoP()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return core.target.Orbit.argumentOfPeriapsis.ToString("F2") + "º";
+        }
+
         [ValueInfoItem("Target eccentricity", InfoItem.Category.Target)]
         public string TargetEccentricity()
         {
@@ -560,7 +569,7 @@ namespace MuMech
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {
-            return mainBody.DragAccel(vesselState.CoM, vesselState.velocityVesselOrbit, vesselState.massDrag / vesselState.mass).magnitude;
+            return mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude;
         }
 
         [ValueInfoItem("Synodic period", InfoItem.Category.Target)]
@@ -658,6 +667,8 @@ namespace MuMech
         public bool showAtmoDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoTime = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public int TWRbody = 1;
 
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
@@ -673,15 +684,37 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
+
+            double geeASL;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                // We're in the VAB/SPH
+                TWRbody = (int)GuiUtils.ArrowSelector(TWRbody, FlightGlobals.Bodies.Count, FlightGlobals.Bodies[(int)TWRbody].GetName());
+                geeASL = FlightGlobals.Bodies[TWRbody].GeeASL;
+            }
+            else
+            {
+                // We're in flight
+                geeASL = mainBody.GeeASL;
+            }
+
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
 
                 // NK detect necessity of atmo initial TWR
                 bool hasMFE = false;
-                foreach (Part p in parts)
-                    if (p.Modules.Contains("ModuleEngineConfigs") || p.Modules.Contains("ModuleHybridEngine") || p.Modules.Contains("ModuleHybridEngines"))
-                        hasMFE = true;
-                // end
+                if (HighLogic.LoadedSceneIsEditor)
+                {
+                    foreach (Part p in parts)
+                        if (p.Modules.Contains("ModuleEngineConfigs") || p.Modules.Contains("ModuleHybridEngine") || p.Modules.Contains("ModuleHybridEngines"))
+                        {
+                            hasMFE = true;
+                            break;
+                        }
+                }
+                else
+                    hasMFE = vesselState.hasMFE;
+
                 if (showInitialMass)
                 {
                     showInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
@@ -695,8 +728,6 @@ namespace MuMech
                 }
             }
             GUILayout.EndHorizontal();
-
-            double geeASL = (HighLogic.LoadedSceneIsEditor ? 1 : mainBody.GeeASL);
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));

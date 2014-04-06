@@ -18,6 +18,11 @@ namespace MuMech
         [EditableInfoItem("RCS balancer overdrive", InfoItem.Category.Thrust, rightLabel = "%")]
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
+        // RCS for rotation
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [ToggleInfoItem("Use RCS for rotation", InfoItem.Category.Thrust)]
+        public bool rcsForRotation = true;
+
         // Advanced options
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool advancedOptions = false;
@@ -167,10 +172,20 @@ namespace MuMech
         // Throttles RCS thrusters to keep a vessel balanced during translation.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
+            bool cutThrottles = false;
+
             if (s.X == 0 && s.Y == 0 && s.Z == 0)
             {
-                solverThread.ResetThrusterForces();
-                return;
+                if (rcsForRotation)
+                {
+                    solverThread.ResetThrusterForces();
+                }
+                else
+                {
+                    // We're not translating, and we shouldn't use RCS for
+                    // rotation, so we don't need RCS at all.
+                    cutThrottles = true;
+                }
             }
 
             // Note that FlightCtrlState doesn't use the same axes as the
@@ -195,13 +210,18 @@ namespace MuMech
             RCSSolverKey.SetPrecision(calcPrecision);
             GetThrottles(direction, out throttles, out thrusters);
 
-            // If the throttles we got were bad (due to the threaded calculation
-            // not having completed yet), throttle all RCS thrusters to 0. It's
+            // If the throttles we got were bad (due to the threaded
+            // calculation not having completed yet), cut throttles. It's
             // better to not move at all than move in the wrong direction.
             if (throttles.Length != thrusters.Count)
             {
                 throttles = new double[thrusters.Count];
-                for (int i = 0; i < thrusters.Count; i++)
+                cutThrottles = true;
+            }
+
+            if (cutThrottles)
+            {
+                for (int i = 0; i < throttles.Length; i++)
                 {
                     throttles[i] = 0;
                 }

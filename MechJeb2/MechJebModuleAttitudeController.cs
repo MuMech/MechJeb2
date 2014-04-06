@@ -29,8 +29,21 @@ namespace MuMech
         public bool RCS_auto = false;
         public bool attitudeRCScontrol = true;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)Pass.Global)]
+        public bool Tf_autoTune = true;
+
+        [Persistent(pass = (int)Pass.Global)]
         public double Tf = 0.3;
+        [Persistent(pass = (int)Pass.Global)]
+        public double TfMin = 0.1;
+        [Persistent(pass = (int)Pass.Global)]
+        public double TfMax = 0.5;
+        [Persistent(pass = (int)Pass.Global)]
+        public double kpFactor = 3;
+        [Persistent(pass = (int)Pass.Global)]
+        public double kiFactor = 6;
+        [Persistent(pass = (int)Pass.Global)]
+        public double kdFactor = 0.5;
 
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
@@ -118,13 +131,38 @@ namespace MuMech
         }
 
         public override void OnStart(PartModule.StartState state)
-        {
-            double Kd = 0.53 / Tf;
-            double Kp = Kd / (3 * Math.Sqrt(2) * Tf);
-            double Ki = Kp / (12 * Math.Sqrt(2) * Tf);
-            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+        {            
+            pid = new PIDControllerV2(0, 0, 0, 1, -1);
+            setPIDParameters();
             lastAct = Vector3d.zero;
             base.OnStart(state);
+        }
+
+        public void tuneTf()
+        {
+            Vector3d torque = new Vector3d(
+                                    vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
+                                    vesselState.torqueAvailable.y,
+                                    vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
+                                          );
+
+            Vector3d ratio = new Vector3d(
+                                    torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
+                                    torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
+                                    torque.z != 0 ? vesselState.MoI.z / torque.z : 0
+                );
+
+            Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
+            Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
+            setPIDParameters();
+        }
+
+        public void setPIDParameters()
+        {
+            pid.Kd = kdFactor / Tf;
+            pid.Kp = pid.Kd / (kpFactor * Math.Sqrt(2) * Tf);
+            pid.Ki = pid.Kp / (kiFactor * Math.Sqrt(2) * Tf);
+            pid.intAccum = Vector3.ClampMagnitude(pid.intAccum, 5);
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
@@ -147,16 +185,16 @@ namespace MuMech
             switch (reference)
             {
                 case AttitudeReference.ORBIT:
-                    rotRef = Quaternion.LookRotation(vesselState.velocityVesselOrbitUnit, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vessel.obt_velocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.velocityVesselOrbitUnit), vesselState.up);
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.obt_velocity.normalized), vesselState.up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = vesselState.rotationSurface;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = Quaternion.LookRotation(vesselState.velocityVesselSurfaceUnit, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vessel.srf_velocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (core.target.Position - vessel.GetTransform().position).normalized;
@@ -213,9 +251,12 @@ namespace MuMech
 
         public bool attitudeTo(Vector3d direction, AttitudeReference reference, object controller)
         {
-            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
-
+            //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
+            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
+            
             Vector3 up, dir = direction;
+
+            // TODO : Fix that so it does not roll when it should not. Current fix is a "hack" that set required roll to 0 if !attitudeRollMatters
 
             if (!enabled || (ang_diff > 45))
             {
@@ -269,6 +310,10 @@ namespace MuMech
 
                 attitudeChanged = false;
             }
+
+            if (Tf_autoTune)
+                tuneTf();
+
         }
 
         public override void Drive(FlightCtrlState s)
@@ -320,9 +365,23 @@ namespace MuMech
 
                 // ( MoI / avaiable torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
+                
+                // Find out the real shorter way to turn were we wan to.
+                // Thanks to HoneyFox
 
-                // angular error:
-                Vector3d err = deltaEuler * Math.PI / 180.0F;
+                Vector3d tgtLocalUp = vessel.ReferenceTransform.transform.rotation.Inverse() * target * Vector3d.forward;
+                Vector3d curLocalUp = Vector3d.up;
+
+                double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
+                Vector2d rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
+                rotDirection = rotDirection.normalized * turnAngle / 180.0f;
+
+                Vector3d err = new Vector3d(
+                                                -rotDirection.y * Math.PI,
+                                                rotDirection.x * Math.PI,
+                                                attitudeRollMatters?((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
+                                            );
+
                 err += inertia.Reorder(132) / 2;
                 err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
                                    Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),

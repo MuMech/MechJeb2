@@ -365,6 +365,7 @@ public class RCSSolverThread
         {
             if (t != null)
             {
+                //ResetThrusterForces();
                 stopRunning = true;
                 workEvent.Set();
                 t.Abort();
@@ -586,11 +587,6 @@ public class RCSSolverThread
         out double[] throttles, out List<RCSSolver.Thruster> thrustersOut)
     {
         thrustersOut = callerThrusters;
-        if (direction == Vector3.zero)
-        {
-            throttles = (double[])originalThrottles.Clone();
-            return;
-        }
 
         Vector3 rotation = Vector3.zero;
 
@@ -599,16 +595,18 @@ public class RCSSolverThread
         // Update vessel info if needed.
         CheckVessel(vessel, state);
 
-        if (thrusters.Count == 0)
-        {
-            throttles = (double[])double0.Clone();
-            return;
-        }
-
         Vector3 dir = direction.normalized;
         RCSSolverKey key = new RCSSolverKey(ref dir, rotation);
 
-        if (results.TryGetValue(key, out throttles))
+        if (thrusters.Count == 0)
+        {
+            throttles = double0;
+        }
+        else if (direction == Vector3.zero)
+        {
+            throttles = originalThrottles;
+        }
+        else if (results.TryGetValue(key, out throttles))
         {
             cacheHits++;
         }
