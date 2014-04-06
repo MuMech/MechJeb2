@@ -114,7 +114,7 @@ namespace MuMech
             {
                 menuButton = ToolbarManager.Instance.add("MechJeb2", "MechJeb2MenuButton");
                 menuButton.ToolTip = "MechJeb2";
-                menuButton.TexturePath = "MechJeb2/Plugins/Icons/MJ2";
+                menuButton.TexturePath = "MechJeb2/Icons/MJ2";
                 menuButton.OnClick += (b) =>
                 {
                     MechJebModuleMenu mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
@@ -157,11 +157,11 @@ namespace MuMech
                     //if (button.Visible != module.showInCurrentScene)
                 }
                 button.Visible = module.showInCurrentScene;
-                String TexturePath = "MechJeb2/Plugins/Icons/" + name;
+                String TexturePath = "MechJeb2/Icons/" + name;
                 String TexturePathActive = TexturePath + "_active";
                 if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
                 {
-                    TexturePath = "MechJeb2/Plugins/Icons/QMark";
+                    TexturePath = "MechJeb2/Icons/QMark";
                     if (!missingIcons.Contains(name))
                     {
                         missingIcons.Add(name);
