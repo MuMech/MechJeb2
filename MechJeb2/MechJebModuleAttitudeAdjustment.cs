@@ -58,7 +58,7 @@ namespace MuMech
                     GUILayout.Label("Tf range");
                     GuiUtils.SimpleTextBox("min", TfMin, "", 50);
                     TfMin = Math.Max(TfMin, 0.01);
-                    GuiUtils.SimpleTextBox("min", TfMax, "", 50);
+                    GuiUtils.SimpleTextBox("max", TfMax, "", 50);
                     TfMax = Math.Max(TfMax, 0.01);
                     GUILayout.EndHorizontal();
 

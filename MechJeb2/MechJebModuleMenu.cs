@@ -107,6 +107,9 @@ namespace MuMech
 
         public void SetupMainToolbarButton()
         {
+            if (!ToolbarManager.ToolbarAvailable)
+                return;
+
             if (menuButton == null)
             {
                 menuButton = ToolbarManager.Instance.add("MechJeb2", "MechJeb2MenuButton");
@@ -124,6 +127,9 @@ namespace MuMech
 
         public void SetupToolbarButton(DisplayModule module, bool active)
         {
+            if (!ToolbarManager.ToolbarAvailable)
+                return;
+
             if (!module.hidden)
             {
                 IButton button;
