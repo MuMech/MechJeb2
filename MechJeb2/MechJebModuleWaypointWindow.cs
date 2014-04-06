@@ -368,7 +368,7 @@ namespace MuMech
 				double error = 0;
 				int loops = 0;
 				float st = Time.time;
-				while (loops < 75)
+				while (loops < 50)
 				{
 					if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
 					{
@@ -399,36 +399,6 @@ namespace MuMech
 						}
 					}
 				}
-				
-//				Vector3d hit;
-//				PQS.LineSphereIntersection(mouseRay.origin - body.position, mouseRay.direction, body.Radius, out hit);
-//				if (hit != Vector3d.zero) {
-//					hit = body.position + hit;
-//					Vector3d start = mouseRay.origin;
-//					Vector3d end = hit;
-//					Vector3d point = Vector3d.zero;
-//					for (int i = 0; i < 24; i++) {
-//						point = (start + end) / 2;
-//						//var lat = body.GetLatitude(point);
-//						//var lon = body.GetLongitude(point);
-//						//var surf = body.GetWorldSurfacePosition(lat, lon, body.TerrainAltitude(lat, lon));
-//						var alt = body.GetAltitude(point) - body.TerrainAltitude(point);
-//						//Debug.Log(alt);
-//						if (alt > 0) {
-//							start = point;
-//						}
-//						else if (alt < 0) {
-//							end = point;
-//						}
-//						else {
-//							break;
-//						}
-//					}
-//					hit = point;
-////					redLine.SetPosition(0, ray.origin);
-////					redLine.SetPosition(1, hit);
-//					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
-//				}				
 			}
 
 			return null;
@@ -446,7 +416,7 @@ namespace MuMech
 //					Vector3d start = ray.origin;
 //					Vector3d end = hit;
 //					Vector3d point = Vector3d.zero;
-//					for (int i = 0; i < 24; i++) {
+//					for (int i = 0; i < 16; i++) {
 //						point = (start + end) / 2;
 //						//var lat = body.GetLatitude(point);
 //						//var lon = body.GetLongitude(point);
