@@ -106,7 +106,7 @@ namespace MuMech
         {
             get
             {
-                return (target != null && (target is Vessel || target is CelestialBody || target is ModuleDockingNode));
+                return (target != null && (target is Vessel || target is CelestialBody || target is ModuleDockingNode || target is FlightCoMTracker));
             }
         }
 
@@ -114,7 +114,7 @@ namespace MuMech
         {
             get
             {
-                return (target != null && ((target is PositionTarget) || (target is Vessel)) && !(target is DirectionTarget));
+                return (target != null && (target is PositionTarget || target is Vessel || target is FlightCoMTracker) && !(target is DirectionTarget));
             }
         }
 
