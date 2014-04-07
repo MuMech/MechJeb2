@@ -398,7 +398,7 @@ namespace MuMech
 
                     isEngine = true;
 
-                    g = engine.g;
+                    g = enginefx.g;
 
                     // If we take into account the engine rotation 
                     if (dVLinearThrust)
