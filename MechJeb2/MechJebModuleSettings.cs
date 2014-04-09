@@ -71,6 +71,9 @@ namespace MuMech
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 			ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
+            if (ToolbarManager.ToolbarAvailable)
+                ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
+
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);

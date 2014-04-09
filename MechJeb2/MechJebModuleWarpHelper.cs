@@ -150,6 +150,11 @@ namespace MuMech
             return new GUILayoutOption[] { GUILayout.Width(240), GUILayout.Height(50) };
         }
 
+        public override bool isActive()
+        {
+            return warping;            
+        }
+
         public override string GetName()
         {
             return "Warp Helper";
