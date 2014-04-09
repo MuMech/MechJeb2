@@ -334,7 +334,7 @@ namespace MuMech
 
             foreach (Part p in vessel.parts)
             {
-                if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
+                if (p.IsPhysicallySignificant())
                 {
                     double partMass = p.TotalMass();
                     mass += partMass;

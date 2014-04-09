@@ -155,7 +155,7 @@ namespace MuMech
             
             foreach (Part p in vessel.parts)
             {
-                if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
+                if (p.IsPhysicallySignificant())
                 {
                     bool partIsParachute = false;
                     double partDrag =0;
