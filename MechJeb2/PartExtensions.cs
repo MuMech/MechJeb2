@@ -97,5 +97,23 @@ namespace MuMech
             if (p.parent == null) return false;
             return p.parent.IsDecoupledInStage(stage);
         }
+
+        public static bool IsPhysicallySignificant(this Part p)
+        {
+            bool physicallySignificant = (p.physicalSignificance != Part.PhysicalSignificance.NONE);
+
+            // part.PhysicsSignificance is not initialized in the Editor for all part. but physicallySignificant is useful there.
+            if (HighLogic.LoadedSceneIsEditor)
+                physicallySignificant = physicallySignificant && p.PhysicsSignificance != 1;
+
+            if (p.HasModule<ModuleLandingGear>() || p.HasModule<LaunchClamp>())
+            {
+                //Landing gear set physicalSignificance = NONE when they enter the flight scene
+                //Launch clamp mass should be ignored.
+                physicallySignificant = false;
+            }
+            return physicallySignificant;
+        }
+
     }
 }

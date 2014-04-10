@@ -319,15 +319,8 @@ namespace MuMech
         public string partName; //for debugging
 
         public FuelNode(Part part, bool dVLinearThrust)
-        {
-            bool physicallySignificant = (part.physicalSignificance != Part.PhysicalSignificance.NONE);
-            if (part.HasModule<ModuleLandingGear>() || part.HasModule<LaunchClamp>())
-            {
-                //Landing gear set physicalSignificance = NONE when they enter the flight scene
-                //Launch clamp mass should be ignored.
-                physicallySignificant = false;
-            }
-            if (physicallySignificant) dryMass = part.mass;
+        {            
+            if (part.IsPhysicallySignificant()) dryMass = part.mass;
 
             inverseStage = part.inverseStage;
             isFuelLine = (part is FuelLine);

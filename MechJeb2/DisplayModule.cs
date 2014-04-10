@@ -132,6 +132,21 @@ namespace MuMech
             }
         }
 
+        public virtual bool isActive()
+        {
+            ComputerModule[] makesActive = { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
+
+            bool active = false;
+            foreach (var m in makesActive)
+            {
+                if (m != null)
+                {
+                    if (active |= m.users.RecursiveUser(this)) break;
+                }
+            }
+            return active;
+        }
+
         public override void UnlockCheck()
         {
             if (!unlockChecked)

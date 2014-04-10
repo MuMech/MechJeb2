@@ -262,7 +262,7 @@ namespace MuMech
 
             double m0 = (HighLogic.LoadedSceneIsEditor)
                 ? EditorLogic.SortedShipList.Where(
-                    p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass())
+                    p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass())
                 : vesselState.mass;
             double m1 = m0 - monopropMass;
             if (numThrusters == 0 || m1 <= 0) return 0;
@@ -300,14 +300,14 @@ namespace MuMech
         public double VesselMass()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList
-                                  .Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass());
+                                  .Where(p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass());
             else return vesselState.mass;
         }
 
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
-            return parts.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.mass);
+            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass);
         }
 
         [ValueInfoItem("Liquid fuel & oxidizer mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]
@@ -385,7 +385,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                return EditorLogic.SortedShipList.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE)
+                return EditorLogic.SortedShipList.Where(p => p.IsPhysicallySignificant())
                                   .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
             }
             else
