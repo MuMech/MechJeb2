@@ -189,12 +189,15 @@ namespace MuMech
 
         public override void OnDestroy()
         {
-            foreach( Button b in toolbarButtons.Values)
+            if (ToolbarManager.ToolbarAvailable)
             {
-                b.Destroy();
+                foreach (Button b in toolbarButtons.Values)
+                {
+                    b.Destroy();
+                }
+                toolbarButtons = new Dictionary<string, IButton>();
+                menuButton.Destroy();
             }
-            toolbarButtons = new Dictionary<string, IButton>();
-            menuButton.Destroy();
 
             base.OnDestroy();
         }
