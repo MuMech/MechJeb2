@@ -195,7 +195,7 @@ namespace MuMech
                 {
                     b.Destroy();
                 }
-                toolbarButtons = new Dictionary<string, IButton>();
+                toolbarButtons.Clear();
                 menuButton.Destroy();
             }
 
