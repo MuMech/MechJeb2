@@ -955,6 +955,15 @@ namespace MuMech
         }
 
 
+        [ValueInfoItem("Raw Biome", InfoItem.Category.Misc, showInEditor = false)]
+        public string CurrentRawBiome()
+        {
+            if (vessel.landedAt != string.Empty)
+                return vessel.landedAt;
+            string biome = ScienceUtil.GetExperimentBiome(mainBody, vessel.latitude, vessel.longitude);
+            return "" + biome;
+        }
+
         // No default experiment makes use of the biome at FlyingHigh and beyond
         // I stop displaying it from InSpaceLow
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]
