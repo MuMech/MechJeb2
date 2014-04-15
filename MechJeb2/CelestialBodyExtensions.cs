@@ -54,11 +54,20 @@ namespace MuMech
             return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeffOverMass);
         }
 
+        //CelestialBody.maxAtmosphereAltitude doesn't actually give the upper edge of
+        //the atmosphere. Use this function instead.
         public static double RealMaxAtmosphereAltitude(this CelestialBody body)
         {
             if (!body.atmosphere) return 0;
-            //Atmosphere actually cuts out when exp(-altitude / scale height) = 1e-6
-            return -body.atmosphereScaleHeight * 1000 * Math.Log(1e-6);
+            if (body.useLegacyAtmosphere)
+            {
+                //Atmosphere actually cuts out when exp(-altitude / scale height) = 1e-6
+                return -body.atmosphereScaleHeight * 1000 * Math.Log(1e-6);
+            }
+            else
+            {
+                return body.pressureCurve.keys.Last().time * 1000;
+            }
         }
     }
 }
