@@ -122,5 +122,39 @@ namespace MuMech
             return physicallySignificant;
         }
 
+        public static Vector3Pair GetBoundingBox(this Part part)
+        {
+            Vector3 minBounds = new Vector3();
+            Vector3 maxBounds = new Vector3();
+
+            foreach (Transform t in part.FindModelComponents<Transform>())
+            {
+                MeshFilter mf = t.GetComponent<MeshFilter>();
+                if (mf == null)
+                    continue;
+                Mesh m = mf.mesh;
+
+                if (m == null)
+                    continue;
+
+                var matrix = part.vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
+
+                foreach (Vector3 vertex in m.vertices)
+                {
+                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
+                    maxBounds.x = Mathf.Max(maxBounds.x, v.x);
+                    minBounds.x = Mathf.Min(minBounds.x, v.x);
+                    maxBounds.y = Mathf.Max(maxBounds.y, v.y);
+                    minBounds.y = Mathf.Min(minBounds.y, v.y);
+                    maxBounds.z = Mathf.Max(maxBounds.z, v.z);
+                    minBounds.z = Mathf.Min(minBounds.z, v.z);
+                }
+            }
+
+            return new Vector3Pair(maxBounds, minBounds);
+        }
+
+
+
     }
 }

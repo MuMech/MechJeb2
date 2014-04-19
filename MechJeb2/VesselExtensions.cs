@@ -172,42 +172,43 @@ namespace MuMech
             }
         }
 
-
         // From FAR with ferram4 authorisation
-        public static Vector3Pair GetBoundingBox(this Vessel vessel)
+        public static MechJebModuleDockingAutopilot.Box3d GetBoundingBox(this Vessel vessel)
         {
             Vector3 minBounds = new Vector3();
             Vector3 maxBounds = new Vector3();
 
             foreach (Part p in vessel.parts)
             {
-                foreach (Transform t in p.FindModelComponents<Transform>())
+                Vector3Pair partBox = p.GetBoundingBox();
+
+                maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
+                minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
+                maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
+                minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
+                maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
+                minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
+
+                foreach (var sympart in p.symmetryCounterparts)
                 {
-                    MeshFilter mf = t.GetComponent<MeshFilter>();
-                    if (mf == null)
-                        continue;
-                    Mesh m = mf.mesh;
+                    partBox = sympart.GetBoundingBox();
 
-                    if (m == null)
-                        continue;
-
-                    var matrix = vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
-
-                    foreach (Vector3 vertex in m.vertices)
-                    {
-                        Vector3 v = matrix.MultiplyPoint3x4(vertex);
-
-                        maxBounds.x = Mathf.Max(maxBounds.x, v.x);
-                        minBounds.x = Mathf.Min(minBounds.x, v.x);
-                        maxBounds.y = Mathf.Max(maxBounds.y, v.y);
-                        minBounds.y = Mathf.Min(minBounds.y, v.y);
-                        maxBounds.z = Mathf.Max(maxBounds.z, v.z);
-                        minBounds.z = Mathf.Min(minBounds.z, v.z);
-                    }
+                    maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
+                    minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
+                    maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
+                    minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
+                    maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
+                    minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
                 }
+
             }
 
-            return new Vector3Pair(minBounds, maxBounds);
+            MechJebModuleDockingAutopilot.Box3d box = new MechJebModuleDockingAutopilot.Box3d();
+
+            box.center = new Vector3d((maxBounds.x + minBounds.x) / 2, (maxBounds.y + minBounds.y) / 2, (maxBounds.z + minBounds.z) / 2);
+            box.size = new Vector3d(Math.Abs(box.center.x - maxBounds.x), Math.Abs(box.center.y - maxBounds.y), Math.Abs(box.center.z - maxBounds.z));
+
+            return box;
         }
         
 
