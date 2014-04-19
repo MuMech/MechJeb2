@@ -57,6 +57,11 @@ namespace MuMech
             };
         }
 
+        public override bool isActive()
+        {
+            return core.thrust.limiter != MechJebModuleThrustController.LimitMode.None;
+        }
+
         public override string GetName()
         {
             return "Utilities";

@@ -45,8 +45,19 @@ namespace MuMech
         public bool firstDraw = true;
 
         bool movingButton = false;
-
+        
+        [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideButton = false;
+        
+        // If the Toolbar is loaded and we don't want to display the big menu button
+        public bool HideMenuButton 
+        {
+            get
+            {
+                return ToolbarManager.ToolbarAvailable && hideButton;
+            }
+        }
+
 
         private static Dictionary<string, IButton> toolbarButtons;
         private static HashSet<string> missingIcons;
@@ -55,8 +66,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            SetupMainToolbarButton();
-            if (hideButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
+            if (HideMenuButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
             {
                 ShowHideWindow();
             }
@@ -73,22 +83,7 @@ namespace MuMech
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
-                    // This display module is considered active if it uses any of these modules.
-                    ComputerModule[] makesActive = { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
-
-                    bool active = false;
-                    foreach (var m in makesActive)
-                    {
-                        if (m != null)
-                        {
-                            if (active |= m.users.RecursiveUser(module)) break;
-                        }
-                    }
-                    if (module is MechJebModuleWarpHelper && ((MechJebModuleWarpHelper)module).warping) active = true;
-                    if (module is MechJebModuleThrustWindow && core.thrust.limiter != MechJebModuleThrustController.LimitMode.None) active = true;
-                    module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), active ? toggleActive : toggleInactive);
-
-                    SetupToolbarButton(module, active);
+                    module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
                 }
             }
 
@@ -103,7 +98,18 @@ namespace MuMech
 
             GUILayout.EndVertical();
         }
-
+        
+        public void SetupToolBarButtons()
+        {
+            SetupMainToolbarButton();
+            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
+            {
+                if (!module.hidden && module.showInCurrentScene)
+                {
+                    SetupToolbarButton(module, module.isActive());
+                }
+            }
+        }
 
         public void SetupMainToolbarButton()
         {
@@ -124,7 +130,7 @@ namespace MuMech
             }
             menuButton.Visible = true;
         }
-
+        
         public void SetupToolbarButton(DisplayModule module, bool active)
         {
             if (!ToolbarManager.ToolbarAvailable)
@@ -183,12 +189,15 @@ namespace MuMech
 
         public override void OnDestroy()
         {
-            foreach( Button b in toolbarButtons.Values)
+            if (ToolbarManager.ToolbarAvailable)
             {
-                b.Destroy();
+                foreach (Button b in toolbarButtons.Values)
+                {
+                    b.Destroy();
+                }
+                toolbarButtons.Clear();
+                menuButton.Destroy();
             }
-            toolbarButtons = new Dictionary<string, IButton>();
-            menuButton.Destroy();
 
             base.OnDestroy();
         }
@@ -200,6 +209,8 @@ namespace MuMech
         
         public override void DrawGUI(bool inEditor)
         {
+            SetupToolBarButtons();
+
             switch (windowStat)
             {
                 case WindowStat.OPENING:
@@ -223,7 +234,7 @@ namespace MuMech
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (!hideButton && GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            if (!HideMenuButton && GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
             {
                 if (Event.current.button == 0)
                 {

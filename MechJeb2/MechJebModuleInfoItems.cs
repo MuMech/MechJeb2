@@ -262,7 +262,7 @@ namespace MuMech
 
             double m0 = (HighLogic.LoadedSceneIsEditor)
                 ? EditorLogic.SortedShipList.Where(
-                    p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass())
+                    p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass())
                 : vesselState.mass;
             double m1 = m0 - monopropMass;
             if (numThrusters == 0 || m1 <= 0) return 0;
@@ -300,14 +300,14 @@ namespace MuMech
         public double VesselMass()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList
-                                  .Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.TotalMass());
+                                  .Where(p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass());
             else return vesselState.mass;
         }
 
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
-            return parts.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE).Sum(p => p.mass);
+            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass);
         }
 
         [ValueInfoItem("Liquid fuel & oxidizer mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]
@@ -385,7 +385,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                return EditorLogic.SortedShipList.Where(p => p.physicalSignificance != Part.PhysicalSignificance.NONE)
+                return EditorLogic.SortedShipList.Where(p => p.IsPhysicallySignificant())
                                   .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
             }
             else
@@ -670,14 +670,23 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public int TWRbody = 1;
 
+        private FuelFlowSimulation.Stats[] vacStats;
+        private FuelFlowSimulation.Stats[] atmoStats;
+
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            // Unity throws an exception if we change our layout between the Layout event and 
+            // the Repaint event, so only get new data right before the Layout event.
+            if (Event.current.type == EventType.Layout)
+            {
+                MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+                vacStats = stats.vacStats;
+                atmoStats = stats.atmoStats;
+                stats.RequestUpdate(this);
+            }
 
-            stats.RequestUpdate(this);
-
-            int numStages = stats.atmoStats.Length;
+            int numStages = atmoStats.Length;
             var stages = Enumerable.Range(0, numStages);
 
             GUILayout.BeginVertical();
@@ -731,15 +740,15 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => stats.vacStats[s].startMass.ToString("F1") + " t"));
-            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => stats.vacStats[s].endMass.ToString("F1") + " t"));
-            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => stats.vacStats[s].StartTWR(geeASL).ToString("F2")));
-            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => stats.atmoStats[s].StartTWR(geeASL).ToString("F2"))); // NK
-            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => stats.vacStats[s].MaxTWR(geeASL).ToString("F2")));
-            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => stats.atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(stats.atmoStats[s].deltaTime)));
-            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => stats.vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(stats.vacStats[s].deltaTime)));
+            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].startMass.ToString("F1") + " t"));
+            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => vacStats[s].endMass.ToString("F1") + " t"));
+            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
+            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2"))); // NK
+            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].deltaTime)));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -954,6 +963,15 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+
+        [ValueInfoItem("Raw Biome", InfoItem.Category.Misc, showInEditor = false)]
+        public string CurrentRawBiome()
+        {
+            if (vessel.landedAt != string.Empty)
+                return vessel.landedAt;
+            string biome = ScienceUtil.GetExperimentBiome(mainBody, vessel.latitude, vessel.longitude);
+            return "" + biome;
+        }
 
         // No default experiment makes use of the biome at FlyingHigh and beyond
         // I stop displaying it from InSpaceLow
