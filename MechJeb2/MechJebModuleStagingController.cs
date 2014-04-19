@@ -121,7 +121,7 @@ namespace MuMech
         {
             foreach (Part p in v.parts)
             {
-                if (p.inverseStage == inverseStage && p.IsDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources))
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources))
                 {
                     return true;
                 }
@@ -179,7 +179,7 @@ namespace MuMech
         {
             foreach (Part p in v.parts)
             {
-                if (p.inverseStage == inverseStage && p.IsDecoupler()) return true;
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler()) return true;
             }
             return false;
         }
@@ -189,7 +189,7 @@ namespace MuMech
         {
             foreach (Part p in v.parts)
             {
-                if (p.inverseStage == inverseStage && p.IsDecoupler() && HasDeactivatedEngineOrTankDescendant(p)) return true;
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasDeactivatedEngineOrTankDescendant(p)) return true;
             }
             return false;
         }

@@ -430,7 +430,7 @@ namespace MuMech
             Part p = part;
             while (true)
             {
-                if (p.IsDecoupler() || p.IsLaunchClamp())
+                if (p.IsUnfiredDecoupler() || p.IsLaunchClamp())
                 {
                     if (p.inverseStage > decoupledInStage) decoupledInStage = p.inverseStage;
                 }

@@ -46,6 +46,13 @@ namespace MuMech
              p.HasModule<ModuleAnchoredDecoupler>());
         }
 
+        public static bool IsUnfiredDecoupler(this Part p)
+        {
+            return p.FindModulesImplementing<ModuleDecouple>().Any(m => !m.isDecoupled) ||
+                p.FindModulesImplementing<ModuleAnchoredDecoupler>().Any(m => !m.isDecoupled);
+        }
+
+
         //Any engine that is decoupled in the same stage in 
         //which it activates we call a sepratron.
         public static bool IsSepratron(this Part p)
@@ -93,7 +100,7 @@ namespace MuMech
 
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
-            if ((p.IsDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
+            if ((p.IsUnfiredDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
             if (p.parent == null) return false;
             return p.parent.IsDecoupledInStage(stage);
         }
