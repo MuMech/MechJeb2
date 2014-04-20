@@ -63,7 +63,7 @@ namespace MuMech
         {
             if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
 
-            if (NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position), true);
+            if (NormalTargetExists) return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position), true);
 
             return "N/A";
         }
@@ -123,7 +123,7 @@ namespace MuMech
             get { return target; }
         }
 
-        public Orbit Orbit
+        public Orbit TargetOrbit
         {
             get { return target.GetOrbit(); }
         }
@@ -140,7 +140,7 @@ namespace MuMech
 
         public Vector3d RelativeVelocity
         {
-            get { return (vessel.orbit.GetVel() - Orbit.GetVel()); }
+            get { return (vessel.orbit.GetVel() - TargetOrbit.GetVel()); }
         }
 
         public Vector3d RelativePosition

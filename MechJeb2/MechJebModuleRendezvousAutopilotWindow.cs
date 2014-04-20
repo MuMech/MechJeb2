@@ -17,7 +17,7 @@ namespace MuMech
 
             MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 
-            if (core.target.Orbit.referenceBody != orbit.referenceBody)
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
                 if (autopilot.enabled)
@@ -42,6 +42,7 @@ namespace MuMech
                 }
 
                 GuiUtils.SimpleTextBox("Desired final distance:", autopilot.desiredDistance, "m");
+                GuiUtils.SimpleTextBox("Max # of phasing orbits:", autopilot.maxPhasingOrbits);
 
                 if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
             }

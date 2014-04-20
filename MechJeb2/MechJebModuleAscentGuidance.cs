@@ -143,8 +143,8 @@ namespace MuMech
                 if (launchingToPlane || launchingToRendezvous)
                 {
                     double tMinus;
-                    if (launchingToPlane) tMinus = LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.Orbit);
-                    else tMinus = LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
+                    if (launchingToPlane) tMinus = LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.TargetOrbit);
+                    else tMinus = LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle, mainBody, vesselState.longitude, core.target.TargetOrbit);
 
                     double launchTime = vesselState.time + tMinus;
 
@@ -152,8 +152,8 @@ namespace MuMech
 
                     if (launchingToPlane)
                     {
-                        desiredInclination = core.target.Orbit.inclination;
-                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
+                        desiredInclination = core.target.TargetOrbit.inclination;
+                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                     }                    
 
                     GUILayout.Label("Launching to " + (launchingToPlane ? "target plane" : "rendezvous") + ": T-" + MuUtils.ToSI(tMinus, 0) + "s");

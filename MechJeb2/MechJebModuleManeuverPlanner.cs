@@ -372,7 +372,7 @@ namespace MuMech
                 case TimeReference.CLOSEST_APPROACH:
                     if (core.target.NormalTargetExists)
                     {
-                        UT = o.NextClosestApproachTime(core.target.Orbit, UT);
+                        UT = o.NextClosestApproachTime(core.target.TargetOrbit, UT);
                     }
                     else
                     {
@@ -424,7 +424,7 @@ namespace MuMech
                 Orbit correctionPatch = o;
                 while (correctionPatch != null)
                 {
-                    if (correctionPatch.referenceBody == core.target.Orbit.referenceBody)
+                    if (correctionPatch.referenceBody == core.target.TargetOrbit.referenceBody)
                     {
                         o = correctionPatch;
                         UT = correctionPatch.StartUT;
@@ -509,14 +509,14 @@ namespace MuMech
                         error = true;
                         errorMessage = "must select a target to match planes with.";
                     }
-                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    else if (o.referenceBody != core.target.TargetOrbit.referenceBody)
                     {
                         error = true;
                         errorMessage = "can only match planes with an object in the same sphere of influence.";
                     }
                     else if (timeReference == TimeReference.REL_ASCENDING)
                     {
-                        if (!o.AscendingNodeExists(core.target.Orbit))
+                        if (!o.AscendingNodeExists(core.target.TargetOrbit))
                         {
                             error = true;
                             errorMessage = "ascending node with target doesn't exist.";
@@ -524,7 +524,7 @@ namespace MuMech
                     }
                     else
                     {
-                        if (!o.DescendingNodeExists(core.target.Orbit))
+                        if (!o.DescendingNodeExists(core.target.TargetOrbit))
                         {
                             error = true;
                             errorMessage = "descending node with target doesn't exist.";
@@ -538,7 +538,7 @@ namespace MuMech
                         error = true;
                         errorMessage = "must select a target for the Hohmann transfer.";
                     }
-                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    else if (o.referenceBody != core.target.TargetOrbit.referenceBody)
                     {
                         error = true;
                         errorMessage = "target for Hohmann transfer must be in the same sphere of influence.";
@@ -548,14 +548,14 @@ namespace MuMech
                         error = true;
                         errorMessage = "starting orbit for Hohmann transfer must not be hyperbolic.";
                     }
-                    else if (core.target.Orbit.eccentricity > 1)
+                    else if (core.target.TargetOrbit.eccentricity > 1)
                     {
                         error = true;
                         errorMessage = "target orbit for Hohmann transfer must not be hyperbolic.";
                     }
-                    else if (o.RelativeInclination(core.target.Orbit) > 30 && o.RelativeInclination(core.target.Orbit) < 150)
+                    else if (o.RelativeInclination(core.target.TargetOrbit) > 30 && o.RelativeInclination(core.target.TargetOrbit) < 150)
                     {
-                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.Orbit).ToString("F0") + "º angle to starting orbit's plane (recommend at most 30º). Planned transfer may not intercept target properly.";
+                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.TargetOrbit).ToString("F0") + "º angle to starting orbit's plane (recommend at most 30º). Planned transfer may not intercept target properly.";
                     }
                     else if (o.eccentricity > 0.2)
                     {
@@ -569,13 +569,13 @@ namespace MuMech
                         error = true;
                         errorMessage = "must select a target for the course correction.";
                     }
-                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    else if (o.referenceBody != core.target.TargetOrbit.referenceBody)
                     {
                         error = true;
                         errorMessage = "target for course correction must be in the same sphere of influence";
                     }
-                    else if (o.NextClosestApproachTime(core.target.Orbit, UT) < UT + 1 ||
-                        o.NextClosestApproachDistance(core.target.Orbit, UT) > core.target.Orbit.semiMajorAxis * 0.2)
+                    else if (o.NextClosestApproachTime(core.target.TargetOrbit, UT) < UT + 1 ||
+                        o.NextClosestApproachDistance(core.target.TargetOrbit, UT) > core.target.TargetOrbit.semiMajorAxis * 0.2)
                     {
                         errorMessage = "Warning: orbit before course correction doesn't seem to approach target very closely. Planned course correction may be extreme. Recommend plotting an approximate intercept orbit and then plotting a course correction.";
                     }
@@ -592,15 +592,15 @@ namespace MuMech
                         error = true;
                         errorMessage = "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".";
                     }
-                    else if (o.referenceBody.referenceBody != core.target.Orbit.referenceBody)
+                    else if (o.referenceBody.referenceBody != core.target.TargetOrbit.referenceBody)
                     {
                         error = true;
-                        if (o.referenceBody == core.target.Orbit.referenceBody) errorMessage = "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
+                        if (o.referenceBody == core.target.TargetOrbit.referenceBody) errorMessage = "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
                         else errorMessage = "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
                     }
-                    else if (o.referenceBody.orbit.RelativeInclination(core.target.Orbit) > 30)
+                    else if (o.referenceBody.orbit.RelativeInclination(core.target.TargetOrbit) > 30)
                     {
-                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.Orbit).ToString("F0") + "º angle to " + o.referenceBody.theName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly.";
+                        errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(core.target.TargetOrbit).ToString("F0") + "º angle to " + o.referenceBody.theName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly.";
                     }
                     else
                     {
@@ -634,7 +634,7 @@ namespace MuMech
                         error = true;
                         errorMessage = "must select a target to intercept.";
                     }
-                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    else if (o.referenceBody != core.target.TargetOrbit.referenceBody)
                     {
                         error = true;
                         errorMessage = "target must be in the same sphere of influence.";
@@ -647,7 +647,7 @@ namespace MuMech
                         error = true;
                         errorMessage = "must select a target to match velocities with.";
                     }
-                    else if (o.referenceBody != core.target.Orbit.referenceBody)
+                    else if (o.referenceBody != core.target.TargetOrbit.referenceBody)
                     {
                         error = true;
                         errorMessage = "target must be in the same sphere of influence.";
@@ -720,16 +720,16 @@ namespace MuMech
                 case Operation.PLANE:
                     if (timeReference == TimeReference.REL_ASCENDING)
                     {
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, core.target.Orbit, UT, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, core.target.TargetOrbit, UT, out UT);
                     }
                     else
                     {
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, core.target.Orbit, UT, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, core.target.TargetOrbit, UT, out UT);
                     }
                     break;
 
                 case Operation.TRANSFER:
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.Orbit, UT, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, core.target.TargetOrbit, UT, out UT);
                     break;
 
                 case Operation.MOON_RETURN:
@@ -740,24 +740,24 @@ namespace MuMech
                     CelestialBody targetBody = core.target.Target as CelestialBody;
                     if (targetBody != null)
                     {
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, targetBody, targetBody.Radius + courseCorrectFinalPeA, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.TargetOrbit, targetBody, targetBody.Radius + courseCorrectFinalPeA, out UT);
                     }
                     else
                     {
-                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.Orbit, interceptDistance, out UT);
+                        dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, core.target.TargetOrbit, interceptDistance, out UT);
                     }
                     break;
 
                 case Operation.INTERPLANETARY_TRANSFER:
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.Orbit, true, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, core.target.TargetOrbit, true, out UT);
                     break;
 
                 case Operation.LAMBERT:
-                    dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.Orbit, UT + interceptInterval);
+                    dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, core.target.TargetOrbit, UT + interceptInterval);
                     break;
 
                 case Operation.KILL_RELVEL:
-                    dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, UT, core.target.Orbit);
+                    dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, UT, core.target.TargetOrbit);
                     break;
 
                 case Operation.RESONANT_ORBIT:

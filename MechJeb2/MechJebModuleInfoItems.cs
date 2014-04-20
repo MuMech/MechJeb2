@@ -89,7 +89,7 @@ namespace MuMech
         public string TargetOrbitSummary()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return OrbitSummary(core.target.Orbit);
+            return OrbitSummary(core.target.TargetOrbit);
         }
 
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit, description = "Orbit shape w/ inc.")]
@@ -102,7 +102,7 @@ namespace MuMech
         public string TargetOrbitSummaryWithInclination()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return OrbitSummaryWithInclination(core.target.Orbit);
+            return OrbitSummaryWithInclination(core.target.TargetOrbit);
         }
 
         //TODO: consider turning this into a binary search
@@ -471,27 +471,27 @@ namespace MuMech
 				double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
 				return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
 			}
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) - vesselState.time);
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("Closest approach distance", InfoItem.Category.Target)]
         public string TargetClosestApproachDistance()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
-			return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time), -1) + "m";
+			return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time), -1) + "m";
         }
 
         [ValueInfoItem("Rel. vel. at closest approach", InfoItem.Category.Target)]
         public string TargetClosestApproachRelativeVelocity()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
-            double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
-            double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+            double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+            double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
             return MuUtils.ToSI(relVel, -1) + "m/s";
         }
 
@@ -499,77 +499,77 @@ namespace MuMech
         public string TargetApoapsis()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return MuUtils.ToSI(core.target.Orbit.ApA, 2) + "m";
+            return MuUtils.ToSI(core.target.TargetOrbit.ApA, 2) + "m";
         }
 
         [ValueInfoItem("Target periapsis", InfoItem.Category.Target)]
         public string TargetPeriapsis()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return MuUtils.ToSI(core.target.Orbit.PeA, 2) + "m";
+            return MuUtils.ToSI(core.target.TargetOrbit.PeA, 2) + "m";
         }
 
         [ValueInfoItem("Target inclination", InfoItem.Category.Target)]
         public string TargetInclination()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.Orbit.inclination.ToString("F2") + "º";
+            return core.target.TargetOrbit.inclination.ToString("F2") + "º";
         }
 
         [ValueInfoItem("Target orbit period", InfoItem.Category.Target)]
         public string TargetOrbitPeriod()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.Orbit.period);
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.period);
         }
 
         [ValueInfoItem("Target orbit speed", InfoItem.Category.Target)]
         public string TargetOrbitSpeed()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return MuUtils.ToSI(core.target.Orbit.GetVel().magnitude) + "m/s";
+            return MuUtils.ToSI(core.target.TargetOrbit.GetVel().magnitude) + "m/s";
         }
 
         [ValueInfoItem("Target time to Ap", InfoItem.Category.Target)]
         public string TargetOrbitTimeToAp()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.Orbit.timeToAp);
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.timeToAp);
         }
 
         [ValueInfoItem("Target time to Pe", InfoItem.Category.Target)]
         public string TargetOrbitTimeToPe()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.Orbit.timeToPe);
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.timeToPe);
         }
 
         [ValueInfoItem("Target LAN", InfoItem.Category.Target)]
         public string TargetLAN()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.Orbit.LAN.ToString("F2") + "º";
+            return core.target.TargetOrbit.LAN.ToString("F2") + "º";
         }
 
         [ValueInfoItem("Target AoP", InfoItem.Category.Target)]
         public string TargetAoP()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.Orbit.argumentOfPeriapsis.ToString("F2") + "º";
+            return core.target.TargetOrbit.argumentOfPeriapsis.ToString("F2") + "º";
         }
 
         [ValueInfoItem("Target eccentricity", InfoItem.Category.Target)]
         public string TargetEccentricity()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.Orbit.eccentricity);
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.eccentricity);
         }
 
         [ValueInfoItem("Target SMA", InfoItem.Category.Target)]
         public string TargetSMA()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return MuUtils.ToSI(core.target.Orbit.semiMajorAxis, 2) + "m";
+            return MuUtils.ToSI(core.target.TargetOrbit.semiMajorAxis, 2) + "m";
         }
 
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
@@ -582,55 +582,55 @@ namespace MuMech
         public string SynodicPeriod()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.Orbit));
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.TargetOrbit));
         }
 
         [ValueInfoItem("Phase angle to target", InfoItem.Category.Target)]
         public string PhaseAngle()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
 
-            return orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
+            return orbit.PhaseAngle(core.target.TargetOrbit, vesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("Target planet phase angle", InfoItem.Category.Target)]
         public string TargetPlanetPhaseAngle()
         {
             if (!(core.target.Target is CelestialBody)) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
 
-            return mainBody.orbit.PhaseAngle(core.target.Orbit, vesselState.time).ToString("F2") + "º";
+            return mainBody.orbit.PhaseAngle(core.target.TargetOrbit, vesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("Relative inclination", InfoItem.Category.Target)]
         public string RelativeInclinationToTarget()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
 
-            return orbit.RelativeInclination(core.target.Orbit).ToString("F2") + "º";
+            return orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º";
         }
 
         [ValueInfoItem("Time to AN", InfoItem.Category.Target)]
         public string TimeToAscendingNodeWithTarget()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (!orbit.AscendingNodeExists(core.target.Orbit)) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.AscendingNodeExists(core.target.TargetOrbit)) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.target.Orbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("Time to DN", InfoItem.Category.Target)]
         public string TimeToDescendingNodeWithTarget()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.Orbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (!orbit.DescendingNodeExists(core.target.Orbit)) return "N/A";
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.DescendingNodeExists(core.target.TargetOrbit)) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.target.Orbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("Time to equatorial AN", InfoItem.Category.Orbit)]
@@ -1012,6 +1012,9 @@ namespace MuMech
                         return "Space high over " + mainBody.theName;
             }
         }
+
+
+
 
         static GUIStyle _separatorStyle;
         static GUIStyle separatorStyle

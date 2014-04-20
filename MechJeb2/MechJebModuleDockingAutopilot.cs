@@ -99,7 +99,7 @@ namespace MuMech
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
             
-            Vector3d targetVel = core.target.Orbit.GetVel();
+            Vector3d targetVel = core.target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
             double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
