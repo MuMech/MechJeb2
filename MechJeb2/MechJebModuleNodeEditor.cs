@@ -69,7 +69,7 @@ namespace MuMech
             {
                 prograde = node.DeltaV.z;
                 radialPlus = node.DeltaV.x;
-                normalPlus = -node.DeltaV.y;
+                normalPlus = node.DeltaV.y;
             }
 
             if (gizmo != node.attachedGizmo)
