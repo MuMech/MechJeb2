@@ -296,6 +296,12 @@ namespace MuMech
             return mainBody.GeeASL * 9.81;
         }
 
+        [ValueInfoItem("Escape velocity", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 3, units = "m/s")]
+        public double EscapeVelocity()
+        {
+            return Math.Sqrt(2 * mainBody.gravParameter / vesselState.radius);
+        }
+
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
