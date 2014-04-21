@@ -193,10 +193,12 @@ namespace MuMech
             {
                 foreach (Button b in toolbarButtons.Values)
                 {
-                    b.Destroy();
+                    if (b != null)
+                        b.Destroy();
                 }
                 toolbarButtons.Clear();
-                menuButton.Destroy();
+                if (menuButton != null)
+                    menuButton.Destroy();
             }
 
             base.OnDestroy();
