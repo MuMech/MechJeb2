@@ -140,7 +140,9 @@ namespace MuMech
 
                 double numPhasingOrbits = (hohmannUT - vesselState.time) / orbit.period;
 
-                if (numPhasingOrbits < maxPhasingOrbits)
+                double actualMaxPhasingOrbits = Math.Max(maxPhasingOrbits, 5); // ignore input values that are unreasonably small
+
+                if (numPhasingOrbits < actualMaxPhasingOrbits)
                 {
                     //It won't be too long until the intercept window. Plot a Hohmann transfer intercept.
                     vessel.PlaceManeuverNode(orbit, hohmannDV, hohmannUT);
@@ -150,7 +152,7 @@ namespace MuMech
                 else
                 {
                     //We are in a circular orbit in the right plane, but we aren't phasing quickly enough. Move to a better phasing orbit
-                    double axisRatio = Math.Pow(1 + 1.25 / maxPhasingOrbits, 2.0 / 3.0);
+                    double axisRatio = Math.Pow(1 + 1.25 / actualMaxPhasingOrbits, 2.0 / 3.0);
                     double lowPhasingRadius = core.target.TargetOrbit.semiMajorAxis / axisRatio;
                     double highPhasingRadius = core.target.TargetOrbit.semiMajorAxis * axisRatio;
 
