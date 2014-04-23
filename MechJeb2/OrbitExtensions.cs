@@ -281,22 +281,50 @@ namespace MuMech
             return Math.Abs(MuUtils.ClampDegrees180(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
+        //Returns the vector from the primary to the orbiting body at periapsis
+        //Better than using Orbit.eccVec because that is zero for circular orbits
+        public static Vector3d SwappedRelativePositionAtPeriapsis(this Orbit o)
+        {
+            Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
+            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.SwappedOrbitNormal()) * vectorToAN;
+            return o.PeR * vectorToPe;
+        }
+
+        //Returns the vector from the primary to the orbiting body at apoapsis
+        //Better than using -Orbit.eccVec because that is zero for circular orbits
+        public static Vector3d SwappedRelativePositionAtApoapsis(this Orbit o)
+        {
+            Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
+            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.SwappedOrbitNormal()) * vectorToAN;
+            Vector3d ret = -o.ApR * vectorToPe;
+            if (double.IsNaN(ret.x))
+            {
+                Debug.LogError("OrbitExtensions.SwappedRelativePositionAtApoapsis got a NaN result!");
+                Debug.LogError("o.LAN = " + o.LAN);
+                Debug.LogError("o.inclination = " + o.inclination);
+                Debug.LogError("o.argumentOfPeriapsis = " + o.argumentOfPeriapsis);
+                Debug.LogError("o.SwappedOrbitNormal() = " + o.SwappedOrbitNormal());
+            }
+            return ret;
+        }
+
         //Converts a direction, specified by a Vector3d, into a true anomaly.
         //The vector is projected into the orbital plane and then the true anomaly is
         //computed as the angle this vector makes with the vector pointing to the periapsis.
         //The returned value is always between 0 and 360.
         public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec)
         {
-            Vector3d projected = Vector3d.Exclude(o.SwappedOrbitNormal(), vec);
-            Vector3d vectorToPe = SwapYZ(o.eccVec);
-            double angleFromPe = Math.Abs(Vector3d.Angle(vectorToPe, projected));
+            Vector3d oNormal = o.SwappedOrbitNormal();
+            Vector3d projected = Vector3d.Exclude(oNormal, vec);
+            Vector3d vectorToPe = o.SwappedRelativePositionAtPeriapsis();
+            double angleFromPe = Vector3d.Angle(vectorToPe, projected);
 
             //If the vector points to the infalling part of the orbit then we need to do 360 minus the
             //angle from Pe to get the true anomaly. Test this by taking the the cross product of the
             //orbit normal and vector to the periapsis. This gives a vector that points to center of the 
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
-            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(o.SwappedOrbitNormal(), vectorToPe))) < 90)
+            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
             {
                 return angleFromPe;
             }
