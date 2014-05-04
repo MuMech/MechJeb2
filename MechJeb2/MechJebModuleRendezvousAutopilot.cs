@@ -156,7 +156,7 @@ namespace MuMech
                     double lowPhasingRadius = core.target.TargetOrbit.semiMajorAxis / axisRatio;
                     double highPhasingRadius = core.target.TargetOrbit.semiMajorAxis * axisRatio;
 
-                    bool useLowPhasingRadius = (lowPhasingRadius > mainBody.RealMaxAtmosphereAltitude() + 3000) && (orbit.semiMajorAxis < core.target.TargetOrbit.semiMajorAxis);
+                    bool useLowPhasingRadius = (lowPhasingRadius > mainBody.Radius + mainBody.RealMaxAtmosphereAltitude() + 3000) && (orbit.semiMajorAxis < core.target.TargetOrbit.semiMajorAxis);
                     double phasingOrbitRadius = (useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius);
 
                     if (orbit.ApR < phasingOrbitRadius)

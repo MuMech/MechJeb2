@@ -252,7 +252,7 @@ namespace MuMech
             if (desiredApsis > o.ApR)
             {
                 dV = DeltaVToChangeApoapsis(o, UT, desiredApsis);
-                Orbit transferOrbit = o.PerturbedOrbit(UT, dV + new Vector3d(1e-2, 1e-2, 1e-2)); //the hack to end all hacks. 0 inclination orbits make KSP sad
+                Orbit transferOrbit = o.PerturbedOrbit(UT, dV);
                 double transferApTime = transferOrbit.NextApoapsisTime(UT);
                 Vector3d transferApDirection = transferOrbit.SwappedRelativePositionAtApoapsis();  // getRelativePositionAtUT was returning NaNs! :(((((
                 double targetTrueAnomaly = target.TrueAnomalyFromVector(transferApDirection);
@@ -262,7 +262,7 @@ namespace MuMech
             else
             {
                 dV = DeltaVToChangePeriapsis(o, UT, desiredApsis);
-                Orbit transferOrbit = o.PerturbedOrbit(UT, dV + new Vector3d(1e-2, 1e-2, 1e-2)); //the hack to end all hacks. 0 inclination orbits make KSP sad
+                Orbit transferOrbit = o.PerturbedOrbit(UT, dV);
                 double transferPeTime = transferOrbit.NextPeriapsisTime(UT);
                 Vector3d transferPeDirection = transferOrbit.SwappedRelativePositionAtPeriapsis();  // getRelativePositionAtUT was returning NaNs! :(((((
                 double targetTrueAnomaly = target.TrueAnomalyFromVector(transferPeDirection);
