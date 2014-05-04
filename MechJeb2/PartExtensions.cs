@@ -111,13 +111,17 @@ namespace MuMech
 
             // part.PhysicsSignificance is not initialized in the Editor for all part. but physicallySignificant is useful there.
             if (HighLogic.LoadedSceneIsEditor)
+            {
                 physicallySignificant = physicallySignificant && p.PhysicsSignificance != 1;
 
-            if (p.HasModule<ModuleLandingGear>() || p.HasModule<LaunchClamp>())
-            {
-                //Landing gear set physicalSignificance = NONE when they enter the flight scene
-                //Launch clamp mass should be ignored.
-                physicallySignificant = false;
+                // Testing for launch clamp only in the Editor helps with the frame rate.
+                // TODO : cache which part are LaunchClamp ?
+                if (p.HasModule<ModuleLandingGear>() || p.HasModule<LaunchClamp>())
+                {
+                    //Landing gear set physicalSignificance = NONE when they enter the flight scene
+                    //Launch clamp mass should be ignored.
+                    physicallySignificant = false;
+                }
             }
             return physicallySignificant;
         }
