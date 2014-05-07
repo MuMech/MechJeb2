@@ -328,6 +328,13 @@ namespace MuMech
             return vessel.TotalResourceMass("MonoPropellant");
         }
 
+        [ValueInfoItem("Total electric charge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, siMaxPrecision = 1, units = "Ah")]
+        public double TotalElectricCharge()
+        {
+            return vessel.TotalResourceAmount("ElectricCharge");
+        }
+
+
 
         [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = "F0", units = "kN", showInEditor = true)]
         public double MaxThrust()

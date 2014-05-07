@@ -47,11 +47,10 @@ namespace MuMech
             return masterMechjebs[vessel.id];
         }
 
-        public static double TotalResourceMass(this Vessel vessel, string resourceName)
+        public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
             if (definition == null) return 0;
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
 
             double amount = 0;
             foreach (Part p in parts)
@@ -62,7 +61,18 @@ namespace MuMech
                 }
             }
 
-            return amount * definition.density;
+            return amount;
+        }
+
+        public static double TotalResourceAmount(this Vessel vessel, string resourceName)
+        {
+            return vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
+        }
+
+        public static double TotalResourceMass(this Vessel vessel, string resourceName)
+        {
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
         public static bool HasElectricCharge(this Vessel vessel)
