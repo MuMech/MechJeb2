@@ -44,7 +44,7 @@ namespace MuMech
             }
 
             bool onAxisNodeExists = false;
-            foreach (ModuleDockingNode node in vessel.GetModules<ModuleDockingNode>())
+            foreach (ITargetable node in vessel.GetTargetables())
             {
                 if (Vector3d.Angle(node.GetTransform().forward, vessel.ReferenceTransform.up) < 2)
                 {
