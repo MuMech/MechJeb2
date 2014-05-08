@@ -61,25 +61,8 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            
-            bool active = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
-            if (predictor.enabled != active)
-            {
-                if (active)
-                {
-                    predictor.users.Add(this);
-                }
-                else
-                {
-                    predictor.users.Remove(this);
-                }
-            }
 
-            if (predictor.enabled)
-            {
-                predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
-                DrawGUIPrediction();
-            }
+            DrawGUITogglePredictions();
 
             if (autopilot != null)
             {
@@ -125,6 +108,33 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        [GeneralInfoItem("Landing predictions", InfoItem.Category.Misc)]
+        void DrawGUITogglePredictions()
+        {
+            GUILayout.BeginVertical();
+
+            bool active = GUILayout.Toggle(predictor.enabled, "Show landing predictions");
+            if (predictor.enabled != active)
+            {
+                if (active)
+                {
+                    predictor.users.Add(this);
+                }
+                else
+                {
+                    predictor.users.Remove(this);
+                }
+            }
+
+            if (predictor.enabled)
+            {
+                predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
+                DrawGUIPrediction();
+            }
+
+            GUILayout.EndVertical();
         }
 
         void DrawGUIPrediction()

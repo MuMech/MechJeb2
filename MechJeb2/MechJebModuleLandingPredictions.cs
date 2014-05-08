@@ -389,10 +389,10 @@ namespace MuMech
 
         void DoMapView()
         {
-            ReentrySimulation.Result drawnResult = GetResult();
-            if (MapView.MapIsEnabled && this.enabled && drawnResult != null)
+            if (MapView.MapIsEnabled && vessel.isActiveVessel && this.enabled)
             {
-                if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
+                ReentrySimulation.Result drawnResult = GetResult();
+                if (drawnResult != null && drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
                 {
                     GLUtils.DrawMapViewGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, 60);
                 }
