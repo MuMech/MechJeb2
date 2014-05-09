@@ -106,7 +106,7 @@ namespace MuMech
         {
             get
             {
-                return (target != null && (target is Vessel || target is CelestialBody || target is ModuleDockingNode));
+                return (target != null && (target is Vessel || target is CelestialBody || CanAlign));
             }
         }
 
@@ -117,6 +117,11 @@ namespace MuMech
                 return (target != null && ((target is PositionTarget) || (target is Vessel)) && !(target is DirectionTarget));
             }
         }
+
+		public bool CanAlign
+		{
+			get { return target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation; }
+		}
 
         public ITargetable Target
         {
@@ -158,7 +163,7 @@ namespace MuMech
         {
             get
             {
-                if (target is ModuleDockingNode) return -Transform.forward;
+                if (CanAlign) return -Transform.forward;
                 return -Transform.up;
             }
         }

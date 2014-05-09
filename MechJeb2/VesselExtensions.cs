@@ -15,6 +15,16 @@ namespace MuMech
             return vessel.Parts.OfType<T>().ToList();
         }
 
+        public static List<ITargetable> GetTargetables(this Vessel vessel)
+        {
+            List<Part> parts;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            else if (vessel == null) return new List<ITargetable>();
+            else parts = vessel.Parts;
+
+            return (from part in parts from targetable in part.Modules.OfType<ITargetable>() select targetable).ToList();
+        }
+
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
