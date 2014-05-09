@@ -36,8 +36,8 @@ namespace MuMech
         public double zSep;
         public Vector3d lateralSep;
 
-        
-        float dockingcorridorRadius = 1;
+
+        const float dockingcorridorRadius = 1;
         double acquireRange = 0.25;
 
         public MechJebModuleDockingAutopilot.Box3d vesselBoundingBox;

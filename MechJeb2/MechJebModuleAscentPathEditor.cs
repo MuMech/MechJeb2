@@ -68,7 +68,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Turn shape:", path.turnShapeExponent, "%");
 
             // Round the slider's value (0..1) to sliderPrecision decimal places.
-            int sliderPrecision = 3;
+            const int sliderPrecision = 3;
 
             double sliderTurnShapeExponent = GUILayout.HorizontalSlider((float)path.turnShapeExponent, 0.0F, 1.0F);
             if (Math.Round(Math.Abs(sliderTurnShapeExponent - oldTurnShapeExponent), sliderPrecision) > 0)

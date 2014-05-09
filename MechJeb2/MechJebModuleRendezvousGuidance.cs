@@ -34,7 +34,7 @@ namespace MuMech
 
             GuiUtils.SimpleLabel("Rendezvous target", core.target.Name);
 
-            double leadTime = 30;
+            const double leadTime = 30;
             GuiUtils.SimpleLabel("Target orbit", MuUtils.ToSI(core.target.TargetOrbit.PeA, 3) + "m x " + MuUtils.ToSI(core.target.TargetOrbit.ApA, 3) + "m");
             GuiUtils.SimpleLabel("Current orbit", MuUtils.ToSI(orbit.PeA, 3) + "m x " + MuUtils.ToSI(orbit.ApA, 3) + "m");
             GuiUtils.SimpleLabel("Relative inclination", orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º");

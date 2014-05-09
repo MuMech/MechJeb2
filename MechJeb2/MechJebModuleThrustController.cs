@@ -314,7 +314,7 @@ namespace MuMech
             if (velocityRatio < 1.0) return 1.0F; //full throttle if under terminal velocity
 
             //throttle down quickly as we exceed terminal velocity:
-            double falloff = 15.0;
+            const double falloff = 15.0;
             return Mathf.Clamp((float)(1.0 - falloff * (velocityRatio - 1.0)), 0.0F, 1.0F);
         }
 
@@ -324,7 +324,7 @@ namespace MuMech
             float maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
 
             //reduce throttle as the max temp. ratio approaches 1 within the safety margin
-            float tempSafetyMargin = 0.05f;
+            const float tempSafetyMargin = 0.05f;
             if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
             else return (1 - maxTempRatio) / tempSafetyMargin;
         }

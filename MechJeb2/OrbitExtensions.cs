@@ -126,7 +126,7 @@ namespace MuMech
                 interval = 100 / a.MeanMotion(); //this should be an interval of time that covers a large chunk of the hyperbolic arc
             }
             double maxTime = UT + interval;
-            int numDivisions = 20;
+            const int numDivisions = 20;
 
             for (int iter = 0; iter < 8; iter++)
             {

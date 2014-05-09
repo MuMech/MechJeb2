@@ -14,7 +14,7 @@ namespace MuMech
         public float bubbleHeight = 50;
         public float offsetX = 0;
         public float offsetY = 50;
-        public int points = 100;
+        public const int points = 100;
 
         public SpeechBubble(GUIStyle style)
         {

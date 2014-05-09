@@ -46,7 +46,7 @@ namespace MuMech
         
         double dt;
         double max_dt;
-        double min_dt = 0.01; //in seconds
+        private const double min_dt = 0.01; //in seconds
         const double maxSimulatedTime = 2000; //in seconds
 
         List<SimulatedParachute> parachutes;
@@ -524,7 +524,7 @@ namespace MuMech
 
             public List<Vector3d> WorldTrajectory(double timeStep) 
             {
-                if (trajectory.Count() == 0) return new List<Vector3d>();
+                if (!trajectory.Any()) return new List<Vector3d>();
 
                 List<Vector3d> ret = new List<Vector3d>();
                 ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
@@ -779,15 +779,13 @@ namespace MuMech
 
         public string GetDebugOutput()
         {
-            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy + " this.targetDrag:" + this.targetDrag + " this.parachuteDrag:" + this.parachuteDrag + " p.part.minimum_drag:" + p.part.minimum_drag + " p.part.maximum_drag:" + p.part.maximum_drag; ; 
+            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy + " this.targetDrag:" + this.targetDrag + " this.parachuteDrag:" + this.parachuteDrag + " p.part.minimum_drag:" + p.part.minimum_drag + " p.part.maximum_drag:" + p.part.maximum_drag; 
             return DebugOutput;
         }
 
         public double AddedDragMass()
         {
-            double totalDrag;
-
-            totalDrag = p.part.minimum_drag + this.parachuteDrag;
+            double totalDrag = p.part.minimum_drag + this.parachuteDrag;
 
             return p.part.mass * totalDrag;
         }

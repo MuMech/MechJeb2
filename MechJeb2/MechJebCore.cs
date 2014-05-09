@@ -717,5 +717,10 @@ namespace MuMech
                 weLockedEditor = false;
             }
         }
+
+        public new static void print(object message)
+        {
+            MonoBehaviour.print("[MechJeb2] " + message);
+        }
     }
 }

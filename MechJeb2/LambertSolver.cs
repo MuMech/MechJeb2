@@ -104,7 +104,7 @@ namespace MuMech
             double f = 0;
             double g = 0;
             double g_dot = 0;
-            double small = 1e-5;
+            const double small = 1e-5;
             if (a > small)
             {
 

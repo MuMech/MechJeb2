@@ -65,7 +65,7 @@ namespace MuMech
 
         public ManeuverNode aerobrakeNode = null;
 
-        protected int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
+        protected const int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
         protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run.
         // TODO - decide if variable for fixed dt results in a more stable result
         protected bool variabledt = true; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.

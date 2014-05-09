@@ -81,7 +81,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableInt limitChutesStage = 0;
 
-        double lowDeorbitBurnTriggerFactor = 2;
+        const double lowDeorbitBurnTriggerFactor = 2;
 
         ParachutePlan parachutePlan = null;  // This is used to adjest the height at which the parachutes semi deploy as a means of targeting the landing in an atmosphere where it is not possible to control atitude to perform corse correction burns.
         
@@ -423,7 +423,7 @@ namespace MuMech
                 //angle slightly left or right to fix any cross-range error in the predicted landing site:
                 Vector3d horizontalToLandingSite = Vector3d.Exclude(vesselState.up, LandingSite - vesselState.CoM).normalized;
                 Vector3d horizontalToTarget = Vector3d.Exclude(vesselState.up, core.target.GetPositionTargetPosition() - vesselState.CoM).normalized;
-                double angleGain = 4;
+                const double angleGain = 4;
                 Vector3d angleCorrection = angleGain * (horizontalToTarget - horizontalToLandingSite);
                 if (angleCorrection.magnitude > 0.1) angleCorrection *= 0.1 / angleCorrection.magnitude;
                 thrustDirection = (thrustDirection + angleCorrection).normalized;
@@ -585,7 +585,7 @@ namespace MuMech
             Vector3d[] deltas = new Vector3d[3];
             for (int i = 0; i < 3; i++)
             {
-                double perturbationDeltaV = 1; //warning: hard experience shows that setting this too low leads to bewildering bugs due to finite precision of Orbit functions
+                const double perturbationDeltaV = 1; //warning: hard experience shows that setting this too low leads to bewildering bugs due to finite precision of Orbit functions
                 Orbit perturbedOrbit = orbit.PerturbedOrbit(vesselState.time, perturbationDeltaV * perturbationDirections[i]); //compute the perturbed orbit
                 double perturbedLandingTime;
                 if (perturbedOrbit.PeR < endRadius) perturbedLandingTime = perturbedOrbit.NextTimeOfRadius(vesselState.time, endRadius);
@@ -805,7 +805,7 @@ namespace MuMech
                 double desiredSpeedAfterDt = -MaxAllowedSpeedAfterDt(vesselState.deltaT);
                 double minAccel = -vesselState.localg * Math.Abs(Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.up));
                 double maxAccel = vesselState.maxThrustAccel * Vector3d.Dot(vesselState.forward, -vessel.srf_velocity.normalized) - vesselState.localg * Math.Abs(Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.up));
-                double speedCorrectionTimeConstant = 0.3;
+                const double speedCorrectionTimeConstant = 0.3;
                 double speedError = desiredSpeed - controlledSpeed;
                 double desiredAccel = speedError / speedCorrectionTimeConstant + (desiredSpeedAfterDt - desiredSpeed) / vesselState.deltaT;
                 if (maxAccel - minAccel > 0) core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
@@ -829,10 +829,10 @@ namespace MuMech
             }
 
             //control thrust to control vertical speed:
-            double desiredSpeed = 0; //hover until horizontal velocity is killed
+            const double desiredSpeed = 0; //hover until horizontal velocity is killed
             double controlledSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.up);
             double speedError = desiredSpeed - controlledSpeed;
-            double speedCorrectionTimeConstant = 1.0;
+            const double speedCorrectionTimeConstant = 1.0;
             double desiredAccel = speedError / speedCorrectionTimeConstant;
             double minAccel = -vesselState.localg;
             double maxAccel = -vesselState.localg + Vector3d.Dot(vesselState.forward, vesselState.up) * vesselState.maxThrustAccel;
@@ -1229,7 +1229,7 @@ namespace MuMech
         {
             double startRadius = x.magnitude;
 
-            int steps = 10;
+            const int steps = 10;
             for (int i = 0; i < steps; i++)
             {
                 Vector3d gVec = -g * x.normalized;
@@ -1263,7 +1263,7 @@ namespace MuMech
         double maxMultiplier;
         double currentMultiplier;  // This is multiplied with the parachutes fulldeploy height to give the height at which the parachutes will be semideployed.
         double correlation; // This is the correlation coefficent of the dataset, and is used to tell if the data set is providing helpful information or not. It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
-        int dataSetSize = 40;
+        const int dataSetSize = 40;
 
         public double Multiplier
         {

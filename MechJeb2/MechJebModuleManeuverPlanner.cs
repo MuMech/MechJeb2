@@ -84,7 +84,7 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
-            bool anyNodeExists = (maneuverNodes.Count() > 0);
+            bool anyNodeExists = maneuverNodes.Any();
 
             if (anyNodeExists)
             {
@@ -339,7 +339,7 @@ namespace MuMech
             Orbit o = orbit;
 
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
-            if (maneuverNodes.Count() > 0)
+            if (maneuverNodes.Any())
             {
             	if (InvolveGUI) { GUILayout.Label("after the last maneuver node."); }
                 ManeuverNode last = maneuverNodes.Last();

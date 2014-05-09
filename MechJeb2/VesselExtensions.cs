@@ -114,7 +114,7 @@ namespace MuMech
         {
             IEnumerable<ManeuverNode> earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.UT <= UT));
             Orbit o = vessel.orbit;
-            if (earlierNodes.Count() > 0)
+            if (earlierNodes.Any())
             {
                 o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
             }
@@ -136,7 +136,7 @@ namespace MuMech
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
             var nodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.patch == patch && n != ignoreNode));
-            if (nodes.Count() > 0) return nodes.First().nextPatch;
+            if (nodes.Any()) return nodes.First().nextPatch;
 
             //return the next patch, or null if there isn't one:
             if (!finalPatch) return patch.nextPatch;

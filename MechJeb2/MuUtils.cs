@@ -25,7 +25,7 @@ namespace MuMech
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
 
             string[] units = new string[] { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
-            int unitIndexOffset = 8; //index of "" in the units array
+            const int unitIndexOffset = 8; //index of "" in the units array
             int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
             if (unitIndex < 0) unitIndex = 0;
             if (unitIndex >= units.Length) unitIndex = units.Length - 1;

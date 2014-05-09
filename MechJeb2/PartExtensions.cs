@@ -9,7 +9,7 @@ namespace MuMech
     {
         public static bool HasModule<T>(this Part p) where T : PartModule
         {
-            return p.Modules.OfType<T>().Count() > 0;
+            return p.Modules.OfType<T>().Any();
         }
 
         public static float TotalMass(this Part p)

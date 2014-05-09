@@ -156,7 +156,7 @@ namespace MuMech
                     unlock = false;
                     foreach (string p in parts)
                     {
-                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 && ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.Where(a => a.name == p).First()))
+                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 && ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
                         {
                             unlock = true;
                             break;

@@ -242,9 +242,9 @@ namespace MuMech
 		internal string tmpMaxSpeed = "";
 		internal string tmpLat = "";
 		internal string tmpLon = "";
-		internal static string coordRegEx = @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
-		
-		private Vector2 scroll;
+	    internal const string coordRegEx = @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
+
+	    private Vector2 scroll;
 		private GUIStyle styleActive;
 		private GUIStyle styleInactive;
 		private GUIStyle styleQuicksave;

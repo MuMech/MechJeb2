@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class GLUtils
+    public static class GLUtils
     {
         static Material _material;
         static Material material

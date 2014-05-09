@@ -68,7 +68,7 @@ namespace MuMech
             GuiUtils.SimpleLabel("Status", solverThread.statusString);
 
             string error = solverThread.errorString;
-            if (error != null && error.Length != 0)
+            if (!string.IsNullOrEmpty(error))
             {
                 GUILayout.Label(error, GUILayout.ExpandWidth(true));
             }

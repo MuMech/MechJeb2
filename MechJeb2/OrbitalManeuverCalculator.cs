@@ -293,7 +293,7 @@ namespace MuMech
             double maxTime = UT + 1.5 * synodicPeriod;
 
             //first find roughly where the zero point is
-            int numDivisions = 30;
+            const int numDivisions = 30;
             double dt = (maxTime - minTime) / numDivisions;
             for (int i = 1; i <= numDivisions; i++)
             {
@@ -394,7 +394,7 @@ namespace MuMech
             burnUT = UT;
             Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime);
 
-            int fineness = 20;
+            const int fineness = 20;
             for (double step = 0.5; step < fineness; step += 1.0)
             {
                 double testUT = UT + (closestApproachTime - UT) * step / fineness;
@@ -557,7 +557,7 @@ namespace MuMech
 
             double minInterceptTime = apsisTime - hohmannOrbit.period / 4;
             double maxInterceptTime = apsisTime + hohmannOrbit.period / 4;
-            int subdivisions = 30;
+            const int subdivisions = 30;
             for (int i = 0; i < subdivisions; i++)
             {
                 double interceptUT = minInterceptTime + i * (maxInterceptTime - minInterceptTime) / subdivisions;
@@ -763,7 +763,7 @@ namespace MuMech
             double burn_latitude = o.referenceBody.GetLatitude(pos);
             double burn_longitude = o.referenceBody.GetLongitude(pos) + o.referenceBody.rotationAngle;
 
-            double target_latitude = 0; // Equator
+            const double target_latitude = 0; // Equator
             double target_longitude = 0; // Prime Meridian
 
             // Select the location of either the descending or ascending node.
