@@ -44,7 +44,7 @@ namespace MuMech
             }
 
             bool onAxisNodeExists = false;
-            foreach (ITargetable node in vessel.GetTargetables())
+            foreach (ITargetable node in vessel.GetTargetables().Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
             {
                 if (Vector3d.Angle(node.GetTransform().forward, vessel.ReferenceTransform.up) < 2)
                 {
