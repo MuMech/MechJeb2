@@ -418,12 +418,12 @@ namespace MuMech
         public static double TimeToPlane(CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
         {
             double inc = Math.Abs(Vector3d.Angle(target.SwappedOrbitNormal(), launchBody.angularVelocity));
-            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.SwappedOrbitNormal()).normalized;
+            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, target.SwappedOrbitNormal()).normalized; // I don't understand the sign here, but this seems to work
             b *= launchBody.Radius * Math.Sin(Math.PI / 180 * launchLatitude) / Math.Tan(Math.PI / 180 * inc);
             Vector3d c = Vector3d.Cross(target.SwappedOrbitNormal(), launchBody.angularVelocity).normalized;
             double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(Math.PI / 180 * launchLatitude), 2) - b.sqrMagnitude;
             if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
-            c *= cMagnitudeSquared;
+            c *= Math.Sqrt(cMagnitudeSquared);
             Vector3d a1 = b + c;
             Vector3d a2 = b - c;
 

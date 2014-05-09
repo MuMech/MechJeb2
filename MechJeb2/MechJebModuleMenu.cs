@@ -20,8 +20,8 @@ namespace MuMech
             if (toolbarButtons == null)
                 toolbarButtons = new Dictionary<string, IButton>();
 
-            if (missingIcons == null)
-                missingIcons = new HashSet<string>();
+            if (actualIcons == null)
+                actualIcons = new Dictionary<string, string>();
         }
 
         public enum WindowStat
@@ -60,7 +60,7 @@ namespace MuMech
 
 
         private static Dictionary<string, IButton> toolbarButtons;
-        private static HashSet<string> missingIcons;
+        private static Dictionary<string, string> actualIcons;
 
         IButton menuButton;
 
@@ -130,7 +130,9 @@ namespace MuMech
             }
             menuButton.Visible = true;
         }
-        
+
+        const string Qmark = "MechJeb2/Icons/QMark";
+
         public void SetupToolbarButton(DisplayModule module, bool active)
         {
             if (!ToolbarManager.ToolbarAvailable)
@@ -165,25 +167,30 @@ namespace MuMech
                 button.Visible = module.showInCurrentScene;
                 String TexturePath = "MechJeb2/Icons/" + name;
                 String TexturePathActive = TexturePath + "_active";
-                if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
+
+                if (!actualIcons.ContainsKey(TexturePath))
                 {
-                    TexturePath = "MechJeb2/Icons/QMark";
-                    if (!missingIcons.Contains(name))
+                    if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
                     {
-                        missingIcons.Add(name);
+                        actualIcons[TexturePath] = Qmark;
                         print("No icon for " + name);
                     }
-                }
-                if (active & GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
+                    else
+                        actualIcons[TexturePath] = TexturePath;
+                }               
+
+                if (active && !actualIcons.ContainsKey(TexturePathActive))
                 {
-                    TexturePathActive = TexturePath;
-                    if (!missingIcons.Contains(name + "_active"))
+                    if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
                     {
-                        missingIcons.Add(name + "_active");
+                        actualIcons[TexturePathActive] = TexturePath;
                         print("No icon for " + name + "_active");
                     }
+                    else
+                        actualIcons[TexturePathActive] = TexturePathActive;
                 }
-                button.TexturePath = active ? TexturePathActive : TexturePath;
+
+                button.TexturePath = active ? actualIcons[TexturePathActive] : actualIcons[TexturePath];
             }
         }
 
@@ -193,10 +200,12 @@ namespace MuMech
             {
                 foreach (Button b in toolbarButtons.Values)
                 {
-                    b.Destroy();
+                    if (b != null)
+                        b.Destroy();
                 }
                 toolbarButtons.Clear();
-                menuButton.Destroy();
+                if (menuButton != null)
+                    menuButton.Destroy();
             }
 
             base.OnDestroy();

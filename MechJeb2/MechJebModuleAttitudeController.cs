@@ -210,7 +210,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
                     Transform targetTransform = core.target.Transform;
-                    if (core.target.Target is ModuleDockingNode)
+                    if (core.target.CanAlign)
                     {
                         rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
                     }

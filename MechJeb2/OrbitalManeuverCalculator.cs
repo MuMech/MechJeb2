@@ -236,6 +236,45 @@ namespace MuMech
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
 
+        //Computes the dV of a Hohmann transfer burn at time UT that will put the apoapsis or periapsis
+        //of the transfer orbit on top of the target orbit.
+        //The output value apsisPhaseAngle is the phase angle between the transferring vessel and the
+        //target object as the transferring vessel crosses the target orbit at the apoapsis or periapsis
+        //of the transfer orbit.
+        //Actually, it's not exactly the phase angle. It's a sort of mean anomaly phase angle. The
+        //difference is not important for how this function is used by DeltaVAndTimeForHohmannTransfer.
+        private static Vector3d DeltaVAndApsisPhaseAngleOfHohmannTransfer(Orbit o, Orbit target, double UT, out double apsisPhaseAngle)
+        {
+            Vector3d apsisDirection = -o.SwappedRelativePositionAtUT(UT);
+            double desiredApsis = target.RadiusAtTrueAnomaly(target.TrueAnomalyFromVector(apsisDirection));
+
+            Vector3d dV;
+            if (desiredApsis > o.ApR)
+            {
+                dV = DeltaVToChangeApoapsis(o, UT, desiredApsis);
+                Orbit transferOrbit = o.PerturbedOrbit(UT, dV);
+                double transferApTime = transferOrbit.NextApoapsisTime(UT);
+                Vector3d transferApDirection = transferOrbit.SwappedRelativePositionAtApoapsis();  // getRelativePositionAtUT was returning NaNs! :(((((
+                double targetTrueAnomaly = target.TrueAnomalyFromVector(transferApDirection);
+                double meanAnomalyOffset = 360 * (target.TimeOfTrueAnomaly(targetTrueAnomaly, UT) - transferApTime) / target.period;
+                apsisPhaseAngle = meanAnomalyOffset;
+            }
+            else
+            {
+                dV = DeltaVToChangePeriapsis(o, UT, desiredApsis);
+                Orbit transferOrbit = o.PerturbedOrbit(UT, dV);
+                double transferPeTime = transferOrbit.NextPeriapsisTime(UT);
+                Vector3d transferPeDirection = transferOrbit.SwappedRelativePositionAtPeriapsis();  // getRelativePositionAtUT was returning NaNs! :(((((
+                double targetTrueAnomaly = target.TrueAnomalyFromVector(transferPeDirection);
+                double meanAnomalyOffset = 360 * (target.TimeOfTrueAnomaly(targetTrueAnomaly, UT) - transferPeTime) / target.period;
+                apsisPhaseAngle = meanAnomalyOffset;
+            }
+
+            apsisPhaseAngle = MuUtils.ClampDegrees180(apsisPhaseAngle);
+
+            return dV;
+        }
+
         //Computes the time and dV of a Hohmann transfer injection burn such that at apoapsis the transfer
         //orbit passes as close as possible to the target.
         //The output burnUT will be the first transfer window found after the given UT.
@@ -243,77 +282,98 @@ namespace MuMech
         //Also assumes that o is a perfectly circular orbit (though result should be OK for small eccentricity).
         public static Vector3d DeltaVAndTimeForHohmannTransfer(Orbit o, Orbit target, double UT, out double burnUT)
         {
+            //We do a binary search for the burn time that zeros out the phase angle between the
+            //transferring vessel and the target at the apsis of the transfer orbit.
             double synodicPeriod = o.SynodicPeriod(target);
 
-            Vector3d burnDV = Vector3d.zero;
-            burnUT = UT;
-            double bestApproachDistance = Double.MaxValue;
+            double lastApsisPhaseAngle;
+            Vector3d immediateBurnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, UT, out lastApsisPhaseAngle);
+
             double minTime = UT;
-            double maxTime = UT + 1.1 * synodicPeriod;
-            int numDivisions = 20;
+            double maxTime = UT + 1.5 * synodicPeriod;
 
-            for (int iter = 0; iter < 8; iter++)
+            //first find roughly where the zero point is
+            int numDivisions = 30;
+            double dt = (maxTime - minTime) / numDivisions;
+            for (int i = 1; i <= numDivisions; i++)
             {
-                double dt = (maxTime - minTime) / numDivisions;
-                for (int i = 0; i < numDivisions; i++)
+                double t = minTime + dt * i;
+
+                double apsisPhaseAngle;
+                Vector3d dV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, t, out apsisPhaseAngle);
+
+                if ((Math.Abs(apsisPhaseAngle) < 90) && (Math.Sign(lastApsisPhaseAngle) != Math.Sign(apsisPhaseAngle)))
                 {
-                    double t = minTime + i * dt;
-                    Vector3d apsisDirection = -o.SwappedRelativePositionAtUT(t);
-                    double desiredApsis = target.RadiusAtTrueAnomaly(target.TrueAnomalyFromVector(apsisDirection));
-
-                    double approachDistance;
-                    Vector3d burn;
-                    if (desiredApsis > o.ApR)
-                    {
-                        burn = DeltaVToChangeApoapsis(o, t, desiredApsis);
-                        Orbit transferOrbit = o.PerturbedOrbit(t, burn);
-                        approachDistance = transferOrbit.Separation(target, transferOrbit.NextApoapsisTime(t));
-                    }
-                    else
-                    {
-                        burn = DeltaVToChangePeriapsis(o, t, desiredApsis);
-                        Orbit transferOrbit = o.PerturbedOrbit(t, burn);
-                        approachDistance = transferOrbit.Separation(target, transferOrbit.NextPeriapsisTime(t));
-                    }
-
-                    if (approachDistance < bestApproachDistance)
-                    {
-                        bestApproachDistance = approachDistance;
-                        burnUT = t;
-                        burnDV = burn;
-                    }
+                    minTime = t - dt;
+                    maxTime = t;
+                    break;
                 }
-                minTime = MuUtils.Clamp(burnUT - dt, UT, UT + synodicPeriod);
-                maxTime = MuUtils.Clamp(burnUT + dt, UT, UT + synodicPeriod);
+
+                if ((i == 1) && (Math.Abs(lastApsisPhaseAngle) < 0.5) && (Math.Sign(lastApsisPhaseAngle) == Math.Sign(apsisPhaseAngle)))
+                {
+                    //In this case we are JUST passed the center of the transfer window, but probably we
+                    //can still do the transfer just fine. Don't do a search, just return an immediate burn
+                    burnUT = UT;
+                    return immediateBurnDV;
+                }
+
+                lastApsisPhaseAngle = apsisPhaseAngle;
+
+                if (i == numDivisions)
+                {
+                    throw new ArgumentException("OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer: couldn't find the transfer window!!");
+                }
             }
+
+            int minTimeApsisPhaseAngleSign = Math.Sign(lastApsisPhaseAngle);
+
+            //then do a binary search
+            while (maxTime - minTime > 0.01)
+            {
+                double testTime = (maxTime + minTime) / 2;
+
+                double testApsisPhaseAngle;
+                Vector3d dV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
+
+                if (Math.Sign(testApsisPhaseAngle) == minTimeApsisPhaseAngleSign)
+                {
+                    minTime = testTime;
+                }
+                else
+                {
+                    maxTime = testTime;
+                }
+            }
+
+            burnUT = (minTime + maxTime) / 2;
+            double finalApsisPhaseAngle;
+            Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out finalApsisPhaseAngle);
 
             return burnDV;
         }
 
         //Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
         //course to intercept a target at a specific interceptUT.
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT, double offsetDistance = 0)
+        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT, double offsetDistance = 0, bool shortway = true)
         {
             double initialT = UT;
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialT);
             double finalT = interceptUT;
             Vector3d finalRelPos = target.SwappedRelativePositionAtUT(finalT);
 
-            double targetOrbitalSpeed = o.SwappedOrbitalVelocityAtUT(finalT).magnitude;
-            double deltaTPrecision = 20.0 / targetOrbitalSpeed;
-
             Vector3d initialVelocity, finalVelocity;
-            LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, true, out initialVelocity, out finalVelocity);
+            LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, shortway, out initialVelocity, out finalVelocity);
 
             if (offsetDistance != 0)
             {
                 finalRelPos += offsetDistance * Vector3d.Cross(finalVelocity, finalRelPos).normalized;
-                LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, true, out initialVelocity, out finalVelocity);
+                LambertSolver.Solve(initialRelPos, finalRelPos, finalT - initialT, o.referenceBody, shortway, out initialVelocity, out finalVelocity);
             }
 
             Vector3d currentInitialVelocity = o.SwappedOrbitalVelocityAtUT(initialT);
             return initialVelocity - currentInitialVelocity;
         }
+
 
         //First finds the time of closest approach to the target during the next orbit after the
         //time UT. Then returns the delta-V of a burn at UT that will change the separation at
@@ -394,7 +454,7 @@ namespace MuMech
             Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
             return deltaV;
         }
-        
+
         //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another. 
         //It's assumed that the initial orbit around the first planet is circular, and that this orbit
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
@@ -436,7 +496,6 @@ namespace MuMech
             //just add in (1/2)(sun gravity)*(time to exit soi)^2 ? But how to compute time to exit soi? Or maybe once we
             //have the ejection orbit we should just move the ejection burn back by the time to exit the soi?
             Vector3d soiExitVelocity = idealDeltaV;
-
             //project the desired exit direction into the current orbit plane to get the feasible exit direction
             Vector3d inPlaneSoiExitDirection = Vector3d.Exclude(o.SwappedOrbitNormal(), soiExitVelocity).normalized;
 
@@ -472,6 +531,157 @@ namespace MuMech
             //rotate the exit direction by the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn
             Vector3d ejectionBurnDirection = Quaternion.AngleAxis(-(float)(turningAngle), o.SwappedOrbitNormal()) * inPlaneSoiExitDirection;
+            Vector3d ejectionVelocity = ejectionSpeed * ejectionBurnDirection;
+
+            Vector3d preEjectionVelocity = o.SwappedOrbitalVelocityAtUT(burnUT);
+
+            return ejectionVelocity - preEjectionVelocity;
+        }
+
+        //Like DeltaVAndTimeForHohmannTransfer, but adds an additional step that uses the Lambert
+        //solver to adjust the initial burn to produce an exact intercept instead of an approximate
+        public static Vector3d DeltaVAndTimeForHohmannLambertTransfer(Orbit o, Orbit target, double UT, out double burnUT, double subtractProgradeDV = 0)
+        {
+            Vector3d hohmannDV = DeltaVAndTimeForHohmannTransfer(o, target, UT, out burnUT);
+            Vector3d subtractedProgradeDV = subtractProgradeDV * hohmannDV.normalized;
+
+            Orbit hohmannOrbit = o.PerturbedOrbit(burnUT, hohmannDV);
+            double apsisTime; //approximate target  intercept time
+            if (hohmannOrbit.semiMajorAxis > o.semiMajorAxis) apsisTime = hohmannOrbit.NextApoapsisTime(burnUT);
+            else apsisTime = hohmannOrbit.NextPeriapsisTime(burnUT);
+
+            Debug.Log("hohmannDV = " + (Vector3)hohmannDV + ", apsisTime = " + apsisTime);
+
+            Vector3d dV = Vector3d.zero;
+            double minCost = 999999;
+
+            double minInterceptTime = apsisTime - hohmannOrbit.period / 4;
+            double maxInterceptTime = apsisTime + hohmannOrbit.period / 4;
+            int subdivisions = 30;
+            for (int i = 0; i < subdivisions; i++)
+            {
+                double interceptUT = minInterceptTime + i * (maxInterceptTime - minInterceptTime) / subdivisions;
+
+                Debug.Log("i + " + i + ", trying for intercept at UT = " + interceptUT);
+
+                //Try both short and long way
+                bool shortway = true;
+                Vector3d interceptBurn = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT, 0, shortway);
+                double cost = (interceptBurn - subtractedProgradeDV).magnitude;
+                Debug.Log("short way dV = " + interceptBurn.magnitude + "; subtracted cost = " + cost);
+                if (cost < minCost)
+                {
+                    dV = interceptBurn;
+                    minCost = cost;
+                }
+
+                shortway = false;
+                interceptBurn = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT, 0, shortway);
+                cost = (interceptBurn - subtractedProgradeDV).magnitude;
+                Debug.Log("long way dV = " + interceptBurn.magnitude + "; subtracted cost = " + cost);
+                if (cost < minCost)
+                {
+                    dV = interceptBurn;
+                    minCost = cost;
+                }
+            }
+
+            return dV;
+        }
+
+        //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another. 
+        //It's assumed that the initial orbit around the first planet is circular, and that this orbit
+        //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
+        //the target planet has a fairly low relative inclination with respect to the first planet. If the
+        //inclination change is nonzero you should also do a mid-course correction burn, as computed by
+        //DeltaVForCourseCorrection.
+        public static Vector3d DeltaVAndTimeForInterplanetaryLambertTransferEjection(Orbit o, double UT, Orbit target, out double burnUT)
+        {
+            Orbit planetOrbit = o.referenceBody.orbit;
+
+            //Compute the time and dV for a Hohmann transfer where we pretend that we are the planet we are orbiting.
+            //This gives us the "ideal" deltaV and UT of the ejection burn, if we didn't have to worry about waiting for the right
+            //ejection angle and if we didn't have to worry about the planet's gravity dragging us back and increasing the required dV.
+            double idealBurnUT;
+            Vector3d idealDeltaV;
+
+            //time the ejection burn to intercept the target
+            //idealDeltaV = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT, out idealBurnUT);
+            double vesselOrbitVelocity = OrbitalManeuverCalculator.CircularOrbitSpeed(o.referenceBody, o.semiMajorAxis);
+            idealDeltaV = DeltaVAndTimeForHohmannLambertTransfer(planetOrbit, target, UT, out idealBurnUT, vesselOrbitVelocity);
+
+            Debug.Log("idealBurnUT = " + idealBurnUT + ", idealDeltaV = " + idealDeltaV);
+
+            //Compute the actual transfer orbit this ideal burn would lead to.
+            Orbit transferOrbit = planetOrbit.PerturbedOrbit(idealBurnUT, idealDeltaV);
+
+            //Now figure out how to approximately eject from our current orbit into the Hohmann orbit we just computed.
+
+            //Assume we want to exit the SOI with the same velocity as the ideal transfer orbit at idealUT -- i.e., immediately
+            //after the "ideal" burn we used to compute the transfer orbit. This isn't quite right. 
+            //We intend to eject from our planet at idealUT and only several hours later will we exit the SOI. Meanwhile
+            //the transfer orbit will have acquired a slightly different velocity, which we should correct for. Maybe
+            //just add in (1/2)(sun gravity)*(time to exit soi)^2 ? But how to compute time to exit soi? Or maybe once we
+            //have the ejection orbit we should just move the ejection burn back by the time to exit the soi?
+            Vector3d soiExitVelocity = idealDeltaV;
+            Debug.Log("soiExitVelocity = " + (Vector3)soiExitVelocity);
+
+            //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn) 
+            //and SOI exit (approximated as radius = infinity)
+            double soiExitEnergy = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
+            double ejectionRadius = o.semiMajorAxis; //a guess, good for nearly circular orbits
+            Debug.Log("soiExitEnergy = " + soiExitEnergy);
+            Debug.Log("ejectionRadius = " + ejectionRadius);
+
+            double ejectionKineticEnergy = soiExitEnergy + o.referenceBody.gravParameter / ejectionRadius;
+            double ejectionSpeed = Math.Sqrt(2 * ejectionKineticEnergy);
+            Debug.Log("ejectionSpeed = " + ejectionSpeed);
+
+            //construct a sample ejection orbit
+            Vector3d ejectionOrbitInitialVelocity = ejectionSpeed * (Vector3d)o.referenceBody.transform.right;
+            Vector3d ejectionOrbitInitialPosition = o.referenceBody.position + ejectionRadius * (Vector3d)o.referenceBody.transform.up;
+            Orbit sampleEjectionOrbit = MuUtils.OrbitFromStateVectors(ejectionOrbitInitialPosition, ejectionOrbitInitialVelocity, o.referenceBody, 0);
+            double ejectionOrbitDuration = sampleEjectionOrbit.NextTimeOfRadius(0, o.referenceBody.sphereOfInfluence);
+            Vector3d ejectionOrbitFinalVelocity = sampleEjectionOrbit.SwappedOrbitalVelocityAtUT(ejectionOrbitDuration);
+
+            double turningAngle = Vector3d.Angle(ejectionOrbitInitialVelocity, ejectionOrbitFinalVelocity);
+            Debug.Log("turningAngle = " + turningAngle);
+
+            //sine of the angle between the vessel orbit and the desired SOI exit velocity
+            double outOfPlaneAngle = (Math.PI / 180) * (90 - Vector3d.Angle(soiExitVelocity, o.SwappedOrbitNormal()));
+            Debug.Log("outOfPlaneAngle (rad) = " + outOfPlaneAngle);
+
+            double coneAngle = Math.PI / 2 - (Math.PI / 180) * turningAngle;
+            Debug.Log("coneAngle (rad) = " + coneAngle);
+
+            Vector3d exitNormal = Vector3d.Cross(-soiExitVelocity, o.SwappedOrbitNormal()).normalized;
+            Vector3d normal2 = Vector3d.Cross(exitNormal, -soiExitVelocity).normalized;
+
+            //unit vector pointing to the spot on our orbit where we will burn.
+            //fails if outOfPlaneAngle > coneAngle.
+            Vector3d ejectionPointDirection = Math.Cos(coneAngle) * (-soiExitVelocity.normalized)
+                + Math.Cos(coneAngle) * Math.Tan(outOfPlaneAngle) * normal2
+                - Math.Sqrt(Math.Pow(Math.Sin(coneAngle), 2) - Math.Pow(Math.Cos(coneAngle) * Math.Tan(outOfPlaneAngle), 2)) * exitNormal;
+
+            Debug.Log("soiExitVelocity = " + (Vector3)soiExitVelocity);
+            Debug.Log("vessel orbit normal = " + (Vector3)(1000 * o.SwappedOrbitNormal()));
+            Debug.Log("exitNormal = " + (Vector3)(1000 * exitNormal));
+            Debug.Log("normal2 = " + (Vector3)(1000 * normal2));
+            Debug.Log("ejectionPointDirection = " + ejectionPointDirection);
+
+
+            double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
+            burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
+
+            if ((idealBurnUT - burnUT > o.period / 2) || (burnUT < UT))
+            {
+                burnUT += o.period;
+            }
+
+            Vector3d ejectionOrbitNormal = Vector3d.Cross(ejectionPointDirection, soiExitVelocity).normalized;
+            Debug.Log("ejectionOrbitNormal = " + ejectionOrbitNormal);
+            Vector3d ejectionBurnDirection = Quaternion.AngleAxis(-(float)(turningAngle), ejectionOrbitNormal) * soiExitVelocity.normalized;
+            Debug.Log("ejectionBurnDirection = " + ejectionBurnDirection);
             Vector3d ejectionVelocity = ejectionSpeed * ejectionBurnDirection;
 
             Vector3d preEjectionVelocity = o.SwappedOrbitalVelocityAtUT(burnUT);

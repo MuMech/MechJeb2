@@ -63,7 +63,7 @@ namespace MuMech
         {
             if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
 
-            if (NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position), true);
+            if (NormalTargetExists) return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position), true);
 
             return "N/A";
         }
@@ -106,7 +106,7 @@ namespace MuMech
         {
             get
             {
-                return (target != null && (target is Vessel || target is CelestialBody || target is ModuleDockingNode));
+                return (target != null && (target is Vessel || target is CelestialBody || CanAlign));
             }
         }
 
@@ -118,12 +118,17 @@ namespace MuMech
             }
         }
 
+		public bool CanAlign
+		{
+			get { return target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation; }
+		}
+
         public ITargetable Target
         {
             get { return target; }
         }
 
-        public Orbit Orbit
+        public Orbit TargetOrbit
         {
             get { return target.GetOrbit(); }
         }
@@ -140,7 +145,7 @@ namespace MuMech
 
         public Vector3d RelativeVelocity
         {
-            get { return (vessel.orbit.GetVel() - Orbit.GetVel()); }
+            get { return (vessel.orbit.GetVel() - TargetOrbit.GetVel()); }
         }
 
         public Vector3d RelativePosition
@@ -158,7 +163,7 @@ namespace MuMech
         {
             get
             {
-                if (target is ModuleDockingNode) return -Transform.forward;
+                if (CanAlign) return -Transform.forward;
                 return -Transform.up;
             }
         }

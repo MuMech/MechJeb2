@@ -69,7 +69,7 @@ namespace MuMech
             {
                 prograde = node.DeltaV.z;
                 radialPlus = node.DeltaV.x;
-                normalPlus = -node.DeltaV.y;
+                normalPlus = node.DeltaV.y;
             }
 
             if (gizmo != node.attachedGizmo)
@@ -181,16 +181,16 @@ namespace MuMech
                         break;
 
                     case Snap.REL_ASCENDING:
-                        if (core.target.NormalTargetExists && core.target.Orbit.referenceBody == o.referenceBody)
+                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
                         {
-                            if (o.AscendingNodeExists(core.target.Orbit)) UT = o.TimeOfAscendingNode(core.target.Orbit, UT - o.period / 2);
+                            if (o.AscendingNodeExists(core.target.TargetOrbit)) UT = o.TimeOfAscendingNode(core.target.TargetOrbit, UT - o.period / 2);
                         }
                         break;
 
                     case Snap.REL_DESCENDING:
-                        if (core.target.NormalTargetExists && core.target.Orbit.referenceBody == o.referenceBody)
+                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
                         {
-                            if (o.DescendingNodeExists(core.target.Orbit)) UT = o.TimeOfDescendingNode(core.target.Orbit, UT - o.period / 2);
+                            if (o.DescendingNodeExists(core.target.TargetOrbit)) UT = o.TimeOfDescendingNode(core.target.TargetOrbit, UT - o.period / 2);
                         }
                         break;
                 }
