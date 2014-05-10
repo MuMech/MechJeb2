@@ -96,6 +96,12 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            if (!core.target.NormalTargetExists)
+            {
+                EndDocking();
+                return;
+            }
+
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
             
@@ -176,17 +182,17 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            if (!core.target.NormalTargetExists)
+            {
+                EndDocking();
+                return;
+            }
+
             UpdateDistance();
 
             switch (dockingStep)
             {
                 case DockingStep.INIT:
-                    if (!core.target.NormalTargetExists)
-                    {
-                        dockingStep = DockingStep.OFF;
-                        users.Clear();
-                        return;
-                    }
                     InitDocking();
                     break;
 
@@ -218,9 +224,7 @@ namespace MuMech
                 case DockingStep.DOCKING:
                     if (zSep < acquireRange)
                     {
-                        dockingStep = DockingStep.OFF;
-                        users.Clear();
-                        enabled = false;
+                        EndDocking();
                     }
                     break;
 
@@ -274,6 +278,12 @@ namespace MuMech
 
         }
 
+        void EndDocking()
+        {
+            dockingStep = DockingStep.OFF;
+            users.Clear();
+            enabled = false;
+        }
 
         void DrawBoundingBox()
         {
