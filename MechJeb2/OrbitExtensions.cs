@@ -102,7 +102,16 @@ namespace MuMech
         //mean motion is rate of increase of the mean anomaly
         public static double MeanMotion(this Orbit o)
         {
-            return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
+            if (o.eccentricity > 1)
+            {
+                return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
+            }
+            else
+            {
+                // The above formula is wrong when using the RealSolarSystem mod, which messes with orbital periods.
+                // This simpler formula should be foolproof for elliptical orbits:
+                return 2 * Math.PI / o.period;
+            }
         }
 
         //distance between two orbiting objects at a given time
@@ -159,7 +168,9 @@ namespace MuMech
         //For hyperbolic orbits, the value can be any number.
         public static double MeanAnomalyAtUT(this Orbit o, double UT)
         {
-            double ret = o.meanAnomalyAtEpoch + o.MeanMotion() * (UT - o.epoch);
+            // We use ObtAtEpoch and not meanAnomalyAtEpoch because somehow meanAnomalyAtEpoch
+            // can be wrong when using the RealSolarSystem mod. ObtAtEpoch is always correct.
+            double ret = 2 * Math.PI * (o.ObTAtEpoch + (UT - o.epoch)) / o.period;
             if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
             return ret;
         }
