@@ -63,18 +63,12 @@ namespace MuMech
             bool active = GUILayout.Toggle(autopilot.enabled, "Autopilot enabled");
             GuiUtils.SimpleTextBox("Speed limit", autopilot.speedLimit, "m/s");
 
-            autopilot.overrideSafeDistance = GUILayout.Toggle(autopilot.overrideSafeDistance, "Override Safe Distance");
-            if (autopilot.overrideSafeDistance)
-                GuiUtils.SimpleTextBox("Safe Distance", autopilot.overridenSafeDistance, "m");
-
-            if (autopilot.overridenSafeDistance < 0)
-                autopilot.overridenSafeDistance = 0;
-
             GUILayout.Label("safeDistance " + autopilot.safeDistance.ToString("F2"), GUILayout.ExpandWidth(false));
             GUILayout.Label("targetSize   " + autopilot.targetSize.ToString("F2"), GUILayout.ExpandWidth(false));
-
+			
             if (autopilot.speedLimit < 0)
                 autopilot.speedLimit = 0;
+
 
             GUILayout.BeginHorizontal();
             autopilot.forceRol = GUILayout.Toggle(autopilot.forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
