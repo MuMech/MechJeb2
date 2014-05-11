@@ -170,7 +170,7 @@ namespace MuMech
         {
             // We use ObtAtEpoch and not meanAnomalyAtEpoch because somehow meanAnomalyAtEpoch
             // can be wrong when using the RealSolarSystem mod. ObtAtEpoch is always correct.
-            double ret = 2 * Math.PI * (o.ObTAtEpoch + (UT - o.epoch)) / o.period;
+            double ret = (o.ObTAtEpoch + (UT - o.epoch)) * o.MeanMotion();
             if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
             return ret;
         }
