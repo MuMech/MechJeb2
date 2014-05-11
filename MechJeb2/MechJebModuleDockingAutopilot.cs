@@ -18,6 +18,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble overridenSafeDistance = 5;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean overrideSafeDistance = false;
+
+        public float safeDistance = 10;
+        public float targetSize = 5;
+
         public Boolean drawBoundingBox = false;
 
         enum DockingStep
@@ -36,6 +45,7 @@ namespace MuMech
         public double zSep;
         public Vector3d lateralSep;
 
+        ITargetable lastTarget;
 
         const float dockingcorridorRadius = 1;
         double acquireRange = 0.25;
@@ -89,10 +99,6 @@ namespace MuMech
             Vector3d localAxis = vessel.ReferenceTransform.InverseTransformDirection(axis);
             return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.rcs.rcsAccelFactor() / vesselState.mass));
         }
-
-        ITargetable lastTarget;
-        public float safeDistance = 10;
-        public float targetSize = 5;
 
         public override void Drive(FlightCtrlState s)
         {
@@ -252,8 +258,11 @@ namespace MuMech
                 targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
                 
                 targetSize = targetBoundingBox.size.magnitude;
-
-                safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
+                
+                if (!overrideSafeDistance)
+                    safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
+                else
+                    safeDistance = (float)overridenSafeDistance.val;
 
                 if (core.target.Target is ModuleDockingNode)
                     acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.5;
