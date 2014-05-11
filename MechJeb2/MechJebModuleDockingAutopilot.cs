@@ -18,6 +18,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble overridenSafeDistance = 5;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean overrideSafeDistance = false;
+
+        public float safeDistance = 10;
+        public float targetSize = 5;
+
         enum DockingStep
         {
             INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
@@ -28,6 +37,7 @@ namespace MuMech
         public double zSep;
         public Vector3d lateralSep;
 
+        ITargetable lastTarget;
         
         float dockingcorridorRadius = 1;
         double acquireRange = 0.25;
@@ -70,10 +80,6 @@ namespace MuMech
             Vector3d localAxis = vessel.ReferenceTransform.InverseTransformDirection(axis);
             return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.rcs.rcsAccelFactor() / vesselState.mass));
         }
-
-        ITargetable lastTarget;
-        public float safeDistance = 10;
-        public float targetSize = 5;
 
         public override void Drive(FlightCtrlState s)
         {
@@ -120,8 +126,7 @@ namespace MuMech
                         zApproachSpeed = 0;
                     else
                     {
-
-                        double timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
+                        double timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed);
                         double timeToTargetSize = Math.Abs((zSep - targetSize) / zApproachSpeed);                                               
 
                         if (timeToTargetSize < timeToAxis && timeToAxis > 0 && timeToTargetSize > 0)
@@ -229,9 +234,11 @@ namespace MuMech
                 Vector3Pair targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
 
                 targetSize = Mathf.Max(targetBoundingBox.p1.magnitude, targetBoundingBox.p2.magnitude);
-
-                safeDistance = Mathf.Max(vesselBoundingBox.p1.magnitude, vesselBoundingBox.p2.magnitude) + targetSize;
-
+                
+                if (!overrideSafeDistance)
+                    safeDistance = Mathf.Max(vesselBoundingBox.p1.magnitude, vesselBoundingBox.p2.magnitude) + targetSize;
+                else
+                    safeDistance = (float)overridenSafeDistance.val;
 
                 if (core.target.Target is ModuleDockingNode)
                     acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.5;
