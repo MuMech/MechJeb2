@@ -6,6 +6,8 @@ using System.Text;
 using System.Reflection;
 using UnityEngine;
 using KSP.IO;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
@@ -373,11 +375,13 @@ namespace MuMech
 				}
         	}
 
-        	System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
-            if (v.Revision == 0)
-                version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
+            Assembly assembly = Assembly.GetAssembly(typeof(MechJebCore));
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+
+            if (fileVersionInfo.FilePrivatePart == 0)
+                version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
             else
-                version = "Dev #" + v.Revision;
+                version = "Dev #" + fileVersionInfo.FilePrivatePart;
 
             try
             {
