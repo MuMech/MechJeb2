@@ -72,6 +72,18 @@ namespace MuMech
 
             autopilot.drawBoundingBox = GUILayout.Toggle(autopilot.drawBoundingBox, "Draw Bounding Box");
 
+            if (GUILayout.Button("Dump Bounding Box Info"))
+            {
+                vessel.GetBoundingBox(true);
+
+                if (core.target.Target != null)
+                {
+                    Vessel targetVessel = core.target.Target.GetVessel();
+                    targetVessel.GetBoundingBox(true);
+                }
+            }
+
+
             GUILayout.Label("safeDistance " + autopilot.safeDistance.ToString("F2"), GUILayout.ExpandWidth(false));
             GUILayout.Label("targetSize   " + autopilot.targetSize.ToString("F2"), GUILayout.ExpandWidth(false));
 			
