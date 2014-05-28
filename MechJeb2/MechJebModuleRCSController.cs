@@ -25,6 +25,10 @@ namespace MuMech
         [EditableInfoItem("RCS Tf", InfoItem.Category.Thrust)]
         public EditableDouble Tf = 1;
 
+        [Persistent(pass = (int)(Pass.Global))]
+        [ToggleInfoItem("RCS throttle when 0kn thrust", InfoItem.Category.Thrust)]
+        public bool rcsThrottle = true;
+
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
         {
