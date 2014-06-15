@@ -389,7 +389,8 @@ namespace MuMech
             return done;
         }
 
-
+        public static int HoursPerDay { get { return GameSettings.KERBIN_TIME ? 6 : 24; } }
+        public static int DaysPerYear { get { return GameSettings.KERBIN_TIME ? 426 : 365; } }
 
         public static string TimeToDHMS(double seconds, int decimalPlaces = 0)
         {
@@ -401,7 +402,7 @@ namespace MuMech
             try
             {
                 string[] units = { "y", "d", "h", "m", "s" };
-                long[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
+                long[] intervals = { DaysPerYear * HoursPerDay * 3600, HoursPerDay * 3600, 3600, 60, 1 };
 
                 if (seconds < 0)
                 {
@@ -437,7 +438,7 @@ namespace MuMech
         public static bool TryParseDHMS(string s, out double seconds)
         {
             string[] units = { "y", "d", "h", "m", "s" };
-            int[] intervals = { 365 * 24 * 3600, 24 * 3600, 3600, 60, 1 };
+            int[] intervals = { DaysPerYear * HoursPerDay * 3600, HoursPerDay * 3600, 3600, 60, 1 };
 
             s = s.Trim(' ');
             bool minus = (s.StartsWith("-"));
