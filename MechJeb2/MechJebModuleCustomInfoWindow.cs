@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Reflection;
 using UnityEngine;
@@ -415,8 +416,6 @@ namespace MuMech
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
     public class ValueInfoItem : InfoItem
     {
-        object obj;
-        MemberInfo member;
         string units;
         string format;
         public const string SI = "SI";
@@ -428,26 +427,29 @@ namespace MuMech
         int siMaxPrecision; //only used with the "SI" format
         int timeDecimalPlaces; //only used with the "TIME" format
 
+        Func<object> getValue;
+
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
             id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
-            this.obj = obj;
-            this.member = member;
             units = attribute.units;
             format = attribute.format;
             siSigFigs = attribute.siSigFigs;
             siMaxPrecision = attribute.siMaxPrecision;
             timeDecimalPlaces = attribute.timeDecimalPlaces;
-        }
 
-        object GetValue()
-        {
-            if (member is FieldInfo) return ((FieldInfo)member).GetValue(obj);
-            else if (member is MethodInfo) return ((MethodInfo)member).Invoke(obj, new object[] { });
-            else if (member is PropertyInfo) return ((PropertyInfo)member).GetValue(obj, new object[] { });
-            else return null;
+            // This ugly stuff compiles a small function to grab the value of member, so that we don't
+            // have to use reflection to get it every frame.
+            ParameterExpression objExpr = Expression.Parameter(typeof(object), ""); // obj
+            Expression castObjExpr = Expression.Convert(objExpr, obj.GetType()); // (T)obj
+            Expression memberExpr;
+            if (member is MethodInfo) memberExpr = Expression.Call(castObjExpr, (MethodInfo)member);
+            else memberExpr = Expression.MakeMemberAccess(castObjExpr, member); // ((T)obj).member
+            Expression castMemberExpr = Expression.Convert(memberExpr, typeof(object)); // (object)(((T)obj).member);
+            Func<object, object> getFromObj = Expression.Lambda<Func<object, object>>(castMemberExpr, new[] { objExpr }).Compile();
+            getValue = () => getFromObj(obj);
         }
 
         string GetStringValue(object value)
@@ -476,7 +478,7 @@ namespace MuMech
 
         public override void DrawItem()
         {
-            object value = GetValue();
+            object value = getValue();
 
             string stringValue = GetStringValue(value);
 
@@ -489,21 +491,19 @@ namespace MuMech
 
     public class ActionInfoItem : InfoItem
     {
-        object obj;
-        MethodInfo method;
+        Action action;
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
         {
             id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
-            this.obj = obj;
-            this.method = method;
+            action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
         }
 
         public override void DrawItem()
         {
-            if (GUILayout.Button(name)) method.Invoke(obj, new object[] { });
+            if (GUILayout.Button(name)) action();
         }
     }
 
@@ -529,55 +529,52 @@ namespace MuMech
 
             bool newValue = GUILayout.Toggle(currentValue, name);
 
-            if (member is FieldInfo) ((FieldInfo)member).SetValue(obj, newValue);
-            else if (member is PropertyInfo) ((PropertyInfo)member).SetValue(obj, newValue, new object[] { });
+            if (newValue != currentValue)
+            {
+                if (member is FieldInfo) ((FieldInfo)member).SetValue(obj, newValue);
+                else if (member is PropertyInfo) ((PropertyInfo)member).SetValue(obj, newValue, new object[] { });
+            }
         }
     }
 
     public class GeneralInfoItem : InfoItem
     {
-        object obj;
-        MethodInfo method;
+        Action draw;
 
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
             : base(attribute)
         {
             id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
-            this.obj = obj;
-            this.method = method;
+            draw = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
         }
 
         public override void DrawItem()
         {
-            method.Invoke(obj, new object[] { });
+            draw();
         }
     }
 
     public class EditableInfoItem : InfoItem
     {
-        object obj;
-        MemberInfo member;
         public string rightLabel;
         public float width;
+        IEditable val;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
         {
             id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
-            this.obj = obj;
-            this.member = member;
             this.rightLabel = attribute.rightLabel;
             this.width = attribute.width;
+
+            if (member is FieldInfo) val = (IEditable)((FieldInfo)member).GetValue(obj);
+            else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
         }
 
         public override void DrawItem()
         {
-            IEditable val = null;
-
-            if (member is FieldInfo) val = (IEditable)((FieldInfo)member).GetValue(obj);
-            else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
             if (val != null)
             {
                 GuiUtils.SimpleTextBox(name, val, rightLabel, width);
