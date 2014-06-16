@@ -86,11 +86,11 @@ namespace MuMech
 		public EditableDouble brakeSpeedLimit = 0.7;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDp = 0.5;
+		public EditableDouble hPIDp = 0.1;
 		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDi = 0.0005;
+		public EditableDouble hPIDi = 0.025;
 		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDd = 0.0025;
+		public EditableDouble hPIDd = 0.005;
 		
 		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDp = 2.0;
