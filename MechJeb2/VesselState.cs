@@ -354,7 +354,7 @@ namespace MuMech
                             {
                                 Vector3d thrusterThrust = vessel.GetTransform().InverseTransformDirection(-t.up.normalized) * pm.thrusterPower;
                                 rcsThrustAvailable.Add(thrusterThrust);
-                                Vector3d thrusterTorque = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, thrusterThrust));
+                                Vector3d thrusterTorque = Vector3.Cross(vessel.GetTransform().InverseTransformDirection(partPosition), thrusterThrust);
                                 rcsTorqueAvailable.Add(thrusterTorque);
                             }
                         }
