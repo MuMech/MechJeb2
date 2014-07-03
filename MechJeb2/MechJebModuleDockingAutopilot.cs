@@ -160,7 +160,7 @@ namespace MuMech
                             zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
                         }
                     }
-                    status = "Moving toward the staring point at " + zApproachSpeed.ToString("F2") + " m/s.";
+                    status = "Moving toward the starting point at " + zApproachSpeed.ToString("F2") + " m/s.";
                     break;
 
                 case DockingStep.DOCKING:
