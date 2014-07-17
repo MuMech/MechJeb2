@@ -25,7 +25,7 @@ namespace MuMech
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
 
             string[] units = new string[] { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
-            int unitIndexOffset = 8; //index of "" in the units array
+            const int unitIndexOffset = 8; //index of "" in the units array
             int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
             if (unitIndex < 0) unitIndex = 0;
             if (unitIndex >= units.Length) unitIndex = units.Length - 1;
@@ -115,6 +115,20 @@ namespace MuMech
         {
             Orbit ret = new Orbit();
             ret.UpdateFromStateVectors(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
+            if (double.IsNaN(ret.argumentOfPeriapsis))
+            {
+                Vector3d vectorToAN = Quaternion.AngleAxis(-(float)ret.LAN, Planetarium.up) * Planetarium.right;
+                Vector3d vectorToPe = OrbitExtensions.SwapYZ(ret.eccVec);
+                double cosArgumentOfPeriapsis = Vector3d.Dot(vectorToAN, vectorToPe) / (vectorToAN.magnitude * vectorToPe.magnitude);
+                //Squad's UpdateFromStateVectors is missing these checks, which are needed due to finite precision arithmetic:
+                if(cosArgumentOfPeriapsis > 1) {
+                    ret.argumentOfPeriapsis = 0;
+                } else if(cosArgumentOfPeriapsis < -1) {
+                    ret.argumentOfPeriapsis = 180;
+                } else {
+                    ret.argumentOfPeriapsis = Math.Acos(cosArgumentOfPeriapsis);
+                }
+            }
             return ret;
         }
 

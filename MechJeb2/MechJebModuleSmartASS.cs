@@ -195,6 +195,8 @@ namespace MuMech
                         GUILayout.Label("Direction:");
                         advDirection = (Vector6.Direction)GuiUtils.ArrowSelector((int)advDirection, Enum.GetValues(typeof(Vector6.Direction)).Length, advDirection.ToString());
 
+                        ForceRoll();
+
                         if (GUILayout.Button("EXECUTE", btNormal, GUILayout.ExpandWidth(true)))
                         {
                             target = Target.ADVANCED;

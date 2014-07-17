@@ -121,11 +121,11 @@ namespace MuMech
 
         public double stableAoA = 0; //we average AoA over time to get an estimate of what pitch will produce what FPA
         public double pitchCorrection = 0; //we average (commanded pitch - actual pitch) over time in order to fix this offset in our commands
-        public float maxYaw = 10.0F;
-        public float maxRoll = 10.0F;
-        public float maxPitchCorrection = 5.0F;
-        public double AoAtimeConstant = 2.0;
-        public double pitchCorrectionTimeConstant = 15.0;
+        public const float maxYaw = 10.0F;
+        public const float maxRoll = 10.0F;
+        public const float maxPitchCorrection = 5.0F;
+        public const double AoAtimeConstant = 2.0;
+        public const double pitchCorrectionTimeConstant = 15.0;
 
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {

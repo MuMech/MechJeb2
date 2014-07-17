@@ -66,7 +66,7 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Overdrive", balancer.overdrive, "%");
 
                 double sliderVal = GUILayout.HorizontalSlider((float)balancer.overdrive, 0.0F, 1.0F);
-                int sliderPrecision = 3;
+                const int sliderPrecision = 3;
                 if (Math.Round(Math.Abs(sliderVal - oldOverdrive), sliderPrecision) > 0)
                 {
                     double rounded = Math.Round(sliderVal, sliderPrecision);

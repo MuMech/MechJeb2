@@ -95,13 +95,13 @@ namespace MuMech
                             if (core.target.NormalTargetExists)
                             {
                                 Orbit reference;
-                                if (core.target.Orbit.referenceBody == orbit.referenceBody) 
+                                if (core.target.TargetOrbit.referenceBody == orbit.referenceBody) 
                                     reference = orbit; // we orbit arround the same body
                                 else
                                     reference = orbit.referenceBody.orbit; 
                                 // From Kerbal Alarm Clock
-                                double angleChangePerSec = (360 / core.target.Orbit.period) - (360 / reference.period);
-                                double currentAngle = reference.PhaseAngle(core.target.Orbit, vesselState.time);
+                                double angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
+                                double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
                                 double angleDigff = currentAngle - phaseAngle;
                                 if (angleDigff > 0 && angleChangePerSec > 0)
                                     angleDigff -= 360;

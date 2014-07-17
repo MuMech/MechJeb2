@@ -236,7 +236,7 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         public List<FuelNode> FindActiveEngines()
         {
-            print("Finding active engines: excluding resource considerations, there are " + nodes.Where(n => n.isEngine && n.inverseStage >= simStage).Count());
+            print("Finding active engines: excluding resource considerations, there are " + nodes.Count(n => n.isEngine && n.inverseStage >= simStage));
             return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
 
@@ -379,7 +379,7 @@ namespace MuMech
 
 
             // And do the same for ModuleEnginesFX :(
-            ModuleEnginesFX enginefx = part.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).FirstOrDefault();
+            ModuleEnginesFX enginefx = part.Modules.OfType<ModuleEnginesFX>().FirstOrDefault(e => e.isEnabled);
             if (enginefx != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
@@ -430,7 +430,7 @@ namespace MuMech
             Part p = part;
             while (true)
             {
-                if (p.IsDecoupler() || p.IsLaunchClamp())
+                if (p.IsUnfiredDecoupler() || p.IsLaunchClamp())
                 {
                     if (p.inverseStage > decoupledInStage) decoupledInStage = p.inverseStage;
                 }
@@ -549,8 +549,8 @@ namespace MuMech
 
         public float MaxTimeStep()
         {
-            if (resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() == 0) return float.MaxValue;
-            print("resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() = " + resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count());
+            if (!resourceDrains.Keys.Any(id => resources[id] > DRAINED)) return float.MaxValue;
+            print("resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() = " + resourceDrains.Keys.Count(id => resources[id] > DRAINED));
             return resourceDrains.Keys.Where(id => resources[id] > DRAINED).Min(id => resources[id] / resourceDrains[id]);
         }
 

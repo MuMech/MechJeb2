@@ -46,7 +46,7 @@ namespace MuMech
         
         double dt;
         double max_dt;
-        double min_dt = 0.01; //in seconds
+        private const double min_dt = 0.01; //in seconds
         const double maxSimulatedTime = 2000; //in seconds
 
         List<SimulatedParachute> parachutes;
@@ -524,7 +524,7 @@ namespace MuMech
 
             public List<Vector3d> WorldTrajectory(double timeStep) 
             {
-                if (trajectory.Count() == 0) return new List<Vector3d>();
+                if (!trajectory.Any()) return new List<Vector3d>();
 
                 List<Vector3d> ret = new List<Vector3d>();
                 ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
@@ -732,11 +732,10 @@ namespace MuMech
         double fullDeployAGL = 0;
         double targetASLAtSemiDeploy = 0;
         double targetASLAtFullDeploy = 0;
-        double parachuteDrag = 0;
-        double targetDrag = 0;
+        double parachuteDrag = 0;       
         public bool deploying = false;
 
-        public SimulatedParachute(ModuleParachute p)
+        public SimulatedParachute(ModuleParachute p, double startTime)
         {
             this.p = p;
             this.state = p.deploymentState;
@@ -744,25 +743,26 @@ namespace MuMech
             // Work out when the chute was put into its current state based on the current drag as compared to the stoed, semi deployed and fully deployed drag
 
             double timeSinceDeployment = 0;
-            this.targetDrag = p.targetDrag;
-            this.parachuteDrag = p.parachuteDrag;
 
             switch (p.deploymentState)
             {
-                case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                    // If the parachute is semi deployed calculate when it was semideployed by comparing the actual drag with the stowed drag and the semideployed drag.
-                    timeSinceDeployment = (p.parachuteDrag - p.stowedDrag) / (p.semiDeployedDrag - p.stowedDrag) * p.semiDeploymentSpeed; // TODO there is an error in this, because the (semi)deployment does not increase the drag in a linear way. However this will only cause a problem for simulations run during the deployment and in unlikely to cause an error in the landing location.
+                case ModuleParachute.deploymentStates.SEMIDEPLOYED:                    
+                    if (p.Anim.isPlaying) 
+                        timeSinceDeployment = p.Anim[p.semiDeployedAnimation].time;                        
+                    else
+                        timeSinceDeployment = 10000000;
                     break;
 
                 case ModuleParachute.deploymentStates.DEPLOYED:
-                    // If the parachute is deployed calculate when it was deployed by comparing the actual drag with the semideployed drag and the deployed drag.
-                    timeSinceDeployment = (p.parachuteDrag - p.semiDeployedDrag) / (p.fullyDeployedDrag - p.semiDeployedDrag) * p.deploymentSpeed; // TODO there is an error in this, because the (semi)deployment does not increase the drag in a linear way. However this will only cause a problem for simulations run during the deployment and in unlikely to cause an error in the landing location.
+                    if (p.Anim.isPlaying) 
+                        timeSinceDeployment = p.Anim[p.fullyDeployedAnimation].time;
+                    else
+                        timeSinceDeployment = 10000000;
                     break;
 
                 case ModuleParachute.deploymentStates.STOWED:
                 case ModuleParachute.deploymentStates.ACTIVE:
                     // If the parachute is stowed then for some reason p.parachuteDrag does not reflect the stowed drag. set this up by hand. 
-                    this.parachuteDrag = this.targetDrag = p.stowedDrag;
                     timeSinceDeployment = 10000000;
                     break;
 
@@ -771,23 +771,27 @@ namespace MuMech
                     timeSinceDeployment = 10000000;
                     break;
             }
-           
-            this.openningTime = -timeSinceDeployment;
 
-            // Debug.Log("Parachute " + p.name + " parachuteDrag:" + p.parachuteDrag + " targetDrag:" + p.targetDrag + " stowedDrag:" + p.stowedDrag + " semiDeployedDrag:" + p.semiDeployedDrag + " fullyDeployedDrag:" + p.fullyDeployedDrag + " part.maximum_drag:" + p.part.maximum_drag + " part.minimum_drag:" + p.part.minimum_drag + " semiDeploymentSpeed:" + p.semiDeploymentSpeed + " deploymentSpeed:" + p.deploymentSpeed + " deploymentState:" + p.deploymentState + " timeSinceDeployment:" + timeSinceDeployment);       
+            this.openningTime = startTime - timeSinceDeployment;
+
+            // This is the current drag for the parachute only
+            this.parachuteDrag = p.part.maximum_drag - p.part.minimum_drag;
+
+            //Debug.Log("Parachute " + p.name + " parachuteDrag:" + this.parachuteDrag + " stowedDrag:" + p.stowedDrag + " semiDeployedDrag:" + p.semiDeployedDrag + " fullyDeployedDrag:" + p.fullyDeployedDrag + " part.maximum_drag:" + p.part.maximum_drag + " part.minimum_drag:" + p.part.minimum_drag + " semiDeploymentSpeed:" + p.semiDeploymentSpeed + " deploymentSpeed:" + p.deploymentSpeed + " deploymentState:" + p.deploymentState + " timeSinceDeployment:" + timeSinceDeployment);
+            // Keep that test code until they fix the bug in the new parachute module
+            //if ((realDrag / parachuteDrag) > 1.01d || (realDrag / parachuteDrag) < 0.99d)
+            //    Debug.Log("Parachute " + p.name + " parachuteDrag:" + this.parachuteDrag.ToString("F3") + " RealDrag:" + realDrag.ToString("F3") + " MinDrag:" + p.part.minimum_drag.ToString("F3") + " MaxDrag:" + p.part.maximum_drag.ToString("F3"));
         }
 
         public string GetDebugOutput()
         {
-            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy + " this.targetDrag:" + this.targetDrag + " this.parachuteDrag:" + this.parachuteDrag + " p.part.minimum_drag:" + p.part.minimum_drag + " p.part.maximum_drag:" + p.part.maximum_drag; ; 
+            string DebugOutput = "Parachute" + p.name + " activatedASL: " + activatedASL + " activatedAGL: " + activatedAGL + " semiDeployASL: " + semiDeployASL + " semiDeployAGL: " + semiDeployAGL + " fullDeployASL: " + fullDeployASL + " fullDeployAGL: " + fullDeployAGL + " targetASLAtSemiDeploy: " + targetASLAtSemiDeploy + " targetASLAtFullDeploy: " + targetASLAtFullDeploy + " this.parachuteDrag:" + this.parachuteDrag + " p.part.minimum_drag:" + p.part.minimum_drag + " p.part.maximum_drag:" + p.part.maximum_drag; 
             return DebugOutput;
         }
 
         public double AddedDragMass()
         {
-            double totalDrag;
-
-            totalDrag = p.part.minimum_drag + this.parachuteDrag;
+            double totalDrag = p.part.minimum_drag + this.parachuteDrag;
 
             return p.part.mass * totalDrag;
         }
@@ -842,7 +846,6 @@ namespace MuMech
                             semiDeployAGL = altATGL;
                             semiDeployASL = altASL;
                             targetASLAtSemiDeploy = endASL;
-                            this.targetDrag = p.semiDeployedDrag;
                         }
                     }
                     break;
@@ -855,7 +858,6 @@ namespace MuMech
                         semiDeployAGL = altATGL;
                         semiDeployASL = altASL;
                         targetASLAtSemiDeploy = endASL;
-                        this.targetDrag = p.semiDeployedDrag;
                     }
 
                     break;
@@ -868,7 +870,6 @@ namespace MuMech
                         fullDeployAGL = altATGL;
                         fullDeployASL = altASL;
                         targetASLAtFullDeploy = endASL;
-                        this.targetDrag = p.fullyDeployedDrag;
                     }
                     break;
             }
@@ -901,9 +902,13 @@ namespace MuMech
             }
 
             // If we are deploying or semi deploying then use Lerp to replicate the way the game increases the drag as we deploy.
-            if (state == ModuleParachute.deploymentStates.DEPLOYED || state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+            if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
             {
-                this.parachuteDrag = Mathf.Lerp((float)this.parachuteDrag, (float)this.targetDrag, normalizedTime);
+                this.parachuteDrag = Mathf.Lerp(p.stowedDrag, p.semiDeployedDrag, Mathf.Pow(normalizedTime, p.deploymentCurve));
+            }
+            else if (state == ModuleParachute.deploymentStates.DEPLOYED)
+            {
+                this.parachuteDrag = Mathf.Lerp(p.semiDeployedDrag, p.fullyDeployedDrag, normalizedTime);
             }
 
             return (stateChanged);

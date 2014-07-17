@@ -18,23 +18,52 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble overridenSafeDistance = 5;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean overrideSafeDistance = false;
+
+        public float safeDistance = 10;
+        public float targetSize = 5;
+
+        public Boolean drawBoundingBox = false;
+
         enum DockingStep
         {
             INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
         }
         DockingStep dockingStep = DockingStep.OFF;
 
+        public struct Box3d
+        {
+            public Vector3 center;
+            public Vector3 size;
+        }
+
         Vector3d zAxis;
         public double zSep;
         public Vector3d lateralSep;
 
-        
-        float dockingcorridorRadius = 1;
+        ITargetable lastTarget;
+
+        const float dockingcorridorRadius = 1;
         double acquireRange = 0.25;
+
+        public MechJebModuleDockingAutopilot.Box3d vesselBoundingBox;
+        public MechJebModuleDockingAutopilot.Box3d targetBoundingBox;
 
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
         {
+        }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
+            {
+                RenderingManager.AddToPostDrawQueue(1, DrawBoundingBox);
+            }
         }
 
         public override void OnModuleEnabled()
@@ -71,16 +100,18 @@ namespace MuMech
             return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.rcs.rcsAccelFactor() / vesselState.mass));
         }
 
-        ITargetable lastTarget;
-        public float safeDistance = 10;
-        public float targetSize = 5;
-
         public override void Drive(FlightCtrlState s)
         {
+            if (!core.target.NormalTargetExists)
+            {
+                EndDocking();
+                return;
+            }
+
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
             
-            Vector3d targetVel = core.target.Orbit.GetVel();
+            Vector3d targetVel = core.target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
             double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
@@ -129,7 +160,7 @@ namespace MuMech
                             zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
                         }
                     }
-                    status = "Moving toward the staring point at " + zApproachSpeed.ToString("F2") + " m/s.";
+                    status = "Moving toward the starting point at " + zApproachSpeed.ToString("F2") + " m/s.";
                     break;
 
                 case DockingStep.DOCKING:
@@ -157,17 +188,17 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            if (!core.target.NormalTargetExists)
+            {
+                EndDocking();
+                return;
+            }
+
             UpdateDistance();
 
             switch (dockingStep)
             {
                 case DockingStep.INIT:
-                    if (!core.target.NormalTargetExists)
-                    {
-                        dockingStep = DockingStep.OFF;
-                        users.Clear();
-                        return;
-                    }
                     InitDocking();
                     break;
 
@@ -199,9 +230,7 @@ namespace MuMech
                 case DockingStep.DOCKING:
                     if (zSep < acquireRange)
                     {
-                        dockingStep = DockingStep.OFF;
-                        users.Clear();
-                        enabled = false;
+                        EndDocking();
                     }
                     break;
 
@@ -225,13 +254,15 @@ namespace MuMech
 
             try
             {
-                Vector3Pair vesselBoundingBox = vessel.GetBoundingBox();
-                Vector3Pair targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
-
-                targetSize = Mathf.Max(targetBoundingBox.p1.magnitude, targetBoundingBox.p2.magnitude);
-
-                safeDistance = Mathf.Max(vesselBoundingBox.p1.magnitude, vesselBoundingBox.p2.magnitude) + targetSize;
-
+                vesselBoundingBox = vessel.GetBoundingBox();
+                targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
+                
+                targetSize = targetBoundingBox.size.magnitude;
+                
+                if (!overrideSafeDistance)
+                    safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
+                else
+                    safeDistance = (float)overridenSafeDistance.val;
 
                 if (core.target.Target is ModuleDockingNode)
                     acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.5;
@@ -256,6 +287,27 @@ namespace MuMech
 
         }
 
+        void EndDocking()
+        {
+            dockingStep = DockingStep.OFF;
+            users.Clear();
+            enabled = false;
+        }
 
+        void DrawBoundingBox()
+        {
+            if (drawBoundingBox && vessel == FlightGlobals.ActiveVessel)
+            {
+                vesselBoundingBox = vessel.GetBoundingBox();
+                GLUtils.DrawBoundingBox(vessel.mainBody, vessel, vesselBoundingBox, Color.green);
+
+                if (core.target.Target != null)
+                {
+                    Vessel targetVessel = core.target.Target.GetVessel();
+                    targetBoundingBox = targetVessel.GetBoundingBox();
+                    GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetBoundingBox, Color.blue);
+                }
+            }
+        }
     }
 }

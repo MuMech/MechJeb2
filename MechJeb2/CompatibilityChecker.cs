@@ -64,7 +64,7 @@ namespace MuMech
             // can expect a future update to be available.
             //
 
-            return Versioning.version_major == 0 && Versioning.version_minor == 23 && Versioning.Revision == 5; 
+            return Versioning.version_major == 0 && Versioning.version_minor == 24 && Versioning.Revision == 0; 
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |

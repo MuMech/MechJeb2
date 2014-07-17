@@ -15,6 +15,16 @@ namespace MuMech
             return vessel.Parts.OfType<T>().ToList();
         }
 
+        public static List<ITargetable> GetTargetables(this Vessel vessel)
+        {
+            List<Part> parts;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            else if (vessel == null) return new List<ITargetable>();
+            else parts = vessel.Parts;
+
+            return (from part in parts from targetable in part.Modules.OfType<ITargetable>() select targetable).ToList();
+        }
+
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
@@ -47,11 +57,10 @@ namespace MuMech
             return masterMechjebs[vessel.id];
         }
 
-        public static double TotalResourceMass(this Vessel vessel, string resourceName)
+        public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
             if (definition == null) return 0;
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
 
             double amount = 0;
             foreach (Part p in parts)
@@ -62,7 +71,18 @@ namespace MuMech
                 }
             }
 
-            return amount * definition.density;
+            return amount;
+        }
+
+        public static double TotalResourceAmount(this Vessel vessel, string resourceName)
+        {
+            return vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
+        }
+
+        public static double TotalResourceMass(this Vessel vessel, string resourceName)
+        {
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
         public static bool HasElectricCharge(this Vessel vessel)
@@ -104,7 +124,7 @@ namespace MuMech
         {
             IEnumerable<ManeuverNode> earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.UT <= UT));
             Orbit o = vessel.orbit;
-            if (earlierNodes.Count() > 0)
+            if (earlierNodes.Any())
             {
                 o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
             }
@@ -126,7 +146,7 @@ namespace MuMech
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
             var nodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.patch == patch && n != ignoreNode));
-            if (nodes.Count() > 0) return nodes.First().nextPatch;
+            if (nodes.Any()) return nodes.First().nextPatch;
 
             //return the next patch, or null if there isn't one:
             if (!finalPatch) return patch.nextPatch;
@@ -172,42 +192,58 @@ namespace MuMech
             }
         }
 
-
         // From FAR with ferram4 authorisation
-        public static Vector3Pair GetBoundingBox(this Vessel vessel)
+        public static MechJebModuleDockingAutopilot.Box3d GetBoundingBox(this Vessel vessel, bool debug=false)
         {
             Vector3 minBounds = new Vector3();
             Vector3 maxBounds = new Vector3();
 
-            foreach (Part p in vessel.parts)
+            if (debug)
             {
-                foreach (Transform t in p.FindModelComponents<Transform>())
-                {
-                    MeshFilter mf = t.GetComponent<MeshFilter>();
-                    if (mf == null)
-                        continue;
-                    Mesh m = mf.mesh;
-
-                    if (m == null)
-                        continue;
-
-                    var matrix = vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
-
-                    foreach (Vector3 vertex in m.vertices)
-                    {
-                        Vector3 v = matrix.MultiplyPoint3x4(vertex);
-
-                        maxBounds.x = Mathf.Max(maxBounds.x, v.x);
-                        minBounds.x = Mathf.Min(minBounds.x, v.x);
-                        maxBounds.y = Mathf.Max(maxBounds.y, v.y);
-                        minBounds.y = Mathf.Min(minBounds.y, v.y);
-                        maxBounds.z = Mathf.Max(maxBounds.z, v.z);
-                        minBounds.z = Mathf.Min(minBounds.z, v.z);
-                    }
-                }
+                MonoBehaviour.print("[GetBoundingBox] Start " + vessel.vesselName);
             }
 
-            return new Vector3Pair(minBounds, maxBounds);
+            foreach (Part p in vessel.parts)
+            {
+                Vector3Pair partBox = p.GetBoundingBox();
+
+                if (debug)
+                {
+                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (partBox.p1 - partBox.p2).magnitude.ToString("F3"));
+                }
+
+                maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
+                minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
+                maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
+                minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
+                maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
+                minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
+
+                //foreach (var sympart in p.symmetryCounterparts)
+                //{
+                //    partBox = sympart.GetBoundingBox();
+
+                //    maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
+                //    minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
+                //    maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
+                //    minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
+                //    maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
+                //    minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
+                //}
+
+            }
+
+            if (debug)
+            {
+                MonoBehaviour.print("[GetBoundingBox] End " + vessel.vesselName);
+            }
+
+            MechJebModuleDockingAutopilot.Box3d box = new MechJebModuleDockingAutopilot.Box3d();
+
+            box.center = new Vector3d((maxBounds.x + minBounds.x) / 2, (maxBounds.y + minBounds.y) / 2, (maxBounds.z + minBounds.z) / 2);
+            box.size = new Vector3d(Math.Abs(box.center.x - maxBounds.x), Math.Abs(box.center.y - maxBounds.y), Math.Abs(box.center.z - maxBounds.z));
+
+            return box;
         }
         
 

@@ -16,7 +16,8 @@ namespace MuMech
         TARGET,            //forward = toward target, up = perpendicular component of vessel heading
         RELATIVE_VELOCITY, //forward = toward relative velocity direction, up = tbd
         TARGET_ORIENTATION,//forward = direction target is facing, up = target up
-        MANEUVER_NODE      //forward = next maneuver node direction, up = tbd
+        MANEUVER_NODE,     //forward = next maneuver node direction, up = tbd
+        SUN,               //forward = orbit velocity of the parent body orbiting the sun, up = radial plus of that orbit
     }
 
     public class MechJebModuleAttitudeController : ComputerModule
@@ -210,7 +211,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
                     Transform targetTransform = core.target.Transform;
-                    if (core.target.Target is ModuleDockingNode)
+                    if (core.target.CanAlign)
                     {
                         rotRef = Quaternion.LookRotation(targetTransform.forward, targetTransform.up);
                     }
@@ -224,6 +225,11 @@ namespace MuMech
                     up = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
+                    break;
+                case AttitudeReference.SUN:
+                    fwd = orbit.TopParentOrbit().SwappedOrbitalVelocityAtUT(vesselState.time);
+                    up = Planetarium.fetch.Sun.transform.position - vesselState.CoM;
+                    rotRef = Quaternion.LookRotation(fwd.normalized, up);
                     break;
             }
             return rotRef;

@@ -9,7 +9,7 @@ namespace MuMech
     {
         public static bool HasModule<T>(this Part p) where T : PartModule
         {
-            return p.Modules.OfType<T>().Count() > 0;
+            return p.Modules.OfType<T>().Any();
         }
 
         public static float TotalMass(this Part p)
@@ -45,6 +45,13 @@ namespace MuMech
              p.HasModule<ModuleDecouple>() ||
              p.HasModule<ModuleAnchoredDecoupler>());
         }
+
+        public static bool IsUnfiredDecoupler(this Part p)
+        {
+            return p.FindModulesImplementing<ModuleDecouple>().Any(m => !m.isDecoupled) ||
+                p.FindModulesImplementing<ModuleAnchoredDecoupler>().Any(m => !m.isDecoupled);
+        }
+
 
         //Any engine that is decoupled in the same stage in 
         //which it activates we call a sepratron.
@@ -93,7 +100,7 @@ namespace MuMech
 
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
-            if ((p.IsDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
+            if ((p.IsUnfiredDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
             if (p.parent == null) return false;
             return p.parent.IsDecoupledInStage(stage);
         }
@@ -104,16 +111,54 @@ namespace MuMech
 
             // part.PhysicsSignificance is not initialized in the Editor for all part. but physicallySignificant is useful there.
             if (HighLogic.LoadedSceneIsEditor)
+            {
                 physicallySignificant = physicallySignificant && p.PhysicsSignificance != 1;
 
-            if (p.HasModule<ModuleLandingGear>() || p.HasModule<LaunchClamp>())
-            {
-                //Landing gear set physicalSignificance = NONE when they enter the flight scene
-                //Launch clamp mass should be ignored.
-                physicallySignificant = false;
+                // Testing for launch clamp only in the Editor helps with the frame rate.
+                // TODO : cache which part are LaunchClamp ?
+                if (p.HasModule<ModuleLandingGear>() || p.HasModule<LaunchClamp>())
+                {
+                    //Landing gear set physicalSignificance = NONE when they enter the flight scene
+                    //Launch clamp mass should be ignored.
+                    physicallySignificant = false;
+                }
             }
             return physicallySignificant;
         }
+
+        public static Vector3Pair GetBoundingBox(this Part part)
+        {
+            Vector3 minBounds = new Vector3();
+            Vector3 maxBounds = new Vector3();
+
+            foreach (Transform t in part.FindModelComponents<Transform>())
+            {
+                MeshFilter mf = t.GetComponent<MeshFilter>();
+                if (mf == null)
+                    continue;
+                Mesh m = mf.mesh;
+
+                if (m == null)
+                    continue;
+
+                var matrix = part.vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
+
+                foreach (Vector3 vertex in m.vertices)
+                {
+                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
+                    maxBounds.x = Mathf.Max(maxBounds.x, v.x);
+                    minBounds.x = Mathf.Min(minBounds.x, v.x);
+                    maxBounds.y = Mathf.Max(maxBounds.y, v.y);
+                    minBounds.y = Mathf.Min(minBounds.y, v.y);
+                    maxBounds.z = Mathf.Max(maxBounds.z, v.z);
+                    minBounds.z = Mathf.Min(minBounds.z, v.z);
+                }
+            }
+
+            return new Vector3Pair(maxBounds, minBounds);
+        }
+
+
 
     }
 }

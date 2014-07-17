@@ -6,6 +6,8 @@ using System.Text;
 using System.Reflection;
 using UnityEngine;
 using KSP.IO;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
@@ -42,7 +44,6 @@ namespace MuMech
         private bool weLockedEditor = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
-        public static RenderingManager renderingManager = null;
         protected bool wasMasterAndFocus = false;
         protected static Vessel lastFocus = null;
 
@@ -160,6 +161,9 @@ namespace MuMech
             {
                 OnLoad(null);
             }
+
+            GameEvents.onShowUI.Add(new EventVoid.OnEvent(this.ShowGUI));
+            GameEvents.onHideUI.Add(new EventVoid.OnEvent(this.HideGUI));
 
             lastSettingsSaveTime = Time.time;
 
@@ -285,15 +289,6 @@ namespace MuMech
 
         public void Update()
         {
-            if (renderingManager == null)
-            {
-                renderingManager = (RenderingManager)GameObject.FindObjectOfType(typeof(RenderingManager));
-            }
-            if (HighLogic.LoadedSceneIsFlight && renderingManager != null)
-            {
-                if (renderingManager.uiElementsToDisable.Length >= 1) showGui = renderingManager.uiElementsToDisable[0].activeSelf;
-            }
-
             if (this != vessel.GetMasterMechJeb())
             {
                 return;
@@ -373,11 +368,13 @@ namespace MuMech
 				}
         	}
 
-        	System.Version v = Assembly.GetAssembly(typeof(MechJebCore)).GetName().Version;
-            if (v.Revision == 0)
-                version = v.Major.ToString() + "." + v.Minor.ToString() + "." + v.Build.ToString();
+            Assembly assembly = Assembly.GetAssembly(typeof(MechJebCore));
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+
+            if (fileVersionInfo.FilePrivatePart == 0)
+                version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
             else
-                version = "Dev #" + v.Revision;
+                version = "Dev #" + fileVersionInfo.FilePrivatePart;
 
             try
             {
@@ -598,6 +595,9 @@ namespace MuMech
                 OnSave(null);
             }
 
+            GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
+            GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
+
             foreach (ComputerModule module in computerModules)
             {
                 try
@@ -667,6 +667,15 @@ namespace MuMech
             s.Z = Mathf.Clamp(s.Z, -1, 1);
         }
 
+        private void ShowGUI()
+        {
+            showGui = true;
+        }
+        private void HideGUI()
+        {
+            showGui = false;
+        }
+
         private void OnGUI()
         {
             if (!showGui) return;
@@ -716,6 +725,11 @@ namespace MuMech
                 EditorLogic.fetch.Unlock("MechJeb_noclick");
                 weLockedEditor = false;
             }
+        }
+
+        public new static void print(object message)
+        {
+            MonoBehaviour.print("[MechJeb2] " + message);
         }
     }
 }
