@@ -44,7 +44,6 @@ namespace MuMech
         private bool weLockedEditor = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
-        public static RenderingManager renderingManager = null;
         protected bool wasMasterAndFocus = false;
         protected static Vessel lastFocus = null;
 
@@ -162,6 +161,9 @@ namespace MuMech
             {
                 OnLoad(null);
             }
+
+            GameEvents.onShowUI.Add(new EventVoid.OnEvent(this.ShowGUI));
+            GameEvents.onHideUI.Add(new EventVoid.OnEvent(this.HideGUI));
 
             lastSettingsSaveTime = Time.time;
 
@@ -287,15 +289,6 @@ namespace MuMech
 
         public void Update()
         {
-            if (renderingManager == null)
-            {
-                renderingManager = (RenderingManager)GameObject.FindObjectOfType(typeof(RenderingManager));
-            }
-            if (HighLogic.LoadedSceneIsFlight && renderingManager != null)
-            {
-                if (renderingManager.uiElementsToDisable.Length >= 1) showGui = renderingManager.uiElementsToDisable[0].activeSelf;
-            }
-
             if (this != vessel.GetMasterMechJeb())
             {
                 return;
@@ -602,6 +595,9 @@ namespace MuMech
                 OnSave(null);
             }
 
+            GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
+            GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
+
             foreach (ComputerModule module in computerModules)
             {
                 try
@@ -669,6 +665,15 @@ namespace MuMech
             s.X = Mathf.Clamp(s.X, -1, 1);
             s.Y = Mathf.Clamp(s.Y, -1, 1);
             s.Z = Mathf.Clamp(s.Z, -1, 1);
+        }
+
+        private void ShowGUI()
+        {
+            showGui = true;
+        }
+        private void HideGUI()
+        {
+            showGui = false;
         }
 
         private void OnGUI()
