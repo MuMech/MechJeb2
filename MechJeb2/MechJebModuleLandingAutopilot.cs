@@ -985,7 +985,7 @@ namespace MuMech
 
                     if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && ASLDeployAltitude > vesselState.altitudeASL)
                     {
-                        p.DeployAction(null);
+                        p.Deploy();
                         // Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
                     }
                 }
