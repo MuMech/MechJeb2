@@ -49,6 +49,13 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool limitAngleOfAttack = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble angleOfAttackLimit = 5;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult angleOfAttackLimitFadeoutAltitude = new EditableDoubleMult(20000, 1000);
+
         //internal state:
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
@@ -216,12 +223,24 @@ namespace MuMech
 
                 Vector3d steerOffset = Kp * difficulty * velocityError;
 
-                //limit the amount of steering to 10 degrees. Furthemore, never steer to a FPA of > 90 (that is, never lean backward)
+                //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
                 double maxOffset = 10 * Math.PI / 180;
                 if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * Math.PI / 180;
                 if (steerOffset.magnitude > maxOffset) steerOffset = maxOffset * steerOffset.normalized;
 
                 desiredThrustVector += steerOffset;
+            }
+            desiredThrustVector = desiredThrustVector.normalized;
+
+            if (limitAngleOfAttack)
+            {
+                Vector3d limitedVector = Vector3.RotateTowards(vessel.srf_velocity.normalized, desiredThrustVector, (float)(angleOfAttackLimit * Math.PI / 180), 1).normalized;
+                if (angleOfAttackLimitFadeoutAltitude < mainBody.maxAtmosphereAltitude && vessel.altitude > angleOfAttackLimitFadeoutAltitude) {
+                    double fade = (mainBody.maxAtmosphereAltitude - vessel.altitude) / (mainBody.maxAtmosphereAltitude - angleOfAttackLimitFadeoutAltitude);
+                    desiredThrustVector = fade * limitedVector + (1 - fade) * desiredThrustVector;
+                } else {
+                    desiredThrustVector = limitedVector;
+                }
             }
 
             desiredThrustVector = desiredThrustVector.normalized;
