@@ -15,6 +15,7 @@ else
 endif
 
 MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
+	$(wildcard MechJeb2/Maneuver/*.cs) \
 	$(wildcard MechJeb2/Properties/*.cs) \
 	$(wildcard MechJeb2/alglib/*.cs)
 
