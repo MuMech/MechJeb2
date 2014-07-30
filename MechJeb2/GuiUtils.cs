@@ -345,19 +345,48 @@ namespace MuMech
             return ArrowSelector(index, modulo, drawLabel);
         }
 
-        public static int ComboBox(int selectedItem, ref bool menuActive, string[] entries)
+
+        //from http://wiki.unity3d.com/index.php?title=PopupList
+        public static bool List(Rect position, ref bool showList, ref int listEntry, 
+            GUIContent buttonContent, string[] list, GUIStyle listStyle)
         {
-            if (!menuActive)
+            return List(position, ref showList, ref listEntry, buttonContent, list, "button", "box", listStyle);
+        }
+
+        public static bool List(Rect position, ref bool showList, ref int listEntry, GUIContent buttonContent, string[] list,
+                                 GUIStyle buttonStyle, GUIStyle boxStyle, GUIStyle listStyle)
+        {
+            int controlID = GUIUtility.GetControlID(865645, FocusType.Passive);
+            bool done = false;
+            switch (Event.current.GetTypeForControl(controlID))
             {
-                menuActive = GUILayout.Button(entries[selectedItem]);
+                case EventType.mouseDown:
+                    if (position.Contains(Event.current.mousePosition))
+                    {
+                        GUIUtility.hotControl = controlID;
+                        showList = true;
+                    }
+                    break;
+                case EventType.mouseUp:
+                    if (showList)
+                    {
+                        done = true;
+                    }
+                    break;
             }
-            else
+
+            GUI.Label(position, buttonContent, buttonStyle);
+            if (showList)
             {
-                selectedItem = GUILayout.SelectionGrid(selectedItem, entries, 1, _yellowOnHover);
-                if (GUI.changed)
-                    menuActive = false;
+                Rect listRect = new Rect(position.x, position.y, position.width, list.Length * 20);
+                GUI.Box(listRect, "", boxStyle);
+                listEntry = GUI.SelectionGrid(listRect, listEntry, list, 1, listStyle);
             }
-            return selectedItem;
+            if (done)
+            {
+                showList = false;
+            }
+            return done;
         }
 
         public static int HoursPerDay { get { return GameSettings.KERBIN_TIME ? 6 : 24; } }
