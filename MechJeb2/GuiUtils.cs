@@ -345,48 +345,19 @@ namespace MuMech
             return ArrowSelector(index, modulo, drawLabel);
         }
 
-
-        //from http://wiki.unity3d.com/index.php?title=PopupList
-        public static bool List(Rect position, ref bool showList, ref int listEntry, 
-            GUIContent buttonContent, string[] list, GUIStyle listStyle)
+        public static int ComboBox(int selectedItem, ref bool menuActive, string[] entries)
         {
-            return List(position, ref showList, ref listEntry, buttonContent, list, "button", "box", listStyle);
-        }
-
-        public static bool List(Rect position, ref bool showList, ref int listEntry, GUIContent buttonContent, string[] list,
-                                 GUIStyle buttonStyle, GUIStyle boxStyle, GUIStyle listStyle)
-        {
-            int controlID = GUIUtility.GetControlID(865645, FocusType.Passive);
-            bool done = false;
-            switch (Event.current.GetTypeForControl(controlID))
+            if (!menuActive)
             {
-                case EventType.mouseDown:
-                    if (position.Contains(Event.current.mousePosition))
-                    {
-                        GUIUtility.hotControl = controlID;
-                        showList = true;
-                    }
-                    break;
-                case EventType.mouseUp:
-                    if (showList)
-                    {
-                        done = true;
-                    }
-                    break;
+                menuActive = GUILayout.Button(entries[selectedItem]);
             }
-
-            GUI.Label(position, buttonContent, buttonStyle);
-            if (showList)
+            else
             {
-                Rect listRect = new Rect(position.x, position.y, position.width, list.Length * 20);
-                GUI.Box(listRect, "", boxStyle);
-                listEntry = GUI.SelectionGrid(listRect, listEntry, list, 1, listStyle);
+                selectedItem = GUILayout.SelectionGrid(selectedItem, entries, 1, _yellowOnHover);
+                if (GUI.changed)
+                    menuActive = false;
             }
-            if (done)
-            {
-                showList = false;
-            }
-            return done;
+            return selectedItem;
         }
 
         public static int HoursPerDay { get { return GameSettings.KERBIN_TIME ? 6 : 24; } }
