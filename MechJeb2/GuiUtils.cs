@@ -347,13 +347,23 @@ namespace MuMech
 
         public static int ComboBox(int selectedItem, ref bool menuActive, string[] entries)
         {
+            if (entries.Length == 0)
+                return 0;
+
+            if (entries.Length == 1)
+            {
+                menuActive = false;
+                GUILayout.Label(entries[0]);
+                return 0;
+            }
+
             if (!menuActive)
             {
                 menuActive = GUILayout.Button(entries[selectedItem]);
             }
             else
             {
-                selectedItem = GUILayout.SelectionGrid(selectedItem, entries, 1, _yellowOnHover);
+                selectedItem = GUILayout.SelectionGrid(selectedItem % entries.Length, entries, 1, yellowOnHover);
                 if (GUI.changed)
                     menuActive = false;
             }

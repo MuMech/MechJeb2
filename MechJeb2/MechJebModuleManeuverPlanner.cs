@@ -17,7 +17,7 @@ namespace MuMech
         Operation[] operation = Operation.getAvailableOperations();
         string[] operationNames;
         int operationId = 0;
-        bool operationPopupDisplay;
+        bool operationPopupDisplay = false;
 
         // Creation or replacement mode
         bool createNode = true;
