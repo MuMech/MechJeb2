@@ -339,7 +339,7 @@ namespace MuMech
             if (engine != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState)
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && engine.thrustPercentage > 0)
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
                     if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
@@ -383,7 +383,7 @@ namespace MuMech
             if (enginefx != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState)
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState) && engine.thrustPercentage > 0)
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
                     if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage)
