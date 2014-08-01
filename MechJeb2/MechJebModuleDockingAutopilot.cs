@@ -63,6 +63,11 @@ namespace MuMech
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
                 RenderingManager.AddToPostDrawQueue(1, DrawBoundingBox);
+
+                GameEvents.onPartCouple.Add((GameEvents.FromToAction<Part, Part> ev) =>
+                {
+                    if(dockingStep != DockingStep.OFF) EndDocking();
+                });
             }
         }
 
@@ -78,6 +83,7 @@ namespace MuMech
             core.rcs.users.Remove(this);
             core.attitude.attitudeDeactivate();
             dockingStep = DockingStep.OFF;
+            drawBoundingBox = false;
         }
 
         private double FixSpeed(double s)
