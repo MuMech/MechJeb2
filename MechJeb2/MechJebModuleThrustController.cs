@@ -162,6 +162,18 @@ namespace MuMech
             }
         }
 
+        // Call this function to set the throttle for a burn with dV delta-V remaining.
+        // timeConstant controls how quickly we throttle down toward the end of the burn.
+        // This function is nice because it will correctly handle engine spool-up/down times.
+        public void ThrustForDV(double dV, double timeConstant)
+        {
+            timeConstant += vesselState.maxEngineResponseTime;
+            double spooldownDV = vesselState.currentThrustAccel * vesselState.maxEngineResponseTime;
+            double desiredAcceleration = (dV - spooldownDV) / timeConstant;
+
+            targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
+        }
+
         public override void Drive(FlightCtrlState s)
         {
         	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
