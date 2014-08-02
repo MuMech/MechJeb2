@@ -112,6 +112,9 @@ namespace MuMech
         // Acceleration in the forward direction, for when dividing by mass is too complicated.
         public double maxThrustAccel { get { return thrustAvailable / mass; } }
         public double minThrustAccel { get { return thrustMinimum / mass; } }
+        public double currentThrustAccel { get { return thrustCurrent / mass; } }
+
+        public double maxEngineResponseTime = 0;
 
         public bool rcsThrust = false;
         public float throttleLimit = 1;
@@ -464,6 +467,8 @@ namespace MuMech
             thrustVectorLastFrame += einfo.thrustCurrent;
             torqueThrustPYAvailable += einfo.torqueThrustPYAvailable;
 
+            maxEngineResponseTime = einfo.maxResponseTime;
+
             if (thrustVectorMaxThrottle.magnitude == 0 && vessel.ActionGroups[KSPActionGroup.RCS])
             {
             	rcsThrust = true;
@@ -577,6 +582,7 @@ namespace MuMech
             public Vector3d thrustCurrent = new Vector3d(); // thrust at throttle achieved last frame
             public Vector3d thrustMax = new Vector3d(); // thrust at full throttle
             public Vector3d thrustMin = new Vector3d(); // thrust at zero throttle
+            public double maxResponseTime = 0;
 
             public double torqueThrustPYAvailable = 0;
 
@@ -647,6 +653,12 @@ namespace MuMech
                     thrustCurrent += eCurrentThrust * thrustDirectionVector;
                     thrustMax += eMaxThrust * thrustDirectionVector;
                     thrustMin += eMinThrust * thrustDirectionVector;
+
+                    if (e.useEngineResponseTime)
+                    {
+                        double responseTime = 1.0 / Math.Min(e.engineAccelerationSpeed, e.engineDecelerationSpeed);
+                        if (responseTime > maxResponseTime) maxResponseTime = responseTime;
+                    }
 
                     Part p = e.part;
                     ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();

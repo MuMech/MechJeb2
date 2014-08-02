@@ -130,7 +130,9 @@ namespace MuMech
                     if (core.attitude.attitudeAngleFromTarget() < 90)
                     {
                         double timeConstant = (dVLeft > 10 ? 0.5 : 2);
-                        double desiredAcceleration = dVLeft / timeConstant;
+                        timeConstant += vesselState.maxEngineResponseTime;
+                        double spooldownDV = vesselState.currentThrustAccel * vesselState.maxEngineResponseTime;
+                        double desiredAcceleration = (dVLeft - spooldownDV) / timeConstant;
                         desiredAcceleration = Math.Max(tolerance, desiredAcceleration);
 
                         core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
