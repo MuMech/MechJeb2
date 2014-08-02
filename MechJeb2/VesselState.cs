@@ -723,6 +723,12 @@ namespace MuMech
                     thrustMax += eMaxThrust * thrustDirectionVector;
                     thrustMin += eMinThrust * thrustDirectionVector;
 
+                    if (e.useEngineResponseTime)
+                    {
+                        double responseTime = 1.0 / Math.Min(e.engineAccelerationSpeed, e.engineDecelerationSpeed);
+                        if (responseTime > maxResponseTime) maxResponseTime = responseTime;
+                    }
+
                     Part p = e.part;
                     ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
                     if (gimbal != null && !gimbal.gimbalLock)
