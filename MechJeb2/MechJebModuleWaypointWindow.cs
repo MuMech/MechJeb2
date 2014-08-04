@@ -209,7 +209,7 @@ namespace MuMech
 		[EditableInfoItem("Gilly Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble GillyMapdist = -500;
 		[EditableInfoItem("Kerbin Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble KerbinMapdist = 500;
+		public EditableDouble KerbinMapdist = 500; 
 		[EditableInfoItem("Mun Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble MunMapdist = 4000;
 		[EditableInfoItem("Minmus Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
@@ -1223,6 +1223,7 @@ namespace MuMech
 					case "Bop" : addHeight = window.BopMapdist; break;
 					case "Pol" : addHeight = window.PolMapdist; break;
 					case "Eeloo" : addHeight = window.EelooMapdist; break;
+					default: addHeight = window.KerbinMapdist; break;
 			}
 			
 			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
