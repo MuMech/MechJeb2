@@ -84,7 +84,7 @@ namespace MuMech
             stopwatch.Start(); //starts a timer that times how long the simulation takes
 
             //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
             FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts, dVLinearThrust), new FuelFlowSimulation(parts, dVLinearThrust) };
 
             //Run the simulation in a separate thread
