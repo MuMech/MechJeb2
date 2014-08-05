@@ -17,8 +17,8 @@ namespace MuMech
         {
             get
             {
-                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.SortedShipList : 
-                    (vessel == null) ? new List<Part>() : vessel.Parts;
+                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.fetch.ship.parts : 
+                    ((vessel == null) ? new List<Part>() : vessel.Parts);
             }
         }
 
@@ -253,17 +253,14 @@ namespace MuMech
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
             
-            foreach (ModuleRCS pm in VesselExtensions.GetModules<ModuleRCS>(vessel))
+            foreach (ModuleRCS pm in vessel.GetModules<ModuleRCS>())
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
                 numThrusters++;
                 gForRCS = pm.G;
             }
 
-            double m0 = (HighLogic.LoadedSceneIsEditor)
-                ? EditorLogic.SortedShipList.Where(
-                    p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass())
-                : vesselState.mass;
+            double m0 = VesselMass();
             double m1 = m0 - monopropMass;
             if (numThrusters == 0 || m1 <= 0) return 0;
             double isp = totalIsp / numThrusters;
@@ -305,7 +302,7 @@ namespace MuMech
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts
                                   .Where(p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass());
             else return vesselState.mass;
         }
@@ -341,11 +338,11 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                var engines = (from part in EditorLogic.SortedShipList
+                var engines = (from part in EditorLogic.fetch.ship.parts
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.SortedShipList
+                var enginesfx = (from part in EditorLogic.fetch.ship.parts
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
@@ -363,11 +360,11 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                var engines = (from part in EditorLogic.SortedShipList
+                var engines = (from part in EditorLogic.fetch.ship.parts
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.SortedShipList
+                var enginesfx = (from part in EditorLogic.fetch.ship.parts
                                  where part.inverseStage == Staging.lastStage
                                  from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
@@ -398,7 +395,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                return EditorLogic.SortedShipList.Where(p => p.IsPhysicallySignificant())
+                return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
                                   .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
             }
             else

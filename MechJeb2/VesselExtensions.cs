@@ -10,7 +10,7 @@ namespace MuMech
     {
         public static List<T> GetParts<T>(this Vessel vessel) where T : Part
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.OfType<T>().ToList();
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts.OfType<T>().ToList();
             if (vessel == null) return new List<T>();
             return vessel.Parts.OfType<T>().ToList();
         }
@@ -18,7 +18,7 @@ namespace MuMech
         public static List<ITargetable> GetTargetables(this Vessel vessel)
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
             else if (vessel == null) return new List<ITargetable>();
             else parts = vessel.Parts;
 
@@ -28,7 +28,7 @@ namespace MuMech
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
             else if (vessel == null) return new List<T>();
             else parts = vessel.Parts;
 
@@ -60,7 +60,7 @@ namespace MuMech
         public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
             if (definition == null) return 0;
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
 
             double amount = 0;
             foreach (Part p in parts)
@@ -90,7 +90,7 @@ namespace MuMech
             if (vessel == null)
                 return false;
 
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
             PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
             if (definition == null) return false;
 
