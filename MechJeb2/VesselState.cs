@@ -559,7 +559,7 @@ namespace MuMech
                       
         public double TerminalVelocityStockKSP()
         {
-            if (altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
+            if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
             double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(CoM, mainBody));
             return Math.Sqrt(2 * localg * mass / (massDrag * FlightGlobals.DragMultiplier * airDensity));
