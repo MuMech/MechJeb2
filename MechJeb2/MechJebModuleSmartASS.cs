@@ -119,6 +119,8 @@ namespace MuMech
             // If any other module use the attitude controler then let them do it
             if (core.attitude.enabled && core.attitude.users.Count(u => !this.Equals(u)) > 0)
             {
+                target = Target.OFF;
+                if (core.attitude.users.Contains(this)) core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }
             else
