@@ -840,7 +840,7 @@ namespace MuMech
             float fullThrottleTime = StageTimeLeftFullThrottle();
             if (fullThrottleTime == 0) return 0;
 
-            return fullThrottleTime / FlightInputHandler.state.mainThrottle;
+            return fullThrottleTime / vessel.ctrlState.mainThrottle;
         }
 
         [ValueInfoItem("Stage time (hover)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)]
