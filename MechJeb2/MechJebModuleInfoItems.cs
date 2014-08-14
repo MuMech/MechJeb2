@@ -977,7 +977,7 @@ namespace MuMech
         }
 
 
-        [ValueInfoItem("Raw Biome", InfoItem.Category.Misc, showInEditor = false)]
+        [ValueInfoItem("Surface Biome", InfoItem.Category.Misc, showInEditor = false)]
         public string CurrentRawBiome()
         {
             if (vessel.landedAt != string.Empty)
@@ -986,37 +986,38 @@ namespace MuMech
             return "" + biome;
         }
 
-        // No default experiment makes use of the biome at FlyingHigh and beyond
-        // I stop displaying it from InSpaceLow
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]
         public string CurrentBiome()
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
-            string biome = mainBody.BiomeMap.GetAtt(vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            if (biome != "")
+                biome = "'s " + biome;
+
             switch (vessel.situation)
             {
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.theName + "'s " + (biome == "" ? "surface" : biome);
+                    return mainBody.theName + (biome == "" ? "'s surface" : biome);
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.theName + "'s " + (biome == "" ? "oceans" : biome);
+                    return mainBody.theName + (biome == "" ? "'s oceans" : biome);
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)                        
                         //ExperimentSituations.FlyingLow
-                        return "Flying over " + mainBody.theName + (biome == "" ? "" : "'s " + biome);
+                        return "Flying over " + mainBody.theName + biome;
                     else                
                         //ExperimentSituations.FlyingHigh
-                        return "Upper atmosphere of " + mainBody.theName + (biome == "" ? "" : "'s " + biome);
+                        return "Upper atmosphere of " + mainBody.theName + biome;
                 default:
                     if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
-                        return "Space just above " + mainBody.theName;
+                        return "Space just above " + mainBody.theName + biome;
                     else
                         // ExperimentSituations.InSpaceHigh
-                        return "Space high over " + mainBody.theName;
+                        return "Space high over " + mainBody.theName + biome;
             }
         }
 
