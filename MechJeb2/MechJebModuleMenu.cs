@@ -138,60 +138,59 @@ namespace MuMech
             if (!ToolbarManager.ToolbarAvailable)
                 return;
 
-            if (!module.hidden)
+
+            IButton button;
+            String name = CleanName(module.GetName());
+            if (!toolbarButtons.ContainsKey(name))
             {
-                IButton button;
-                String name = CleanName(module.GetName());
-                if (!toolbarButtons.ContainsKey(name))
+                print("Adding button for " + name);
+                button = ToolbarManager.Instance.add("MechJeb2", name);
+                toolbarButtons[name] = button;
+                button.ToolTip = "MechJeb " + module.GetName();
+                //button.Visibility = new MJButtonVisibility(this);
+                button.OnClick += (b) =>
                 {
-                    print("Adding button for " + name);
-                    button = ToolbarManager.Instance.add("MechJeb2", name);
-                    toolbarButtons[name] = button;
-                    button.ToolTip = "MechJeb " + module.GetName();                    
-                    //button.Visibility = new MJButtonVisibility(this);
-                    button.OnClick += (b) =>
+                    DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModules<DisplayModule>().FirstOrDefault(m => m.GetName() == module.GetName());
+                    if (mod != null)
                     {
-                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModules<DisplayModule>().FirstOrDefault(m => m.GetName() == module.GetName());
-                        if (mod != null)
-                        {
-                            mod.enabled = !mod.enabled;
-                            //print("Change " + module.GetName() + " to " + module.enabled);
-                        }
-                    };
+                        mod.enabled = !mod.enabled;
+                        //print("Change " + module.GetName() + " to " + module.enabled);
+                    }
+                };
+            }
+            else
+            {
+                button = toolbarButtons[name];
+                //if (button.Visible != module.showInCurrentScene)
+            }
+            button.Visible = module.showInCurrentScene && !module.hidden;
+            String TexturePath = "MechJeb2/Icons/" + name;
+            String TexturePathActive = TexturePath + "_active";
+
+            if (!actualIcons.ContainsKey(TexturePath))
+            {
+                if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
+                {
+                    actualIcons[TexturePath] = Qmark;
+                    print("No icon for " + name);
                 }
                 else
-                {
-                    button = toolbarButtons[name];
-                    //if (button.Visible != module.showInCurrentScene)
-                }
-                button.Visible = module.showInCurrentScene;
-                String TexturePath = "MechJeb2/Icons/" + name;
-                String TexturePathActive = TexturePath + "_active";
-
-                if (!actualIcons.ContainsKey(TexturePath))
-                {
-                    if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
-                    {
-                        actualIcons[TexturePath] = Qmark;
-                        print("No icon for " + name);
-                    }
-                    else
-                        actualIcons[TexturePath] = TexturePath;
-                }               
-
-                if (active && !actualIcons.ContainsKey(TexturePathActive))
-                {
-                    if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
-                    {
-                        actualIcons[TexturePathActive] = TexturePath;
-                        print("No icon for " + name + "_active");
-                    }
-                    else
-                        actualIcons[TexturePathActive] = TexturePathActive;
-                }
-
-                button.TexturePath = active ? actualIcons[TexturePathActive] : actualIcons[TexturePath];
+                    actualIcons[TexturePath] = TexturePath;
             }
+
+            if (active && !actualIcons.ContainsKey(TexturePathActive))
+            {
+                if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
+                {
+                    actualIcons[TexturePathActive] = TexturePath;
+                    print("No icon for " + name + "_active");
+                }
+                else
+                    actualIcons[TexturePathActive] = TexturePathActive;
+            }
+
+            button.TexturePath = active ? actualIcons[TexturePathActive] : actualIcons[TexturePath];
+
         }
 
         public override void OnDestroy()
