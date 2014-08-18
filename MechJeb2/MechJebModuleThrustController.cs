@@ -195,12 +195,12 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
-//                            tmode = TMode.DIRECT;
-//                            trans_spd_act = 100;
                             Vector3 hsdir = Vector3.Exclude(vesselState.up, vessel.srf_velocity);
-                            Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL) * (150 / vesselState.torqueAvailable.magnitude);
+                            Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
                             if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
+                                tmode = TMode.DIRECT;
+                                trans_spd_act = 100;
                                 rot = -hsdir;
                             }
                             else
@@ -224,7 +224,7 @@ namespace MuMech
 
                 if ((tmode != TMode.KEEP_VERTICAL)
                     || !trans_kill_h
-                    || (core.attitude.attitudeError < 3)
+                    || (core.attitude.attitudeError < 2)
                     || ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) < 1000) && (core.attitude.attitudeError < 90)))
                 {
                     if (tmode == TMode.DIRECT)
@@ -238,7 +238,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if ((core.attitude.attitudeError >= 3) && (vesselState.torqueThrustPYAvailable > Math.Min( vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) * 10))
+                    if ((core.attitude.attitudeError >= 2) && (vesselState.torqueThrustPYAvailable > Math.Min( vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) * 10))
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
                     }
