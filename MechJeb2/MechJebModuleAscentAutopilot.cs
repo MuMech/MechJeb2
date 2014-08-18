@@ -27,6 +27,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool limitAoA = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage;
         public bool autostage
         {
@@ -227,7 +229,7 @@ namespace MuMech
             desiredThrustVector = desiredThrustVector.normalized;
             var error = Vector3d.Angle(vesselState.forward, desiredThrustVector);
             
-            if (vesselState.atmosphericDensity > 0.02)
+            if (limitAoA && vesselState.atmosphericDensity > 0.02)
             {
             	var limit = Mathf.Clamp(3f / (float)vesselState.atmosphericDensity, 5, 12.5f);
 	        	var ang = Vector3d.Angle(vessel.srf_velocity.normalized, desiredThrustVector);

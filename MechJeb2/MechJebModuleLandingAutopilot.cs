@@ -876,7 +876,7 @@ namespace MuMech
                 core.thrust.trans_kill_h = true;
                 core.thrust.trans_spd_act = 0;
             }
-            else if (minalt > 300)
+            else if (minalt > 200)
             {
                 if ((vessel.srf_velocity.magnitude > 5) && (Vector3d.Angle(vessel.srf_velocity, vesselState.up) < 80))
                 {
@@ -894,7 +894,7 @@ namespace MuMech
                 }
                 else
                 {
-                    //if we're above 300m, point retrograde and control surface velocity:
+                    //if we're above 200m, point retrograde and control surface velocity:
                     core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                     
                     core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
@@ -908,8 +908,8 @@ namespace MuMech
             }
             else
             {
-                //last 300 meters:
-                core.thrust.trans_spd_act = -Mathf.Lerp(0, (float)Math.Sqrt((vesselState.limitedMaxThrustAccel - vesselState.localg) * 2 * 300) * 0.90F, (float)minalt / 300);
+                //last 200 meters:
+                core.thrust.trans_spd_act = -Mathf.Lerp(0, (float)Math.Sqrt((vesselState.limitedMaxThrustAccel - vesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
 
                 //take into account desired landing speed:
                 core.thrust.trans_spd_act = (float)Math.Min(-touchdownSpeed, core.thrust.trans_spd_act);
