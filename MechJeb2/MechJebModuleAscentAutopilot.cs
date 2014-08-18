@@ -225,10 +225,21 @@ namespace MuMech
             }
 
             desiredThrustVector = desiredThrustVector.normalized;
+            var error = Vector3d.Angle(vesselState.forward, desiredThrustVector);
+            
+            if (vesselState.atmosphericDensity > 0.02)
+            {
+            	var limit = Mathf.Clamp(3f / (float)vesselState.atmosphericDensity, 5, 12.5f);
+	        	var ang = Vector3d.Angle(vessel.srf_velocity.normalized, desiredThrustVector);
+            	if (ang > limit)
+            	{
+            		desiredThrustVector = ((1 - limit / ang) * vessel.srf_velocity.normalized) + ((limit / ang) * desiredThrustVector);
+            	}
+            }
 
             core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
 
-            status = "Gravity turn";
+        	status = "Gravity turn\nPath Error: " + error.ToString("F1") + "°";
         }
 
         void DriveCoastToApoapsis(FlightCtrlState s)
