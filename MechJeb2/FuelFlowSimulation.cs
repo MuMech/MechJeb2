@@ -471,7 +471,11 @@ namespace MuMech
             // In the flight scene, each part knows which fuel lines point to it.
             // (actually, fuelLookupTargets also includes attached docking nodes that can
             // transfer fuel to us).
-            fuelLineSources.AddRange(part.fuelLookupTargets.Select(p => nodeLookup[p]));
+            foreach (Part partSource in part.fuelLookupTargets)
+            {
+                FuelNode nodeSource;
+                if (nodeLookup.TryGetValue(partSource, out nodeSource)) fuelLineSources.Add(nodeSource);
+            }
         }
 
         public void SetupFuelLineSourcesEditor(Part part, Dictionary<Part, FuelNode> nodeLookup)
@@ -485,10 +489,7 @@ namespace MuMech
                 if (target != null)
                 {
                     FuelNode targetNode;
-                    if (nodeLookup.TryGetValue(target, out targetNode))
-                    {
-                        targetNode.fuelLineSources.Add(this);
-                    }
+                    if (nodeLookup.TryGetValue(target, out targetNode)) targetNode.fuelLineSources.Add(this);
                 }
             }
         }
