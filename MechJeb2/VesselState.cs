@@ -94,6 +94,10 @@ namespace MuMech
         public MovingAverage latitude = new MovingAverage();
         [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]
         public MovingAverage longitude = new MovingAverage();
+        [ValueInfoItem("Angle of Attack (pitch)", InfoItem.Category.Misc, format = "F2", units = "º")]
+        public MovingAverage AoA = new MovingAverage();
+        [ValueInfoItem("Angle of Attach (yaw)", InfoItem.Category.Misc, format = "F2", units = "º")]
+        public MovingAverage AoS = new MovingAverage();
 
         public double radius;  //distance from planet center
 
@@ -199,6 +203,28 @@ namespace MuMech
             forward = vessel.GetTransform().up;
             rotationSurface = Quaternion.LookRotation(north, up);
             rotationVesselSurface = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * rotationSurface);
+
+            // Angle of attack, angle between surface velocity and the vessel's "up" vector
+            // Originally from ferram4's FAR
+            Vector3 tmpVec = vessel.ReferenceTransform.up      * Vector3.Dot(vessel.ReferenceTransform.up,      vessel.srf_velocity.normalized)
+                           + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vessel.srf_velocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+            double tmpAoA = 180.0/Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
+            if (double.IsNaN(tmpAoA))
+                AoA.value = 0;
+            else
+                AoA.value = tmpAoA;
+
+            // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
+            // Originally from ferram4's FAR
+            tmpVec = vessel.ReferenceTransform.up    * Vector3.Dot(vessel.ReferenceTransform.up,    vessel.srf_velocity.normalized) 
+                   + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, vessel.srf_velocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
+            double tempAoS = 180.0/Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
+            if (double.IsNaN(tempAoS))
+                AoS.value = 0;
+            else
+                AoS.value= tempAoS;
+
+
 
 //            velocityVesselOrbit = vessel.orbit.GetVel();
 //            velocityVesselOrbitUnit = velocityVesselOrbit.normalized;
