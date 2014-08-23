@@ -104,6 +104,11 @@ namespace MuMech
             core.thrust.LimitToTerminalVelocityInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
+<<<<<<< HEAD
+=======
+            autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA");
+            autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
+>>>>>>> 95a31bb... added Force Roll to Ascent AP which tries to keep the roll a 0° when the pitch is below 83°
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
