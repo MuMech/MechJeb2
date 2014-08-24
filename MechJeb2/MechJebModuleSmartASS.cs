@@ -35,11 +35,13 @@ namespace MuMech
             PARALLEL_PLUS,
             PARALLEL_MINUS,
             ADVANCED,
-            AUTO
+            AUTO,
+            SURFACE_PROGRADE,
+            SURFACE_RETROGRADE
         }
-        public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO };
+        public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE, Mode.SURFACE };
         public static string[] ModeTexts = { "OBT", "SURF", "TGT", "ADV", "AUTO" };
-        public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO" };
+        public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO", "SVEL\n+", "SVEL\n-" };
 
         public static GUIStyle btNormal, btActive, btAuto;
 
@@ -53,6 +55,12 @@ namespace MuMech
         public EditableDouble srfPit = new EditableDouble(90);
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble srfRol = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble srfVelYaw = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble srfVelPit = new EditableDouble(0);
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble srfVelRol = new EditableDouble(0);
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble rol = new EditableDouble(0);
         [Persistent(pass = (int)Pass.Local)]
@@ -86,6 +94,14 @@ namespace MuMech
             {
                 target = bt;
                 Engage();
+            }
+        }
+
+        protected void TargetButtonNoEngage(Target bt)
+        {
+            if (GUILayout.Button(TargetTexts[(int)bt], (target == bt) ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+            {
+                target = bt;
             }
         }
 
@@ -154,6 +170,7 @@ namespace MuMech
                 switch (mode)
                 {
                     case Mode.ORBITAL:
+
                         GUILayout.BeginHorizontal();
                         TargetButton(Target.PROGRADE);
                         TargetButton(Target.NORMAL_PLUS);
@@ -169,14 +186,53 @@ namespace MuMech
 
                         break;
                     case Mode.SURFACE:
-                        GuiUtils.SimpleTextBox("HDG:", srfHdg);
-                        GuiUtils.SimpleTextBox("PIT:", srfPit);
-                        GuiUtils.SimpleTextBox("ROL:", srfRol);
+                        GUILayout.BeginHorizontal();
+                        TargetButton(Target.SURFACE_PROGRADE);
+                        TargetButton(Target.SURFACE_RETROGRADE);
+                        TargetButtonNoEngage(Target.SURFACE);
+                        GUILayout.EndHorizontal();
+                        if (target == Target.SURFACE) {
+                            GuiUtils.SimpleTextBox("HDG:", srfHdg);
+                            GuiUtils.SimpleTextBox("PIT:", srfPit);
+                            GuiUtils.SimpleTextBox("ROL:", srfRol);
+                            if (GUILayout.Button("EXECUTE")) {
+                                Engage();
+                            }
+                        } else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE) {
+                            GUILayout.BeginHorizontal();
+                            GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 60);
+                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
+                                srfVelRol -= 1;
+                                Engage();
 
-                        if (GUILayout.Button("EXECUTE", GUILayout.ExpandWidth(true)))
-                        {
-                            target = Target.SURFACE;
-                            Engage();
+                            }
+                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
+                                srfVelRol += 1;
+                                Engage();
+                            }
+                            GUILayout.EndHorizontal();
+                            GUILayout.BeginHorizontal();
+                            GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 60);
+                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
+                                srfVelPit -= 1;
+                                Engage();
+                            }
+                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
+                                srfVelPit += 1;
+                                Engage();
+                            }
+                            GUILayout.EndHorizontal();
+                            GUILayout.BeginHorizontal();
+                            GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 60);
+                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
+                                srfVelYaw -= 1;
+                                Engage();
+                            }
+                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
+                                srfVelYaw += 1;
+                                Engage();
+                            }
+                            GUILayout.EndHorizontal();
                         }
                         break;
                     case Mode.TARGET:
@@ -301,6 +357,18 @@ namespace MuMech
                 case Target.ADVANCED:
                     direction = Vector6.directions[advDirection];
                     reference = advReference;
+                    break;
+                case Target.SURFACE_PROGRADE:
+                    attitude = Quaternion.AngleAxis(-(float)srfVelRol, Vector3.forward) *
+                        Quaternion.AngleAxis(-(float)srfVelPit, Vector3.right) *
+                        Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
+                    reference = AttitudeReference.SURFACE_VELOCITY;
+                    break;
+                case Target.SURFACE_RETROGRADE:
+                    attitude = Quaternion.AngleAxis((float)srfVelRol + 180, Vector3.forward) *
+                        Quaternion.AngleAxis(-(float)srfVelPit + 180, Vector3.right) *
+                        Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
+                    reference = AttitudeReference.SURFACE_VELOCITY;
                     break;
                 default:
                     return;
