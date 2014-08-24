@@ -48,8 +48,22 @@ namespace MuMech
 
         public static bool IsUnfiredDecoupler(this Part p)
         {
-            return p.FindModulesImplementing<ModuleDecouple>().Any(m => !m.isDecoupled) ||
-                p.FindModulesImplementing<ModuleAnchoredDecoupler>().Any(m => !m.isDecoupled);
+            foreach (PartModule m in p.Modules) {
+                ModuleDecouple mDecouple = m as ModuleDecouple;
+                if (mDecouple != null)
+                {
+                    if (!mDecouple.isDecoupled) return true;
+                    break;
+                }
+
+                ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
+                if (mAnchoredDecoupler != null)
+                {
+                    if (!mAnchoredDecoupler.isDecoupled) return true;
+                    break;
+                }
+            }
+            return false;
         }
 
 
@@ -95,7 +109,11 @@ namespace MuMech
 
         public static bool IsLaunchClamp(this Part p)
         {
-            return p.HasModule<LaunchClamp>();
+            foreach (PartModule m in p.Modules)
+            {
+                if (m is LaunchClamp) return true;
+            }
+            return false;
         }
 
         public static bool IsDecoupledInStage(this Part p, int stage)

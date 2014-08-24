@@ -15,11 +15,16 @@ namespace MuMech
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
         public FuelFlowSimulation(List<Part> parts, bool dVLinearThrust)
         {
-            //Initialize the simulation
+            // Create FuelNodes corresponding to each Part
             nodes = new List<FuelNode>();
             Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p, dVLinearThrust));
             nodes = nodeLookup.Values.ToList();
 
+            // Determine when each part will be decoupled
+            Part rootPart = parts[0]; // hopefully always correct
+            nodeLookup[rootPart].AssignDecoupledInStage(rootPart, nodeLookup, -1);
+
+            // Set up the fuel flow graph
             if (HighLogic.LoadedSceneIsFlight)
             {
                 foreach (Part p in parts) nodeLookup[p].SetupFuelLineSourcesFlight(p, nodeLookup);
@@ -29,6 +34,7 @@ namespace MuMech
                 foreach (Part p in parts) nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
             }
             foreach (Part p in parts) nodeLookup[p].SetupRegularSources(p, nodeLookup);
+
 
             simStage = Staging.lastStage + 1;
 
@@ -330,7 +336,6 @@ namespace MuMech
             if (part.IsPhysicallySignificant()) dryMass = part.mass;
 
             inverseStage = part.inverseStage;
-            isSepratron = part.IsSepratron();
             partName = part.partInfo.name;
 
             //note which resources this part has stored
@@ -429,23 +434,24 @@ namespace MuMech
                     propellantRatios = enginefx.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir").ToDictionary(prop => prop.id, prop => prop.ratio);
                 }
             }
+        }
 
-
-
-            //figure out when this part gets decoupled. We do this by looking through this part and all this part's ancestors
-            //and noting which one gets decoupled earliest (i.e., has the highest inverseStage). Some parts never get decoupled
-            //and these are assigned decoupledInStage = -1.
-            decoupledInStage = -1;
-            Part p = part;
-            while (true)
+        // Determine when this part will be decoupled given when its parent will be decoupled.
+        // Then recurse to all of this part's children.
+        public void AssignDecoupledInStage(Part p, Dictionary<Part, FuelNode> nodeLookup, int parentDecoupledInStage)
+        {
+            if (p.IsUnfiredDecoupler() || p.IsLaunchClamp())
             {
-                if (p.IsUnfiredDecoupler() || p.IsLaunchClamp())
-                {
-                    if (p.inverseStage > decoupledInStage) decoupledInStage = p.inverseStage;
-                }
-                if (p.parent == null) break;
-                else p = p.parent;
+                decoupledInStage = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
             }
+            else
+            {
+                decoupledInStage = parentDecoupledInStage;
+            }
+
+            isSepratron = isEngine && (inverseStage == decoupledInStage);
+
+            foreach (Part child in p.children) nodeLookup[child].AssignDecoupledInStage(child, nodeLookup, decoupledInStage);
         }
 
         public static void print(object message)
