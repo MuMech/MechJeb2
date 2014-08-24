@@ -248,7 +248,15 @@ namespace MuMech
             }
             else
             {
-                return this.OfType<ComputerModule>().ToList().Exists(c => (c != controlledModule) && c.users.RecursiveUser(user));
+                foreach (object o in this)
+                {
+                    ComputerModule c = o as ComputerModule;
+                    if (c != null && c != controlledModule)
+                    {
+                        if (c.users.RecursiveUser(user)) return true;
+                    }
+                }
+                return false;
             }
         }
     }
