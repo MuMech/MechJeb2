@@ -104,6 +104,7 @@ namespace MuMech
             core.thrust.LimitToTerminalVelocityInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
+            autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
