@@ -101,6 +101,9 @@ namespace MuMech
         
         public void SetupToolBarButtons()
         {
+            if (!ToolbarManager.ToolbarAvailable)
+                return;
+
             SetupMainToolbarButton();
             foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
             {
