@@ -40,21 +40,20 @@ namespace MuMech
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
-            if (vessel == null) // there will be no cache in the editor, but thats not as usefull as in flight
-                return vessel.GetModules<MechJebCore>().Max();
             if (lastFixedTime != Time.fixedTime)
             {
                 masterMechjebs = new Dictionary<Guid, MechJebCore>();
                 lastFixedTime = Time.fixedTime;
             }
-            if (!masterMechjebs.ContainsKey(vessel.id))
+            Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
+            if (!masterMechjebs.ContainsKey(vesselKey))
             {
                 MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
                 if (mj != null)
-                    masterMechjebs.Add(vessel.id, mj);
+                    masterMechjebs.Add(vesselKey, mj);
                 return mj;
             }
-            return masterMechjebs[vessel.id];
+            return masterMechjebs[vesselKey];
         }
 
         public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
