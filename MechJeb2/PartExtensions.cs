@@ -20,30 +20,15 @@ namespace MuMech
 
         public static bool EngineHasFuel(this Part p)
         {
-            if (p is LiquidEngine || p is LiquidFuelEngine || p is AtmosphericEngine)
+            foreach (PartModule m in p.Modules)
             {
-                //I don't really know the details of how you're supposed to use RequestFuel, but this seems to work to
-                //test whether something can get fuel.
-                return p.RequestFuel(p, 0, Part.getFuelReqId());
-            }
-            else if (p.HasModule<ModuleEngines>())
-            {
-                return !p.Modules.OfType<ModuleEngines>().First().getFlameoutState;
-            }
-            else if (p.HasModule<ModuleEnginesFX>())
-            {
-                return !p.Modules.OfType<ModuleEnginesFX>().First(e => e.isEnabled).getFlameoutState;
-            }
-            else return false;
-        }
+                ModuleEngines eng = m as ModuleEngines;
+                if (eng != null) return !eng.getFlameoutState;
 
-        public static bool IsDecoupler(this Part p)
-        {
-            return (p is Decoupler ||
-             p is DecouplerGUI ||
-             p is RadialDecoupler ||
-             p.HasModule<ModuleDecouple>() ||
-             p.HasModule<ModuleAnchoredDecoupler>());
+                ModuleEnginesFX engFX = m as ModuleEnginesFX;
+                if (engFX != null) return !engFX.getFlameoutState;
+            }
+            return false;
         }
 
         public static bool IsUnfiredDecoupler(this Part p)
@@ -77,34 +62,23 @@ namespace MuMech
                 && !p.isControlSource;
         }
 
-        public static bool IsSRB(this Part p)
-        {
-            if (p is SolidRocket) return true;
-
-            //new-style SRBs:
-            if (p.HasModule<ModuleEngines>())  //sepratrons are motors
-                return p.Modules.OfType<ModuleEngines>().First().throttleLocked; //throttleLocked signifies an SRB
-            if (p.HasModule<ModuleEnginesFX>())
-                return p.Modules.OfType<ModuleEnginesFX>().First(e => e.isEnabled).throttleLocked;  // Will fail if they are all !isEnabled. Can this happend ?
-            return false;
-        }
-
 
         public static bool IsEngine(this Part p)
         {
-            return (p is SolidRocket ||
-                p is LiquidEngine ||
-                p is LiquidFuelEngine ||
-                p is AtmosphericEngine ||
-                p.HasModule<ModuleEngines>() ||
-                p.HasModule<ModuleEnginesFX>());
+            foreach (PartModule m in p.Modules)
+            {
+                if (m is ModuleEngines || m is ModuleEnginesFX) return true;
+            }
+            return false;
         }
 
         public static bool IsParachute(this Part p)
         {
-            return p is Parachutes ||
-                p is HParachutes ||
-                p.HasModule<ModuleParachute>();
+            foreach (PartModule m in p.Modules)
+            {
+                if (m is ModuleParachute) return true;
+            }
+            return false;
         }
 
         public static bool IsLaunchClamp(this Part p)
