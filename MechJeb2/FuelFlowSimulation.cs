@@ -376,7 +376,7 @@ namespace MuMech
 
                     maxThrust = engine.thrustPercentage / 100f * engine.maxThrust;
 
-                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
+                    if (part.IsMFE())
                     {
                         correctThrust = true;
                         if (HighLogic.LoadedSceneIsFlight && engine.realIsp > 0.0f)
@@ -420,7 +420,7 @@ namespace MuMech
 
                     maxThrust = enginefx.thrustPercentage / 100f * enginefx.maxThrust;
 
-                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
+                    if (part.IsMFE())
                     {
                         correctThrust = true;
                         if (HighLogic.LoadedSceneIsFlight && enginefx.realIsp > 0.0f)

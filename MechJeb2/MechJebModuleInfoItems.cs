@@ -719,20 +719,8 @@ namespace MuMech
 
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
-
                 // NK detect necessity of atmo initial TWR
-                bool hasMFE = false;
-                if (HighLogic.LoadedSceneIsEditor)
-                {
-                    foreach (Part p in parts)
-                        if (p.Modules.Contains("ModuleEngineConfigs") || p.Modules.Contains("ModuleHybridEngine") || p.Modules.Contains("ModuleHybridEngines"))
-                        {
-                            hasMFE = true;
-                            break;
-                        }
-                }
-                else
-                    hasMFE = vesselState.hasMFE;
+                bool hasMFE = parts.Any(p => p.IsMFE());
 
                 if (showInitialMass)
                 {

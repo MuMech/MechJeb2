@@ -72,6 +72,17 @@ namespace MuMech
             return false;
         }
 
+        public static bool IsMFE(this Part p)
+        {
+            foreach(PartModule m in p.Modules)
+            {
+                if(m.ClassName == "ModuleEngineConfigs" || m.ClassName == "ModuleHybridEngine" || m.ClassName == "ModuleHybridEngines") return true;
+            }
+            return false;
+        }
+
+            
+
         public static bool IsParachute(this Part p)
         {
             foreach (PartModule m in p.Modules)
