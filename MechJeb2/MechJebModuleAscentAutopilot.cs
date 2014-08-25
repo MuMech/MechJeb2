@@ -45,6 +45,13 @@ namespace MuMech
             }
         }
 
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool limitAngle = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble maxAngle = 5;
+        public bool limitingAngle = false;
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
 
@@ -234,6 +241,26 @@ namespace MuMech
             }
 
             desiredThrustVector = desiredThrustVector.normalized;
+			
+			if (vessel.atmDensity > 0 && limitAngle)
+            {
+                Vector3d velocityError = (desiredThrustVector - vessel.srf_velocity.normalized);
+                double errorAngle = Vector3d.Angle(desiredThrustVector, vessel.srf_velocity.normalized);
+
+                // If the angle between desired and actual is greater than our limit
+                // we need to scale the error vector and subtract it from the desired vector, and renormalize
+                if (errorAngle > maxAngle)
+                {
+                    velocityError = (errorAngle - maxAngle) / errorAngle * velocityError;
+                    desiredThrustVector -= velocityError;
+                    desiredThrustVector = desiredThrustVector.normalized;
+                    limitingAngle = true;
+                }
+                else
+                    limitingAngle = false;
+            }
+
+			
             
             if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
             {
