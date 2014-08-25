@@ -47,10 +47,12 @@ namespace MuMech
 
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool limitAngle = false;
+        public bool limitAoA = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble maxAngle = 5;
-        public bool limitingAngle = false;
+        public EditableDouble maxAoA = 5;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(0, 1);
+        public bool limitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
@@ -87,24 +89,24 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-        	switch (mode)
-        	{
-        		case AscentMode.VERTICAL_ASCENT:
-        			DriveVerticalAscent(s);
-        			break;
+            switch (mode)
+            {
+                case AscentMode.VERTICAL_ASCENT:
+                    DriveVerticalAscent(s);
+                    break;
 
-        		case AscentMode.GRAVITY_TURN:
-        			DriveGravityTurn(s);
-        			break;
+                case AscentMode.GRAVITY_TURN:
+                    DriveGravityTurn(s);
+                    break;
 
-        		case AscentMode.COAST_TO_APOAPSIS:
-        			DriveCoastToApoapsis(s);
-        			break;
+                case AscentMode.COAST_TO_APOAPSIS:
+                    DriveCoastToApoapsis(s);
+                    break;
 
-        		case AscentMode.CIRCULARIZE:
-        			DriveCircularizationBurn(s);
-        			break;
-        	}
+                case AscentMode.CIRCULARIZE:
+                    DriveCircularizationBurn(s);
+                    break;
+            }
         }
 
         void DriveVerticalAscent(FlightCtrlState s)
@@ -232,7 +234,7 @@ namespace MuMech
 
                 Vector3d steerOffset = Kp * difficulty * velocityError;
 
-                //limit the amount of steering to 10 degrees. Furthemore, never steer to a FPA of > 90 (that is, never lean backward)
+                //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
                 double maxOffset = 10 * Math.PI / 180;
                 if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * Math.PI / 180;
                 if (steerOffset.magnitude > maxOffset) steerOffset = maxOffset * steerOffset.normalized;
@@ -241,36 +243,35 @@ namespace MuMech
             }
 
             desiredThrustVector = desiredThrustVector.normalized;
-			
-			if (vessel.atmDensity > 0 && limitAngle)
-            {
-                Vector3d velocityError = (desiredThrustVector - vessel.srf_velocity.normalized);
-                double errorAngle = Vector3d.Angle(desiredThrustVector, vessel.srf_velocity.normalized);
 
-                // If the angle between desired and actual is greater than our limit
-                // we need to scale the error vector and subtract it from the desired vector, and renormalize
-                if (errorAngle > maxAngle)
+            limitingAoA = limitAoA && vessel.altitude < mainBody.maxAtmosphereAltitude && Vector3.Angle(vessel.srf_velocity, desiredThrustVector) > maxAoA;
+
+            if (limitingAoA)
+            {
+                Vector3d limitedVector = Vector3.RotateTowards(vessel.srf_velocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
+
+                double dynamicPressure = vessel.srf_velocity.sqrMagnitude * vessel.staticPressure;
+
+                if (aoALimitFadeoutPressure > 0 && dynamicPressure < aoALimitFadeoutPressure)
                 {
-                    velocityError = (errorAngle - maxAngle) / errorAngle * velocityError;
-                    desiredThrustVector -= velocityError;
-                    desiredThrustVector = desiredThrustVector.normalized;
-                    limitingAngle = true;
+                    float fade = (float)(dynamicPressure / aoALimitFadeoutPressure);
+                    desiredThrustVector = Vector3.RotateTowards(desiredThrustVector, limitedVector, Mathf.PI, fade);
                 }
                 else
-                    limitingAngle = false;
+                {
+                    desiredThrustVector = limitedVector;
+                }
             }
 
-			
-            
             if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
             {
-            	var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
-            	var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
-            	core.attitude.attitudeTo(hdg, pitch, 0, this);
+                var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
+                var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
+                core.attitude.attitudeTo(hdg, pitch, 0, this);
             }
             else
             {
-            	core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
+                core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
             }
 
             status = "Gravity turn";

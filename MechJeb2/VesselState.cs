@@ -94,9 +94,9 @@ namespace MuMech
         public MovingAverage latitude = new MovingAverage();
         [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]
         public MovingAverage longitude = new MovingAverage();
-        [ValueInfoItem("Angle of Attack (pitch)", InfoItem.Category.Misc, format = "F2", units = "º")]
+        [ValueInfoItem("Angle of Attack", InfoItem.Category.Misc, format = "F2", units = "º")]
         public MovingAverage AoA = new MovingAverage();
-        [ValueInfoItem("Angle of Attach (yaw)", InfoItem.Category.Misc, format = "F2", units = "º")]
+        [ValueInfoItem("Angle of Sideslip", InfoItem.Category.Misc, format = "F2", units = "º")]
         public MovingAverage AoS = new MovingAverage();
 
         public double radius;  //distance from planet center

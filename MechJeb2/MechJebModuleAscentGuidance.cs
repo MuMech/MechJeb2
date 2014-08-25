@@ -107,11 +107,15 @@ namespace MuMech
             autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
             GUILayout.BeginHorizontal();
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (autopilot.limitingAngle) s.onHover.textColor = s.onNormal.textColor = Color.green;
-            autopilot.limitAngle = GUILayout.Toggle(autopilot.limitAngle, "Limit angle of attack to", s, GUILayout.Width(150));
-            autopilot.maxAngle.text = GUILayout.TextField(autopilot.maxAngle.text, GUILayout.Width(30));
+            if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit angle of attack to", s, GUILayout.Width(150));
+            autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
             GUILayout.Label("º", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+
+            if (autopilot.limitAoA) {
+                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "", 300);
+            }
 
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
