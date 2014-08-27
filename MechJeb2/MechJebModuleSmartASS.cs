@@ -210,6 +210,10 @@ namespace MuMech
                                 srfVelRol += 1;
                                 Engage();
                             }
+                            if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
+                                srfVelRol = -vesselState.vesselRoll.value;
+                                Engage();
+                            }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
                             GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 60);
@@ -221,6 +225,10 @@ namespace MuMech
                                 srfVelPit += 1;
                                 Engage();
                             }
+                            if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
+                                srfVelPit = vesselState.AoA.value;
+                                Engage();
+                            }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
                             GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 60);
@@ -230,6 +238,10 @@ namespace MuMech
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfVelYaw += 1;
+                                Engage();
+                            }
+                            if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
+                                srfVelYaw = -vesselState.AoS.value;
                                 Engage();
                             }
                             GUILayout.EndHorizontal();
