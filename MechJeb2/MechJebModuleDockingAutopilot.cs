@@ -63,6 +63,18 @@ namespace MuMech
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
                 RenderingManager.AddToPostDrawQueue(1, DrawBoundingBox);
+
+                // Turn off docking AP on successful docking (in case other checks for successful docking fail)
+                GameEvents.onPartCouple.Add((GameEvents.FromToAction<Part, Part> ev) =>
+                {
+                    if (dockingStep != DockingStep.OFF)
+                    {
+                        if (ev.from.vessel == vessel || ev.to.vessel == vessel)
+                        {
+                            EndDocking();
+                        }
+                    }
+                });
             }
         }
 
@@ -78,6 +90,7 @@ namespace MuMech
             core.rcs.users.Remove(this);
             core.attitude.attitudeDeactivate();
             dockingStep = DockingStep.OFF;
+            drawBoundingBox = false;
         }
 
         private double FixSpeed(double s)

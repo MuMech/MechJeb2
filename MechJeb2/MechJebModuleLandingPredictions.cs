@@ -173,21 +173,17 @@ namespace MuMech
                         if (pm is ModuleParachute)
                         {
                             ModuleParachute chute = (ModuleParachute)pm;
-                            partIsParachute = true;
                             // This is a parachute, but is it one that will be used in the landing / rentry simulation?
                             if (deployChutes && p.inverseStage >= limitChutesStage)
                             {
                                 // This chute will be used in the simualtion. Add it to the list of useage parachutes.
                                 usableChutes.Add(new SimulatedParachute(chute, patch.StartUT));
-                            }
-                            else
-                            {
-                                partDrag = p.maximum_drag;
+                                partIsParachute = true;
                             }
                         }
                     }
 
-                    if (false == partIsParachute)
+                    if (!partIsParachute)
                     {
                         // Part is not a parachute. Just use its drag value.
                         partDrag = p.maximum_drag;

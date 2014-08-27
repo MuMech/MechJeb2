@@ -308,21 +308,21 @@ namespace MuMech
 
     //Is it silly to have a Matrix2x2 and a Matrix3x3, and not a generic Matrix? Yes.
     //However I don't feel like implementing inverse() for matrices larger than 
-    //2x2, and I want Matrix3x3 to interact nicely with Vector3d.
-    public class Matrix3x3
+    //2x2, and I want Matrix3x3f to interact nicely with Vector3.
+    public class Matrix3x3f
     {
         //row index, then column index
-        private double[,] e = new double[3, 3];
+        private float[,] e = new float[3, 3];
 
-        public double this[int i, int j] 
+        public float this[int i, int j] 
         {
             get { return e[i, j]; }
             set { e[i, j] = value; }
         }
 
-        public static Vector3d operator *(Matrix3x3 M, Vector3d v) 
+        public static Vector3d operator *(Matrix3x3f M, Vector3 v) 
         {
-            Vector3d ret = Vector3d.zero;
+            Vector3 ret = Vector3.zero;
             for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
                     ret[i] += M.e[i, j] * v[j];

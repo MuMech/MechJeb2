@@ -62,6 +62,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool autoDisableSmartASS = true;
+        [GeneralInfoItem("Disable SmartASS automatically", InfoItem.Category.Misc)]
+        public void AutoDisableSmartASS()
+        {
+            autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, "Disable SmartASS automatically");
+        }
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
 
@@ -119,6 +126,11 @@ namespace MuMech
             // If any other module use the attitude controler then let them do it
             if (core.attitude.enabled && core.attitude.users.Count(u => !this.Equals(u)) > 0)
             {
+                if (autoDisableSmartASS)
+                {
+                    target = Target.OFF;
+                    if (core.attitude.users.Contains(this)) core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                }
                 GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }
             else

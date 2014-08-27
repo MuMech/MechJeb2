@@ -104,6 +104,19 @@ namespace MuMech
             core.thrust.LimitToTerminalVelocityInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
+            autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit angle of attack to", s, GUILayout.Width(150));
+            autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
+            GUILayout.Label("º", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            if (autopilot.limitAoA) {
+                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "", 300);
+            }
+
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
