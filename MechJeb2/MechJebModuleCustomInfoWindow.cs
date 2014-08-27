@@ -117,7 +117,7 @@ namespace MuMech
         int selectedItemIndex = -1;
         [Persistent(pass = (int)Pass.Global)]
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;
-        static int numCategories = Enum.GetNames(typeof(InfoItem.Category)).Length;
+        static string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         int presetIndex = 0;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -303,7 +303,7 @@ namespace MuMech
 
                 GUILayout.Label("Click an item to add it to the info window:");
 
-                itemCategory = (InfoItem.Category)GuiUtils.ArrowSelector((int)itemCategory, numCategories, itemCategory.ToString());
+                itemCategory = (InfoItem.Category)GuiUtils.ComboBox.Box((int)itemCategory, categories, this);
 
                 scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
                 foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
