@@ -51,7 +51,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble maxAoA = 5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(0, 1);
+        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(1000, 1);
         public bool limitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -89,6 +89,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            limitingAoA = false;
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -250,11 +251,9 @@ namespace MuMech
             {
                 Vector3d limitedVector = Vector3.RotateTowards(vessel.srf_velocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
 
-                double dynamicPressure = vessel.srf_velocity.sqrMagnitude * vessel.staticPressure;
-
-                if (aoALimitFadeoutPressure > 0 && dynamicPressure < aoALimitFadeoutPressure)
+                if (aoALimitFadeoutPressure > 0 && vesselState.dynamicPressure < aoALimitFadeoutPressure)
                 {
-                    float fade = (float)(dynamicPressure / aoALimitFadeoutPressure);
+                    float fade = (float)(vesselState.dynamicPressure / aoALimitFadeoutPressure);
                     desiredThrustVector = Vector3.RotateTowards(desiredThrustVector, limitedVector, Mathf.PI, fade);
                 }
                 else

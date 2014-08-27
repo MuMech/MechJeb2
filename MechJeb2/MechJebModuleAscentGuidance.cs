@@ -114,9 +114,8 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (autopilot.limitAoA) {
-                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "", 300);
+                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "", 50);
             }
-
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");

@@ -126,6 +126,8 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
+        [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "pa")]
+        public double dynamicPressure;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
         [ValueInfoItem("Intake air (all intakes open)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
@@ -260,6 +262,7 @@ namespace MuMech
             if (atmosphericPressure < vessel.mainBody.atmosphereMultiplier * 1e-6) atmosphericPressure = 0;
             atmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure);
             atmosphericDensityGrams = atmosphericDensity * 1000;
+            dynamicPressure = 0.5 * vessel.atmDensity * vessel.srf_velocity.sqrMagnitude;
 
             orbitApA.value = vessel.orbit.ApA;
             orbitPeA.value = vessel.orbit.PeA;
