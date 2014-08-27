@@ -407,6 +407,8 @@ namespace MuMech
                 core.attitude.attitudeTo(direction, reference, this);
             else
                 core.attitude.attitudeTo(attitude, reference, this);
+
+            core.attitude.pid.Reset();
         }
 
         public override GUILayoutOption[] WindowOptions()
