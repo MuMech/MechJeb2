@@ -686,6 +686,8 @@ namespace MuMech
 
             GUI.skin = GuiUtils.skin;
 
+            GuiUtils.ComboBox.DrawGUI();
+
             if (this == vessel.GetMasterMechJeb() &&
                 ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD))))
             {
