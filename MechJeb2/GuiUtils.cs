@@ -345,31 +345,6 @@ namespace MuMech
             return ArrowSelector(index, modulo, drawLabel);
         }
 
-        public static int ComboBox(int selectedItem, ref bool menuActive, string[] entries)
-        {
-            if (entries.Length == 0)
-                return 0;
-
-            if (entries.Length == 1)
-            {
-                menuActive = false;
-                GUILayout.Label(entries[0]);
-                return 0;
-            }
-
-            if (!menuActive)
-            {
-                menuActive = GUILayout.Button(entries[selectedItem]);
-            }
-            else
-            {
-                selectedItem = GUILayout.SelectionGrid(selectedItem % entries.Length, entries, 1, yellowOnHover);
-                if (GUI.changed)
-                    menuActive = false;
-            }
-            return selectedItem;
-        }
-
         public static int HoursPerDay { get { return GameSettings.KERBIN_TIME ? 6 : 24; } }
         public static int DaysPerYear { get { return GameSettings.KERBIN_TIME ? 426 : 365; } }
 
@@ -514,6 +489,89 @@ namespace MuMech
             return null;
         }
 
+        public class ComboBox
+        {
+            // Easy to use combobox class
+            // ***** For users *****
+            // Call the Box method with the latest selected item, list of text entries
+            // and an object identifying who is making the request.
+            // The result is the newly selected item.
+            // There is currently no way of knowing when a choice has been made
+
+            // Position of the popup
+            private static Rect rect;
+            // Identifier of the caller of the popup, null if nobody is waiting for a value
+            private static object popupOwner = null;
+            private static string[] entries;
+            private static bool popupActive;
+            // Result to be returned to the owner
+            private static int selectedItem;
+            // Unity identifier of the window, just needs to be unique
+            private static int id = GUIUtility.GetControlID(FocusType.Passive);
+
+            public static void DrawGUI()
+            {
+                if (popupOwner == null || rect.height == 0 || ! popupActive)
+                    return;
+
+                // Make sure the rectangle is fully on screen
+                rect.x = Math.Max(0, Math.Min(rect.x, Screen.width - rect.width));
+                rect.y = Math.Max(0, Math.Min(rect.y, Screen.height - rect.height));
+
+                rect = GUILayout.Window(id, rect, identifier =>
+                    {
+                        selectedItem = GUILayout.SelectionGrid(-1, entries, 1, yellowOnHover);
+                        if (GUI.changed)
+                            popupActive = false;
+                    }, "");
+
+                //Cancel the popup if we click outside
+                if (Event.current.type == EventType.MouseDown && !rect.Contains(Event.current.mousePosition))
+                    popupOwner = null;
+            }
+
+            public static int Box(int selectedItem, string[] entries, object caller)
+            {
+                // Trivial cases (0-1 items)
+                if (entries.Length == 0)
+                    return 0;
+                if (entries.Length == 1)
+                {
+                    GUILayout.Label(entries[0]);
+                    return 0;
+                }
+
+                // A choice has been made, update the return value
+                if (popupOwner == caller && ! ComboBox.popupActive)
+                {
+                    popupOwner = null;
+                    selectedItem = ComboBox.selectedItem;
+                }
+
+                if (GUILayout.Button(entries[selectedItem]))
+                {
+                    // Update the global state with the new items
+                    popupOwner = caller;
+                    popupActive = true;
+                    ComboBox.entries = entries;
+                    // Magic value to force position update during repaint event
+                    rect = new Rect(0, 0, 0, 0);
+                }
+                // The GetLastRect method only works during repaint event, but the Button will return false during repaint
+                if (Event.current.type == EventType.Repaint && popupOwner == caller && rect.height == 0)
+                {
+                    rect = GUILayoutUtility.GetLastRect();
+                    // But even worse, I can't find a clean way to convert from relative to absolute coordinates
+                    Vector2 mousePos = Input.mousePosition;
+                    mousePos.y = Screen.height - mousePos.y;
+                    Vector2 clippedMousePos = Event.current.mousePosition;
+                    rect.x += mousePos.x - clippedMousePos.x;
+                    rect.y += mousePos.y - clippedMousePos.y;
+                }
+
+                return selectedItem;
+            }
+        }
     }
 
     public class Coordinates
