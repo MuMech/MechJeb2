@@ -37,11 +37,14 @@ namespace MuMech
             ADVANCED,
             AUTO,
             SURFACE_PROGRADE,
-            SURFACE_RETROGRADE
+            SURFACE_RETROGRADE,
+            HORIZONTAL_PLUS,
+            HORIZONTAL_MINUS,
+            VERTICAL_PLUS
         }
-        public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE, Mode.SURFACE };
+        public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE };
         public static string[] ModeTexts = { "OBT", "SURF", "TGT", "ADV", "AUTO" };
-        public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO", "SVEL\n+", "SVEL\n-" };
+        public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO", "SVEL\n+", "SVEL\n-", "HVEL\n+", "HVEL\n-", "UP" };
 
         public static GUIStyle btNormal, btActive, btAuto;
 
@@ -190,6 +193,11 @@ namespace MuMech
                         TargetButton(Target.SURFACE_PROGRADE);
                         TargetButton(Target.SURFACE_RETROGRADE);
                         TargetButtonNoEngage(Target.SURFACE);
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        TargetButton(Target.HORIZONTAL_PLUS);
+                        TargetButton(Target.HORIZONTAL_MINUS);
+                        TargetButton(Target.VERTICAL_PLUS);
                         GUILayout.EndHorizontal();
                         if (target == Target.SURFACE) {
                             GuiUtils.SimpleTextBox("HDG:", srfHdg);
@@ -392,6 +400,18 @@ namespace MuMech
                         Quaternion.AngleAxis(-(float)srfVelPit + 180, Vector3.right) *
                         Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
                     reference = AttitudeReference.SURFACE_VELOCITY;
+                    break;
+                case Target.HORIZONTAL_PLUS:
+                    direction = Vector3d.forward;
+                    reference = AttitudeReference.SURFACE_HORIZONTAL;
+                    break;
+                case Target.HORIZONTAL_MINUS:
+                    direction = Vector3d.back;
+                    reference = AttitudeReference.SURFACE_HORIZONTAL;
+                    break;
+                case Target.VERTICAL_PLUS:
+                    direction = Vector3d.up;
+                    reference = AttitudeReference.SURFACE_NORTH;
                     break;
                 default:
                     return;
