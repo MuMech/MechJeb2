@@ -204,7 +204,6 @@ namespace MuMech
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                                 srfVelRol -= 1;
                                 Engage();
-
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfVelRol += 1;
@@ -212,6 +211,10 @@ namespace MuMech
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
                                 srfVelRol = -vesselState.vesselRoll.value;
+                                Engage();
+                            }
+                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
+                                srfVelRol = 0;
                                 Engage();
                             }
                             GUILayout.EndHorizontal();
@@ -229,6 +232,10 @@ namespace MuMech
                                 srfVelPit = vesselState.AoA.value;
                                 Engage();
                             }
+                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
+                                srfVelPit = 0;
+                                Engage();
+                            }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
                             GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 60);
@@ -242,6 +249,10 @@ namespace MuMech
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
                                 srfVelYaw = -vesselState.AoS.value;
+                                Engage();
+                            }
+                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
+                                srfVelYaw = 0;
                                 Engage();
                             }
                             GUILayout.EndHorizontal();
