@@ -238,7 +238,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if ((core.attitude.attitudeError >= 2) && (vesselState.torqueThrustPYAvailable > Math.Min( vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) * 10))
+                    if ((core.attitude.attitudeError >= 2) && ((vesselState.torqueFromEngine.x > vesselState.torqueAvailable.x * 10) || vesselState.torqueFromEngine.z > vesselState.torqueAvailable.z * 10))
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
                     }

@@ -141,11 +141,7 @@ namespace MuMech
 
         public void tuneTf()
         {
-            Vector3d torque = new Vector3d(
-                                    vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
-                                    vesselState.torqueAvailable.y,
-                                    vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
-                                          );
+            Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
 
             Vector3d ratio = new Vector3d(
                                     torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
@@ -355,11 +351,7 @@ namespace MuMech
                                                         (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
                                                     );
 
-                Vector3d torque = new Vector3d(
-                                                        vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * s.mainThrottle,
-                                                        vesselState.torqueAvailable.y,
-                                                        vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * s.mainThrottle
-                                                );
+                Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
 
                 Vector3d inertia = Vector3d.Scale(
                                                         vesselState.angularMomentum.Sign(),

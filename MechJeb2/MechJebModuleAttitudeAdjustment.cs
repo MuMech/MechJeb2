@@ -106,11 +106,8 @@ namespace MuMech
                 GUILayout.Label(core.attitude.attitudeRollMatters ? "true" : "false", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
-                Vector3d torque = new Vector3d(
-                                                        vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
-                                                        vesselState.torqueAvailable.y,
-                                                        vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
-                                                );
+                Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
+
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("torque", GUILayout.ExpandWidth(true));
                 GUILayout.Label(MuUtils.PrettyPrint(torque), GUILayout.ExpandWidth(false));

@@ -120,8 +120,10 @@ namespace MuMech
         public bool rcsThrust = false;
         public float throttleLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit + minThrustAccel * (1 - throttleLimit); } }
+        // Total base torque (including torque from SRB)
         public Vector3d torqueAvailable;
-        public double torqueThrustPYAvailable;
+        // Variable part of torque related to throttle
+        public Vector3d torqueFromEngine;
         public double massDrag;
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
@@ -361,6 +363,7 @@ namespace MuMech
             parachuteDeployed = false;
 
             torqueAvailable = Vector3d.zero;
+            torqueFromEngine = Vector3d.zero;
             ctrlTorqueAvailable = new Vector6();
 
             foreach (Part p in vessel.parts)
@@ -452,11 +455,14 @@ namespace MuMech
 
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
             torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative); // Should we use Max or Min ?            
+            torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
+            
+            torqueFromEngine += Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
 
             thrustVectorMaxThrottle = einfo.thrustMax;
             thrustVectorMinThrottle = einfo.thrustMin;
             thrustVectorLastFrame = einfo.thrustCurrent;
-            torqueThrustPYAvailable = einfo.torqueThrustPYAvailable;
+            
             maxEngineResponseTime = einfo.maxResponseTime;
         }
 
@@ -628,7 +634,8 @@ namespace MuMech
             public Vector3d thrustMin = new Vector3d(); // thrust at zero throttle
             public double maxResponseTime = 0;
 
-            public double torqueThrustPYAvailable = 0;
+            public Vector6 torqueEngineAvailable = new Vector6();
+            public Vector6 torqueEngineVariable = new Vector6();
 
             public class FuelRequirement
             {
@@ -676,44 +683,66 @@ namespace MuMech
 
                 if (!e.getFlameoutState)
                 {
-                    var thrustDirectionVector = new Vector3d();
-
-                    foreach (var xform in e.thrustTransforms) {
-                        // The rotation makes a +z vector point in the direction that molecules are ejected
-                        // from the engine.  The resulting thrust force is in the opposite direction.
-                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
-                    }
-
-                    double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
+                    Part p = e.part;
+                    ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
 
                     double usableFraction = e.thrustPercentage / 100f;
-                    if (e.useVelocityCurve) {
-                        usableFraction = e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
+                    if (e.useVelocityCurve)
+                    {
+                        usableFraction *= e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
                     }
-                    double eMaxThrust = e.maxThrust * usableFraction * cosineLosses;
-                    double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction * cosineLosses);
-                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
-                    thrustCurrent += eCurrentThrust * thrustDirectionVector;
-                    thrustMax += eMaxThrust * thrustDirectionVector;
-                    thrustMin += eMinThrust * thrustDirectionVector;
+                    for (int i = 0; i < e.thrustTransforms.Count; i++)
+                    {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
+
+                        // if there is a gimbal get the thrust direction at rest
+                        if (gimbal == null)
+                            thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
+                        else
+                            // gimbal.initRots[i] is a local rotation so we have to mulitply it with the parent world rot
+                            thrustDirectionVector = e.thrustTransforms[i].parent.rotation * gimbal.initRots[i] * thrustDirectionVector;
+
+                        double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
+
+                        double eMaxThrust = e.maxThrust * usableFraction;
+                        double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction);
+                        double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+
+                        thrustCurrent += eCurrentThrust * cosineLosses * thrustDirectionVector;
+                        thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
+                        thrustMin += eMinThrust * cosineLosses * thrustDirectionVector;
+
+                        if (gimbal != null && !gimbal.gimbalLock)
+                        {
+                            Vector3d torque = Vector3d.zero;
+
+                            Vector3d position = gimbal.gimbalTransforms[i].position - CoM;
+                            double distance = position.magnitude;
+                            double radius = Vector3.Exclude(Vector3.Project(position, e.part.vessel.ReferenceTransform.up), position).magnitude;
+
+                            torque.x = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * distance;
+                            torque.z = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * distance;
+
+                            // The "(e.part.vessel.rb_velocity * Time.fixedDeltaTime)" makes no sense to me but that's how the game does it...
+                            Vector3d position2 = position + (e.part.vessel.rb_velocity * Time.fixedDeltaTime);
+                            Vector3d radialAxis = Vector3.Exclude(Vector3.Project(position2, e.part.vessel.ReferenceTransform.up), position2);
+                            if (radialAxis.sqrMagnitude > 0.01f)
+                            {
+                                torque.y = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * radius;
+                            }
+
+                            torqueEngineAvailable.Add(torque * eCurrentThrust);
+                            torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
+                        }
+                    }
 
                     if (e.useEngineResponseTime)
                     {
                         double responseTime = 1.0 / Math.Min(e.engineAccelerationSpeed, e.engineDecelerationSpeed);
                         if (responseTime > maxResponseTime) maxResponseTime = responseTime;
-                    }
-
-                    Part p = e.part;
-                    foreach (PartModule pm in p.Modules)
-                    {
-                        ModuleGimbal gimbal = pm as ModuleGimbal;
-                        if (gimbal != null && !gimbal.gimbalLock)
-                        {
-                            double gimbalRange = gimbal.gimbalRange;
-                            torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * e.maxThrust * usableFraction * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
-                            break;
-                        }
                     }
                 }
             }
@@ -747,45 +776,66 @@ namespace MuMech
 
                 if (!e.getFlameoutState)
                 {
-                    var thrustDirectionVector = new Vector3d();
-
-                    foreach (var xform in e.thrustTransforms)
-                    {
-                        // The rotation makes a +z vector point in the direction that molecules are ejected
-                        // from the engine.  The resulting thrust force is in the opposite direction.
-                        thrustDirectionVector += xform.rotation * new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
-                    }
-
-                    double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
+                    Part p = e.part;
+                    ModuleGimbal gimbal = p.Modules.OfType<ModuleGimbal>().FirstOrDefault();
 
                     double usableFraction = e.thrustPercentage / 100f;
                     if (e.useVelocityCurve)
                     {
-                        usableFraction = e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
+                        usableFraction *= e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
                     }
-                    double eMaxThrust = e.maxThrust * usableFraction * cosineLosses;
-                    double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction * cosineLosses);
-                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
-                    thrustCurrent += eCurrentThrust * thrustDirectionVector;
-                    thrustMax += eMaxThrust * thrustDirectionVector;
-                    thrustMin += eMinThrust * thrustDirectionVector;
+                    for (int i = 0; i < e.thrustTransforms.Count; i++)
+                    {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
+
+                        // if there is a gimbal get the thrust direction at rest
+                        if (gimbal == null)
+                            thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
+                        else
+                            // gimbal.initRots[i] is a local rotation so we have to mulitply it with the parent world rot
+                            thrustDirectionVector = e.thrustTransforms[i].parent.rotation * gimbal.initRots[i] * thrustDirectionVector;
+
+                        double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
+
+                        double eMaxThrust = e.maxThrust * usableFraction;
+                        double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction);
+                        double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+
+                        thrustCurrent += eCurrentThrust * cosineLosses * thrustDirectionVector;
+                        thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
+                        thrustMin += eMinThrust * cosineLosses * thrustDirectionVector;
+
+                        if (gimbal != null && !gimbal.gimbalLock)
+                        {
+                            Vector3d torque = Vector3d.zero;
+
+                            Vector3d position = gimbal.gimbalTransforms[i].position - CoM;
+                            double distance = position.magnitude;
+                            double radius = Vector3.Exclude(Vector3.Project(position, e.part.vessel.ReferenceTransform.up), position).magnitude;
+
+                            torque.x = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * distance;
+                            torque.z = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * distance;
+
+                            // The "(e.part.vessel.rb_velocity * Time.fixedDeltaTime)" makes no sense to me but that's how the game does it...
+                            Vector3d position2 = position + (e.part.vessel.rb_velocity * Time.fixedDeltaTime);
+                            Vector3d radialAxis = Vector3.Exclude(Vector3.Project(position2, e.part.vessel.ReferenceTransform.up), position2);
+                            if (radialAxis.sqrMagnitude > 0.01f)
+                            {
+                                torque.y = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * radius;
+                            }     
+
+                            torqueEngineAvailable.Add(torque * eCurrentThrust);
+                            torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
+                        }
+                    }
 
                     if (e.useEngineResponseTime)
                     {
                         double responseTime = 1.0 / Math.Min(e.engineAccelerationSpeed, e.engineDecelerationSpeed);
                         if (responseTime > maxResponseTime) maxResponseTime = responseTime;
-                    }
-
-                    Part p = e.part;
-                    foreach (PartModule pm in p.Modules)
-                    {
-                        ModuleGimbal gimbal = pm as ModuleGimbal;
-                        if (gimbal != null && !gimbal.gimbalLock)
-                        {
-                            double gimbalRange = gimbal.gimbalRange;
-                            torqueThrustPYAvailable += Math.Sin(Math.Abs(gimbalRange) * Math.PI / 180) * eCurrentThrust * (p.Rigidbody.worldCenterOfMass - CoM).magnitude; // TODO: close enough?
-                        }
                     }
                 }
             }
