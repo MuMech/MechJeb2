@@ -368,13 +368,22 @@ namespace MuMech
 				}
         	}
 
-            Assembly assembly = Assembly.GetAssembly(typeof(MechJebCore));
+            Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
-            if (fileVersionInfo.FilePrivatePart == 0)
+            // Mono compiler is stupid and use AssemblyVersion for the AssemblyFileVersion
+            // So we use an other field to store the dev build number ...
+            Attribute[] attributes = Attribute.GetCustomAttributes(assembly, typeof(AssemblyInformationalVersionAttribute));
+            string dev_version = "";
+            if (attributes != null && attributes.Length != 0)
+            {
+                dev_version = ((AssemblyInformationalVersionAttribute)(attributes[0])).InformationalVersion;
+            }
+
+            if (dev_version == "")
                 version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
             else
-                version = "Dev #" + fileVersionInfo.FilePrivatePart;
+                version = dev_version;
 
             try
             {
