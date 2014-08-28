@@ -18,6 +18,7 @@ namespace MuMech
         TARGET_ORIENTATION,//forward = direction target is facing, up = target up
         MANEUVER_NODE,     //forward = next maneuver node direction, up = tbd
         SUN,               //forward = orbit velocity of the parent body orbiting the sun, up = radial plus of that orbit
+        SURFACE_HORIZONTAL,//forward = surface velocity horizontal component, up = surface normal
     }
 
     public class MechJebModuleAttitudeController : ComputerModule
@@ -226,6 +227,9 @@ namespace MuMech
                     fwd = orbit.TopParentOrbit().SwappedOrbitalVelocityAtUT(vesselState.time);
                     up = Planetarium.fetch.Sun.transform.position - vesselState.CoM;
                     rotRef = Quaternion.LookRotation(fwd.normalized, up);
+                    break;
+                case AttitudeReference.SURFACE_HORIZONTAL:
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.srf_velocity.normalized), vesselState.up);
                     break;
             }
             return rotRef;
