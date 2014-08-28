@@ -40,6 +40,8 @@ namespace MuMech
         public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO };
         public static string[] ModeTexts = { "OBT", "SURF", "TGT", "ADV", "AUTO" };
         public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO" };
+        public static string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
+        public static string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
         public static GUIStyle btNormal, btActive, btAuto;
 
@@ -202,10 +204,10 @@ namespace MuMech
                         break;
                     case Mode.ADVANCED:
                         GUILayout.Label("Reference:");
-                        advReference = (AttitudeReference)GuiUtils.ArrowSelector((int)advReference, Enum.GetValues(typeof(AttitudeReference)).Length, advReference.ToString());
+                        advReference = (AttitudeReference)GuiUtils.ComboBox.Box((int)advReference, ReferenceTexts, this);
 
                         GUILayout.Label("Direction:");
-                        advDirection = (Vector6.Direction)GuiUtils.ArrowSelector((int)advDirection, Enum.GetValues(typeof(Vector6.Direction)).Length, advDirection.ToString());
+                        advDirection = (Vector6.Direction)GuiUtils.ComboBox.Box((int)advDirection, directionTexts, directionTexts);
 
                         ForceRoll();
 

@@ -708,7 +708,7 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 // We're in the VAB/SPH
-                TWRbody = (int)GuiUtils.ArrowSelector(TWRbody, FlightGlobals.Bodies.Count, FlightGlobals.Bodies[(int)TWRbody].GetName());
+                TWRbody = GuiUtils.ComboBox.Box(TWRbody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
                 geeASL = FlightGlobals.Bodies[TWRbody].GeeASL;
             }
             else
