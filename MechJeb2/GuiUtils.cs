@@ -508,6 +508,30 @@ namespace MuMech
             private static int selectedItem;
             // Unity identifier of the window, just needs to be unique
             private static int id = GUIUtility.GetControlID(FocusType.Passive);
+            // ComboBox GUI Style
+            private static GUIStyle style;
+
+            static ComboBox()
+            {
+                Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+                background.wrapMode = TextureWrapMode.Clamp;
+
+                for (int x = 0; x < background.width; x++)
+                    for (int y = 0; y < background.height; y++)
+                    {
+                        if (x == 0 || x == background.width-1 || y == 0 || y == background.height-1)
+                            background.SetPixel(x, y, new Color(0, 0, 0, 1));
+                        else
+                            background.SetPixel(x, y, new Color(0.1f, 0.1f, 0.1f, 0.9f));
+                    }
+
+                background.Apply();
+
+                style = new GUIStyle(GUI.skin.window);
+                style.normal.background = background;
+                style.border.top = style.border.bottom;
+                style.padding.top = style.padding.bottom;
+            }
 
             public static void DrawGUI()
             {
@@ -523,7 +547,7 @@ namespace MuMech
                         selectedItem = GUILayout.SelectionGrid(-1, entries, 1, yellowOnHover);
                         if (GUI.changed)
                             popupActive = false;
-                    }, "");
+                    }, "", style);
 
                 //Cancel the popup if we click outside
                 if (Event.current.type == EventType.MouseDown && !rect.Contains(Event.current.mousePosition))
