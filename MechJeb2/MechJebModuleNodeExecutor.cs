@@ -20,6 +20,8 @@ namespace MuMech
         [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
         public string NextNodeBurnTime()
         {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
             return GuiUtils.TimeToDHMS(BurnTime(dV));
@@ -28,6 +30,8 @@ namespace MuMech
         [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
         public string NextNodeCountdown()
         {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
             return GuiUtils.TimeToDHMS(node.UT - BurnTime(dV) * leadFraction - vesselState.time);
