@@ -16,6 +16,23 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
+
+        [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
+        public string NextNodeBurnTime()
+        {
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            double dV = node.GetBurnVector(orbit).magnitude;
+            return GuiUtils.TimeToDHMS(BurnTime(dV));
+        }
+
+        [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
+        public string NextNodeCountdown()
+        {
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            double dV = node.GetBurnVector(orbit).magnitude;
+            return GuiUtils.TimeToDHMS(node.UT - BurnTime(dV) * leadFraction - vesselState.time);
+        }
+
         public void ExecuteOneNode(object controller)
         {
             mode = Mode.ONE_NODE;
