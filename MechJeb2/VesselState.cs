@@ -734,7 +734,7 @@ namespace MuMech
                                 torque.y = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * radius;
                             }
 
-                            torqueEngineAvailable.Add(torque * eCurrentThrust);
+                            torqueEngineAvailable.Add(torque * eMinThrust);
                             torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
                         }
                     }
@@ -825,9 +825,9 @@ namespace MuMech
                             if (radialAxis.sqrMagnitude > 0.01f)
                             {
                                 torque.y = Math.Sin(Math.Abs(gimbal.gimbalRange) * Math.PI / 180d) * radius;
-                            }     
+                            }
 
-                            torqueEngineAvailable.Add(torque * eCurrentThrust);
+                            torqueEngineAvailable.Add(torque * eMinThrust);
                             torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
                         }
                     }
