@@ -27,6 +27,7 @@ namespace MuMech
         public Vector3d lastAct = Vector3d.zero;
         public Vector3d pidAction;  //info
         protected float timeCount = 0;
+        protected Part lastReferencePart;
 
         public bool RCS_auto = false;
         public bool attitudeRCScontrol = true;
@@ -417,14 +418,17 @@ namespace MuMech
             // Todo : enable it when it's a good idea or the user had it enabled before
             part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
 
+            if (attitudeKILLROT)
+            {
+                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll) 
+                {
+                    attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
+                    lastReferencePart = vessel.GetReferenceTransformPart();
+                }
+            }
             if (userCommandingPitchYaw || userCommandingRoll)
             {
                 pid.Reset();
-                
-                if (attitudeKILLROT)
-                {
-                    attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
-                }
             }
 
             if (!attitudeRollMatters)
