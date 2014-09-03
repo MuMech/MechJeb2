@@ -699,7 +699,7 @@ namespace MuMech
                         var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
 
                         // if there is a gimbal get the thrust direction at rest
-                        if (gimbal == null)
+                        if (gimbal == null || gimbal.initRots == null || i >= gimbal.initRots.Count())
                             thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
                         else
                             // gimbal.initRots[i] is a local rotation so we have to mulitply it with the parent world rot
@@ -715,7 +715,7 @@ namespace MuMech
                         thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
                         thrustMin += eMinThrust * cosineLosses * thrustDirectionVector;
 
-                        if (gimbal != null && !gimbal.gimbalLock)
+                        if (gimbal != null && !gimbal.gimbalLock && gimbal.initRots != null && i < gimbal.initRots.Count())
                         {
                             Vector3d torque = Vector3d.zero;
 
@@ -792,7 +792,7 @@ namespace MuMech
                         var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
 
                         // if there is a gimbal get the thrust direction at rest
-                        if (gimbal == null)
+                        if (gimbal == null || gimbal.initRots == null || i >= gimbal.initRots.Count())
                             thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
                         else
                             // gimbal.initRots[i] is a local rotation so we have to mulitply it with the parent world rot
@@ -808,7 +808,7 @@ namespace MuMech
                         thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
                         thrustMin += eMinThrust * cosineLosses * thrustDirectionVector;
 
-                        if (gimbal != null && !gimbal.gimbalLock)
+                        if (gimbal != null && !gimbal.gimbalLock && gimbal.initRots != null && i < gimbal.initRots.Count())
                         {
                             Vector3d torque = Vector3d.zero;
 
