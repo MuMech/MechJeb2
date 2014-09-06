@@ -692,12 +692,19 @@ namespace MuMech
                         usableFraction *= e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
                     }
 
+                    float maxThrust = e.maxThrust / (float)e.thrustTransforms.Count;
+                    float minThrust = e.minThrust / (float)e.thrustTransforms.Count;
+
+                    double eMaxThrust = maxThrust * usableFraction;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : (minThrust * usableFraction);
+                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+
+                    // The rotation makes a +z vector point in the direction that molecules are ejected
+                    // from the engine.  The resulting thrust force is in the opposite direction.
+                    var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
+
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
-                        // The rotation makes a +z vector point in the direction that molecules are ejected
-                        // from the engine.  The resulting thrust force is in the opposite direction.
-                        var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
-
                         // if there is a gimbal get the thrust direction at rest
                         if (gimbal == null || gimbal.initRots == null || i >= gimbal.initRots.Count())
                             thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
@@ -706,10 +713,6 @@ namespace MuMech
                             thrustDirectionVector = e.thrustTransforms[i].parent.rotation * gimbal.initRots[i] * thrustDirectionVector;
 
                         double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
-
-                        double eMaxThrust = e.maxThrust * usableFraction;
-                        double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction);
-                        double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
                         thrustCurrent += eCurrentThrust * cosineLosses * thrustDirectionVector;
                         thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
@@ -785,12 +788,19 @@ namespace MuMech
                         usableFraction *= e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
                     }
 
+                    float maxThrust = e.maxThrust / (float)e.thrustTransforms.Count;
+                    float minThrust = e.minThrust / (float)e.thrustTransforms.Count;
+
+                    double eMaxThrust = maxThrust * usableFraction;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : (minThrust * usableFraction);
+                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+
+                    // The rotation makes a +z vector point in the direction that molecules are ejected
+                    // from the engine.  The resulting thrust force is in the opposite direction.
+                    var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
+
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
-                        // The rotation makes a +z vector point in the direction that molecules are ejected
-                        // from the engine.  The resulting thrust force is in the opposite direction.
-                        var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
-
                         // if there is a gimbal get the thrust direction at rest
                         if (gimbal == null || gimbal.initRots == null || i >= gimbal.initRots.Count())
                             thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
@@ -799,10 +809,6 @@ namespace MuMech
                             thrustDirectionVector = e.thrustTransforms[i].parent.rotation * gimbal.initRots[i] * thrustDirectionVector;
 
                         double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
-
-                        double eMaxThrust = e.maxThrust * usableFraction;
-                        double eMinThrust = e.throttleLocked ? eMaxThrust : (e.minThrust * usableFraction);
-                        double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
                         thrustCurrent += eCurrentThrust * cosineLosses * thrustDirectionVector;
                         thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
