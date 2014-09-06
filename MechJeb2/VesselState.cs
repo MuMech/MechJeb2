@@ -699,12 +699,12 @@ namespace MuMech
                     double eMinThrust = e.throttleLocked ? eMaxThrust : (minThrust * usableFraction);
                     double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
-                    // The rotation makes a +z vector point in the direction that molecules are ejected
-                    // from the engine.  The resulting thrust force is in the opposite direction.
-                    var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
-
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        var thrustDirectionVector = new Vector3d(0, 0, -1);
+
                         // if there is a gimbal get the thrust direction at rest
                         if (gimbal == null || gimbal.initRots == null || i >= gimbal.initRots.Count())
                             thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
@@ -795,12 +795,12 @@ namespace MuMech
                     double eMinThrust = e.throttleLocked ? eMaxThrust : (minThrust * usableFraction);
                     double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
 
-                    // The rotation makes a +z vector point in the direction that molecules are ejected
-                    // from the engine.  The resulting thrust force is in the opposite direction.
-                    var thrustDirectionVector = new Vector3d(0, 0, -1d / (double)e.thrustTransforms.Count);
-
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        var thrustDirectionVector = new Vector3d(0, 0, -1);
+
                         // if there is a gimbal get the thrust direction at rest
                         if (gimbal == null || gimbal.initRots == null || i >= gimbal.initRots.Count())
                             thrustDirectionVector = e.thrustTransforms[i].rotation * thrustDirectionVector;
