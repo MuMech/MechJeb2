@@ -171,7 +171,7 @@ namespace MuMech
             public GimbalExtTorqueVector torqueVector;
         }
 
-        private static Dictionary<string, GimbalExt> gimbalExtDict;
+        public static Dictionary<string, GimbalExt> gimbalExtDict;
 
         public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
@@ -646,7 +646,7 @@ namespace MuMech
             return ret;
         }
 
-        public static GimbalExt getGimbalExt(Part p, out PartModule pm)
+        private static GimbalExt getGimbalExt(Part p, out PartModule pm)
         {
             for (int i = 0; i < p.Modules.Count; i++)
             {
@@ -663,32 +663,35 @@ namespace MuMech
         }
 
         // The delgates implentation for the null gimbal ( no gimbal present)
-        public bool nullGimbalIsValid(PartModule p)
+        private bool nullGimbalIsValid(PartModule p)
         {
             return true;
         }
 
-        public Vector3d nullGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
+        private Vector3d nullGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
         {
             return Vector3d.zero;
         }
 
-        public Quaternion nullGimbalInitialRot(PartModule p, Transform engineTransform, int i)
+        private Quaternion nullGimbalInitialRot(PartModule p, Transform engineTransform, int i)
         {
             return engineTransform.rotation;
         }
 
         // The delgates implentation for the stock gimbal
-        public bool stockGimbalIsValid(PartModule p)
+        private bool stockGimbalIsValid(PartModule p)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
             return gimbal.initRots.Count() > 0;
         }
 
-        public Vector3d stockGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
+        private Vector3d stockGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
             Vector3d torque = Vector3d.zero;
+
+            if (gimbal.gimbalLock)
+                return Vector3d.zero;
 
             Vector3d position = gimbal.gimbalTransforms[i].position - CoM;
             double distance = position.magnitude;
@@ -708,7 +711,7 @@ namespace MuMech
             return torque;
         }
 
-        public Quaternion stockGimbalInitialRot(PartModule p, Transform engineTransform, int i)
+        private Quaternion stockGimbalInitialRot(PartModule p, Transform engineTransform, int i)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
             return engineTransform.parent.rotation * gimbal.initRots[i];
