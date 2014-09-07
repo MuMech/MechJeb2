@@ -107,10 +107,7 @@ namespace MuMech
             SetupMainToolbarButton();
             foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
             {
-                if (!module.hidden && module.showInCurrentScene)
-                {
-                    SetupToolbarButton(module, module.isActive());
-                }
+                SetupToolbarButton(module, module.isActive());
             }
         }
 
