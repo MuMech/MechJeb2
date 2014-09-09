@@ -392,7 +392,7 @@ namespace MuMech
                     reference = advReference;
                     break;
                 case Target.SURFACE_PROGRADE:
-                    attitude = Quaternion.AngleAxis(-(float)srfVelRol, Vector3.forward) *
+                    attitude = Quaternion.AngleAxis(-(float) srfVelRol, Vector3.forward) *
                         Quaternion.AngleAxis(-(float)srfVelPit, Vector3.right) *
                         Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
                     reference = AttitudeReference.SURFACE_VELOCITY;

@@ -36,7 +36,7 @@ namespace MuMech
 
             if (!core.attitude.useSAS)
             {
-                core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto tunning");
+                core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
                 
                 if (!core.attitude.Tf_autoTune)
                 {
