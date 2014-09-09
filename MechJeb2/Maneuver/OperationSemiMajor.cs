@@ -20,23 +20,16 @@ namespace MuMech
         {
             GuiUtils.SimpleTextBox ("New Semi-Major Axis:", newSMA, "km");
             timeSelector.DoChooseTimeGUI();
-
-            try
-            {
-                double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-                if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence)
-                {
-                    GUIStyle s = new GUIStyle(GUI.skin.label);
-                    s.normal.textColor = Color.yellow;
-                    GUILayout.Label("Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit", s);
-                }
-            }
-            catch(Exception) {}
         }
 
         public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+
+            if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence)
+            {
+                errorMessage = "Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit";
+            }
 
             if(o.Radius(UT) > 2*newSMA)
             {
