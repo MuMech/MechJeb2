@@ -714,7 +714,14 @@ namespace MuMech
         private Quaternion stockGimbalInitialRot(PartModule p, Transform engineTransform, int i)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
-            return engineTransform.parent.rotation * gimbal.initRots[i];
+            // Save the current local rot
+            Quaternion save = gimbal.gimbalTransforms[i].localRotation;
+            // Apply the default rot and let unity compute the world rot
+            gimbal.gimbalTransforms[i].localRotation = gimbal.initRots[i];
+            Quaternion initRot = gimbal.gimbalTransforms[i].rotation;
+            // Restore the current local rot
+            gimbal.gimbalTransforms[i].localRotation = save;
+            return initRot;
         }
 
         // Used during the vesselState constructor; distilled to other
@@ -792,14 +799,16 @@ namespace MuMech
 
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
-                        // The rotation makes a +z vector point in the direction that molecules are ejected
-                        // from the engine.  The resulting thrust force is in the opposite direction.
-                        var thrustDirectionVector = new Vector3d(0, 0, -1);
-
                         PartModule gimbal;
                         GimbalExt gimbalExt = VesselState.getGimbalExt(p, out gimbal);
 
-                        thrustDirectionVector = gimbalExt.initialRot(gimbal, e.thrustTransforms[i], i) * thrustDirectionVector;
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        // This gives us the thrust direction at rest state fro gimbaled engines
+                        Vector3d thrustDirectionVector = gimbalExt.initialRot(gimbal, e.thrustTransforms[i], i) * Vector3d.back;
+                        // This one would give us the current thrust direction including current gimbal
+                        // Not sure which one is the best one to use.
+                        //thrustDirectionVector = e.thrustTransforms[i].rotation * Vector3d.back;
 
                         double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
 
@@ -867,14 +876,16 @@ namespace MuMech
 
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
-                        // The rotation makes a +z vector point in the direction that molecules are ejected
-                        // from the engine.  The resulting thrust force is in the opposite direction.
-                        var thrustDirectionVector = new Vector3d(0, 0, -1);
-
                         PartModule gimbal;
                         GimbalExt gimbalExt = VesselState.getGimbalExt(p, out gimbal);
 
-                        thrustDirectionVector = gimbalExt.initialRot(gimbal, e.thrustTransforms[i], i) * thrustDirectionVector;
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        // This gives us the thrust direction at rest state fro gimbaled engines
+                        Vector3d thrustDirectionVector = gimbalExt.initialRot(gimbal, e.thrustTransforms[i], i) * Vector3d.back;
+                        // This one would give us the current thrust direction including current gimbal
+                        // Not sure which one is the best one to use.
+                        //thrustDirectionVector = e.thrustTransforms[i].rotation * Vector3d.back;
 
                         double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
 
