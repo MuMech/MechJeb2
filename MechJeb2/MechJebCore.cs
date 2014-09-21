@@ -614,7 +614,8 @@ namespace MuMech
             GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
             GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
 
-            EditorLogic.fetch.Unlock("MechJeb_noclick");
+            if (EditorLogic.fetch != null)
+                EditorLogic.fetch.Unlock("MechJeb_noclick");
 
             foreach (ComputerModule module in computerModules)
             {
