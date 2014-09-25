@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,6 +9,7 @@ using UnityEngine;
 using KSP.IO;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using File = KSP.IO.File;
 
 namespace MuMech
 {
@@ -545,7 +547,7 @@ namespace MuMech
             if (computerModules.Count == 0) return;
 
             // .23 added a call to OnSave for undocking/decoupling vessel before they are properly init ...
-            if (HighLogic.LoadedSceneIsFlight && vessel.vesselName == null)
+            if (HighLogic.LoadedSceneIsFlight && vessel != null && vessel.vesselName == null)
                 return;
 
             try
@@ -582,9 +584,14 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
-                vesselName = string.Join("_", vesselName.Split(System.IO.Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
+                // The EDITOR => FLIGHT transition is annoying to handle. OnDestroy is called when HighLogic.LoadedSceneIsEditor is already false
+                // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
+                if (vessel != null)
+                {
+                    string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
+                    vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
+                    type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
+                }
 
                 if (lastFocus == vessel)
                 {
@@ -599,13 +606,16 @@ namespace MuMech
 
         public void OnDestroy()
         {
-            if (this == vessel.GetMasterMechJeb() && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
+            if (this == vessel.GetMasterMechJeb() && (vessel == null || vessel.isActiveVessel))
             {
                 OnSave(null);
             }
 
             GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
             GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
+
+            if (EditorLogic.fetch != null)
+                EditorLogic.fetch.Unlock("MechJeb_noclick");
 
             foreach (ComputerModule module in computerModules)
             {
