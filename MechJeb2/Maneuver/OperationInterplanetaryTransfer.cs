@@ -7,13 +7,24 @@ namespace MuMech
     {
         public override string getName() { return "transfer to another planet";}
 
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        private bool waitForPhaseAngle = true;
+
         public OperationInterplanetaryTransfer ()
         {
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GUILayout.Label("Schedule the burn at the next transfer window.");
+            GUILayout.Label("Schedule the burn:");
+            waitForPhaseAngle = GUILayout.Toggle(waitForPhaseAngle, "at the next transfer window.");
+            waitForPhaseAngle = !GUILayout.Toggle(!waitForPhaseAngle, "as soon as possible");
+
+            if (!waitForPhaseAngle)
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}};
+                GUILayout.Label("Using this mode voids your warranty", s);
+            }
         }
 
         public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
@@ -51,7 +62,7 @@ namespace MuMech
                 }
             }
 
-            var dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, target.TargetOrbit, true, out UT);
+            var dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, target.TargetOrbit, waitForPhaseAngle, out UT);
             return new ManeuverParameters(dV, UT);
         }
     }
