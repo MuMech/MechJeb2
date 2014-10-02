@@ -87,6 +87,8 @@ namespace MuMech
             res.Sort((x,y) => x.getName().CompareTo(y.getName()));
             return res.ToArray();
         }
+
+		public virtual bool draggable { get { return true;}}
     }
 }
 
