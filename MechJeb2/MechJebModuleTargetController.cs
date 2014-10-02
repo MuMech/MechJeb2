@@ -130,7 +130,11 @@ namespace MuMech
 
         public Orbit TargetOrbit
         {
-            get { return target.GetOrbit(); }
+            get {
+                if (target == null)
+                    return null;
+                return target.GetOrbit();
+            }
         }
 
         public Vector3 Position

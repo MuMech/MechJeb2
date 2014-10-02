@@ -21,7 +21,16 @@ namespace MuMech
     public class EditableDoubleMult : IEditable
     {
         [Persistent]
-        public double val;
+        public double _val;
+		public virtual double val
+		{
+			get { return _val; }
+			set
+			{
+				_val = value;
+				_text = (_val / multiplier).ToString();
+			}
+		}
         public readonly double multiplier;
 
         public bool parsed;
@@ -77,6 +86,16 @@ namespace MuMech
         {
             _text = GuiUtils.TimeToDHMS(seconds);
         }
+
+		public override double val
+		{
+			get { return _val; }
+			set
+			{
+				_val = value;
+				_text = GuiUtils.TimeToDHMS(_val);
+			}
+		}
 
         public override string text
         {
@@ -539,6 +558,7 @@ namespace MuMech
 
                 style = new GUIStyle(GUI.skin.window);
                 style.normal.background = background;
+                style.onNormal.background = background;
                 style.border.top = style.border.bottom;
                 style.padding.top = style.padding.bottom;
             }
@@ -580,10 +600,14 @@ namespace MuMech
                 {
                     popupOwner = null;
                     selectedItem = ComboBox.selectedItem;
+                    GUI.changed = true;
                 }
 
+                bool guiChanged = GUI.changed;
                 if (GUILayout.Button(entries[selectedItem]))
                 {
+                    // We will set the changed status when we return from the menu instead
+                    GUI.changed = guiChanged;
                     // Update the global state with the new items
                     popupOwner = caller;
                     popupActive = true;

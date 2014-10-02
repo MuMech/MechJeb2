@@ -320,6 +320,19 @@ namespace MuMech
             set { e[i, j] = value; }
         }
 
+		public Matrix3x3f transpose()
+		{
+			Matrix3x3f ret = new Matrix3x3f();
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					ret.e[i, j] = e[j, i];
+				}
+			}
+			return ret;
+		}
+
         public static Vector3d operator *(Matrix3x3f M, Vector3 v) 
         {
             Vector3 ret = Vector3.zero;

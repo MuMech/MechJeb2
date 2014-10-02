@@ -74,14 +74,20 @@ namespace MuMech
             return new GUILayoutOption[0];
         }
 
-        protected virtual void WindowGUI(int windowID)
+        protected void WindowGUI(int windowID, bool draggable)
         {
             if (GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
             {
                 enabled = false;
             }
 
-            GUI.DragWindow();
+            if (draggable)
+                GUI.DragWindow();
+        }
+
+        protected virtual void WindowGUI(int windowID)
+        {
+            WindowGUI(windowID, true);
         }
 
         public virtual void DrawGUI(bool inEditor)

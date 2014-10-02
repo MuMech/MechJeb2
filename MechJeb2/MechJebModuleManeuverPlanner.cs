@@ -65,7 +65,14 @@ namespace MuMech
                 }
             }
 
-            operation[operationId].DoParametersGUI(o, UT, core.target);
+            try
+            {
+                operation[operationId].DoParametersGUI(o, UT, core.target);
+            }
+            catch(Exception e)
+            {
+                Debug.Log(e.Message + "\n" + e.StackTrace);
+            }
 
             if (anyNodeExists)
                 GUILayout.Label("after the last maneuver node.");
@@ -146,7 +153,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.WindowGUI(windowID);
+            base.WindowGUI(windowID, operation[operationId].draggable);
         }
 
         public List<ManeuverNode> GetManeuverNodes()
