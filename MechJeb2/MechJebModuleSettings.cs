@@ -16,6 +16,9 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public int skinId = 0;
+
+        [Persistent(pass = (int)(Pass.Global))]
+        public EditableDouble UIScale = 1.0;
         
         [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideBrakeOnEject = false;
@@ -23,6 +26,8 @@ namespace MuMech
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
+
+            GuiUtils.SetGUIScale(UIScale.val);
 
             if (useOldSkin)
             {
@@ -67,9 +72,16 @@ namespace MuMech
                     skinId = 2;
                 }
             }
-            
-			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-			ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("UI Scale:", GUILayout.ExpandWidth(true));
+            UIScale.text = GUILayout.TextField(UIScale.text, GUILayout.Width(60));
+            GUILayout.EndHorizontal();
+
+            GuiUtils.SetGUIScale(UIScale.val);
+
+            MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
             if (ToolbarManager.ToolbarAvailable)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();

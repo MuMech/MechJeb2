@@ -227,8 +227,18 @@ namespace MuMech
 
         public enum SkinType { Default, MechJeb1, Compact }
         public static GUISkin skin;
+        public static float scale = 1;
+        public static int scaledScreenWidth = 1;
+        public static int scaledScreenHeight = 1;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
+
+        public static void SetGUIScale(double s)
+        {
+            scale = Mathf.Clamp((float)s, 0.2f, 5f);
+            scaledScreenHeight = Mathf.RoundToInt(Screen.height / GuiUtils.scale);
+            scaledScreenWidth = Mathf.RoundToInt(Screen.width / GuiUtils.scale);
+        }
 
         public static void CopyDefaultSkin()
         {
@@ -434,7 +444,7 @@ namespace MuMech
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
                 if (m.enabled && m.showInCurrentScene
-                    && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
+                    && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / GuiUtils.scale))
                 {
                     return true;
                 }
@@ -539,8 +549,8 @@ namespace MuMech
                     return;
 
                 // Make sure the rectangle is fully on screen
-                rect.x = Math.Max(0, Math.Min(rect.x, Screen.width - rect.width));
-                rect.y = Math.Max(0, Math.Min(rect.y, Screen.height - rect.height));
+                rect.x = Math.Max(0, Math.Min(rect.x, scaledScreenWidth - rect.width));
+                rect.y = Math.Max(0, Math.Min(rect.y, scaledScreenHeight - rect.height));
 
                 rect = GUILayout.Window(id, rect, identifier =>
                     {
@@ -589,8 +599,8 @@ namespace MuMech
                     Vector2 mousePos = Input.mousePosition;
                     mousePos.y = Screen.height - mousePos.y;
                     Vector2 clippedMousePos = Event.current.mousePosition;
-                    rect.x += mousePos.x - clippedMousePos.x;
-                    rect.y += mousePos.y - clippedMousePos.y;
+                    rect.x = (rect.x + mousePos.x) / scale - clippedMousePos.x;
+                    rect.y = (rect.y + mousePos.y) / scale - clippedMousePos.y;
                 }
 
                 return selectedItem;

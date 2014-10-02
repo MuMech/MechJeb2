@@ -241,8 +241,9 @@ namespace MuMech
 
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
-            GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (!HideMenuButton && GUI.RepeatButton(new Rect(windowVPos, Screen.width - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            Matrix4x4 previousGuiMatrix = GUI.matrix;
+            GUI.matrix = GUI.matrix * Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
+            if (!HideMenuButton && GUI.RepeatButton(new Rect(windowVPos, GuiUtils.scaledScreenWidth - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
             {
                 if (Event.current.button == 0)
                 {
@@ -253,18 +254,18 @@ namespace MuMech
                     movingButton = true;
                 }
             }
-            GUI.matrix = Matrix4x4.identity;
+            GUI.matrix = previousGuiMatrix;
 
             GUI.depth = -99;
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                Rect pos = new Rect(Screen.width - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, Screen.height - windowPos.height), windowPos.width, windowPos.height );
+                Rect pos = new Rect(GuiUtils.scaledScreenWidth - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height );
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
             {
-                windowPos = new Rect(Screen.width, Screen.height, 0, 0); // make it small so the mouse can't hoover it
+                windowPos = new Rect(GuiUtils.scaledScreenWidth, GuiUtils.scaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
             }
 
             GUI.depth = -98;
@@ -298,7 +299,7 @@ namespace MuMech
             if (movingButton)
                 if (Input.GetMouseButton(1))
                 {
-                    windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, - Screen.height, -100);
+                    windowVPos = Mathf.Clamp(Input.mousePosition.y - GuiUtils.scaledScreenHeight - 50, - GuiUtils.scaledScreenHeight, -100);
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {

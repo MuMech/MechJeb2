@@ -697,19 +697,21 @@ namespace MuMech
 
         private void OnGUI()
         {
-            if (!showGui) return;
+            if (!showGui || this != vessel.GetMasterMechJeb()) return;
 
-            GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
-
-            GuiUtils.CheckSkin();
-
-            GUI.skin = GuiUtils.skin;
-
-            GuiUtils.ComboBox.DrawGUI();
-
-            if (this == vessel.GetMasterMechJeb() &&
-                ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD))))
+            if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD)))
             {
+                Matrix4x4 previousGuiMatrix = GUI.matrix;
+                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.scale, GuiUtils.scale, 1));
+
+                GuiUtils.ComboBox.DrawGUI();
+
+                GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
+
+                GuiUtils.CheckSkin();
+
+                GUI.skin = GuiUtils.skin;
+
                 foreach (DisplayModule module in GetComputerModules<DisplayModule>())
                 {
                     try
@@ -723,6 +725,7 @@ namespace MuMech
                 }
 
                 if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
+                GUI.matrix = previousGuiMatrix;
             }
         }
 

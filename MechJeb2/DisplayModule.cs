@@ -24,22 +24,22 @@ namespace MuMech
                 if (!HighLogic.LoadedSceneIsEditor)
                 {
                     windowVector = new Vector4(
-                        Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
-                        Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
+                        Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
+                        Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
                         value.width, value.height
                     );
-                    windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, Screen.width - 10);
-                    windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, Screen.height - 10);
+                    windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
+                    windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
                 }
                 else
                 {
                     windowVectorEditor = new Vector4(
-                        Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
-                        Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
+                        Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
+                        Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
                         value.width, value.height
                     );
-                    windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, Screen.width - 10);
-                    windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, Screen.height - 10);
+                    windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
+                    windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
                 }
             }
         }
