@@ -552,7 +552,7 @@ namespace MuMech
                         if (x == 0 || x == background.width-1 || y == 0 || y == background.height-1)
                             background.SetPixel(x, y, new Color(0, 0, 0, 1));
                         else
-                            background.SetPixel(x, y, new Color(0.1f, 0.1f, 0.1f, 0.9f));
+                            background.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
                     }
 
                 background.Apply();
