@@ -12,7 +12,7 @@ namespace MuMech
 
         public OperationApoapsis ()
         {
-            timeSelector = new TimeSelector(new TimeReference[] {TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW});
+            timeSelector = new TimeSelector(new TimeReference[] {TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING});
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
