@@ -608,7 +608,7 @@ namespace MuMech
                 }
 
                 bool guiChanged = GUI.changed;
-                if (GUILayout.Button(entries[selectedItem]))
+                if (GUILayout.Button("↓ " + entries[selectedItem] + " ↓"))
                 {
                     // We will set the changed status when we return from the menu instead
                     GUI.changed = guiChanged;
