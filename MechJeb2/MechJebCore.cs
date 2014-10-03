@@ -43,7 +43,7 @@ namespace MuMech
         [KSPField]
         public ConfigNode partSettings;
 
-        private bool weLockedEditor = false;
+        private bool weLockedInputs = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
         protected bool wasMasterAndFocus = false;
@@ -614,8 +614,11 @@ namespace MuMech
             GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
             GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
 
-            if (EditorLogic.fetch != null)
-                EditorLogic.fetch.Unlock("MechJeb_noclick");
+            if (weLockedInputs)
+            {
+                InputLockManager.RemoveControlLock("MechJeb_noclick");
+                ManeuverGizmo.HasMouseFocus = false;
+            }
 
             foreach (ComputerModule module in computerModules)
             {
@@ -725,6 +728,7 @@ namespace MuMech
                 }
 
                 if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
+                if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium) PreventInFlightClickthrough();
                 GUI.matrix = previousGuiMatrix;
             }
         }
@@ -739,15 +743,33 @@ namespace MuMech
         void PreventEditorClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedEditor && mouseOverWindow)
+            if (!weLockedInputs && mouseOverWindow)
             {
                 EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
-                weLockedEditor = true;
+                weLockedInputs = true;
             }
-            if (weLockedEditor && !mouseOverWindow)
+            if (weLockedInputs && !mouseOverWindow)
             {
                 EditorLogic.fetch.Unlock("MechJeb_noclick");
-                weLockedEditor = false;
+                weLockedInputs = false;
+            }
+        }
+
+        void PreventInFlightClickthrough()
+        {
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
+            if (!weLockedInputs && mouseOverWindow)
+            {
+                InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP | ControlTypes.ACTIONS_ALL, "MechJeb_noclick");
+                // Setting this prevents the mouse wheel to zoom in/out while in map mode
+                ManeuverGizmo.HasMouseFocus = true;
+                weLockedInputs = true;
+            }
+            if (weLockedInputs && !mouseOverWindow)
+            {
+                InputLockManager.RemoveControlLock("MechJeb_noclick");
+                ManeuverGizmo.HasMouseFocus = false;
+                weLockedInputs = false;
             }
         }
 
