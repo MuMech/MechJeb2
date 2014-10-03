@@ -249,6 +249,7 @@ namespace MuMech
         public static float scale = 1;
         public static int scaledScreenWidth = 1;
         public static int scaledScreenHeight = 1;
+        public static bool dontUseDropDownMenu = false;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
 
@@ -586,6 +587,9 @@ namespace MuMech
 
             public static int Box(int selectedItem, string[] entries, object caller)
             {
+                if (dontUseDropDownMenu)
+                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem]);
+
                 // Trivial cases (0-1 items)
                 if (entries.Length == 0)
                     return 0;

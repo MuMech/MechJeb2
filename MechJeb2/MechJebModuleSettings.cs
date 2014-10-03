@@ -19,6 +19,9 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Global))]
         public EditableDouble UIScale = 1.0;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool dontUseDropDownMenu = false;
         
         [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideBrakeOnEject = false;
@@ -28,6 +31,7 @@ namespace MuMech
             base.OnLoad(local, type, global);
 
             GuiUtils.SetGUIScale(UIScale.val);
+            GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
 
             if (useOldSkin)
             {
@@ -79,6 +83,9 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GuiUtils.SetGUIScale(UIScale.val);
+
+            dontUseDropDownMenu = GUILayout.Toggle(dontUseDropDownMenu, "Replace drop down menu with arrow selector");
+            GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
 
             MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
