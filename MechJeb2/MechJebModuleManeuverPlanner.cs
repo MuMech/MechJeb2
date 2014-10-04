@@ -69,7 +69,7 @@ namespace MuMech
             {
                 operation[operationId].DoParametersGUI(o, UT, core.target);
             }
-            catch (ArgumentException) { } // Would be better to fix the problem but this will do for now
+            catch (Exception) { } // TODO: Would be better to fix the problem but this will do for now
 
             if (anyNodeExists)
                 GUILayout.Label("after the last maneuver node.");
