@@ -138,30 +138,28 @@ namespace MuMech
             if (!ToolbarManager.ToolbarAvailable)
                 return;
 
-
             IButton button;
             String name = CleanName(module.GetName());
             if (!toolbarButtons.ContainsKey(name))
             {
+                if (module.hidden)
+                    return;
                 print("Adding button for " + name);
                 button = ToolbarManager.Instance.add("MechJeb2", name);
                 toolbarButtons[name] = button;
                 button.ToolTip = "MechJeb " + module.GetName();
-                //button.Visibility = new MJButtonVisibility(this);
                 button.OnClick += (b) =>
                 {
                     DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModules<DisplayModule>().FirstOrDefault(m => m.GetName() == module.GetName());
                     if (mod != null)
                     {
                         mod.enabled = !mod.enabled;
-                        //print("Change " + module.GetName() + " to " + module.enabled);
                     }
                 };
             }
             else
             {
                 button = toolbarButtons[name];
-                //if (button.Visible != module.showInCurrentScene)
             }
             button.Visible = module.showInCurrentScene && !module.hidden;
             String TexturePath = "MechJeb2/Icons/" + name;
@@ -190,7 +188,6 @@ namespace MuMech
             }
 
             button.TexturePath = active ? actualIcons[TexturePathActive] : actualIcons[TexturePath];
-
         }
 
         public override void OnDestroy()
