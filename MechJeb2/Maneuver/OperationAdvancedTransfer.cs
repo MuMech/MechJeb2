@@ -98,7 +98,7 @@ namespace MuMech
 
 		void ComputeTimes(Orbit o, Orbit destination, double universalTime)
 		{
-			if (destination == null)
+			if (destination == null || o == null || o.referenceBody.orbit == null)
 				return;
 
 			double synodic_period = o.referenceBody.orbit.SynodicPeriod(destination);
