@@ -45,7 +45,7 @@ namespace MuMech
                 _text = Regex.Replace(_text, @"[^\d+-.]", ""); //throw away junk characters
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) val = parsedValue * multiplier;
+                if (parsed) _val = parsedValue * multiplier;
             }
         }
 
