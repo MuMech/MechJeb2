@@ -186,8 +186,7 @@ namespace MuMech
             runways = new List<Runway>();
 
             // Import landing sites form a user createded .cfg
-            UrlDir.UrlConfig mjConf = GameDatabase.Instance.GetConfigs("MechJeb2").FirstOrDefault();
-            if (mjConf != null)
+            foreach (var mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
             {
                 foreach (ConfigNode site in mjConf.config.GetNode("Runways").GetNodes("Runway"))
                 {

@@ -12,7 +12,7 @@ namespace MuMech
         public MechJebModuleLandingAutopilot autopilot;
         public static List<LandingSite> landingSites;
 
-        [Persistent(pass = (int)(Pass.Local))]
+        [Persistent(pass = (int)(Pass.Global|Pass.Local))]
         public int landingSiteIdx = 0;
 
         public struct LandingSite
@@ -193,10 +193,8 @@ namespace MuMech
         {
             landingSites = new List<LandingSite>();
 
-            // Import landing sites from a user createded .cfg
-            UrlDir.UrlConfig mjConf = GameDatabase.Instance.GetConfigs("MechJeb2").FirstOrDefault();
-            print("mjConf " + (mjConf != null));
-            if (mjConf != null)
+            // Import landing sites from users createded .cfg
+            foreach (var mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
             {
                 foreach (ConfigNode site in mjConf.config.GetNode("LandingSites").GetNodes("Site"))
                 {
