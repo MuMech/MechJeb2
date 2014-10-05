@@ -30,27 +30,13 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
         }
 
-        public static Runway[] runways = 
-        {
-            new Runway //The runway at KSC
-            { 
-                name = "KSC runway",
-                start = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 67 }, 
-                end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 67 } 
-            },
-            new Runway //The runway on the island off the KSC coast.
-            { 
-                name = "Island runway",
-                start = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 132 },
-                end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 132 }
-            }
-        };
+        public static List<Runway> runways;
 
         public enum Mode { AUTOLAND, HOLD, OFF };
         public Mode mode = Mode.OFF;
 
         //autoland parameters
-        public Runway runway = runways[0]; //the runway to land at
+        public Runway runway; //the runway to land at
         public EditableDouble glideslope = 3;      //the FPA to approach at during autoland
         public EditableDouble touchdownPoint = 100; //how many meters down the runway to touch down
 
@@ -59,6 +45,12 @@ namespace MuMech
         public EditableDouble targetHeading = 90;
 
         bool loweredGear = false;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (runways == null)
+                InitRunwaysList();
+        }
 
         public override void OnModuleDisabled()
         {
@@ -189,6 +181,83 @@ namespace MuMech
             return aimDir;
         }
 
+        private void InitRunwaysList()
+        {
+            runways = new List<Runway>();
+
+            // Import landing sites form a user createded .cfg
+            UrlDir.UrlConfig mjConf = GameDatabase.Instance.GetConfigs("MechJeb2").FirstOrDefault();
+            if (mjConf != null)
+            {
+                foreach (ConfigNode site in mjConf.config.GetNode("Runways").GetNodes("Runway"))
+                {
+                    string runwayName = site.GetValue("name");
+                    ConfigNode start = site.GetNode("start");
+                    ConfigNode end = site.GetNode("end");
+
+                    if (runwayName == null || start == null || end == null)
+                        continue;
+
+                    string lat = start.GetValue("latitude");
+                    string lon = start.GetValue("longitude");
+                    string alt = start.GetValue("altitude");
+
+                    if (lat == null || lon == null || alt == null)
+                        continue;
+
+                    double startLatitude, startLongitude, startAltitude;
+                    double.TryParse(lat, out startLatitude);
+                    double.TryParse(lon, out startLongitude);
+                    double.TryParse(alt, out startAltitude);
+
+                    lat = end.GetValue("latitude");
+                    lon = end.GetValue("longitude");
+                    alt = end.GetValue("altitude");
+
+                    if (lat == null || lon == null || alt == null)
+                        continue;
+
+                    double endLatitude, endLongitude, endAltitude;
+                    double.TryParse(lat, out endLatitude);
+                    double.TryParse(lon, out endLongitude);
+                    double.TryParse(alt, out endAltitude);
+
+                    string bodyName = site.GetValue("body");
+                    CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
+
+                    if (body != null && !runways.Any(p => p.name == runwayName))
+                    {
+                        runways.Add(new Runway()
+                        {
+                            name = runwayName,
+                            body = body,
+                            start = new Runway.Endpoint { latitude = startLatitude, longitude = startLongitude, altitude = startAltitude },
+                            end = new Runway.Endpoint { latitude = endLatitude, longitude = endLongitude, altitude = endAltitude }
+                        });
+                    }
+                }
+            }
+
+            // Create a default config file in MJ dir for those ?
+            if (!runways.Any(p => p.name == "KSC runway"))
+                runways.Add(new Runway //The runway at KSC
+                {
+                    name = "KSC runway",
+                    body = Planetarium.fetch.Home,
+                    start = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 67 },
+                    end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 67 }
+                });
+
+            if (!runways.Any(p => p.name == "Island runway"))
+                runways.Add(new Runway //The runway on the island off the KSC coast.
+                {
+                    name = "Island runway",
+                    body = Planetarium.fetch.Home,
+                    start = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 132 },
+                    end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 132 }
+                });
+        }
+
         public MechJebModuleSpaceplaneAutopilot(MechJebCore core) : base(core) { }
     }
 
@@ -208,6 +277,7 @@ namespace MuMech
         }
 
         public string name;
+        public CelestialBody body;
         public Endpoint start;
         public Endpoint end;
 

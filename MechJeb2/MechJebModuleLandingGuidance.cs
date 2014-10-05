@@ -10,11 +10,26 @@ namespace MuMech
     {
         public MechJebModuleLandingPredictions predictor;
         public MechJebModuleLandingAutopilot autopilot;
+        public static List<LandingSite> landingSites;
+
+        [Persistent(pass = (int)(Pass.Local))]
+        public int landingSiteIdx = 0;
+
+        public struct LandingSite
+        {
+            public string name;
+            public CelestialBody body;
+            public double latitude;
+            public double longitude;
+        }
 
         public override void OnStart(PartModule.StartState state)
         {
             predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
             autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
+
+            if (landingSites == null)
+                InitLandingSitesList();
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -47,20 +62,17 @@ namespace MuMech
 
             if (GUILayout.Button("Pick target on map")) core.target.PickPositionTargetOnMap();
 
-            if (mainBody.bodyName.ToLower().Contains("kerbin"))
+            List<LandingSite> availableLadingSites = landingSites.Where(p => p.body == mainBody).ToList();
+            if (availableLadingSites.Any())
             {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("KSC Pad"))
+                landingSiteIdx = GuiUtils.ComboBox.Box(landingSiteIdx, availableLadingSites.Select(p => p.name).ToArray(), this);
+                if (GUILayout.Button("Set", GUILayout.ExpandWidth(false)))
                 {
-                    core.target.SetPositionTarget(mainBody, -0.09694444, -74.5575);
-                }
-                if (GUILayout.Button("VAB"))
-                {
-                    core.target.SetPositionTarget(mainBody, -0.09694444, -74.617);
+                    core.target.SetPositionTarget(mainBody, landingSites[landingSiteIdx].latitude, landingSites[landingSiteIdx].longitude);
                 }
                 GUILayout.EndHorizontal();
             }
-
 
             DrawGUITogglePredictions();
 
@@ -174,6 +186,146 @@ namespace MuMech
                         GUILayout.Label("Reentry simulation timed out.");
                         break;
                 }
+            }
+        }
+
+        private void InitLandingSitesList()
+        {
+            landingSites = new List<LandingSite>();
+
+            // Import landing sites from a user createded .cfg
+            UrlDir.UrlConfig mjConf = GameDatabase.Instance.GetConfigs("MechJeb2").FirstOrDefault();
+            print("mjConf " + (mjConf != null));
+            if (mjConf != null)
+            {
+                foreach (ConfigNode site in mjConf.config.GetNode("LandingSites").GetNodes("Site"))
+                {
+                    print("site " + site);
+                    string launchSiteName = site.GetValue("name");
+                    string lat = site.GetValue("latitude");
+                    string lon = site.GetValue("longitude");
+
+                    if (launchSiteName == null || lat == null || lon == null)
+                    {
+                        print("un null");
+                        continue;
+                    }
+
+                    double latitude, longitude;
+                    double.TryParse(lat, out latitude);
+                    double.TryParse(lon, out longitude);
+
+                    string bodyName = site.GetValue("body");
+                    CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
+
+                    if (!landingSites.Any(p => p.name == launchSiteName))
+                    {
+                        print("Adding " + launchSiteName);
+                        landingSites.Add(new LandingSite()
+                        {
+                            name = launchSiteName,
+                            latitude = latitude,
+                            longitude = longitude,
+                            body = body
+                        });
+                    }
+                }
+            }
+
+            // Create a default config file in MJ dir for those ?
+            if (!landingSites.Any(p => p.name == "KSC Pad"))
+                landingSites.Add(new LandingSite()
+                {
+                    name = "KSC Pad",
+                    latitude = -0.09694444,
+                    longitude = -74.5575,
+                    body = Planetarium.fetch.Home
+                });
+
+            if (!landingSites.Any(p => p.name == "VAB"))
+                landingSites.Add(new LandingSite()
+                {
+                    name = "VAB",
+                    latitude = -0.09694444,
+                    longitude = -74.617,
+                    body = Planetarium.fetch.Home
+                });
+
+            // Import KerbTown/Kerbal-Konstructs launch site
+            foreach (var config in GameDatabase.Instance.GetConfigs("STATIC"))
+            {
+                foreach (ConfigNode instances in config.config.GetNodes("Instances"))
+                {
+                    string bodyName = instances.GetValue("CelestialBody");
+                    string radialPos = instances.GetValue("RadialPosition");
+                    string launchSiteName = instances.GetValue("LaunchSiteName");
+                    string launchSiteType = instances.GetValue("LaunchSiteType");
+
+                    if (bodyName == null || radialPos == null || launchSiteName == null || launchSiteType == null ||
+                        launchSiteType != "VAB")
+                    {
+                        continue;
+                    }
+
+                    Vector3d pos = ConfigNode.ParseVector3D(radialPos).normalized;
+                    CelestialBody body = FlightGlobals.Bodies.Find(b => b.bodyName == bodyName);
+
+                    double latitude = Math.Asin(pos.y) * 180 / Math.PI;
+                    double longitude = Math.Atan2(pos.z, pos.x) * 180 / Math.PI;
+
+                    if (body != null && !landingSites.Any(p => p.name == launchSiteName))
+                    {
+                        landingSites.Add(new LandingSite()
+                        {
+                            name = launchSiteName,
+                            latitude = !double.IsNaN(latitude) ? latitude : 0,
+                            longitude = !double.IsNaN(longitude) ? longitude : 0,
+                            body = body
+                        });
+                    }
+                }
+            }
+
+            // Import RSS Launch sites
+            UrlDir.UrlConfig rssSites = GameDatabase.Instance.GetConfigs("REALSOLARSYSTEM").FirstOrDefault();
+            if (rssSites != null)
+            {
+                foreach (ConfigNode site in rssSites.config.GetNode("LaunchSites").GetNodes("Site"))
+                {
+                    string launchSiteName = site.GetValue("displayName");
+                    ConfigNode pqsCity = site.GetNode("PQSCity");
+                    if (pqsCity == null)
+                    {
+                        continue;
+                    }
+
+                    string lat = pqsCity.GetValue("latitude");
+                    string lon = pqsCity.GetValue("longitude");
+
+                    if (launchSiteName == null || lat == null || lon == null)
+                    {
+                        continue;
+                    }
+
+                    double latitude, longitude;
+                    double.TryParse(lat, out latitude);
+                    double.TryParse(lon, out longitude);
+
+                    if (!landingSites.Any(p => p.name == launchSiteName))
+                    {
+                        landingSites.Add(new LandingSite()
+                        {
+                            name = launchSiteName,
+                            latitude = latitude,
+                            longitude = longitude,
+                            body = Planetarium.fetch.Home
+                        });
+                    }
+                }
+            }
+            if (landingSiteIdx > landingSites.Count)
+            {
+                landingSiteIdx = 0;
             }
         }
 

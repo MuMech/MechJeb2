@@ -1006,7 +1006,19 @@ namespace MuMech
             }
         }
 
-
+        [GeneralInfoItem("Lat/Lon/Alt Copy to Clipboard", InfoItem.Category.Misc, showInEditor = false)]
+        public void LatLonClipbardCopy()
+        {
+            if (GUILayout.Button("Copy Lat/Lon/Alt to Clipboard"))
+            {
+                TextEditor te = new TextEditor();
+                string result = "latitude =  " + vesselState.latitude.ToString("F6") + "\nlongitude = " + vesselState.longitude.ToString("F6") +
+                                "\naltitude = " + vessel.altitude.ToString("F2") + "\n";
+                te.content = new GUIContent(result);
+                te.SelectAll();
+                te.Copy();
+            }
+        }
 
 
         static GUIStyle _separatorStyle;
