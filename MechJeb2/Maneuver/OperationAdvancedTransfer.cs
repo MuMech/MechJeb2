@@ -32,16 +32,6 @@ namespace MuMech
 		public override bool draggable { get { return _draggable;}}
 
 		const int porkchop_Height = 200;
-		GUIStyle progressStyle;
-
-		public OperationAdvancedTransfer()
-		{
-			progressStyle = new GUIStyle();
-			progressStyle.font = GuiUtils.skin.font;
-			progressStyle.fontSize = GuiUtils.skin.label.fontSize;
-			progressStyle.fontStyle = GuiUtils.skin.label.fontStyle;
-			progressStyle.normal.textColor = GuiUtils.skin.label.normal.textColor;
-		}
 
 		public void CheckPreconditions(Orbit o, MechJebModuleTargetController target)
 		{
@@ -157,7 +147,15 @@ namespace MuMech
 			}
 			else
 			{
-				GUILayout.Box("Computing: " + worker.Progress + "%", progressStyle, new GUILayoutOption[] {
+                GUIStyle progressStyle = new GUIStyle
+                {
+                    font = GuiUtils.skin.font,
+                    fontSize = GuiUtils.skin.label.fontSize,
+                    fontStyle = GuiUtils.skin.label.fontStyle,
+                    normal = {textColor = GuiUtils.skin.label.normal.textColor}
+                };
+
+			    GUILayout.Box("Computing: " + worker.Progress + "%", progressStyle, new GUILayoutOption[] {
 					GUILayout.Width(windowWidth),
 					GUILayout.Height(porkchop_Height)});
 			}
