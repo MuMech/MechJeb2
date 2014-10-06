@@ -119,9 +119,8 @@ namespace MuMech
 
                 // Testing for launch clamp only in the Editor helps with the frame rate.
                 // TODO : cache which part are LaunchClamp ?
-                if (p.HasModule<ModuleLandingGear>() || p.HasModule<LaunchClamp>())
+                if (p.HasModule<LaunchClamp>())
                 {
-                    //Landing gear set physicalSignificance = NONE when they enter the flight scene
                     //Launch clamp mass should be ignored.
                     physicallySignificant = false;
                 }
