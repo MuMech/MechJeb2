@@ -107,12 +107,12 @@ namespace MuMech
 
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) val = parsedValue;
+                if (parsed) _val = parsedValue;
 
                 if (!parsed)
                 {
                     parsed = GuiUtils.TryParseDHMS(_text, out parsedValue);
-                    if (parsed) val = parsedValue;
+                    if (parsed) _val = parsedValue;
                 }
             }
         }
