@@ -27,6 +27,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool forceRoll = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage;
         public bool autostage
         {
@@ -42,6 +44,15 @@ namespace MuMech
                 }
             }
         }
+
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool limitAoA = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble maxAoA = 5;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(1000, 1);
+        public bool limitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
@@ -78,6 +89,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            limitingAoA = false;
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -104,7 +116,14 @@ namespace MuMech
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
             //during the vertical ascent we just thrust straight up at max throttle
-            core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+            if (forceRoll && !correctiveSteering && vesselState.altitudeTrue > 25)
+            { // pre-align roll unless correctiveSteering is active as it would just interfere with that
+            	core.attitude.attitudeTo(90 - desiredInclination, 90, 0, this);
+            }
+            else
+            {
+            	core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+            }
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             if (!vessel.LiftedOff()) status = "Awaiting liftoff";
@@ -216,7 +235,7 @@ namespace MuMech
 
                 Vector3d steerOffset = Kp * difficulty * velocityError;
 
-                //limit the amount of steering to 10 degrees. Furthemore, never steer to a FPA of > 90 (that is, never lean backward)
+                //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
                 double maxOffset = 10 * Math.PI / 180;
                 if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * Math.PI / 180;
                 if (steerOffset.magnitude > maxOffset) steerOffset = maxOffset * steerOffset.normalized;
@@ -226,7 +245,33 @@ namespace MuMech
 
             desiredThrustVector = desiredThrustVector.normalized;
 
-            core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
+            limitingAoA = limitAoA && vessel.altitude < mainBody.maxAtmosphereAltitude && Vector3.Angle(vessel.srf_velocity, desiredThrustVector) > maxAoA;
+
+            if (limitingAoA)
+            {
+                Vector3d limitedVector = Vector3.RotateTowards(vessel.srf_velocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
+
+                if (aoALimitFadeoutPressure > 0 && vesselState.dynamicPressure < aoALimitFadeoutPressure)
+                {
+                    float fade = (float)(vesselState.dynamicPressure / aoALimitFadeoutPressure);
+                    desiredThrustVector = Vector3.RotateTowards(desiredThrustVector, limitedVector, Mathf.PI, fade);
+                }
+                else
+                {
+                    desiredThrustVector = limitedVector;
+                }
+            }
+
+            if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
+            {
+                var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
+                var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
+                core.attitude.attitudeTo(hdg, pitch, 0, this);
+            }
+            else
+            {
+                core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
+            }
 
             status = "Gravity turn";
         }

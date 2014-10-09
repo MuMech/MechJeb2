@@ -18,15 +18,15 @@ namespace MuMech
         {
             GuiUtils.SimpleTextBox("Approximate final periapsis:", moonReturnAltitude, "km");
             GUILayout.Label("Schedule the burn at the next return window.");
-
-            if (o.eccentricity > 0.2)
-            {
-                errorMessage = "Warning: Recommend starting moon returns from a near-circular orbit (eccentricity < 0.2). Planned return is starting from an orbit with eccentricity " + o.eccentricity.ToString("F2") + " and so may not be accurate.";
-            }
         }
 
         public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
+            if (o.eccentricity > 0.2)
+            {
+                errorMessage = "Warning: Recommend starting moon returns from a near-circular orbit (eccentricity < 0.2). Planned return is starting from an orbit with eccentricity " + o.eccentricity.ToString("F2") + " and so may not be accurate.";
+            }
+
             if (o.referenceBody.referenceBody == null)
             {
                 throw new Exception(o.referenceBody.theName + " is not orbiting another body you could return to.");

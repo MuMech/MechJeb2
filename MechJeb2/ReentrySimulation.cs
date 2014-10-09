@@ -23,6 +23,7 @@ namespace MuMech
          double input_dt;
 
         //parameters of the problem:
+        Orbit initialOrbit;
         bool bodyHasAtmosphere;
         double seaLevelAtmospheres;
         double scaleHeight;
@@ -81,7 +82,11 @@ namespace MuMech
             input_dt = _dt;
 
             max_dt = _dt;
-            dt = max_dt;             
+            dt = max_dt;    
+
+            // Get a copy of the original orbit, to be more thread safe
+            initialOrbit = new Orbit();
+            initialOrbit.UpdateFromOrbitAtUT(_initialOrbit, _UT, _initialOrbit.referenceBody);
 
             CelestialBody body = _initialOrbit.referenceBody;
             bodyHasAtmosphere = body.atmosphere;
@@ -110,11 +115,7 @@ namespace MuMech
             orbitReenters = OrbitReenters(_initialOrbit);
 
             if (orbitReenters)
-            {
                 startUT = _UT;
-                t = startUT;
-                AdvanceToFreefallEnd(_initialOrbit);
-            }
 
             maxDragGees = 0;
             deltaVExpended = 0;
@@ -140,8 +141,12 @@ namespace MuMech
                 result.input_multiplierHasError = this.input_multiplierHasError;
                 result.input_dt = this.input_dt;
  
-
-                if (!orbitReenters) 
+                if (orbitReenters)
+                {
+                    t = startUT;
+                    AdvanceToFreefallEnd(initialOrbit);
+                }
+                else
                 {
                     result.outcome = Outcome.NO_REENTRY; return result; 
                 }

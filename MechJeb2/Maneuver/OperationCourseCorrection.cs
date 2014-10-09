@@ -30,9 +30,6 @@ namespace MuMech
             if (!target.NormalTargetExists)
                 throw new Exception("must select a target for the course correction.");
 
-            if (o.referenceBody != target.TargetOrbit.referenceBody)
-                throw new Exception("target for course correction must be in the same sphere of influence");
-
             Orbit correctionPatch = o;
             while (correctionPatch != null)
             {
@@ -44,6 +41,9 @@ namespace MuMech
                 }
                 correctionPatch = target.core.vessel.GetNextPatch(correctionPatch);
             }
+
+            if (correctionPatch == null || correctionPatch.referenceBody != target.TargetOrbit.referenceBody)
+                throw new Exception("target for course correction must be in the same sphere of influence");
 
             if (o.NextClosestApproachTime(target.TargetOrbit, UT) < UT + 1 ||
                     o.NextClosestApproachDistance(target.TargetOrbit, UT) > target.TargetOrbit.semiMajorAxis * 0.2)

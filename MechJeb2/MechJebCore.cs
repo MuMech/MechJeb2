@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,6 +9,7 @@ using UnityEngine;
 using KSP.IO;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using File = KSP.IO.File;
 
 namespace MuMech
 {
@@ -41,7 +43,7 @@ namespace MuMech
         [KSPField]
         public ConfigNode partSettings;
 
-        private bool weLockedEditor = false;
+        private bool weLockedInputs = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
         protected bool wasMasterAndFocus = false;
@@ -349,47 +351,56 @@ namespace MuMech
 
         void LoadComputerModules()
         {
-        	if (moduleRegistry == null)
-        	{
-        		moduleRegistry = new List<Type>();
-        		foreach (var ass in AppDomain.CurrentDomain.GetAssemblies())
-        		{
-        			try
-        			{
-        				foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList())
-        				{
-        					moduleRegistry.Add(module);
-        				}
-        			}
-					catch (Exception e)
-					{
-						Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
-					}
-				}
-        	}
+            if (moduleRegistry == null)
+            {
+                moduleRegistry = new List<Type>();
+                foreach (var ass in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    try
+                    {
+                        foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList())
+                        {
+                            moduleRegistry.Add(module);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " + e);
+                    }
+                }
+            }
 
-            Assembly assembly = Assembly.GetAssembly(typeof(MechJebCore));
+            Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
-            if (fileVersionInfo.FilePrivatePart == 0)
+            // Mono compiler is stupid and use AssemblyVersion for the AssemblyFileVersion
+            // So we use an other field to store the dev build number ...
+            Attribute[] attributes = Attribute.GetCustomAttributes(assembly, typeof(AssemblyInformationalVersionAttribute));
+            string dev_version = "";
+            if (attributes != null && attributes.Length != 0)
+            {
+                dev_version = ((AssemblyInformationalVersionAttribute)(attributes[0])).InformationalVersion;
+            }
+
+            if (dev_version == "")
                 version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
             else
-                version = "Dev #" + fileVersionInfo.FilePrivatePart;
+                version = dev_version;
 
             try
             {
-            	foreach (Type t in moduleRegistry)
-            	{
-            		if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
-            		    && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
-            		{
-            			AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
-            		}
-            	}
+                foreach (Type t in moduleRegistry)
+                {
+                    if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
+                        && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
+                    {
+                        AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
+                    }
+                }
             }
             catch (Exception e)
             {
-            	Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
+                Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
             }
 
             attitude = GetComputerModule<MechJebModuleAttitudeController>();
@@ -536,7 +547,7 @@ namespace MuMech
             if (computerModules.Count == 0) return;
 
             // .23 added a call to OnSave for undocking/decoupling vessel before they are properly init ...
-            if (HighLogic.LoadedSceneIsFlight && vessel.vesselName == null)
+            if (HighLogic.LoadedSceneIsFlight && vessel != null && vessel.vesselName == null)
                 return;
 
             try
@@ -573,9 +584,14 @@ namespace MuMech
 
                 if (sfsNode != null) sfsNode.nodes.Add(local);
 
-                string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
-                vesselName = string.Join("_", vesselName.Split(System.IO.Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
-                type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
+                // The EDITOR => FLIGHT transition is annoying to handle. OnDestroy is called when HighLogic.LoadedSceneIsEditor is already false
+                // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
+                if (vessel != null)
+                {
+                    string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
+                    vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
+                    type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
+                }
 
                 if (lastFocus == vessel)
                 {
@@ -590,13 +606,19 @@ namespace MuMech
 
         public void OnDestroy()
         {
-            if (this == vessel.GetMasterMechJeb() && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
+            if (this == vessel.GetMasterMechJeb() && (vessel == null || vessel.isActiveVessel))
             {
                 OnSave(null);
             }
 
             GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
             GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
+
+            if (weLockedInputs)
+            {
+                InputLockManager.RemoveControlLock("MechJeb_noclick");
+                ManeuverGizmo.HasMouseFocus = false;
+            }
 
             foreach (ComputerModule module in computerModules)
             {
@@ -678,17 +700,21 @@ namespace MuMech
 
         private void OnGUI()
         {
-            if (!showGui) return;
+            if (!showGui || this != vessel.GetMasterMechJeb()) return;
 
-            GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
-
-            GuiUtils.CheckSkin();
-
-            GUI.skin = GuiUtils.skin;
-
-            if (this == vessel.GetMasterMechJeb() &&
-                ((HighLogic.LoadedSceneIsEditor) || ((FlightGlobals.ready) && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD))))
+            if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD)))
             {
+                Matrix4x4 previousGuiMatrix = GUI.matrix;
+                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.scale, GuiUtils.scale, 1));
+
+                GuiUtils.ComboBox.DrawGUI();
+
+                GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
+
+                GuiUtils.CheckSkin();
+
+                GUI.skin = GuiUtils.skin;
+
                 foreach (DisplayModule module in GetComputerModules<DisplayModule>())
                 {
                     try
@@ -702,6 +728,8 @@ namespace MuMech
                 }
 
                 if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
+                if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium) PreventInFlightClickthrough();
+                GUI.matrix = previousGuiMatrix;
             }
         }
 
@@ -715,15 +743,33 @@ namespace MuMech
         void PreventEditorClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedEditor && mouseOverWindow)
+            if (!weLockedInputs && mouseOverWindow)
             {
                 EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
-                weLockedEditor = true;
+                weLockedInputs = true;
             }
-            if (weLockedEditor && !mouseOverWindow)
+            if (weLockedInputs && !mouseOverWindow)
             {
                 EditorLogic.fetch.Unlock("MechJeb_noclick");
-                weLockedEditor = false;
+                weLockedInputs = false;
+            }
+        }
+
+        void PreventInFlightClickthrough()
+        {
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
+            if (!weLockedInputs && mouseOverWindow)
+            {
+                InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP | ControlTypes.ACTIONS_ALL, "MechJeb_noclick");
+                // Setting this prevents the mouse wheel to zoom in/out while in map mode
+                ManeuverGizmo.HasMouseFocus = true;
+                weLockedInputs = true;
+            }
+            if (weLockedInputs && !mouseOverWindow)
+            {
+                InputLockManager.RemoveControlLock("MechJeb_noclick");
+                ManeuverGizmo.HasMouseFocus = false;
+                weLockedInputs = false;
             }
         }
 

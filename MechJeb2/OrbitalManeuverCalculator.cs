@@ -850,5 +850,41 @@ namespace MuMech
 
             return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
         }
+
+        public static Vector3d DeltaVToShiftNodeLongitude(Orbit o, double UT, double newNodeLong)
+        {
+            // Get the location underneath the burn location at the current moment.
+            // Note that this does NOT account for the rotation of the body that will happen between now
+            // and when the vessel reaches the apoapsis.
+            Vector3d pos = o.SwappedAbsolutePositionAtUT (UT);
+            double burnRadius = o.Radius (UT);
+            double oppositeRadius = 0;
+
+            // Back out the rotation of the body to calculate the longitude of the apoapsis when the vessel reaches the node
+            double degreeRotationToNode = (UT - Planetarium.GetUniversalTime ()) * 360 / o.referenceBody.rotationPeriod;
+            double NodeLongitude = o.referenceBody.GetLongitude(pos) - degreeRotationToNode;
+
+            double LongitudeOffset = NodeLongitude - newNodeLong; // Amount we need to shift the Ap's longitude
+
+            // Calculate a semi-major axis that gives us an orbital period that will rotate the body to place
+            // the burn location directly over the newNodeLong longitude, over the course of one full orbit.
+            // N tracks the number of full body rotations desired in a vessal orbit.
+            // If N=0, we calculate the SMA required to let the body rotate less than a full local day.
+            // If the resulting SMA would drop us under the 5x time warp limit, we deem it to be too low, and try again with N+1.
+            // In other words, we allow the body to rotate more than 1 day, but less then 2 days.
+            // As long as the resulting SMA is below the 5x limit, we keep increasing N until we find a viable solution.
+            // This may place the apside out the sphere of influence, however.
+            // TODO: find the cheapest SMA, instead of the smallest
+            int N = -1;
+            double target_sma = 0;
+
+            while (oppositeRadius-o.referenceBody.Radius < o.referenceBody.timeWarpAltitudeLimits [4] && N < 20) {
+                    N++;
+                    double target_period = o.referenceBody.rotationPeriod * (LongitudeOffset / 360 + N);
+                    target_sma = Math.Pow ((o.referenceBody.gravParameter * target_period * target_period) / (4 * Math.PI * Math.PI), 1.0 / 3.0); // cube roo
+                    oppositeRadius = 2 * (target_sma) - burnRadius;
+                }
+            return DeltaVForSemiMajorAxis (o, UT, target_sma);
+        }
     }
 }

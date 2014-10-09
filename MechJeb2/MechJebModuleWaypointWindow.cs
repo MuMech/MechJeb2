@@ -1223,6 +1223,7 @@ namespace MuMech
 					case "Bop" : addHeight = window.BopMapdist; break;
 					case "Pol" : addHeight = window.PolMapdist; break;
 					case "Eeloo" : addHeight = window.EelooMapdist; break;
+					default: addHeight = window.KerbinMapdist; break;
 			}
 			
 			if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)

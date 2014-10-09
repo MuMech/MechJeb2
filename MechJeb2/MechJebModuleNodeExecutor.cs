@@ -16,6 +16,27 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
+
+        [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
+        public string NextNodeBurnTime()
+        {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                return "-";
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            double dV = node.GetBurnVector(orbit).magnitude;
+            return GuiUtils.TimeToDHMS(BurnTime(dV));
+        }
+
+        [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
+        public string NextNodeCountdown()
+        {
+            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                return "-";
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            double dV = node.GetBurnVector(orbit).magnitude;
+            return GuiUtils.TimeToDHMS(node.UT - BurnTime(dV) * leadFraction - vesselState.time);
+        }
+
         public void ExecuteOneNode(object controller)
         {
             mode = Mode.ONE_NODE;
@@ -130,10 +151,7 @@ namespace MuMech
                     if (core.attitude.attitudeAngleFromTarget() < 90)
                     {
                         double timeConstant = (dVLeft > 10 ? 0.5 : 2);
-                        double desiredAcceleration = dVLeft / timeConstant;
-                        desiredAcceleration = Math.Max(tolerance, desiredAcceleration);
-
-                        core.thrust.targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
+                        core.thrust.ThrustForDV(dVLeft + tolerance, timeConstant);
                     }
                     else
                     {
