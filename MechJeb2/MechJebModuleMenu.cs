@@ -48,21 +48,25 @@ namespace MuMech
         
         [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideButton = false;
+
+        [ToggleInfoItem("Use AppLauncher", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        public bool useAppLauncher = true;
         
         // If the Toolbar is loaded and we don't want to display the big menu button
         public bool HideMenuButton 
         {
             get
             {
-                return ToolbarManager.ToolbarAvailable && hideButton;
+                return (ToolbarManager.ToolbarAvailable || useAppLauncher) && hideButton;
             }
         }
-
 
         private static Dictionary<string, IButton> toolbarButtons;
         private static Dictionary<string, string> actualIcons;
 
         IButton menuButton;
+
+        ApplicationLauncherButton mjButton;
 
         protected override void WindowGUI(int windowID)
         {
@@ -98,7 +102,28 @@ namespace MuMech
 
             GUILayout.EndVertical();
         }
-        
+
+        public void SetupAppLauncher()
+        {
+            if (ApplicationLauncher.Ready && mjButton == null)
+            {
+                Texture2D mjButtonTexture = GameDatabase.Instance.GetTexture("MechJeb2/Icons/MJ2", false);
+
+                mjButton = ApplicationLauncher.Instance.AddModApplication(
+                    ShowHideMasterWindow, ShowHideMasterWindow,
+                    null, null,
+                    null, null,
+                    ApplicationLauncher.AppScenes.ALWAYS,
+                    mjButtonTexture);
+            }
+        }
+
+        public void ShowHideMasterWindow()
+        {
+            MechJebModuleMenu mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
+            mod.ShowHideWindow();
+        }
+
         public void SetupToolBarButtons()
         {
             if (!ToolbarManager.ToolbarAvailable)
@@ -121,12 +146,7 @@ namespace MuMech
                 menuButton = ToolbarManager.Instance.add("MechJeb2", "MechJeb2MenuButton");
                 menuButton.ToolTip = "MechJeb2";
                 menuButton.TexturePath = "MechJeb2/Icons/MJ2";
-                menuButton.OnClick += (b) =>
-                {
-                    MechJebModuleMenu mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
-                    mod.ShowHideWindow();
-                    //print("Change MechJebModuleMenu ");                
-                };
+                menuButton.OnClick += (b) => ShowHideMasterWindow();
             }
             menuButton.Visible = true;
         }
@@ -192,9 +212,15 @@ namespace MuMech
 
         public override void OnDestroy()
         {
+            if (mjButton != null)
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(mjButton);
+                mjButton = null;
+            }
+
             if (ToolbarManager.ToolbarAvailable)
             {
-                foreach (Button b in toolbarButtons.Values)
+                foreach (IButton b in toolbarButtons.Values)
                 {
                     if (b != null)
                         b.Destroy();
@@ -214,6 +240,7 @@ namespace MuMech
         
         public override void DrawGUI(bool inEditor)
         {
+            SetupAppLauncher();
             SetupToolBarButtons();
 
             switch (windowStat)
