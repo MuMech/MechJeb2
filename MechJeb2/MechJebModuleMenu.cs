@@ -105,7 +105,10 @@ namespace MuMech
 
         public void SetupAppLauncher()
         {
-            if (ApplicationLauncher.Ready && mjButton == null)
+            if (!ApplicationLauncher.Ready)
+                return;
+
+            if (useAppLauncher && mjButton == null)
             {
                 Texture2D mjButtonTexture = GameDatabase.Instance.GetTexture("MechJeb2/Icons/MJ2", false);
 
@@ -115,6 +118,12 @@ namespace MuMech
                     null, null,
                     ApplicationLauncher.AppScenes.ALWAYS,
                     mjButtonTexture);
+            }
+
+            if (!useAppLauncher && mjButton != null)
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(mjButton);
+                mjButton = null;
             }
         }
 
