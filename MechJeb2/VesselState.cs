@@ -718,7 +718,7 @@ namespace MuMech
             Quaternion save = gimbal.gimbalTransforms[i].localRotation;
             // Apply the default rot and let unity compute the world rot
             gimbal.gimbalTransforms[i].localRotation = gimbal.initRots[i];
-            Quaternion initRot = gimbal.gimbalTransforms[i].rotation;
+            Quaternion initRot = engineTransform.rotation;
             // Restore the current local rot
             gimbal.gimbalTransforms[i].localRotation = save;
             return initRot;
