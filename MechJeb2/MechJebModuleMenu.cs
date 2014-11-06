@@ -66,7 +66,7 @@ namespace MuMech
 
         IButton menuButton;
 
-        ApplicationLauncherButton mjButton;
+        private static ApplicationLauncherButton mjButton;
 
         protected override void WindowGUI(int windowID)
         {
