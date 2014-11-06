@@ -56,6 +56,18 @@ namespace MuMech
             else return vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
         }
 
+        [ValueInfoItem("Local TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)]
+        public double LocalTWR()
+        {
+            return vesselState.thrustAvailable / (vesselState.mass * vesselState.gravityForce.magnitude);
+        }
+
+        [ValueInfoItem("Throttle TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)]
+        public double ThrottleTWR()
+        {
+            return vesselState.thrustCurrent / (vesselState.mass * vesselState.gravityForce.magnitude);
+        }
+
         [ValueInfoItem("Atmospheric pressure", InfoItem.Category.Misc, format = "F3", units = "atm")]
         public double AtmosphericPressure()
         {
