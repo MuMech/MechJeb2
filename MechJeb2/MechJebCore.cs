@@ -760,15 +760,12 @@ namespace MuMech
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             if (!weLockedInputs && mouseOverWindow)
             {
-                InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP | ControlTypes.ACTIONS_ALL, "MechJeb_noclick");
-                // Setting this prevents the mouse wheel to zoom in/out while in map mode
-                ManeuverGizmo.HasMouseFocus = true;
+                InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP, "MechJeb_noclick");
                 weLockedInputs = true;
             }
             if (weLockedInputs && !mouseOverWindow)
             {
                 InputLockManager.RemoveControlLock("MechJeb_noclick");
-                ManeuverGizmo.HasMouseFocus = false;
                 weLockedInputs = false;
             }
         }
