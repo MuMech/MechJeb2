@@ -359,7 +359,7 @@ namespace MuMech
                                from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
                                select engine);
-                return engines.Sum(e => e.thrustPercentage / 100f * e.maxThrust) + enginesfx.Sum(e => e.thrustPercentage / 100f * e.maxThrust);
+                return engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)) + enginesfx.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
             }
             else
             {
@@ -381,8 +381,8 @@ namespace MuMech
                                  from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
                                  select engine);
-                return engines.Sum(e => (e.throttleLocked ? e.thrustPercentage / 100f * e.maxThrust : e.thrustPercentage * e.minThrust))
-                    + enginesfx.Sum(e => (e.throttleLocked ? e.thrustPercentage / 100f * e.maxThrust : e.thrustPercentage * e.minThrust));
+                return engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust))
+                    + enginesfx.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));
             }
             else
             {

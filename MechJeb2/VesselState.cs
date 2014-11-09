@@ -784,7 +784,7 @@ namespace MuMech
                 {
                     Part p = e.part;
 
-                    double usableFraction = e.thrustPercentage / 100f;
+                    double usableFraction = 1;
                     if (e.useVelocityCurve)
                     {
                         usableFraction *= e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
@@ -793,9 +793,9 @@ namespace MuMech
                     float maxThrust = e.maxThrust / (float)e.thrustTransforms.Count;
                     float minThrust = e.minThrust / (float)e.thrustTransforms.Count;
 
-                    double eMaxThrust = maxThrust * usableFraction;
-                    double eMinThrust = e.throttleLocked ? eMaxThrust : (minThrust * usableFraction);
-                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+                    double eMaxThrust = minThrust + (maxThrust - minThrust) * e.thrustPercentage / 100f;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : minThrust;
+                    double eCurrentThrust = usableFraction * (eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle));
 
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
@@ -861,7 +861,7 @@ namespace MuMech
                 {
                     Part p = e.part;
 
-                    double usableFraction = e.thrustPercentage / 100f;
+                    double usableFraction = 1;
                     if (e.useVelocityCurve)
                     {
                         usableFraction *= e.velocityCurve.Evaluate((float)(e.part.vessel.orbit.GetVel() - e.part.vessel.mainBody.getRFrmVel(CoM)).magnitude);
@@ -870,9 +870,9 @@ namespace MuMech
                     float maxThrust = e.maxThrust / (float)e.thrustTransforms.Count;
                     float minThrust = e.minThrust / (float)e.thrustTransforms.Count;
 
-                    double eMaxThrust = maxThrust * usableFraction;
-                    double eMinThrust = e.throttleLocked ? eMaxThrust : (minThrust * usableFraction);
-                    double eCurrentThrust = eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle);
+                    double eMaxThrust = minThrust + (maxThrust - minThrust) * e.thrustPercentage / 100f;
+                    double eMinThrust = e.throttleLocked ? eMaxThrust : minThrust;
+                    double eCurrentThrust = usableFraction * (eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle));
 
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
