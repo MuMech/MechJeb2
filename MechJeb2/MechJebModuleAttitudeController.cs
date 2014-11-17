@@ -225,9 +225,10 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SUN:
-                    fwd = orbit.TopParentOrbit().SwappedOrbitalVelocityAtUT(vesselState.time);
-                    up = Planetarium.fetch.Sun.transform.position - vesselState.CoM;
-                    rotRef = Quaternion.LookRotation(fwd.normalized, up);
+                    Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
+                    up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
+                    fwd = Vector3d.Cross(baseOrbit.SwappedOrbitNormal(), up);
+                    rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
                     rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.srf_velocity.normalized), vesselState.up);
