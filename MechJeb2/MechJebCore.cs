@@ -383,7 +383,7 @@ namespace MuMech
             }
 
             if (dev_version == "")
-                version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
+                version = fileVersionInfo.ProductMajorPart + "." + fileVersionInfo.ProductMinorPart + "." + fileVersionInfo.ProductBuildPart;
             else
                 version = dev_version;
 
