@@ -19,6 +19,11 @@ namespace MuMech
 
     }
 
+    public class OperationException : Exception
+    {
+        public OperationException(string message) : base(message) {}
+    }
+
     public abstract class Operation
     {
         protected string errorMessage = "";
@@ -33,7 +38,7 @@ namespace MuMech
         public abstract void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target);
         // Function called when create node is pressed; input parameters are orbit and time parameters after the last maneuver and current target
         // ManeuverParameters contain a single time and dV describing the node that should be executed
-        // In case of error you can throw an exception, the message will be displayed and no node will be created.
+        // In case of error you can throw an OperationException, the message will be displayed and no node will be created.
         public abstract ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target);
 
         public ManeuverParameters MakeNode(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -43,9 +48,15 @@ namespace MuMech
             {
                 return MakeNodeImpl(o, universalTime, target);
             }
-            catch (Exception e)
+            catch (OperationException e)
             {
                 errorMessage = e.Message;
+                return null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                errorMessage = "An error occurred while creating the node.";
                 return null;
             }
         }

@@ -28,11 +28,11 @@ namespace MuMech
             if (o.referenceBody.Radius + newPeA > o.Radius(UT))
             {
                 string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
-                throw new Exception("new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException("new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")");
             }
             else if (newPeA < -o.referenceBody.Radius)
             {
-                throw new Exception("new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
+                throw new OperationException("new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, newPeA + o.referenceBody.Radius), UT);
