@@ -29,7 +29,7 @@ namespace MuMech
 
             if (o.referenceBody.referenceBody == null)
             {
-                throw new Exception(o.referenceBody.theName + " is not orbiting another body you could return to.");
+                throw new OperationException(o.referenceBody.theName + " is not orbiting another body you could return to.");
             }
 
             double UT;

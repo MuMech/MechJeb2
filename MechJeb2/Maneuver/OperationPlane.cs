@@ -24,24 +24,24 @@ namespace MuMech
 
             if (!target.NormalTargetExists)
             {
-                throw new Exception("must select a target to match planes with.");
+                throw new OperationException("must select a target to match planes with.");
             }
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
             {
-                throw new Exception("can only match planes with an object in the same sphere of influence.");
+                throw new OperationException("can only match planes with an object in the same sphere of influence.");
             }
             else if (timeSelector.timeReference == TimeReference.REL_ASCENDING)
             {
                 if (!o.AscendingNodeExists(target.TargetOrbit))
                 {
-                    throw new Exception("ascending node with target doesn't exist.");
+                    throw new OperationException("ascending node with target doesn't exist.");
                 }
             }
             else
             {
                 if (!o.DescendingNodeExists(target.TargetOrbit))
                 {
-                    throw new Exception("descending node with target doesn't exist.");
+                    throw new OperationException("descending node with target doesn't exist.");
                 }
             }
 

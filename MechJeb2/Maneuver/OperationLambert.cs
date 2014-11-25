@@ -25,9 +25,9 @@ namespace MuMech
         public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
-                throw new Exception("must select a target to intercept.");
+                throw new OperationException("must select a target to intercept.");
             if (o.referenceBody != target.TargetOrbit.referenceBody)
-                throw new Exception("target must be in the same sphere of influence.");
+                throw new OperationException("target must be in the same sphere of influence.");
 
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 

@@ -32,15 +32,15 @@ namespace MuMech
             string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
             if (o.referenceBody.Radius + newPeA > o.Radius(UT))
             {
-                throw new Exception("new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException("new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")");
             }
             else if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
-                throw new Exception("new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException("new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")");
             }
             else if (newPeA < -o.referenceBody.Radius)
             {
-                throw new Exception("new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
+                throw new OperationException("new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, newPeA + o.referenceBody.Radius, newApA + o.referenceBody.Radius), UT);

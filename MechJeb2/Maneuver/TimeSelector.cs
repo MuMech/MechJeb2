@@ -95,7 +95,7 @@ namespace MuMech
                 }
                 else
                 {
-                    throw new System.Exception("Warning: orbit is hyperbolic, so apoapsis doesn't exist.");
+                    throw new OperationException("Warning: orbit is hyperbolic, so apoapsis doesn't exist.");
                 }
                 break;
 
@@ -110,7 +110,7 @@ namespace MuMech
                 }
                 else
                 {
-                    throw new System.Exception("Warning: no target selected.");
+                    throw new OperationException("Warning: no target selected.");
                 }
                 break;
 
@@ -121,7 +121,7 @@ namespace MuMech
                 }
                 else
                 {
-                    throw new System.Exception("Warning: can't circularize at this altitude, since current orbit does not reach it.");
+                    throw new OperationException("Warning: can't circularize at this altitude, since current orbit does not reach it.");
                 }
                 break;
 
@@ -132,7 +132,7 @@ namespace MuMech
                 }
                 else
                 {
-                    throw new System.Exception("Warning: equatorial ascending node doesn't exist.");
+                    throw new OperationException("Warning: equatorial ascending node doesn't exist.");
                 }
                 break;
 
@@ -143,7 +143,7 @@ namespace MuMech
                 }
                 else
                 {
-                    throw new System.Exception("Warning: equatorial descending node doesn't exist.");
+                    throw new OperationException("Warning: equatorial descending node doesn't exist.");
                 }
                 break;
 
