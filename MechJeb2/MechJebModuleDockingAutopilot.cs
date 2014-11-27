@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,11 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Local)]
         public Boolean overrideSafeDistance = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean overrideTargetSize = false;
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble overridenTargetSize = 10;
 
         public float safeDistance = 10;
         public float targetSize = 5;
@@ -269,8 +274,11 @@ namespace MuMech
             {
                 vesselBoundingBox = vessel.GetBoundingBox();
                 targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
-                
-                targetSize = targetBoundingBox.size.magnitude;
+
+                if (!overrideTargetSize)
+                    targetSize = targetBoundingBox.size.magnitude;
+                else
+                    targetSize = (float)overridenTargetSize.val;
                 
                 if (!overrideSafeDistance)
                     safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
