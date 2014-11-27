@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -67,8 +67,15 @@ namespace MuMech
             if (autopilot.overrideSafeDistance)
                 GuiUtils.SimpleTextBox("Safe Distance", autopilot.overridenSafeDistance, "m");
 
+            autopilot.overrideTargetSize = GUILayout.Toggle(autopilot.overrideTargetSize, "Override Start Distance");
+            if (autopilot.overrideTargetSize)
+                GuiUtils.SimpleTextBox("Start Distance", autopilot.overridenTargetSize, "m");
+
             if (autopilot.overridenSafeDistance < 0)
                 autopilot.overridenSafeDistance = 0;
+
+            if (autopilot.overridenTargetSize < 10)
+                autopilot.overridenTargetSize = 10;
 
             autopilot.drawBoundingBox = GUILayout.Toggle(autopilot.drawBoundingBox, "Draw Bounding Box");
 
