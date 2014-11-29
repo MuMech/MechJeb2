@@ -394,10 +394,13 @@ namespace MuMech
 					fi[2] = err.z;
 					return;
 				}
-				else
+
+				// As of 0.25 CalculatePatch fails if the orbit does not change SoI
+				if (next_orbit.referenceBody == null)
 				{
-					orbit = next_orbit;
+					next_orbit.UpdateFromOrbitAtUT(orbit, orbit.StartUT + orbit.period, orbit.referenceBody);
 				}
+				orbit = next_orbit;
 			}
 		}
 
