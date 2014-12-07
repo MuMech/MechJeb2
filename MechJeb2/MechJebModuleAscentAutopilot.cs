@@ -209,8 +209,8 @@ namespace MuMech
             double verticalSpeedForDesiredApoapsis = Math.Sqrt(2 * potentialDifferenceWithApoapsis);
             double referenceFrameBlend = Mathf.Clamp((float)(vesselState.speedOrbital / verticalSpeedForDesiredApoapsis), 0.0F, 1.0F);
 
-            Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vessel.srf_velocity.normalized
-                                               + referenceFrameBlend * vessel.obt_velocity.normalized).normalized;
+            Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
+                                               + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
             double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
@@ -228,7 +228,7 @@ namespace MuMech
                 const double Kp = 5.0; //control gain
 
                 //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-                double difficulty = vessel.srf_velocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
+                double difficulty = vesselState.surfaceVelocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
                 if (difficulty > 5) difficulty = 5;
 
                 if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
@@ -245,11 +245,11 @@ namespace MuMech
 
             desiredThrustVector = desiredThrustVector.normalized;
 
-            limitingAoA = limitAoA && vessel.altitude < mainBody.maxAtmosphereAltitude && Vector3.Angle(vessel.srf_velocity, desiredThrustVector) > maxAoA;
+            limitingAoA = limitAoA && vessel.altitude < mainBody.maxAtmosphereAltitude && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > maxAoA;
 
             if (limitingAoA)
             {
-                Vector3d limitedVector = Vector3.RotateTowards(vessel.srf_velocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
+                Vector3d limitedVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
 
                 if (aoALimitFadeoutPressure > 0 && vesselState.dynamicPressure < aoALimitFadeoutPressure)
                 {
@@ -430,7 +430,7 @@ namespace MuMech
         {
             double launchpadAngularRate = 360 / launchBody.rotationPeriod;
             double targetAngularRate = 360.0 / target.period;
-            if (Vector3d.Dot(target.SwappedOrbitNormal(), launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
+            if (Vector3d.Dot(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
 
             Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
             Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
@@ -462,10 +462,10 @@ namespace MuMech
         //I have a wonderful proof of this formula which this comment is too short to contain.
         public static double TimeToPlane(CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
         {
-            double inc = Math.Abs(Vector3d.Angle(target.SwappedOrbitNormal(), launchBody.angularVelocity));
-            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, target.SwappedOrbitNormal()).normalized; // I don't understand the sign here, but this seems to work
+            double inc = Math.Abs(Vector3d.Angle(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity));
+            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.GetOrbitNormal().Reorder(132).normalized).normalized; // I don't understand the sign here, but this seems to work
             b *= launchBody.Radius * Math.Sin(Math.PI / 180 * launchLatitude) / Math.Tan(Math.PI / 180 * inc);
-            Vector3d c = Vector3d.Cross(target.SwappedOrbitNormal(), launchBody.angularVelocity).normalized;
+            Vector3d c = Vector3d.Cross(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity).normalized;
             double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(Math.PI / 180 * launchLatitude), 2) - b.sqrMagnitude;
             if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
             c *= Math.Sqrt(cMagnitudeSquared);

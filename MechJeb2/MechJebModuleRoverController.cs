@@ -174,7 +174,7 @@ namespace MuMech
 		{
 			if (wheels.Count == 0 && colliders.Count == 0) { OnVesselModified(vessel); }
 			RaycastHit hit;
-			Physics.Raycast(vessel.CoM + vessel.srf_velocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
+			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
 			norm = hit.normal;
 			traction = 0;
 //			foreach (var c in colliders) {
@@ -211,7 +211,7 @@ namespace MuMech
 			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
 			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are			
-			curSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
+			curSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 			
 			CalculateTraction();
 			speedIntAcc = speedPID.intAccum;
@@ -332,7 +332,7 @@ namespace MuMech
 			{
 				speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -5, 5);
 
-				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
+				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
 				{
 					float act = (float)speedPID.Compute(speedErr);
@@ -365,10 +365,10 @@ namespace MuMech
 				var fSpeed = (float)curSpeed;
 //				if (Mathf.Abs(fSpeed) >= turnSpeed * 0.75) {
 				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-//				                        ((Mathf.Abs(fSpeed) <= turnSpeed ? vesselState.forward : vessel.srf_velocity / 4) - vessel.transform.right * s.wheelSteer) * Mathf.Sign(fSpeed) :
+//				                        ((Mathf.Abs(fSpeed) <= turnSpeed ? vesselState.forward : vesselState.surfaceVelocity / 4) - vessel.transform.right * s.wheelSteer) * Mathf.Sign(fSpeed) :
 //				                        // ^ and then add the steering
 				                        vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
-				                        vessel.srf_velocity); // in the air so follow velocity
+				                        vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
 				var quat = Quaternion.LookRotation(fwd, norm);
 				

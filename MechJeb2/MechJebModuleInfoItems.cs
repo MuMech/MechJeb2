@@ -147,7 +147,7 @@ namespace MuMech
         {
             if (orbit.PeA > 0) return "N/A";
 
-            double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
+            double angleFromHorizontal = 90 - Vector3d.Angle(-vesselState.surfaceVelocity, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
             double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
             double g = vesselState.localg;
@@ -156,7 +156,7 @@ namespace MuMech
             double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
             double decelTime = vesselState.speedSurface / effectiveDecel;
 
-            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vessel.srf_velocity;
+            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vesselState.surfaceVelocity;
             double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingSite);
             double impactTime = 0;
             try
@@ -591,7 +591,7 @@ namespace MuMech
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {
-            return mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude;
+            return mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude;
         }
 
         [ValueInfoItem("Synodic period", InfoItem.Category.Target)]
