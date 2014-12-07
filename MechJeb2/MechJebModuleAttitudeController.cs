@@ -184,16 +184,16 @@ namespace MuMech
             switch (reference)
             {
                 case AttitudeReference.ORBIT:
-                    rotRef = Quaternion.LookRotation(vesselState.orbitalVelocity.normalized, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vessel.obt_velocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.orbitalVelocity.normalized), vesselState.up);
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.obt_velocity.normalized), vesselState.up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = vesselState.rotationSurface;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = Quaternion.LookRotation(vesselState.surfaceVelocity.normalized, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vessel.srf_velocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (core.target.Position - vessel.GetTransform().position).normalized;
@@ -227,11 +227,11 @@ namespace MuMech
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
                     up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
-                    fwd = Vector3d.Cross(-baseOrbit.GetOrbitNormal().Reorder(132).normalized, up);
+                    fwd = Vector3d.Cross(baseOrbit.SwappedOrbitNormal(), up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
-                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.surfaceVelocity.normalized), vesselState.up);
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.srf_velocity.normalized), vesselState.up);
                     break;
             }
             return rotRef;

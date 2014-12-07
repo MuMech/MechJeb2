@@ -108,9 +108,9 @@ namespace MuMech
                 return;
             }
 
-            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.surfaceVelocity.normalized, vesselState.gravityForce);
-            gravityLosses -= vesselState.deltaT * Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
-            double dragAccel = mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude;
+            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vessel.srf_velocity.normalized, vesselState.gravityForce);
+            gravityLosses -= vesselState.deltaT * Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
+            double dragAccel = mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude;
             dragLosses += vesselState.deltaT * dragAccel;
 
             maxDragGees = Math.Max(maxDragGees, dragAccel / 9.81);
@@ -123,7 +123,7 @@ namespace MuMech
         public override void Drive(FlightCtrlState s)
         {
             deltaVExpended += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle);
-            steeringLosses += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle) * (1 - Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.forward));
+            steeringLosses += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle) * (1 - Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.forward));
         }
     }
 }
