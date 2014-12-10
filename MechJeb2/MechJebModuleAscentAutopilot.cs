@@ -262,7 +262,7 @@ namespace MuMech
                 }
             }
 
-            if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
+            if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7)
             {
                 var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
                 var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
