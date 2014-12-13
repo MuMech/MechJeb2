@@ -22,19 +22,19 @@ namespace MuMech
         {
             if (!target.NormalTargetExists)
             {
-                throw new Exception("must select a target for the Hohmann transfer.");
+                throw new OperationException("must select a target for the Hohmann transfer.");
             }
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
             {
-                throw new Exception("target for Hohmann transfer must be in the same sphere of influence.");
+                throw new OperationException("target for Hohmann transfer must be in the same sphere of influence.");
             }
             else if (o.eccentricity > 1)
             {
-                throw new Exception("starting orbit for Hohmann transfer must not be hyperbolic.");
+                throw new OperationException("starting orbit for Hohmann transfer must not be hyperbolic.");
             }
             else if (target.TargetOrbit.eccentricity > 1)
             {
-                throw new Exception("target orbit for Hohmann transfer must not be hyperbolic.");
+                throw new OperationException("target orbit for Hohmann transfer must not be hyperbolic.");
             }
             else if (o.RelativeInclination(target.TargetOrbit) > 30 && o.RelativeInclination(target.TargetOrbit) < 150)
             {

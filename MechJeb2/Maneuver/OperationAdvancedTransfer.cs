@@ -36,19 +36,19 @@ namespace MuMech
 		public void CheckPreconditions(Orbit o, MechJebModuleTargetController target)
 		{
 			if (o.eccentricity >= 1 || o.ApR >= o.referenceBody.sphereOfInfluence)
-				throw new Exception("initial orbit must not be hyperbolic");
+				throw new OperationException("initial orbit must not be hyperbolic");
 
 			if (!target.NormalTargetExists)
-				throw new Exception("must select a target for the interplanetary transfer.");
+				throw new OperationException("must select a target for the interplanetary transfer.");
 
 			if (o.referenceBody.referenceBody == null)
-				throw new Exception("doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".");
+				throw new OperationException("doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".");
 
 			if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
 			{
 				if (o.referenceBody == target.TargetOrbit.referenceBody)
-					throw new Exception("use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".");
-				throw new Exception("an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".");
+					throw new OperationException("use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".");
+				throw new OperationException("an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".");
 			}
 		}
 
@@ -208,21 +208,21 @@ namespace MuMech
 			CheckPreconditions(o, target);
 			// Check if computation is finished
 			if (worker != null && !worker.Finished)
-				throw new Exception("Computation not finished");
+				throw new OperationException("Computation not finished");
 			if (worker == null)
 			{
 				ComputeStuff(o, UT, target);
-				throw new Exception("Started computation");
+				throw new OperationException("Started computation");
 			}
 
 			if (worker.result == null)
 			{
-				throw new Exception("Computation failed");
+				throw new OperationException("Computation failed");
 			}
 			if (selectionMode == Mode.Porkchop)
 			{
 				if (plot == null || plot.selectedPoint == null)
-					throw new Exception("Invalid point selected.");
+					throw new OperationException("Invalid point selected.");
 				return TransferCalculator.OptimizeEjection(
 					worker.computed[plot.selectedPoint[0], plot.selectedPoint[1]],
 					o, worker.destinationOrbit,

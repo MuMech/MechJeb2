@@ -27,7 +27,7 @@ namespace MuMech
             if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
                 string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
-                throw new Exception("new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException("new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")");
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT);

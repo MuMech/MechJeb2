@@ -28,7 +28,7 @@ namespace MuMech
         public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
-                throw new Exception("must select a target for the course correction.");
+                throw new OperationException("must select a target for the course correction.");
 
             Orbit correctionPatch = o;
             while (correctionPatch != null)
@@ -43,7 +43,7 @@ namespace MuMech
             }
 
             if (correctionPatch == null || correctionPatch.referenceBody != target.TargetOrbit.referenceBody)
-                throw new Exception("target for course correction must be in the same sphere of influence");
+                throw new OperationException("target for course correction must be in the same sphere of influence");
 
             if (o.NextClosestApproachTime(target.TargetOrbit, UT) < UT + 1 ||
                     o.NextClosestApproachDistance(target.TargetOrbit, UT) > target.TargetOrbit.semiMajorAxis * 0.2)

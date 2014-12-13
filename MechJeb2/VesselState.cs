@@ -678,7 +678,7 @@ namespace MuMech
             return engineTransform.rotation;
         }
 
-        // The delgates implentation for the stock gimbal
+        // The delegate implementation for the stock gimbal
         private static bool stockGimbalIsValid(PartModule p)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
@@ -692,6 +692,9 @@ namespace MuMech
 
             if (gimbal.gimbalLock)
                 return Vector3d.zero;
+
+            // Edge case where multiple gimbals defined, clamp to the last one as an easy fix.
+            i = Math.Min(gimbal.gimbalTransforms.Count - 1, i);
 
             Vector3d position = gimbal.gimbalTransforms[i].position - CoM;
             double distance = position.magnitude;
@@ -714,6 +717,10 @@ namespace MuMech
         private static Quaternion stockGimbalInitialRot(PartModule p, Transform engineTransform, int i)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
+
+            // Edge case where multiple gimbals defined, clamp to the last one as an easy fix.
+            i = Math.Min(gimbal.gimbalTransforms.Count - 1, i);
+
             // Save the current local rot
             Quaternion save = gimbal.gimbalTransforms[i].localRotation;
             // Apply the default rot and let unity compute the world rot
