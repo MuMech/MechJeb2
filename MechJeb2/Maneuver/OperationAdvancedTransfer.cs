@@ -53,11 +53,6 @@ namespace MuMech
 			return null;
 		}
 
-		static double SafeDepartureTime (Orbit o, double universalTime)
-		{
-			return universalTime + 600 + o.period;
-		}
-
 		void ComputeStuff(Orbit o, double universalTime, MechJebModuleTargetController target)
 		{
 			errorMessage = CheckPreconditions(o, target);
@@ -74,7 +69,7 @@ namespace MuMech
 			{
 			case Mode.LimitedTime:
 				// We could end up asking for parameters in the past, take a safe 10 min margin
-				worker = new TransferCalculator (o, target.TargetOrbit, SafeDepartureTime(o, universalTime), maxArrivalTime, minSamplingStep);
+				worker = new TransferCalculator (o, target.TargetOrbit, universalTime, maxArrivalTime, minSamplingStep);
 				break;
 			case Mode.Porkchop:
 				worker = new AllGraphTransferCalculator(o, target.TargetOrbit, minDepartureTime, maxDepartureTime, minTransferTime, maxTransferTime, windowWidth, porkchop_Height);
@@ -90,7 +85,7 @@ namespace MuMech
 			double synodic_period = o.referenceBody.orbit.SynodicPeriod(destination);
 			double hohmann_transfer_time = OrbitUtil.GetTransferTime(o.referenceBody.orbit, destination);
 
-			minDepartureTime = SafeDepartureTime(o, universalTime);
+			minDepartureTime = universalTime;
 			minTransferTime = 3600;
 
 			maxDepartureTime = minDepartureTime + synodic_period * 1.5;
@@ -116,7 +111,7 @@ namespace MuMech
 						worker.maxTransferTime,
 						new Porkchop(worker.computed).texture,
 						(xmin, xmax, ymin, ymax) => {
-							minDepartureTime = Math.Max(xmin, SafeDepartureTime(o, universalTime));
+							minDepartureTime = Math.Max(xmin, universalTime);
 							maxDepartureTime = xmax;
 							minTransferTime = Math.Max(ymin, 3600);
 							maxTransferTime = ymax;
