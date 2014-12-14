@@ -33,23 +33,24 @@ namespace MuMech
 
 		const int porkchop_Height = 200;
 
-		public void CheckPreconditions(Orbit o, MechJebModuleTargetController target)
+		private string CheckPreconditions(Orbit o, MechJebModuleTargetController target)
 		{
 			if (o.eccentricity >= 1 || o.ApR >= o.referenceBody.sphereOfInfluence)
-				throw new OperationException("initial orbit must not be hyperbolic");
+				return "initial orbit must not be hyperbolic";
 
 			if (!target.NormalTargetExists)
-				throw new OperationException("must select a target for the interplanetary transfer.");
+				return "must select a target for the interplanetary transfer.";
 
 			if (o.referenceBody.referenceBody == null)
-				throw new OperationException("doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".");
+				return "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".";
 
 			if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
 			{
 				if (o.referenceBody == target.TargetOrbit.referenceBody)
-					throw new OperationException("use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".");
-				throw new OperationException("an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".");
+					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
+				return "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
 			}
+			return null;
 		}
 
 		static double SafeDepartureTime (Orbit o, double universalTime)
@@ -59,16 +60,11 @@ namespace MuMech
 
 		void ComputeStuff(Orbit o, double universalTime, MechJebModuleTargetController target)
 		{
-			errorMessage = "";
-			try
-			{
-				CheckPreconditions(o, target);
-			}
-			catch(Exception e)
-			{
-				errorMessage = e.Message;
+			errorMessage = CheckPreconditions(o, target);
+			if (errorMessage == null)
+				errorMessage = "";
+			else
 				return;
-			}
 
 			if (worker != null)
 				worker.stop = true;
@@ -205,7 +201,10 @@ namespace MuMech
 		public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
 		{
 			// Check preconditions
-			CheckPreconditions(o, target);
+			string message = CheckPreconditions(o, target);
+			if (message != null)
+				throw new OperationException(message);
+
 			// Check if computation is finished
 			if (worker != null && !worker.Finished)
 				throw new OperationException("Computation not finished");
