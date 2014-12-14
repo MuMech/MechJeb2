@@ -35,6 +35,12 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
+            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+            core.thrust.differentialThrottle = GUILayout.Toggle(core.thrust.differentialThrottle, "Differential throttle");
+
+            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
+                core.thrust.DisableDifferentialThrottle();
+
             bool oldAutostage = core.staging.users.Contains(this);
             bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
             if (newAutostage && !oldAutostage) core.staging.users.Add(this);

@@ -434,11 +434,11 @@ namespace MuMech
                     }
                     else if (pm is ModuleEngines)
                     {
-                        einfo.AddNewEngine(pm as ModuleEngines);
+                        einfo.AddNewEngine(pm as ModuleEngines, p.Rigidbody.worldCenterOfMass - CoM);
                     }
                     else if (pm is ModuleEnginesFX)
                     {
-                        einfo.AddNewEngine(pm as ModuleEnginesFX);
+                        einfo.AddNewEngine(pm as ModuleEnginesFX, p.Rigidbody.worldCenterOfMass - CoM);
                     }
                     else if (pm is ModuleResourceIntake)
                     {
@@ -479,7 +479,9 @@ namespace MuMech
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
             torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative); // Should we use Max or Min ?            
             torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
-            
+
+            // TODO: add torqueEngineThrottle if differential throttle is active
+
             torqueFromEngine += Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
 
             thrustVectorMaxThrottle = einfo.thrustMax;
@@ -647,7 +649,7 @@ namespace MuMech
             return ret;
         }
 
-        private static GimbalExt getGimbalExt(Part p, out PartModule pm)
+        internal static GimbalExt getGimbalExt(Part p, out PartModule pm)
         {
             foreach (PartModule m in p.Modules)
             {
@@ -742,6 +744,7 @@ namespace MuMech
 
             public Vector6 torqueEngineAvailable = new Vector6();
             public Vector6 torqueEngineVariable = new Vector6();
+            public Vector3d torqueEngineThrottle = new Vector3d();
 
             public class FuelRequirement
             {
@@ -762,7 +765,7 @@ namespace MuMech
                 atmP1 = (float)FlightGlobals.getStaticPressure(alt1);
             }
 
-            public void AddNewEngine(ModuleEngines e)
+            public void AddNewEngine(ModuleEngines e, Vector3d partPosition)
             {
                 if ((!e.EngineIgnited) || (!e.isEnabled))
                 {
@@ -827,6 +830,10 @@ namespace MuMech
 
                         torqueEngineAvailable.Add(torque * eMinThrust);
                         torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
+                        if (!e.throttleLocked)
+                        {
+                            torqueEngineThrottle += Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust); // TODO: check
+                        }
                     }
 
                     if (e.useEngineResponseTime)
@@ -839,7 +846,7 @@ namespace MuMech
 
             // Support for the new ModuleEnginesFX - lack of common interface between the 2 engins type is not fun
             // I can't even just copy  ModuleEngines to a ModuleEnginesFX and use the same function since some field are readonly
-            public void AddNewEngine(ModuleEnginesFX e)
+            public void AddNewEngine(ModuleEnginesFX e, Vector3d partPosition)
             {
                 if ((!e.EngineIgnited) || (!e.isEnabled))
                 {
@@ -904,6 +911,10 @@ namespace MuMech
 
                         torqueEngineAvailable.Add(torque * eMinThrust);
                         torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
+                        if (!e.throttleLocked)
+                        {
+                            torqueEngineThrottle += Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust); // TODO: check
+                        }
                     }
 
                     if (e.useEngineResponseTime)

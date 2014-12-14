@@ -102,6 +102,10 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
+        [ToggleInfoItem("Differential throttle", InfoItem.Category.Thrust)]
+        [Persistent(pass = (int)Pass.Type)]
+        public bool differentialThrottle = false;
+
         public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle }
         public LimitMode limiter = LimitMode.None;
 
@@ -176,9 +180,9 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-        	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
-        	
-        	if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
+
+            if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
                 double spd = 0;
 
@@ -314,6 +318,15 @@ namespace MuMech
             if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
             lastThrottle = s.mainThrottle;
+        }
+
+        public override void OnFixedUpdate()
+        {
+            if (differentialThrottle)
+            {
+                // TODO: get the commanded torque from the attitude controller
+                ComputeDifferentialThrottle(Vector3d.zero);
+            }
         }
 
         //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
@@ -499,8 +512,11 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-        	if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
-        	
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden)
+            {
+                return;
+            }
+
             if (tmode_changed)
             {
                 if (trans_kill_h && (tmode == TMode.OFF))
@@ -510,6 +526,120 @@ namespace MuMech
                 pid.Reset();
                 tmode_changed = false;
                 FlightInputHandler.SetNeutralControls();
+            }
+        }
+
+
+        static void MaxThrust(double[] x, ref double func, double[] grad, object obj)
+        {
+            List<EngineWrapper> el = (List<EngineWrapper>)obj;
+
+            func = 0;
+
+            for (int i = 0, j = 0; j < el.Count; j++)
+            {
+                EngineWrapper e = el[j];
+                if (!e.throttleLocked)
+                {
+                    func -= el[j].maxVariableForce.y * x[i];
+                    grad[i] = -el[j].maxVariableForce.y;
+                    i++;
+                }
+            }
+        }
+
+        public void ComputeDifferentialThrottle(Vector3d torque)
+        {
+            List<EngineWrapper> engines = new List<EngineWrapper>();
+            foreach (Part p in vessel.parts)
+            {
+                foreach (PartModule pm in p.Modules)
+                {
+                    if (pm is ModuleEngines || pm is ModuleEnginesFX)
+                    {
+                        EngineWrapper engine = new EngineWrapper(pm);
+                        if (engine.ignited && !engine.flameout && engine.enabled)
+                        {
+                            engine.UpdateForceAndTorque(vesselState.CoM);
+                            engines.Add(engine);
+                            Debug.Log("  Engine at " + vessel.transform.rotation.Inverse() * (p.transform.position - vesselState.CoM));
+                        }
+                    }
+                }
+            }
+
+            int n = engines.Where(eng => !eng.throttleLocked).Count();
+            if (n < 3)
+            {
+                foreach (EngineWrapper e in engines)
+                    e.thrustRatio = 1;
+                return;
+            }
+
+            double[,] C = new double[2+2*n,n+1];
+            int[] CT = new int[2+2*n];
+            float mainThrottle = vessel.ctrlState.mainThrottle;
+
+            // FIXME: the solver will throw an exception if the commanded torque is not realisable
+            C[0, n] = torque.x;
+            C[1, n] = torque.z;
+
+            for (int i = 0, j = 0; j < engines.Count; j++)
+            {
+                var e = engines[j];
+
+                C[0,n] -= e.constantTorque.x;
+                C[1,n] -= e.constantTorque.z;
+
+                if (!e.throttleLocked)
+                {
+                    C[0,i] = e.maxVariableTorque.x * mainThrottle;
+                    //C[1,j] = e.maxVariableTorque.y * mainThrottle;
+                    C[1,i] = e.maxVariableTorque.z * mainThrottle;
+
+                    C[2+2*i,i] = 1;
+                    C[2+2*i,n] = 1;
+                    CT[2+2*i] = -1;
+
+                    C[3+2*i,i] = 1;
+                    C[3+2*i,n] = 0;
+                    CT[3+2*i] = 1;
+
+                    i++;
+                }
+            }
+
+            double[] x = new double[n];
+            alglib.minbleicstate state;
+            alglib.minbleicreport rep;
+
+            alglib.minbleiccreate(x, out state);
+            alglib.minbleicsetlc(state, C, CT);
+            alglib.minbleicoptimize(state, MaxThrust, null, engines);
+            alglib.minbleicresults(state, out x, out rep);
+
+            for (int i = 0, j = 0; j < engines.Count; j++)
+            {
+                if (!engines[j].throttleLocked)
+                {
+                    engines[j].thrustRatio = (float)x[i];
+                    i++;
+                }
+            }
+        }
+
+        public void DisableDifferentialThrottle()
+        {
+            foreach (Part p in vessel.parts)
+            {
+                foreach (PartModule pm in p.Modules)
+                {
+                    if (pm is ModuleEngines || pm is ModuleEnginesFX)
+                    {
+                        EngineWrapper engine = new EngineWrapper(pm);
+                        engine.thrustRatio = 1;
+                    }
+                }
             }
         }
     }
