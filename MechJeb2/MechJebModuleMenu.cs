@@ -66,7 +66,7 @@ namespace MuMech
 
         IButton menuButton;
 
-        ApplicationLauncherButton mjButton;
+        private static ApplicationLauncherButton mjButton;
 
         protected override void WindowGUI(int windowID)
         {
@@ -83,7 +83,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
+            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>(DisplayOrder.instance))
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
@@ -105,7 +105,10 @@ namespace MuMech
 
         public void SetupAppLauncher()
         {
-            if (ApplicationLauncher.Ready && mjButton == null)
+            if (!ApplicationLauncher.Ready)
+                return;
+
+            if (useAppLauncher && mjButton == null)
             {
                 Texture2D mjButtonTexture = GameDatabase.Instance.GetTexture("MechJeb2/Icons/MJ2", false);
 
@@ -115,6 +118,12 @@ namespace MuMech
                     null, null,
                     ApplicationLauncher.AppScenes.ALWAYS,
                     mjButtonTexture);
+            }
+
+            if (!useAppLauncher && mjButton != null)
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(mjButton);
+                mjButton = null;
             }
         }
 
@@ -338,9 +347,10 @@ namespace MuMech
 
             int IComparer<DisplayModule>.Compare(DisplayModule a, DisplayModule b)
             {
-                if (a is MechJebModuleCustomInfoWindow && b is MechJebModuleCustomInfoWindow) return a.GetName().CompareTo(b.GetName());
-                if (a is MechJebModuleCustomInfoWindow) return 1;
-                if (b is MechJebModuleCustomInfoWindow) return -1;
+                bool customA = a is MechJebModuleCustomInfoWindow;
+                bool customB = b is MechJebModuleCustomInfoWindow;
+                if (!customA && customB) return -1;
+                if (customA && !customB) return 1;
                 return a.GetName().CompareTo(b.GetName());
             }
         }

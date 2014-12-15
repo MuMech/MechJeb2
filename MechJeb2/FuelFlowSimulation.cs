@@ -353,7 +353,7 @@ namespace MuMech
             if (engine != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && engine.thrustPercentage > 0)
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
                     if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
@@ -370,11 +370,11 @@ namespace MuMech
                         foreach (var t in engine.thrustTransforms)
                             thrust -= t.forward / engine.thrustTransforms.Count;
 
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.GetTransform().up);
+                        Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 
-                    maxThrust = engine.thrustPercentage / 100f * engine.maxThrust;
+                    maxThrust = engine.minThrust + engine.thrustPercentage / 100f * (engine.maxThrust - engine.minThrust);
 
                     if (part.IsMFE())
                     {
@@ -397,7 +397,7 @@ namespace MuMech
             if (enginefx != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState) && enginefx.thrustPercentage > 0)
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState) && (enginefx.thrustPercentage > 0 || enginefx.minThrust > 0))
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
                     if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage)
@@ -414,17 +414,17 @@ namespace MuMech
                         foreach (var t in enginefx.thrustTransforms)
                             thrust -= t.forward / enginefx.thrustTransforms.Count;
 
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)enginefx.part.vessel.GetTransform().up);
+                        Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : enginefx.part.vessel.GetTransform().up;
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 
-                    maxThrust = enginefx.thrustPercentage / 100f * enginefx.maxThrust;
+                    maxThrust = enginefx.minThrust + enginefx.thrustPercentage / 100f * (enginefx.maxThrust - enginefx.minThrust);
 
                     if (part.IsMFE())
                     {
                         correctThrust = true;
                         if (HighLogic.LoadedSceneIsFlight && enginefx.realIsp > 0.0f)
-                            maxThrust = maxThrust * enginefx.atmosphereCurve.Evaluate(0) / enginefx.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
+                            maxThrust = maxThrust * enginefx.atmosphereCurve.Evaluate(0) / enginefx.realIsp; //enginefx.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
                     }
                     else
                         correctThrust = false;

@@ -69,7 +69,7 @@ namespace MuMech
                 landingSiteIdx = GuiUtils.ComboBox.Box(landingSiteIdx, availableLadingSites.Select(p => p.name).ToArray(), this);
                 if (GUILayout.Button("Set", GUILayout.ExpandWidth(false)))
                 {
-                    core.target.SetPositionTarget(mainBody, landingSites[landingSiteIdx].latitude, landingSites[landingSiteIdx].longitude);
+                    core.target.SetPositionTarget(mainBody, availableLadingSites[landingSiteIdx].latitude, availableLadingSites[landingSiteIdx].longitude);
                 }
                 GUILayout.EndHorizontal();
             }

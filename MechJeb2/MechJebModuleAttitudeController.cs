@@ -225,9 +225,10 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SUN:
-                    fwd = orbit.TopParentOrbit().SwappedOrbitalVelocityAtUT(vesselState.time);
-                    up = Planetarium.fetch.Sun.transform.position - vesselState.CoM;
-                    rotRef = Quaternion.LookRotation(fwd.normalized, up);
+                    Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
+                    up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
+                    fwd = Vector3d.Cross(baseOrbit.SwappedOrbitNormal(), up);
+                    rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
                     rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.srf_velocity.normalized), vesselState.up);
@@ -331,17 +332,17 @@ namespace MuMech
                 if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                    part.vessel.VesselSAS.LockHeading(target);
+                    part.vessel.Autopilot.SAS.LockHeading(target);
                     lastSAS = target;
                 }
                 else if (Quaternion.Angle(lastSAS, target) > 10)
                 {
-                    part.vessel.VesselSAS.LockHeading(target);
+                    part.vessel.Autopilot.SAS.LockHeading(target);
                     lastSAS = target;
                 }
                 else
                 {
-                    part.vessel.VesselSAS.LockHeading(target, true);
+                    part.vessel.Autopilot.SAS.LockHeading(target, true);
                 }
             }
             else

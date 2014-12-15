@@ -5,11 +5,12 @@ ifeq ($(OS),Windows_NT)
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		KSPDIR := ${HOME}/.steam/SteamApps/common/Kerbal\ Space\ Program
+		XDG_DATA_HOME := ${HOME}/.local/share
+		KSPDIR := ${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program
 		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		KSPDIR  := ${HOME}/Library/Application\ Support/Steam/SteamApps/common/Kerbal\ Space\ Program
+		KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
 		MANAGED := ${KSPDIR}/KSP.app/Contents/Data/Managed/
 	endif
 endif
@@ -44,7 +45,7 @@ build: build/MechJeb2.dll
 build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${GMCS} -t:library -lib:${MANAGED} \
+	${GMCS} -t:library -lib:"${MANAGED}" \
 		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine \
 		-out:$@ \
 		${MECHJEBFILES} \
@@ -72,13 +73,13 @@ clean:
 	rm -rf build/ package/
 
 install: build
-	mkdir -p ${KSPDIR}/GameData/MechJeb2/Plugins
-	cp -r Parts ${KSPDIR}/GameData/MechJeb2/
-	cp build/MechJeb2.dll ${KSPDIR}/GameData/MechJeb2/Plugins/
+	mkdir -p "${KSPDIR}"/GameData/MechJeb2/Plugins
+	cp -r Parts "${KSPDIR}"/GameData/MechJeb2/
+	cp build/MechJeb2.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
 
 uninstall: info
-	rm -rf ${KSPDIR}/GameData/MechJeb2/Plugins
-	rm -rf ${KSPDIR}/GameData/MechJeb2/Parts
+	rm -rf "${KSPDIR}"/GameData/MechJeb2/Plugins
+	rm -rf "${KSPDIR}"/GameData/MechJeb2/Parts
 
 
 .PHONY : all info build package tar.gz zip clean install uninstall

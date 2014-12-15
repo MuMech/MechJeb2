@@ -241,7 +241,7 @@ namespace MuMech
 
             if (editedWindow != null)
             {
-                List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
+                List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>().ToList();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Title:", GUILayout.ExpandWidth(false));
