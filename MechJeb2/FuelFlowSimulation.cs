@@ -370,7 +370,7 @@ namespace MuMech
                         foreach (var t in engine.thrustTransforms)
                             thrust -= t.forward / engine.thrustTransforms.Count;
 
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.GetTransform().up);
+                        Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 
@@ -414,7 +414,7 @@ namespace MuMech
                         foreach (var t in enginefx.thrustTransforms)
                             thrust -= t.forward / enginefx.thrustTransforms.Count;
 
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)enginefx.part.vessel.GetTransform().up);
+                        Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : enginefx.part.vessel.GetTransform().up;
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 
