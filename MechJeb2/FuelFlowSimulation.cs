@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CompoundParts;
 using UnityEngine;
 
 namespace MuMech
@@ -489,11 +490,12 @@ namespace MuMech
             // In the editor scene, fuel lines have to inform their targets that they
             // are valid fuel sources (and in the editor docking nodes attach via regular stack nodes,
             // so they need no special treatment).
-            var cp = part as CompoundPart;
-            if (cp != null && cp.target != null && cp.fuelCrossFeed)
+            CModuleFuelLine fuelLine = part.GetModule<CModuleFuelLine>();
+            if (fuelLine != null && fuelLine.target != null)
             {
                 FuelNode targetNode;
-                if (nodeLookup.TryGetValue(cp.target, out targetNode)) targetNode.fuelLineSources.Add(this);
+                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode)) 
+                    targetNode.fuelLineSources.Add(this);
             }
         }
 

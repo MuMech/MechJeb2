@@ -12,6 +12,11 @@ namespace MuMech
             return p.Modules.OfType<T>().Any();
         }
 
+        public static T GetModule<T>(this Part part) where T : PartModule
+        {
+            return part.Modules.OfType<T>().FirstOrDefault();
+        }
+
         public static float TotalMass(this Part p)
         {
             return p.mass + p.GetResourceMass();
