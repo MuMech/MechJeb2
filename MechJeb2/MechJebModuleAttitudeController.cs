@@ -332,17 +332,17 @@ namespace MuMech
                 if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                    part.vessel.VesselSAS.LockHeading(target);
+                    part.vessel.Autopilot.SAS.LockHeading(target);
                     lastSAS = target;
                 }
                 else if (Quaternion.Angle(lastSAS, target) > 10)
                 {
-                    part.vessel.VesselSAS.LockHeading(target);
+                    part.vessel.Autopilot.SAS.LockHeading(target);
                     lastSAS = target;
                 }
                 else
                 {
-                    part.vessel.VesselSAS.LockHeading(target, true);
+                    part.vessel.Autopilot.SAS.LockHeading(target, true);
                 }
             }
             else

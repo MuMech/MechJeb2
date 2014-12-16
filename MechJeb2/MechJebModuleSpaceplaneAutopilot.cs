@@ -271,7 +271,7 @@ namespace MuMech
             public Vector3d Position()
             {
                 //hardcoded to use Kerbin for the moment:
-                return FlightGlobals.Bodies[1].GetWorldSurfacePosition(latitude, longitude, altitude);
+                return FlightGlobals.currentMainBody.GetWorldSurfacePosition(latitude, longitude, altitude);
             }
         }
 
@@ -298,7 +298,7 @@ namespace MuMech
 
         public Vector3d Up()
         {
-            return FlightGlobals.Bodies[1].GetSurfaceNVector(start.latitude, start.longitude);
+            return FlightGlobals.currentMainBody.GetSurfaceNVector(start.latitude, start.longitude);
         }
     }
 }
