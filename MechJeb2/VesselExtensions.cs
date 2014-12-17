@@ -253,7 +253,8 @@ namespace MuMech
         // So we need to add a lot of sanity check and/or disable modules
         public static bool patchedConicsUnlocked(this Vessel vessel)
         {
-            return GameVariables.Instance.GetOrbitDisplayMode(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation)) == GameVariables.OrbitDisplayMode.PatchedConics;
+            //return GameVariables.Instance.GetOrbitDisplayMode(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation)) == GameVariables.OrbitDisplayMode.PatchedConics;
+            return vessel.patchedConicSolver != null;
         }
     }
 }
