@@ -169,5 +169,15 @@ namespace MuMech
         {
             return "Maneuver Planner";
         }
+
+        public override void UnlockCheck()
+        {
+            if (!unlockChecked)
+            {
+                base.UnlockCheck();
+                enabled = enabled && vessel.patchedConicsUnlocked();
+                hidden = !enabled;
+            }
+        }
     }
 }

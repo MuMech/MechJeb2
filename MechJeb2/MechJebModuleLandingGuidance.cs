@@ -332,6 +332,16 @@ namespace MuMech
             return "Landing Guidance";
         }
 
+        public override void UnlockCheck()
+        {
+            if (!unlockChecked)
+            {
+                base.UnlockCheck();
+                enabled = enabled && vessel.patchedConicsUnlocked();
+                hidden = !enabled;
+            }
+        }
+
         public MechJebModuleLandingGuidance(MechJebCore core) : base(core) { }
     }
 }

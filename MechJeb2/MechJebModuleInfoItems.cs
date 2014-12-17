@@ -26,7 +26,7 @@ namespace MuMech
         [ValueInfoItem("Node burn time", InfoItem.Category.Misc)]
         public string NextManeuverNodeBurnTime()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.limitedMaxThrustAccel;
@@ -36,7 +36,7 @@ namespace MuMech
         [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
         public string TimeToManeuverNode()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             return GuiUtils.TimeToDHMS(vessel.patchedConicSolver.maneuverNodes[0].UT - vesselState.time);
         }
@@ -44,7 +44,7 @@ namespace MuMech
         [ValueInfoItem("Node dV", InfoItem.Category.Misc)]
         public string NextManeuverNodeDeltaV()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             return MuUtils.ToSI(vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude, -1) + "m/s";
         }

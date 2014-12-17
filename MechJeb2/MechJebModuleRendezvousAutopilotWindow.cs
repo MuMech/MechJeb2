@@ -70,5 +70,15 @@ namespace MuMech
         {
             return "Rendezvous Autopilot";
         }
+
+        public override void UnlockCheck()
+        {
+            if (!unlockChecked)
+            {
+                base.UnlockCheck();
+                enabled = enabled && vessel.patchedConicsUnlocked();
+                hidden = !enabled;
+            }
+        }
     }
 }

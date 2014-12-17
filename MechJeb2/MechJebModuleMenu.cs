@@ -89,10 +89,12 @@ namespace MuMech
                 {
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
                 }
+                if (module.hidden)
+                    core.someModuleAreLocked = true;
             }
 
             if (core.someModuleAreLocked)
-                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree");
+                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
 
 
             if (GUILayout.Button("Online Manual"))

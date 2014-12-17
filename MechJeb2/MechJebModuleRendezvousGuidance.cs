@@ -139,5 +139,15 @@ namespace MuMech
         {
             return "Rendezvous Planner";
         }
+
+        public override void UnlockCheck()
+        {
+            if (!unlockChecked)
+            {
+                base.UnlockCheck();
+                enabled = enabled && vessel.patchedConicsUnlocked();
+                hidden = !enabled;
+            }
+        }
     }
 }

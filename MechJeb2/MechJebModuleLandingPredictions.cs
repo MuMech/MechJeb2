@@ -22,7 +22,7 @@ namespace MuMech
                     result.endASL = result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude);
                 }
             }
-            return result; 
+            return result;
         }
         public ReentrySimulation.Result GetErrorResult() 
         {
@@ -33,7 +33,6 @@ namespace MuMech
                     errorResult.endASL = errorResult.body.TerrainAltitude(errorResult.endPosition.latitude, errorResult.endPosition.longitude);
                 }
             }
-            
             return errorResult;
         }
 

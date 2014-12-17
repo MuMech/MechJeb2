@@ -161,7 +161,14 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 TargetButton(Target.OFF);
                 TargetButton(Target.KILLROT);
-                TargetButton(Target.NODE);
+                if (vessel.patchedConicsUnlocked())
+                {
+                    TargetButton(Target.NODE);
+                }
+                else
+                {
+                    GUILayout.Button("-", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                }
                 GUILayout.EndHorizontal();
 
                 GUILayout.Label("Mode:");

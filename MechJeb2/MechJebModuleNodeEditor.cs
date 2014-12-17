@@ -268,6 +268,18 @@ namespace MuMech
             return "Maneuver Node Editor";
         }
 
+        public override void UnlockCheck()
+        {
+            print("vessel.patchedConicsUnlocked() = " + vessel.patchedConicsUnlocked());
+            if (!unlockChecked)
+            {
+                base.UnlockCheck();
+                enabled = enabled && vessel.patchedConicsUnlocked();
+                hidden = !enabled;
+            }
+            print("enabled = " + enabled);
+        }
+
         public MechJebModuleNodeEditor(MechJebCore core) : base(core) { }
     }
 }
