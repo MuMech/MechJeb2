@@ -62,14 +62,14 @@ namespace MuMech
 
             if (GUILayout.Button("Pick target on map")) core.target.PickPositionTargetOnMap();
 
-            List<LandingSite> availableLadingSites = landingSites.Where(p => p.body == mainBody).ToList();
-            if (availableLadingSites.Any())
+            List<LandingSite> availableLandingSites = landingSites.Where(p => p.body == mainBody).ToList();
+            if (availableLandingSites.Any())
             {
                 GUILayout.BeginHorizontal();
-                landingSiteIdx = GuiUtils.ComboBox.Box(landingSiteIdx, availableLadingSites.Select(p => p.name).ToArray(), this);
+                landingSiteIdx = GuiUtils.ComboBox.Box(landingSiteIdx, availableLandingSites.Select(p => p.name).ToArray(), this);
                 if (GUILayout.Button("Set", GUILayout.ExpandWidth(false)))
                 {
-                    core.target.SetPositionTarget(mainBody, availableLadingSites[landingSiteIdx].latitude, availableLadingSites[landingSiteIdx].longitude);
+                    core.target.SetPositionTarget(mainBody, availableLandingSites[landingSiteIdx].latitude, availableLandingSites[landingSiteIdx].longitude);
                 }
                 GUILayout.EndHorizontal();
             }
