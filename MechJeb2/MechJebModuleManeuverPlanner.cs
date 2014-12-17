@@ -170,14 +170,9 @@ namespace MuMech
             return "Maneuver Planner";
         }
 
-        public override void UnlockCheck()
+        public override bool IsSpaceCenterUpgradeUnlocked()
         {
-            if (!unlockChecked)
-            {
-                base.UnlockCheck();
-                enabled = enabled && vessel.patchedConicsUnlocked();
-                hidden = !enabled;
-            }
+            return vessel.patchedConicsUnlocked();
         }
     }
 }

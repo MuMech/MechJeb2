@@ -268,16 +268,9 @@ namespace MuMech
             return "Maneuver Node Editor";
         }
 
-        public override void UnlockCheck()
+        public override bool IsSpaceCenterUpgradeUnlocked()
         {
-            print("vessel.patchedConicsUnlocked() = " + vessel.patchedConicsUnlocked());
-            if (!unlockChecked)
-            {
-                base.UnlockCheck();
-                enabled = enabled && vessel.patchedConicsUnlocked();
-                hidden = !enabled;
-            }
-            print("enabled = " + enabled);
+            return vessel.patchedConicsUnlocked();
         }
 
         public MechJebModuleNodeEditor(MechJebCore core) : base(core) { }

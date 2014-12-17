@@ -89,8 +89,6 @@ namespace MuMech
                 {
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
                 }
-                if (module.hidden)
-                    core.someModuleAreLocked = true;
             }
 
             if (core.someModuleAreLocked)

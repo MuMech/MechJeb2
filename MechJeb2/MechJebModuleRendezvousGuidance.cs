@@ -140,14 +140,9 @@ namespace MuMech
             return "Rendezvous Planner";
         }
 
-        public override void UnlockCheck()
+        public override bool IsSpaceCenterUpgradeUnlocked()
         {
-            if (!unlockChecked)
-            {
-                base.UnlockCheck();
-                enabled = enabled && vessel.patchedConicsUnlocked();
-                hidden = !enabled;
-            }
+            return vessel.patchedConicsUnlocked();
         }
     }
 }

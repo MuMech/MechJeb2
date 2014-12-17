@@ -160,7 +160,7 @@ namespace MuMech
                 bool prevEn = enabled;
                 enabled = true;
                 base.UnlockCheck();
-                if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0)
+                if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
                 {
                     hidden = !enabled;
                     if (hidden)
