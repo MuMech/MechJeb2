@@ -327,7 +327,6 @@ namespace MuMech
         {
             if (!vessel.patchedConicsUnlocked())
             {
-                status = "Unable to Circularize without an upgraded an tracking station";
                 this.users.Clear();
                 return;
             }
