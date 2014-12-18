@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -64,6 +64,7 @@ namespace MuMech
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
+		Vector3d lastDesiredThrustVector = new Vector3();
 
         public override void OnModuleEnabled()
         {
@@ -262,6 +263,8 @@ namespace MuMech
                 }
             }
 
+			lastDesiredThrustVector = desiredThrustVector;
+
             if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
             {
                 var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
@@ -307,9 +310,14 @@ namespace MuMech
             }
 
             //point prograde and thrust gently if our apoapsis falls below the target
-            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+            //core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+
+			// Actually I have a better idea: Don't initiate orientation changes when there's a chance that our main engine
+			// might reignite. There won't be enough control authority to counteract that much momentum change.
+			// - Starwaster
             core.thrust.targetThrottle = 0;
-            if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
+ 			core.attitude.attitudeTo(lastDesiredThrustVector, AttitudeReference.INERTIAL, this);
+           if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
