@@ -337,8 +337,10 @@ namespace MuMech
                 }
             }
 
-            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
+            GetComputerModule<MechJebModuleMenu>().OnMenuUpdate(); // Allow the menu movement, even while in Editor
 
+            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
+            
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
                 try

@@ -326,18 +326,20 @@ namespace MuMech
         }
 
 
-        // The button won't move in the editor since OnUpdate is never called...
-        public override void OnUpdate()
+        public void OnMenuUpdate()
         {
             if (movingButton)
+            {
                 if (Input.GetMouseButton(1))
                 {
-                    windowVPos = Mathf.Clamp(Input.mousePosition.y - GuiUtils.scaledScreenHeight - 50, - GuiUtils.scaledScreenHeight, -100);
+                    print(Input.mousePosition.y + " " + Screen.height);
+                    windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.height, -100) / GuiUtils.scale;
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {
                     movingButton = false;
                 }
+            }
         }
 
         class DisplayOrder : IComparer<DisplayModule>
