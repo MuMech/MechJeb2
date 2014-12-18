@@ -332,7 +332,6 @@ namespace MuMech
             {
                 if (Input.GetMouseButton(1))
                 {
-                    print(Input.mousePosition.y + " " + Screen.height);
                     windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.height, -100) / GuiUtils.scale;
                 }
                 else if (Input.GetMouseButtonUp(1))
