@@ -322,7 +322,7 @@ namespace MuMech
                 }
             }
 
-            if (unorderedComputerModules.Any(a => !a.unlockChecked))
+            if (ResearchAndDevelopment.Instance != null && unorderedComputerModules.Any(a => !a.unlockChecked))
             {
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
