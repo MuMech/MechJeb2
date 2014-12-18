@@ -216,7 +216,7 @@ namespace MuMech
         {
             if (rand.NextDouble() < 0.2)
             {
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), lightningTex);
+                GUI.DrawTexture(new Rect(0, 0, GuiUtils.scaledScreenWidth, GuiUtils.scaledScreenHeight), lightningTex);
             }
         }
     }
@@ -344,7 +344,7 @@ namespace MuMech
             {
                 GUILayout.BeginVertical();
                 GUILayout.Label("That did it!\nThe controls are back!");
-                if (GUILayout.Button("Close")) SetDialogRect(new Rect(Screen.width + 100, 0, 0, 0));
+                if (GUILayout.Button("Close")) SetDialogRect(new Rect(GuiUtils.scaledScreenWidth + 100, 0, 0, 0));
                 GUILayout.EndVertical();
             };
         }

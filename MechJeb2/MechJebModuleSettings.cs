@@ -16,6 +16,12 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public int skinId = 0;
+
+        [Persistent(pass = (int)(Pass.Global))]
+        public EditableDouble UIScale = 1.0;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool dontUseDropDownMenu = false;
         
         [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideBrakeOnEject = false;
@@ -23,6 +29,9 @@ namespace MuMech
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
+
+            GuiUtils.SetGUIScale(UIScale.val);
+            GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
 
             if (useOldSkin)
             {
@@ -67,11 +76,22 @@ namespace MuMech
                     skinId = 2;
                 }
             }
-            
-			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-			ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
-            if (ToolbarManager.ToolbarAvailable)
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("UI Scale:", GUILayout.ExpandWidth(true));
+            UIScale.text = GUILayout.TextField(UIScale.text, GUILayout.Width(60));
+            GUILayout.EndHorizontal();
+
+            GuiUtils.SetGUIScale(UIScale.val);
+
+            dontUseDropDownMenu = GUILayout.Toggle(dontUseDropDownMenu, "Replace drop down menu with arrow selector");
+            GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
+
+            MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
+            
+            ed.registry.Find(i => i.id == "Toggle:Menu.useAppLauncher").DrawItem();
+            if (ToolbarManager.ToolbarAvailable || core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
 
             GUILayout.EndVertical();

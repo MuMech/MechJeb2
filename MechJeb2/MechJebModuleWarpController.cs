@@ -18,7 +18,7 @@ namespace MuMech
 
         public void WarpToUT(double UT, double maxRate = 100000)
         {
-            double desiredRate = 1.0 * (UT - vesselState.time);
+            double desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
             if (!vessel.LandedOrSplashed &&

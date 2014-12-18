@@ -10,7 +10,7 @@ namespace MuMech
     {
         public static List<T> GetParts<T>(this Vessel vessel) where T : Part
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList.OfType<T>().ToList();
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts.OfType<T>().ToList();
             if (vessel == null) return new List<T>();
             return vessel.Parts.OfType<T>().ToList();
         }
@@ -18,7 +18,7 @@ namespace MuMech
         public static List<ITargetable> GetTargetables(this Vessel vessel)
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
             else if (vessel == null) return new List<ITargetable>();
             else parts = vessel.Parts;
 
@@ -28,7 +28,7 @@ namespace MuMech
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.SortedShipList;
+            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
             else if (vessel == null) return new List<T>();
             else parts = vessel.Parts;
 
@@ -40,27 +40,26 @@ namespace MuMech
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
-            if (vessel == null) // there will be no cache in the editor, but thats not as usefull as in flight
-                return vessel.GetModules<MechJebCore>().Max();
             if (lastFixedTime != Time.fixedTime)
             {
                 masterMechjebs = new Dictionary<Guid, MechJebCore>();
                 lastFixedTime = Time.fixedTime;
             }
-            if (!masterMechjebs.ContainsKey(vessel.id))
+            Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
+            if (!masterMechjebs.ContainsKey(vesselKey))
             {
                 MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
                 if (mj != null)
-                    masterMechjebs.Add(vessel.id, mj);
+                    masterMechjebs.Add(vesselKey, mj);
                 return mj;
             }
-            return masterMechjebs[vessel.id];
+            return masterMechjebs[vesselKey];
         }
 
         public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
             if (definition == null) return 0;
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
 
             double amount = 0;
             foreach (Part p in parts)
@@ -90,7 +89,7 @@ namespace MuMech
             if (vessel == null)
                 return false;
 
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
             PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
             if (definition == null) return false;
 
@@ -186,6 +185,9 @@ namespace MuMech
 
         public static void RemoveAllManeuverNodes(this Vessel vessel)
         {
+            if (!vessel.patchedConicsUnlocked())
+                return;
+
             while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
                 vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
@@ -245,12 +247,14 @@ namespace MuMech
 
             return box;
         }
-        
 
-
-        
-
-
-
+        // 0.90 added a building upgrade to unlock Orbit visualisation and patched connic
+        // Unfortunately when patchedConics are disabled vessel.patchedConicSolver is null
+        // So we need to add a lot of sanity check and/or disable modules
+        public static bool patchedConicsUnlocked(this Vessel vessel)
+        {
+            //return GameVariables.Instance.GetOrbitDisplayMode(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation)) == GameVariables.OrbitDisplayMode.PatchedConics;
+            return vessel.patchedConicSolver != null;
+        }
     }
 }

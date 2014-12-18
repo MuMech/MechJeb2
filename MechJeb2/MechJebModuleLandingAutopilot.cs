@@ -689,7 +689,8 @@ namespace MuMech
 
             if (core.attitude.attitudeAngleFromTarget() < 5)
             {
-                core.thrust.targetThrottle = Mathf.Clamp01((float)(deltaV.magnitude / (2.0 * vesselState.maxThrustAccel)));
+                const double timeConstant = 2.0;
+                core.thrust.ThrustForDV(deltaV.magnitude, timeConstant);
             }
             else
             {
@@ -985,7 +986,7 @@ namespace MuMech
 
                     if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && ASLDeployAltitude > vesselState.altitudeASL)
                     {
-                        p.DeployAction(null);
+                        p.Deploy();
                         // Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
                     }
                 }

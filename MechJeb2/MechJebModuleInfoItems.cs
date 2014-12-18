@@ -17,8 +17,8 @@ namespace MuMech
         {
             get
             {
-                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.SortedShipList : 
-                    (vessel == null) ? new List<Part>() : vessel.Parts;
+                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.fetch.ship.parts : 
+                    ((vessel == null) ? new List<Part>() : vessel.Parts);
             }
         }
 
@@ -26,7 +26,7 @@ namespace MuMech
         [ValueInfoItem("Node burn time", InfoItem.Category.Misc)]
         public string NextManeuverNodeBurnTime()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.limitedMaxThrustAccel;
@@ -36,7 +36,7 @@ namespace MuMech
         [ValueInfoItem("Time to node", InfoItem.Category.Misc)]
         public string TimeToManeuverNode()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             return GuiUtils.TimeToDHMS(vessel.patchedConicSolver.maneuverNodes[0].UT - vesselState.time);
         }
@@ -44,7 +44,7 @@ namespace MuMech
         [ValueInfoItem("Node dV", InfoItem.Category.Misc)]
         public string NextManeuverNodeDeltaV()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
             return MuUtils.ToSI(vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude, -1) + "m/s";
         }
@@ -54,6 +54,18 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor) return MaxAcceleration() / 9.81;
             else return vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
+        }
+
+        [ValueInfoItem("Local TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)]
+        public double LocalTWR()
+        {
+            return vesselState.thrustAvailable / (vesselState.mass * vesselState.gravityForce.magnitude);
+        }
+
+        [ValueInfoItem("Throttle TWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)]
+        public double ThrottleTWR()
+        {
+            return vesselState.thrustCurrent / (vesselState.mass * vesselState.gravityForce.magnitude);
         }
 
         [ValueInfoItem("Atmospheric pressure", InfoItem.Category.Misc, format = "F3", units = "atm")]
@@ -253,17 +265,14 @@ namespace MuMech
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
             
-            foreach (ModuleRCS pm in VesselExtensions.GetModules<ModuleRCS>(vessel))
+            foreach (ModuleRCS pm in vessel.GetModules<ModuleRCS>())
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
                 numThrusters++;
                 gForRCS = pm.G;
             }
 
-            double m0 = (HighLogic.LoadedSceneIsEditor)
-                ? EditorLogic.SortedShipList.Where(
-                    p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass())
-                : vesselState.mass;
+            double m0 = VesselMass();
             double m1 = m0 - monopropMass;
             if (numThrusters == 0 || m1 <= 0) return 0;
             double isp = totalIsp / numThrusters;
@@ -305,7 +314,7 @@ namespace MuMech
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.SortedShipList
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts
                                   .Where(p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass());
             else return vesselState.mass;
         }
@@ -341,16 +350,16 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                var engines = (from part in EditorLogic.SortedShipList
+                var engines = (from part in EditorLogic.fetch.ship.parts
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.SortedShipList
+                var enginesfx = (from part in EditorLogic.fetch.ship.parts
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
                                select engine);
-                return engines.Sum(e => e.thrustPercentage / 100f * e.maxThrust) + enginesfx.Sum(e => e.thrustPercentage / 100f * e.maxThrust);
+                return engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)) + enginesfx.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
             }
             else
             {
@@ -363,17 +372,17 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                var engines = (from part in EditorLogic.SortedShipList
+                var engines = (from part in EditorLogic.fetch.ship.parts
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.SortedShipList
+                var enginesfx = (from part in EditorLogic.fetch.ship.parts
                                  where part.inverseStage == Staging.lastStage
                                  from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
                                  select engine);
-                return engines.Sum(e => (e.throttleLocked ? e.thrustPercentage / 100f * e.maxThrust : e.thrustPercentage * e.minThrust))
-                    + enginesfx.Sum(e => (e.throttleLocked ? e.thrustPercentage / 100f * e.maxThrust : e.thrustPercentage * e.minThrust));
+                return engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust))
+                    + enginesfx.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));
             }
             else
             {
@@ -398,7 +407,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                return EditorLogic.SortedShipList.Where(p => p.IsPhysicallySignificant())
+                return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
                                   .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
             }
             else
@@ -711,7 +720,7 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 // We're in the VAB/SPH
-                TWRbody = (int)GuiUtils.ArrowSelector(TWRbody, FlightGlobals.Bodies.Count, FlightGlobals.Bodies[(int)TWRbody].GetName());
+                TWRbody = GuiUtils.ComboBox.Box(TWRbody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
                 geeASL = FlightGlobals.Bodies[TWRbody].GeeASL;
             }
             else
@@ -722,20 +731,8 @@ namespace MuMech
 
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
-
                 // NK detect necessity of atmo initial TWR
-                bool hasMFE = false;
-                if (HighLogic.LoadedSceneIsEditor)
-                {
-                    foreach (Part p in parts)
-                        if (p.Modules.Contains("ModuleEngineConfigs") || p.Modules.Contains("ModuleHybridEngine") || p.Modules.Contains("ModuleHybridEngines"))
-                        {
-                            hasMFE = true;
-                            break;
-                        }
-                }
-                else
-                    hasMFE = vesselState.hasMFE;
+                bool hasMFE = parts.Any(p => p.IsMFE());
 
                 if (showInitialMass)
                 {
@@ -843,7 +840,7 @@ namespace MuMech
             float fullThrottleTime = StageTimeLeftFullThrottle();
             if (fullThrottleTime == 0) return 0;
 
-            return fullThrottleTime / FlightInputHandler.state.mainThrottle;
+            return fullThrottleTime / vessel.ctrlState.mainThrottle;
         }
 
         [ValueInfoItem("Stage time (hover)", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)]
@@ -977,7 +974,7 @@ namespace MuMech
         }
 
 
-        [ValueInfoItem("Raw Biome", InfoItem.Category.Misc, showInEditor = false)]
+        [ValueInfoItem("Surface Biome", InfoItem.Category.Misc, showInEditor = false)]
         public string CurrentRawBiome()
         {
             if (vessel.landedAt != string.Empty)
@@ -986,41 +983,54 @@ namespace MuMech
             return "" + biome;
         }
 
-        // No default experiment makes use of the biome at FlyingHigh and beyond
-        // I stop displaying it from InSpaceLow
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]
         public string CurrentBiome()
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
-            string biome = mainBody.BiomeMap.GetAtt(vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            if (biome != "")
+                biome = "'s " + biome;
+
             switch (vessel.situation)
             {
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.theName + "'s " + (biome == "" ? "surface" : biome);
+                    return mainBody.theName + (biome == "" ? "'s surface" : biome);
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.theName + "'s " + (biome == "" ? "oceans" : biome);
+                    return mainBody.theName + (biome == "" ? "'s oceans" : biome);
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)                        
                         //ExperimentSituations.FlyingLow
-                        return "Flying over " + mainBody.theName + (biome == "" ? "" : "'s " + biome);
+                        return "Flying over " + mainBody.theName + biome;
                     else                
                         //ExperimentSituations.FlyingHigh
-                        return "Upper atmosphere of " + mainBody.theName + (biome == "" ? "" : "'s " + biome);
+                        return "Upper atmosphere of " + mainBody.theName + biome;
                 default:
                     if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
-                        return "Space just above " + mainBody.theName;
+                        return "Space just above " + mainBody.theName + biome;
                     else
                         // ExperimentSituations.InSpaceHigh
                         return "Space high over " + mainBody.theName;
             }
         }
 
-
+        [GeneralInfoItem("Lat/Lon/Alt Copy to Clipboard", InfoItem.Category.Misc, showInEditor = false)]
+        public void LatLonClipbardCopy()
+        {
+            if (GUILayout.Button("Copy Lat/Lon/Alt to Clipboard"))
+            {
+                TextEditor te = new TextEditor();
+                string result = "latitude =  " + vesselState.latitude.ToString("F6") + "\nlongitude = " + vesselState.longitude.ToString("F6") +
+                                "\naltitude = " + vessel.altitude.ToString("F2") + "\n";
+                te.content = new GUIContent(result);
+                te.SelectAll();
+                te.Copy();
+            }
+        }
 
 
         static GUIStyle _separatorStyle;

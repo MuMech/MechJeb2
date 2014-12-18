@@ -18,6 +18,7 @@ namespace MuMech
         TARGET_ORIENTATION,//forward = direction target is facing, up = target up
         MANEUVER_NODE,     //forward = next maneuver node direction, up = tbd
         SUN,               //forward = orbit velocity of the parent body orbiting the sun, up = radial plus of that orbit
+        SURFACE_HORIZONTAL,//forward = surface velocity horizontal component, up = surface normal
     }
 
     public class MechJebModuleAttitudeController : ComputerModule
@@ -26,6 +27,7 @@ namespace MuMech
         public Vector3d lastAct = Vector3d.zero;
         public Vector3d pidAction;  //info
         protected float timeCount = 0;
+        protected Part lastReferencePart;
 
         public bool RCS_auto = false;
         public bool attitudeRCScontrol = true;
@@ -141,11 +143,7 @@ namespace MuMech
 
         public void tuneTf()
         {
-            Vector3d torque = new Vector3d(
-                                    vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle,
-                                    vesselState.torqueAvailable.y,
-                                    vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * vessel.ctrlState.mainThrottle
-                                          );
+            Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
 
             Vector3d ratio = new Vector3d(
                                     torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
@@ -227,9 +225,13 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SUN:
-                    fwd = orbit.TopParentOrbit().SwappedOrbitalVelocityAtUT(vesselState.time);
-                    up = Planetarium.fetch.Sun.transform.position - vesselState.CoM;
-                    rotRef = Quaternion.LookRotation(fwd.normalized, up);
+                    Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
+                    up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
+                    fwd = Vector3d.Cross(baseOrbit.SwappedOrbitNormal(), up);
+                    rotRef = Quaternion.LookRotation(fwd, up);
+                    break;
+                case AttitudeReference.SURFACE_HORIZONTAL:
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.srf_velocity.normalized), vesselState.up);
                     break;
             }
             return rotRef;
@@ -330,17 +332,17 @@ namespace MuMech
                 if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                    part.vessel.VesselSAS.LockHeading(target);
+                    part.vessel.Autopilot.SAS.LockHeading(target);
                     lastSAS = target;
                 }
                 else if (Quaternion.Angle(lastSAS, target) > 10)
                 {
-                    part.vessel.VesselSAS.LockHeading(target);
+                    part.vessel.Autopilot.SAS.LockHeading(target);
                     lastSAS = target;
                 }
                 else
                 {
-                    part.vessel.VesselSAS.LockHeading(target, true);
+                    part.vessel.Autopilot.SAS.LockHeading(target, true);
                 }
             }
             else
@@ -355,11 +357,7 @@ namespace MuMech
                                                         (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
                                                     );
 
-                Vector3d torque = new Vector3d(
-                                                        vesselState.torqueAvailable.x + vesselState.torqueThrustPYAvailable * s.mainThrottle,
-                                                        vesselState.torqueAvailable.y,
-                                                        vesselState.torqueAvailable.z + vesselState.torqueThrustPYAvailable * s.mainThrottle
-                                                );
+                Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
 
                 Vector3d inertia = Vector3d.Scale(
                                                         vesselState.angularMomentum.Sign(),
@@ -421,14 +419,17 @@ namespace MuMech
             // Todo : enable it when it's a good idea or the user had it enabled before
             part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
 
+            if (attitudeKILLROT)
+            {
+                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll) 
+                {
+                    attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
+                    lastReferencePart = vessel.GetReferenceTransformPart();
+                }
+            }
             if (userCommandingPitchYaw || userCommandingRoll)
             {
                 pid.Reset();
-                
-                if (attitudeKILLROT)
-                {
-                    attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
-                }
             }
 
             if (!attitudeRollMatters)

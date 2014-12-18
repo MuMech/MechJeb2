@@ -10,7 +10,6 @@ namespace MuMech
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT }
         static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle" };
-        static readonly int numWarpTargets = Enum.GetNames(typeof(WarpTarget)).Length;
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -32,7 +31,7 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Warp to: ", GUILayout.ExpandWidth(false));
-            warpTarget = (WarpTarget)GuiUtils.ArrowSelector((int)warpTarget, numWarpTargets, warpTargetStrings[(int)warpTarget]);
+            warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
             GUILayout.EndHorizontal();
 
             if (warpTarget == WarpTarget.Time)
@@ -84,7 +83,7 @@ namespace MuMech
                             break;
 
                         case WarpTarget.Node:
-                            if (vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
                             break;
 
                         case WarpTarget.Time:

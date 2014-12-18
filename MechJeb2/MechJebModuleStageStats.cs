@@ -79,17 +79,32 @@ namespace MuMech
 
         protected void StartSimulation()
         {
-            simulationRunning = true;
+            try
+            {
+                simulationRunning = true;
+                stopwatch.Start(); //starts a timer that times how long the simulation takes
 
-            stopwatch.Start(); //starts a timer that times how long the simulation takes
+                //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
+                List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+                FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts, dVLinearThrust), new FuelFlowSimulation(parts, dVLinearThrust) };
 
-            //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.SortedShipList : vessel.parts);
-            FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts, dVLinearThrust), new FuelFlowSimulation(parts, dVLinearThrust) };
+                //Run the simulation in a separate thread
+                ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+                //RunSimulation(sims);
+            }
+            catch (Exception e)
+            {
+                print("Exception in MechJebModuleStageStats.StartSimulation(): " + e.StackTrace);
+                
+                // Stop timing the simulation
+                stopwatch.Stop();
+                millisecondsBetweenSimulations = 500;
+                stopwatch.Reset();
 
-            //Run the simulation in a separate thread
-            ThreadPool.QueueUserWorkItem(RunSimulation, sims);
-            //RunSimulation(sims);
+                // Start counting down the time to the next simulation
+                stopwatch.Start();
+                simulationRunning = false;
+            }
         }
 
         protected void RunSimulation(object o)
@@ -102,23 +117,22 @@ namespace MuMech
                 FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0f);
                 atmoStats = newAtmoStats;
                 vacStats = newVacStats;
-
-                //see how long the simulation took
-                stopwatch.Stop();
-                long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
-                stopwatch.Reset();
-
-                //set the delay before the next simulation
-                millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
-
-                //start the stopwatch that will count off this delay
-                stopwatch.Start();
             }
             catch (Exception e)
             {
-                print("Exception on MechJebModuleStageStats.RunSimulation(): " + e.Message);
+                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e.StackTrace);
             }
 
+            //see how long the simulation took
+            stopwatch.Stop();
+            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+            stopwatch.Reset();
+
+            //set the delay before the next simulation
+            millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
+
+            //start the stopwatch that will count off this delay
+            stopwatch.Start();
             simulationRunning = false;
         }
     }

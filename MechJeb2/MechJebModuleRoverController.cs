@@ -54,6 +54,9 @@ namespace MuMech
 //			}
 //		}
 
+		[EditableInfoItem("Speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		public EditableDouble speed = 10;
+
         [ToggleInfoItem("Brake on Pilot Eject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
         public bool BrakeOnEject = false;
 
@@ -66,9 +69,6 @@ namespace MuMech
 
 		[ToggleInfoItem("Stability Control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
 		public bool StabilityControl = false;
-
-		[EditableInfoItem("Speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
-		public EditableDouble speed = 10;
 
 		[ToggleInfoItem("Limit Acceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local | (int)Pass.Type)]
 		public bool LimitAcceleration = false;
@@ -220,7 +220,7 @@ namespace MuMech
 			{
 				if (ControlHeading)
 				{
-					heading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+					heading.val = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
 				}
 				if (ControlSpeed)
 				{

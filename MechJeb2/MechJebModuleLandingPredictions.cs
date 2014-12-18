@@ -22,7 +22,7 @@ namespace MuMech
                     result.endASL = result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude);
                 }
             }
-            return result; 
+            return result;
         }
         public ReentrySimulation.Result GetErrorResult() 
         {
@@ -33,7 +33,6 @@ namespace MuMech
                     errorResult.endASL = errorResult.body.TerrainAltitude(errorResult.endPosition.latitude, errorResult.endPosition.longitude);
                 }
             }
-            
             return errorResult;
         }
 
@@ -148,6 +147,8 @@ namespace MuMech
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
             }
 
+            Orbit patch = GetReenteringPatch() ?? orbit;
+
             // Work out a mass for the total ship, a DragMass for everything except the parachutes that will be used (including the stowed parachutes that will not be used) and list of parchutes that will be used.
             double totalMass =0;
             double dragMassExcludingUsedParachutes = 0;
@@ -171,21 +172,17 @@ namespace MuMech
                         if (pm is ModuleParachute)
                         {
                             ModuleParachute chute = (ModuleParachute)pm;
-                            partIsParachute = true;
                             // This is a parachute, but is it one that will be used in the landing / rentry simulation?
                             if (deployChutes && p.inverseStage >= limitChutesStage)
                             {
                                 // This chute will be used in the simualtion. Add it to the list of useage parachutes.
-                                usableChutes.Add(new SimulatedParachute(chute));
-                            }
-                            else
-                            {
-                                partDrag = p.maximum_drag;
+                                usableChutes.Add(new SimulatedParachute(chute, patch.StartUT));
+                                partIsParachute = true;
                             }
                         }
                     }
 
-                    if (false == partIsParachute)
+                    if (!partIsParachute)
                     {
                         // Part is not a parachute. Just use its drag value.
                         partDrag = p.maximum_drag;
@@ -193,9 +190,7 @@ namespace MuMech
 
                     dragMassExcludingUsedParachutes += partDrag * partMass;
                 }
-            }
-
-            Orbit patch = GetReenteringPatch() ?? orbit;
+            }            
 
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
             if(null !=this.result)

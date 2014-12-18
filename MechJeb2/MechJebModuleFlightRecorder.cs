@@ -65,6 +65,15 @@ namespace MuMech
             return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude));
         }
 
+        [ValueInfoItem("Downrange distance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
+        public double GroundDistanceFromMark()
+        {
+            CelestialBody markBody = FlightGlobals.Bodies[markBodyIndex];
+            Vector3d markVector = markBody.GetSurfaceNVector(markLatitude, markLongitude);
+            Vector3d vesselVector = vesselState.CoM - markBody.transform.position;
+            return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * Math.PI / 180;
+        }
+
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Max drag gees", InfoItem.Category.Recorder, format = "F2")]
         public double maxDragGees = 0;

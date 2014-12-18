@@ -268,6 +268,11 @@ namespace MuMech
             return "Maneuver Node Editor";
         }
 
+        public override bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return vessel.patchedConicsUnlocked();
+        }
+
         public MechJebModuleNodeEditor(MechJebCore core) : base(core) { }
     }
 }

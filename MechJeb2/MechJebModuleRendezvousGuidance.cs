@@ -139,5 +139,10 @@ namespace MuMech
         {
             return "Rendezvous Planner";
         }
+
+        public override bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return vessel.patchedConicsUnlocked();
+        }
     }
 }

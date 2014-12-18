@@ -21,7 +21,16 @@ namespace MuMech
     public class EditableDoubleMult : IEditable
     {
         [Persistent]
-        public double val;
+        public double _val;
+		public virtual double val
+		{
+			get { return _val; }
+			set
+			{
+				_val = value;
+				_text = (_val / multiplier).ToString();
+			}
+		}
         public readonly double multiplier;
 
         public bool parsed;
@@ -36,7 +45,7 @@ namespace MuMech
                 _text = Regex.Replace(_text, @"[^\d+-.]", ""); //throw away junk characters
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) val = parsedValue * multiplier;
+                if (parsed) _val = parsedValue * multiplier;
             }
         }
 
@@ -78,6 +87,16 @@ namespace MuMech
             _text = GuiUtils.TimeToDHMS(seconds);
         }
 
+		public override double val
+		{
+			get { return _val; }
+			set
+			{
+				_val = value;
+				_text = GuiUtils.TimeToDHMS(_val);
+			}
+		}
+
         public override string text
         {
             get { return _text; }
@@ -88,12 +107,12 @@ namespace MuMech
 
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) val = parsedValue;
+                if (parsed) _val = parsedValue;
 
                 if (!parsed)
                 {
                     parsed = GuiUtils.TryParseDHMS(_text, out parsedValue);
-                    if (parsed) val = parsedValue;
+                    if (parsed) _val = parsedValue;
                 }
             }
         }
@@ -227,8 +246,19 @@ namespace MuMech
 
         public enum SkinType { Default, MechJeb1, Compact }
         public static GUISkin skin;
+        public static float scale = 1;
+        public static int scaledScreenWidth = 1;
+        public static int scaledScreenHeight = 1;
+        public static bool dontUseDropDownMenu = false;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
+
+        public static void SetGUIScale(double s)
+        {
+            scale = Mathf.Clamp((float)s, 0.2f, 5f);
+            scaledScreenHeight = Mathf.RoundToInt(Screen.height / GuiUtils.scale);
+            scaledScreenWidth = Mathf.RoundToInt(Screen.width / GuiUtils.scale);
+        }
 
         public static void CopyDefaultSkin()
         {
@@ -345,50 +375,6 @@ namespace MuMech
             return ArrowSelector(index, modulo, drawLabel);
         }
 
-
-        //from http://wiki.unity3d.com/index.php?title=PopupList
-        public static bool List(Rect position, ref bool showList, ref int listEntry, 
-            GUIContent buttonContent, string[] list, GUIStyle listStyle)
-        {
-            return List(position, ref showList, ref listEntry, buttonContent, list, "button", "box", listStyle);
-        }
-
-        public static bool List(Rect position, ref bool showList, ref int listEntry, GUIContent buttonContent, string[] list,
-                                 GUIStyle buttonStyle, GUIStyle boxStyle, GUIStyle listStyle)
-        {
-            int controlID = GUIUtility.GetControlID(865645, FocusType.Passive);
-            bool done = false;
-            switch (Event.current.GetTypeForControl(controlID))
-            {
-                case EventType.mouseDown:
-                    if (position.Contains(Event.current.mousePosition))
-                    {
-                        GUIUtility.hotControl = controlID;
-                        showList = true;
-                    }
-                    break;
-                case EventType.mouseUp:
-                    if (showList)
-                    {
-                        done = true;
-                    }
-                    break;
-            }
-
-            GUI.Label(position, buttonContent, buttonStyle);
-            if (showList)
-            {
-                Rect listRect = new Rect(position.x, position.y, position.width, list.Length * 20);
-                GUI.Box(listRect, "", boxStyle);
-                listEntry = GUI.SelectionGrid(listRect, listEntry, list, 1, listStyle);
-            }
-            if (done)
-            {
-                showList = false;
-            }
-            return done;
-        }
-
         public static int HoursPerDay { get { return GameSettings.KERBIN_TIME ? 6 : 24; } }
         public static int DaysPerYear { get { return GameSettings.KERBIN_TIME ? 426 : 365; } }
 
@@ -418,9 +404,9 @@ namespace MuMech
                     {
                         if (!first) ret += " ";
 
-                        if (showSecondsDecimals && seconds < 60 && i == units.Length -1) ret += seconds.ToString("0." + new string('0', decimalPlaces));
+                        if (showSecondsDecimals && seconds < 60 && i == units.Length - 1) ret += seconds.ToString("00." + new string('0', decimalPlaces));
                         else if (first) ret += n.ToString();
-                        else ret += n.ToString("00");
+                        else ret += n.ToString(i == 1 ? "000" : "00");
 
                         ret += units[i];
                     }
@@ -478,7 +464,7 @@ namespace MuMech
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
                 if (m.enabled && m.showInCurrentScene
-                    && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
+                    && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / GuiUtils.scale))
                 {
                     return true;
                 }
@@ -533,6 +519,121 @@ namespace MuMech
             return null;
         }
 
+        public class ComboBox
+        {
+            // Easy to use combobox class
+            // ***** For users *****
+            // Call the Box method with the latest selected item, list of text entries
+            // and an object identifying who is making the request.
+            // The result is the newly selected item.
+            // There is currently no way of knowing when a choice has been made
+
+            // Position of the popup
+            private static Rect rect;
+            // Identifier of the caller of the popup, null if nobody is waiting for a value
+            private static object popupOwner = null;
+            private static string[] entries;
+            private static bool popupActive;
+            // Result to be returned to the owner
+            private static int selectedItem;
+            // Unity identifier of the window, just needs to be unique
+            private static int id = GUIUtility.GetControlID(FocusType.Passive);
+            // ComboBox GUI Style
+            private static GUIStyle style;
+
+            static ComboBox()
+            {
+                Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+                background.wrapMode = TextureWrapMode.Clamp;
+
+                for (int x = 0; x < background.width; x++)
+                    for (int y = 0; y < background.height; y++)
+                    {
+                        if (x == 0 || x == background.width-1 || y == 0 || y == background.height-1)
+                            background.SetPixel(x, y, new Color(0, 0, 0, 1));
+                        else
+                            background.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
+                    }
+
+                background.Apply();
+
+                style = new GUIStyle(GUI.skin.window);
+                style.normal.background = background;
+                style.onNormal.background = background;
+                style.border.top = style.border.bottom;
+                style.padding.top = style.padding.bottom;
+            }
+
+            public static void DrawGUI()
+            {
+                if (popupOwner == null || rect.height == 0 || ! popupActive)
+                    return;
+
+                // Make sure the rectangle is fully on screen
+                rect.x = Math.Max(0, Math.Min(rect.x, scaledScreenWidth - rect.width));
+                rect.y = Math.Max(0, Math.Min(rect.y, scaledScreenHeight - rect.height));
+
+                rect = GUILayout.Window(id, rect, identifier =>
+                    {
+                        selectedItem = GUILayout.SelectionGrid(-1, entries, 1, yellowOnHover);
+                        if (GUI.changed)
+                            popupActive = false;
+                    }, "", style);
+
+                //Cancel the popup if we click outside
+                if (Event.current.type == EventType.MouseDown && !rect.Contains(Event.current.mousePosition))
+                    popupOwner = null;
+            }
+
+            public static int Box(int selectedItem, string[] entries, object caller)
+            {
+                if (dontUseDropDownMenu)
+                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem]);
+
+                // Trivial cases (0-1 items)
+                if (entries.Length == 0)
+                    return 0;
+                if (entries.Length == 1)
+                {
+                    GUILayout.Label(entries[0]);
+                    return 0;
+                }
+
+                // A choice has been made, update the return value
+                if (popupOwner == caller && ! ComboBox.popupActive)
+                {
+                    popupOwner = null;
+                    selectedItem = ComboBox.selectedItem;
+                    GUI.changed = true;
+                }
+
+                bool guiChanged = GUI.changed;
+                if (GUILayout.Button("↓ " + entries[selectedItem] + " ↓"))
+                {
+                    // We will set the changed status when we return from the menu instead
+                    GUI.changed = guiChanged;
+                    // Update the global state with the new items
+                    popupOwner = caller;
+                    popupActive = true;
+                    ComboBox.entries = entries;
+                    // Magic value to force position update during repaint event
+                    rect = new Rect(0, 0, 0, 0);
+                }
+                // The GetLastRect method only works during repaint event, but the Button will return false during repaint
+                if (Event.current.type == EventType.Repaint && popupOwner == caller && rect.height == 0)
+                {
+                    rect = GUILayoutUtility.GetLastRect();
+                    // But even worse, I can't find a clean way to convert from relative to absolute coordinates
+                    Vector2 mousePos = Input.mousePosition;
+                    mousePos.y = Screen.height - mousePos.y;
+                    Vector2 clippedMousePos = Event.current.mousePosition;
+                    rect.x = (rect.x + mousePos.x) / scale - clippedMousePos.x;
+                    rect.y = (rect.y + mousePos.y) / scale - clippedMousePos.y;
+                }
+
+                return selectedItem;
+            }
+        }
     }
 
     public class Coordinates
