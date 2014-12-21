@@ -248,7 +248,7 @@ namespace MuMech
             return box;
         }
 
-        // 0.90 added a building upgrade to unlock Orbit visualisation and patched connic
+        // 0.90 added a building upgrade to unlock Orbit visualization and patched conics
         // Unfortunately when patchedConics are disabled vessel.patchedConicSolver is null
         // So we need to add a lot of sanity check and/or disable modules
         public static bool patchedConicsUnlocked(this Vessel vessel)
