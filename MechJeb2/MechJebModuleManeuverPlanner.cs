@@ -169,5 +169,10 @@ namespace MuMech
         {
             return "Maneuver Planner";
         }
+
+        public override bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return vessel.patchedConicsUnlocked();
+        }
     }
 }

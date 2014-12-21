@@ -83,7 +83,7 @@ namespace MuMech
                             break;
 
                         case WarpTarget.Node:
-                            if (vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
                             break;
 
                         case WarpTarget.Time:

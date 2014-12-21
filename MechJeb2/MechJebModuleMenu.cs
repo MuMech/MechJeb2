@@ -92,7 +92,7 @@ namespace MuMech
             }
 
             if (core.someModuleAreLocked)
-                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree");
+                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
 
 
             if (GUILayout.Button("Online Manual"))
@@ -326,18 +326,19 @@ namespace MuMech
         }
 
 
-        // The button won't move in the editor since OnUpdate is never called...
-        public override void OnUpdate()
+        public void OnMenuUpdate()
         {
             if (movingButton)
+            {
                 if (Input.GetMouseButton(1))
                 {
-                    windowVPos = Mathf.Clamp(Input.mousePosition.y - GuiUtils.scaledScreenHeight - 50, - GuiUtils.scaledScreenHeight, -100);
+                    windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.height, -100) / GuiUtils.scale;
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {
                     movingButton = false;
                 }
+            }
         }
 
         class DisplayOrder : IComparer<DisplayModule>

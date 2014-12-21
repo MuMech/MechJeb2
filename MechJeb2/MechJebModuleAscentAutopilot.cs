@@ -325,6 +325,11 @@ namespace MuMech
 
         void DriveCircularizationBurn(FlightCtrlState s)
         {
+            if (!vessel.patchedConicsUnlocked())
+            {
+                this.users.Clear();
+                return;
+            }
 
             if (placedCircularizeNode)
             {

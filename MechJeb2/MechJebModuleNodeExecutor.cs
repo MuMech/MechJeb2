@@ -20,7 +20,7 @@ namespace MuMech
         [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
         public string NextNodeBurnTime()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
                 return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
@@ -30,7 +30,7 @@ namespace MuMech
         [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
         public string NextNodeCountdown()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
                 return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
@@ -80,7 +80,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!vessel.patchedConicSolver.maneuverNodes.Any())
+            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
             {
                 Abort();
                 return;

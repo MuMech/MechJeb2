@@ -33,42 +33,33 @@ namespace MuMech
 
 		const int porkchop_Height = 200;
 
-		public void CheckPreconditions(Orbit o, MechJebModuleTargetController target)
+		private string CheckPreconditions(Orbit o, MechJebModuleTargetController target)
 		{
 			if (o.eccentricity >= 1 || o.ApR >= o.referenceBody.sphereOfInfluence)
-				throw new OperationException("initial orbit must not be hyperbolic");
+				return "initial orbit must not be hyperbolic";
 
 			if (!target.NormalTargetExists)
-				throw new OperationException("must select a target for the interplanetary transfer.");
+				return "must select a target for the interplanetary transfer.";
 
 			if (o.referenceBody.referenceBody == null)
-				throw new OperationException("doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".");
+				return "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".";
 
 			if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
 			{
 				if (o.referenceBody == target.TargetOrbit.referenceBody)
-					throw new OperationException("use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".");
-				throw new OperationException("an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".");
+					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
+				return "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
 			}
-		}
-
-		static double SafeDepartureTime (Orbit o, double universalTime)
-		{
-			return universalTime + 600 + o.period;
+			return null;
 		}
 
 		void ComputeStuff(Orbit o, double universalTime, MechJebModuleTargetController target)
 		{
-			errorMessage = "";
-			try
-			{
-				CheckPreconditions(o, target);
-			}
-			catch(Exception e)
-			{
-				errorMessage = e.Message;
+			errorMessage = CheckPreconditions(o, target);
+			if (errorMessage == null)
+				errorMessage = "";
+			else
 				return;
-			}
 
 			if (worker != null)
 				worker.stop = true;
@@ -78,7 +69,7 @@ namespace MuMech
 			{
 			case Mode.LimitedTime:
 				// We could end up asking for parameters in the past, take a safe 10 min margin
-				worker = new TransferCalculator (o, target.TargetOrbit, SafeDepartureTime(o, universalTime), maxArrivalTime, minSamplingStep);
+				worker = new TransferCalculator (o, target.TargetOrbit, universalTime, maxArrivalTime, minSamplingStep);
 				break;
 			case Mode.Porkchop:
 				worker = new AllGraphTransferCalculator(o, target.TargetOrbit, minDepartureTime, maxDepartureTime, minTransferTime, maxTransferTime, windowWidth, porkchop_Height);
@@ -94,7 +85,7 @@ namespace MuMech
 			double synodic_period = o.referenceBody.orbit.SynodicPeriod(destination);
 			double hohmann_transfer_time = OrbitUtil.GetTransferTime(o.referenceBody.orbit, destination);
 
-			minDepartureTime = SafeDepartureTime(o, universalTime);
+			minDepartureTime = universalTime;
 			minTransferTime = 3600;
 
 			maxDepartureTime = minDepartureTime + synodic_period * 1.5;
@@ -120,7 +111,7 @@ namespace MuMech
 						worker.maxTransferTime,
 						new Porkchop(worker.computed).texture,
 						(xmin, xmax, ymin, ymax) => {
-							minDepartureTime = Math.Max(xmin, SafeDepartureTime(o, universalTime));
+							minDepartureTime = Math.Max(xmin, universalTime);
 							maxDepartureTime = xmax;
 							minTransferTime = Math.Max(ymin, 3600);
 							maxTransferTime = ymax;
@@ -205,7 +196,10 @@ namespace MuMech
 		public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
 		{
 			// Check preconditions
-			CheckPreconditions(o, target);
+			string message = CheckPreconditions(o, target);
+			if (message != null)
+				throw new OperationException(message);
+
 			// Check if computation is finished
 			if (worker != null && !worker.Finished)
 				throw new OperationException("Computation not finished");

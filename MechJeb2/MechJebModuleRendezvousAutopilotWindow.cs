@@ -70,5 +70,10 @@ namespace MuMech
         {
             return "Rendezvous Autopilot";
         }
+
+        public override bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return vessel.patchedConicsUnlocked();
+        }
     }
 }

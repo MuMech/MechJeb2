@@ -222,6 +222,11 @@ namespace MuMech
                 GUILayout.Label("Autopilot status: " + autopilot.status);
             }
 
+            if (!vessel.patchedConicsUnlocked())
+            {
+                GUILayout.Label("Warning: MechJeb is unable to circularize without an upgraded Tracking Station.");
+            }
+
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
             if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
