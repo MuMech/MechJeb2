@@ -586,7 +586,7 @@ namespace MuMech
 						}
 					}
 					
-					if(Event.current.type == EventType.Repaint)
+					if (Event.current.type == EventType.Repaint)
 					{
 						waypointRects[i] = GUILayoutUtility.GetLastRect();
 						//if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }

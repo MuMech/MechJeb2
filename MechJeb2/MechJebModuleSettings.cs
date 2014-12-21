@@ -26,6 +26,9 @@ namespace MuMech
         [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideBrakeOnEject = false;
 
+        [ToggleInfoItem("Use only the titlebar for window dragging", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        public bool useTitlebarDragging = false;
+
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
@@ -89,6 +92,8 @@ namespace MuMech
 
             MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
+
+            ed.registry.Find(i => i.id == "Toggle:Settings.useTitlebarDragging").DrawItem();
             
             ed.registry.Find(i => i.id == "Toggle:Menu.useAppLauncher").DrawItem();
             if (ToolbarManager.ToolbarAvailable || core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
