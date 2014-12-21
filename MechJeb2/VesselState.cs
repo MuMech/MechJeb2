@@ -171,23 +171,24 @@ namespace MuMech
             public GimbalExtTorqueVector torqueVector;
         }
 
-        public static Dictionary<string, GimbalExt> gimbalExtDict;
+        private static Dictionary<System.Type, GimbalExt> gimbalExtDict;
 
         public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
         public delegate double DTerminalVelocity();
 
+        static VesselState()
+        {
+            gimbalExtDict = new Dictionary<System.Type, GimbalExt>();
+            GimbalExt nullGimbal = new GimbalExt() { isValid = nullGimbalIsValid, initialRot = nullGimbalInitialRot, torqueVector = nullGimbalTorqueVector };
+            GimbalExt stockGimbal = new GimbalExt() { isValid = stockGimbalIsValid, initialRot = stockGimbalInitialRot, torqueVector = stockGimbalTorqueVector };
+            gimbalExtDict.Add(typeof(object), nullGimbal);
+            gimbalExtDict.Add(typeof(ModuleGimbal), stockGimbal);
+        }
+
         public VesselState()
         {
             TerminalVelocityCall = TerminalVelocityStockKSP;
-            if (gimbalExtDict == null)
-            {
-                gimbalExtDict = new Dictionary<string, GimbalExt>();
-                GimbalExt nullGimbal = new GimbalExt() { isValid = nullGimbalIsValid, initialRot = nullGimbalInitialRot, torqueVector = nullGimbalTorqueVector };
-                GimbalExt stockGimbal = new GimbalExt() { isValid = stockGimbalIsValid, initialRot = stockGimbalInitialRot, torqueVector = stockGimbalTorqueVector };
-                gimbalExtDict.Add(string.Empty, nullGimbal);
-                gimbalExtDict.Add("ModuleGimbal", stockGimbal);
-            }
         }
 
         public void Update(Vessel vessel)
@@ -648,44 +649,43 @@ namespace MuMech
 
         private static GimbalExt getGimbalExt(Part p, out PartModule pm)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            foreach (PartModule m in p.Modules)
             {
                 GimbalExt gimbal;
-                string ModuleName = p.Modules[i].GetType().Name;
-                if (gimbalExtDict.TryGetValue(ModuleName, out gimbal) && gimbal.isValid(p.Modules[i]))
+                if (gimbalExtDict.TryGetValue(m.GetType(), out gimbal) && gimbal.isValid(m))
                 {
-                    pm = p.Modules[i];
+                    pm = m;
                     return gimbal;
                 }
             }
             pm = null;
-            return gimbalExtDict[string.Empty];
+            return gimbalExtDict[typeof(object)];
         }
 
-        // The delegate implementation for the null gimbal (no gimbal present)
-        private bool nullGimbalIsValid(PartModule p)
+        // The delgates implentation for the null gimbal ( no gimbal present)
+        private static bool nullGimbalIsValid(PartModule p)
         {
             return true;
         }
 
-        private Vector3d nullGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
+        private static Vector3d nullGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
         {
             return Vector3d.zero;
         }
 
-        private Quaternion nullGimbalInitialRot(PartModule p, Transform engineTransform, int i)
+        private static Quaternion nullGimbalInitialRot(PartModule p, Transform engineTransform, int i)
         {
             return engineTransform.rotation;
         }
 
         // The delegate implementation for the stock gimbal
-        private bool stockGimbalIsValid(PartModule p)
+        private static bool stockGimbalIsValid(PartModule p)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
             return gimbal.initRots.Count() > 0;
         }
 
-        private Vector3d stockGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
+        private static Vector3d stockGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
             Vector3d torque = Vector3d.zero;
@@ -714,7 +714,7 @@ namespace MuMech
             return torque;
         }
 
-        private Quaternion stockGimbalInitialRot(PartModule p, Transform engineTransform, int i)
+        private static Quaternion stockGimbalInitialRot(PartModule p, Transform engineTransform, int i)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
 
