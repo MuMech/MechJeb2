@@ -319,11 +319,20 @@ namespace MuMech
             else return vesselState.mass;
         }
 
+        private SpaceCenterFacility GetRolloutFacilityFromEditorFacility(EditorFacility editorFacility)
+        {
+            return (editorFacility == EditorFacility.VAB) ? SpaceCenterFacility.LaunchPad : SpaceCenterFacility.Runway;
+        }
+
         [ValueInfoItem("Max vessel mass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)]
         public string MaximumVesselMass()
         {
+            ScenarioUpgradeableFacilities.GetFacilityLevel(EditorEnumExtensions.ToFacility(EditorDriver.editorFacility));
+
             float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorEnumExtensions.ToFacility(EditorDriver.editorFacility));
-            float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(editorFacilityLevel);
+            SpaceCenterFacility rolloutFacility = GetRolloutFacilityFromEditorFacility(EditorDriver.editorFacility);
+            float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility));
+            
             if(maximumVesselMass < float.MaxValue)
                 return string.Format("{0} t", maximumVesselMass.ToString("F3"));
             else
