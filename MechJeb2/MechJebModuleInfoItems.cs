@@ -319,6 +319,17 @@ namespace MuMech
             else return vesselState.mass;
         }
 
+        [ValueInfoItem("Max vessel mass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)]
+        public string MaximumVesselMass()
+        {
+            float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorEnumExtensions.ToFacility(EditorDriver.editorFacility));
+            float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(editorFacilityLevel);
+            if(maximumVesselMass < float.MaxValue)
+                return string.Format("{0} t", maximumVesselMass.ToString("F3"));
+            else
+                return "Unlimited";
+        }
+
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
@@ -420,6 +431,23 @@ namespace MuMech
         public int PartCount()
         {
             return parts.Count;
+        }
+
+        [ValueInfoItem("Max part count", InfoItem.Category.Vessel, showInEditor = true)]
+        public string MaxPartCount()
+        {
+            float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorEnumExtensions.ToFacility(EditorDriver.editorFacility));
+            int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel);
+            if(maxPartCount < int.MaxValue)
+                return maxPartCount.ToString();
+            else
+                return "Unlimited";
+        }
+
+        [ValueInfoItem("Part count / Max parts", InfoItem.Category.Vessel, showInEditor = true)]
+        public string PartCountAndMaxPartCount()
+        {
+            return string.Format("{0} / {1}", PartCount(), MaxPartCount());
         }
 
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
