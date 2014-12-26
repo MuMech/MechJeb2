@@ -60,11 +60,14 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool autodeploySolarPanels = true;
+
         //internal state:
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
-		Vector3d lastDesiredThrustVector = new Vector3();
+        Vector3d lastDesiredThrustVector = new Vector3();
 
         public override void OnModuleEnabled()
         {
@@ -348,6 +351,18 @@ namespace MuMech
 
                     //finished circularize
                     this.users.Clear();
+
+                    if (autodeploySolarPanels)
+                    {
+                        foreach (Part p in vessel.parts)
+                        {
+                            foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
+                            {
+                                if (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTED)
+                                    sa.Extend();
+                            }
+                        }
+                    }
                     return;
                 }
             }
