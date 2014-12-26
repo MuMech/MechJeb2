@@ -360,7 +360,7 @@ namespace MuMech
                                                     );
 
                 Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
-                if (core.thrust.differentialThrottle)
+                if (core.thrust.differentialThrottleSuccess)
                     torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2;
 
                 Vector3d inertia = Vector3d.Scale(
@@ -414,7 +414,7 @@ namespace MuMech
                 act = new Vector3d(s.pitch, s.yaw, s.roll);
 
                 // Feed the control torque to the differential throttle
-                if (core.thrust.differentialThrottle)
+                if (core.thrust.differentialThrottleSuccess)
                     core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }

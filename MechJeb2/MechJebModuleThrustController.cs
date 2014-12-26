@@ -106,6 +106,9 @@ namespace MuMech
         public bool differentialThrottle = false;
         public Vector3d differentialThrottleDemandedTorque = new Vector3d();
 
+        // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
+        public bool differentialThrottleSuccess = false;
+
         public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle }
         public LimitMode limiter = LimitMode.None;
 
@@ -336,7 +339,11 @@ namespace MuMech
         {
             if (differentialThrottle)
             {
-                ComputeDifferentialThrottle(differentialThrottleDemandedTorque);
+                differentialThrottleSuccess = ComputeDifferentialThrottle(differentialThrottleDemandedTorque);
+            }
+            else
+            {
+                differentialThrottleSuccess = false;
             }
         }
 
@@ -559,7 +566,7 @@ namespace MuMech
             }
         }
 
-        public void ComputeDifferentialThrottle(Vector3d torque)
+        public bool ComputeDifferentialThrottle(Vector3d torque)
         {
             List<EngineWrapper> engines = new List<EngineWrapper>();
             foreach (Part p in vessel.parts)
@@ -583,7 +590,7 @@ namespace MuMech
             {
                 foreach (EngineWrapper e in engines)
                     e.thrustRatio = 1;
-                return;
+                return false;
             }
 
             double[,] C = new double[2+2*n,n+1];
@@ -606,9 +613,9 @@ namespace MuMech
 
                 if (!e.throttleLocked)
                 {
-                    C[0,i] = e.maxVariableTorque.x * mainThrottle;
-                    //C[1,j] = e.maxVariableTorque.y * mainThrottle;
-                    C[1,i] = e.maxVariableTorque.z * mainThrottle;
+                    C[0,i] = e.maxVariableTorque.x;
+                    //C[1,j] = e.maxVariableTorque.y;
+                    C[1,i] = e.maxVariableTorque.z;
 
                     C[2+2*i,i] = 1;
                     C[2+2*i,n] = 1;
@@ -622,14 +629,39 @@ namespace MuMech
                 }
             }
 
+            double[] w = new double[0];
+            double[,] u = new double[0,0];
+            double[,] vt = new double[0,0];
+            alglib.svd.rmatrixsvd(C, 2, n, 0, 0, 2, ref w, ref u, ref vt);
+            if (w[0] >= 10 * w[1])
+            {
+                foreach (EngineWrapper e in engines)
+                    e.thrustRatio = 1;
+                return false;
+            }
+
+            // Multiply by mainThrottle later to compute the singular value decomposition correctly
+            for (int i = 0; i < n; i++)
+            {
+                C[0,i] *= mainThrottle;
+                C[1,i] *= mainThrottle;
+            }
+
             double[] x = new double[n];
             alglib.minbleicstate state;
             alglib.minbleicreport rep;
 
-            alglib.minbleiccreate(x, out state);
-            alglib.minbleicsetlc(state, C, CT);
-            alglib.minbleicoptimize(state, MaxThrust, null, engines);
-            alglib.minbleicresults(state, out x, out rep);
+            try
+            {
+                alglib.minbleiccreate(x, out state);
+                alglib.minbleicsetlc(state, C, CT);
+                alglib.minbleicoptimize(state, MaxThrust, null, engines);
+                alglib.minbleicresults(state, out x, out rep);
+            }
+            catch
+            {
+                return false;
+            }
 
             for (int i = 0, j = 0; j < engines.Count; j++)
             {
@@ -639,6 +671,8 @@ namespace MuMech
                     i++;
                 }
             }
+
+            return true;
         }
 
         public void DisableDifferentialThrottle()
