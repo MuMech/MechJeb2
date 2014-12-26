@@ -122,8 +122,10 @@ namespace MuMech
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit + minThrustAccel * (1 - throttleLimit); } }
         // Total base torque (including torque from SRB)
         public Vector3d torqueAvailable;
-        // Variable part of torque related to throttle
+        // Variable part of torque related to throttle from engine gimbal
         public Vector3d torqueFromEngine;
+        // Variable part of torque related to differential throttle
+        public Vector3d torqueFromDiffThrottle;
         public double massDrag;
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
@@ -434,11 +436,11 @@ namespace MuMech
                     }
                     else if (pm is ModuleEngines)
                     {
-                        einfo.AddNewEngine(pm as ModuleEngines, p.Rigidbody.worldCenterOfMass - CoM);
+                        einfo.AddNewEngine(pm as ModuleEngines, p.transform.position - CoM);
                     }
                     else if (pm is ModuleEnginesFX)
                     {
-                        einfo.AddNewEngine(pm as ModuleEnginesFX, p.Rigidbody.worldCenterOfMass - CoM);
+                        einfo.AddNewEngine(pm as ModuleEnginesFX, p.transform.position - CoM);
                     }
                     else if (pm is ModuleResourceIntake)
                     {
@@ -480,7 +482,8 @@ namespace MuMech
             torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative); // Should we use Max or Min ?            
             torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
 
-            // TODO: add torqueEngineThrottle if differential throttle is active
+            torqueFromDiffThrottle = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);
+            torqueFromDiffThrottle.y = 0;
 
             torqueFromEngine += Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
 
@@ -744,7 +747,7 @@ namespace MuMech
 
             public Vector6 torqueEngineAvailable = new Vector6();
             public Vector6 torqueEngineVariable = new Vector6();
-            public Vector3d torqueEngineThrottle = new Vector3d();
+            public Vector6 torqueDiffThrottle = new Vector6();
 
             public class FuelRequirement
             {
@@ -832,7 +835,7 @@ namespace MuMech
                         torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
                         if (!e.throttleLocked)
                         {
-                            torqueEngineThrottle += Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust); // TODO: check
+                            torqueDiffThrottle.Add(e.vessel.transform.rotation.Inverse() * Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust));
                         }
                     }
 
@@ -913,7 +916,7 @@ namespace MuMech
                         torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
                         if (!e.throttleLocked)
                         {
-                            torqueEngineThrottle += Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust); // TODO: check
+                            torqueDiffThrottle.Add(e.vessel.transform.rotation.Inverse() * Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust));
                         }
                     }
 

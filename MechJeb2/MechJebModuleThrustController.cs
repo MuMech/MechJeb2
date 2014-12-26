@@ -102,9 +102,9 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        [ToggleInfoItem("Differential throttle", InfoItem.Category.Thrust)]
         [Persistent(pass = (int)Pass.Type)]
         public bool differentialThrottle = false;
+        public Vector3d differentialThrottleDemandedTorque = new Vector3d();
 
         public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle }
         public LimitMode limiter = LimitMode.None;
@@ -242,7 +242,13 @@ namespace MuMech
                 }
                 else
                 {
-                    if ((core.attitude.attitudeError >= 2) && ((vesselState.torqueFromEngine.x > vesselState.torqueAvailable.x * 10) || vesselState.torqueFromEngine.z > vesselState.torqueAvailable.z * 10))
+                    bool useGimbal = (vesselState.torqueFromEngine.x > vesselState.torqueAvailable.x * 10) ||
+                                     (vesselState.torqueFromEngine.z > vesselState.torqueAvailable.z * 10);
+
+                    bool useDiffThrottle = (vesselState.torqueFromDiffThrottle.x > vesselState.torqueAvailable.x * 10) ||
+                                           (vesselState.torqueFromDiffThrottle.z > vesselState.torqueAvailable.z * 10);
+
+                    if ((core.attitude.attitudeError >= 2) && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
                     }
@@ -318,14 +324,19 @@ namespace MuMech
             if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
             lastThrottle = s.mainThrottle;
+
+            if (!core.attitude.enabled)
+            {
+                Vector3d act = new Vector3d(s.pitch, s.yaw, s.roll);
+                differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * s.mainThrottle * 0.5f);
+            }
         }
 
         public override void OnFixedUpdate()
         {
             if (differentialThrottle)
             {
-                // TODO: get the commanded torque from the attitude controller
-                ComputeDifferentialThrottle(Vector3d.zero);
+                ComputeDifferentialThrottle(differentialThrottleDemandedTorque);
             }
         }
 
@@ -562,7 +573,6 @@ namespace MuMech
                         {
                             engine.UpdateForceAndTorque(vesselState.CoM);
                             engines.Add(engine);
-                            Debug.Log("  Engine at " + vessel.transform.rotation.Inverse() * (p.transform.position - vesselState.CoM));
                         }
                     }
                 }
@@ -580,9 +590,12 @@ namespace MuMech
             int[] CT = new int[2+2*n];
             float mainThrottle = vessel.ctrlState.mainThrottle;
 
-            // FIXME: the solver will throw an exception if the commanded torque is not realisable
-            C[0, n] = torque.x;
-            C[1, n] = torque.z;
+            // FIXME: the solver will throw an exception if the commanded torque is not realisable,
+            // clamp the commanded torque to half the possible torque for now
+            if (double.IsNaN(vesselState.torqueFromDiffThrottle.x)) vesselState.torqueFromDiffThrottle.x = 0;
+            if (double.IsNaN(vesselState.torqueFromDiffThrottle.z)) vesselState.torqueFromDiffThrottle.z = 0;
+            C[0, n] = Mathf.Clamp((float)torque.x, -(float)vesselState.torqueFromDiffThrottle.x * mainThrottle / 2, (float)vesselState.torqueFromDiffThrottle.x * mainThrottle / 2);
+            C[1, n] = Mathf.Clamp((float)torque.z, -(float)vesselState.torqueFromDiffThrottle.z * mainThrottle / 2, (float)vesselState.torqueFromDiffThrottle.z * mainThrottle / 2);
 
             for (int i = 0, j = 0; j < engines.Count; j++)
             {
