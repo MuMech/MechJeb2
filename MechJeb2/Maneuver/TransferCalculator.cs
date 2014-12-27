@@ -23,9 +23,9 @@ namespace MuMech
 
 		protected int nextDateIndex;
 		protected readonly int dateSamples;
-		public readonly double minDepartureTime = 3600;
+		public readonly double minDepartureTime;
 		public readonly double maxDepartureTime;
-		public readonly double minTransferTime = 3600;
+		public readonly double minTransferTime;
 		public readonly double maxTransferTime;
 		protected readonly int maxDurationSamples;
 
@@ -222,7 +222,7 @@ namespace MuMech
 		{
 			get
 			{
-				return OptimizeEjection(result, origin, destination, arrivalDate);
+				return OptimizeEjection(result, origin, destination, arrivalDate, minDepartureTime);
 			}
 		}
 
@@ -404,35 +404,50 @@ namespace MuMech
 			}
 		}
 
-		public static ManeuverParameters OptimizeEjection(ManeuverParameters original_maneuver, Orbit initial_orbit, Orbit target, double UT_arrival)
+		public static ManeuverParameters OptimizeEjection(ManeuverParameters original_maneuver, Orbit initial_orbit, Orbit target, double UT_arrival, double earliest_UT)
 		{
-			alglib.minlmstate state;
-			alglib.minlmreport rep;
+			while(true)
+			{
+				alglib.minlmstate state;
+				alglib.minlmreport rep;
 
-			double[] x = new double[4];
-			double[] scale = new double[4];
+				double[] x = new double[4];
+				double[] scale = new double[4];
 
-			x[0] = original_maneuver.dV.x;
-			x[1] = original_maneuver.dV.y;
-			x[2] = original_maneuver.dV.z;
-			x[3] = 0;
+				x[0] = original_maneuver.dV.x;
+				x[1] = original_maneuver.dV.y;
+				x[2] = original_maneuver.dV.z;
+				x[3] = 0;
 
-			scale[0] = scale[1] = scale[2] = original_maneuver.dV.magnitude;
-			scale[3] = initial_orbit.period;
+				scale[0] = scale[1] = scale[2] = original_maneuver.dV.magnitude;
+				scale[3] = initial_orbit.period;
 
-			OptimizerData data = new OptimizerData();
-			data.initial_orbit = initial_orbit;
-			data.original_UT = original_maneuver.UT;
-			data.UT_arrival = UT_arrival;
-			data.pos_arrival = target.getTruePositionAtUT(UT_arrival);
+				OptimizerData data = new OptimizerData();
+				data.initial_orbit = initial_orbit;
+				data.original_UT = original_maneuver.UT;
+				data.UT_arrival = UT_arrival;
+				data.pos_arrival = target.getTruePositionAtUT(UT_arrival);
 
-			alglib.minlmcreatev(3, x, 0.01, out state);
-			alglib.minlmsetcond(state, 0, 0, 0, 50);
-			alglib.minlmsetscale(state, scale);
-			alglib.minlmoptimize(state, DistanceToTarget, null, data);
-			alglib.minlmresults(state, out x, out rep);
+				alglib.minlmcreatev(4, x, 0.01, out state);
+				double epsx = 1e-4; // stop if |(x(k+1)-x(k)) ./ scale| <= EpsX
+				double epsf = 0.01; // stop if |F(k+1)-F(k)| <= EpsF*max{|F(k)|,|F(k+1)|,1}
+				alglib.minlmsetcond(state, 0, epsf, epsx, 50);
+				alglib.minlmsetscale(state, scale);
+				alglib.minlmoptimize(state, DistanceToTarget, null, data);
+				alglib.minlmresults(state, out x, out rep);
 
-			return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), original_maneuver.UT + x[3]);
+				Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
+				Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+
+				// try again in one orbit if the maneuver node is in the past
+				if (original_maneuver.UT + x[3] < earliest_UT)
+				{
+					Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - original_maneuver.UT - x[3]) + " s too early, trying again in " + initial_orbit.period + " s");
+					original_maneuver.UT += initial_orbit.period;
+				}
+				else
+					return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), original_maneuver.UT + x[3]);
+			}
 		}
 	}
 

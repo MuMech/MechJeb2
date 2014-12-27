@@ -663,6 +663,9 @@ namespace MuMech
                 return false;
             }
 
+            if (x.Any(val => double.IsNaN(val)))
+                return false;
+
             for (int i = 0, j = 0; j < engines.Count; j++)
             {
                 if (!engines[j].throttleLocked)
