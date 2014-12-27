@@ -104,7 +104,14 @@ namespace MuMech
             core.thrust.LimitToTerminalVelocityInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
+            GUILayout.BeginHorizontal();
             autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
+            if (autopilot.forceRoll)
+            {
+                GuiUtils.SimpleTextBox(" climb ", autopilot.verticalRoll, "º", 30f);
+                GuiUtils.SimpleTextBox(" turn ", autopilot.turnRoll, "º", 30f);
+            }
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
             if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;

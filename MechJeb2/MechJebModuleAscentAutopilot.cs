@@ -29,6 +29,10 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble verticalRoll = new EditableDouble(0);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble turnRoll = new EditableDouble(0);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage;
         public bool autostage
         {
@@ -122,7 +126,7 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             if (forceRoll && !correctiveSteering && vesselState.altitudeTrue > 25)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
-            	core.attitude.attitudeTo(90 - desiredInclination, 90, 0, this);
+                core.attitude.attitudeTo(90 - desiredInclination, 90, verticalRoll, this);
             }
             else
             {
@@ -272,7 +276,7 @@ namespace MuMech
             {
                 var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
                 var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
-                core.attitude.attitudeTo(hdg, pitch, 0, this);
+                core.attitude.attitudeTo(hdg, pitch, turnRoll, this);
             }
             else
             {
