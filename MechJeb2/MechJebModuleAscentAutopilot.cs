@@ -67,11 +67,21 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public bool autodeploySolarPanels = true;
 
+        public bool timedLaunch = false;
+        public double launchTime = 0;
+
+        public double tMinus
+        {
+            get { return launchTime - vesselState.time; }
+        }
+
         //internal state:
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
         Vector3d lastDesiredThrustVector = new Vector3();
+        private double lastTMinus = 999;
+
 
         public override void OnModuleEnabled()
         {
@@ -93,6 +103,32 @@ namespace MuMech
             if (placedCircularizeNode) core.node.Abort();
 
             status = "Off";
+        }
+
+        public void StartCountdown(double time)
+        {
+            timedLaunch = true;
+            launchTime = time;
+            lastTMinus = 999;
+        }
+
+        public override void OnFixedUpdate()
+        {
+            if (timedLaunch)
+            {
+                if (tMinus < 3 * vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
+                {
+                    if (enabled)
+                        Staging.ActivateNextStage();
+                    timedLaunch = false;
+                }
+                else
+                {
+                    if (core.node.autowarp) 
+                        core.warp.WarpToUT(launchTime - warpCountDown);
+                }
+                lastTMinus = tMinus;
+            }
         }
 
         public override void Drive(FlightCtrlState s)
