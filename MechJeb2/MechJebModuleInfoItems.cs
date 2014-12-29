@@ -342,7 +342,7 @@ namespace MuMech
 
 
 
-        [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = "F0", units = "N", showInEditor = true)]
+        [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MaxThrust()
         {
             if (HighLogic.LoadedSceneIsEditor)
@@ -365,7 +365,7 @@ namespace MuMech
             }
         }
 
-        [ValueInfoItem("Min thrust", InfoItem.Category.Vessel, format = "F0", units = "N", showInEditor = true)]
+        [ValueInfoItem("Min thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MinThrust()
         {
             if (HighLogic.LoadedSceneIsEditor)
