@@ -28,7 +28,8 @@ namespace MuMech
             {
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
-                    sa.Extend();
+                    if (sa.isBreakable)
+                        sa.Extend();
                 }
             }
         }
@@ -39,7 +40,8 @@ namespace MuMech
             {
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
-                    sa.Retract();
+                    if (sa.isBreakable)
+                        sa.Retract();
                 }
             }
         }
@@ -50,12 +52,14 @@ namespace MuMech
             {
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
-                    if ((sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED) ||
-                        (sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDING) ||
-                        (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTING))
+                    if (sa.isBreakable &&
+                        ((sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED) ||
+                         (sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDING) ||
+                         (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTING)))
                         return false;
                 }
             }
+
             return true;
         }
 
@@ -89,7 +93,9 @@ namespace MuMech
         public override void OnUpdate()
         {
             // Let the ascent guidance handle the solar panels to retract them before launch
-            if (autodeploySolarPanels && !core.GetComputerModule<MechJebModuleAscentAutopilot>().enabled)
+            if (autodeploySolarPanels &&
+                !(core.GetComputerModule<MechJebModuleAscentAutopilot>() != null &&
+                    core.GetComputerModule<MechJebModuleAscentAutopilot>().enabled))
             {
                 bool tmp = ShouldOpenSolarPanels();
 
