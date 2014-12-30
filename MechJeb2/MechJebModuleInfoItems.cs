@@ -1003,6 +1003,8 @@ namespace MuMech
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
+            if (mainBody.BiomeMap == null)
+                return "N/A";
             string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
             if (biome != "")
                 biome = "'s " + biome;
