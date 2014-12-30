@@ -31,6 +31,7 @@ namespace MuMech
         public MechJebModuleRCSBalancer rcsbal;
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
+        public MechJebModuleSolarPanelController solarpanel;
 
         public VesselState vesselState = new VesselState();
 
@@ -417,6 +418,7 @@ namespace MuMech
             rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
+            solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
