@@ -64,9 +64,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
-        [Persistent(pass = (int)(Pass.Global))]
-        public bool autodeploySolarPanels = true;
-
         public bool timedLaunch = false;
         public double launchTime = 0;
 
@@ -76,7 +73,7 @@ namespace MuMech
         }
 
         //internal state:
-        enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
+        enum AscentMode { RETRACT_SOLAR_PANELS, VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
         Vector3d lastDesiredThrustVector = new Vector3();
@@ -85,7 +82,11 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            mode = AscentMode.VERTICAL_ASCENT;
+            if (core.solarpanel.autodeploySolarPanels && mainBody.atmosphere)
+                mode = AscentMode.RETRACT_SOLAR_PANELS;
+            else
+                mode = AscentMode.VERTICAL_ASCENT;
+
             placedCircularizeNode = false;
 
             core.attitude.users.Add(this);
@@ -136,6 +137,10 @@ namespace MuMech
             limitingAoA = false;
             switch (mode)
             {
+                case AscentMode.RETRACT_SOLAR_PANELS:
+                    DriveRetractSolarPanels(s);
+                    break;
+
                 case AscentMode.VERTICAL_ASCENT:
                     DriveVerticalAscent(s);
                     break;
@@ -154,6 +159,22 @@ namespace MuMech
             }
         }
 
+        void DriveRetractSolarPanels(FlightCtrlState s)
+        {
+            if (autoThrottle) core.thrust.targetThrottle = 0.0f;
+
+            if (timedLaunch && tMinus > 10.0)
+            {
+                status = "Awaiting liftoff";
+                return;
+            }
+
+            status = "Retracting solar panels";
+            core.solarpanel.RetractAll();
+            if (core.solarpanel.AllRetracted())
+                mode = AscentMode.VERTICAL_ASCENT;
+        }
+
         void DriveVerticalAscent(FlightCtrlState s)
         {
             if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
@@ -166,7 +187,7 @@ namespace MuMech
             }
             else
             {
-            	core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+                core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
@@ -339,6 +360,9 @@ namespace MuMech
             // Sarbian : removed the special case for now. Some ship where turning whil still in atmosphere
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
+                if (core.solarpanel.autodeploySolarPanels)
+                    core.solarpanel.ExtendAll();
+
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
                 return;
@@ -391,18 +415,6 @@ namespace MuMech
 
                     //finished circularize
                     this.users.Clear();
-
-                    if (autodeploySolarPanels)
-                    {
-                        foreach (Part p in vessel.parts)
-                        {
-                            foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
-                            {
-                                if (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTED)
-                                    sa.Extend();
-                            }
-                        }
-                    }
                     return;
                 }
             }
