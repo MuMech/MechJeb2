@@ -41,7 +41,7 @@ namespace MuMech
             if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
                 core.thrust.DisableDifferentialThrottle();
 
-            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess)
+            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
                 GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
 
             bool oldAutostage = core.staging.users.Contains(this);

@@ -126,7 +126,7 @@ namespace MuMech
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
             if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();
 
-            autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels, "Auto-deploy solar panels");
+            core.solarpanel.autodeploySolarPanels = GUILayout.Toggle(core.solarpanel.autodeploySolarPanels, "Auto-deploy solar panels");
 
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
