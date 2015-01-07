@@ -1,0 +1,26 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="MechJebModuleAttitudeController.cs">
+    <Files>
+      <File FileName="MechJebModuleDockingAutopilot.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleDockingGuidance.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleAscentGuidance.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleAscentAutopilot.cs" Line="364" Column="33" />
+      <File FileName="MechJebModuleNodeExecutor.cs" Line="119" Column="67" />
+      <File FileName="MechJebModuleAttitudeController.cs" Line="422" Column="29" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="Mechjeb2" expanded="True">
+            <Node name="MechJebModuleAttitudeController.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
