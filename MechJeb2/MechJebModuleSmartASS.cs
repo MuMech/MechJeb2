@@ -198,6 +198,7 @@ namespace MuMech
 
                         break;
                     case Mode.SURFACE:
+                    	double val = (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); // change by 5 if the mod_key is held down, else by 1
                         GUILayout.BeginHorizontal();
                         TargetButton(Target.SURFACE_PROGRADE);
                         TargetButton(Target.SURFACE_RETROGRADE);
@@ -209,21 +210,75 @@ namespace MuMech
                         TargetButton(Target.VERTICAL_PLUS);
                         GUILayout.EndHorizontal();
                         if (target == Target.SURFACE) {
-                            GuiUtils.SimpleTextBox("HDG:", srfHdg);
-                            GuiUtils.SimpleTextBox("PIT:", srfPit);
-                            GuiUtils.SimpleTextBox("ROL:", srfRol);
+                        	GUILayout.BeginHorizontal();
+                            GuiUtils.SimpleTextBox("HDG", srfHdg, "°", 37);
+                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
+                            	srfHdg -= val;
+                                Engage();
+                            }
+                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
+                                srfHdg += val;
+                                Engage();
+                            }
+                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
+                                srfHdg = 0;
+                                Engage();
+                            }
+                            if (GUILayout.Button("90", GUILayout.Width(35))) {
+                                srfHdg = 90;
+                                Engage();
+                            }
+                            GUILayout.EndHorizontal();
+                        	GUILayout.BeginHorizontal();
+                            GuiUtils.SimpleTextBox("PIT", srfPit, "°", 37);
+                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
+                                srfPit -= val;
+                                Engage();
+                            }
+                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
+                                srfPit += val;
+                                Engage();
+                            }
+                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
+                                srfPit = 0;
+                                Engage();
+                            }
+                            if (GUILayout.Button("90", GUILayout.Width(35))) {
+                                srfPit = 90;
+                                Engage();
+                            }
+                            GUILayout.EndHorizontal();
+                        	GUILayout.BeginHorizontal();
+                            GuiUtils.SimpleTextBox("ROL", srfRol, "°", 37);
+                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
+                                srfRol -= val;
+                                Engage();
+                            }
+                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
+                                srfRol += val;
+                                Engage();
+                            }
+                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
+                                srfRol = 0;
+                                Engage();
+                            }
+                            if (GUILayout.Button("180", GUILayout.Width(35))) {
+                                srfRol = 180;
+                                Engage();
+                            }
+                            GUILayout.EndHorizontal();
                             if (GUILayout.Button("EXECUTE")) {
                                 Engage();
                             }
                         } else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE) {
                             GUILayout.BeginHorizontal();
-                            GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 60);
+                            GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
-                                srfVelRol -= 1;
+                                srfVelRol -= val;
                                 Engage();
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
-                                srfVelRol += 1;
+                                srfVelRol += val;
                                 Engage();
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
@@ -236,13 +291,13 @@ namespace MuMech
                             }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
-                            GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 60);
+                            GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
-                                srfVelPit -= 1;
+                                srfVelPit -= val;
                                 Engage();
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
-                                srfVelPit += 1;
+                                srfVelPit += val;
                                 Engage();
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
@@ -255,13 +310,13 @@ namespace MuMech
                             }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
-                            GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 60);
+                            GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
-                                srfVelYaw -= 1;
+                                srfVelYaw -= val;
                                 Engage();
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
-                                srfVelYaw += 1;
+                                srfVelYaw += val;
                                 Engage();
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {

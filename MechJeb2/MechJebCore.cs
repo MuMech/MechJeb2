@@ -31,6 +31,7 @@ namespace MuMech
         public MechJebModuleRCSBalancer rcsbal;
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
+        public MechJebModuleSolarPanelController solarpanel;
 
         public VesselState vesselState = new VesselState();
 
@@ -322,7 +323,7 @@ namespace MuMech
                 }
             }
 
-            if (unorderedComputerModules.Any(a => !a.unlockChecked))
+            if (ResearchAndDevelopment.Instance != null && unorderedComputerModules.Any(a => !a.unlockChecked))
             {
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
@@ -337,8 +338,10 @@ namespace MuMech
                 }
             }
 
-            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
+            GetComputerModule<MechJebModuleMenu>().OnMenuUpdate(); // Allow the menu movement, even while in Editor
 
+            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
+            
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
                 try
@@ -415,6 +418,7 @@ namespace MuMech
             rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
+            solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

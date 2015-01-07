@@ -145,29 +145,14 @@ namespace MuMech
         [ValueInfoItem("Suicide burn countdown", InfoItem.Category.Misc)]
         public string SuicideBurnCountdown()
         {
-            if (orbit.PeA > 0) return "N/A";
-
-            double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
-            angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
-            double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
-            double g = vesselState.localg;
-            double T = vesselState.limitedMaxThrustAccel;
-
-            double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
-            double decelTime = vesselState.speedSurface / effectiveDecel;
-
-            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vessel.srf_velocity;
-            double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingSite);
-            double impactTime = 0;
             try
             {
-                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel));
             }
-            catch (ArgumentException)
+            catch
             {
-                return GuiUtils.TimeToDHMS(0);
+                return "N/A";
             }
-            return GuiUtils.TimeToDHMS(impactTime - decelTime / 2 - vesselState.time);
         }
 
         private MovingAverage rcsThrustAvg = new MovingAverage(10);
@@ -282,13 +267,13 @@ namespace MuMech
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {
-            return CurrentThrust() / VesselMass();
+            return CurrentThrust() / (1000 * VesselMass());
         }
 
-        [ValueInfoItem("Current thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kN")]
+        [ValueInfoItem("Current thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N")]
         public double CurrentThrust()
         {
-            return vesselState.thrustCurrent;
+            return vesselState.thrustCurrent * 1000;
         }
 
         [ValueInfoItem("Time to SoI switch", InfoItem.Category.Orbit)]
@@ -319,6 +304,18 @@ namespace MuMech
             else return vesselState.mass;
         }
 
+        [ValueInfoItem("Max vessel mass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)]
+        public string MaximumVesselMass()
+        {
+            SpaceCenterFacility rolloutFacility = (EditorDriver.editorFacility == EditorFacility.VAB) ? SpaceCenterFacility.LaunchPad : SpaceCenterFacility.Runway;
+            float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility));
+            
+            if(maximumVesselMass < float.MaxValue)
+                return string.Format("{0} t", maximumVesselMass.ToString("F3"));
+            else
+                return "Unlimited";
+        }
+
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
@@ -345,7 +342,7 @@ namespace MuMech
 
 
 
-        [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = "F0", units = "kN", showInEditor = true)]
+        [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MaxThrust()
         {
             if (HighLogic.LoadedSceneIsEditor)
@@ -359,15 +356,16 @@ namespace MuMech
                                from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
                                select engine);
-                return engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)) + enginesfx.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
+                return 1000 * (engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)) +
+                    enginesfx.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)));
             }
             else
             {
-                return vesselState.thrustAvailable;
+                return 1000 * vesselState.thrustAvailable;
             }
         }
 
-        [ValueInfoItem("Min thrust", InfoItem.Category.Vessel, format = "F0", units = "kN", showInEditor = true)]
+        [ValueInfoItem("Min thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MinThrust()
         {
             if (HighLogic.LoadedSceneIsEditor)
@@ -381,8 +379,8 @@ namespace MuMech
                                  from engine in part.Modules.OfType<ModuleEnginesFX>()
                                  where engine.isEnabled
                                  select engine);
-                return engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust))
-                    + enginesfx.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));
+                return 1000 * (engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust))
+                    + enginesfx.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust)));
             }
             else
             {
@@ -393,13 +391,13 @@ namespace MuMech
         [ValueInfoItem("Max acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²", showInEditor = true)]
         public double MaxAcceleration()
         {
-            return MaxThrust() / VesselMass();
+            return MaxThrust() / (1000 * VesselMass());
         }
 
         [ValueInfoItem("Min acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²", showInEditor = true)]
         public double MinAcceleration()
         {
-            return MinThrust() / VesselMass();
+            return MinThrust() / (1000 * VesselMass());
         }
 
         [ValueInfoItem("Drag coefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]
@@ -420,6 +418,23 @@ namespace MuMech
         public int PartCount()
         {
             return parts.Count;
+        }
+
+        [ValueInfoItem("Max part count", InfoItem.Category.Vessel, showInEditor = true)]
+        public string MaxPartCount()
+        {
+            float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorEnumExtensions.ToFacility(EditorDriver.editorFacility));
+            int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel);
+            if(maxPartCount < int.MaxValue)
+                return maxPartCount.ToString();
+            else
+                return "Unlimited";
+        }
+
+        [ValueInfoItem("Part count / Max parts", InfoItem.Category.Vessel, showInEditor = true)]
+        public string PartCountAndMaxPartCount()
+        {
+            return string.Format("{0} / {1}", PartCount(), MaxPartCount());
         }
 
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
@@ -988,6 +1003,8 @@ namespace MuMech
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
+            if (mainBody.BiomeMap == null)
+                return "N/A";
             string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
             if (biome != "")
                 biome = "'s " + biome;

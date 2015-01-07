@@ -68,7 +68,6 @@ namespace MuMech
 			switch (selectionMode)
 			{
 			case Mode.LimitedTime:
-				// We could end up asking for parameters in the past, take a safe 10 min margin
 				worker = new TransferCalculator (o, target.TargetOrbit, universalTime, maxArrivalTime, minSamplingStep);
 				break;
 			case Mode.Porkchop:
@@ -129,24 +128,27 @@ namespace MuMech
 				var p = worker.computed[point[0], point[1]];
 				if (p != null)
 				{
-					dv =  MuUtils.ToSI(p.dV.magnitude) + "m/s";
-					departure =  GuiUtils.TimeToDHMS(worker.DateFromIndex(point[0]) - Planetarium.GetUniversalTime());
+					dv = MuUtils.ToSI(p.dV.magnitude) + "m/s";
+					if (worker.DateFromIndex(point[0]) < Planetarium.GetUniversalTime())
+						departure = "any time now";
+					else
+						departure = GuiUtils.TimeToDHMS(worker.DateFromIndex(point[0]) - Planetarium.GetUniversalTime());
 					duration = GuiUtils.TimeToDHMS(worker.DurationFromIndex(point[1]));
 				}
 				plot.DoGUI();
-				if (! plot.draggable) _draggable = false;
+				if (!plot.draggable) _draggable = false;
 			}
 			else
 			{
-                GUIStyle progressStyle = new GUIStyle
-                {
-                    font = GuiUtils.skin.font,
-                    fontSize = GuiUtils.skin.label.fontSize,
-                    fontStyle = GuiUtils.skin.label.fontStyle,
-                    normal = {textColor = GuiUtils.skin.label.normal.textColor}
-                };
+				GUIStyle progressStyle = new GUIStyle
+				{
+					font = GuiUtils.skin.font,
+					fontSize = GuiUtils.skin.label.fontSize,
+					fontStyle = GuiUtils.skin.label.fontStyle,
+					normal = {textColor = GuiUtils.skin.label.normal.textColor}
+				};
 
-			    GUILayout.Box("Computing: " + worker.Progress + "%", progressStyle, new GUILayoutOption[] {
+				GUILayout.Box("Computing: " + worker.Progress + "%", progressStyle, new GUILayoutOption[] {
 					GUILayout.Width(windowWidth),
 					GUILayout.Height(porkchop_Height)});
 			}
@@ -156,8 +158,31 @@ namespace MuMech
 			if (GUILayout.Button("Reset", GuiUtils.yellowOnHover))
 				ComputeTimes(o, target.TargetOrbit, universalTime);
 			GUILayout.EndHorizontal();
-			GUILayout.Label("departure in " +departure);
-			GUILayout.Label("transit duration " + duration);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Select: ");
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Lowest ΔV"))
+			{
+				plot.selectedPoint = new int[]{ worker.bestDate, worker.bestDuration };
+				GUI.changed = false;
+			}
+
+			if (GUILayout.Button("ASAP"))
+			{
+				int bestDuration = 0;
+				for (int i = 1; i < worker.computed.GetLength(1); i++)
+				{
+					if (worker.computed[0, bestDuration].dV.sqrMagnitude > worker.computed[0, i].dV.sqrMagnitude)
+						bestDuration = i;
+				}
+				plot.selectedPoint = new int[]{ 0, bestDuration };
+				GUI.changed = false;
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.Label("Departure in " + departure);
+			GUILayout.Label("Transit duration " + duration);
 		}
 
 		public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -220,7 +245,8 @@ namespace MuMech
 				return TransferCalculator.OptimizeEjection(
 					worker.computed[plot.selectedPoint[0], plot.selectedPoint[1]],
 					o, worker.destinationOrbit,
-					worker.DateFromIndex(plot.selectedPoint[0]) + worker.DurationFromIndex(plot.selectedPoint[1]));
+					worker.DateFromIndex(plot.selectedPoint[0]) + worker.DurationFromIndex(plot.selectedPoint[1]),
+					UT);
 			}
 
 			return worker.OptimizedResult;

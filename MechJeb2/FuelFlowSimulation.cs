@@ -515,12 +515,14 @@ namespace MuMech
                     {
                         // For stack nodes, we can draw fuel unless this node is specifically
                         // labeled as having crossfeed disabled (Kashua rule #4)
+                        FuelNode fuelnode;
                         if (attachNode.id != "Strut"
                             && attachNode.ResourceXFeed
                             && !(part.NoCrossFeedNodeKey.Length > 0
-                                 && attachNode.id.Contains(part.NoCrossFeedNodeKey)))
+                                 && attachNode.id.Contains(part.NoCrossFeedNodeKey))
+                            && nodeLookup.TryGetValue(attachNode.attachedPart, out fuelnode))
                         {
-                            stackNodeSources.Add(nodeLookup[attachNode.attachedPart]);
+                            stackNodeSources.Add(fuelnode);
                         }
                     }
                 }

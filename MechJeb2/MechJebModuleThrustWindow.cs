@@ -35,6 +35,15 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
+            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+            core.thrust.differentialThrottle = GUILayout.Toggle(core.thrust.differentialThrottle, "Differential throttle");
+
+            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
+                core.thrust.DisableDifferentialThrottle();
+
+            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
+                GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
+
             bool oldAutostage = core.staging.users.Contains(this);
             bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
             if (newAutostage && !oldAutostage) core.staging.users.Add(this);
