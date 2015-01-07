@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,10 +28,6 @@ namespace MuMech
         public bool correctiveSteering = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble verticalRoll = new EditableDouble(0);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble turnRoll = new EditableDouble(0);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage;
         public bool autostage
@@ -64,29 +60,15 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
-        public bool timedLaunch = false;
-        public double launchTime = 0;
-
-        public double tMinus
-        {
-            get { return launchTime - vesselState.time; }
-        }
-
         //internal state:
-        enum AscentMode { RETRACT_SOLAR_PANELS, VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
+        enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
-        Vector3d lastDesiredThrustVector = new Vector3();
-        private double lastTMinus = 999;
-
+		Vector3d lastDesiredThrustVector = new Vector3();
 
         public override void OnModuleEnabled()
         {
-            if (core.solarpanel.autodeploySolarPanels && mainBody.atmosphere)
-                mode = AscentMode.RETRACT_SOLAR_PANELS;
-            else
-                mode = AscentMode.VERTICAL_ASCENT;
-
+            mode = AscentMode.VERTICAL_ASCENT;
             placedCircularizeNode = false;
 
             core.attitude.users.Add(this);
@@ -106,41 +88,11 @@ namespace MuMech
             status = "Off";
         }
 
-        public void StartCountdown(double time)
-        {
-            timedLaunch = true;
-            launchTime = time;
-            lastTMinus = 999;
-        }
-
-        public override void OnFixedUpdate()
-        {
-            if (timedLaunch)
-            {
-                if (tMinus < 3 * vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
-                {
-                    if (enabled)
-                        Staging.ActivateNextStage();
-                    timedLaunch = false;
-                }
-                else
-                {
-                    if (core.node.autowarp) 
-                        core.warp.WarpToUT(launchTime - warpCountDown);
-                }
-                lastTMinus = tMinus;
-            }
-        }
-
         public override void Drive(FlightCtrlState s)
         {
             limitingAoA = false;
             switch (mode)
             {
-                case AscentMode.RETRACT_SOLAR_PANELS:
-                    DriveRetractSolarPanels(s);
-                    break;
-
                 case AscentMode.VERTICAL_ASCENT:
                     DriveVerticalAscent(s);
                     break;
@@ -159,22 +111,6 @@ namespace MuMech
             }
         }
 
-        void DriveRetractSolarPanels(FlightCtrlState s)
-        {
-            if (autoThrottle) core.thrust.targetThrottle = 0.0f;
-
-            if (timedLaunch && tMinus > 10.0)
-            {
-                status = "Awaiting liftoff";
-                return;
-            }
-
-            status = "Retracting solar panels";
-            core.solarpanel.RetractAll();
-            if (core.solarpanel.AllRetracted())
-                mode = AscentMode.VERTICAL_ASCENT;
-        }
-
         void DriveVerticalAscent(FlightCtrlState s)
         {
             if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
@@ -183,11 +119,11 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             if (forceRoll && !correctiveSteering && vesselState.altitudeTrue > 25)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
-                core.attitude.attitudeTo(90 - desiredInclination, 90, verticalRoll, this);
+            	core.attitude.attitudeTo(90 - desiredInclination, 90, 0, this);
             }
             else
             {
-                core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+            	core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
@@ -333,7 +269,7 @@ namespace MuMech
             {
                 var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
                 var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
-                core.attitude.attitudeTo(hdg, pitch, turnRoll, this);
+                core.attitude.attitudeTo(hdg, pitch, 0, this);
             }
             else
             {
@@ -360,9 +296,6 @@ namespace MuMech
             // Sarbian : removed the special case for now. Some ship where turning whil still in atmosphere
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
-                if (core.solarpanel.autodeploySolarPanels)
-                    core.solarpanel.ExtendAll();
-
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
                 return;
@@ -383,7 +316,16 @@ namespace MuMech
 			// might reignite. There won't be enough control authority to counteract that much momentum change.
 			// - Starwaster
             core.thrust.targetThrottle = 0;
- 			core.attitude.attitudeTo(lastDesiredThrustVector, AttitudeReference.INERTIAL, this);
+
+			double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+			Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
+			double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL);
+			
+			Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
+				+ Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
+
+
+			core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
            if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
@@ -402,6 +344,7 @@ namespace MuMech
         {
             if (!vessel.patchedConicsUnlocked())
             {
+                status = "Unable to Circularize without an upgraded an tracking station";
                 this.users.Clear();
                 return;
             }
