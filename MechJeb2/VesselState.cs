@@ -193,6 +193,16 @@ namespace MuMech
             TerminalVelocityCall = TerminalVelocityStockKSP;
         }
 
+        public static bool SupportsGimbalExtension<T>() where T : PartModule
+        {
+            return gimbalExtDict.ContainsKey(typeof(T));
+        }
+
+        public static void AddGimbalExtension<T>(GimbalExt gimbalExtension) where T : PartModule
+        {
+            gimbalExtDict[typeof(T)] = gimbalExtension;
+        }
+
         public void Update(Vessel vessel)
         {
             if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
