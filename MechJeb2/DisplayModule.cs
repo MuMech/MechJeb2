@@ -9,6 +9,7 @@ namespace MuMech
     public class DisplayModule : ComputerModule
     {
         public bool hidden = false;
+        public bool locked = false;
 
         public Rect windowPos
         {
@@ -81,7 +82,19 @@ namespace MuMech
                 enabled = false;
             }
 
-            if (draggable)
+//            if (GUI.Button(new Rect(windowPos.width - 40, 2, 20, 16), (locked ? "X" : "O"))) // lock button needs an icon, letters look crap
+//            {
+//                locked = !locked;
+//            }
+            
+            bool allowDrag = true;
+            if (core.GetComputerModule<MechJebModuleSettings>().useTitlebarDragging)
+            {
+            	allowDrag = Mouse.screenPos.x >= windowPos.xMin + 3 && Mouse.screenPos.x <= windowPos.xMin + windowPos.width - 3 &&
+							Mouse.screenPos.y >= windowPos.yMin + 3 && Mouse.screenPos.y <= windowPos.yMin + 17;
+            }
+            
+            if (draggable && allowDrag)
                 GUI.DragWindow();
         }
 
@@ -125,6 +138,7 @@ namespace MuMech
             base.OnSave(local, type, global);
 
             if (global != null) global.AddValue("enabled", enabled);
+//            if (global != null) global.AddValue("locked", locked);
         }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -136,6 +150,12 @@ namespace MuMech
                 bool loadedEnabled;
                 if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled)) enabled = loadedEnabled;
             }
+
+//            if (global != null && global.HasValue("locked"))
+//            {
+//                bool loadedLocked;
+//                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
+//            }
         }
 
         public virtual bool isActive()
