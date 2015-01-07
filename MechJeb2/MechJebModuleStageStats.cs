@@ -94,7 +94,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                print(string.Format("Exception in MechJebModuleStageStats.StartSimulation(): {0}{1}{2}", e, Environment.NewLine, e.StackTrace));
+                print(string.Format("Exception in MechJebModuleStageStats.StartSimulation(): {0}{1}{2}", e, Environment.NewLine, e.StackTrace));
                 
                 // Stop timing the simulation
                 stopwatch.Stop();
