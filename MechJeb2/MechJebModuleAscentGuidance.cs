@@ -159,8 +159,6 @@ namespace MuMech
                             launchingToPlane = true;
                             autopilot.StartCountdown( vesselState.time +
                                 LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.TargetOrbit));
-                            desiredInclination = core.target.TargetOrbit.inclination;
-                            desiredInclination *= Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                         }
                         if (core.target.TargetOrbit.referenceBody == orbit.referenceBody.referenceBody)
                         {
@@ -193,6 +191,8 @@ namespace MuMech
                     }
                     else if (launchingToPlane)
                     {
+                        desiredInclination = core.target.TargetOrbit.inclination;
+                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                         message = "Launching to target plane";
                     }
                     else if (launchingToRendezvous)
