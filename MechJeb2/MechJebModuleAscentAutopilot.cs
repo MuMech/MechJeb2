@@ -357,7 +357,8 @@ namespace MuMech
             //if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             //    || (vesselState.limitedMaxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
 
-            // Sarbian : removed the special case for now. Some ship where turning whil still in atmosphere
+            // Sarbian : removed the special case for now. Some ship where turning while still in atmosphere
+
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
                 if (core.solarpanel.autodeploySolarPanels)
