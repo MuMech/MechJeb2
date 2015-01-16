@@ -15,12 +15,19 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)(Pass.Global))]
-        public bool autodeploySolarPanels = true;
+        public bool autodeploySolarPanels = false;
 
         [Persistent(pass = (int)(Pass.Local))]
         private bool prev_ShouldOpenSolarPanels = false;
 
         public bool prev_autodeploySolarPanels = true;
+
+
+        [GeneralInfoItem("Auto-deploy solar panels", InfoItem.Category.Misc)]
+        public void AutoDeploySolarPanelsInfoItem()
+        {
+            autodeploySolarPanels = GUILayout.Toggle(autodeploySolarPanels, "Auto-deploy solar panels");
+        }
 
         public void ExtendAll()
         {
