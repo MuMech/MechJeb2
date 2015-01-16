@@ -104,6 +104,21 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Type)]
         public bool differentialThrottle = false;
+
+        [GeneralInfoItem("Differential throttle", InfoItem.Category.Thrust)]
+        public void  DifferentialThrottle()
+        {
+            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (differentialThrottle && vessel.LiftedOff())
+            {
+                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess ? Color.green : Color.yellow;
+            }
+            differentialThrottle = GUILayout.Toggle(differentialThrottle, "Differential throttle", s);
+            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
+                core.thrust.DisableDifferentialThrottle();
+        }
+
         public Vector3d differentialThrottleDemandedTorque = new Vector3d();
 
         // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
