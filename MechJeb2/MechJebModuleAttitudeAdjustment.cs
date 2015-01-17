@@ -148,6 +148,13 @@ namespace MuMech
                 GUILayout.EndHorizontal();
 
 
+                MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
+
+                arrows.srfVelocityArrowActive = GUILayout.Toggle(arrows.srfVelocityArrowActive, "Surface Velocity (yellow)");
+                arrows.obtVelocityArrowActive = GUILayout.Toggle(arrows.obtVelocityArrowActive, "Orbital Velocity (red)");
+                arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (green)");
+                arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
+
 
             }
 
