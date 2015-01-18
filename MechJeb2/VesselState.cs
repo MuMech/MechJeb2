@@ -30,6 +30,9 @@ namespace MuMech
 
         public Vector3d velocityMainBodySurface;
 
+        public Vector3d orbitalVelocity;
+        public Vector3d surfaceVelocity;
+
         public Vector3d angularVelocity;
         public Vector3d angularMomentum;
 
@@ -207,6 +210,9 @@ namespace MuMech
         {
             if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
+
+            UpdateVelocityAndCoM(vessel);
+
             UpdateBasicInfo(vessel);
 
             UpdateRCSThrustAndTorque(vessel);
@@ -222,14 +228,51 @@ namespace MuMech
             UpdateMoIAndAngularMom(vessel);
         }
 
-        
+
+        // TODO memo for later. egg found out that vessel.pos is actually 1 frame in the future while vessel.obt_vel is not.
+        // This most likely has some impact on the code.
+
+        // Calculate velocity at the CoM, and the CoM
+        // This should no be slower than calling vessel.findWorldCenterOfMass() since
+        // the KSP call does the same thing.
+        void UpdateVelocityAndCoM(Vessel vessel)
+        {
+            CoM = Vector3d.zero;
+            orbitalVelocity = Vector3d.zero;
+
+            mass = 0;
+            massDrag = 0;
+
+            torqueAvailable = Vector3d.zero;
+            torqueFromEngine = Vector3d.zero;
+            ctrlTorqueAvailable = new Vector6();
+
+            foreach (Part p in vessel.parts)
+            {
+                if (p.rb != null)
+                {
+                    mass += p.rb.mass;
+                    massDrag += p.rb.mass * p.maximum_drag;
+
+                    CoM = CoM + (p.rb.worldCenterOfMass * p.rb.mass);
+
+                    orbitalVelocity = orbitalVelocity + p.rb.velocity * p.rb.mass;
+                }
+            }
+            CoM = CoM / mass;
+            orbitalVelocity = orbitalVelocity / mass + Krakensbane.GetFrameVelocity() + vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy;
+
+            if (!MechJebModuleAttitudeController.useCoMVelocity)
+                orbitalVelocity = vessel.obt_velocity;
+        }
+
         // Calculate a bunch of simple quantities each frame.
         void UpdateBasicInfo(Vessel vessel)
         {
             time = Planetarium.GetUniversalTime();
             deltaT = TimeWarp.fixedDeltaTime;
 
-            CoM = vessel.findWorldCenterOfMass();
+            //CoM = vessel.findWorldCenterOfMass();
             up = (CoM - vessel.mainBody.position).normalized;
 
             Rigidbody rigidBody = vessel.rootPart.rigidbody;
@@ -241,46 +284,45 @@ namespace MuMech
             rotationSurface = Quaternion.LookRotation(north, up);
             rotationVesselSurface = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * rotationSurface);
 
+            surfaceVelocity = orbitalVelocity - vessel.mainBody.getRFrmVel(CoM);
+
             // Angle of attack, angle between surface velocity and the vessel's "up" vector
             // Originally from ferram4's FAR
-            Vector3 tmpVec = vessel.ReferenceTransform.up      * Vector3.Dot(vessel.ReferenceTransform.up,      vessel.srf_velocity.normalized)
-                           + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vessel.srf_velocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+            Vector3 tmpVec = vessel.ReferenceTransform.up      * Vector3.Dot(vessel.ReferenceTransform.up,      surfaceVelocity.normalized)
+                           + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, surfaceVelocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
             double tmpAoA = 180.0/Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
-            if (double.IsNaN(tmpAoA))
-                AoA.value = 0;
-            else
-                AoA.value = tmpAoA;
+            AoA.value = double.IsNaN(tmpAoA) ? 0 : tmpAoA;
 
             // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
             // Originally from ferram4's FAR
-            tmpVec = vessel.ReferenceTransform.up    * Vector3.Dot(vessel.ReferenceTransform.up,    vessel.srf_velocity.normalized) 
-                   + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, vessel.srf_velocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
+            tmpVec = vessel.ReferenceTransform.up    * Vector3.Dot(vessel.ReferenceTransform.up,    surfaceVelocity.normalized) 
+                   + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
             double tempAoS = 180.0/Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
             if (double.IsNaN(tempAoS))
                 AoS.value = 0;
             else
                 AoS.value= tempAoS;
 
-            velocityMainBodySurface = rotationSurface * vessel.srf_velocity;
+            velocityMainBodySurface = rotationSurface * surfaceVelocity;
 
-            horizontalOrbit = Vector3d.Exclude(up, vessel.obt_velocity).normalized;
-            horizontalSurface = Vector3d.Exclude(up, vessel.srf_velocity).normalized;
+            horizontalOrbit = Vector3d.Exclude(up, orbitalVelocity).normalized;
+            horizontalSurface = Vector3d.Exclude(up, surfaceVelocity).normalized;
 
             angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
 
-            radialPlusSurface = Vector3d.Exclude(vessel.srf_velocity, up).normalized;
-            radialPlus = Vector3d.Exclude(vessel.obt_velocity, up).normalized;
-            normalPlusSurface = -Vector3d.Cross(radialPlusSurface, vessel.srf_velocity.normalized);
-            normalPlus = -Vector3d.Cross(radialPlus, vessel.obt_velocity.normalized);
+            radialPlusSurface = Vector3d.Exclude(surfaceVelocity, up).normalized;
+            radialPlus = Vector3d.Exclude(orbitalVelocity, up).normalized;
+            normalPlusSurface = -Vector3d.Cross(radialPlusSurface, surfaceVelocity.normalized);
+            normalPlus = -Vector3d.Cross(radialPlus, orbitalVelocity.normalized);
 
             gravityForce = FlightGlobals.getGeeForceAtPosition(CoM);
             localg = gravityForce.magnitude;
 
-            speedOrbital.value = vessel.obt_velocity.magnitude;
-            speedSurface.value = vessel.srf_velocity.magnitude;
-            speedVertical.value = Vector3d.Dot(vessel.srf_velocity, up);
-            speedSurfaceHorizontal.value = Vector3d.Exclude(up, vessel.srf_velocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
-            speedOrbitHorizontal = (vessel.obt_velocity - (speedVertical * up)).magnitude;
+            speedOrbital.value = orbitalVelocity.magnitude;
+            speedSurface.value = surfaceVelocity.magnitude;
+            speedVertical.value = Vector3d.Dot(surfaceVelocity, up);
+            speedSurfaceHorizontal.value = Vector3d.Exclude(up, surfaceVelocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
+            speedOrbitHorizontal = (orbitalVelocity - (speedVertical * up)).magnitude;
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
@@ -299,7 +341,7 @@ namespace MuMech
             if (atmosphericPressure < vessel.mainBody.atmosphereMultiplier * 1e-6) atmosphericPressure = 0;
             atmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure);
             atmosphericDensityGrams = atmosphericDensity * 1000;
-            dynamicPressure = 0.5 * vessel.atmDensity * vessel.srf_velocity.sqrMagnitude;
+            dynamicPressure = 0.5 * vessel.atmDensity * surfaceVelocity.sqrMagnitude;
 
             orbitApA.value = vessel.orbit.ApA;
             orbitPeA.value = vessel.orbit.PeA;
@@ -391,9 +433,6 @@ namespace MuMech
         // Loop over all the parts in the vessel and calculate some things.
         void AnalyzeParts(Vessel vessel, EngineInfo einfo, IntakeInfo iinfo)
         {
-            mass = 0;
-            massDrag = 0;
-
             parachutes = new List<ModuleParachute>();
             parachuteDeployed = false;
 
@@ -403,25 +442,18 @@ namespace MuMech
 
             foreach (Part p in vessel.parts)
             {
-                if (p.IsPhysicallySignificant())
-                {
-                    double partMass = p.TotalMass();
-                    mass += partMass;
-                    massDrag += partMass * p.maximum_drag;
-                }
-
                 if (p is ControlSurface) // legacy. Remove this if and when it's no longer important to support mods that use ControlSurface
                 {
                     Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
                     ControlSurface cs = (p as ControlSurface);
-                    Vector3d airSpeed = vessel.srf_velocity + Vector3.Cross(cs.Rigidbody.angularVelocity, cs.transform.position - cs.Rigidbody.position);
+                    Vector3d airSpeed = surfaceVelocity + Vector3.Cross(cs.Rigidbody.angularVelocity, cs.transform.position - cs.Rigidbody.position);
                     // Air Speed is velocityVesselSurface
                     // AddForceAtPosition seems to need the airspeed vector rotated with the flap rotation x its surface
                     Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * cs.pivotAxis);
-                    Vector3 ctrlTroquePos = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(airSpeedRot * airSpeed)));
-                    Vector3 ctrlTroqueNeg = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(Quaternion.Inverse(airSpeedRot) * airSpeed)));
-                    ctrlTorqueAvailable.Add(ctrlTroquePos);
-                    ctrlTorqueAvailable.Add(ctrlTroqueNeg);
+                    Vector3 ctrlTorquePos = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(airSpeedRot * airSpeed)));
+                    Vector3 ctrlTorqueNeg = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, cs.getLiftVector(Quaternion.Inverse(airSpeedRot) * airSpeed)));
+                    ctrlTorqueAvailable.Add(ctrlTorquePos);
+                    ctrlTorqueAvailable.Add(ctrlTorqueNeg);
                 }
 
                 foreach (VesselStatePartExtension vspe in vesselStatePartExtensions)
@@ -437,7 +469,7 @@ namespace MuMech
                     {
                         ModuleReactionWheel rw = (ModuleReactionWheel)pm;
                         // I had to remove the test for active in .23 since the new ressource system reply to the RW that 
-                        // there is no energy available when the RW do tiny adjustement.
+                        // there is no energy available when the RW do tiny adjustment.
                         // I replaceed it with a test that check if there is electricity anywhere on the ship. 
                         // Let's hope we don't get reaction wheel that use something else
                         //if (rw.wheelState == ModuleReactionWheel.WheelState.Active && !rw.stateString.Contains("Not enough"))
@@ -471,7 +503,7 @@ namespace MuMech
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
                         Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
-                        Vector3d airSpeed = vessel.srf_velocity + Vector3.Cross(cs.part.Rigidbody.angularVelocity, cs.transform.position - cs.part.Rigidbody.position);
+                        Vector3d airSpeed = surfaceVelocity + Vector3.Cross(cs.part.Rigidbody.angularVelocity, cs.transform.position - cs.part.Rigidbody.position);
 
                         Quaternion airSpeedRot = Quaternion.AngleAxis(cs.ctrlSurfaceRange * cs.ctrlSurfaceArea, cs.transform.rotation * Vector3.right);
 

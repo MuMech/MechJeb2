@@ -120,7 +120,7 @@ namespace MuMech
             if (autopilot.enabled)
             {
                 GUILayout.Label("Status: " + autopilot.status);
-                Vector3d error = core.rcs.targetVelocity - vessel.obt_velocity;
+                Vector3d error = core.rcs.targetVelocity - vesselState.orbitalVelocity;
                 double error_x = Vector3d.Dot(error, vessel.GetTransform().right);
                 double error_y = Vector3d.Dot(error, vessel.GetTransform().forward);
                 double error_z = Vector3d.Dot(error, vessel.GetTransform().up);
