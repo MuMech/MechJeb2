@@ -1,120 +1,206 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace MuMech
 {
 
     class MechJebModuleDebugArrows : ComputerModule
     {
+
         [Persistent(pass = (int)Pass.Global)]
-        public bool srfVelocityArrowActive;
-        public DebugArrow srfVelocityArrow;
+        public bool displayAtCoM;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool podSrfVelocityArrowActive;
+        public DebugArrow podSrfVelocityArrow;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool comSrfVelocityArrowActive;
+        public DebugArrow comSrfVelocityArrow;
         
         [Persistent(pass = (int)Pass.Global)]
-        public bool obtVelocityArrowActive;
-        public DebugArrow obtVelocityArrow;
+        public bool podObtVelocityArrowActive;
+        public DebugArrow podObtVelocityArrow;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool comObtVelocityArrowActive;
+        public DebugArrow comObtVelocityArrow;
+
         
         [Persistent(pass = (int)Pass.Global)]
         public bool forwardArrowActive;
         public DebugArrow forwardArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        // Not used since I did not write the code for that one yet.
+        //[Persistent(pass = (int)Pass.Global)]
         public bool avgForwardArrowActive;
         public DebugArrow avgForwardArrow;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool requestedAttitudeArrowActive;
+        public DebugArrow requestedAttitudeArrow;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble arrowsLength = new EditableDouble(4);
 
         public MechJebModuleDebugArrows(MechJebCore core) : base(core)
         {
             enabled = true;
         }
 
+        // TODO : I should probably use an array and an enum to lower code dup ...
         public override void OnUpdate()
         {
-            if (srfVelocityArrow == null)
+            if (podSrfVelocityArrow == null)
             {
-                srfVelocityArrow = new DebugArrow(Color.yellow);
-                obtVelocityArrow = new DebugArrow(Color.red);
-                forwardArrow = new DebugArrow(Color.green);
+                podSrfVelocityArrow = new DebugArrow(Color.yellow);
+                comSrfVelocityArrow = new DebugArrow(Color.green);
+
+                podObtVelocityArrow = new DebugArrow(Color.red);
+                comObtVelocityArrow = new DebugArrow(XKCDColors.Orange);
+
+                forwardArrow = new DebugArrow(XKCDColors.NavyBlue);
                 avgForwardArrow = new DebugArrow(Color.blue);
+
+                requestedAttitudeArrow = new DebugArrow(Color.gray);
             }
 
-            srfVelocityArrow.Set(vessel.GetReferenceTransformPart().transform.position, vessel.srf_velocity);
-            srfVelocityArrow.State(srfVelocityArrowActive);
+            podSrfVelocityArrow.State(podSrfVelocityArrowActive);
+            if (podSrfVelocityArrowActive)
+            {
+                podSrfVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vessel.srf_velocity);
+                podSrfVelocityArrow.SetLength((float)arrowsLength.val);
+            }
 
-            obtVelocityArrow.Set(vessel.GetReferenceTransformPart().transform.position, vessel.obt_velocity);
-            obtVelocityArrow.State(obtVelocityArrowActive);
+            comSrfVelocityArrow.State(comSrfVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
+            if (comSrfVelocityArrowActive)
+            {
+                comSrfVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.surfaceVelocity);
+                comSrfVelocityArrow.SetLength((float)arrowsLength.val);
+            }
 
-            forwardArrow.Set(vessel.GetReferenceTransformPart().transform.position, vessel.GetTransform().up);
+
+            podObtVelocityArrow.State(podObtVelocityArrowActive);
+            if (podObtVelocityArrowActive)
+            {
+                podObtVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vessel.obt_velocity);
+                podObtVelocityArrow.SetLength((float)arrowsLength.val);
+            }
+
+            comObtVelocityArrow.State(comObtVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
+            if (comObtVelocityArrowActive)
+            {
+                comObtVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.orbitalVelocity);
+                comObtVelocityArrow.SetLength((float)arrowsLength.val);
+            }
+
             forwardArrow.State(forwardArrowActive);
+            if (forwardArrowActive)
+            {
+                forwardArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vessel.GetTransform().up);
+                forwardArrow.SetLength((float)arrowsLength.val);
+            }
 
-            avgForwardArrow.Set(vessel.GetReferenceTransformPart().transform.position, vesselState.forward);
             avgForwardArrow.State(avgForwardArrowActive);
+            if (avgForwardArrowActive)
+            {
+                avgForwardArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.forward);
+                avgForwardArrow.SetLength((float)arrowsLength.val);
+            }
+            
+
+            requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled);
+            if (requestedAttitudeArrowActive && core.attitude.enabled)
+            {
+                requestedAttitudeArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, core.attitude.RequestedAttitude);
+                requestedAttitudeArrow.SetLength((float)arrowsLength.val);
+            }
         }
     }
 
-
     class DebugArrow
     {
-
         private GameObject gameObject;
         private GameObject haft;
         private GameObject cone;
 
+        private static Shader diffuseAmbient;
+
+        private const float coneLength = 0.5f;
+        private float length;
+
+        static  DebugArrow()
+        {
+            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
+        }
+
+        // TODO : change the shader to allow see thru (ignore the z buffer)
         public DebugArrow(Color color)
         {
             gameObject = new GameObject("DebugArrow");
 
-            haft = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-
-            //foreach (var component in haft.GetComponents(typeof(Component)))
-            //{
-            //    MechJebCore.print(component.GetType() + " " + component.name);
-            //}
-
-            haft.collider.enabled = false;
-
+            haft = CreateCone(1f, 0.05f, 0.05f, 0f, 20);
             haft.transform.parent = gameObject.transform;
-            haft.transform.localScale = new Vector3(0.1f, 2f, 0.1f);
-            haft.transform.localPosition = new Vector3(0f, 0f, 2f);
             haft.transform.localRotation = Quaternion.Euler(90, 0, 0);
 
-            cone = CreateCone(0.5f, 0.15f, 0f, 20);
+            cone = CreateCone(coneLength, 0.15f, 0f, 0f, 20);
             cone.transform.parent = gameObject.transform;
             cone.transform.localRotation = Quaternion.Euler(90, 0, 0);
-            cone.transform.localPosition = new Vector3(0f, 0f, 4f);
 
-            MeshRenderer haftMeshRenderer = haft.GetComponent<MeshRenderer>();
+            SetLength(4);
+
+            MeshRenderer haftMeshRenderer = haft.AddComponent<MeshRenderer>();
             MeshRenderer coneMeshRenderer = cone.AddComponent<MeshRenderer>();
 
-            haftMeshRenderer.material = new Material(Shader.Find("KSP/Unlit")) { color = color };
+            haftMeshRenderer.material.shader = diffuseAmbient;
+            haftMeshRenderer.material.color = color;
             haftMeshRenderer.castShadows = false;
             haftMeshRenderer.receiveShadows = false;
-            //haftMeshRenderer.material.color = color;
 
-            coneMeshRenderer.material = new Material(Shader.Find("KSP/Unlit")) { color = color };
+            coneMeshRenderer.material.shader = diffuseAmbient;
+            coneMeshRenderer.material.color =  color;
             coneMeshRenderer.castShadows = false;
             coneMeshRenderer.receiveShadows = false;
-            //coneMeshRenderer.material.color = color;
+        }
 
-            //haft.SetActive(true);
-            //cone.SetActive(true);
+        public void SetLength(float length)
+        {
+            if (this.length == length)
+                return;
+            float conePos = length - coneLength;
+            if (conePos > 0)
+            {
+                this.length = length;
+                haft.transform.localScale = new Vector3(1f, conePos, 1f);
+                cone.transform.localPosition = new Vector3(0f, 0f, conePos);
+            }
         }
 
         public void Set(Vector3d position, Vector3d direction)
         {
+            if (direction.sqrMagnitude < 0.001)
+            {
+                State(false);
+                return;
+            }
+            Set(position, Quaternion.LookRotation(direction));
+        }
+
+        public void Set(Vector3d position, Quaternion direction)
+        {
             gameObject.transform.position = position;
-            gameObject.transform.rotation = Quaternion.LookRotation(direction);
+            gameObject.transform.rotation = direction;
         }
 
         public void State(bool state)
         {
-            gameObject.SetActive(state);
+            if (state != gameObject.activeSelf)
+                gameObject.SetActive(state);
         }
 
-        private GameObject CreateCone(float height, float bottomRadius, float topRadius, int nbSides)
+        // From http://wiki.unity3d.com/index.php/ProceduralPrimitives
+        // TODO : merge with the cylinder code  on that page and create the full arrow instead of using 2 mesh.
+        private GameObject CreateCone(float height, float bottomRadius, float topRadius, float offset, int nbSides)
         {
             cone = new GameObject();
             MeshFilter filter = cone.AddComponent<MeshFilter>();
@@ -131,20 +217,20 @@ namespace MuMech
             float _2pi = Mathf.PI * 2f;
 
             // Bottom cap
-            vertices[vert++] = new Vector3(0f, 0f, 0f);
+            vertices[vert++] = new Vector3(0f, offset, 0f);
             while (vert <= nbSides)
             {
                 float rad = (float)vert / nbSides * _2pi;
-                vertices[vert] = new Vector3(Mathf.Cos(rad) * bottomRadius, 0f, Mathf.Sin(rad) * bottomRadius);
+                vertices[vert] = new Vector3(Mathf.Cos(rad) * bottomRadius, offset, Mathf.Sin(rad) * bottomRadius);
                 vert++;
             }
 
             // Top cap
-            vertices[vert++] = new Vector3(0f, height, 0f);
+            vertices[vert++] = new Vector3(0f, offset + height, 0f);
             while (vert <= nbSides * 2 + 1)
             {
                 float rad = (float)(vert - nbSides - 1) / nbSides * _2pi;
-                vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, height, Mathf.Sin(rad) * topRadius);
+                vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, offset + height, Mathf.Sin(rad) * topRadius);
                 vert++;
             }
 
@@ -153,8 +239,8 @@ namespace MuMech
             while (vert <= vertices.Length - 4)
             {
                 float rad = (float)v / nbSides * _2pi;
-                vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, height, Mathf.Sin(rad) * topRadius);
-                vertices[vert + 1] = new Vector3(Mathf.Cos(rad) * bottomRadius, 0, Mathf.Sin(rad) * bottomRadius);
+                vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, offset + height, Mathf.Sin(rad) * topRadius);
+                vertices[vert + 1] = new Vector3(Mathf.Cos(rad) * bottomRadius, offset, Mathf.Sin(rad) * bottomRadius);
                 vert += 2;
                 v++;
             }
