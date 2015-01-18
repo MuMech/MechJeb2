@@ -606,7 +606,7 @@ namespace MuMech
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {
-            return mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude;
+            return mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude;
         }
 
         [ValueInfoItem("Synodic period", InfoItem.Category.Target)]
