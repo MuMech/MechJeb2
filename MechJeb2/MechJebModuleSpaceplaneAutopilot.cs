@@ -48,7 +48,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            if (runways == null)
+            if (runways == null && HighLogic.LoadedSceneIsFlight)
                 InitRunwaysList();
         }
 

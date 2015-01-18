@@ -28,7 +28,7 @@ namespace MuMech
             predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
             autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
 
-            if (landingSites == null)
+            if (landingSites == null && HighLogic.LoadedSceneIsFlight)
                 InitLandingSitesList();
         }
 
