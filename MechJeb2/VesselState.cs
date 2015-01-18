@@ -262,7 +262,7 @@ namespace MuMech
             CoM = CoM / mass;
             orbitalVelocity = orbitalVelocity / mass + Krakensbane.GetFrameVelocity() + vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy;
 
-            if (!MechJebModuleAttitudeController.useCoMVelocity)
+            if (!MechJebModuleAttitudeController.useCoMVelocity || vessel.packed)
                 orbitalVelocity = vessel.obt_velocity;
         }
 
