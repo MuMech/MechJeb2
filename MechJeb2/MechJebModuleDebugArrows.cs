@@ -138,14 +138,17 @@ namespace MuMech
         public DebugArrow(Color color)
         {
             gameObject = new GameObject("DebugArrow");
+            gameObject.layer = 15; // Change layer. Not reentry effect that way.
 
             haft = CreateCone(1f, 0.05f, 0.05f, 0f, 20);
             haft.transform.parent = gameObject.transform;
             haft.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            haft.layer = 15;
 
             cone = CreateCone(coneLength, 0.15f, 0f, 0f, 20);
             cone.transform.parent = gameObject.transform;
             cone.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            cone.layer = 15;
 
             SetLength(4);
 
