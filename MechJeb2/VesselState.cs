@@ -675,6 +675,7 @@ namespace MuMech
 
         double ComputeVesselBottomAltitude(Vessel vessel)
         {
+            if (vessel.rigidbody == null) return 0;
             double ret = altitudeTrue;
             foreach (Part p in vessel.parts)
             {
