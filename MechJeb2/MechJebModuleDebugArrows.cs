@@ -41,6 +41,12 @@ namespace MuMech
         public DebugArrow requestedAttitudeArrow;
 
         [Persistent(pass = (int)Pass.Global)]
+        public bool debugArrowActive;
+        public DebugArrow debugArrow;
+
+        public Vector3d debugVector = Vector3d.zero;
+
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDouble arrowsLength = new EditableDouble(4);
 
         public MechJebModuleDebugArrows(MechJebCore core) : base(core)
@@ -63,6 +69,8 @@ namespace MuMech
                 avgForwardArrow = new DebugArrow(Color.blue);
 
                 requestedAttitudeArrow = new DebugArrow(Color.gray);
+
+                debugArrow = new DebugArrow(XKCDColors.Fuchsia);
             }
 
             podSrfVelocityArrow.State(podSrfVelocityArrowActive);
@@ -107,13 +115,19 @@ namespace MuMech
                 avgForwardArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.forward);
                 avgForwardArrow.SetLength((float)arrowsLength.val);
             }
-            
 
             requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled);
             if (requestedAttitudeArrowActive && core.attitude.enabled)
             {
                 requestedAttitudeArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, core.attitude.RequestedAttitude);
                 requestedAttitudeArrow.SetLength((float)arrowsLength.val);
+            }
+
+            debugArrow.State(debugArrowActive);
+            if (debugArrowActive)
+            {
+                debugArrow.Set((Vector3d)vessel.GetReferenceTransformPart().transform.position, debugVector);
+                debugArrow.SetLength((float)debugVector.magnitude);
             }
         }
     }
@@ -138,7 +152,7 @@ namespace MuMech
         public DebugArrow(Color color)
         {
             gameObject = new GameObject("DebugArrow");
-            gameObject.layer = 15; // Change layer. Not reentry effect that way.
+            gameObject.layer = 15; // Change layer. Not reentry effect that way (TODO :  try 22)
 
             haft = CreateCone(1f, 0.05f, 0.05f, 0f, 20);
             haft.transform.parent = gameObject.transform;

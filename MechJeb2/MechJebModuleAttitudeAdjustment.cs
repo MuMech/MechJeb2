@@ -15,6 +15,9 @@ namespace MuMech
         public EditableDouble kiFactor;
         public EditableDouble kdFactor;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showInfos = false;
+
         public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) { }
 
         public override void OnStart(PartModule.StartState state)
@@ -37,7 +40,7 @@ namespace MuMech
             if (!core.attitude.useSAS)
             {
                 core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
-                
+
                 if (!core.attitude.Tf_autoTune)
                 {
                     GUILayout.Label("Larger ship do better with a larger Tf");
@@ -74,99 +77,104 @@ namespace MuMech
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
                 core.rcs.rcsThrottle = GUILayout.Toggle(core.rcs.rcsThrottle, " RCS throttle when 0k thrust");
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Kp, Ki, Kd", GUILayout.ExpandWidth(true));
-                GUILayout.Label(core.attitude.pid.Kp.ToString("F3") + ", " +
-                                core.attitude.pid.Ki.ToString("F3") + ", " +
-                                core.attitude.pid.Kd.ToString("F3"), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                showInfos = GUILayout.Toggle(showInfos, "Show Numbers");
+                if (showInfos)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Kp, Ki, Kd", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(
+                        core.attitude.pid.Kp.ToString("F3") + ", " +
+                        core.attitude.pid.Ki.ToString("F3") + ", " +
+                        core.attitude.pid.Kd.ToString("F3"),
+                        GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("prop. action.", GUILayout.ExpandWidth(true));
-                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.propAct), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("prop. action.", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.propAct), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("deriv. action", GUILayout.ExpandWidth(true));
-                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.derivativeAct), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("deriv. action", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.derivativeAct), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("integral action.", GUILayout.ExpandWidth(true));
-                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.intAccum), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("integral action.", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.intAccum), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("PID Action", GUILayout.ExpandWidth(true));
-                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pidAction), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("PID Action", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pidAction), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("AttitudeRollMatters ", GUILayout.ExpandWidth(true));
-                GUILayout.Label(core.attitude.attitudeRollMatters ? "true" : "false", GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("AttitudeRollMatters ", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(core.attitude.attitudeRollMatters ? "true" : "false", GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
+                    Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("torque", GUILayout.ExpandWidth(true));
-                GUILayout.Label(MuUtils.PrettyPrint(torque), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("torque", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(torque), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("|torque|", GUILayout.ExpandWidth(true));
-                GUILayout.Label(torque.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("|torque|", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(torque.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                Vector3d inertia = Vector3d.Scale(
-                                                        vesselState.angularMomentum.Sign(),
-                                                        Vector3d.Scale(
-                                                            Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                                                            Vector3d.Scale(torque, vesselState.MoI).Invert()
-                                                        )
-                                                    );
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("inertia", GUILayout.ExpandWidth(true));
-                GUILayout.Label(MuUtils.PrettyPrint(inertia), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    Vector3d inertia = Vector3d.Scale(
+                        vesselState.angularMomentum.Sign(),
+                        Vector3d.Scale(
+                            Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
+                            Vector3d.Scale(torque, vesselState.MoI).Invert()
+                            )
+                        );
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("inertia", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(inertia), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("|inertia|", GUILayout.ExpandWidth(true));
-                GUILayout.Label(inertia.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("|inertia|", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(inertia.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                Vector3d ratio = Vector3d.Scale(vesselState.MoI, torque.Invert());
+                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, torque.Invert());
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("|MOI| / |Torque|", GUILayout.ExpandWidth(true));
-                GUILayout.Label(ratio.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("|MOI| / |Torque|", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(ratio.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("fixedDeltaTime", GUILayout.ExpandWidth(true));
-                GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
-
-
-                MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
-
-
-                MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
-
-                GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
-
-                arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Display the arrow at the CoM");
-                arrows.podSrfVelocityArrowActive = GUILayout.Toggle(arrows.podSrfVelocityArrowActive, "Pod Surface Velocity (yellow)");
-                arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
-                arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
-                arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
-                arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (Navy Blue)");
-                //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
-
-                arrows.requestedAttitudeArrowActive = GUILayout.Toggle(arrows.requestedAttitudeArrowActive, "Requested Attitude (Gray)");
-
-
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("fixedDeltaTime", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+                }
             }
+
+            MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
+
+            MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
+
+            GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
+
+            arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Display the arrow at the CoM");
+            arrows.podSrfVelocityArrowActive = GUILayout.Toggle(arrows.podSrfVelocityArrowActive, "Pod Surface Velocity (yellow)");
+            arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
+            arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
+            arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
+            arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (Navy Blue)");
+            //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
+
+            arrows.requestedAttitudeArrowActive = GUILayout.Toggle(arrows.requestedAttitudeArrowActive, "Requested Attitude (Gray)");
+
+            arrows.debugArrowActive = GUILayout.Toggle(arrows.debugArrowActive, "Debug (Magenta)");
+            
 
             GUILayout.EndVertical();
 
