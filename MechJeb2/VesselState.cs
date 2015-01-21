@@ -386,7 +386,7 @@ namespace MuMech
             if (rcsbal.enabled)
             {
                 Vector3d rot = Vector3d.zero;
-                foreach (Vector6.Direction dir6 in Enum.GetValues(typeof(Vector6.Direction)))
+                foreach (Vector6.Direction dir6 in Enum.GetValues(typeof (Vector6.Direction)))
                 {
                     Vector3d dir = Vector6.directions[dir6];
                     double[] throttles;
@@ -399,31 +399,33 @@ namespace MuMech
                             if (throttles[i] > 0)
                             {
                                 Vector3d force = thrusters[i].GetThrust(dir, rot);
-                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[i], dir)));
+                                rcsThrustAvailable.Add(
+                                    vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[i], dir)));
                                 // Are we missing an rcsTorqueAvailable calculation here?
                             }
                         }
                     }
                 }
             }
-            else // !rcsbal.enabled
-            {
-                foreach (Part p in vessel.parts)
-                {
-                    foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                    {
-                        double maxT = pm.thrusterPower;
-                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
-                        if ((pm.isEnabled) && (!pm.isJustForShow))
+            foreach (Part p in vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
+
+                    if ((pm.isEnabled) && (!pm.isJustForShow))
+                    {
+                        foreach (Transform t in pm.thrusterTransforms)
                         {
-                            foreach (Transform t in pm.thrusterTransforms)
-                            {
-                                Vector3d thrusterThrust = vessel.GetTransform().InverseTransformDirection(-t.up.normalized) * pm.thrusterPower;
+                            Vector3d thrusterThrust = vessel.GetTransform().InverseTransformDirection(-t.up.normalized) * pm.thrusterPower;
+                            // This is a cheap hack to get rcsTorque with the RCSbalancer active.
+                            if (!rcsbal.enabled)
                                 rcsThrustAvailable.Add(thrusterThrust);
-                                Vector3d thrusterTorque = Vector3.Cross(vessel.GetTransform().InverseTransformDirection(partPosition), thrusterThrust);
-                                rcsTorqueAvailable.Add(thrusterTorque);
-                            }
+                            Vector3d thrusterTorque = Vector3.Cross(
+                                vessel.GetTransform().InverseTransformDirection(partPosition),
+                                thrusterThrust);
+                            rcsTorqueAvailable.Add(thrusterTorque);
                         }
                     }
                 }
