@@ -104,6 +104,21 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Type)]
         public bool differentialThrottle = false;
+
+        [GeneralInfoItem("Differential throttle", InfoItem.Category.Thrust)]
+        public void  DifferentialThrottle()
+        {
+            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (differentialThrottle && vessel.LiftedOff())
+            {
+                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess ? Color.green : Color.yellow;
+            }
+            differentialThrottle = GUILayout.Toggle(differentialThrottle, "Differential throttle", s);
+            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
+                core.thrust.DisableDifferentialThrottle();
+        }
+
         public Vector3d differentialThrottleDemandedTorque = new Vector3d();
 
         // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
@@ -202,7 +217,7 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
-                            Vector3 hsdir = Vector3.Exclude(vesselState.up, vessel.srf_velocity);
+                            Vector3 hsdir = Vector3.Exclude(vesselState.up, vesselState.surfaceVelocity);
                             Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
                             if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
@@ -220,8 +235,8 @@ namespace MuMech
                 }
 
                 double t_err = (trans_spd_act - spd) / vesselState.maxThrustAccel;
-                if ((tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(vesselState.forward, vessel.obt_velocity) < 0) ||
-                   (tmode == TMode.KEEP_SURFACE && Vector3d.Dot(vesselState.forward, vessel.srf_velocity) < 0))
+                if ((tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(vesselState.forward, vesselState.orbitalVelocity) < 0) ||
+                   (tmode == TMode.KEEP_SURFACE && Vector3d.Dot(vesselState.forward, vesselState.surfaceVelocity) < 0))
                 {
                     //allow thrust to declerate 
                     t_err *= -1;
@@ -352,7 +367,7 @@ namespace MuMech
         {
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return 1.0F;
 
-            double velocityRatio = Vector3d.Dot(vessel.srf_velocity, vesselState.up) / vesselState.TerminalVelocity();
+            double velocityRatio = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.up) / vesselState.TerminalVelocity();
 
             if (velocityRatio < 1.0) return 1.0F; //full throttle if under terminal velocity
 

@@ -180,10 +180,23 @@ namespace MuMech
             var stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
+            double lastStageBurnTime = 0;
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
                 var s = stats.vacStats[i];
-                if (s.deltaV <= 0 || s.startThrust <= 0) continue;
+                if (s.deltaV <= 0 || s.startThrust <= 0)
+                {
+                    if (core.staging.enabled)
+                    {
+                        // We staged again before autostagePreDelay is elapsed.
+                        // Add the remaining wait time
+                        if (burnTime - lastStageBurnTime < core.staging.autostagePreDelay && i != stats.vacStats.Length - 1)
+                            burnTime += core.staging.autostagePreDelay - (burnTime - lastStageBurnTime);
+                        burnTime += core.staging.autostagePreDelay;
+                        lastStageBurnTime = burnTime;
+                    }
+                    continue;
+                }
 
                 double stageBurnDv = Math.Min(s.deltaV, dvLeft);
                 dvLeft -= stageBurnDv;

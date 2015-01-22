@@ -35,14 +35,13 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
-            core.thrust.differentialThrottle = GUILayout.Toggle(core.thrust.differentialThrottle, "Differential throttle");
-
-            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
-                core.thrust.DisableDifferentialThrottle();
-
+            
+            core.thrust.DifferentialThrottle();
+            
             if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
                 GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
+
+            core.solarpanel.AutoDeploySolarPanelsInfoItem();
 
             bool oldAutostage = core.staging.users.Contains(this);
             bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");

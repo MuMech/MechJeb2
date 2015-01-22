@@ -119,14 +119,14 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (autopilot.limitAoA) {
-                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "", 50);
+                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50);
             }
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
             if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();
 
-            core.solarpanel.autodeploySolarPanels = GUILayout.Toggle(core.solarpanel.autodeploySolarPanels, "Auto-deploy solar panels");
+            core.solarpanel.AutoDeploySolarPanelsInfoItem();
 
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
@@ -159,8 +159,6 @@ namespace MuMech
                             launchingToPlane = true;
                             autopilot.StartCountdown( vesselState.time +
                                 LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.TargetOrbit));
-                            desiredInclination = core.target.TargetOrbit.inclination;
-                            desiredInclination *= Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                         }
                         if (core.target.TargetOrbit.referenceBody == orbit.referenceBody.referenceBody)
                         {
@@ -193,6 +191,8 @@ namespace MuMech
                     }
                     else if (launchingToPlane)
                     {
+                        desiredInclination = core.target.TargetOrbit.inclination;
+                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
                         message = "Launching to target plane";
                     }
                     else if (launchingToRendezvous)

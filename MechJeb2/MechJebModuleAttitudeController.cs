@@ -52,6 +52,9 @@ namespace MuMech
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
 
+        [Persistent(pass = (int)Pass.Global)]
+        public static bool useCoMVelocity = true;
+
         public bool attitudeKILLROT = false;
 
         protected bool attitudeChanged = false;
@@ -100,6 +103,12 @@ namespace MuMech
                 }
                 _attitudeTarget = value;
             }
+        }
+
+        protected Quaternion _requestedAttitude = Quaternion.identity;
+        public Quaternion RequestedAttitude 
+        {
+            get { return _requestedAttitude; }
         }
 
         protected bool _attitudeRollMatters = false;
@@ -184,16 +193,16 @@ namespace MuMech
             switch (reference)
             {
                 case AttitudeReference.ORBIT:
-                    rotRef = Quaternion.LookRotation(vessel.obt_velocity.normalized, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vesselState.orbitalVelocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.obt_velocity.normalized), vesselState.up);
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.orbitalVelocity.normalized), vesselState.up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = vesselState.rotationSurface;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = Quaternion.LookRotation(vessel.srf_velocity.normalized, vesselState.up);
+                    rotRef = Quaternion.LookRotation(vesselState.surfaceVelocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (core.target.Position - vessel.GetTransform().position).normalized;
@@ -227,11 +236,11 @@ namespace MuMech
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
                     up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
-                    fwd = Vector3d.Cross(baseOrbit.SwappedOrbitNormal(), up);
+                    fwd = Vector3d.Cross(-baseOrbit.GetOrbitNormal().Reorder(132).normalized, up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
-                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vessel.srf_velocity.normalized), vesselState.up);
+                    rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.surfaceVelocity.normalized), vesselState.up);
                     break;
             }
             return rotRef;
@@ -328,21 +337,21 @@ namespace MuMech
         {
             if (useSAS)
             {
-                Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Quaternion.Euler(90, 0, 0);
+                _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Quaternion.Euler(90, 0, 0);
                 if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                    part.vessel.Autopilot.SAS.LockHeading(target);
-                    lastSAS = target;
+                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude);
+                    lastSAS = _requestedAttitude;
                 }
-                else if (Quaternion.Angle(lastSAS, target) > 10)
+                else if (Quaternion.Angle(lastSAS, _requestedAttitude) > 10)
                 {
-                    part.vessel.Autopilot.SAS.LockHeading(target);
-                    lastSAS = target;
+                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude);
+                    lastSAS = _requestedAttitude;
                 }
                 else
                 {
-                    part.vessel.Autopilot.SAS.LockHeading(target, true);
+                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude, true);
                 }
 
                 core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
@@ -350,8 +359,8 @@ namespace MuMech
             else
             {
                 // Direction we want to be facing
-                Quaternion target = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
-                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * target);
+                _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
+                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * _requestedAttitude);
 
                 Vector3d deltaEuler = new Vector3d(
                                                         (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
@@ -377,7 +386,7 @@ namespace MuMech
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox
 
-                Vector3d tgtLocalUp = vessel.ReferenceTransform.transform.rotation.Inverse() * target * Vector3d.forward;
+                Vector3d tgtLocalUp = vessel.ReferenceTransform.transform.rotation.Inverse() * _requestedAttitude * Vector3d.forward;
                 Vector3d curLocalUp = Vector3d.up;
 
                 double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));

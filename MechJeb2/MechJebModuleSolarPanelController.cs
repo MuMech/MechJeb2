@@ -15,12 +15,28 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)(Pass.Global))]
-        public bool autodeploySolarPanels = true;
+        public bool autodeploySolarPanels = false;
 
         [Persistent(pass = (int)(Pass.Local))]
         private bool prev_ShouldOpenSolarPanels = false;
 
         public bool prev_autodeploySolarPanels = true;
+
+
+        [GeneralInfoItem("Auto-deploy solar panels", InfoItem.Category.Misc, showInEditor = false)]
+        public void AutoDeploySolarPanelsInfoItem()
+        {
+            autodeploySolarPanels = GUILayout.Toggle(autodeploySolarPanels, "Auto-deploy solar panels");
+        }
+
+        [GeneralInfoItem("Extend all solar panels", InfoItem.Category.Misc, showInEditor = false)]
+        public void ExtendAllSolarPanelsInfoItem()
+        {
+            if (GUILayout.Button("Extend all solar panels"))
+            {
+                ExtendAll();
+            }
+        }
 
         public void ExtendAll()
         {
@@ -31,6 +47,15 @@ namespace MuMech
                     if (sa.isBreakable)
                         sa.Extend();
                 }
+            }
+        }
+
+        [GeneralInfoItem("Retract all solar panels", InfoItem.Category.Misc, showInEditor = false)]
+        public void RetractAllSolarPanelsInfoItem()
+        {
+            if (GUILayout.Button("Retract all solar panels"))
+            {
+                RetractAll();
             }
         }
 
@@ -59,7 +84,6 @@ namespace MuMech
                         return false;
                 }
             }
-
             return true;
         }
 
@@ -72,7 +96,7 @@ namespace MuMech
                 return false;
 
             if (vessel.LandedOrSplashed)
-                return true;
+                return false; // True adds too many complex case
 
             double dt = 10;
             double min_alt; // minimum altitude between now and now+dt seconds
@@ -90,7 +114,7 @@ namespace MuMech
             return false;
         }
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
             // Let the ascent guidance handle the solar panels to retract them before launch
             if (autodeploySolarPanels &&

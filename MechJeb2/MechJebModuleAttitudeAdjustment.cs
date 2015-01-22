@@ -148,6 +148,23 @@ namespace MuMech
                 GUILayout.EndHorizontal();
 
 
+                MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
+
+
+                MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
+
+                GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
+
+                arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Display the arrow at the CoM");
+                arrows.podSrfVelocityArrowActive = GUILayout.Toggle(arrows.podSrfVelocityArrowActive, "Pod Surface Velocity (yellow)");
+                arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
+                arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
+                arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
+                arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (Navy Blue)");
+                //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
+
+                arrows.requestedAttitudeArrowActive = GUILayout.Toggle(arrows.requestedAttitudeArrowActive, "Requested Attitude (Gray)");
+
 
             }
 
