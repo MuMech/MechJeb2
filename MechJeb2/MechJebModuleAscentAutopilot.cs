@@ -396,7 +396,7 @@ namespace MuMech
 			core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
 			if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
-				core.attitude.attitudeTo (Vector3d.forward, AttitudeReference.INERTIAL, this);
+                core.attitude.attitudeTo (Vector3d.forward, AttitudeReference.INERTIAL, this);
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
