@@ -132,7 +132,7 @@ namespace MuMech
             Vector3d targetVel = core.target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
-            double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
+			double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude > 1.0 ? Math.Pow(lateralSep.magnitude, 2.0) : lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
 
             bool align = true;
 
