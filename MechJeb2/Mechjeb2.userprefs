@@ -1,15 +1,15 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="MechJebModuleDockingAutopilot.cs">
     <Files>
-      <File FileName="MechJebModuleAscentAutopilot.cs" Line="578" Column="1" />
-      <File FileName="MechJebModuleThrustController.cs" Line="712" Column="1" />
-      <File FileName="MechJebModuleAscentGuidance.cs" Line="243" Column="1" />
-      <File FileName="MechJebModuleLandingAutopilot.cs" Line="1541" Column="1" />
+      <File FileName="MechJebModuleAscentAutopilot.cs" Line="395" Column="95" />
+      <File FileName="MechJebModuleThrustController.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleAscentGuidance.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleLandingAutopilot.cs" Line="164" Column="55" />
       <File FileName="MechJebModuleLandingPredictions.cs" Line="274" Column="34" />
-      <File FileName="MechJebModuleLandingGuidance.cs" Line="343" Column="1" />
-      <File FileName="MechJebModuleDockingAutopilot.cs" Line="135" Column="4" />
-      <File FileName="MechJebModuleDockingGuidance.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleLandingGuidance.cs" Line="130" Column="68" />
+      <File FileName="MechJebModuleDockingAutopilot.cs" Line="135" Column="144" />
+      <File FileName="MechJebModuleDockingGuidance.cs" Line="13" Column="30" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
