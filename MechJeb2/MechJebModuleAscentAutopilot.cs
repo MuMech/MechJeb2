@@ -76,7 +76,6 @@ namespace MuMech
         enum AscentMode { RETRACT_SOLAR_PANELS, VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
-        Vector3d lastDesiredThrustVector = new Vector3();
         private double lastTMinus = 999;
 
 
@@ -327,7 +326,6 @@ namespace MuMech
                 }
             }
 
-			lastDesiredThrustVector = desiredThrustVector;
 
             if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
             {
@@ -383,12 +381,22 @@ namespace MuMech
 			// Actually I have a better idea: Don't initiate orientation changes when there's a chance that our main engine
 			// might reignite. There won't be enough control authority to counteract that much momentum change.
 			// - Starwaster
-            core.thrust.targetThrottle = 0;
- 			core.attitude.attitudeTo(lastDesiredThrustVector, AttitudeReference.INERTIAL, this);
-           if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
+			core.thrust.targetThrottle = 0;
+			
+			double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+			Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
+			double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL);
+			
+			Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
+				+ Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
+			
+			
+			core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
+			if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
-            }
+				core.attitude.attitudeTo (Vector3d.forward, AttitudeReference.INERTIAL, this);
+				core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
+			}
 
             if (core.node.autowarp)
             {
