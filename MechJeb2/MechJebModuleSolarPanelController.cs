@@ -29,6 +29,11 @@ namespace MuMech
             autodeploySolarPanels = GUILayout.Toggle(autodeploySolarPanels, "Auto-deploy solar panels");
         }
 
+        private bool isDeployable(ModuleDeployableSolarPanel sa)
+        {
+            return sa.Events["Extend"].active || sa.Events["Retract"].active;
+        }
+
         [GeneralInfoItem("Extend all solar panels", InfoItem.Category.Misc, showInEditor = false)]
         public void ExtendAllSolarPanelsInfoItem()
         {
@@ -44,7 +49,7 @@ namespace MuMech
             {
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
-                    if (sa.isBreakable)
+                    if (isDeployable(sa))
                         sa.Extend();
                 }
             }
@@ -65,7 +70,7 @@ namespace MuMech
             {
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
-                    if (sa.isBreakable)
+                    if (isDeployable(sa))
                         sa.Retract();
                 }
             }
@@ -77,7 +82,7 @@ namespace MuMech
             {
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
-                    if (sa.isBreakable &&
+                    if (isDeployable(sa) &&
                         ((sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED) ||
                          (sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDING) ||
                          (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTING)))
