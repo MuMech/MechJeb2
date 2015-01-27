@@ -151,6 +151,11 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
+                    GUILayout.Label("CoM local", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(vessel.ReferenceTransform.InverseTransformPoint(vesselState.CoM + vesselState.orbitalVelocity * TimeWarp.fixedDeltaTime)), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
                     GUILayout.Label("fixedDeltaTime", GUILayout.ExpandWidth(true));
                     GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();

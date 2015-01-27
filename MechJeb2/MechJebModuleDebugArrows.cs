@@ -73,53 +73,56 @@ namespace MuMech
                 debugArrow = new DebugArrow(XKCDColors.Fuchsia);
             }
 
+            Vector3 arrowPos = displayAtCoM
+                ? vesselState.CoM + (vessel.packed ? Vector3d.zero : vesselState.orbitalVelocity * TimeWarp.fixedDeltaTime)
+                : (Vector3d)vessel.GetReferenceTransformPart().transform.position;
+
             podSrfVelocityArrow.State(podSrfVelocityArrowActive);
             if (podSrfVelocityArrowActive)
             {
-                podSrfVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vessel.srf_velocity);
+                podSrfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
                 podSrfVelocityArrow.SetLength((float)arrowsLength.val);
             }
 
             comSrfVelocityArrow.State(comSrfVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
             if (comSrfVelocityArrowActive)
             {
-                comSrfVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.surfaceVelocity);
+                comSrfVelocityArrow.Set(arrowPos, vesselState.surfaceVelocity);
                 comSrfVelocityArrow.SetLength((float)arrowsLength.val);
             }
-
 
             podObtVelocityArrow.State(podObtVelocityArrowActive);
             if (podObtVelocityArrowActive)
             {
-                podObtVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vessel.obt_velocity);
+                podObtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
                 podObtVelocityArrow.SetLength((float)arrowsLength.val);
             }
 
             comObtVelocityArrow.State(comObtVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
             if (comObtVelocityArrowActive)
             {
-                comObtVelocityArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.orbitalVelocity);
+                comObtVelocityArrow.Set(arrowPos, vesselState.orbitalVelocity);
                 comObtVelocityArrow.SetLength((float)arrowsLength.val);
             }
 
             forwardArrow.State(forwardArrowActive);
             if (forwardArrowActive)
             {
-                forwardArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vessel.GetTransform().up);
+                forwardArrow.Set(arrowPos, vessel.GetTransform().up);
                 forwardArrow.SetLength((float)arrowsLength.val);
             }
 
             avgForwardArrow.State(avgForwardArrowActive);
             if (avgForwardArrowActive)
             {
-                avgForwardArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, vesselState.forward);
+                avgForwardArrow.Set(arrowPos, vesselState.forward);
                 avgForwardArrow.SetLength((float)arrowsLength.val);
             }
 
             requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled);
             if (requestedAttitudeArrowActive && core.attitude.enabled)
             {
-                requestedAttitudeArrow.Set(displayAtCoM ? vesselState.CoM : (Vector3d)vessel.GetReferenceTransformPart().transform.position, core.attitude.RequestedAttitude);
+                requestedAttitudeArrow.Set(arrowPos, core.attitude.RequestedAttitude);
                 requestedAttitudeArrow.SetLength((float)arrowsLength.val);
             }
 
