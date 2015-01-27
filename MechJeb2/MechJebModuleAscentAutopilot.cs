@@ -180,7 +180,7 @@ namespace MuMech
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
             //during the vertical ascent we just thrust straight up at max throttle
-            if (forceRoll && !correctiveSteering && vesselState.altitudeTrue > 25)
+            if (forceRoll && vesselState.altitudeTrue > 50)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
                 core.attitude.attitudeTo(90 - desiredInclination, 90, verticalRoll, this);
             }
