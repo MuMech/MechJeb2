@@ -109,22 +109,16 @@ namespace MuMech
 			GUILayout.EndHorizontal();
 			
 			GUILayout.BeginHorizontal();
-			if (autopilot.WaypointIndex == -1) {
-				if (autopilot.Waypoints.Count > 0) {
+			if (autopilot.Waypoints.Count > 0) {
+				if (!autopilot.ControlHeading || !autopilot.ControlSpeed) {
 					if (GUILayout.Button("Follow")) {
 						autopilot.WaypointIndex = 0;
 						autopilot.ControlHeading = autopilot.ControlSpeed = true;
 						autopilot.LoopWaypoints = alt;
 					}
 				}
-				else {
-//					if (GUILayout.Button("No Waypoints")) {
-//					}
-				}
-			}
-			else {
-				if (GUILayout.Button("Stop")) {
-					autopilot.WaypointIndex = -1;
+				else if (GUILayout.Button("Stop")) {
+					// autopilot.WaypointIndex = -1; // more annoying than helpful
 					autopilot.ControlHeading = autopilot.ControlSpeed = autopilot.LoopWaypoints = false;
 				}
 			}

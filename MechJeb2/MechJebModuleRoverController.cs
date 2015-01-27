@@ -237,7 +237,7 @@ namespace MuMech
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
+//					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
 //					newSpeed = tgtSpeed + Mathf.Clamp((float)(newSpeed - tgtSpeed), -Time.deltaTime * 8f, Time.deltaTime * 2f);
 					var radius = Math.Max(wp.Radius, 10);
 					if (distance < radius)
@@ -336,8 +336,10 @@ namespace MuMech
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
 				{
 					float act = (float)speedPID.Compute(speedErr);
-					s.wheelThrottle = !LimitAcceleration ? Mathf.Clamp((float)act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
-						(traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.005f, 0.005f)) * (traction < tractionLimit ? -1 : 1)));
+					s.wheelThrottle = (!LimitAcceleration ? Mathf.Clamp(act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
+						(traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.01f, 0.01f)) * (traction < tractionLimit ? -1 : 1))));
+//						(lastThrottle + Mathf.Clamp(act, -0.01f, 0.01f)));
+//					Debug.Log(s.wheelThrottle + Mathf.Clamp(act, -0.01f, 0.01f));
 					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
 //					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
 					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
@@ -347,7 +349,7 @@ namespace MuMech
 //					else if (!stabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
 //						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
 //					}
-					lastThrottle = s.wheelThrottle;
+					lastThrottle = Mathf.Clamp(s.wheelThrottle, -1, 1);
 				}
 			}
 			
