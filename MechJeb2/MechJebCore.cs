@@ -32,6 +32,7 @@ namespace MuMech
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
         public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleLandingAutopilot landing;
 
         public VesselState vesselState = new VesselState();
 
@@ -398,6 +399,7 @@ namespace MuMech
                 foreach (Type t in moduleRegistry)
                 {
                     if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
+                        && (t != typeof(AutopilotModule))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
                         AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
@@ -419,6 +421,7 @@ namespace MuMech
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
             solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            landing = GetComputerModule<MechJebModuleLandingAutopilot>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
