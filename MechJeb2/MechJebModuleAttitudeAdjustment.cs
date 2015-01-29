@@ -151,11 +151,6 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("CoM local", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(vessel.ReferenceTransform.InverseTransformPoint(vesselState.CoM + vesselState.orbitalVelocity * TimeWarp.fixedDeltaTime)), GUILayout.ExpandWidth(false));
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
                     GUILayout.Label("fixedDeltaTime", GUILayout.ExpandWidth(true));
                     GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
@@ -166,9 +161,16 @@ namespace MuMech
 
             MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
 
+            
             GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
 
-            arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Display the arrow at the CoM");
+            arrows.seeThrough = GUILayout.Toggle(arrows.seeThrough, "Visible through object");
+            GUILayout.BeginHorizontal();
+
+            arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, "Display the CoM. Radius of ", GUILayout.ExpandWidth(false));
+            arrows.comSphereRadius.text = GUILayout.TextField(arrows.comSphereRadius.text, GUILayout.Width(40));
+            GUILayout.EndHorizontal();
+            arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Arrows origins at the CoM");
             arrows.podSrfVelocityArrowActive = GUILayout.Toggle(arrows.podSrfVelocityArrowActive, "Pod Surface Velocity (yellow)");
             arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
             arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");

@@ -136,6 +136,9 @@
   <data name="shader2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>shader2;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="shader3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>shader3;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="troll" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>troll;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

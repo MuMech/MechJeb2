@@ -111,5 +111,14 @@ namespace MuMech.Properties {
                 return ((byte[])(obj));
             }
         }
+
+        internal static byte[] shader3
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("shader3", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
