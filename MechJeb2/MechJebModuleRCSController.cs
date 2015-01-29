@@ -107,7 +107,7 @@ namespace MuMech
                     // Removed the gravity since it also affect the target and we don't know the target pos here.
                     // Since the difference is negligable for docking it's removed
                     // TODO : add it back once we use the RCS Controler for other use than docking
-                    worldVelocityDelta = vessel.orbitalVelocity - targetVelocity;
+                    worldVelocityDelta = vesselState.orbitalVelocity - targetVelocity;
                     //worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
                     //worldVelocityDelta -= TimeWarp.fixedDeltaTime * gravityForce = FlightGlobals.getGeeForceAtPosition(  Here be the target position  ); ; //account for one frame's worth of gravity
                     break;
