@@ -102,6 +102,7 @@ namespace MuMech
                 predictor.deployChutes = core.landing.deployChutes;
                 GuiUtils.SimpleTextBox("Stage Limit:", core.landing.limitChutesStage, "", 35);
                 predictor.limitChutesStage = core.landing.limitChutesStage;
+                core.landing.rcsAdjustment = GUILayout.Toggle(core.landing.rcsAdjustment, "Use RCS for small adjustment");
 
                 if (core.landing.enabled)
                 {

@@ -22,6 +22,8 @@ namespace MuMech
         public bool deployChutes = true;
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableInt limitChutesStage = 0;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public bool rcsAdjustment = true;
 
         // This is used to adjust the height at which the parachutes semi deploy as a means of
         // targeting the landing in an atmosphere where it is not possible to control atitude
