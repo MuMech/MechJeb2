@@ -70,6 +70,9 @@ namespace MuMech
         public override void OnDestroy()
         {
             // Dirty cleanup. I m spending too much time on this already
+            if (comSphere == null)
+                return;
+
             comSphere.Destroy();
             comSphere = null;
 
@@ -253,7 +256,8 @@ namespace MuMech
 
         public void Destroy()
         {
-            Object.Destroy(gameObject);
+            if (gameObject != null)
+                Object.Destroy(gameObject);
         }
 
         public void SeeThrough(bool state)
