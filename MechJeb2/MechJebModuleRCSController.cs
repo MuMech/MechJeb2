@@ -18,7 +18,9 @@ namespace MuMech
         enum ControlType
         {
             TARGET_VELOCITY,
-            VELOCITY_ERROR
+            VELOCITY_ERROR,
+            VELOCITY_TARGET_REL,
+            POSITION_TARGET_REL
         };
 
         ControlType controlType;
@@ -56,6 +58,11 @@ namespace MuMech
             base.OnModuleEnabled();
         }
 
+        public bool rcsDeactivate()
+        {
+            users.Clear();
+            return true;
+        }
 
         public void setPIDParameters()
         {
@@ -68,8 +75,8 @@ namespace MuMech
         }
 
 
-        // When evaluating how fast RCS can accelerate and calculate a speed that avaible thrust should
-        // be multipled by that since the PID controller actual lower the used accel
+        // When evaluating how fast RCS can accelerate and calculate a speed that available thrust should
+        // be multiplied by that since the PID controller actual lower the used acceleration
         public double rcsAccelFactor()
         {
             return pid.Kp;
@@ -97,6 +104,12 @@ namespace MuMech
             }
         }
 
+        public void SetTargetRelative(Vector3d vel)
+        {
+            targetVelocity = vel;
+            controlType = ControlType.VELOCITY_TARGET_REL;
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             setPIDParameters();
@@ -106,7 +119,7 @@ namespace MuMech
                 case ControlType.TARGET_VELOCITY:
                     // Removed the gravity since it also affect the target and we don't know the target pos here.
                     // Since the difference is negligable for docking it's removed
-                    // TODO : add it back once we use the RCS Controler for other use than docking
+                    // TODO : add it back once we use the RCS Controler for other use than docking. Account for current acceleration beside gravity ?
                     worldVelocityDelta = vesselState.orbitalVelocity - targetVelocity;
                     //worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
                     //worldVelocityDelta -= TimeWarp.fixedDeltaTime * gravityForce = FlightGlobals.getGeeForceAtPosition(  Here be the target position  ); ; //account for one frame's worth of gravity
@@ -114,6 +127,16 @@ namespace MuMech
 
                 case ControlType.VELOCITY_ERROR:
                     // worldVelocityDelta already contains the velocity error
+                    break;
+
+                case ControlType.VELOCITY_TARGET_REL:
+                    if (core.target.Target == null)
+                    {
+                        rcsDeactivate();
+                        return;
+                    }
+
+                    worldVelocityDelta = core.target.RelativeVelocity - targetVelocity;
                     break;
             }
 
@@ -151,6 +174,7 @@ namespace MuMech
                         omega = Quaternion.Inverse(vessel.GetTransform().rotation) * (vessel.acceleration - vesselState.gravityForce);
                         break;
 
+                    case ControlType.VELOCITY_TARGET_REL:
                     case ControlType.VELOCITY_ERROR:
                         omega = (worldVelocityDelta - prev_worldVelocityDelta) / TimeWarp.fixedDeltaTime;
                         prev_worldVelocityDelta = worldVelocityDelta;
