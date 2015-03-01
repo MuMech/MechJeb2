@@ -851,9 +851,11 @@ namespace MuMech
                     float maxThrust = e.maxThrust / (float)e.thrustTransforms.Count;
                     float minThrust = e.minThrust / (float)e.thrustTransforms.Count;
 
-                    double eMaxThrust = minThrust + (maxThrust - minThrust) * e.thrustPercentage / 100f;
+                    float thrustLimiter = e.thrustPercentage / 100f;
+                    double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
                     double eMinThrust = e.throttleLocked ? eMaxThrust : minThrust;
-                    double eCurrentThrust = usableFraction * (eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle));
+                    // currentThrottle include the thrustLimiter
+                    double eCurrentThrust = usableFraction * (eMaxThrust * e.currentThrottle / thrustLimiter + eMinThrust * (1 - e.currentThrottle / thrustLimiter));
 
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
@@ -932,9 +934,11 @@ namespace MuMech
                     float maxThrust = e.maxThrust / (float)e.thrustTransforms.Count;
                     float minThrust = e.minThrust / (float)e.thrustTransforms.Count;
 
-                    double eMaxThrust = minThrust + (maxThrust - minThrust) * e.thrustPercentage / 100f;
+                    float thrustLimiter = e.thrustPercentage / 100f;
+                    double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
                     double eMinThrust = e.throttleLocked ? eMaxThrust : minThrust;
-                    double eCurrentThrust = usableFraction * (eMaxThrust * e.currentThrottle + eMinThrust * (1 - e.currentThrottle));
+                    // currentThrottle include the thrustLimiter
+                    double eCurrentThrust = usableFraction * (eMaxThrust * e.currentThrottle / thrustLimiter + eMinThrust * (1 - e.currentThrottle / thrustLimiter));
 
                     for (int i = 0; i < e.thrustTransforms.Count; i++)
                     {
