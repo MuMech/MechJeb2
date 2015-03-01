@@ -19,13 +19,16 @@ namespace MuMech
 
                 Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
 
-                if (deltaV.magnitude > 3)
-                    core.rcs.enabled = true;
-                else if (deltaV.magnitude < 0.1)
-                    core.rcs.enabled = false;
+                if (core.landing.rcsAdjustment)
+                {
+                    if (deltaV.magnitude > 3)
+                        core.rcs.enabled = true;
+                    else if (deltaV.magnitude < 0.1)
+                        core.rcs.enabled = false;
 
-                if (core.rcs.enabled)
-                    core.rcs.SetWorldVelocityError(deltaV);
+                    if (core.rcs.enabled)
+                        core.rcs.SetWorldVelocityError(deltaV);
+                }
 
                 return this;
             }

@@ -75,7 +75,6 @@ namespace MuMech
                 }
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
-                core.rcs.rcsThrottle = GUILayout.Toggle(core.rcs.rcsThrottle, " RCS throttle when 0k thrust");
 
                 showInfos = GUILayout.Toggle(showInfos, "Show Numbers");
                 if (showInfos)

@@ -32,7 +32,7 @@ namespace MuMech
                 if (currentError < 150)
                 {
                     core.thrust.targetThrottle = 0;
-                    core.rcs.enabled = true;
+                    core.rcs.enabled = core.landing.rcsAdjustment;
                     return new CoastToDeceleration(core);
                 }
 
