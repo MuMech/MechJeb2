@@ -46,6 +46,80 @@ namespace MuMech
         [KSPField]
         public ConfigNode partSettings;
 
+        [KSPAction("Orbit Prograde")]
+        public void OnOrbitProgradeAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.PROGRADE);
+        }
+
+        [KSPAction("Orbit Retrograde")]
+        public void OnOrbitRetrogradeAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RETROGRADE);
+        }
+
+        [KSPAction("Orbit Normal")]
+        public void OnOrbitNormalAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_PLUS);
+        }
+
+        [KSPAction("Orbit Antinormal")]
+        public void OnOrbitAntinormalAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_MINUS);
+        }
+
+        [KSPAction("Orbit Radial In")]
+        public void OnOrbitRadialInAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_MINUS);
+        }
+
+        [KSPAction("Orbit Radial Out")]
+        public void OnOrbitRadialOutAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_PLUS);
+        }
+
+        [KSPAction("Orbit Kill Rotation")]
+        public void OnKillRotationAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
+        }
+
+        [KSPAction("Deactivate SmartASS")]
+        public void OnDeactivateSmartASSAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
+        }
+
+        private void EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target target)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if(masterMechJeb != null)
+            {
+                MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
+
+                if(masterSmartASS != null)
+                {
+                    masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
+                    masterSmartASS.target = target;
+
+                    masterSmartASS.Engage();
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
         private bool weLockedInputs = false;
         private float lastSettingsSaveTime;
         private bool showGui = true;
@@ -786,3 +860,4 @@ namespace MuMech
         }
     }
 }
+
