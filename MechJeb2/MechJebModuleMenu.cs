@@ -173,7 +173,7 @@ namespace MuMech
             {
                 if (module.hidden)
                     return;
-                print("Adding button for " + name);
+                //print("Adding button for " + name);
                 button = ToolbarManager.Instance.add("MechJeb2", name);
                 toolbarButtons[name] = button;
                 button.ToolTip = "MechJeb " + module.GetName();
@@ -210,7 +210,7 @@ namespace MuMech
                 if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
                 {
                     actualIcons[TexturePathActive] = TexturePath;
-                    print("No icon for " + name + "_active");
+                    //print("No icon for " + name + "_active");
                 }
                 else
                     actualIcons[TexturePathActive] = TexturePathActive;
@@ -219,6 +219,10 @@ namespace MuMech
             button.TexturePath = active ? actualIcons[TexturePathActive] : actualIcons[TexturePath];
         }
 
+
+        // OnDestroy is actually run a bit too often when we have multiple MJ unit that get staged
+        // But the edge case may get a bit too complex to handle properly so for now we 
+        // recreate the buttons a bit often.
         public override void OnDestroy()
         {
             if (mjButton != null)
