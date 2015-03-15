@@ -736,7 +736,7 @@ namespace MuMech
 
         private void Drive(FlightCtrlState s)
         {
-            if (this == vessel.GetMasterMechJeb() && !InputLockManager.IsLocked(ControlTypes.PITCH | ControlTypes.ROLL | ControlTypes.YAW | ControlTypes.THROTTLE))
+            if (this == vessel.GetMasterMechJeb())
             {
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
