@@ -57,7 +57,7 @@ namespace MuMech
         public static DebugArrow debugArrow;
 
 
-        public Vector3d debugVector = Vector3d.one;
+        public static Vector3d debugVector = Vector3d.one;
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble arrowsLength = new EditableDouble(4);
