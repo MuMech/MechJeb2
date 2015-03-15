@@ -127,7 +127,7 @@ namespace MuMech
 
             Vector3 arrowPos = displayAtCoM
                 ? instantCoM
-                : (Vector3d)vessel.GetReferenceTransformPart().transform.position;
+                : (Vector3d)vessel.ReferenceTransform.position;
 
             comSphere.State(comSphereActive);
             if (comSphereActive)
@@ -195,7 +195,7 @@ namespace MuMech
             debugArrow.State(debugArrowActive);
             if (debugArrowActive)
             {
-                debugArrow.Set((Vector3d)vessel.GetReferenceTransformPart().transform.position, debugVector);
+                debugArrow.Set((Vector3d)vessel.ReferenceTransform.position, debugVector);
                 debugArrow.SetLength((float)debugVector.magnitude);
                 debugArrow.SeeThrough(seeThrough);
             }
