@@ -40,6 +40,29 @@ namespace MuMech
 
         public string version = "";
 
+        private bool deactivateControl = false; 
+
+        public MechJebCore MasterMechJeb
+        {
+            get { return vessel.GetMasterMechJeb(); }
+        }
+
+        // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
+        public bool DeactivateControl
+        {
+            get
+            {
+                MechJebCore mj = vessel.GetMasterMechJeb();
+                return mj != null && vessel.GetMasterMechJeb().deactivateControl;
+            }
+            set
+            {
+                MechJebCore mj = vessel.GetMasterMechJeb();
+                if (mj != null )
+                    vessel.GetMasterMechJeb().deactivateControl = value;
+            }
+        }
+
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
@@ -724,7 +747,7 @@ namespace MuMech
 
         private void OnAutopilotUpdate(FlightCtrlState s)
         {
-            if (!CheckControlledVessel() || this != vessel.GetMasterMechJeb())
+            if (deactivateControl || !CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
                 return;
             }
