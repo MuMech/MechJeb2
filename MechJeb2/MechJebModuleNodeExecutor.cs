@@ -12,7 +12,6 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
         public const double leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
-        public const double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
@@ -24,7 +23,8 @@ namespace MuMech
                 return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
-            return GuiUtils.TimeToDHMS(BurnTime(dV));
+            double halfBurnTIme;
+            return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTIme));
         }
 
         [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
@@ -34,7 +34,9 @@ namespace MuMech
                 return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
-            return GuiUtils.TimeToDHMS(node.UT - BurnTime(dV) * leadFraction - vesselState.time);
+            double halfBurnTIme;
+            double burnTIme = BurnTime(dV, out halfBurnTIme);
+            return GuiUtils.TimeToDHMS(node.UT - halfBurnTIme - vesselState.time);
         }
 
         public void ExecuteOneNode(object controller)
@@ -118,11 +120,12 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            double burnTime = BurnTime(dVLeft);
+            double halfBurnTime;
+            double burnTime = BurnTime(dVLeft, out halfBurnTime);
             
             double timeToNode = node.UT - vesselState.time;
 
-            if (timeToNode < burnTime * leadFraction)
+            if (timeToNode < halfBurnTime)
             {
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -133,7 +136,7 @@ namespace MuMech
             {
                 if (core.attitude.attitudeAngleFromTarget() < 1 || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
-                    core.warp.WarpToUT(node.UT - burnTime * leadFraction - leadTime);
+                    core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }
                 else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
                 {
@@ -168,11 +171,13 @@ namespace MuMech
             }
         }
 
-        private double BurnTime(double dv)
+        private double BurnTime(double dv, out double halfBurnTime)
         {
             double dvLeft = dv;
+            double halfDvLeft = dv / 2;
 
             double burnTime = 0;
+            halfBurnTime = 0;
 
             // Old code:
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
@@ -201,6 +206,11 @@ namespace MuMech
                 double stageBurnDv = Math.Min(s.deltaV, dvLeft);
                 dvLeft -= stageBurnDv;
 
+                if (halfDvLeft > stageBurnDv)
+                {
+                    halfDvLeft -= stageBurnDv;
+                }
+
                 double stageBurnFraction = stageBurnDv / s.deltaV;
 
                 // Delta-V is proportional to ln(m0 / m1) (where m0 is initial
@@ -221,7 +231,14 @@ namespace MuMech
                     stageAvgAccel *= vesselState.throttleLimit;
                 }
 
+                if (halfDvLeft < stageBurnDv)
+                {
+                    halfBurnTime = burnTime + halfDvLeft / stageAvgAccel;
+                    halfDvLeft = 0;
+                }
+
                 burnTime += stageBurnDv / stageAvgAccel;
+
             }
 
             return burnTime;
