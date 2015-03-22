@@ -326,6 +326,7 @@ namespace MuMech
                 }
                 pid.Reset();
                 lastAct = Vector3d.zero;
+                _lastAttitudeTarget = _attitudeTarget;
                 _lastAttitudeTargetSpeed = Vector3d.zero;
 
                 attitudeChanged = false;
@@ -422,6 +423,11 @@ namespace MuMech
                 var attitudeTargetAcc = (attitudeTargetSpeed - _lastAttitudeTargetSpeed) / TimeWarp.fixedDeltaTime;
                 _lastAttitudeTarget = _attitudeTarget;
                 _lastAttitudeTargetSpeed = attitudeTargetSpeed;
+                if (!_attitudeRollMatters)
+                {
+                    attitudeTargetSpeed.z = 0;
+                    attitudeTargetAcc.z = 0;
+                }
 
                 omega += attitudeTargetSpeed;
                 omega.Scale(NormFactor);
