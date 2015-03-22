@@ -84,7 +84,6 @@ namespace MuMech
             }
         }
 
-        protected Quaternion _oldAttitudeTarget = Quaternion.identity;
         protected Quaternion _lastAttitudeTarget = Quaternion.identity;
         protected Quaternion _attitudeTarget = Quaternion.identity;
         public Quaternion attitudeTarget
@@ -93,17 +92,20 @@ namespace MuMech
             {
                 return _attitudeTarget;
             }
-            set
+            private set
             {
-                if (Math.Abs(Vector3d.Angle(_lastAttitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
+                if (Quaternion.Dot(value, _lastAttitudeTarget) < 0)
+                    _attitudeTarget = value.Mult(-1);
+                else
+                    _attitudeTarget = value;
+                if (Math.Abs(Vector3d.Angle(_attitudeTarget * Vector3d.forward, _lastAttitudeTarget * Vector3d.forward)) > 10)
                 {
-                    _oldAttitudeTarget = _attitudeTarget;
-                    _lastAttitudeTarget = value;
                     attitudeChanged = true;
+                    _lastAttitudeTarget = value;
                 }
-                _attitudeTarget = value;
             }
         }
+        private Vector3d _lastAttitudeTargetSpeed = Vector3d.zero;
 
         protected Quaternion _requestedAttitude = Quaternion.identity;
         public Quaternion RequestedAttitude 
@@ -324,6 +326,7 @@ namespace MuMech
                 }
                 pid.Reset();
                 lastAct = Vector3d.zero;
+                _lastAttitudeTargetSpeed = Vector3d.zero;
 
                 attitudeChanged = false;
             }
@@ -410,9 +413,21 @@ namespace MuMech
                 omega.x = vessel.angularVelocity.x;
                 omega.y = vessel.angularVelocity.z; // y <=> z 
                 omega.z = vessel.angularVelocity.y; // z <=> y 
-                omega.Scale(NormFactor);
 
-                pidAction = pid.Compute(err, omega);
+                // Feed-forward: compute target changes
+                // (T2 - T1) / dt
+                var attitudeTargetDerivate = _attitudeTarget.Add(_lastAttitudeTarget.Mult(-1)).Mult(1/TimeWarp.fixedDeltaTime);
+                var attitudeTargetSpeedQ = (_attitudeTarget.Conj() * attitudeTargetDerivate).Mult(2);
+                var attitudeTargetSpeed = new Vector3d(attitudeTargetSpeedQ.x, attitudeTargetSpeedQ.y, attitudeTargetSpeedQ.z);
+                var attitudeTargetAcc = (attitudeTargetSpeed - _lastAttitudeTargetSpeed) / TimeWarp.fixedDeltaTime;
+                _lastAttitudeTarget = _attitudeTarget;
+                _lastAttitudeTargetSpeed = attitudeTargetSpeed;
+
+                omega += attitudeTargetSpeed;
+                omega.Scale(NormFactor);
+                attitudeTargetAcc.Scale(NormFactor);
+
+                pidAction = pid.Compute(err, omega) + attitudeTargetAcc;
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct + (pidAction - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));
