@@ -432,7 +432,8 @@ namespace MuMech
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
                 double UT = orbit.NextApoapsisTime(vesselState.time);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                //Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit, UT, desiredOrbitAltitude + mainBody.Radius);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 
