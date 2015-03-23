@@ -416,20 +416,24 @@ namespace MuMech
                 omega.z = vessel.angularVelocity.y; // z <=> y 
 
                 // Feed-forward: compute target changes
-                // (T2 - T1) / dt
-                var attitudeTargetDerivate = _attitudeTarget.Add(_lastAttitudeTarget.Mult(-1)).Mult(1/TimeWarp.fixedDeltaTime);
-                var attitudeTargetSpeedQ = (_attitudeTarget.Conj() * attitudeTargetDerivate).Mult(2);
-                var attitudeTargetSpeed = new Vector3d(attitudeTargetSpeedQ.x, attitudeTargetSpeedQ.y, attitudeTargetSpeedQ.z);
-                var attitudeTargetAcc = (attitudeTargetSpeed - _lastAttitudeTargetSpeed) / TimeWarp.fixedDeltaTime;
-                _lastAttitudeTarget = _attitudeTarget;
-                _lastAttitudeTargetSpeed = attitudeTargetSpeed;
-                if (!_attitudeRollMatters)
+                var attitudeTargetAcc = Vector3d.zero;
+                if (! attitudeKILLROT)
                 {
-                    attitudeTargetSpeed.z = 0;
-                    attitudeTargetAcc.z = 0;
+                    // (T2 - T1) / dt
+                    var attitudeTargetDerivate = _attitudeTarget.Add(_lastAttitudeTarget.Mult(-1)).Mult(1/TimeWarp.fixedDeltaTime);
+                    var attitudeTargetSpeedQ = (_attitudeTarget.Conj() * attitudeTargetDerivate).Mult(2);
+                    var attitudeTargetSpeed = new Vector3d(attitudeTargetSpeedQ.x, attitudeTargetSpeedQ.y, attitudeTargetSpeedQ.z);
+                    attitudeTargetAcc = (attitudeTargetSpeed - _lastAttitudeTargetSpeed) / TimeWarp.fixedDeltaTime;
+                    _lastAttitudeTarget = _attitudeTarget;
+                    _lastAttitudeTargetSpeed = attitudeTargetSpeed;
+                    if (!_attitudeRollMatters)
+                    {
+                        attitudeTargetSpeed.z = 0;
+                        attitudeTargetAcc.z = 0;
+                    }
+                    omega += attitudeTargetSpeed;
                 }
 
-                omega += attitudeTargetSpeed;
                 omega.Scale(NormFactor);
                 attitudeTargetAcc.Scale(NormFactor);
 
