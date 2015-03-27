@@ -412,19 +412,19 @@ namespace MuMech
             {
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
+                    if ((pm.rcsEnabled) && (pm.isEnabled) && (!pm.isJustForShow) )
+                     {
+                        // RCS position local to vessel:
+                        Vector3d partPosition = vessel.GetTransform().InverseTransformDirection(p.transform.position - CoM);
 
-                    if ((pm.isEnabled) && (!pm.isJustForShow))
-                    {
+                        // rcsTorqueAvailable:
                         foreach (Transform t in pm.thrusterTransforms)
                         {
-                            Vector3d thrusterThrust = vessel.GetTransform().InverseTransformDirection(-t.up.normalized) * pm.thrusterPower;
+                            Vector3d thrusterThrust = vessel.GetTransform().InverseTransformDirection( -t.up) * pm.thrusterPower;
                             // This is a cheap hack to get rcsTorque with the RCSbalancer active.
                             if (!rcsbal.enabled)
                                 rcsThrustAvailable.Add(thrusterThrust);
-                            Vector3d thrusterTorque = Vector3.Cross(
-                                vessel.GetTransform().InverseTransformDirection(partPosition),
-                                thrusterThrust);
+                            Vector3d thrusterTorque = Vector3.Cross(partPosition, thrusterThrust);
                             rcsTorqueAvailable.Add(thrusterTorque);
                         }
                     }
