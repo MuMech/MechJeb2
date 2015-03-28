@@ -31,18 +31,117 @@ namespace MuMech
         public MechJebModuleRCSBalancer rcsbal;
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
+        public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleLandingAutopilot landing;
 
         public VesselState vesselState = new VesselState();
 
-        private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
+        private Vessel controlledVessel; //keep track of which vessel we've added our OnAutopilotUpdate callback to
 
         public string version = "";
+
+        private bool deactivateControl = false; 
+
+        public MechJebCore MasterMechJeb
+        {
+            get { return vessel.GetMasterMechJeb(); }
+        }
+
+        // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
+        public bool DeactivateControl
+        {
+            get
+            {
+                MechJebCore mj = vessel.GetMasterMechJeb();
+                return mj != null && vessel.GetMasterMechJeb().deactivateControl;
+            }
+            set
+            {
+                MechJebCore mj = vessel.GetMasterMechJeb();
+                if (mj != null )
+                    vessel.GetMasterMechJeb().deactivateControl = value;
+            }
+        }
 
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
         [KSPField]
         public ConfigNode partSettings;
+
+        [KSPAction("Orbit Prograde")]
+        public void OnOrbitProgradeAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.PROGRADE);
+        }
+
+        [KSPAction("Orbit Retrograde")]
+        public void OnOrbitRetrogradeAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RETROGRADE);
+        }
+
+        [KSPAction("Orbit Normal")]
+        public void OnOrbitNormalAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_PLUS);
+        }
+
+        [KSPAction("Orbit Antinormal")]
+        public void OnOrbitAntinormalAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_MINUS);
+        }
+
+        [KSPAction("Orbit Radial In")]
+        public void OnOrbitRadialInAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_MINUS);
+        }
+
+        [KSPAction("Orbit Radial Out")]
+        public void OnOrbitRadialOutAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_PLUS);
+        }
+
+        [KSPAction("Orbit Kill Rotation")]
+        public void OnKillRotationAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
+        }
+
+        [KSPAction("Deactivate SmartASS")]
+        public void OnDeactivateSmartASSAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
+        }
+
+        private void EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target target)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if(masterMechJeb != null)
+            {
+                MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
+
+                if(masterSmartASS != null)
+                {
+                    masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
+                    masterSmartASS.target = target;
+
+                    masterSmartASS.Engage();
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
 
         private bool weLockedInputs = false;
         private float lastSettingsSaveTime;
@@ -52,19 +151,19 @@ namespace MuMech
 
         public bool someModuleAreLocked = false; // True if any module was locked by the R&D system
 
-        //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
+        //Returns whether the vessel we've registered OnAutopilotUpdate with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
         {
             if (controlledVessel == vessel) return true;
 
-            //else we have an onFlyByWire callback registered with the wrong vessel:
+            //else we have an OnAutopilotUpdate callback registered with the wrong vessel:
             //handle vessel changes due to docking/undocking
-            if (controlledVessel != null) controlledVessel.OnFlyByWire -= OnFlyByWire;
+            if (controlledVessel != null) controlledVessel.OnAutopilotUpdate -= OnAutopilotUpdate;
             if (vessel != null)
             {
-                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
-                vessel.OnFlyByWire += OnFlyByWire;
+                vessel.OnAutopilotUpdate -= OnAutopilotUpdate; //just a safety precaution to avoid duplicates
+                vessel.OnAutopilotUpdate += OnAutopilotUpdate;
             }
             controlledVessel = vessel;
 
@@ -154,7 +253,7 @@ namespace MuMech
             unorderedComputerModules.Clear();
             sortedModules.Clear();
 
-            if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
+            if (vessel != null) vessel.OnAutopilotUpdate -= OnAutopilotUpdate;
             controlledVessel = null;
 
             //Start fresh
@@ -200,8 +299,8 @@ namespace MuMech
 
             if (vessel != null && this != vessel.GetMasterMechJeb())
             {
-                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
-                vessel.OnFlyByWire += OnFlyByWire;
+                vessel.OnAutopilotUpdate -= OnAutopilotUpdate; //just a safety precaution to avoid duplicates
+                vessel.OnAutopilotUpdate += OnAutopilotUpdate;
                 controlledVessel = vessel;
             }
         }
@@ -255,7 +354,7 @@ namespace MuMech
         {
             LoadDelayedModules();
 
-            CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
+            CheckControlledVessel(); //make sure our OnAutopilotUpdate callback is registered with the right vessel
 
             if (this != vessel.GetMasterMechJeb() || (HighLogic.LoadedSceneIsFlight && !vessel.isActiveVessel))
             {
@@ -397,6 +496,7 @@ namespace MuMech
                 foreach (Type t in moduleRegistry)
                 {
                     if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
+                        && (t != typeof(AutopilotModule))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
                         AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
@@ -417,6 +517,8 @@ namespace MuMech
             rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
+            solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            landing = GetComputerModule<MechJebModuleLandingAutopilot>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
@@ -638,14 +740,14 @@ namespace MuMech
             }
             if (vessel != null)
             {
-                vessel.OnFlyByWire -= OnFlyByWire;
+                vessel.OnAutopilotUpdate -= OnAutopilotUpdate;
             }
             controlledVessel = null;
         }
 
-        private void OnFlyByWire(FlightCtrlState s)
+        private void OnAutopilotUpdate(FlightCtrlState s)
         {
-            if (!CheckControlledVessel() || this != vessel.GetMasterMechJeb())
+            if (deactivateControl || !CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
                 return;
             }
@@ -781,3 +883,4 @@ namespace MuMech
         }
     }
 }
+

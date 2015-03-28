@@ -450,12 +450,16 @@ namespace MuMech
             return parsedSomething;
         }
         
-        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
+        public static double ArcDistance(Vector3 From, Vector3 To) {
         	double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
         	double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
         	double c = Vector3d.Distance(From, To);
         	double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
-        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
+        }
+        
+        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
+        	return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
         }
 
         public static bool MouseIsOverWindow(MechJebCore core)

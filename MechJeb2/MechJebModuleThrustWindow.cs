@@ -8,7 +8,21 @@ namespace MuMech
 {
     public class MechJebModuleThrustWindow : DisplayModule
     {
+
+        [Persistent(pass = (int)Pass.Local)]
+        private bool autostageSavedState = false;
+
         public MechJebModuleThrustWindow(MechJebCore core) : base(core) { }
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+
+            if (autostageSavedState && !core.staging.users.Contains(this))
+            {
+                core.staging.users.Add(this);
+            }
+        }
 
         // UI stuff
         protected override void WindowGUI(int windowID)
@@ -35,10 +49,19 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
+            
+            core.thrust.DifferentialThrottle();
+            
+            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
+                GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
+
+            core.solarpanel.AutoDeploySolarPanelsInfoItem();
+
             bool oldAutostage = core.staging.users.Contains(this);
             bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
             if (newAutostage && !oldAutostage) core.staging.users.Add(this);
             if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
+            autostageSavedState = newAutostage;
             
             if (!core.staging.enabled && GUILayout.Button("Autostage once")) core.staging.AutostageOnce(this);
             

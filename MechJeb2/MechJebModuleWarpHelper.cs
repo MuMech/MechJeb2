@@ -8,8 +8,8 @@ namespace MuMech
 {
     public class MechJebModuleWarpHelper : DisplayModule
     {
-        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT }
-        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle" };
+        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
+        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -40,7 +40,7 @@ namespace MuMech
                 GUILayout.Label("Warp for: ", GUILayout.ExpandWidth(true));
                 timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
                 GUILayout.EndHorizontal();
-            } 
+            }
             else if (warpTarget == WarpTarget.PhaseAngleT)
             {
                 // I wonder if I should check for target that don't make sense
@@ -111,6 +111,28 @@ namespace MuMech
                             }
                             break;
 
+                        case WarpTarget.AtmosphericEntry:
+                            try
+                            {
+                                targetUT = OrbitExtensions.NextTimeOfRadius(vessel.orbit, vesselState.time, vesselState.mainBody.Radius + vesselState.mainBody.RealMaxAtmosphereAltitude());
+                            }
+                            catch
+                            {
+                                warping = false;
+                            }
+                            break;
+
+                        case WarpTarget.SuicideBurn:
+                            try
+                            {
+                                targetUT = OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel) + vesselState.time;
+                            }
+                            catch
+                            {
+                                warping = false;
+                            }
+                            break;
+
                         default:
                             targetUT = vesselState.time;
                             break;
@@ -130,6 +152,18 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             if (!warping) return;
+
+            if (warpTarget == WarpTarget.SuicideBurn)
+            {
+                try
+                {
+                    targetUT = OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel) + vesselState.time;
+                }
+                catch
+                {
+                    warping = false;
+                }
+            }
 
             double target = targetUT - leadTime;
 

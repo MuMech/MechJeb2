@@ -63,5 +63,32 @@ namespace MuMech
 
             return (float)((Math.Atan2(r1.y, r1.x) - Math.Atan2(r2.y, r2.x)) * 180.0 / Math.PI);
         }
+
+		public static Quaternion Add(this Quaternion left, Quaternion right)
+		{
+			return new Quaternion(
+				left.x + right.x,
+				left.y + right.y,
+				left.z + right.z,
+				left.w + right.w);
+		}
+
+		public static Quaternion Mult(this Quaternion left, float lambda)
+		{
+			return new Quaternion(
+				left.x * lambda,
+				left.y * lambda,
+				left.z * lambda,
+				left.w * lambda);
+		}
+
+		public static Quaternion Conj(this Quaternion left)
+		{
+			return new Quaternion(
+				-left.x,
+				-left.y,
+				-left.z,
+				left.w);
+		}
     }
 }

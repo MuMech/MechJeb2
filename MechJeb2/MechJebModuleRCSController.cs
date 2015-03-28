@@ -12,7 +12,18 @@ namespace MuMech
 
         public PIDControllerV2 pid;
         Vector3d lastAct = Vector3d.zero;
+        Vector3d worldVelocityDelta = Vector3d.zero;
+        Vector3d prev_worldVelocityDelta = Vector3d.zero;
 
+        enum ControlType
+        {
+            TARGET_VELOCITY,
+            VELOCITY_ERROR,
+            VELOCITY_TARGET_REL,
+            POSITION_TARGET_REL
+        };
+
+        ControlType controlType;
 
         [Persistent(pass = (int)(Pass.Global))]
         [ToggleInfoItem("Conserve RCS fuel", InfoItem.Category.Thrust)]
@@ -41,9 +52,17 @@ namespace MuMech
             setPIDParameters();
             pid.Reset();
             lastAct = Vector3d.zero;
+            worldVelocityDelta = Vector3d.zero;
+            prev_worldVelocityDelta = Vector3d.zero;
+            controlType = ControlType.VELOCITY_ERROR;
             base.OnModuleEnabled();
         }
 
+        public bool rcsDeactivate()
+        {
+            users.Clear();
+            return true;
+        }
 
         public void setPIDParameters()
         {
@@ -56,8 +75,8 @@ namespace MuMech
         }
 
 
-        // When evaluating how fast RCS can accelerate and calculate a speed that avaible thrust should
-        // be multipled by that since the PID controller actual lower the used accel
+        // When evaluating how fast RCS can accelerate and calculate a speed that available thrust should
+        // be multiplied by that since the PID controller actual lower the used acceleration
         public double rcsAccelFactor()
         {
             return pid.Kp;
@@ -72,27 +91,58 @@ namespace MuMech
         public void SetTargetWorldVelocity(Vector3d vel)
         {
             targetVelocity = vel;
+            controlType = ControlType.TARGET_VELOCITY;
         }
 
-        public void SetTargetLocalVelocity(Vector3d vel)
+        public void SetWorldVelocityError(Vector3d dv)
         {
-            targetVelocity = vessel.GetTransform().rotation * vel;
+            worldVelocityDelta = -dv;
+            if (controlType != ControlType.VELOCITY_ERROR)
+            {
+                prev_worldVelocityDelta = worldVelocityDelta;
+                controlType = ControlType.VELOCITY_ERROR;
+            }
+        }
+
+        public void SetTargetRelative(Vector3d vel)
+        {
+            targetVelocity = vel;
+            controlType = ControlType.VELOCITY_TARGET_REL;
         }
 
         public override void Drive(FlightCtrlState s)
         {
             setPIDParameters();
 
-            // Removed the gravity since it also affect the target and we don't know the target pos here.
-            // Since the difference is negligable for docking it's removed
-            // TODO : add it back once we use the RCS Controler for other use than docking
-            Vector3d worldVelocityDelta = vessel.obt_velocity - targetVelocity;
-            //worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
-            //worldVelocityDelta -= TimeWarp.fixedDeltaTime * gravityForce = FlightGlobals.getGeeForceAtPosition(  Here be the target position  ); ; //account for one frame's worth of gravity
-            
+            switch (controlType)
+            {
+                case ControlType.TARGET_VELOCITY:
+                    // Removed the gravity since it also affect the target and we don't know the target pos here.
+                    // Since the difference is negligable for docking it's removed
+                    // TODO : add it back once we use the RCS Controler for other use than docking. Account for current acceleration beside gravity ?
+                    worldVelocityDelta = vesselState.orbitalVelocity - targetVelocity;
+                    //worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
+                    //worldVelocityDelta -= TimeWarp.fixedDeltaTime * gravityForce = FlightGlobals.getGeeForceAtPosition(  Here be the target position  ); ; //account for one frame's worth of gravity
+                    break;
+
+                case ControlType.VELOCITY_ERROR:
+                    // worldVelocityDelta already contains the velocity error
+                    break;
+
+                case ControlType.VELOCITY_TARGET_REL:
+                    if (core.target.Target == null)
+                    {
+                        rcsDeactivate();
+                        return;
+                    }
+
+                    worldVelocityDelta = core.target.RelativeVelocity - targetVelocity;
+                    break;
+            }
+
             // We work in local vessel coordinate
             Vector3d velocityDelta = Quaternion.Inverse(vessel.GetTransform().rotation) * worldVelocityDelta;
-                        
+
             if (!conserveFuel || (velocityDelta.magnitude > conserveThreshold))
             {
                 if (!vessel.ActionGroups[KSPActionGroup.RCS])
@@ -116,7 +166,20 @@ namespace MuMech
                     }
                 }
                                 
-                Vector3d omega = Quaternion.Inverse(vessel.GetTransform().rotation) * (vessel.acceleration - vesselState.gravityForce);
+                Vector3d omega = Vector3d.zero;
+
+                switch (controlType)
+                {
+                    case ControlType.TARGET_VELOCITY:
+                        omega = Quaternion.Inverse(vessel.GetTransform().rotation) * (vessel.acceleration - vesselState.gravityForce);
+                        break;
+
+                    case ControlType.VELOCITY_TARGET_REL:
+                    case ControlType.VELOCITY_ERROR:
+                        omega = (worldVelocityDelta - prev_worldVelocityDelta) / TimeWarp.fixedDeltaTime;
+                        prev_worldVelocityDelta = worldVelocityDelta;
+                        break;
+                }
 
                 rcs = pid.Compute(rcs, omega);
 
