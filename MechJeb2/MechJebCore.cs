@@ -19,6 +19,7 @@ namespace MuMech
         private List<ComputerModule> modulesToLoad = new List<ComputerModule>();
 
         private Dictionary<object, IEnumerable<ComputerModule>> sortedModules = new Dictionary<object, IEnumerable<ComputerModule>>();
+        private Dictionary<object, IEnumerable<DisplayModule>> sortedDisplayModules = new Dictionary<object, IEnumerable<DisplayModule>>();
 
         private static List<Type> moduleRegistry;
 
@@ -192,23 +193,36 @@ namespace MuMech
         {
             return unorderedComputerModules.OfType<T>().FirstOrDefault();//returns null if no matches
         }
+
         public IEnumerable<T> GetComputerModules<T>() where T : ComputerModule
         {
-            System.Type key = typeof(T);
-            if (sortedModules.ContainsKey(key))
-                return sortedModules[key].Cast<T>();
-            sortedModules[key] = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m);
-            return sortedModules[key].Cast<T>();
+            Type key = typeof(T);
+            IEnumerable<ComputerModule> value;
+            if (sortedModules.TryGetValue(key, out value))
+                return value.Cast<T>();
+            sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
+            return value.Cast<T>();
         }
 
         // Return the list of modules of type T in the order specified by comparer function
         // Be sure to always use the same instance of comparer in order to avoid memory leaks
         public IEnumerable<T> GetComputerModules<T>(IComparer<T> comparer) where T : ComputerModule
         {
-            if (sortedModules.ContainsKey(comparer))
-                return sortedModules[comparer].Cast<T>();
-            sortedModules[comparer] = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>();
-            return sortedModules[comparer].Cast<T>();
+            IEnumerable<ComputerModule> value;
+            if (sortedModules.TryGetValue(comparer, out value))
+                return value.Cast<T>();
+            sortedModules[comparer] = value = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>().ToList();
+            return value.Cast<T>();
+        }
+
+        // Added because the generic version eats memory like candy when casting from ComputerModule to DisplayModule (.Cast<T>())
+        public IEnumerable<DisplayModule> GetDisplayModules(IComparer<DisplayModule> comparer)
+        {
+            IEnumerable<DisplayModule> value;
+            if (sortedDisplayModules.TryGetValue(comparer, out value))
+                return value;
+            sortedDisplayModules[comparer] = value = unorderedComputerModules.OfType<DisplayModule>().OrderBy(m => m, comparer).ToList();
+            return value;
         }
 
         public ComputerModule GetComputerModule(string type)
