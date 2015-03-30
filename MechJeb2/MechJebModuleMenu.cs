@@ -89,7 +89,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>(DisplayOrder.instance))
+            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance))
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
@@ -359,7 +359,7 @@ namespace MuMech
                 bool customB = b is MechJebModuleCustomInfoWindow;
                 if (!customA && customB) return -1;
                 if (customA && !customB) return 1;
-                return a.GetName().CompareTo(b.GetName());
+                return String.Compare(a.GetName(), b.GetName(), StringComparison.Ordinal);
             }
         }
     }
