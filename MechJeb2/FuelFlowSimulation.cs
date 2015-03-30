@@ -32,7 +32,11 @@ namespace MuMech
             }
             else
             {
-                foreach (Part p in parts) nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
+                foreach (Part p in parts)
+                {
+                    nodeLookup[p].SetupFuelLineSourcesFlight(p, nodeLookup);
+                    nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
+                }
             }
             foreach (Part p in parts) nodeLookup[p].SetupRegularSources(p, nodeLookup);
 
