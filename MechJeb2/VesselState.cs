@@ -414,18 +414,17 @@ namespace MuMech
                 {
                     if ((pm.rcsEnabled) && (pm.isEnabled) && (!pm.isJustForShow) )
                      {
-                        // RCS position local to vessel:
-                        Vector3d partPosition = vessel.GetTransform().InverseTransformDirection(p.transform.position - CoM);
-
                         // rcsTorqueAvailable:
                         foreach (Transform t in pm.thrusterTransforms)
                         {
-                            Vector3d thrusterThrust = vessel.GetTransform().InverseTransformDirection( -t.up) * pm.thrusterPower;
-                            // This is a cheap hack to get rcsTorque with the RCSbalancer active.
+                            Vector3d partPosition = t.position - CoM;
+                            Vector3d thrusterThrust = -t.up * pm.thrusterPower;
+                            // This is a cheap hack to get rcsTorque with the RCS balancer active.
                             if (!rcsbal.enabled)
                                 rcsThrustAvailable.Add(thrusterThrust);
                             Vector3d thrusterTorque = Vector3.Cross(partPosition, thrusterThrust);
-                            rcsTorqueAvailable.Add(thrusterTorque);
+                            // Convert in vessel local coordinate
+                            rcsTorqueAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterTorque));
                         }
                     }
                 }
