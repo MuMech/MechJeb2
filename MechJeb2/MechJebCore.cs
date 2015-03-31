@@ -37,7 +37,7 @@ namespace MuMech
 
         public VesselState vesselState = new VesselState();
 
-        private Vessel controlledVessel; //keep track of which vessel we've added our OnAutopilotUpdate callback to
+        private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
 
         public string version = "";
 
@@ -152,19 +152,19 @@ namespace MuMech
 
         public bool someModuleAreLocked = false; // True if any module was locked by the R&D system
 
-        //Returns whether the vessel we've registered OnAutopilotUpdate with is the correct one. 
+        //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
         {
             if (controlledVessel == vessel) return true;
 
-            //else we have an OnAutopilotUpdate callback registered with the wrong vessel:
+            //else we have an onFlyByWire callback registered with the wrong vessel:
             //handle vessel changes due to docking/undocking
-            if (controlledVessel != null) controlledVessel.OnAutopilotUpdate -= OnAutopilotUpdate;
+            if (controlledVessel != null) controlledVessel.OnFlyByWire -= OnFlyByWire;
             if (vessel != null)
             {
-                vessel.OnAutopilotUpdate -= OnAutopilotUpdate; //just a safety precaution to avoid duplicates
-                vessel.OnAutopilotUpdate += OnAutopilotUpdate;
+                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
+                vessel.OnFlyByWire += OnFlyByWire;
             }
             controlledVessel = vessel;
 
@@ -267,7 +267,7 @@ namespace MuMech
             unorderedComputerModules.Clear();
             sortedModules.Clear();
 
-            if (vessel != null) vessel.OnAutopilotUpdate -= OnAutopilotUpdate;
+            if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             controlledVessel = null;
 
             //Start fresh
@@ -313,8 +313,8 @@ namespace MuMech
 
             if (vessel != null && this != vessel.GetMasterMechJeb())
             {
-                vessel.OnAutopilotUpdate -= OnAutopilotUpdate; //just a safety precaution to avoid duplicates
-                vessel.OnAutopilotUpdate += OnAutopilotUpdate;
+                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
+                vessel.OnFlyByWire += OnFlyByWire;
                 controlledVessel = vessel;
             }
         }
@@ -368,7 +368,7 @@ namespace MuMech
         {
             LoadDelayedModules();
 
-            CheckControlledVessel(); //make sure our OnAutopilotUpdate callback is registered with the right vessel
+            CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
 
             if (this != vessel.GetMasterMechJeb() || (HighLogic.LoadedSceneIsFlight && !vessel.isActiveVessel))
             {
@@ -754,12 +754,12 @@ namespace MuMech
             }
             if (vessel != null)
             {
-                vessel.OnAutopilotUpdate -= OnAutopilotUpdate;
+                vessel.OnFlyByWire -= OnFlyByWire;
             }
             controlledVessel = null;
         }
 
-        private void OnAutopilotUpdate(FlightCtrlState s)
+        private void OnFlyByWire(FlightCtrlState s)
         {
             if (deactivateControl || !CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
