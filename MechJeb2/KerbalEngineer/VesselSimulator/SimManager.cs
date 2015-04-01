@@ -374,13 +374,20 @@ namespace KerbalEngineer.VesselSimulator
 
                 var parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : FlightGlobals.ActiveVessel.Parts;
 
+
+                Profiler.BeginSample("SimManager.StartSimulation().new");
                 // Create the Simulation object in this thread
                 var sim = new Simulation[2];
                 sim[0] = new Simulation();
                 sim[1] = new Simulation();
+                Profiler.EndSample();
 
+                Profiler.BeginSample("SimManager.StartSimulation().vacSim");
                 bool vacSim = sim[0].PrepareSimulation(parts, Gravity, 0d, Velocity, dumpTree, vectoredThrust);
+                Profiler.EndSample();
+                Profiler.BeginSample("SimManager.StartSimulation().atmSim");
                 bool atmSim = sim[1].PrepareSimulation(parts, Gravity, Atmosphere, Velocity, dumpTree, vectoredThrust);
+                Profiler.EndSample();
 
                 // This call doesn't ever fail at the moment but we'll check and return a sensible error for display
                 if (vacSim && atmSim)

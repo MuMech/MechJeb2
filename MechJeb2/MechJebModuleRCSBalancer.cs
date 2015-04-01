@@ -84,16 +84,23 @@ namespace MuMech
 
             bool firstRcsModule = true;
             string thrusterStates = "";
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    if (!firstRcsModule) thrusterStates += " ";
+                    if (!firstRcsModule)
+                    {
+                        thrusterStates += " ";
+                    }
                     firstRcsModule = false;
                     thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
                     for (int i = 0; i < pm.thrustForces.Count; i++)
                     {
-                        if (i != 0) thrusterStates += ",";
+                        if (i != 0)
+                        {
+                            thrusterStates += ",";
+                        }
                         thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
                     }
                     thrusterStates += ")";

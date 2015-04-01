@@ -184,13 +184,17 @@ namespace MuMech
 //					traction += (1.5f - (hit.distance - c.radius)) * 100;
 //				}
 //			}
-			
-			foreach (var w in wheels)
-			{
-				if (w.GroundContact) { traction += 100; }
-			}
-			
-			traction /= wheels.Count;
+
+		    for (int i = 0; i < wheels.Count; i++)
+		    {
+		        var w = wheels[i];
+		        if (w.GroundContact)
+		        {
+		            traction += 100;
+		        }
+		    }
+
+		    traction /= wheels.Count;
 		}
 		
 		public override void OnModuleDisabled()

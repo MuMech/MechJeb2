@@ -73,8 +73,9 @@ namespace MuMech
 
         public static bool IsEngine(this Part p)
         {
-            foreach (PartModule m in p.Modules)
+            for (int i = 0; i < p.Modules.Count; i++)
             {
+                PartModule m = p.Modules[i];
                 if (m is ModuleEngines || m is ModuleEnginesFX) return true;
             }
             return false;

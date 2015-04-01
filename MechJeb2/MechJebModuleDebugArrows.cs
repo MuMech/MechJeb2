@@ -638,8 +638,9 @@ namespace MuMech
             for (int i = 0; i < recursionLevel; i++)
             {
                 List<TriangleIndices> faces2 = new List<TriangleIndices>();
-                foreach (var tri in faces)
+                for (int j = 0; j < faces.Count; j++)
                 {
+                    var tri = faces[j];
                     // replace triangle by 4 triangles
                     int a = getMiddlePoint(tri.v1, tri.v2, ref vertList, ref middlePointIndexCache, radius);
                     int b = getMiddlePoint(tri.v2, tri.v3, ref vertList, ref middlePointIndexCache, radius);

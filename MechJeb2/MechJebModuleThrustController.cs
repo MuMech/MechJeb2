@@ -497,7 +497,9 @@ namespace MuMech
                     groupIds[partIntake] = grpId;
                     intakes.Add(partIntake);
 
-                    foreach (var sympart in part.symmetryCounterparts) {
+                    for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+                    {
+                        var sympart = part.symmetryCounterparts[i];
                         stack.Push(sympart);
                     }
                 }
@@ -513,8 +515,9 @@ namespace MuMech
             {
                 if (airFlowSoFar < requiredFlow)
                 {
-                    foreach (var intake in grp)
+                    for (int i = 0; i < grp.Count; i++)
                     {
+                        var intake = grp[i];
                         double airFlowThisIntake = data[intake].predictedMassFlow;
                         if (!intake.intakeEnabled)
                         {

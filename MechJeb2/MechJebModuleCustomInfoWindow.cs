@@ -23,8 +23,9 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-            foreach (InfoItem item in items)
+            for (int i = 0; i < items.Count; i++)
             {
+                InfoItem item = items[i];
                 if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
                 {
                     item.DrawItem();
@@ -75,8 +76,9 @@ namespace MuMech
             string windowSharingString = "--- MechJeb Custom Window ---\n";
             windowSharingString += "Name: " + GetName() + "\n";
             windowSharingString += "Show in:" + (showInEditor ? " editor" : "") + (showInFlight ? " flight" : "") + "\n";
-            foreach (InfoItem item in items)
+            for (int i = 0; i < items.Count; i++)
             {
+                InfoItem item = items[i];
                 windowSharingString += item.id + "\n";
             }
             windowSharingString += "-----------------------------\n";

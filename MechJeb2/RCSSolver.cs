@@ -422,8 +422,9 @@ namespace MuMech
 
         public void ResetThrusterForces()
         {
-            foreach (var t in thrusters)
+            for (int i = 0; i < thrusters.Count; i++)
             {
+                var t = thrusters[i];
                 t.RestoreOriginalForce();
             }
         }
@@ -468,8 +469,9 @@ namespace MuMech
 
             // Likewise, make sure any previously-disabled RCS modules are still
             // disabled.
-            foreach (var pm in lastDisabled)
+            for (int i = 0; i < lastDisabled.Count; i++)
             {
+                var pm = lastDisabled[i];
                 if (pm.isEnabled)
                 {
                     changed = true;
@@ -538,8 +540,9 @@ namespace MuMech
 
             // Rebuild the list of thrusters.
             var ts = new List<RCSSolver.Thruster>();
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (!pm.isEnabled)

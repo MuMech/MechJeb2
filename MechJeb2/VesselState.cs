@@ -413,8 +413,6 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                //foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                //{
                 for (int m = 0; m < p.Modules.Count; m++)
                 {
                     PartModule mod = p.Modules[m];
@@ -480,8 +478,9 @@ namespace MuMech
                     ctrlTorqueAvailable.Add(ctrlTorqueNeg);
                 }
 
-                foreach (VesselStatePartExtension vspe in vesselStatePartExtensions)
+                for (int index = 0; index < vesselStatePartExtensions.Count; index++)
                 {
+                    VesselStatePartExtension vspe = vesselStatePartExtensions[index];
                     vspe(p);
                 }
 
@@ -554,8 +553,9 @@ namespace MuMech
                         ctrlTorqueAvailable.Add(ctrlTroqueNeg);
                     }
 
-                    foreach (VesselStatePartModuleExtension vspme in vesselStatePartModuleExtensions)
+                    for (int index = 0; index < vesselStatePartModuleExtensions.Count; index++)
                     {
+                        VesselStatePartModuleExtension vspme = vesselStatePartModuleExtensions[index];
                         vspme(pm);
                     }
                 }
@@ -880,8 +880,9 @@ namespace MuMech
                 float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
                 double Isp = Math.Min(Isp0, Isp1);
                 double udot = e.maxThrust / (Isp * e.g * e.mixtureDensity); // Tavert Issue #163
-                foreach (var propellant in e.propellants)
+                for (int i = 0; i < e.propellants.Count; i++)
                 {
+                    var propellant = e.propellants[i];
                     double maxreq = udot * propellant.ratio;
                     addResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
@@ -963,8 +964,9 @@ namespace MuMech
                 float Isp1 = e.atmosphereCurve.Evaluate(atmP1);
                 double Isp = Math.Min(Isp0, Isp1);
                 double udot = e.maxThrust / (Isp * e.g * e.mixtureDensity); // Tavert Issue #163
-                foreach (var propellant in e.propellants)
+                for (int i = 0; i < e.propellants.Count; i++)
                 {
+                    var propellant = e.propellants[i];
                     double maxreq = udot * propellant.ratio;
                     addResource(propellant.id, propellant.currentRequirement, maxreq);
                 }

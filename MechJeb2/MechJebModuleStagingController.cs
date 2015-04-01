@@ -182,9 +182,13 @@ namespace MuMech
         //is used to tell whether we should delay activating the next stage after activating inverseStage
         public static bool InverseStageFiresDecoupler(int inverseStage, Vessel v)
         {
-            foreach (Part p in v.parts)
+            for (int i = 0; i < v.parts.Count; i++)
             {
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler()) return true;
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler())
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -239,13 +243,17 @@ namespace MuMech
         public static bool HasStayingChutes(int inverseStage, Vessel v)
         {
         	var chutes = v.parts.FindAll(p => p.inverseStage == inverseStage && p.IsParachute());
-        	
-            foreach (Part p in chutes)
+
+            for (int i = 0; i < chutes.Count; i++)
             {
-        		if (!p.IsDecoupledInStage(inverseStage)) { return true; }
-        	}
-        	
-        	return false;
+                Part p = chutes[i];
+                if (!p.IsDecoupledInStage(inverseStage))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

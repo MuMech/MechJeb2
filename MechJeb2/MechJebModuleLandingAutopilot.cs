@@ -366,15 +366,17 @@ namespace MuMech
         {
             if (vesselState.mainBody.atmosphere && deployChutes)
             {
-                foreach (ModuleParachute p in vesselState.parachutes)
+                for (int i = 0; i < vesselState.parachutes.Count; i++)
                 {
-                    // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
+                    ModuleParachute p = vesselState.parachutes[i];
+// what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
                     double LandingSiteASL = LandingAltitude;
                     double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.Multiplier;
 
                     double ASLDeployAltitude = ParachuteDeployAboveGroundAtLandingSite + LandingSiteASL;
 
-                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED && ASLDeployAltitude > vesselState.altitudeASL)
+                    if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED &&
+                        ASLDeployAltitude > vesselState.altitudeASL)
                     {
                         p.Deploy();
                         // Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
@@ -389,8 +391,9 @@ namespace MuMech
             if (!vesselState.mainBody.atmosphere) return false;
             if (!deployChutes) return false;
 
-            foreach (ModuleParachute p in vesselState.parachutes)
+            for (int i = 0; i < vesselState.parachutes.Count; i++)
             {
+                ModuleParachute p = vesselState.parachutes[i];
                 if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
                 {
                     return true;
@@ -489,20 +492,22 @@ namespace MuMech
             double addedDragMass = 0;
             if (vesselState.mainBody.atmosphere && deployChutes)
             {
-                foreach (ModuleParachute p in vesselState.parachutes)
+                for (int i = 0; i < vesselState.parachutes.Count; i++)
                 {
+                    ModuleParachute p = vesselState.parachutes[i];
                     if (p.part.inverseStage >= limitChutesStage)
-                        switch (p.deploymentState)
                     {
-                        case ModuleParachute.deploymentStates.STOWED:
-                        case ModuleParachute.deploymentStates.ACTIVE:
-                            addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.stowedDrag;
-                            break;
-                        case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                            addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.semiDeployedDrag;
-                            break;
+                        switch (p.deploymentState)
+                        {
+                            case ModuleParachute.deploymentStates.STOWED:
+                            case ModuleParachute.deploymentStates.ACTIVE:
+                                addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.stowedDrag;
+                                break;
+                            case ModuleParachute.deploymentStates.SEMIDEPLOYED:
+                                addedDragMass += p.part.mass * p.fullyDeployedDrag - p.part.mass * p.semiDeployedDrag;
+                                break;
+                        }
                     }
-
                 }
             }
             return addedDragMass;
@@ -796,9 +801,11 @@ namespace MuMech
             parachutePresent = false; // First assume that there are no parachutes.
 
             // TODO should we check if each of these parachutes is withing the staging limit?
-            foreach (ModuleParachute p in autoPilot.vesselState.parachutes)
+            for (int i = 0; i < autoPilot.vesselState.parachutes.Count; i++)
             {
-                if (p.minAirPressureToOpen > minSemiDeployPressure) // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
+                ModuleParachute p = autoPilot.vesselState.parachutes[i];
+                if (p.minAirPressureToOpen > minSemiDeployPressure)
+                    // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
                 {
                     minSemiDeployPressure = p.minAirPressureToOpen;
                 }

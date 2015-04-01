@@ -269,8 +269,9 @@ namespace MuMech
         // Function to call Simulate and rollback on all of the parachutes to see if any of them are expected to open in the current iteration.
         bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double t, double parachuteSemiDeployMultiplier)
         {
-            foreach (SimulatedParachute p in parachutes)
+            for (int i = 0; i < parachutes.Count; i++)
             {
+                SimulatedParachute p = parachutes[i];
                 if (p.SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier))
                 {
                     return true;
@@ -336,8 +337,9 @@ namespace MuMech
                     }
                     else
                     {
-                        foreach (SimulatedParachute p in parachutes)
+                        for (int i = 0; i < parachutes.Count; i++)
                         {
+                            SimulatedParachute p = parachutes[i];
                             p.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
                         }
                     }
@@ -404,8 +406,9 @@ namespace MuMech
 
             double realDragMass = this.dragMassExcludingUsedParachutes;
 
-            foreach (SimulatedParachute p in parachutes)
+            for (int i = 0; i < parachutes.Count; i++)
             {
+                SimulatedParachute p = parachutes[i];
                 realDragMass += p.AddedDragMass();
             }
 
@@ -421,25 +424,25 @@ namespace MuMech
             double pressure = Pressure(pos);
             if (bodyHasAtmosphere)
             {
-                foreach (SimulatedParachute p in parachutes)
+                for (int i = 0; i < parachutes.Count; i++)
                 {
-                    p.Simulate(altAGL, altASL, probableLandingSiteASL , pressure, t, this.parachuteSemiDeployMultiplier);
+                    SimulatedParachute p = parachutes[i];
+                    p.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
                 }
             }
         }
 
         bool ParachutesDeploying()
         {
-
-            foreach (SimulatedParachute p in parachutes)
+            for (int i = 0; i < parachutes.Count; i++)
             {
+                SimulatedParachute p = parachutes[i];
                 if (p.deploying)
                 {
                     return true;
                 }
             }
             return false;
-
         }
 
         double Pressure(Vector3d pos)
@@ -534,8 +537,9 @@ namespace MuMech
                 List<Vector3d> ret = new List<Vector3d>();
                 ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
                 double lastTime = trajectory[0].UT;
-                foreach (AbsoluteVector absolute in trajectory)
+                for (int i = 0; i < trajectory.Count; i++)
                 {
+                    AbsoluteVector absolute = trajectory[i];
                     if (absolute.UT > lastTime + timeStep)
                     {
                         ret.Add(referenceFrame.WorldPositionAtCurrentTime(absolute));
