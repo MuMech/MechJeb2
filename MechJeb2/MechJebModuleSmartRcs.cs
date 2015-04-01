@@ -24,9 +24,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDisableSmartRCS = true;
         [GeneralInfoItem("Disable SmartRcs automatically", InfoItem.Category.Misc)]
-        public void AutoDisableSmartASS()
+        public void AutoDisableSmartRCS()
         {
-            autoDisableSmartRCS = GUILayout.Toggle(autoDisableSmartRCS, "Disable SmartASS automatically");
+            autoDisableSmartRCS = GUILayout.Toggle(autoDisableSmartRCS, "Disable SmartRcs automatically");
         }
 
         protected void TargetButton(Target bt)
