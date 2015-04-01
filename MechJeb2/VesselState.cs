@@ -386,7 +386,7 @@ namespace MuMech
             if (rcsbal.enabled)
             {
                 Vector3d rot = Vector3d.zero;
-                foreach (Vector6.Direction dir6 in Enum.GetValues(typeof (Vector6.Direction)))
+                foreach (Vector6.Direction dir6 in Vector6.Values)
                 {
                     Vector3d dir = Vector6.directions[dir6];
                     double[] throttles;

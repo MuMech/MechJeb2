@@ -69,6 +69,8 @@ namespace MuMech
 
         private enum PARAMS { TORQUE_X, TORQUE_Y, TORQUE_Z, TRANS_X, TRANS_Y, TRANS_Z, WASTE, FUDGE };
 
+        private int PARAMLength = Enum.GetValues(typeof (PARAMS)).Length;
+
         public void UpdateTuningParameters(RCSSolverTuningParams tuningParams)
         {
             factorTorque    = tuningParams.factorTorque;
@@ -116,8 +118,8 @@ namespace MuMech
             // and any thrust that's wasted due to not being toward 'direction' (1
             // value). We also have a value to make sure there's always -some-
             // thrust.
-            A = new double[Enum.GetValues(typeof(PARAMS)).Length, count];
-            B = new double[Enum.GetValues(typeof(PARAMS)).Length];
+            A = new double[PARAMLength, count];
+            B = new double[PARAMLength];
 
             for (int i = 0; i < B.Length; i++)
             {

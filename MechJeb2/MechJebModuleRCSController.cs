@@ -152,7 +152,7 @@ namespace MuMech
 
                 Vector3d rcs = new Vector3d();
 
-                foreach (Vector6.Direction dir in Enum.GetValues(typeof(Vector6.Direction)))
+                foreach (Vector6.Direction dir in Vector6.Values)
                 {
                     double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[dir]);
                     double dirAvail = vesselState.rcsThrustAvailable[dir]; 
