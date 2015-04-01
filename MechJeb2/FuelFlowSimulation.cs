@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace MuMech
 {
+    /*
     public class FuelFlowSimulation
     {
         public int simStage; //the simulated rocket's current stage
@@ -764,4 +765,5 @@ namespace MuMech
             return false;
         }
     }
+  */
 }

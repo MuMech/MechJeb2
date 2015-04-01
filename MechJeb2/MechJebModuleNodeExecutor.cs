@@ -189,7 +189,7 @@ namespace MuMech
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
                 var s = stats.vacStats[i];
-                if (s.deltaV <= 0 || s.startThrust <= 0)
+                if (s.deltaV <= 0 || s.thrust <= 0)
                 {
                     if (core.staging.enabled)
                     {
@@ -219,8 +219,8 @@ namespace MuMech
                 //      ln(m0 / m1) * stageBurnFraction = ln(m0 / m1b)
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
-                double stageBurnFinalMass = s.startMass / Math.Exp(Math.Log(s.startMass / s.endMass) * stageBurnFraction);
-                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2);
+                double stageBurnFinalMass = s.totalMass / Math.Exp(Math.Log(s.totalMass / (s.totalMass - s.resourceMass)) * stageBurnFraction);
+                double stageAvgAccel = s.thrust / ((s.totalMass + stageBurnFinalMass) / 2);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
