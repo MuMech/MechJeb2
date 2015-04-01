@@ -429,6 +429,9 @@ namespace MuMech
 
         Func<object> getValue;
 
+        private string stringValue;
+        private int cacheValidity = -1;
+
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
@@ -478,9 +481,13 @@ namespace MuMech
 
         public override void DrawItem()
         {
-            object value = getValue();
-
-            string stringValue = GetStringValue(value);
+            int frameCount = Time.frameCount;
+            if (frameCount != cacheValidity)
+            {
+                object value = getValue();
+                stringValue = GetStringValue(value);
+                cacheValidity = frameCount;
+            }
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(name, GUILayout.ExpandWidth(true));
