@@ -421,8 +421,10 @@ namespace MuMech
                             Vector3d thrusterThrust = -t.up * pm.thrusterPower;
                             // This is a cheap hack to get rcsTorque with the RCS balancer active.
                             if (!rcsbal.enabled)
-                                rcsThrustAvailable.Add(thrusterThrust);
-                            Vector3d thrusterTorque = Vector3.Cross(partPosition, thrusterThrust);
+                            {
+                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterThrust));
+                            }
+                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
                             // Convert in vessel local coordinate
                             rcsTorqueAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterTorque));
                         }
