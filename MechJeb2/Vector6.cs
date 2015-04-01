@@ -11,14 +11,6 @@ namespace MuMech
         public Vector3d positive = Vector3d.zero, negative = Vector3d.zero;
 
         public enum Direction { FORWARD=0, BACK=1, UP=2, DOWN=3, RIGHT=4, LEFT=5 };
-        //public static readonly Dictionary<Direction, Vector3d> directions = new Dictionary<Direction, Vector3d> {
-        //    { Direction.FORWARD, Vector3d.forward },
-        //    { Direction.BACK, Vector3d.back },
-        //    { Direction.UP, Vector3d.up },
-        //    { Direction.DOWN, Vector3d.down },
-        //    { Direction.RIGHT, Vector3d.right },
-        //    { Direction.LEFT, Vector3d.left }
-        //};
 
         public static readonly Vector3d[] directions = { Vector3d.forward, Vector3d.back, Vector3d.up, Vector3d.down, Vector3d.right, Vector3d.left };
 
@@ -101,8 +93,9 @@ namespace MuMech
         public double GetMagnitude(Vector3d direction)
         {
             double sqrMagnitude = 0;
-            foreach (Direction d in Values)
+            for (int i = 0; i < Values.Length; i++)
             {
+                Direction d = Values[i];
                 double projection = Vector3d.Dot(direction.normalized, directions[(int)d]);
                 if (projection > 0)
                 {
