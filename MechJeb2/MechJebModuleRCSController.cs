@@ -152,16 +152,17 @@ namespace MuMech
 
                 Vector3d rcs = new Vector3d();
 
-                foreach (Vector6.Direction dir in Vector6.Values)
+                for (int i = 0; i < Vector6.Values.Length; i++)
                 {
-                    double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[dir]);
+                    Vector6.Direction dir = Vector6.Values[i];
+                    double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[(int)dir]);
                     double dirAvail = vesselState.rcsThrustAvailable[dir]; 
                     if (dirAvail  > 0 && Math.Abs(dirDv) > 0.001)
                     {
                         double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / vesselState.mass);
                         if (dirAction > 0)
                         {
-                            rcs += Vector6.directions[dir] * dirAction;
+                            rcs += Vector6.directions[(int)dir] * dirAction;
                         }
                     }
                 }
