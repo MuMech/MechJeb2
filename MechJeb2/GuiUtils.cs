@@ -683,7 +683,7 @@ namespace MuMech
             int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
             int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
 
-            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
+            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees.ToString(), minutes.ToString(), seconds.ToString());
         }
     }
 }
