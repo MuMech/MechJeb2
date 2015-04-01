@@ -413,12 +413,19 @@ namespace MuMech
             //vessel.rootPart.SendEvent("LowerLeg");
 
             //old-style landings legs are activated on part activation:
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
-                if (p.HasModule<ModuleLandingLeg>()) 
-                if ( p.inverseStage >= limitGearsStage )
-                    foreach (ModuleLandingLeg l in p.FindModulesImplementing<ModuleLandingLeg>())
-                        l.LowerLeg();
+                Part p = vessel.parts[i];
+                if (p.HasModule<ModuleLandingLeg>())
+                {
+                    if (p.inverseStage >= limitGearsStage)
+                    {
+                        foreach (ModuleLandingLeg l in p.FindModulesImplementing<ModuleLandingLeg>())
+                        {
+                            l.LowerLeg();
+                        }
+                    }
+                }
 
                 if (p is LandingLeg)
                 {

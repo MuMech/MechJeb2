@@ -153,21 +153,26 @@ namespace MuMech
             double totalMass =0;
             double dragMassExcludingUsedParachutes = 0;
             List<SimulatedParachute> usableChutes = new List<SimulatedParachute>();
-            
-            foreach (Part p in vessel.parts)
+
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 if (p.IsPhysicallySignificant())
                 {
                     bool partIsParachute = false;
-                    double partDrag =0;
+                    double partDrag = 0;
                     double partMass = p.TotalMass();
 
                     totalMass += partMass;
 
                     // Is this part a parachute?
-                    foreach (PartModule pm in p.Modules)
+                    for (int i = 0; i < p.Modules.Count; i++)
                     {
-                        if (!pm.isEnabled) continue;
+                        PartModule pm = p.Modules[i];
+                        if (!pm.isEnabled)
+                        {
+                            continue;
+                        }
 
                         if (pm is ModuleParachute)
                         {
@@ -190,7 +195,7 @@ namespace MuMech
 
                     dragMassExcludingUsedParachutes += partDrag * partMass;
                 }
-            }            
+            }
 
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
             if(null !=this.result)

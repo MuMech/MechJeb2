@@ -450,7 +450,7 @@ namespace MuMech
                     reference = AttitudeReference.TARGET_ORIENTATION;
                     break;
                 case Target.ADVANCED:
-                    direction = Vector6.directions[advDirection];
+                    direction = Vector6.directions[(int)advDirection];
                     reference = advReference;
                     break;
                 case Target.SURFACE_PROGRADE:

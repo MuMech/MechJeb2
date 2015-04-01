@@ -45,12 +45,15 @@ namespace MuMech
 
         public void ExtendAll()
         {
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
+                Part p = vessel.parts[i];
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
                     if (isDeployable(sa))
+                    {
                         sa.Extend();
+                    }
                 }
             }
         }
@@ -66,27 +69,33 @@ namespace MuMech
 
         public void RetractAll()
         {
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
+                Part p = vessel.parts[i];
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
                     if (isDeployable(sa))
+                    {
                         sa.Retract();
+                    }
                 }
             }
         }
 
         public bool AllRetracted()
         {
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
+                Part p = vessel.parts[i];
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
                     if (isDeployable(sa) &&
                         ((sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED) ||
                          (sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDING) ||
                          (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTING)))
+                    {
                         return false;
+                    }
                 }
             }
             return true;

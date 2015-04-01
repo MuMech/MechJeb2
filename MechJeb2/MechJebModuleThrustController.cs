@@ -525,8 +525,9 @@ namespace MuMech
                 }
                 else
                 {
-                    foreach (var intake in grp)
+                    for (int j = 0; j < grp.Count; j++)
                     {
+                        var intake = grp[j];
                         if (intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
@@ -584,10 +585,12 @@ namespace MuMech
         public bool ComputeDifferentialThrottle(Vector3d torque)
         {
             List<EngineWrapper> engines = new List<EngineWrapper>();
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
-                foreach (PartModule pm in p.Modules)
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
+                    PartModule pm = p.Modules[j];
                     if (pm is ModuleEngines || pm is ModuleEnginesFX)
                     {
                         EngineWrapper engine = new EngineWrapper(pm);
@@ -600,11 +603,14 @@ namespace MuMech
                 }
             }
 
-            int n = engines.Where(eng => !eng.throttleLocked).Count();
+            int n = engines.Count(eng => !eng.throttleLocked);
             if (n < 3)
             {
-                foreach (EngineWrapper e in engines)
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    EngineWrapper e = engines[i];
                     e.thrustRatio = 1;
+                }
                 return false;
             }
 
@@ -650,8 +656,11 @@ namespace MuMech
             alglib.svd.rmatrixsvd(C, 2, n, 0, 0, 2, ref w, ref u, ref vt);
             if (w[0] >= 10 * w[1])
             {
-                foreach (EngineWrapper e in engines)
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    EngineWrapper e = engines[i];
                     e.thrustRatio = 1;
+                }
                 return false;
             }
 
@@ -695,10 +704,12 @@ namespace MuMech
 
         public void DisableDifferentialThrottle()
         {
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
-                foreach (PartModule pm in p.Modules)
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
+                    PartModule pm = p.Modules[j];
                     if (pm is ModuleEngines || pm is ModuleEnginesFX)
                     {
                         EngineWrapper engine = new EngineWrapper(pm);

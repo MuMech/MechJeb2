@@ -169,8 +169,9 @@ namespace MuMech
         {
             double rcsThrust = 0;
 
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
+                Part p = vessel.parts[i];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
@@ -178,9 +179,9 @@ namespace MuMech
                         continue;
                     }
 
-                    foreach (float f in pm.thrustForces)
+                    for (int j = 0; j < pm.thrustForces.Count; j++)
                     {
-                        rcsThrust += f * pm.thrusterPower;
+                        rcsThrust += pm.thrustForces[j] * pm.thrusterPower;
                     }
                 }
             }
@@ -207,8 +208,9 @@ namespace MuMech
 
             direction.Normalize();
 
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
@@ -948,11 +950,21 @@ namespace MuMech
             GUILayout.BeginVertical();
             GUILayout.Label("Planet phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
 
-            foreach (CelestialBody body in FlightGlobals.Bodies)
+            for (int i = 0; i < FlightGlobals.Bodies.Count; i++)
             {
-                if (body == Planetarium.fetch.Sun) continue;
-                if (body.referenceBody != Planetarium.fetch.Sun) continue;
-                if (body.orbit == o) continue;
+                CelestialBody body = FlightGlobals.Bodies[i];
+                if (body == Planetarium.fetch.Sun)
+                {
+                    continue;
+                }
+                if (body.referenceBody != Planetarium.fetch.Sun)
+                {
+                    continue;
+                }
+                if (body.orbit == o)
+                {
+                    continue;
+                }
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
@@ -974,9 +986,13 @@ namespace MuMech
                 Orbit o = orbit;
                 while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
-                foreach (CelestialBody body in o.referenceBody.orbitingBodies)
+                for (int i = 0; i < o.referenceBody.orbitingBodies.Count; i++)
                 {
-                    if (body.orbit == o) continue;
+                    CelestialBody body = o.referenceBody.orbitingBodies[i];
+                    if (body.orbit == o)
+                    {
+                        continue;
+                    }
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
