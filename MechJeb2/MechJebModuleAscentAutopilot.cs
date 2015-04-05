@@ -118,7 +118,7 @@ namespace MuMech
             {
                 if (tMinus < 3 * vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
                 {
-                    if (enabled)
+                    if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
                         Staging.ActivateNextStage();
                     timedLaunch = false;
                 }
