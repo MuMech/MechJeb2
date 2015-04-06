@@ -289,9 +289,9 @@ namespace KerbalEngineer.VesselSimulator
             Simulation[] sims = (Simulation[])simObject;
             try
             {
-                Profiler.BeginSample("SimManager.RunSimulation().vacSim");
+                //Profiler.BeginSample("SimManager.RunSimulation().vacSim");
                 VacStages = sims[0].RunSimulation();
-                Profiler.EndSample();
+                //Profiler.EndSample();
                 if (VacStages != null && VacStages.Length > 0)
                 {
                     if (logOutput)
