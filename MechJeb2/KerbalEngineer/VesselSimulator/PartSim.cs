@@ -513,7 +513,7 @@ namespace KerbalEngineer.VesselSimulator
         // All functions below this point must not rely on the part member (it may be null)
         //
 
-        public HashSet<PartSim> GetSourceSet(int type, List<PartSim> allParts, HashSet<PartSim> visited, LogMsg log, String indent)
+        public void GetSourceSet(int type, List<PartSim> allParts, HashSet<PartSim> visited, HashSet<PartSim> allSources, LogMsg log, String indent)
         {
             if (log != null)
             {
@@ -521,10 +521,7 @@ namespace KerbalEngineer.VesselSimulator
                 indent += "  ";
             }
 
-            HashSet<PartSim> allSources = new HashSet<PartSim>();
-            HashSet<PartSim> partSources = null;
-
-            // Rule 1: Each part can be only visited once, If it is visited for second time in particular search it returns empty list.
+            // Rule 1: Each part can be only visited once, If it is visited for second time in particular search it returns as is.
             if (visited.Contains(this))
             {
                 if (log != null)
@@ -532,7 +529,7 @@ namespace KerbalEngineer.VesselSimulator
                     log.buf.AppendLine(indent + "Returning empty set, already visited (" + this.name + ":" + this.partId + ")");
                 }
 
-                return allSources;
+                return;
             }
 
             //if (log != null)
@@ -557,12 +554,7 @@ namespace KerbalEngineer.VesselSimulator
                     //if (log != null)
                     //    log.buf.AppendLine(indent + "Adding fuel target as source (" + partSim.name + ":" + partSim.partId + ")");
 
-                    partSources = partSim.GetSourceSet(type, allParts, visited, log, indent);
-                    if (partSources.Count > 0)
-                    {
-                        allSources.UnionWith(partSources);
-                        partSources.Clear();
-                    }
+                    partSim.GetSourceSet(type, allParts, visited, allSources, log, indent);
                 }
             }
 
@@ -573,7 +565,7 @@ namespace KerbalEngineer.VesselSimulator
                     log.buf.AppendLine(indent + "Returning " + allSources.Count + " fuel target sources (" + this.name + ":" + this.partId + ")");
                 }
 
-                return allSources;
+                return;
             }
 
             // Rule 3: This rule has been removed and merged with rules 4 and 7 to fix issue with fuel tanks with disabled crossfeed
@@ -607,12 +599,7 @@ namespace KerbalEngineer.VesselSimulator
                                     //if (log != null)
                                     //    log.buf.AppendLine(indent + "Adding attached part as source (" + attachSim.attachedPartSim.name + ":" + attachSim.attachedPartSim.partId + ")");
 
-                                    partSources = attachSim.attachedPartSim.GetSourceSet(type, allParts, visited, log, indent);
-                                    if (partSources.Count > 0)
-                                    {
-                                        allSources.UnionWith(partSources);
-                                        partSources.Clear();
-                                    }
+                                    attachSim.attachedPartSim.GetSourceSet(type, allParts, visited, allSources, log, indent);
                                 }
                             }
                         }
@@ -626,7 +613,7 @@ namespace KerbalEngineer.VesselSimulator
                         log.buf.AppendLine(indent + "Returning " + allSources.Count + " attached sources (" + this.name + ":" + this.partId + ")");
                     }
 
-                    return allSources;
+                    return;
                 }
             }
 
@@ -646,7 +633,7 @@ namespace KerbalEngineer.VesselSimulator
                     }
                 }
 
-                return allSources;
+                return;
             }
 
             // Rule 7: If the part is radially attached to another part and it is child of that part in the ship's tree structure, it scans its 
@@ -662,7 +649,7 @@ namespace KerbalEngineer.VesselSimulator
                     }
                     else
                     {
-                        allSources = this.parent.GetSourceSet(type, allParts, visited, log, indent);
+                        this.parent.GetSourceSet(type, allParts, visited, allSources, log, indent);
                         if (allSources.Count > 0)
                         {
                             if (log != null)
@@ -670,7 +657,7 @@ namespace KerbalEngineer.VesselSimulator
                                 log.buf.AppendLine(indent + "Returning " + allSources.Count + " parent sources (" + this.name + ":" + this.partId + ")");
                             }
 
-                            return allSources;
+                            return;
                         }
                     }
                 }
@@ -680,7 +667,7 @@ namespace KerbalEngineer.VesselSimulator
             //if (log != null)
             //    log.buf.AppendLine(indent + "Returning empty set, no sources found (" + name + ":" + partId + ")");
 
-            return allSources;
+            return;
         }
 
         public void RemoveAttachedParts(HashSet<PartSim> partSims)

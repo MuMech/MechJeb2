@@ -45,6 +45,12 @@ namespace KerbalEngineer
         private Vector3d sum = Vector3d.zero;
         private double totalweight = 0;
 
+        public void Reset()
+        {
+            sum = Vector3d.zero;
+            totalweight = 0;
+        }
+
         public void Add(Vector3d v, double weight) {
             sum += v * weight;
             totalweight += weight;

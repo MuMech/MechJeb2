@@ -27,7 +27,7 @@ namespace KerbalEngineer
     // a (force, application point) tuple
     public class AppliedForce
     {
-        public static readonly Pool<AppliedForce> poll = new Pool<AppliedForce>(Create, Reset);
+        public static readonly Pool<AppliedForce> pool = new Pool<AppliedForce>(Create, Reset);
 
         public Vector3d vector;
         public Vector3d applicationPoint;
@@ -58,7 +58,7 @@ namespace KerbalEngineer
 	// some amount of residual torque. The line with the least amount of residual torque is chosen.
 	public class ForceAccumulator
 	{
-		// Total force.
+	    // Total force.
 		private Vector3d totalForce = Vector3d.zero;
 		// Torque needed to compensate if force were applied at origin.
 		private Vector3d totalZeroOriginTorque = Vector3d.zero;
@@ -109,6 +109,13 @@ namespace KerbalEngineer
         public Vector3d GetMinTorqueForceApplicationPoint()
         {
             return GetMinTorqueForceApplicationPoint(avgApplicationPoint.Get());
+        }
+
+        public void Reset()
+        {
+            totalForce = Vector3d.zero;
+            totalZeroOriginTorque = Vector3d.zero;
+            avgApplicationPoint.Reset();
         }
 	}
 }

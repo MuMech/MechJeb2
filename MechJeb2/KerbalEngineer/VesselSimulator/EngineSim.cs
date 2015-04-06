@@ -60,7 +60,7 @@ namespace KerbalEngineer.VesselSimulator
             engineSim.isp = 0;
             for (int i = 0; i < engineSim.appliedForces.Count; i++)
             {
-                AppliedForce.poll.Release(engineSim.appliedForces[i]);
+                AppliedForce.pool.Release(engineSim.appliedForces[i]);
             }
             engineSim.appliedForces.Clear();
             engineSim.thrust = 0;
@@ -251,7 +251,7 @@ namespace KerbalEngineer.VesselSimulator
                 Vector3d direction = thrustTransform.forward.normalized;
                 Vector3d position = thrustTransform.position;
 
-                AppliedForce appliedForce = AppliedForce.poll.Borrow();
+                AppliedForce appliedForce = AppliedForce.pool.Borrow();
                 appliedForce.Set(direction * thrustPerThrustTransform, position);
                 appliedForces.Add(appliedForce);
             }
@@ -278,7 +278,6 @@ namespace KerbalEngineer.VesselSimulator
                 sourcePartSet.Clear();
             }
 
-            Profiler.BeginSample("EngineSim.SetResourceDrains().RessourceLoop");
             for (int index = 0; index < this.resourceConsumptions.Types.Count; index++)
             {
                 int type = this.resourceConsumptions.Types[index];
@@ -289,7 +288,6 @@ namespace KerbalEngineer.VesselSimulator
                     sourcePartSet = new HashSet<PartSim>();
                     sourcePartSets.Add(type, sourcePartSet);
                 }
-                //Profiler.BeginSample("EngineSim.SetResourceDrains().switch");
                 switch (ResourceContainer.GetResourceFlowMode(type))
                 {
                     case ResourceFlowMode.NO_FLOW:
@@ -365,7 +363,7 @@ namespace KerbalEngineer.VesselSimulator
                                 "Find " + ResourceContainer.GetResourceName(type) + " sources for " + this.partSim.name + ":" +
                                 this.partSim.partId);
                         }
-                        sourcePartSet = this.partSim.GetSourceSet(type, allParts, visited, log, "");
+                        this.partSim.GetSourceSet(type, allParts, visited, sourcePartSet, log, "");
                         if (SimManager.logOutput)
                         {
                             MonoBehaviour.print(log.buf);
@@ -378,7 +376,6 @@ namespace KerbalEngineer.VesselSimulator
                             ResourceContainer.GetResourceName(type) + ")");
                         break;
                 }
-                //Profiler.EndSample();
 
 
                 if (sourcePartSet.Count > 0)
@@ -396,9 +393,7 @@ namespace KerbalEngineer.VesselSimulator
                     }
                 }
             }
-
-            Profiler.EndSample();
-
+            
             // If we don't have sources for all the needed resources then return false without setting up any drains
             for (int i = 0; i < this.resourceConsumptions.Types.Count; i++)
             {
@@ -415,7 +410,6 @@ namespace KerbalEngineer.VesselSimulator
                     return false;
                 }
             }
-            Profiler.BeginSample("EngineSim.SetResourceDrains().drains");
             // Now we set the drains on the members of the sets and update the draining parts set
             for (int i = 0; i < this.resourceConsumptions.Types.Count; i++)
             {
@@ -436,7 +430,6 @@ namespace KerbalEngineer.VesselSimulator
                     drainingParts.Add(partSim);
                 }
             }
-            Profiler.EndSample();
             return true;
         }
 
