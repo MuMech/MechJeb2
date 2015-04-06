@@ -398,8 +398,7 @@ namespace KerbalEngineer.VesselSimulator
                 // This call doesn't ever fail at the moment but we'll check and return a sensible error for display
                 if (vacSim && atmSim)
                 {
-                    //ThreadPool.QueueUserWorkItem(RunSimulation, simulations);
-                    RunSimulation(simulations);
+                    ThreadPool.QueueUserWorkItem(RunSimulation, simulations);
                 }
                 else
                 {
