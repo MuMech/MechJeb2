@@ -7,14 +7,25 @@ namespace MuMech
 {
     public static class PartExtensions
     {
-        public static bool HasModule<T>(this Part p) where T : PartModule
+        public static bool HasModule<T>(this Part part) where T : PartModule
         {
-            return p.Modules.OfType<T>().Any();
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                if (part.Modules[i] is T)
+                    return true;
+            }
+            return false;
         }
 
         public static T GetModule<T>(this Part part) where T : PartModule
         {
-            return part.Modules.OfType<T>().FirstOrDefault();
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule pm = part.Modules[i];
+                if (pm is T)
+                    return (T)pm;
+            }
+            return null;
         }
 
         public static float TotalMass(this Part p)
