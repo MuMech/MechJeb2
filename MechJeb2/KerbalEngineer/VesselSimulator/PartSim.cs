@@ -25,7 +25,7 @@ using System.Linq;
 using System.Text;
 
 using KerbalEngineer.Extensions;
-
+using Smooth.Pools;
 using UnityEngine;
 
 #endregion
@@ -36,7 +36,10 @@ namespace KerbalEngineer.VesselSimulator
 
     public class PartSim
     {
+        public static readonly Pool<PartSim> pool = new Pool<PartSim>(Create, Reset);
+
         private readonly List<AttachNodeSim> attachNodes = new List<AttachNodeSim>();
+
         public Vector3d centerOfMass;
         public double baseMass = 0d;
         public double cost;
@@ -70,8 +73,29 @@ namespace KerbalEngineer.VesselSimulator
         public double startMass = 0d;
         public String vesselName;
         public VesselType vesselType;
+        
 
-        public PartSim(Part thePart, int id, double atmosphere, LogMsg log)
+        private static PartSim Create()
+        {
+            return new PartSim();
+        }
+
+        private static void Reset(PartSim partSim)
+        {
+            for (int i = 0; i < partSim.attachNodes.Count; i++)
+            {
+                AttachNodeSim.pool.Release(partSim.attachNodes[i]);
+            }
+            partSim.attachNodes.Clear();
+            partSim.fuelTargets.Clear();
+            partSim.resourceDrains.Reset();
+            partSim.resourceFlowStates.Reset();
+            partSim.resources.Reset();
+            partSim.baseMass = 0d;
+            partSim.startMass = 0d;
+        }
+
+        public void Set(Part thePart, int id, double atmosphere, LogMsg log)
         {
             this.part = thePart;
             this.centerOfMass = thePart.transform.TransformPoint(thePart.CoMOffset);
@@ -187,9 +211,10 @@ namespace KerbalEngineer.VesselSimulator
                 // The mode of the engine is the engineID of the ModuleEnginesFX that is active
                 string mode = this.part.GetModule<MultiModeEngine>().mode;
 
-                for (int i = 0; i < this.part.GetModules<ModuleEnginesFX>().Count; i++)
+                List<ModuleEnginesFX> enginesFx = this.part.GetModules<ModuleEnginesFX>();
+                for (int i = 0; i < enginesFx.Count; i++)
                 {
-                    ModuleEnginesFX engine = this.part.GetModules<ModuleEnginesFX>()[i];
+                    ModuleEnginesFX engine = enginesFx[i];
                     if (engine.engineID == mode)
                     {
                         if (log != null)
@@ -199,7 +224,8 @@ namespace KerbalEngineer.VesselSimulator
 
                         Vector3 thrustvec = this.CalculateThrustVector(vectoredThrust ? engine.thrustTransforms : null, log);
 
-                        EngineSim engineSim = new EngineSim(
+                        EngineSim engineSim = EngineSim.pool.Borrow();
+                        engineSim.Set(
                             this,
                             atmosphere,
                             velocity,
@@ -224,9 +250,10 @@ namespace KerbalEngineer.VesselSimulator
             {
                 if (this.hasModuleEnginesFX)
                 {
-                    for (int i = 0; i < this.part.GetModules<ModuleEnginesFX>().Count; i++)
+                    List<ModuleEnginesFX> enginesFx = this.part.GetModules<ModuleEnginesFX>();  // only place that still allocate some memory
+                    for (int i = 0; i < enginesFx.Count; i++)
                     {
-                        ModuleEnginesFX engine = this.part.GetModules<ModuleEnginesFX>()[i];
+                        ModuleEnginesFX engine = enginesFx[i];
                         if (log != null)
                         {
                             log.buf.AppendLine("Module: " + engine.moduleName);
@@ -234,7 +261,8 @@ namespace KerbalEngineer.VesselSimulator
 
                         Vector3 thrustvec = this.CalculateThrustVector(vectoredThrust ? engine.thrustTransforms : null, log);
 
-                        EngineSim engineSim = new EngineSim(
+                        EngineSim engineSim = EngineSim.pool.Borrow();
+                        engineSim.Set(
                             this,
                             atmosphere,
                             velocity,
@@ -257,9 +285,10 @@ namespace KerbalEngineer.VesselSimulator
 
                 if (this.hasModuleEngines)
                 {
-                    for (int i = 0; i < this.part.GetModules<ModuleEngines>().Count; i++)
+                    List<ModuleEngines> engines = this.part.GetModules<ModuleEngines>();  // only place that still allocate some memory
+                    for (int i = 0; i < engines.Count; i++)
                     {
-                        ModuleEngines engine = this.part.GetModules<ModuleEngines>()[i];
+                        ModuleEngines engine = engines[i];
                         if (log != null)
                         {
                             log.buf.AppendLine("Module: " + engine.moduleName);
@@ -267,7 +296,8 @@ namespace KerbalEngineer.VesselSimulator
 
                         Vector3 thrustvec = this.CalculateThrustVector(vectoredThrust ? engine.thrustTransforms : null, log);
 
-                        EngineSim engineSim = new EngineSim(
+                        EngineSim engineSim = EngineSim.pool.Borrow();
+                        engineSim.Set(
                             this,
                             atmosphere,
                             velocity,
@@ -384,7 +414,9 @@ namespace KerbalEngineer.VesselSimulator
                             log.buf.AppendLine("Adding attached node " + attachedSim.name + ":" + attachedSim.partId + "");
                         }
 
-                        this.attachNodes.Add(new AttachNodeSim(attachedSim, attachNode.id, attachNode.nodeType));
+                        AttachNodeSim attachnode = AttachNodeSim.pool.Borrow();
+                        attachnode.Set(attachedSim, attachNode.id, attachNode.nodeType);
+                        this.attachNodes.Add(attachnode);
                     }
                     else
                     {
@@ -464,18 +496,13 @@ namespace KerbalEngineer.VesselSimulator
                 return true;
             }
 
-            var modList = this.part.Modules.OfType<ModuleEngines>();
-            if (modList.Count() == 0)
+            if (!this.part.IsEngine())
             {
                 return false;
             }
 
-            if (modList.First().throttleLocked)
-            {
-                return true;
-            }
 
-            return false;
+            return this.part.IsSolidRocket();
         }
 
         public void ReleasePart()
@@ -662,7 +689,7 @@ namespace KerbalEngineer.VesselSimulator
             for (int i = 0; i < this.attachNodes.Count; i++)
             {
                 AttachNodeSim attachSim = this.attachNodes[i];
-// If the part is in the set then "remove" it by clearing the PartSim reference
+                // If the part is in the set then "remove" it by clearing the PartSim reference
                 if (partSims.Contains(attachSim.attachedPartSim))
                 {
                     attachSim.attachedPartSim = null;
@@ -676,7 +703,7 @@ namespace KerbalEngineer.VesselSimulator
             for (int i = 0; i < this.resourceDrains.Types.Count; i++)
             {
                 int type = this.resourceDrains.Types[i];
-//MonoBehaviour.print("draining " + (time * resourceDrains[type]) + " " + ResourceContainer.GetResourceName(type));
+                //MonoBehaviour.print("draining " + (time * resourceDrains[type]) + " " + ResourceContainer.GetResourceName(type));
                 this.resources.Add(type, -time * this.resourceDrains[type]);
                 //MonoBehaviour.print(ResourceContainer.GetResourceName(type) + " left = " + resources[type]);
             }

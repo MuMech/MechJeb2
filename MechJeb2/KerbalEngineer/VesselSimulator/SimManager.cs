@@ -45,6 +45,7 @@ namespace KerbalEngineer.VesselSimulator
         public static bool vectoredThrust = false;
         private static readonly object locker = new object();
         private static readonly Stopwatch timer = new Stopwatch();
+        private static Simulation[] simulations;
 
         private static bool bRequested;
         private static bool bRunning;
@@ -60,6 +61,8 @@ namespace KerbalEngineer.VesselSimulator
         private static bool hasInstalledKIDS;
         private static MethodInfo KIDS_Utils_GetIspMultiplier;
         private static bool bKIDSThrustISP = false;
+        
+
         #endregion
 
         #region Delegates
@@ -283,10 +286,9 @@ namespace KerbalEngineer.VesselSimulator
 
         private static void RunSimulation(object simObject)
         {
+            Simulation[] sims = (Simulation[])simObject;
             try
             {
-                Simulation[] sims = (Simulation[])simObject;
-
                 VacStages = sims[0].RunSimulation();
                 if (VacStages != null && VacStages.Length > 0)
                 {
@@ -324,6 +326,8 @@ namespace KerbalEngineer.VesselSimulator
                 VacStages = null;
                 LastVacStage = null;
                 failMessage = e.ToString();
+                sims[0].FreePooledObject();
+                sims[1].FreePooledObject();
             }
             lock (locker)
             {
@@ -374,25 +378,25 @@ namespace KerbalEngineer.VesselSimulator
 
                 var parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : FlightGlobals.ActiveVessel.Parts;
 
-
-                Profiler.BeginSample("SimManager.StartSimulation().new");
                 // Create the Simulation object in this thread
-                var sim = new Simulation[2];
-                sim[0] = new Simulation();
-                sim[1] = new Simulation();
-                Profiler.EndSample();
+                if (simulations == null)
+                {
+                    simulations = new Simulation[2];
+                    simulations[0] = new Simulation();
+                    simulations[1] = new Simulation();
+                }
 
                 Profiler.BeginSample("SimManager.StartSimulation().vacSim");
-                bool vacSim = sim[0].PrepareSimulation(parts, Gravity, 0d, Velocity, dumpTree, vectoredThrust);
+                bool vacSim = simulations[0].PrepareSimulation(parts, Gravity, 0d, Velocity, dumpTree, vectoredThrust);
                 Profiler.EndSample();
-                Profiler.BeginSample("SimManager.StartSimulation().atmSim");
-                bool atmSim = sim[1].PrepareSimulation(parts, Gravity, Atmosphere, Velocity, dumpTree, vectoredThrust);
-                Profiler.EndSample();
+                //Profiler.BeginSample("SimManager.StartSimulation().atmSim");
+                bool atmSim = simulations[1].PrepareSimulation(parts, Gravity, Atmosphere, Velocity, dumpTree, vectoredThrust);
+                //Profiler.EndSample();
 
                 // This call doesn't ever fail at the moment but we'll check and return a sensible error for display
                 if (vacSim && atmSim)
                 {
-                    ThreadPool.QueueUserWorkItem(RunSimulation, sim);
+                    ThreadPool.QueueUserWorkItem(RunSimulation, simulations);
                 }
                 else
                 {

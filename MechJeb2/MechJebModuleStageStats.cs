@@ -60,7 +60,7 @@ namespace MuMech
 
         public void TryStartSimulation()
         {
-            if (resultWaiting && SimManager.ResultsReady())  // <--- is the ResultsReady necessary ?
+            if (resultWaiting)
             {
                 atmLastStage = SimManager.LastAtmStage;
                 vacLastStage = SimManager.LastVacStage;
@@ -71,6 +71,8 @@ namespace MuMech
                 resultWaiting = false;
             }
 
+            // I m cheating with the isActiveVessel. Need to add multiple ship handling but it is
+            // an edge case that only triggers if 2 nearby ships burn nodes. is this worth the complexity ?
             if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && SimManager.ResultsReady())
             {
                 if (updateRequested)

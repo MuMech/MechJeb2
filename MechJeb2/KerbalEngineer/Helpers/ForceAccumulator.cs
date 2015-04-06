@@ -19,16 +19,27 @@
 
 using System;
 using System.Collections.Generic;
+using KerbalEngineer.VesselSimulator;
+using Smooth.Pools;
 
 namespace KerbalEngineer
 {
     // a (force, application point) tuple
     public class AppliedForce
     {
+        public static readonly Pool<AppliedForce> poll = new Pool<AppliedForce>(Create, Reset);
+
         public Vector3d vector;
         public Vector3d applicationPoint;
 
-        public AppliedForce(Vector3d vector, Vector3d applicationPoint) {
+        static private AppliedForce Create()
+        {
+            return new AppliedForce();
+        }
+
+        static  private void Reset(AppliedForce appliedForce) { }
+
+        public void Set(Vector3d vector, Vector3d applicationPoint) {
             this.vector = vector;
             this.applicationPoint = applicationPoint;
         }

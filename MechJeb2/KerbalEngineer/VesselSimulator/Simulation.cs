@@ -50,6 +50,7 @@ namespace KerbalEngineer.VesselSimulator
         private HashSet<PartSim> drainingParts;
         private HashSet<int> drainingResources;
         private double gravity;
+        private Dictionary<Part, PartSim> partSimLookup;
 
         private int lastStage;
         private List<Part> partList;
@@ -73,6 +74,16 @@ namespace KerbalEngineer.VesselSimulator
 
         public Simulation()
         {
+            this.allParts = new List<PartSim>();
+            this.allFuelLines = new List<PartSim>();
+            this.drainingParts = new HashSet<PartSim>();
+            this.allEngines = new List<EngineSim>();
+            this.activeEngines = new List<EngineSim>();
+            this.drainingResources = new HashSet<int>();
+
+            // A dictionary for fast lookup of Part->PartSim during the preparation phase
+            partSimLookup = new Dictionary<Part, PartSim>();
+
             if (SimManager.logOutput)
             {
                 MonoBehaviour.print("Simulation created");
@@ -134,23 +145,23 @@ namespace KerbalEngineer.VesselSimulator
             this.lastStage = Staging.lastStage;
             //MonoBehaviour.print("lastStage = " + lastStage);
 
-            // Create the lists for our simulation parts
-            this.allParts = new List<PartSim>();
-            this.allFuelLines = new List<PartSim>();
-            this.drainingParts = new HashSet<PartSim>();
-            this.allEngines = new List<EngineSim>();
-            this.activeEngines = new List<EngineSim>();
-            this.drainingResources = new HashSet<int>();
+            // Clear the lists for our simulation parts
+            this.allParts.Clear();
+            this.allFuelLines.Clear();
+            this.drainingParts.Clear();
+            this.allEngines.Clear();
+            this.activeEngines.Clear();
+            this.drainingResources.Clear();
 
             // A dictionary for fast lookup of Part->PartSim during the preparation phase
-            Dictionary<Part, PartSim> partSimLookup = new Dictionary<Part, PartSim>();
+            partSimLookup.Clear();
 
             if (this.partList.Count > 0 && this.partList[0].vessel != null)
             {
                 this.vesselName = this.partList[0].vessel.vesselName;
                 this.vesselType = this.partList[0].vessel.vesselType;
             }
-
+            //MonoBehaviour.print("PrepareSimulation pool size = " + PartSim.pool.Count());
             // First we create a PartSim for each Part (giving each a unique id)
             int partId = 1;
             for (int i = 0; i < this.partList.Count; i++)
@@ -167,7 +178,8 @@ namespace KerbalEngineer.VesselSimulator
                 }
 
                 // Create the PartSim
-                PartSim partSim = new PartSim(part, partId, this.atmosphere, log);
+                PartSim partSim = PartSim.pool.Borrow();
+                partSim.Set(part, partId, this.atmosphere, log);
 
                 // Add it to the Part lookup dictionary and the necessary lists
                 partSimLookup.Add(part, partSim);
@@ -617,7 +629,29 @@ namespace KerbalEngineer.VesselSimulator
                 MonoBehaviour.print("RunSimulation: " + this._timer.ElapsedMilliseconds + "ms");
             }
 
+            FreePooledObject();
             return stages;
+        }
+
+        
+        // Make sure we free them all, even if they should all be free already at this point
+        public void FreePooledObject()
+        {
+            MonoBehaviour.print("FreePooledObject pool size before = " + PartSim.pool.Count() + " for " + allParts.Count + " parts");
+            foreach (PartSim part in allParts)
+            {
+                PartSim.pool.Release(part);
+            }
+            MonoBehaviour.print("FreePooledObject pool size after = " + PartSim.pool.Count());
+
+            MonoBehaviour.print("FreePooledObject pool size before = " + EngineSim.pool.Count() + " for " + allEngines.Count + " engines");
+            foreach (EngineSim engine in allEngines)
+            {
+                EngineSim.pool.Release(engine);
+            }
+            MonoBehaviour.print("FreePooledObject pool size after = " + EngineSim.pool.Count());
+
+            
         }
 
         private List<List<PartSim>> BuildDontStageLists(LogMsg log)
@@ -869,14 +903,17 @@ namespace KerbalEngineer.VesselSimulator
             {
                 // Remove it from the all parts list
                 this.allParts.Remove(partSim);
+                PartSim.pool.Release(partSim);
                 if (partSim.isEngine)
                 {
                     // If it is an engine then loop through all the engine modules and remove all the ones from this engine part
                     for (int i = this.allEngines.Count - 1; i >= 0; i--)
                     {
-                        if (this.allEngines[i].partSim == partSim)
+                        EngineSim engine = this.allEngines[i];
+                        if (engine.partSim == partSim)
                         {
                             this.allEngines.RemoveAt(i);
+                            EngineSim.pool.Release(engine);
                         }
                     }
                 }
@@ -891,7 +928,7 @@ namespace KerbalEngineer.VesselSimulator
             for (int i = 0; i < this.allParts.Count; i++)
             {
                 PartSim partSim = this.allParts[i];
-// Ask the part to remove all the parts that are decoupled
+                // Ask the part to remove all the parts that are decoupled
                 partSim.RemoveAttachedParts(decoupledParts);
             }
 

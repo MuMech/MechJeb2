@@ -23,7 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using Smooth.Pools;
 using UnityEngine;
 
 #endregion
@@ -32,20 +32,41 @@ namespace KerbalEngineer.VesselSimulator
 {
     public class EngineSim
     {
+        public static readonly Pool<EngineSim> pool = new Pool<EngineSim>(Create, Reset);
+
         private readonly ResourceContainer resourceConsumptions = new ResourceContainer();
 
         public double actualThrust = 0;
         public bool isActive = false;
         public double isp = 0;
         public PartSim partSim;
-        public List<AppliedForce> appliedForces;
+        public List<AppliedForce> appliedForces = new List<AppliedForce>();
 
         public double thrust = 0;
 
         // Add thrust vector to account for directional losses
         public Vector3 thrustVec;
 
-        public EngineSim(PartSim theEngine,
+        private static EngineSim Create()
+        {
+            return new EngineSim();
+        }
+
+        private static void Reset(EngineSim engineSim)
+        {
+            engineSim.resourceConsumptions.Reset();
+            engineSim.actualThrust = 0;
+            engineSim.isActive = false;
+            engineSim.isp = 0;
+            for (int i = 0; i < engineSim.appliedForces.Count; i++)
+            {
+                AppliedForce.poll.Release(engineSim.appliedForces[i]);
+            }
+            engineSim.appliedForces.Clear();
+            engineSim.thrust = 0;
+        }
+
+        public void Set(PartSim theEngine,
                          double atmosphere,
                          double velocity,
                          float maxThrust,
@@ -223,14 +244,16 @@ namespace KerbalEngineer.VesselSimulator
                 MonoBehaviour.print(buffer);
             }
 
-            appliedForces = new List<AppliedForce>();
             double thrustPerThrustTransform = thrust / thrustTransforms.Count;
             for (int i = 0; i < thrustTransforms.Count; i++)
             {
                 Transform thrustTransform = thrustTransforms[i];
                 Vector3d direction = thrustTransform.forward.normalized;
                 Vector3d position = thrustTransform.position;
-                appliedForces.Add(new AppliedForce(direction * thrustPerThrustTransform, position));
+
+                AppliedForce appliedForce = AppliedForce.poll.Borrow();
+                appliedForce.Set(direction * thrustPerThrustTransform, position);
+                appliedForces.Add(appliedForce);
             }
         }
 
