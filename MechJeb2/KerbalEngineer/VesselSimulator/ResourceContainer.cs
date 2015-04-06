@@ -150,21 +150,15 @@ namespace KerbalEngineer.VesselSimulator
             return density == 0d ? 0d : this.resources[type] * density;
         }
 
-        static private Dictionary<int, ResourceFlowMode> flowModes = new Dictionary<int, ResourceFlowMode>();
-
         public static ResourceFlowMode GetResourceFlowMode(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode;
         }
 
-        static private Dictionary<int, ResourceTransferMode> transferMode = new Dictionary<int, ResourceTransferMode>();
-
         public static ResourceTransferMode GetResourceTransferMode(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).resourceTransferMode;;
         }
-
-        static private Dictionary<int, float> densities = new Dictionary<int, float>();
 
         public static float GetResourceDensity(int type)
         {
