@@ -289,7 +289,9 @@ namespace KerbalEngineer.VesselSimulator
             Simulation[] sims = (Simulation[])simObject;
             try
             {
+                Profiler.BeginSample("SimManager.RunSimulation().vacSim");
                 VacStages = sims[0].RunSimulation();
+                Profiler.EndSample();
                 if (VacStages != null && VacStages.Length > 0)
                 {
                     if (logOutput)
@@ -396,7 +398,8 @@ namespace KerbalEngineer.VesselSimulator
                 // This call doesn't ever fail at the moment but we'll check and return a sensible error for display
                 if (vacSim && atmSim)
                 {
-                    ThreadPool.QueueUserWorkItem(RunSimulation, simulations);
+                    //ThreadPool.QueueUserWorkItem(RunSimulation, simulations);
+                    RunSimulation(simulations);
                 }
                 else
                 {

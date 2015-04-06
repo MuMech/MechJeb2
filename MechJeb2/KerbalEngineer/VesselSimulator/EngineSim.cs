@@ -262,23 +262,40 @@ namespace KerbalEngineer.VesselSimulator
             get { return this.resourceConsumptions; }
         }
 
+        // A dictionary to hold a set of parts for each resource
+        Dictionary<int, HashSet<PartSim>> sourcePartSets = new Dictionary<int, HashSet<PartSim>>();
+
+        Dictionary<int, HashSet<PartSim>> stagePartSets = new Dictionary<int, HashSet<PartSim>>();
+
+        HashSet<PartSim> visited = new HashSet<PartSim>();
+
         public bool SetResourceDrains(List<PartSim> allParts, List<PartSim> allFuelLines, HashSet<PartSim> drainingParts)
         {
             LogMsg log = null;
+            
+            foreach (HashSet<PartSim> sourcePartSet in sourcePartSets.Values)
+            {
+                sourcePartSet.Clear();
+            }
 
-            // A dictionary to hold a set of parts for each resource
-            Dictionary<int, HashSet<PartSim>> sourcePartSets = new Dictionary<int, HashSet<PartSim>>();
-
+            Profiler.BeginSample("EngineSim.SetResourceDrains().RessourceLoop");
             for (int index = 0; index < this.resourceConsumptions.Types.Count; index++)
             {
                 int type = this.resourceConsumptions.Types[index];
-                HashSet<PartSim> sourcePartSet = null;
+
+                HashSet<PartSim> sourcePartSet;
+                if (!sourcePartSets.TryGetValue(type, out sourcePartSet))
+                {
+                    sourcePartSet = new HashSet<PartSim>();
+                    sourcePartSets.Add(type, sourcePartSet);
+                }
+                //Profiler.BeginSample("EngineSim.SetResourceDrains().switch");
                 switch (ResourceContainer.GetResourceFlowMode(type))
                 {
                     case ResourceFlowMode.NO_FLOW:
                         if (this.partSim.resources[type] > SimManager.RESOURCE_MIN && this.partSim.resourceFlowStates[type] != 0)
                         {
-                            sourcePartSet = new HashSet<PartSim>();
+                            //sourcePartSet = new HashSet<PartSim>();
                             //MonoBehaviour.print("SetResourceDrains(" + name + ":" + partId + ") setting sources to just this");
                             sourcePartSet.Add(this.partSim);
                         }
@@ -290,18 +307,17 @@ namespace KerbalEngineer.VesselSimulator
                             PartSim aPartSim = allParts[i];
                             if (aPartSim.resources[type] > SimManager.RESOURCE_MIN && aPartSim.resourceFlowStates[type] != 0)
                             {
-                                if (sourcePartSet == null)
-                                {
-                                    sourcePartSet = new HashSet<PartSim>();
-                                }
-
                                 sourcePartSet.Add(aPartSim);
                             }
                         }
                         break;
 
                     case ResourceFlowMode.STAGE_PRIORITY_FLOW:
-                        var stagePartSets = new Dictionary<int, HashSet<PartSim>>();
+
+                        foreach (HashSet<PartSim> stagePartSet in stagePartSets.Values)
+                        {
+                            stagePartSet.Clear();
+                        }
                         var maxStage = -1;
 
                         //Logger.Log(type);
@@ -319,9 +335,11 @@ namespace KerbalEngineer.VesselSimulator
                                 maxStage = stage;
                             }
 
-                            if (!stagePartSets.TryGetValue(stage, out sourcePartSet))
+                            if (!stagePartSets.TryGetValue(stage, out sourcePartSet) || sourcePartSet.Count == 0)
                             {
-                                sourcePartSet = new HashSet<PartSim>();
+                                if (sourcePartSet == null)
+                                    sourcePartSet = new HashSet<PartSim>();
+
                                 stagePartSets.Add(stage, sourcePartSet);
                             }
                             sourcePartSet.Add(aPartSim);
@@ -338,7 +356,7 @@ namespace KerbalEngineer.VesselSimulator
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        HashSet<PartSim> visited = new HashSet<PartSim>();
+                        visited.Clear();
 
                         if (SimManager.logOutput)
                         {
@@ -360,8 +378,10 @@ namespace KerbalEngineer.VesselSimulator
                             ResourceContainer.GetResourceName(type) + ")");
                         break;
                 }
+                //Profiler.EndSample();
 
-                if (sourcePartSet != null && sourcePartSet.Count > 0)
+
+                if (sourcePartSet.Count > 0)
                 {
                     sourcePartSets[type] = sourcePartSet;
                     if (SimManager.logOutput)
@@ -377,11 +397,14 @@ namespace KerbalEngineer.VesselSimulator
                 }
             }
 
+            Profiler.EndSample();
+
             // If we don't have sources for all the needed resources then return false without setting up any drains
             for (int i = 0; i < this.resourceConsumptions.Types.Count; i++)
             {
                 int type = this.resourceConsumptions.Types[i];
-                if (!sourcePartSets.ContainsKey(type))
+                HashSet<PartSim> sourcePartSet; 
+                if (!sourcePartSets.TryGetValue(type, out sourcePartSet) || sourcePartSet.Count() == 0)
                 {
                     if (SimManager.logOutput)
                     {
@@ -392,7 +415,7 @@ namespace KerbalEngineer.VesselSimulator
                     return false;
                 }
             }
-
+            Profiler.BeginSample("EngineSim.SetResourceDrains().drains");
             // Now we set the drains on the members of the sets and update the draining parts set
             for (int i = 0; i < this.resourceConsumptions.Types.Count; i++)
             {
@@ -413,7 +436,7 @@ namespace KerbalEngineer.VesselSimulator
                     drainingParts.Add(partSim);
                 }
             }
-
+            Profiler.EndSample();
             return true;
         }
 
