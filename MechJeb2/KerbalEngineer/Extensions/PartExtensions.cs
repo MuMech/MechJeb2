@@ -83,11 +83,27 @@ namespace KerbalEngineer.Extensions
         }
 
         /// <summary>
+        ///     Gets the cost of the part modules
+        ///     Same as stock but without mem allocation
+        /// </summary>
+        public static double GetModuleCostsNoAlloc(this Part part, float defaultCost)
+        {
+            float cost = 0f;
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule pm = part.Modules[i];
+                if (pm is IPartCostModifier)
+                    cost += (pm as IPartCostModifier).GetModuleCost(defaultCost);
+            }
+            return cost;
+        }
+
+        /// <summary>
         ///     Gets the cost of the part including resources.
         /// </summary>
         public static double GetCostWet(this Part part)
         {
-            return part.partInfo.cost - GetResourceCostInverted(part) + part.GetModuleCosts(0.0f);
+            return part.partInfo.cost - GetResourceCostInverted(part) + part.GetModuleCostsNoAlloc(0.0f); // part.GetModuleCosts allocate 44B per call. 
         }
 
         /// <summary>
@@ -124,7 +140,13 @@ namespace KerbalEngineer.Extensions
         /// </summary>
         public static T GetModule<T>(this Part part) where T : PartModule
         {
-            return part.Modules.OfType<T>().FirstOrDefault();
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule pm = part.Modules[i];
+                if (pm is T)
+                    return (T)pm;
+            }
+            return null;
         }
 
         /// <summary>
@@ -264,7 +286,13 @@ namespace KerbalEngineer.Extensions
         /// </summary>
         public static double GetResourceCostInverted(this Part part)
         {
-            return part.Resources.list.Sum(r => (r.maxAmount - r.amount) * r.info.unitCost);
+            double sum = 0;
+            for (int i = 0; i < part.Resources.list.Count; i++)
+            {
+                PartResource r = part.Resources.list[i];
+                sum += (r.maxAmount - r.amount) * r.info.unitCost;
+            }
+            return sum;
         }
 
         /// <summary>
@@ -309,7 +337,12 @@ namespace KerbalEngineer.Extensions
         /// </summary>
         public static bool HasModule<T>(this Part part) where T : PartModule
         {
-            return part.Modules.OfType<T>().Any();
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                if (part.Modules[i] is T)
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -317,7 +350,13 @@ namespace KerbalEngineer.Extensions
         /// </summary>
         public static bool HasModule<T>(this Part part, Func<T, bool> predicate) where T : PartModule
         {
-            return part.Modules.OfType<T>().Any(predicate);
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule pm = part.Modules[i];
+                if (pm is T && predicate(pm as T))
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>
