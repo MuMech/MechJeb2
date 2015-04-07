@@ -363,7 +363,7 @@ namespace KerbalEngineer.VesselSimulator
                                 "Find " + ResourceContainer.GetResourceName(type) + " sources for " + this.partSim.name + ":" +
                                 this.partSim.partId);
                         }
-                        sourcePartSet = this.partSim.GetSourceSet(type, allParts, visited, log, "");
+                        this.partSim.GetSourceSet(type, allParts, visited, sourcePartSet, log, "");
                         if (SimManager.logOutput)
                         {
                             MonoBehaviour.print(log.buf);
