@@ -261,6 +261,7 @@ namespace MuMech
             return solverThread.calculationTime;
         }
 
+        /*
         public override void OnUpdate()
         {
             // Make thruster exhaust onscreen correspond to actual thrust.
@@ -281,6 +282,7 @@ namespace MuMech
             }
             base.OnUpdate();
         }
+         */
 
         public override void Drive(FlightCtrlState s)
         {
