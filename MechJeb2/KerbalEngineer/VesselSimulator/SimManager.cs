@@ -45,7 +45,7 @@ namespace KerbalEngineer.VesselSimulator
         public static bool vectoredThrust = false;
         private static readonly object locker = new object();
         private static readonly Stopwatch timer = new Stopwatch();
-        private static Simulation[] simulations;
+        private static Simulation[] simulations = { new Simulation(), new Simulation() };
 
         private static bool bRequested;
         private static bool bRunning;
@@ -379,14 +379,6 @@ namespace KerbalEngineer.VesselSimulator
                 }
 
                 var parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : FlightGlobals.ActiveVessel.Parts;
-
-                // Create the Simulation object in this thread
-                if (simulations == null)
-                {
-                    simulations = new Simulation[2];
-                    simulations[0] = new Simulation();
-                    simulations[1] = new Simulation();
-                }
 
                 Profiler.BeginSample("SimManager.StartSimulation().vacSim");
                 bool vacSim = simulations[0].PrepareSimulation(parts, Gravity, 0d, Velocity, dumpTree, vectoredThrust);

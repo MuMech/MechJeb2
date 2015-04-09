@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Smooth.Pools;
 using UnityEngine;
 
 #endregion
@@ -32,7 +31,7 @@ namespace KerbalEngineer.VesselSimulator
 {
     public class EngineSim
     {
-        public static readonly Pool<EngineSim> pool = new Pool<EngineSim>(Create, Reset);
+        private static readonly Pool<EngineSim> pool = new Pool<EngineSim>(Create, Reset);
 
         private readonly ResourceContainer resourceConsumptions = new ResourceContainer();
 
@@ -60,13 +59,18 @@ namespace KerbalEngineer.VesselSimulator
             engineSim.isp = 0;
             for (int i = 0; i < engineSim.appliedForces.Count; i++)
             {
-                AppliedForce.pool.Release(engineSim.appliedForces[i]);
+                engineSim.appliedForces[i].Release();
             }
             engineSim.appliedForces.Clear();
             engineSim.thrust = 0;
         }
 
-        public void Set(PartSim theEngine,
+        public void Release()
+        {
+            pool.Release(this);
+        }
+
+        public static EngineSim New(PartSim theEngine,
                          double atmosphere,
                          double velocity,
                          float maxThrust,
@@ -83,6 +87,9 @@ namespace KerbalEngineer.VesselSimulator
                          bool correctThrust,
                          List<Transform> thrustTransforms)
         {
+            EngineSim engineSim = pool.Borrow();
+
+
             StringBuilder buffer = null;
             //MonoBehaviour.print("Create EngineSim for " + theEngine.name);
             //MonoBehaviour.print("maxThrust = " + maxThrust);
@@ -91,29 +98,29 @@ namespace KerbalEngineer.VesselSimulator
             //MonoBehaviour.print("requestedThrust = " + requestedThrust);
             //MonoBehaviour.print("velocity = " + velocity);
 
-            this.partSim = theEngine;
+            engineSim.partSim = theEngine;
 
-            this.isActive = active;
-            this.thrust = (maxThrust - minThrust) * (thrustPercentage / 100f) + minThrust;
+            engineSim.isActive = active;
+            engineSim.thrust = (maxThrust - minThrust) * (thrustPercentage / 100f) + minThrust;
             //MonoBehaviour.print("thrust = " + thrust);
 
-            this.thrustVec = vecThrust;
+            engineSim.thrustVec = vecThrust;
 
             double flowRate = 0d;
-            if (this.partSim.hasVessel)
+            if (engineSim.partSim.hasVessel)
             {
                 //MonoBehaviour.print("hasVessel is true");
-                this.actualThrust = isActive ? requestedThrust : 0.0;
+                engineSim.actualThrust = engineSim.isActive ? requestedThrust : 0.0;
                 if (velocityCurve != null)
                 {
-                    this.actualThrust *= velocityCurve.Evaluate((float)velocity);
+                    engineSim.actualThrust *= velocityCurve.Evaluate((float)velocity);
                     //MonoBehaviour.print("actualThrust at velocity = " + actualThrust);
                 }
 
-                this.isp = atmosphereCurve.Evaluate((float)this.partSim.part.staticPressureAtm);
-                if (this.isp == 0d)
+                engineSim.isp = atmosphereCurve.Evaluate((float)engineSim.partSim.part.staticPressureAtm);
+                if (engineSim.isp == 0d)
                 {
-                    MonoBehaviour.print("Isp at " + this.partSim.part.staticPressureAtm + " is zero. Flow rate will be NaN");
+                    MonoBehaviour.print("Isp at " + engineSim.partSim.part.staticPressureAtm + " is zero. Flow rate will be NaN");
                 }
 
                 if (correctThrust && realIsp == 0)
@@ -121,7 +128,7 @@ namespace KerbalEngineer.VesselSimulator
                     float ispsl = atmosphereCurve.Evaluate(0);
                     if (ispsl != 0)
                     {
-                        this.thrust = this.thrust * this.isp / ispsl;
+                        engineSim.thrust = engineSim.thrust * engineSim.isp / ispsl;
                     }
                     else
                     {
@@ -132,21 +139,21 @@ namespace KerbalEngineer.VesselSimulator
 
                 if (velocityCurve != null)
                 {
-                    this.thrust *= velocityCurve.Evaluate((float)velocity);
+                    engineSim.thrust *= velocityCurve.Evaluate((float)velocity);
                     //MonoBehaviour.print("thrust at velocity = " + thrust);
                 }
 
                 if (throttleLocked)
                 {
                     //MonoBehaviour.print("throttleLocked is true");
-                    flowRate = this.thrust / (this.isp * 9.82);
+                    flowRate = engineSim.thrust / (engineSim.isp * 9.82);
                 }
                 else
                 {
-                    if (this.partSim.isLanded)
+                    if (engineSim.partSim.isLanded)
                     {
                         //MonoBehaviour.print("partSim.isLanded is true, mainThrottle = " + FlightInputHandler.state.mainThrottle);
-                        flowRate = Math.Max(0.000001d, this.thrust * FlightInputHandler.state.mainThrottle) / (this.isp * 9.82);
+                        flowRate = Math.Max(0.000001d, engineSim.thrust * FlightInputHandler.state.mainThrottle) / (engineSim.isp * 9.82);
                     }
                     else
                     {
@@ -159,12 +166,12 @@ namespace KerbalEngineer.VesselSimulator
                             }
 
                             //MonoBehaviour.print("requestedThrust > 0");
-                            flowRate = requestedThrust / (this.isp * 9.82);
+                            flowRate = requestedThrust / (engineSim.isp * 9.82);
                         }
                         else
                         {
                             //MonoBehaviour.print("requestedThrust <= 0");
-                            flowRate = this.thrust / (this.isp * 9.82);
+                            flowRate = engineSim.thrust / (engineSim.isp * 9.82);
                         }
                     }
                 }
@@ -172,8 +179,8 @@ namespace KerbalEngineer.VesselSimulator
             else
             {
                 //MonoBehaviour.print("hasVessel is false");
-                this.isp = atmosphereCurve.Evaluate((float)atmosphere);
-                if (this.isp == 0d)
+                engineSim.isp = atmosphereCurve.Evaluate((float)atmosphere);
+                if (engineSim.isp == 0d)
                 {
                     MonoBehaviour.print("Isp at " + atmosphere + " is zero. Flow rate will be NaN");
                 }
@@ -182,7 +189,7 @@ namespace KerbalEngineer.VesselSimulator
                     float ispsl = atmosphereCurve.Evaluate(0);
                     if (ispsl != 0)
                     {
-                        this.thrust = this.thrust * this.isp / ispsl;
+                        engineSim.thrust = engineSim.thrust * engineSim.isp / ispsl;
                     }
                     else
                     {
@@ -193,11 +200,11 @@ namespace KerbalEngineer.VesselSimulator
 
                 if (velocityCurve != null)
                 {
-                    this.thrust *= velocityCurve.Evaluate((float)velocity);
+                    engineSim.thrust *= velocityCurve.Evaluate((float)velocity);
                     //MonoBehaviour.print("thrust at velocity = " + thrust);
                 }
 
-                flowRate = this.thrust / (this.isp * 9.82);
+                flowRate = engineSim.thrust / (engineSim.isp * 9.82);
             }
 
             if (SimManager.logOutput)
@@ -236,7 +243,7 @@ namespace KerbalEngineer.VesselSimulator
                         theEngine.partId,
                         consumptionRate);
                 }
-                this.resourceConsumptions.Add(propellant.id, consumptionRate);
+                engineSim.resourceConsumptions.Add(propellant.id, consumptionRate);
             }
 
             if (SimManager.logOutput)
@@ -244,17 +251,17 @@ namespace KerbalEngineer.VesselSimulator
                 MonoBehaviour.print(buffer);
             }
 
-            double thrustPerThrustTransform = thrust / thrustTransforms.Count;
+            double thrustPerThrustTransform = engineSim.thrust / thrustTransforms.Count;
             for (int i = 0; i < thrustTransforms.Count; i++)
             {
                 Transform thrustTransform = thrustTransforms[i];
                 Vector3d direction = thrustTransform.forward.normalized;
                 Vector3d position = thrustTransform.position;
 
-                AppliedForce appliedForce = AppliedForce.pool.Borrow();
-                appliedForce.Set(direction * thrustPerThrustTransform, position);
-                appliedForces.Add(appliedForce);
+                AppliedForce appliedForce = AppliedForce.New(direction * thrustPerThrustTransform, position);
+                engineSim.appliedForces.Add(appliedForce);
             }
+            return engineSim;
         }
 
         public ResourceContainer ResourceConsumptions

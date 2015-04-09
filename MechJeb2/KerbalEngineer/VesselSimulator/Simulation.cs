@@ -181,8 +181,7 @@ namespace KerbalEngineer.VesselSimulator
                 }
 
                 // Create the PartSim
-                PartSim partSim = PartSim.pool.Borrow();
-                partSim.Set(part, partId, this.atmosphere, log);
+                PartSim partSim = PartSim.New(part, partId, this.atmosphere, log);
 
                 // Add it to the Part lookup dictionary and the necessary lists
                 partSimLookup.Add(part, partSim);
@@ -641,14 +640,14 @@ namespace KerbalEngineer.VesselSimulator
             //MonoBehaviour.print("FreePooledObject pool size before = " + PartSim.pool.Count() + " for " + allParts.Count + " parts");
             foreach (PartSim part in allParts)
             {
-                PartSim.pool.Release(part);
+                part.Release();
             }
             //MonoBehaviour.print("FreePooledObject pool size after = " + PartSim.pool.Count());
 
             //MonoBehaviour.print("FreePooledObject pool size before = " + EngineSim.pool.Count() + " for " + allEngines.Count + " engines");
             foreach (EngineSim engine in allEngines)
             {
-                EngineSim.pool.Release(engine);
+                engine.Release();
             }
             //MonoBehaviour.print("FreePooledObject pool size after = " + EngineSim.pool.Count());
         }
@@ -900,7 +899,7 @@ namespace KerbalEngineer.VesselSimulator
             {
                 // Remove it from the all parts list
                 this.allParts.Remove(partSim);
-                PartSim.pool.Release(partSim);
+                partSim.Release();
                 if (partSim.isEngine)
                 {
                     // If it is an engine then loop through all the engine modules and remove all the ones from this engine part
@@ -910,7 +909,7 @@ namespace KerbalEngineer.VesselSimulator
                         if (engine.partSim == partSim)
                         {
                             this.allEngines.RemoveAt(i);
-                            EngineSim.pool.Release(engine);
+                            engine.Release();
                         }
                     }
                 }

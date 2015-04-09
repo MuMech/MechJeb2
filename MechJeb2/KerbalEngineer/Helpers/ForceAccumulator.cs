@@ -20,14 +20,13 @@
 using System;
 using System.Collections.Generic;
 using KerbalEngineer.VesselSimulator;
-using Smooth.Pools;
 
 namespace KerbalEngineer
 {
     // a (force, application point) tuple
     public class AppliedForce
     {
-        public static readonly Pool<AppliedForce> pool = new Pool<AppliedForce>(Create, Reset);
+        private static readonly Pool<AppliedForce> pool = new Pool<AppliedForce>(Create, Reset);
 
         public Vector3d vector;
         public Vector3d applicationPoint;
@@ -37,12 +36,22 @@ namespace KerbalEngineer
             return new AppliedForce();
         }
 
-        static  private void Reset(AppliedForce appliedForce) { }
+        static private void Reset(AppliedForce appliedForce) { }
 
-        public void Set(Vector3d vector, Vector3d applicationPoint) {
-            this.vector = vector;
-            this.applicationPoint = applicationPoint;
+        static public AppliedForce New(Vector3d vector, Vector3d applicationPoint)
+        {
+            AppliedForce force = pool.Borrow();
+            force.vector = vector;
+            force.applicationPoint = applicationPoint;
+            return force;
         }
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
+
+
     }
 
 	// This class was mostly adapted from FARCenterQuery, part of FAR, by ferram4, GPLv3

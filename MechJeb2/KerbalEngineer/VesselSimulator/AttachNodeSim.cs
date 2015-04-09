@@ -21,7 +21,6 @@
 
 using System;
 using System.Text;
-using Smooth.Pools;
 
 #endregion
 
@@ -30,7 +29,7 @@ namespace KerbalEngineer.VesselSimulator
     internal class AttachNodeSim
     {
 
-        public static readonly Pool<AttachNodeSim> pool = new Pool<AttachNodeSim>(Create, Reset);
+        private static readonly Pool<AttachNodeSim> pool = new Pool<AttachNodeSim>(Create, Reset);
 
         public PartSim attachedPartSim;
         public String id;
@@ -41,14 +40,24 @@ namespace KerbalEngineer.VesselSimulator
             return new AttachNodeSim();
         }
 
-        public void Set(PartSim partSim, String newId, AttachNode.NodeType newNodeType)
+        public static AttachNodeSim New(PartSim partSim, String newId, AttachNode.NodeType newNodeType)
         {
-            this.attachedPartSim = partSim;
-            this.nodeType = newNodeType;
-            this.id = newId;
+            AttachNodeSim nodeSim = pool.Borrow();
+
+            nodeSim.attachedPartSim = partSim;
+            nodeSim.nodeType = newNodeType;
+            nodeSim.id = newId;
+
+            return nodeSim;
         }
 
         static private void Reset(AttachNodeSim attachNodeSim) { }
+
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
 
         public void DumpToBuffer(StringBuilder buffer)
         {
