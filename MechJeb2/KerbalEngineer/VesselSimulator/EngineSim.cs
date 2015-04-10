@@ -340,11 +340,9 @@ namespace KerbalEngineer.VesselSimulator
                                 maxStage = stage;
                             }
 
-                            if (!stagePartSets.TryGetValue(stage, out sourcePartSet) || sourcePartSet.Count == 0)
+                            if (!stagePartSets.TryGetValue(stage, out sourcePartSet))
                             {
-                                if (sourcePartSet == null)
-                                    sourcePartSet = new HashSet<PartSim>();
-
+                                sourcePartSet = new HashSet<PartSim>();
                                 stagePartSets.Add(stage, sourcePartSet);
                             }
                             sourcePartSet.Add(aPartSim);
