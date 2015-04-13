@@ -59,14 +59,13 @@ namespace MuMech
 
         protected bool attitudeChanged = false;
 
-        protected AttitudeReference _oldAttitudeReference = AttitudeReference.INERTIAL;
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
-        
+
         public override void OnModuleEnabled()
         {
             timeCount = 50;
         }
-        
+
         public AttitudeReference attitudeReference
         {
             get
@@ -77,13 +76,13 @@ namespace MuMech
             {
                 if (_attitudeReference != value)
                 {
-                    _oldAttitudeReference = _attitudeReference;
                     _attitudeReference = value;
                     attitudeChanged = true;
                 }
             }
         }
 
+        protected Quaternion _oldAttitudeTarget = Quaternion.identity;
         protected Quaternion _lastAttitudeTarget = Quaternion.identity;
         protected Quaternion _attitudeTarget = Quaternion.identity;
         public Quaternion attitudeTarget
@@ -92,23 +91,20 @@ namespace MuMech
             {
                 return _attitudeTarget;
             }
-            private set
+            set
             {
-                if (Quaternion.Dot(value, _lastAttitudeTarget) < 0)
-                    _attitudeTarget = value.Mult(-1);
-                else
-                    _attitudeTarget = value;
-                if (Math.Abs(Vector3d.Angle(_attitudeTarget * Vector3d.forward, _lastAttitudeTarget * Vector3d.forward)) > 10)
+                if (Math.Abs(Vector3d.Angle(_lastAttitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
                 {
-                    attitudeChanged = true;
+                    _oldAttitudeTarget = _attitudeTarget;
                     _lastAttitudeTarget = value;
+                    attitudeChanged = true;
                 }
+                _attitudeTarget = value;
             }
         }
-        private Vector3d _lastAttitudeTargetSpeed = Vector3d.zero;
 
         protected Quaternion _requestedAttitude = Quaternion.identity;
-        public Quaternion RequestedAttitude 
+        public Quaternion RequestedAttitude
         {
             get { return _requestedAttitude; }
         }
@@ -145,7 +141,7 @@ namespace MuMech
         }
 
         public override void OnStart(PartModule.StartState state)
-        {            
+        {
             pid = new PIDControllerV2(0, 0, 0, 1, -1);
             setPIDParameters();
             lastAct = Vector3d.zero;
@@ -272,7 +268,7 @@ namespace MuMech
         {
             //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
             double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
-            
+
             Vector3 up, dir = direction;
 
             // TODO : Fix that so it does not roll when it should not. Current fix is a "hack" that set required roll to 0 if !attitudeRollMatters
@@ -326,8 +322,6 @@ namespace MuMech
                 }
                 pid.Reset();
                 lastAct = Vector3d.zero;
-                _lastAttitudeTarget = _attitudeTarget;
-                _lastAttitudeTargetSpeed = Vector3d.zero;
 
                 attitudeChanged = false;
             }
@@ -386,7 +380,7 @@ namespace MuMech
 
                 // ( MoI / avaiable torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
-                
+
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox
 
@@ -400,7 +394,7 @@ namespace MuMech
                 Vector3d err = new Vector3d(
                                                 -rotDirection.y * Math.PI,
                                                 rotDirection.x * Math.PI,
-                                                attitudeRollMatters?((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
+                                                attitudeRollMatters ? ((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
                                             );
 
                 err += inertia.Reorder(132) / 2;
@@ -414,30 +408,9 @@ namespace MuMech
                 omega.x = vessel.angularVelocity.x;
                 omega.y = vessel.angularVelocity.z; // y <=> z 
                 omega.z = vessel.angularVelocity.y; // z <=> y 
-
-                // Feed-forward: compute target changes
-                var attitudeTargetAcc = Vector3d.zero;
-                if (! attitudeKILLROT)
-                {
-                    // (T2 - T1) / dt
-                    var attitudeTargetDerivate = _attitudeTarget.Add(_lastAttitudeTarget.Mult(-1)).Mult(1/TimeWarp.fixedDeltaTime);
-                    var attitudeTargetSpeedQ = (_attitudeTarget.Conj() * attitudeTargetDerivate).Mult(2);
-                    var attitudeTargetSpeed = new Vector3d(attitudeTargetSpeedQ.x, attitudeTargetSpeedQ.y, attitudeTargetSpeedQ.z);
-                    attitudeTargetAcc = (attitudeTargetSpeed - _lastAttitudeTargetSpeed) / TimeWarp.fixedDeltaTime;
-                    _lastAttitudeTarget = _attitudeTarget;
-                    _lastAttitudeTargetSpeed = attitudeTargetSpeed;
-                    if (!_attitudeRollMatters)
-                    {
-                        attitudeTargetSpeed.z = 0;
-                        attitudeTargetAcc.z = 0;
-                    }
-                    omega += attitudeTargetSpeed;
-                }
-
                 omega.Scale(NormFactor);
-                attitudeTargetAcc.Scale(NormFactor);
 
-                pidAction = pid.Compute(err, omega) + attitudeTargetAcc;
+                pidAction = pid.Compute(err, omega);
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct + (pidAction - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));
@@ -464,7 +437,7 @@ namespace MuMech
 
             if (attitudeKILLROT)
             {
-                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll) 
+                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll)
                 {
                     attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
                     lastReferencePart = vessel.GetReferenceTransformPart();
@@ -508,7 +481,7 @@ namespace MuMech
                 {
                     if (RCS_auto)
                     {
-                        if (attitudeRCScontrol && core.rcs.users.Count==0)
+                        if (attitudeRCScontrol && core.rcs.users.Count == 0)
                         {
                             part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
                         }
