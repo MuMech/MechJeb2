@@ -832,8 +832,6 @@ namespace MuMech
 
                 GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
 
-                GuiUtils.CheckSkin();
-
                 GUI.skin = GuiUtils.skin;
 
                 foreach (DisplayModule module in GetComputerModules<DisplayModule>())
