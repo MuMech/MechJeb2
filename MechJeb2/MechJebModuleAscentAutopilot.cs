@@ -309,7 +309,7 @@ namespace MuMech
 
             desiredThrustVector = desiredThrustVector.normalized;
 
-            limitingAoA = limitAoA && vessel.altitude < mainBody.maxAtmosphereAltitude && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > maxAoA;
+            limitingAoA = limitAoA && vessel.altitude < mainBody.atmosphereDepth && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > maxAoA;
 
             if (limitingAoA)
             {

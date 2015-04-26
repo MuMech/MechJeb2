@@ -162,7 +162,7 @@ namespace MuMech
 			Vector3 myPos  = fromPos - body.transform.position;
 			Vector3 north = body.transform.position + ((float)body.Radius * body.transform.up) - fromPos;
 			Vector3 tgtPos = toPos - fromPos;
-			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.Exclude(myPos.normalized, tgtPos.normalized));
+            return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.ProjectOnPlane(tgtPos.normalized, myPos.normalized));
 		}
 
 		public float TurningSpeed(double speed, double error)
