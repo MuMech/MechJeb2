@@ -28,7 +28,7 @@ namespace MuMech
         // This is used to adjust the height at which the parachutes semi deploy as a means of
         // targeting the landing in an atmosphere where it is not possible to control atitude
         // to perform course correction burns.
-        ParachutePlan parachutePlan = null; 
+        ParachutePlan parachutePlan = null;
 
         //Landing prediction data:
         MechJebModuleLandingPredictions predictor;
@@ -112,7 +112,8 @@ namespace MuMech
 
         IDescentSpeedPolicy descentSpeedPolicy;
 
-        public MechJebModuleLandingAutopilot(MechJebCore core) : base(core)
+        public MechJebModuleLandingAutopilot(MechJebCore core)
+            : base(core)
         {
         }
 
@@ -369,7 +370,7 @@ namespace MuMech
                 for (int i = 0; i < vesselState.parachutes.Count; i++)
                 {
                     ModuleParachute p = vesselState.parachutes[i];
-// what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
+                    // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
                     double LandingSiteASL = LandingAltitude;
                     double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.Multiplier;
 
@@ -447,7 +448,7 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                return new PWBCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude()); // TODO this decent policy has been changed for experimentation.
+                return new PoweredCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
             }
 
             return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
@@ -486,18 +487,18 @@ namespace MuMech
             //Some math shows that if (scale height) > e * (surface drag length) then 
             //there is an altitude at which (altitude) > (drag length at that altitude).
             double seaLevelDragLength = mainBody.DragLength(0, VesselAverageDrag() + ParachuteAddedDragCoef());
-            
+
             // old code : 
             //return (1000 * mainBody.atmosphereScaleHeight > 2.71828 * seaLevelDragLength);
 
-            #warning use proper math solution
+#warning use proper math solution
             // this is not math but a random hack. Someone will have to fix it later
             // 3 case to handle :
             // - !mainBody.atmosphereUsePressureCurve
             // - !mainBody.atmospherePressureCurveIsNormalized
             // - default
             //MechJebCore.print("UseAtmosphereToBrake " + (seaLevelDragLength < 3 * mainBody.atmosphereDepth));
-            return seaLevelDragLength < 3 * mainBody.atmosphereDepth ;
+            return seaLevelDragLength < 3 * mainBody.atmosphereDepth;
         }
 
         // Get an average drag for the whole vessel. Far from precise but fast.
@@ -583,10 +584,10 @@ namespace MuMech
                 if (this.ParachutesDeployable())
                 {
                     string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
-                    retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") +"%";
+                    retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") + "%";
                     retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
 
-                    return ( retVal );
+                    return (retVal);
                 }
                 else
                 {
@@ -618,33 +619,30 @@ namespace MuMech
         }
     }
 
-    class CoastDescentSpeedPolicy : IDescentSpeedPolicy
+    class PoweredCoastDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        double endCoastRadius;
-        public CoastDescentSpeedPolicy(double endCoastRadius)
+        float terrainRadius;
+        float g;
+        float thrust;
+
+        public PoweredCoastDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
-            this.endCoastRadius = endCoastRadius;
+            this.terrainRadius = (float)terrainRadius;
+            this.g = (float)g;
+            this.thrust = (float)thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
-            if (pos.magnitude > endCoastRadius) return double.MaxValue;
-            else return 0; 
-        }
-    }
-
-    class PWBCoastDescentSpeedPolicy : IDescentSpeedPolicy
-    {
-        double endCoastRadius;
-        public PWBCoastDescentSpeedPolicy(double endCoastRadius)
-        {
-            this.endCoastRadius = endCoastRadius;
-        }
-
-        public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
-        {
-            if (pos.magnitude > endCoastRadius) return double.MaxValue;
-            else return 1; //  It is a bit silly to set this at 0 because then the simulation times out as it never reaches the ground.
+            Vector3 planeNormal = Vector3.Cross(pos, vel).normalized;
+            float angle = 0;
+            if (!planeNormal.IsZero())
+            {
+                angle = Mathf.Abs(((Vector3)vel).AngleInPlane(planeNormal, pos)) * Mathf.Deg2Rad;
+            }
+            float ToF = (((float)vel.magnitude * Mathf.Cos(angle)) + Mathf.Sqrt(Mathf.Pow(((float)vel.magnitude * Mathf.Cos(angle)), 2) + 2 * g * ((float)pos.magnitude - terrainRadius))) / g * 2;
+            //MechJebCore.print("ToF = " + ToF.ToString("F2"));
+            return 0.7 * ToF * (thrust - g);
         }
     }
 
@@ -720,7 +718,7 @@ namespace MuMech
 
         public double Multiplier
         {
-            get {return currentMultiplier;}
+            get { return currentMultiplier; }
         }
 
         public int MultiplierDataAmount
@@ -730,11 +728,11 @@ namespace MuMech
 
         public double MultiplierQuality
         {
-            get 
-            { 
+            get
+            {
                 double corr = this.correlation;
                 if (Double.IsNaN(corr)) return 0;
-                return Math.Max(0, corr * -100); 
+                return Math.Max(0, corr * -100);
             }
         }
 
@@ -838,7 +836,7 @@ namespace MuMech
         public void StartPlanning()
         {
             // what is the highest point at which we could semi deploy? - look at all the parachutes in the craft, and consider the lowest semi deployment pressure.
-            float minSemiDeployPressure = 0; 
+            float minSemiDeployPressure = 0;
             float maxFullDeployHeight = 0;
             parachutePresent = false; // First assume that there are no parachutes.
 
@@ -847,7 +845,7 @@ namespace MuMech
             {
                 ModuleParachute p = autoPilot.vesselState.parachutes[i];
                 if (p.minAirPressureToOpen > minSemiDeployPressure)
-                    // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
+                // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
                 {
                     minSemiDeployPressure = p.minAirPressureToOpen;
                 }
@@ -867,7 +865,7 @@ namespace MuMech
                 // At what ASL height does the reference body have this pressure?
                 //maxSemiDeployHeight = (this.body.atmosphereScaleHeight *1000) * -1 * Math.Log(minSemiDeployPressure / this.body.atmosphereMultiplier);
 #warning FIX THAT BEFORE 1.0 !!
-                maxSemiDeployHeight = (1 *1000) * -1 * Math.Log(minSemiDeployPressure / 1);
+                maxSemiDeployHeight = (1 * 1000) * -1 * Math.Log(minSemiDeployPressure / 1);
 
                 // We have to have semi deployed by the time we fully deploy.
                 minSemiDeployHeight = maxFullDeployHeight;
@@ -950,12 +948,12 @@ namespace MuMech
             get
             {
                 // Require at least half the datapoints in the dataset
-                if(this.dataPointCount <2)
+                if (this.dataPointCount < 2)
                 {
                     throw new Exception("Not enough data to calculate trend line");
                 }
 
-                double result = (sumXY - ((sumX*sumY)/dataPointCount)) / (sumXX - ((sumX* sumX)/dataPointCount));
+                double result = (sumXY - ((sumX * sumY) / dataPointCount)) / (sumXX - ((sumX * sumX) / dataPointCount));
 
                 return result;
             }
@@ -965,7 +963,7 @@ namespace MuMech
         {
             get
             {
-                double result = (sumY/dataPointCount) - (slope * (sumX / dataPointCount));
+                double result = (sumY / dataPointCount) - (slope * (sumX / dataPointCount));
 
                 return result;
             }

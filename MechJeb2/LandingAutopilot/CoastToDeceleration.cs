@@ -77,12 +77,14 @@ namespace MuMech
                     }
                 }
 
+                /*
                 // Sometimes (on bodies with a thick atmosphere) there is no need for a decleration burn. Check for this so that it is possible to transition into the final decent step.
                 if ((vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5) && core.landing.UseAtmosphereToBrake())
                 {
                     core.warp.MinimumWarp();
                     return new FinalDescent(core);
                 }
+                */
 
                 if (core.attitude.attitudeAngleFromTarget() < 1) { warpReady = true; } // less warp start warp stop jumping
                 if (core.attitude.attitudeAngleFromTarget() > 5) { warpReady = false; } // hopefully
