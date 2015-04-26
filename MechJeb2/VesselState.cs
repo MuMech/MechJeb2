@@ -179,7 +179,9 @@ namespace MuMech
         public Vector6 rcsThrustAvailable; // thrust available from RCS thrusters
         public Vector6 rcsTorqueAvailable; // torque available from RCS thrusters
 
-        public Vector6 ctrlTorqueAvailable; // torque available from control surfaces
+        // torque available from control surfaces
+        public Vector3 ctrlTorqueAvailablePos;
+        public Vector3 ctrlTorqueAvailableNeg;
 
         // List of parachutes
         public List<ModuleParachute> parachutes;
@@ -352,7 +354,6 @@ namespace MuMech
 
             torqueAvailable = Vector3d.zero;
             torqueFromEngine = Vector3d.zero;
-            ctrlTorqueAvailable = new Vector6();
 
             for (int i = 0; i < vessel.parts.Count; i++)
             {
@@ -562,7 +563,9 @@ namespace MuMech
 
             torqueAvailable = Vector3d.zero;
             torqueFromEngine = Vector3d.zero;
-            ctrlTorqueAvailable = new Vector6();
+            
+            ctrlTorqueAvailablePos = new Vector3();
+            ctrlTorqueAvailableNeg = new Vector3();
 
             pureDragV = Vector3d.zero;
             pureLiftV = Vector3d.zero;
@@ -634,8 +637,6 @@ namespace MuMech
                     }
                     else if (pm is ModuleControlSurface)
                     {
-
-
 #warning TEST THIS : instead of using Vector6 use 2 Vector3. One for control at (1,1,1) and the other for (-1,-1,-1). Add them all up and use that as the real available torque
 
 
@@ -650,11 +651,13 @@ namespace MuMech
 
                         Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
+                        // Build a vector that show if the surface is left/right up/down forward/back of the CoM.
+                        Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
+                        relpos.x = relpos.x < 0.01 ? -1 : 1;
+                        relpos.y = relpos.y < 0.01 ? -1 : 1;
+                        relpos.z = relpos.z < 0.01 ? -1 : 1;
+
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
-
-                        //pointVelocity = forward * 50;
-
-                        //MechJebCore.print("VEL " + MuUtils.PrettyPrint(pointVelocity) + " " + pointVelocity.magnitude.ToString("F2"));
 
                         Vector3 nVel;
                         Vector3 liftVector;
@@ -665,33 +668,24 @@ namespace MuMech
                         Quaternion maxRotation = Quaternion.AngleAxis(cs.ctrlSurfaceRange, cs.transform.rotation * Vector3.right);
 
                         double dynPressurePa = p.dynamicPressurekPa * 1000;
-                        //dynPressurePa = 0.5 * p.atmDensity * pointVelocity.sqrMagnitude;
 
                         float mach = (float)p.machNumber;
-                        //mach = pointVelocity.magnitude / (float)vessel.speedOfSound;
-
-                        //MechJebCore.print(MuUtils.PrettyPrint(pointVelocity) + " " + p.atmDensity.ToString("F3") + " " + MuUtils.PrettyPrint(nVel) + " " + MuUtils.PrettyPrint(liftVector) + " " + liftDot.ToString("F3") + " " + absDot.ToString("F3") + " " + pointVelocity.ToString("F3"));
-
-                        //MechJebCore.print("MRO " + MuUtils.PrettyPrint(maxRotation.eulerAngles) + " mach " + mach.ToString("F5"));
 
                         Vector3 posDeflection = maxRotation * liftVector;
                         float liftDotPos = Vector3.Dot(nVel, posDeflection);
                         absDot = Mathf.Abs(liftDotPos);
 
                         Vector3 liftForcePos = cs.GetLiftVector(posDeflection, liftDotPos, absDot, dynPressurePa, mach) * cs.ctrlSurfaceArea;
-                        Vector3 ctrlTorquePos = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForcePos));
+                        Vector3 ctrlTorquePos = Vector3.Scale(vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForcePos)), relpos);
 
                         Vector3 negsDeflection = Quaternion.Inverse(maxRotation) * liftVector;
                         float liftDotNeg = Vector3.Dot(nVel, negsDeflection);
                         absDot = Mathf.Abs(liftDotPos);
                         Vector3 liftForceNeg = cs.GetLiftVector(negsDeflection, liftDotNeg, absDot, dynPressurePa, mach) * cs.ctrlSurfaceArea;
-                        Vector3 ctrlTorqueNeg = vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForceNeg));
+                        Vector3 ctrlTorqueNeg = Vector3.Scale(vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForceNeg)), relpos);
 
-                        //MechJebCore.print("LFT " + MuUtils.PrettyPrint(liftForcePos) + " " + liftForcePos.magnitude.ToString("F5") + " " + MuUtils.PrettyPrint(liftForceNeg) + " " + liftForceNeg.magnitude.ToString("F5"));
-                        //MechJebCore.print("DOT " + liftDotPos.ToString("F5") + " " + liftDotNeg.ToString("F5"));
-
-                        ctrlTorqueAvailable.Add(ctrlTorquePos);
-                        ctrlTorqueAvailable.Add(ctrlTorqueNeg);
+                        ctrlTorqueAvailablePos += ctrlTorquePos;
+                        ctrlTorqueAvailableNeg += ctrlTorqueNeg;
                     }
                     else if (pm is ModuleLiftingSurface)
                     {
@@ -707,9 +701,12 @@ namespace MuMech
                     }
                 }
             }
-
+            
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
-            torqueAvailable += Vector3d.Max(ctrlTorqueAvailable.positive, ctrlTorqueAvailable.negative); // Should we use Max or Min ?
+            torqueAvailable += new Vector3(
+                (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
+                (Mathf.Abs(ctrlTorqueAvailablePos.y) + Mathf.Abs(ctrlTorqueAvailableNeg.y)) / 2f,
+                (Mathf.Abs(ctrlTorqueAvailablePos.z) + Mathf.Abs(ctrlTorqueAvailableNeg.z)) / 2f);
             torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
 
             torqueFromDiffThrottle = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);
