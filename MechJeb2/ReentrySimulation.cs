@@ -42,7 +42,7 @@ namespace MuMech
         double maxThrustAccel;
         double probableLandingSiteASL; // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
         double probableLandingSiteRadius; // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
-        Quaternion attitude;
+        QuaternionD attitude;
 
 
         bool orbitReenters;
@@ -94,6 +94,8 @@ namespace MuMech
             input_multiplierHasError = _multiplierHasError;
             input_dt = _dt;
 
+
+            // the vessel attitude relative to the surface vel. Fixed for now
             attitude = Quaternion.Euler(180,0,0);
 
 
@@ -435,17 +437,13 @@ namespace MuMech
 
             if (once)
             {
-                result.prediction.firstDrag = DragAccel(pos, vel, dynamicPressurekPa, mach).magnitude;
-                result.prediction.firstLift = LiftAccel(pos, vel, dynamicPressurekPa, mach).magnitude;
+                result.prediction.firstDrag = DragAccel(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
+                result.prediction.firstLift = LiftAccel(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
                 result.prediction.mach = mach;
                 result.prediction.speedOfSound = speedOfSound;
                 result.prediction.dynamicPressurekPa = dynamicPressurekPa;
             }
-
-
-            Quaternion worldtoShip = Quaternion.FromToRotation(vel, Vector3.up);
-
-
+            
             Vector3d dragAccel = (1d / vessel.totalMass) * DragAccel(pos, vel, dynamicPressurekPa, mach);
 
             if (record)
@@ -467,7 +465,7 @@ namespace MuMech
         Vector3d DragAccel(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
             if (!bodyHasAtmosphere) return Vector3d.zero;
-            Vector3d airVel = SurfaceVelocity(pos, vel);
+            
 
             //double realDragMass = this.dragMassExcludingUsedParachutes;
 
@@ -496,11 +494,14 @@ namespace MuMech
             
             //Vector3 shipDrag = vessel.Drag(Vector3.back * (float)airVel.magnitude, dynamicPressurekPa, mach);
 
+            Vector3d airVel = SurfaceVelocity(pos, vel);
+
+            Vector3d localVel = attitude * Vector3d.up * airVel.magnitude;
 
             // TODO : check if it is forward, back, up or down...
             // Lift works with a velocity in SHIP coordinate and return a vector in ship coordinate
             //Vector3 shipDrag = vessel.Drag(Vector3.down * (float)airVel.magnitude, dynamicPressurekPa, mach);
-            Vector3 shipDrag = vessel.Drag(airVel, attitude, dynamicPressurekPa, mach);
+            Vector3 shipDrag = vessel.Drag(localVel, dynamicPressurekPa, mach);
 
             //if (once)
             //{
@@ -540,19 +541,23 @@ namespace MuMech
 
         private Vector3d LiftAccel(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
-            return Vector3d.zero;
-
-
             if (!bodyHasAtmosphere) return Vector3d.zero;
             
             Vector3d airVel = SurfaceVelocity(pos, vel);
+
+            Vector3d localVel = attitude * Vector3d.up * airVel.magnitude;
 
             //double speedOfSound = mainBody.GetSpeedOfSound(Pressure(pos), AirDensity(pos));
             //
             //float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
 
             // Lift works with a velocity in WORLD coordinate <- well it should but the reported value is wrong so I messed up somewhere
-            //return vessel.Lift(airVel, dynamicPressurekPa, mach);
+
+            Vector3d localLift = vessel.Lift(localVel, dynamicPressurekPa, mach);
+
+            Quaternion vesselToWorld = Quaternion.FromToRotation(localVel, airVel);
+
+            return vesselToWorld * localLift;
         }
 
         void OpenParachutes(Vector3d pos)

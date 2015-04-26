@@ -141,7 +141,7 @@ namespace MuMech
             return drag;
         }
 
-        public Vector3 Lift(Vector3 velocity, float dynamicPressurekPa, float mach)
+        public Vector3 Lift(Vector3 vesselVelocity, float dynamicPressurekPa, float mach)
         {
             if (shieldedFromAirstream || hasLiftModule)
                 return Vector3.zero;
@@ -154,7 +154,7 @@ namespace MuMech
             // direction of the lift in a vessel centric reference
             Vector3 liftV = vesselToPart.Inverse() * liftForce * bodyLiftScalar;
 
-            Vector3 liftVector = Vector3.ProjectOnPlane(liftV, -velocity);
+            Vector3 liftVector = Vector3.ProjectOnPlane(liftV, -vesselVelocity);
 
 
             // cubes.LiftForce OK
