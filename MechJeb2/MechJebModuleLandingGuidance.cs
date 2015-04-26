@@ -142,12 +142,14 @@ namespace MuMech
             if (predictor.enabled)
             {
                 predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
+                predictor.showTrajectory = GUILayout.Toggle(predictor.showTrajectory, "Show trajectory");
+                predictor.worldTrajectory = GUILayout.Toggle(predictor.worldTrajectory, "World trajectory");
                 DrawGUIPrediction();
             }
 
             GUILayout.EndVertical();
         }
-
+        
         void DrawGUIPrediction()
         {
             ReentrySimulation.Result result = predictor.GetResult();

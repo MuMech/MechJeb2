@@ -40,7 +40,7 @@ namespace MuMech
                 core.thrust.targetThrottle = 0;
 
                 // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
-                if (mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude > 0.10)
+                if (vesselState.drag > 0.10)
                 {
                     if (core.landing.ParachutesDeployable())
                     {
