@@ -52,14 +52,14 @@ namespace KerbalEngineer.VesselSimulator
         public bool hasVessel;
         public String initialVesselName;
         public int inverseStage;
-        public bool isDecoupler;
+        public bool isDecoupler;   // never assigned - remove ?
         public bool isEngine;
         public bool isFuelLine;
         public bool isFuelTank;
         public bool isLanded;
         public bool isNoPhysics;
         public bool isSepratron;
-        public bool localCorrectThrust;
+        public bool localCorrectThrust;    // not used - remove ?
         public String name;
         public String noCrossFeedNodeKey;
         public PartSim parent;
@@ -92,6 +92,37 @@ namespace KerbalEngineer.VesselSimulator
             partSim.resources.Reset();
             partSim.baseMass = 0d;
             partSim.startMass = 0d;
+
+            // Something did not get reset properly so I got overboard with the default
+            // will find the actual usefull line later
+
+            partSim.centerOfMass = Vector3d.zero;
+            partSim.cost = 0;
+            partSim.decoupledInStage = 0;
+            partSim.fuelCrossFeed = false;
+            partSim.hasModuleEngines= false;
+            partSim.hasModuleEnginesFX = false;
+            partSim.hasMultiModeEngine = false;
+            
+            partSim.hasVessel= false;
+            partSim.initialVesselName = null;
+            partSim.inverseStage = 0;
+            partSim.isDecoupler = false; ;   // never assigned 
+            partSim.isEngine = false;  ;
+            partSim.isFuelLine = false; ;
+            partSim.isFuelTank = false; ;
+            partSim.isLanded = false; ;
+            partSim.isNoPhysics = false; ;
+            partSim.isSepratron = false; ;
+            partSim.localCorrectThrust = false; ;    // not use
+            partSim.name = null;
+            partSim.noCrossFeedNodeKey = null;
+            partSim.parent = null;
+            partSim.parentAttach = AttachModes.SRF_ATTACH;
+            partSim.part = null; // This is only set while t
+            partSim.partId = 0;
+            partSim.vesselName = null;
+            partSim.vesselType = VesselType.Base;
         }
 
         public void Release()
@@ -103,6 +134,7 @@ namespace KerbalEngineer.VesselSimulator
         {
             PartSim partSim = pool.Borrow();
 
+            Reset(partSim);
 
             partSim.part = thePart;
             partSim.centerOfMass = thePart.transform.TransformPoint(thePart.CoMOffset);
@@ -198,7 +230,7 @@ namespace KerbalEngineer.VesselSimulator
             get { return this.resourceDrains; }
         }
 
-        public void CreateEngineSims(List<EngineSim> allEngines, double atmosphere, double velocity, bool vectoredThrust, LogMsg log)
+        public void CreateEngineSims(List<EngineSim> allEngines, double atmosphere, double mach, bool vectoredThrust, bool fullThrust, LogMsg log)
         {
             bool correctThrust = SimManager.DoesEngineUseCorrectedThrust(this.part);
             if (log != null)
@@ -235,16 +267,18 @@ namespace KerbalEngineer.VesselSimulator
                         EngineSim engineSim = EngineSim.New(
                             this,
                             atmosphere,
-                            velocity,
-                            engine.maxThrust,
-                            engine.minThrust,
+                            mach,
+                            engine.maxFuelFlow,
+                            engine.minFuelFlow,
                             engine.thrustPercentage,
-                            engine.requestedThrust,
                             thrustvec,
-                            engine.realIsp,
                             engine.atmosphereCurve,
-                            engine.useVelocityCurve ? engine.velocityCurve : null,
-                            engine.throttleLocked,
+                            engine.atmChangeFlow,
+                            engine.useAtmCurve ? engine.atmCurve : null,
+                            engine.useVelCurve ? engine.velCurve : null,
+                            engine.currentThrottle,
+                            engine.g,
+                            engine.throttleLocked || fullThrust,
                             engine.propellants,
                             engine.isOperational,
                             correctThrust,
@@ -255,40 +289,6 @@ namespace KerbalEngineer.VesselSimulator
             }
             else
             {
-                if (this.hasModuleEnginesFX)
-                {
-                    List<ModuleEnginesFX> enginesFx = this.part.GetModules<ModuleEnginesFX>();  // only place that still allocate some memory
-                    for (int i = 0; i < enginesFx.Count; i++)
-                    {
-                        ModuleEnginesFX engine = enginesFx[i];
-                        if (log != null)
-                        {
-                            log.buf.AppendLine("Module: " + engine.moduleName);
-                        }
-
-                        Vector3 thrustvec = this.CalculateThrustVector(vectoredThrust ? engine.thrustTransforms : null, log);
-
-                        EngineSim engineSim = EngineSim.New(
-                            this,
-                            atmosphere,
-                            velocity,
-                            engine.maxThrust,
-                            engine.minThrust,
-                            engine.thrustPercentage,
-                            engine.requestedThrust,
-                            thrustvec,
-                            engine.realIsp,
-                            engine.atmosphereCurve,
-                            engine.useVelocityCurve ? engine.velocityCurve : null,
-                            engine.throttleLocked,
-                            engine.propellants,
-                            engine.isOperational,
-                            correctThrust,
-                            engine.thrustTransforms);
-                        allEngines.Add(engineSim);
-                    }
-                }
-
                 if (this.hasModuleEngines)
                 {
                     List<ModuleEngines> engines = this.part.GetModules<ModuleEngines>();  // only place that still allocate some memory
@@ -299,22 +299,24 @@ namespace KerbalEngineer.VesselSimulator
                         {
                             log.buf.AppendLine("Module: " + engine.moduleName);
                         }
-
+                        
                         Vector3 thrustvec = this.CalculateThrustVector(vectoredThrust ? engine.thrustTransforms : null, log);
 
                         EngineSim engineSim = EngineSim.New(
                             this,
                             atmosphere,
-                            velocity,
-                            engine.maxThrust,
-                            engine.minThrust,
+                            mach,
+                            engine.maxFuelFlow,
+                            engine.minFuelFlow,
                             engine.thrustPercentage,
-                            engine.requestedThrust,
                             thrustvec,
-                            engine.realIsp,
                             engine.atmosphereCurve,
-                            engine.useVelocityCurve ? engine.velocityCurve : null,
-                            engine.throttleLocked,
+                            engine.atmChangeFlow,
+                            engine.useAtmCurve ? engine.atmCurve : null,
+                            engine.useVelCurve ? engine.velCurve : null,
+                            engine.currentThrottle,
+                            engine.g,
+                            engine.throttleLocked || fullThrust,
                             engine.propellants,
                             engine.isOperational,
                             correctThrust,

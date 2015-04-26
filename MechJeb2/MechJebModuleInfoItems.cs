@@ -740,18 +740,18 @@ namespace MuMech
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
                 // NK detect necessity of atmo initial TWR
-                bool hasMFE = parts.Any(p => p.IsMFE());
+                //bool hasMFE = parts.Any(p => p.IsMFE());
 
                 if (showInitialMass)
                 {
-                    showInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                    showAtmoInitialTWR = hasMFE; // NK
+                    showInitialTWR = showAtmoInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+                    //showAtmoInitialTWR = hasMFE; // NK
                     showInitialMass = showFinalMass = showMaxTWR = false;
                 }
                 else
                 {
-                    showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                    showAtmoInitialTWR = hasMFE; // NK
+                    showInitialMass = showInitialTWR = showAtmoInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
+                    //showAtmoInitialTWR = hasMFE; // NK
                 }
             }
             GUILayout.EndHorizontal();
@@ -764,9 +764,9 @@ namespace MuMech
             if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2"))); // NK
             if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].maxThrustToWeight.ToString("F2")));
             if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].time)));
+            //if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].time)));
             if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].time)));
+            if (showVacTime) showVacTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].time)));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
