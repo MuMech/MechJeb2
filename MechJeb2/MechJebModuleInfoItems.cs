@@ -407,12 +407,14 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
-                                  .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
+                //return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
+                //                  .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
+                return 0;
             }
             else
             {
-                return vesselState.massDrag / vesselState.mass;
+#warning Check that ....
+                return vesselState.dragCoef;
             }
         }
 
@@ -436,7 +438,7 @@ namespace MuMech
         [ValueInfoItem("Part count / Max parts", InfoItem.Category.Vessel, showInEditor = true)]
         public string PartCountAndMaxPartCount()
         {
-            return string.Format("{0} / {1}", PartCount(), MaxPartCount());
+            return string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
         }
 
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
@@ -608,7 +610,7 @@ namespace MuMech
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {
-            return mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude;
+            return vesselState.drag;
         }
 
         [ValueInfoItem("Synodic period", InfoItem.Category.Target)]
