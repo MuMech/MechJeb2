@@ -385,7 +385,7 @@ namespace KerbalEngineer.VesselSimulator
                 bool vacSim = simulations[0].PrepareSimulation(parts, Gravity, 0d, Mach, dumpTree, vectoredThrust, true);
                 //Profiler.EndSample();
                 //Profiler.BeginSample("SimManager.StartSimulation().atmSim");
-                bool atmSim = simulations[1].PrepareSimulation(parts, Gravity, 1d, Mach, dumpTree, vectoredThrust, true);
+                bool atmSim = simulations[1].PrepareSimulation(parts, Gravity, Atmosphere, Mach, dumpTree, vectoredThrust, true);
                 //Profiler.EndSample();
 
                 // This call doesn't ever fail at the moment but we'll check and return a sensible error for display
