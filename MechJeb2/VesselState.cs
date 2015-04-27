@@ -653,9 +653,10 @@ namespace MuMech
 
                         // Build a vector that show if the surface is left/right up/down forward/back of the CoM.
                         Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
-                        relpos.x = relpos.x < 0.01 ? -1 : 1;
-                        relpos.y = relpos.y < 0.01 ? -1 : 1;
-                        relpos.z = relpos.z < 0.01 ? -1 : 1;
+                        float inverted = relpos.y > 0.01 ? -1 : 1;
+                        relpos.x = inverted *  relpos.x < 0.01 ? -1 : 1;
+                        relpos.y = 1;
+                        relpos.z = inverted * (relpos.z < 0.01 ? -1 : 1);
 
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
 
