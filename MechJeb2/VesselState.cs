@@ -643,7 +643,7 @@ namespace MuMech
                         // TODO : Tweakable for ignorePitch / ignoreYaw  / ignoreRoll 
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
 
-                        if (p.ShieldedFromAirstream)
+                        if (p.ShieldedFromAirstream || cs.deploy)
                             continue;
 
                         pureLiftV += cs.liftForce;
@@ -657,7 +657,7 @@ namespace MuMech
                         relpos.x = inverted *  relpos.x < 0.01 ? -1 : 1;
                         relpos.y = 1;
                         relpos.z = inverted * (relpos.z < 0.01 ? -1 : 1);
-
+                        
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
 
                         Vector3 nVel;
