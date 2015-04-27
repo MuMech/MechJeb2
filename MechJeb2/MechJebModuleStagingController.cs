@@ -119,8 +119,9 @@ namespace MuMech
         //determine whether it's safe to activate inverseStage
         public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources)
         {
-            foreach (Part p in v.parts)
+            for (int i = 0; i < v.parts.Count; i++)
             {
+                Part p = v.parts[i];
                 if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources))
                 {
                     return true;
@@ -158,17 +159,21 @@ namespace MuMech
             if ((p is FuelTank) && (((FuelTank)p).fuel > 0)) return true;
             if (!p.IsSepratron())
             {
-                foreach (PartResource r in p.Resources)
+                for (int i = 0; i < p.Resources.Count; i++)
                 {
+                    PartResource r = p.Resources[i];
                     if (r.amount > 0 && r.info.name != "ElectricCharge" && tankResources.Contains(r.info.id))
                     {
                         return true;
                     }
                 }
             }
-            foreach (Part child in p.children)
+            for (int i = 0; i < p.children.Count; i++)
             {
-                if (HasActiveOrIdleEngineOrTankDescendant(child, tankResources)) return true;
+                if (HasActiveOrIdleEngineOrTankDescendant(p.children[i], tankResources))
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -177,9 +182,13 @@ namespace MuMech
         //is used to tell whether we should delay activating the next stage after activating inverseStage
         public static bool InverseStageFiresDecoupler(int inverseStage, Vessel v)
         {
-            foreach (Part p in v.parts)
+            for (int i = 0; i < v.parts.Count; i++)
             {
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler()) return true;
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler())
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -187,9 +196,13 @@ namespace MuMech
         //determine whether inverseStage sheds a dead engine
         public static bool InverseStageDecouplesDeactivatedEngineOrTank(int inverseStage, Vessel v)
         {
-            foreach (Part p in v.parts)
+            for (int i = 0; i < v.parts.Count; i++)
             {
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasDeactivatedEngineOrTankDescendant(p)) return true;
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasDeactivatedEngineOrTankDescendant(p))
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -205,8 +218,9 @@ namespace MuMech
             //check if this is a new-style fuel tank that's run out of resources:
             bool hadResources = false;
             bool hasResources = false;
-            foreach (PartResource r in p.Resources)
+            for (int i = 0; i < p.Resources.Count; i++)
             {
+                PartResource r = p.Resources[i];
                 if (r.name == "ElectricCharge") continue;
                 if (r.maxAmount > 0) hadResources = true;
                 if (r.amount > 0) hasResources = true;
@@ -215,9 +229,12 @@ namespace MuMech
 
             if (p.IsEngine() && !p.EngineHasFuel()) return true;
 
-            foreach (Part child in p.children)
+            for (int i = 0; i < p.children.Count; i++)
             {
-                if (HasDeactivatedEngineOrTankDescendant(child)) return true;
+                if (HasDeactivatedEngineOrTankDescendant(p.children[i]))
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -226,13 +243,17 @@ namespace MuMech
         public static bool HasStayingChutes(int inverseStage, Vessel v)
         {
         	var chutes = v.parts.FindAll(p => p.inverseStage == inverseStage && p.IsParachute());
-        	
-            foreach (Part p in chutes)
+
+            for (int i = 0; i < chutes.Count; i++)
             {
-        		if (!p.IsDecoupledInStage(inverseStage)) { return true; }
-        	}
-        	
-        	return false;
+                Part p = chutes[i];
+                if (!p.IsDecoupledInStage(inverseStage))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

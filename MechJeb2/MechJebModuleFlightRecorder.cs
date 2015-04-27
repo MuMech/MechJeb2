@@ -108,12 +108,11 @@ namespace MuMech
                 return;
             }
 
-            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vessel.srf_velocity.normalized, vesselState.gravityForce);
-            gravityLosses -= vesselState.deltaT * Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
-            double dragAccel = mainBody.DragAccel(vesselState.CoM, vessel.obt_velocity, vesselState.massDrag / vesselState.mass).magnitude;
-            dragLosses += vesselState.deltaT * dragAccel;
+            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.surfaceVelocity.normalized, vesselState.gravityForce);
+            gravityLosses -= vesselState.deltaT * Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
+            dragLosses += vesselState.deltaT * vesselState.drag;
 
-            maxDragGees = Math.Max(maxDragGees, dragAccel / 9.81);
+            maxDragGees = Math.Max(maxDragGees, vesselState.drag / 9.81);
 
             double circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
             double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
@@ -123,7 +122,7 @@ namespace MuMech
         public override void Drive(FlightCtrlState s)
         {
             deltaVExpended += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle);
-            steeringLosses += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle) * (1 - Vector3d.Dot(vessel.srf_velocity.normalized, vesselState.forward));
+            steeringLosses += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle) * (1 - Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.forward));
         }
     }
 }

@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace MuMech
 {
+    /*
     public class FuelFlowSimulation
     {
         public int simStage; //the simulated rocket's current stage
@@ -32,7 +33,11 @@ namespace MuMech
             }
             else
             {
-                foreach (Part p in parts) nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
+                foreach (Part p in parts)
+                {
+                    nodeLookup[p].SetupFuelLineSourcesFlight(p, nodeLookup);
+                    nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
+                }
             }
             foreach (Part p in parts) nodeLookup[p].SetupRegularSources(p, nodeLookup);
 
@@ -515,12 +520,14 @@ namespace MuMech
                     {
                         // For stack nodes, we can draw fuel unless this node is specifically
                         // labeled as having crossfeed disabled (Kashua rule #4)
+                        FuelNode fuelnode;
                         if (attachNode.id != "Strut"
                             && attachNode.ResourceXFeed
                             && !(part.NoCrossFeedNodeKey.Length > 0
-                                 && attachNode.id.Contains(part.NoCrossFeedNodeKey)))
+                                 && attachNode.id.Contains(part.NoCrossFeedNodeKey))
+                            && nodeLookup.TryGetValue(attachNode.attachedPart, out fuelnode))
                         {
-                            stackNodeSources.Add(nodeLookup[attachNode.attachedPart]);
+                            stackNodeSources.Add(fuelnode);
                         }
                     }
                 }
@@ -758,4 +765,5 @@ namespace MuMech
             return false;
         }
     }
+  */
 }

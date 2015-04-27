@@ -7,14 +7,25 @@ namespace MuMech
 {
     public static class PartExtensions
     {
-        public static bool HasModule<T>(this Part p) where T : PartModule
+        public static bool HasModule<T>(this Part part) where T : PartModule
         {
-            return p.Modules.OfType<T>().Any();
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                if (part.Modules[i] is T)
+                    return true;
+            }
+            return false;
         }
 
         public static T GetModule<T>(this Part part) where T : PartModule
         {
-            return part.Modules.OfType<T>().FirstOrDefault();
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule pm = part.Modules[i];
+                if (pm is T)
+                    return (T)pm;
+            }
+            return null;
         }
 
         public static float TotalMass(this Part p)
@@ -25,8 +36,9 @@ namespace MuMech
 
         public static bool EngineHasFuel(this Part p)
         {
-            foreach (PartModule m in p.Modules)
+            for (int i = 0; i < p.Modules.Count; i++)
             {
+                PartModule m = p.Modules[i];
                 ModuleEngines eng = m as ModuleEngines;
                 if (eng != null) return !eng.getFlameoutState;
 
@@ -38,7 +50,9 @@ namespace MuMech
 
         public static bool IsUnfiredDecoupler(this Part p)
         {
-            foreach (PartModule m in p.Modules) {
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                PartModule m = p.Modules[i];
                 ModuleDecouple mDecouple = m as ModuleDecouple;
                 if (mDecouple != null)
                 {
@@ -70,8 +84,9 @@ namespace MuMech
 
         public static bool IsEngine(this Part p)
         {
-            foreach (PartModule m in p.Modules)
+            for (int i = 0; i < p.Modules.Count; i++)
             {
+                PartModule m = p.Modules[i];
                 if (m is ModuleEngines || m is ModuleEnginesFX) return true;
             }
             return false;
@@ -79,8 +94,9 @@ namespace MuMech
 
         public static bool IsMFE(this Part p)
         {
-            foreach(PartModule m in p.Modules)
+            for (int i = 0; i < p.Modules.Count; i++)
             {
+                PartModule m = p.Modules[i];
                 if(m.ClassName == "ModuleEngineConfigs" || m.ClassName == "ModuleHybridEngine" || m.ClassName == "ModuleHybridEngines") return true;
             }
             return false;
@@ -90,18 +106,18 @@ namespace MuMech
 
         public static bool IsParachute(this Part p)
         {
-            foreach (PartModule m in p.Modules)
+            for (int i = 0; i < p.Modules.Count; i++)
             {
-                if (m is ModuleParachute) return true;
+                if (p.Modules[i] is ModuleParachute) return true;
             }
             return false;
         }
 
         public static bool IsLaunchClamp(this Part p)
         {
-            foreach (PartModule m in p.Modules)
+            for (int i = 0; i < p.Modules.Count; i++)
             {
-                if (m is LaunchClamp) return true;
+                if (p.Modules[i] is LaunchClamp) return true;
             }
             return false;
         }

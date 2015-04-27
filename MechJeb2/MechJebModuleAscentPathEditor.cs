@@ -14,7 +14,7 @@ namespace MuMech
         }
 
         public DefaultAscentPath path;
-        Texture2D pathTexture = new Texture2D(400, 100);
+        static Texture2D pathTexture = new Texture2D(400, 100);
         private Boolean pathTextureDrawnBefore = false;
 
         public override void OnStart(PartModule.StartState state)
@@ -44,7 +44,8 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
-            if (path.autoPath) path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc, 0.01f, 1.05f) * 200f + 0.5f) / 200f;
+            if (path.autoPath) path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
+            // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
             GUILayout.EndHorizontal();
 
             if (path.autoPath)

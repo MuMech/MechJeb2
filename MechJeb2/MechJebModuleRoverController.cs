@@ -32,7 +32,7 @@ namespace MuMech
 //			}
 //		}
 
-		[EditableInfoItem("Heading", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		[EditableInfoItem("Heading", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]
 		public EditableDouble heading = 0;
 
 //		protected bool controlSpeed = false;
@@ -54,7 +54,7 @@ namespace MuMech
 //			}
 //		}
 
-		[EditableInfoItem("Speed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		[EditableInfoItem("Speed", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]
 		public EditableDouble speed = 10;
 
         [ToggleInfoItem("Brake on Pilot Eject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
@@ -162,7 +162,7 @@ namespace MuMech
 			Vector3 myPos  = fromPos - body.transform.position;
 			Vector3 north = body.transform.position + ((float)body.Radius * body.transform.up) - fromPos;
 			Vector3 tgtPos = toPos - fromPos;
-			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.Exclude(myPos.normalized, tgtPos.normalized));
+            return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.ProjectOnPlane(tgtPos.normalized, myPos.normalized));
 		}
 
 		public float TurningSpeed(double speed, double error)
@@ -174,7 +174,7 @@ namespace MuMech
 		{
 			if (wheels.Count == 0 && colliders.Count == 0) { OnVesselModified(vessel); }
 			RaycastHit hit;
-			Physics.Raycast(vessel.CoM + vessel.srf_velocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
+			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
 			norm = hit.normal;
 			traction = 0;
 //			foreach (var c in colliders) {
@@ -184,13 +184,17 @@ namespace MuMech
 //					traction += (1.5f - (hit.distance - c.radius)) * 100;
 //				}
 //			}
-			
-			foreach (var w in wheels)
-			{
-				if (w.GroundContact) { traction += 100; }
-			}
-			
-			traction /= wheels.Count;
+
+		    for (int i = 0; i < wheels.Count; i++)
+		    {
+		        var w = wheels[i];
+		        if (w.GroundContact)
+		        {
+		            traction += 100;
+		        }
+		    }
+
+		    traction /= wheels.Count;
 		}
 		
 		public override void OnModuleDisabled()
@@ -211,7 +215,7 @@ namespace MuMech
 			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 			
 			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are			
-			curSpeed = Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
+			curSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 			
 			CalculateTraction();
 			speedIntAcc = speedPID.intAccum;
@@ -237,7 +241,7 @@ namespace MuMech
 					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
+//					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
 //					newSpeed = tgtSpeed + Mathf.Clamp((float)(newSpeed - tgtSpeed), -Time.deltaTime * 8f, Time.deltaTime * 2f);
 					var radius = Math.Max(wp.Radius, 10);
 					if (distance < radius)
@@ -332,12 +336,14 @@ namespace MuMech
 			{
 				speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -5, 5);
 
-				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vessel.srf_velocity, vesselState.forward);
+				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
 				{
 					float act = (float)speedPID.Compute(speedErr);
-					s.wheelThrottle = !LimitAcceleration ? Mathf.Clamp((float)act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
-						(traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.005f, 0.005f)) * (traction < tractionLimit ? -1 : 1)));
+					s.wheelThrottle = (!LimitAcceleration ? Mathf.Clamp(act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
+						(traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.01f, 0.01f)) * (traction < tractionLimit ? -1 : 1))));
+//						(lastThrottle + Mathf.Clamp(act, -0.01f, 0.01f)));
+//					Debug.Log(s.wheelThrottle + Mathf.Clamp(act, -0.01f, 0.01f));
 					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
 //					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
 					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
@@ -347,7 +353,7 @@ namespace MuMech
 //					else if (!stabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
 //						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
 //					}
-					lastThrottle = s.wheelThrottle;
+					lastThrottle = Mathf.Clamp(s.wheelThrottle, -1, 1);
 				}
 			}
 			
@@ -365,10 +371,10 @@ namespace MuMech
 				var fSpeed = (float)curSpeed;
 //				if (Mathf.Abs(fSpeed) >= turnSpeed * 0.75) {
 				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-//				                        ((Mathf.Abs(fSpeed) <= turnSpeed ? vesselState.forward : vessel.srf_velocity / 4) - vessel.transform.right * s.wheelSteer) * Mathf.Sign(fSpeed) :
+//				                        ((Mathf.Abs(fSpeed) <= turnSpeed ? vesselState.forward : vesselState.surfaceVelocity / 4) - vessel.transform.right * s.wheelSteer) * Mathf.Sign(fSpeed) :
 //				                        // ^ and then add the steering
 				                        vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
-				                        vessel.srf_velocity); // in the air so follow velocity
+				                        vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
 				var quat = Quaternion.LookRotation(fwd, norm);
 				

@@ -62,11 +62,17 @@ namespace MuMech
             List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
 
             double amount = 0;
-            foreach (Part p in parts)
+            for (int i = 0; i < parts.Count; i++)
             {
-                foreach (PartResource r in p.Resources)
+                Part p = parts[i];
+                for (int j = 0; j < p.Resources.Count; j++)
                 {
-                    if (r.info.id == definition.id) amount += r.amount;
+                    PartResource r = p.Resources[j];
+
+                    if (r.info.id == definition.id)
+                    {
+                        amount += r.amount;
+                    }
                 }
             }
 
@@ -102,11 +108,14 @@ namespace MuMech
                     return true;
             }
 
-            foreach (Part p in parts)
+            for (int i = 0; i < parts.Count; i++)
             {
+                Part p = parts[i];
                 r = p.Resources.Get(definition.id);
                 if (r != null && r.amount > 0)
+                {
                     return true;
+                }
             }
             return false;
         }
@@ -205,8 +214,9 @@ namespace MuMech
                 MonoBehaviour.print("[GetBoundingBox] Start " + vessel.vesselName);
             }
 
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
+                Part p = vessel.parts[i];
                 Vector3Pair partBox = p.GetBoundingBox();
 
                 if (debug)
@@ -232,7 +242,6 @@ namespace MuMech
                 //    maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
                 //    minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
                 //}
-
             }
 
             if (debug)

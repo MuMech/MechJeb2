@@ -9,7 +9,6 @@ namespace MuMech
     public class MechJebModuleLandingGuidance : DisplayModule
     {
         public MechJebModuleLandingPredictions predictor;
-        public MechJebModuleLandingAutopilot autopilot;
         public static List<LandingSite> landingSites;
 
         [Persistent(pass = (int)(Pass.Global|Pass.Local))]
@@ -26,9 +25,8 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
-            autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
 
-            if (landingSites == null)
+            if (landingSites == null && HighLogic.LoadedSceneIsFlight)
                 InitLandingSitesList();
         }
 
@@ -76,40 +74,41 @@ namespace MuMech
 
             DrawGUITogglePredictions();
 
-            if (autopilot != null)
+            if (core.landing != null)
             {
                 GUILayout.Label("Autopilot:");
 
-                if (autopilot.enabled)
+                if (core.landing.enabled)
                 {
-                    if (GUILayout.Button("Abort autoland")) autopilot.StopLanding();
+                    if (GUILayout.Button("Abort autoland")) core.landing.StopLanding();
                 }
                 else
                 {
                     GUILayout.BeginHorizontal();
                     if (!core.target.PositionTargetExists) GUI.enabled = false;
-                    if (GUILayout.Button("Land at target")) autopilot.LandAtPositionTarget(this);
+                    if (GUILayout.Button("Land at target")) core.landing.LandAtPositionTarget(this);
                     GUI.enabled = true;
-                    if (GUILayout.Button("Land somewhere")) autopilot.LandUntargeted(this);
+                    if (GUILayout.Button("Land somewhere")) core.landing.LandUntargeted(this);
                     GUILayout.EndHorizontal();
                 }
 
-                GuiUtils.SimpleTextBox("Touchdown speed:", autopilot.touchdownSpeed, "m/s", 35);
+                GuiUtils.SimpleTextBox("Touchdown speed:", core.landing.touchdownSpeed, "m/s", 35);
 
-                if (autopilot != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+                if (core.landing != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
-                autopilot.deployGears = GUILayout.Toggle(autopilot.deployGears, "Deploy Landing Gear");
-                GuiUtils.SimpleTextBox("Stage Limit:", autopilot.limitGearsStage, "", 35);
-                autopilot.deployChutes = GUILayout.Toggle(autopilot.deployChutes, "Deploy Parachutes");
-                predictor.deployChutes = autopilot.deployChutes;
-                GuiUtils.SimpleTextBox("Stage Limit:", autopilot.limitChutesStage, "", 35);
-                predictor.limitChutesStage = autopilot.limitChutesStage;
+                core.landing.deployGears = GUILayout.Toggle(core.landing.deployGears, "Deploy Landing Gear");
+                GuiUtils.SimpleTextBox("Stage Limit:", core.landing.limitGearsStage, "", 35);
+                core.landing.deployChutes = GUILayout.Toggle(core.landing.deployChutes, "Deploy Parachutes");
+                predictor.deployChutes = core.landing.deployChutes;
+                GuiUtils.SimpleTextBox("Stage Limit:", core.landing.limitChutesStage, "", 35);
+                predictor.limitChutesStage = core.landing.limitChutesStage;
+                core.landing.rcsAdjustment = GUILayout.Toggle(core.landing.rcsAdjustment, "Use RCS for small adjustment");
 
-                if (autopilot.enabled)
+                if (core.landing.enabled)
                 {
-                    GUILayout.Label("Status: " + autopilot.status);
+                    GUILayout.Label("Status: " + core.landing.status);
 
-                    string parachuteInfo = autopilot.ParachuteControlInfo;
+                    string parachuteInfo = core.landing.ParachuteControlInfo;
                     if (null != parachuteInfo)
                     {
                         GUILayout.Label(parachuteInfo);
@@ -143,12 +142,14 @@ namespace MuMech
             if (predictor.enabled)
             {
                 predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
+                predictor.showTrajectory = GUILayout.Toggle(predictor.showTrajectory, "Show trajectory");
+                predictor.worldTrajectory = GUILayout.Toggle(predictor.worldTrajectory, "World trajectory");
                 DrawGUIPrediction();
             }
 
             GUILayout.EndVertical();
         }
-
+        
         void DrawGUIPrediction()
         {
             ReentrySimulation.Result result = predictor.GetResult();

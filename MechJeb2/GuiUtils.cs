@@ -313,27 +313,6 @@ namespace MuMech
             }
         }
 
-        public static void CheckSkin()
-        {
-            GUI.skin = null;
-            if (GUI.skin.name == "LazorSkin")
-            {
-                Texture2D tex = new Texture2D(64, 31, TextureFormat.ARGB32, false);
-                tex.LoadImage(Properties.Resources.default_gui_window);
-                GUI.skin.window.normal.background = GUI.skin.window.onNormal.background = tex;
-                GUI.skin.window.normal.textColor = GUI.skin.window.onNormal.textColor = XKCDColors.Pink;
-
-                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
-                tex.LoadImage(Properties.Resources.default_toggle_on);
-                GUI.skin.toggle.onNormal.background = GUI.skin.toggle.onHover.background = GUI.skin.toggle.onActive.background = tex;
-                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
-                tex.LoadImage(Properties.Resources.default_toggle_off);
-                GUI.skin.toggle.normal.background = GUI.skin.toggle.hover.background = GUI.skin.toggle.active.background = tex;
-
-                GUI.skin.name = "LazorSkinBow";
-            }
-        }
-
         public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)
         {
             GUILayout.BeginHorizontal();
@@ -450,12 +429,16 @@ namespace MuMech
             return parsedSomething;
         }
         
-        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
+        public static double ArcDistance(Vector3 From, Vector3 To) {
         	double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
         	double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
         	double c = Vector3d.Distance(From, To);
         	double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
-        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
+        }
+        
+        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
+        	return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
         }
 
         public static bool MouseIsOverWindow(MechJebCore core)
@@ -679,7 +662,7 @@ namespace MuMech
             int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
             int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
 
-            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
+            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees.ToString(), minutes.ToString(), seconds.ToString());
         }
     }
 }

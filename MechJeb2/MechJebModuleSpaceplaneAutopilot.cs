@@ -48,7 +48,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            if (runways == null)
+            if (runways == null && HighLogic.LoadedSceneIsFlight)
                 InitRunwaysList();
         }
 
@@ -122,8 +122,8 @@ namespace MuMech
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             //horizontal control
-            double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vessel.srf_velocity, vesselState.east),
-                                                                Vector3d.Dot(vessel.srf_velocity, vesselState.north));
+            double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.surfaceVelocity, vesselState.east),
+                                                                Vector3d.Dot(vesselState.surfaceVelocity, vesselState.north));
             double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
             double noseHeading = velocityHeading + headingTurn;
             double noseRoll = (maxRoll / maxYaw) * headingTurn;
@@ -163,7 +163,7 @@ namespace MuMech
 
             Vector3d vesselUnit = (vesselState.CoM - runwayStart).normalized;
 
-            double leftSpeed = Vector3d.Dot(vessel.srf_velocity, runwayLeftUnit);
+            double leftSpeed = Vector3d.Dot(vesselState.surfaceVelocity, runwayLeftUnit);
             double verticalSpeed = vesselState.speedVertical;
             double horizontalSpeed = vesselState.speedSurfaceHorizontal;
             double flightPathAngle = 180 / Math.PI * Math.Atan2(verticalSpeed, horizontalSpeed);

@@ -132,7 +132,7 @@ namespace MuMech
             Vector3d targetVel = core.target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
-            double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
+			double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude > 1.0 ? Math.Pow(lateralSep.magnitude, 1.05) : lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
 
             bool align = true;
 
@@ -193,7 +193,7 @@ namespace MuMech
                 core.attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, this);
             else
                 if (forceRol)
-                    core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
+                    core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol + 180f, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
                 else
                     core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
             
