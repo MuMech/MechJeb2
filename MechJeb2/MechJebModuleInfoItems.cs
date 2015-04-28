@@ -321,7 +321,7 @@ namespace MuMech
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
-            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass);
+            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass + p.GetPhysicslessChildMass());
         }
 
         [ValueInfoItem("Liquid fuel & oxidizer mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]

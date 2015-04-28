@@ -111,7 +111,7 @@ namespace KerbalEngineer.Extensions
         /// </summary>
         public static double GetDryMass(this Part part)
         {
-            return (part.physicalSignificance == Part.PhysicalSignificance.FULL) ? part.mass : 0d;
+            return (part.physicalSignificance == Part.PhysicalSignificance.FULL) ? part.mass + part.GetPhysicslessChildMass() : 0d;
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace KerbalEngineer.Extensions
         /// </summary>
         public static double GetWetMass(this Part part)
         {
-            return (part.physicalSignificance == Part.PhysicalSignificance.FULL) ? part.mass + part.GetResourceMass() : part.GetResourceMass();
+            return (part.physicalSignificance == Part.PhysicalSignificance.FULL) ? part.mass + part.GetPhysicslessChildMass() + part.GetResourceMass() : part.GetResourceMass();
         }
 
         /// <summary>

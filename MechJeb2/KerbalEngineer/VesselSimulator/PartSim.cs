@@ -166,7 +166,7 @@ namespace KerbalEngineer.VesselSimulator
 
             if (!partSim.isNoPhysics)
             {
-                partSim.baseMass = partSim.part.mass;
+                partSim.baseMass = partSim.part.mass + partSim.part.GetPhysicslessChildMass();
             }
 
             if (SimManager.logOutput)

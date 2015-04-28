@@ -44,7 +44,7 @@ namespace MuMech
 
         private void Set(Part p, ReentrySimulation.SimCurves _simCurves)
         {
-            totalMass = p.mass + p.GetResourceMass() + p.GetPhysicslessChildMass();
+            totalMass = p.rb.mass + p.GetResourceMass() + p.GetPhysicslessChildMass();
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
             noDrag = p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
