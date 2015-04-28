@@ -87,14 +87,12 @@ namespace MuMech
             }
         }
 
-        // vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres
-
         protected void StartSimulation()
         {
             simBody = HighLogic.LoadedSceneIsEditor ? editorBody ?? Planetarium.fetch.Home : vessel.mainBody;
             SimManager.Gravity = 9.81 * simBody.GeeASL;
 
-            SimManager.Atmosphere = HighLogic.LoadedSceneIsEditor ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres;
+            SimManager.Atmosphere = (HighLogic.LoadedSceneIsEditor ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa) * PhysicsGlobals.KpaToAtmospheres;
             SimManager.Mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
             SimManager.vectoredThrust = dVLinearThrust;
 
