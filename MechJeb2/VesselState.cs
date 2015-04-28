@@ -855,7 +855,7 @@ namespace MuMech
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
             #warning Have someone check that. And clean it
-            return Math.Sqrt(2 * localg * mass / (drag / mass));
+            return Math.Sqrt(localg / drag) * speedSurface;
         }
 
         public double ThrustAccel(double throttle)
