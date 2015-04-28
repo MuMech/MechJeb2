@@ -388,6 +388,10 @@ namespace MuMech
                     lastFocus.GetMasterMechJeb().OnSave(null);
                 }
 
+                // Clear the modules cache
+                sortedDisplayModules.Clear();
+                sortedModules.Clear();
+
                 OnLoad(null); // Force Global reload
 
                 wasMasterAndFocus = true;
