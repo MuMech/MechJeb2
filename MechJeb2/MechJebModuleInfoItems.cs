@@ -699,6 +699,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoInitialTWR = false; // NK
         [Persistent(pass = (int)Pass.Global)]
+        public bool showAtmoMaxTWR = false;
+        [Persistent(pass = (int)Pass.Global)]
         public bool showMaxTWR = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool showVacDeltaV = true;
@@ -706,8 +708,6 @@ namespace MuMech
         public bool showVacTime = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoDeltaV = true;
-        [Persistent(pass = (int)Pass.Global)]
-        public bool showAtmoTime = true;
         [Persistent(pass = (int)Pass.Global)]
         public int TWRbody = 1;
         
@@ -746,14 +746,12 @@ namespace MuMech
 
                 if (showInitialMass)
                 {
-                    showInitialTWR = showAtmoInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                    //showAtmoInitialTWR = hasMFE; // NK
-                    showInitialMass = showFinalMass = showMaxTWR = false;
+                    showInitialTWR = showAtmoInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
+                    showInitialMass =  showMaxTWR = showAtmoMaxTWR = false;
                 }
                 else
                 {
-                    showInitialMass = showInitialTWR = showAtmoInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                    //showAtmoInitialTWR = hasMFE; // NK
+                    showInitialMass = showInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
                 }
             }
             GUILayout.EndHorizontal();
@@ -763,10 +761,10 @@ namespace MuMech
             if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].totalMass.ToString("F1") + " t"));
             if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => (vacStats[s].totalMass - vacStats[s].resourceMass).ToString("F1") + " t"));
             if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].thrustToWeight.ToString("F2")));
-            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2"))); // NK
             if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].maxThrustToWeight.ToString("F2")));
+            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2"))); // NK
+            if (showAtmoMaxTWR) showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].maxThrustToWeight.ToString("F2")));
             if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            //if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].time)));
             if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacTime) showVacTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].time)));
             GUILayout.EndHorizontal();
