@@ -460,7 +460,7 @@ namespace MuMech
             {
                 // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
                 // should end a safe height above the landing site in order to allow braking from terminal velocity
-#warning FIX THAT BEFORE 1.0 !!
+#warning Drag Length is quite large now without parachutes, check this better
                 double landingSiteDragLength = mainBody.DragLength(LandingAltitude, VesselAverageDrag() + ParachuteAddedDragCoef());
 
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
@@ -483,22 +483,11 @@ namespace MuMech
         //expect to get slowed to near terminal velocity before impacting the ground. 
         public bool UseAtmosphereToBrake()
         {
-            //The air density goes like exp(-h/(scale height)), so the drag length goes like exp(+h/(scale height)).
-            //Some math shows that if (scale height) > e * (surface drag length) then 
-            //there is an altitude at which (altitude) > (drag length at that altitude).
-            double seaLevelDragLength = mainBody.DragLength(0, VesselAverageDrag() + ParachuteAddedDragCoef());
-
-            // old code : 
-            //return (1000 * mainBody.atmosphereScaleHeight > 2.71828 * seaLevelDragLength);
-
-#warning use proper math solution
-            // this is not math but a random hack. Someone will have to fix it later
-            // 3 case to handle :
-            // - !mainBody.atmosphereUsePressureCurve
-            // - !mainBody.atmospherePressureCurveIsNormalized
-            // - default
-            //MechJebCore.print("UseAtmosphereToBrake " + (seaLevelDragLength < 3 * mainBody.atmosphereDepth));
-            return seaLevelDragLength < 3 * mainBody.atmosphereDepth;
+            if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
+            {
+                return true;
+            }
+            return false;
         }
 
         // Get an average drag for the whole vessel. Far from precise but fast.
@@ -634,15 +623,11 @@ namespace MuMech
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
-            Vector3 planeNormal = Vector3.Cross(pos, vel).normalized;
-            float angle = 0;
-            if (!planeNormal.IsZero())
-            {
-                angle = Mathf.Abs(((Vector3)vel).AngleInPlane(planeNormal, pos)) * Mathf.Deg2Rad;
-            }
-            float ToF = (((float)vel.magnitude * Mathf.Cos(angle)) + Mathf.Sqrt(Mathf.Pow(((float)vel.magnitude * Mathf.Cos(angle)), 2) + 2 * g * ((float)pos.magnitude - terrainRadius))) / g * 2;
-            //MechJebCore.print("ToF = " + ToF.ToString("F2"));
-            return 0.7 * ToF * (thrust - g);
+            double vSpeed = Vector3d.Dot(vel, pos.normalized);
+            double ToF = (vSpeed + Math.Sqrt(vSpeed * vSpeed + 2 * g * (pos.magnitude - terrainRadius))) / g;
+
+            MechJebCore.print("ToF = " + ToF.ToString("F2"));
+            return 0.8 * (thrust - g) * ToF;
         }
     }
 
