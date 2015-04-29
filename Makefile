@@ -19,7 +19,12 @@ MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
 	$(wildcard MechJeb2/Maneuver/*.cs) \
 	$(wildcard MechJeb2/Properties/*.cs) \
 	$(wildcard MechJeb2/alglib/*.cs) \
-	$(wildcard MechJeb2/LandingAutopilot/*.cs)
+	$(wildcard MechJeb2/LandingAutopilot/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/Extensions/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/Helpers/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/VesselSimulator/*.cs) \
+	$(wildcard MechJeb2/FlyingSim/*.cs)
 
 RESGEN2 := resgen2
 GMCS    := gmcs
