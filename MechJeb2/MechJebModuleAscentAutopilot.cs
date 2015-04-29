@@ -25,7 +25,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool correctiveSteering = true;
+        public bool correctiveSteering = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -51,7 +51,7 @@ namespace MuMech
 
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool limitAoA = false;
+        public bool limitAoA = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble maxAoA = 5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -458,9 +458,9 @@ namespace MuMech
     public class DefaultAscentPath : IAscentPath
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(5000, 1000);
+        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(500, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(70000, 1000);
+        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(60000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
