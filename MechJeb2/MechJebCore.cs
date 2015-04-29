@@ -126,7 +126,7 @@ namespace MuMech
             {
                 MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
 
-                if(masterSmartASS != null)
+                if (masterSmartASS != null && !masterSmartASS.hidden)
                 {
                     masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
                     masterSmartASS.target = target;
@@ -136,6 +136,123 @@ namespace MuMech
                 else
                 {
                     Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+        
+        [KSPAction("PANIC!")]
+        public void OnPanicAction(KSPActionParam param)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    moduleTranslatron.PanicSwitch();
+                }
+            }
+        }
+
+        [KSPAction("Translatron OFF")]
+        public void OnTranslatronOffAction(KSPActionParam param)
+        {
+            EngageTranslatronControl(MechJebModuleThrustController.TMode.OFF);
+        }
+
+        [KSPAction("Translatron Keep Vert")]
+        public void OnTranslatronKeepVertAction(KSPActionParam param)
+        {
+            EngageTranslatronControl(MechJebModuleThrustController.TMode.KEEP_VERTICAL);
+        }
+
+        [KSPAction("Translatron Zero speed")]
+        public void OnTranslatronZeroSpeedAction(KSPActionParam param)
+        {
+            SetTranslatronSpeed(0);
+        }
+
+        [KSPAction("Translatron +1 speed")]
+        public void OnTranslatronPlusOneSpeedAction(KSPActionParam param)
+        {
+            SetTranslatronSpeed(1, true);
+        }
+
+        [KSPAction("Translatron -1 speed")]
+        public void OnTranslatronMinusOneSpeedAction(KSPActionParam param)
+        {
+            SetTranslatronSpeed(-1, true);
+        }
+
+        [KSPAction("Translatron Toggle H/S")]
+        public void OnTranslatronToggleHSAction(KSPActionParam param)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    thrust.trans_kill_h = !thrust.trans_kill_h;
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
+        private void EngageTranslatronControl(MechJebModuleThrustController.TMode mode)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    if ((thrust.users.Count > 1) && !thrust.users.Contains(moduleTranslatron))
+                        return;
+
+                    moduleTranslatron.SetMode(mode);
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
+        private void SetTranslatronSpeed(float speed, bool relative=false)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    thrust.trans_spd_act = (relative ? thrust.trans_spd_act : 0) + speed;
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
                 }
             }
             else
