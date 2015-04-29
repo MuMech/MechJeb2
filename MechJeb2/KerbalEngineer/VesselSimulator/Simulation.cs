@@ -553,17 +553,18 @@ namespace KerbalEngineer.VesselSimulator
 
                 // Store the magnitude of the deltaV vector
                 stage.deltaV = this.vecStageDeltaV.magnitude;
-                stage.resourceMass = this.stageStartMass - this.stepEndMass;
 
                 // Recalculate effective stage isp from the stage deltaV (flip the standard deltaV calculation around)
                 // Note: If the mass doesn't change then this is a divide by zero
                 if (this.stageStartMass != this.stepStartMass)
                 {
                     stage.isp = stage.deltaV / (STD_GRAVITY * Math.Log(this.stageStartMass / this.stepStartMass));
+                    stage.resourceMass = this.stageStartMass - this.stepEndMass; 
                 }
                 else
                 {
                     stage.isp = 0;
+                    stage.resourceMass = 0; 
                 }
 
                 // Zero stage time if more than a day (this should be moved into the window code)

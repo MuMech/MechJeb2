@@ -758,8 +758,8 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].totalMass.ToString("F1") + " t"));
-            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => (vacStats[s].totalMass - vacStats[s].resourceMass).ToString("F1") + " t"));
+            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].totalMass.ToString("F3") + " t"));
+            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => (vacStats[s].totalMass - vacStats[s].resourceMass).ToString("F3") + " t"));
             if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].thrustToWeight.ToString("F2")));
             if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].maxThrustToWeight.ToString("F2")));
             if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2"))); // NK
