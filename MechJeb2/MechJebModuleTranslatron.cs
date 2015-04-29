@@ -71,21 +71,8 @@ namespace MuMech
                     autoMode = false;
                 }
 
-                MechJebModuleThrustController.TMode oldMode = core.thrust.tmode;
-                core.thrust.tmode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
-                if (core.thrust.tmode != oldMode)
-                {
-                    core.thrust.trans_spd_act = Convert.ToInt16(trans_spd);
-                    windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
-                    if (core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)
-                    {
-                        core.thrust.users.Remove(this);
-                    }
-                    else
-                    {
-                        core.thrust.users.Add(this);
-                    }
-                }
+                MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
+                SetMode(newMode);
 
                 core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, "Kill H/S", GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
@@ -116,30 +103,54 @@ namespace MuMech
 
             if (GUILayout.Button((abort != AbortStage.OFF) ? "DON'T PANIC!" : "PANIC!!!", sty, GUILayout.ExpandWidth(true)))
             {
-                if (abort != AbortStage.OFF)
-                {
-                    if ((abort == AbortStage.LAND) || (abort == AbortStage.LANDING))
-                    {
-                        core.GetComputerModule<MechJebModuleLandingAutopilot>().StopLanding();
-                    }
-                    else
-                    {
-                        core.thrust.ThrustOff();
-                        core.thrust.users.Remove(this);
-                        core.attitude.attitudeDeactivate();
-                    }
-                    abort = AbortStage.OFF;
-                }
-                else
-                {
-                    abort = AbortStage.THRUSTOFF;
-                    core.thrust.users.Add(this);
-                }
+                PanicSwitch();
             }
 
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        public void SetMode(MechJebModuleThrustController.TMode newMode)
+        {
+            MechJebModuleThrustController.TMode oldMode = core.thrust.tmode;
+            core.thrust.tmode = newMode;
+            if (core.thrust.tmode != oldMode)
+            {
+                core.thrust.trans_spd_act = Convert.ToInt16(trans_spd);
+                windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
+                if (core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)
+                {
+                    core.thrust.users.Remove(this);
+                }
+                else
+                {
+                    core.thrust.users.Add(this);
+                }
+            }
+        }
+
+        public void PanicSwitch()
+        {
+            if (abort != AbortStage.OFF)
+            {
+                if ((abort == AbortStage.LAND) || (abort == AbortStage.LANDING))
+                {
+                    core.GetComputerModule<MechJebModuleLandingAutopilot>().StopLanding();
+                }
+                else
+                {
+                    core.thrust.ThrustOff();
+                    core.thrust.users.Remove(this);
+                    core.attitude.attitudeDeactivate();
+                }
+                abort = AbortStage.OFF;
+            }
+            else
+            {
+                abort = AbortStage.THRUSTOFF;
+                core.thrust.users.Add(this);
+            }
         }
 
         public void recursiveDecouple()
