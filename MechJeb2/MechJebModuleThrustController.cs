@@ -556,13 +556,14 @@ namespace MuMech
 
             if (tmode_changed)
             {
-                if (trans_kill_h && (tmode == TMode.OFF))
-                {
-                    core.attitude.attitudeDeactivate();
-                }
                 pid.Reset();
                 tmode_changed = false;
                 FlightInputHandler.SetNeutralControls();
+            }
+
+			if (!trans_kill_h && (tmode == TMode.OFF || tmode == TMode.KEEP_VERTICAL))
+            {
+            	core.attitude.attitudeDeactivate();
             }
         }
 
