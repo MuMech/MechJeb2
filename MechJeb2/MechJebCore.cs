@@ -21,6 +21,9 @@ namespace MuMech
         private Dictionary<object, IEnumerable<ComputerModule>> sortedModules = new Dictionary<object, IEnumerable<ComputerModule>>();
         private Dictionary<object, IEnumerable<DisplayModule>> sortedDisplayModules = new Dictionary<object, IEnumerable<DisplayModule>>();
 
+        // Reference to the parts base config. See Onload for explanation
+        private static Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
+
         private static List<Type> moduleRegistry;
 
         public MechJebModuleAttitudeController attitude;
@@ -669,9 +672,19 @@ namespace MuMech
 
                 base.OnLoad(sfsNode); //is this necessary?
 
-                if (partSettings == null && sfsNode != null)
+
+                // With the Unity 4.6 upgrade of KSP 1.0 we inherited a serialization problem
+                // with object with high depth like config nodes
+                // so the partmodule config node passed was not ok.
+                // So we use a static dir to save the part config node.
+                if (!savedConfig.ContainsKey(part.name))
                 {
-                    partSettings = sfsNode;
+                    if (HighLogic.LoadedScene == GameScenes.LOADING)
+                        savedConfig.Add(part.name, sfsNode);
+                }
+                else
+                {
+                    partSettings = savedConfig[part.name];
                 }
 
                 LoadComputerModules();
