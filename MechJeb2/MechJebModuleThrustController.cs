@@ -135,6 +135,9 @@ namespace MuMech
         public PIDController pid;
 
         float lastThrottle = 0;
+        bool userCommandingRotation { get { return userCommandingRotationSmoothed > 0; } }
+        int userCommandingRotationSmoothed = 0;
+        bool lastDisableThrusters = false;
 
         public enum TMode
         {
@@ -198,6 +201,23 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            float threshold = 0.1F;
+            bool _userCommandingRotation = !(Mathfx.Approx(s.pitch, s.pitchTrim, threshold)
+                    && Mathfx.Approx(s.yaw, s.yawTrim, threshold)
+                    && Mathfx.Approx(s.roll, s.rollTrim, threshold));
+            bool _userCommandingTranslation = !(Math.Abs(s.X) < threshold
+                        && Math.Abs(s.Y) < threshold
+                        && Math.Abs(s.Z) < threshold);
+
+            if (_userCommandingRotation && !_userCommandingTranslation)
+            {
+                userCommandingRotationSmoothed = 2;
+            }
+            else if (userCommandingRotationSmoothed > 0)
+            {
+                userCommandingRotationSmoothed--;
+            }
+
             if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
 
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
@@ -563,6 +583,24 @@ namespace MuMech
                 pid.Reset();
                 tmode_changed = false;
                 FlightInputHandler.SetNeutralControls();
+            }
+
+            bool disableThrusters = (userCommandingRotation && !core.rcs.rcsForRotation);
+            if (disableThrusters != lastDisableThrusters)
+            {
+                lastDisableThrusters = disableThrusters;
+                var rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
+                foreach (var pm in rcsModules)
+                {
+                    if (disableThrusters)
+                    {
+                        pm.Disable();
+                    }
+                    else
+                    {
+                        pm.Enable();
+                    }
+                }
             }
         }
 

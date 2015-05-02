@@ -40,6 +40,10 @@ namespace MuMech
         [ToggleInfoItem("RCS throttle when 0kn thrust", InfoItem.Category.Thrust)]
         public bool rcsThrottle = true;
 
+        [Persistent(pass = (int)(Pass.Global))]
+        [ToggleInfoItem("Use RCS for rotation", InfoItem.Category.Thrust)]
+        public bool rcsForRotation = true;
+
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
         {
