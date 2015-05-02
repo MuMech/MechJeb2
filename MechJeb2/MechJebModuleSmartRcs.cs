@@ -92,6 +92,7 @@ namespace MuMech
                 GUILayout.EndVertical();
             }
             core.rcs.rcsThrottle = GUILayout.Toggle(core.rcs.rcsThrottle, " RCS throttle when engines are offline");
+            core.rcs.rcsForRotation = GUILayout.Toggle(core.rcs.rcsForRotation, " Use RCS for rotation");
             base.WindowGUI(windowID);
         }
 
