@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9451DE15-F9F6-43E9-BA5E-61852B88A26E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>MechJeb2</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>MechJeb2</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\Desktop\Principia\KSP Assemblies\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\Desktop\Principia\KSP Assemblies\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\Desktop\Principia\KSP Assemblies\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitattributes" />
+    <Content Include=".gitignore" />
+    <Content Include=".git\ms-persist.xml" />
+    <Content Include="Icons\Ascent_Guidance.png" />
+    <Content Include="Icons\Attitude_Adjustment.png" />
+    <Content Include="Icons\Custom_Window_Editor.png" />
+    <Content Include="Icons\Delta-V_Stats.png" />
+    <Content Include="Icons\Docking_Autopilot.png" />
+    <Content Include="Icons\Landing_Guidance.png" />
+    <Content Include="Icons\Maneuver_Node_Editor.png" />
+    <Content Include="Icons\Maneuver_Planner.png" />
+    <Content Include="Icons\MJ2.png" />
+    <Content Include="Icons\Orbit_Info.png" />
+    <Content Include="Icons\QMark.png" />
+    <Content Include="Icons\RCS_Balancer.png" />
+    <Content Include="Icons\Rendezvous_Autopilot.png" />
+    <Content Include="Icons\Rendezvous_Planner.png" />
+    <Content Include="Icons\Rover_Autopilot.png" />
+    <Content Include="Icons\Settings.png" />
+    <Content Include="Icons\Smart_A_S_S_.png" />
+    <Content Include="Icons\Spaceplane_Guidance.png" />
+    <Content Include="Icons\Surface_Info.png" />
+    <Content Include="Icons\Translatron.png" />
+    <Content Include="Icons\Utilities.png" />
+    <Content Include="Icons\Vessel_Info.png" />
+    <Content Include="Icons\Warp_Helper.png" />
+    <Content Include="MechJeb2\Plans.txt" />
+    <Content Include="Parts\MechJeb2_Pod\model000.png" />
+    <Content Include="Parts\MechJeb2_Pod\model001.png" />
+    <Content Include="Parts\MechJeb2_Pod\model002.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".git\config" />
+    <None Include=".git\description" />
+    <None Include=".git\HEAD" />
+    <None Include=".git\hooks\applypatch-msg.sample" />
+    <None Include=".git\hooks\commit-msg.sample" />
+    <None Include=".git\hooks\post-update.sample" />
+    <None Include=".git\hooks\pre-applypatch.sample" />
+    <None Include=".git\hooks\pre-commit.sample" />
+    <None Include=".git\hooks\pre-push.sample" />
+    <None Include=".git\hooks\pre-rebase.sample" />
+    <None Include=".git\hooks\prepare-commit-msg.sample" />
+    <None Include=".git\hooks\update.sample" />
+    <None Include=".git\index" />
+    <None Include=".git\info\exclude" />
+    <None Include=".git\logs\HEAD" />
+    <None Include=".git\logs\refs\heads\dev" />
+    <None Include=".git\logs\refs\heads\master" />
+    <None Include=".git\logs\refs\remotes\origin\HEAD" />
+    <None Include=".git\objects\pack\pack-7791a54e52c07105f61ffc63691d60c68bc070d7.idx" />
+    <None Include=".git\objects\pack\pack-7791a54e52c07105f61ffc63691d60c68bc070d7.pack" />
+    <None Include=".git\packed-refs" />
+    <None Include=".git\refs\heads\dev" />
+    <None Include=".git\refs\heads\master" />
+    <None Include=".git\refs\remotes\origin\HEAD" />
+    <None Include="LandingSites.cfg" />
+    <None Include="LICENSE.md" />
+    <None Include="MechJeb2\Properties\MJ_DiffuseAmbiant.shader" />
+    <None Include="MechJeb2\Properties\MJ_DiffuseAmbiantIgnoreZ.shader" />
+    <None Include="MechJeb2\Properties\shader" />
+    <None Include="MechJeb2\Properties\shader2" />
+    <None Include="MechJeb2\Properties\shader3" />
+    <None Include="Parts\MechJeb2_AR202\model.mu" />
+    <None Include="Parts\MechJeb2_AR202\model000.mbm" />
+    <None Include="Parts\MechJeb2_AR202\part.cfg" />
+    <None Include="Parts\MechJeb2_Pod\model.mu" />
+    <None Include="Parts\MechJeb2_Pod\part.cfg" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MechJeb2\alglib\alglibinternal.cs" />
+    <Compile Include="MechJeb2\alglib\alglibmisc.cs" />
+    <Compile Include="MechJeb2\alglib\ap.cs" />
+    <Compile Include="MechJeb2\alglib\diffequations.cs" />
+    <Compile Include="MechJeb2\alglib\linalg.cs" />
+    <Compile Include="MechJeb2\alglib\optimization.cs" />
+    <Compile Include="MechJeb2\AutopilotModule.cs" />
+    <Compile Include="MechJeb2\CelestialBodyExtensions.cs" />
+    <Compile Include="MechJeb2\CompatibilityChecker.cs" />
+    <Compile Include="MechJeb2\ComputerModule.cs" />
+    <Compile Include="MechJeb2\DisplayModule.cs" />
+    <Compile Include="MechJeb2\EngineWrapper.cs" />
+    <Compile Include="MechJeb2\FlyingSim\SimulatedPart.cs" />
+    <Compile Include="MechJeb2\FlyingSim\SimulatedVessel.cs" />
+    <Compile Include="MechJeb2\FuelFlowSimulation.cs" />
+    <Compile Include="MechJeb2\GLUtils.cs" />
+    <Compile Include="MechJeb2\GuiUtils.cs" />
+    <Compile Include="MechJeb2\InstallChecker.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\Extensions\PartExtensions.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\Helpers\Averager.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\Helpers\ForceAccumulator.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\Helpers\Pool.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\Logger.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\LogMsg.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\AttachNodeSim.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\EngineSim.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\PartSim.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\ResourceContainer.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\SimManager.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\Simulation.cs" />
+    <Compile Include="MechJeb2\KerbalEngineer\VesselSimulator\Stage.cs" />
+    <Compile Include="MechJeb2\LambertSolver.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\CoastToDeceleration.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\CourseCorrection.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\DecelerationBurn.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\DeorbitBurn.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\FinalDescent.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\KillHorizontalVelocity.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\LowDeorbitBurn.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\PlaneChange.cs" />
+    <Compile Include="MechJeb2\LandingAutopilot\UntargetedDeorbit.cs" />
+    <Compile Include="MechJeb2\Maneuver\Operation.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationAdvancedTransfer.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationApoapsis.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationCircularize.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationCourseCorrection.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationEllipticize.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationInclination.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationInterplanetaryTransfer.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationKillRelVel.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationLambert.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationLan.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationLongitude.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationMoonReturn.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationPeriapsis.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationPlane.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationResonantOrbit.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationSemiMajor.cs" />
+    <Compile Include="MechJeb2\Maneuver\OperationTransfer.cs" />
+    <Compile Include="MechJeb2\Maneuver\PlotArea.cs" />
+    <Compile Include="MechJeb2\Maneuver\Porkchop.cs" />
+    <Compile Include="MechJeb2\Maneuver\TimeSelector.cs" />
+    <Compile Include="MechJeb2\Maneuver\TransferCalculator.cs" />
+    <Compile Include="MechJeb2\MathExtensions.cs" />
+    <Compile Include="MechJeb2\MechJebAR202.cs" />
+    <Compile Include="MechJeb2\MechJebCore.cs" />
+    <Compile Include="MechJeb2\MechJebModuleAscentAutopilot.cs" />
+    <Compile Include="MechJeb2\MechJebModuleAscentGuidance.cs" />
+    <Compile Include="MechJeb2\MechJebModuleAscentPathEditor.cs" />
+    <Compile Include="MechJeb2\MechJebModuleAttitudeAdjustment.cs" />
+    <Compile Include="MechJeb2\MechJebModuleAttitudeController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleCustomInfoWindow.cs" />
+    <Compile Include="MechJeb2\MechJebModuleDebugArrows.cs" />
+    <Compile Include="MechJeb2\MechJebModuleDockingAutopilot.cs" />
+    <Compile Include="MechJeb2\MechJebModuleDockingGuidance.cs" />
+    <Compile Include="MechJeb2\MechJebModuleFlightRecorder.cs" />
+    <Compile Include="MechJeb2\MechJebModuleInfoItems.cs" />
+    <Compile Include="MechJeb2\MechJebModuleLandingAutopilot.cs" />
+    <Compile Include="MechJeb2\MechJebModuleLandingGuidance.cs" />
+    <Compile Include="MechJeb2\MechJebModuleLandingPredictions.cs" />
+    <Compile Include="MechJeb2\MechJebModuleManeuverPlanner.cs" />
+    <Compile Include="MechJeb2\MechJebModuleMenu.cs" />
+    <Compile Include="MechJeb2\MechJebModuleNodeEditor.cs" />
+    <Compile Include="MechJeb2\MechJebModuleNodeExecutor.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRCSBalancer.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRCSBalancerWindow.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRCSController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRendezvousAutopilot.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRendezvousAutopilotWindow.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRendezvousGuidance.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRoverController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleRoverWindow.cs" />
+    <Compile Include="MechJeb2\MechJebModuleSettings.cs" />
+    <Compile Include="MechJeb2\MechJebModuleSmartASS.cs" />
+    <Compile Include="MechJeb2\MechJebModuleSmartRcs.cs" />
+    <Compile Include="MechJeb2\MechJebModuleSolarPanelController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleSpaceplaneAutopilot.cs" />
+    <Compile Include="MechJeb2\MechJebModuleSpaceplaneGuidance.cs" />
+    <Compile Include="MechJeb2\MechJebModuleStageStats.cs" />
+    <Compile Include="MechJeb2\MechJebModuleStagingController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleTargetController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleThrustController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleThrustWindow.cs" />
+    <Compile Include="MechJeb2\MechJebModuleTranslatron.cs" />
+    <Compile Include="MechJeb2\MechJebModuleWarpController.cs" />
+    <Compile Include="MechJeb2\MechJebModuleWarpHelper.cs" />
+    <Compile Include="MechJeb2\MechJebModuleWaypointWindow.cs" />
+    <Compile Include="MechJeb2\MechJebPod.cs" />
+    <Compile Include="MechJeb2\ModExtensionDemo.cs" />
+    <Compile Include="MechJeb2\MuUtils.cs" />
+    <Compile Include="MechJeb2\OrbitalManeuverCalculator.cs" />
+    <Compile Include="MechJeb2\OrbitExtensions.cs" />
+    <Compile Include="MechJeb2\PartExtensions.cs" />
+    <Compile Include="MechJeb2\PartModuleExtensions.cs" />
+    <Compile Include="MechJeb2\PIDController.cs" />
+    <Compile Include="MechJeb2\Properties\AssemblyInfo.cs" />
+    <Compile Include="MechJeb2\Properties\Resources.Designer.cs" />
+    <Compile Include="MechJeb2\RCSSolver.cs" />
+    <Compile Include="MechJeb2\ReentrySimulation.cs" />
+    <Compile Include="MechJeb2\SpeechBubble.cs" />
+    <Compile Include="MechJeb2\ToolbarWrapper.cs" />
+    <Compile Include="MechJeb2\Vector6.cs" />
+    <Compile Include="MechJeb2\VesselExtensions.cs" />
+    <Compile Include="MechJeb2\VesselState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MechJeb2\Properties\Resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include=".git\branches\" />
+    <Folder Include=".git\objects\info\" />
+    <Folder Include=".git\refs\tags\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
