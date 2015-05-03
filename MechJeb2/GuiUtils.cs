@@ -313,10 +313,12 @@ namespace MuMech
             }
         }
 
-        public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)
+        public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100, GUIStyle rightLabelStyle=null)
         {
+            if (rightLabelStyle == null)
+                rightLabelStyle = GUI.skin.label;
             GUILayout.BeginHorizontal();
-            GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label(leftLabel, rightLabelStyle, GUILayout.ExpandWidth(true));
             ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(width));
             GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();

@@ -52,10 +52,11 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool limitAoA = true;
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble maxAoA = 5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(1000, 1);
+        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(2500);
         public bool limitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -66,6 +67,8 @@ namespace MuMech
 
         public bool timedLaunch = false;
         public double launchTime = 0;
+
+        public double currentMaxAoA = 0;
 
         public double tMinus
         {
@@ -309,23 +312,17 @@ namespace MuMech
 
             desiredThrustVector = desiredThrustVector.normalized;
 
-            limitingAoA = limitAoA && vessel.altitude < mainBody.atmosphereDepth && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > maxAoA;
-
-            if (limitingAoA)
+            if (limitAoA)
             {
-                Vector3d limitedVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
+                float fade = vesselState.dynamicPressure < aoALimitFadeoutPressure ? (float)(aoALimitFadeoutPressure / vesselState.dynamicPressure) : 1;
+                currentMaxAoA = Math.Min(fade * maxAoA, 180d);
+                limitingAoA = vessel.altitude < mainBody.atmosphereDepth && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > currentMaxAoA;
 
-                if (aoALimitFadeoutPressure > 0 && vesselState.dynamicPressure < aoALimitFadeoutPressure)
+                if (limitingAoA)
                 {
-                    float fade = (float)(vesselState.dynamicPressure / aoALimitFadeoutPressure);
-                    desiredThrustVector = Vector3.RotateTowards(desiredThrustVector, limitedVector, Mathf.PI, fade);
-                }
-                else
-                {
-                    desiredThrustVector = limitedVector;
+                    desiredThrustVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(currentMaxAoA * Mathf.Deg2Rad), 1).normalized;
                 }
             }
-
 
             if (forceRoll && Vector3.Angle(vesselState.up, vesselState.forward) > 7 && core.attitude.attitudeError < 5)
             {

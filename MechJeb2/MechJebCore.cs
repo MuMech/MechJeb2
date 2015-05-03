@@ -412,8 +412,8 @@ namespace MuMech
                 OnLoad(null);
             }
 
-            GameEvents.onShowUI.Add(new EventVoid.OnEvent(this.ShowGUI));
-            GameEvents.onHideUI.Add(new EventVoid.OnEvent(this.HideGUI));
+            GameEvents.onShowUI.Add(this.ShowGUI);
+            GameEvents.onHideUI.Add(this.HideGUI);
 
             lastSettingsSaveTime = Time.time;
 
