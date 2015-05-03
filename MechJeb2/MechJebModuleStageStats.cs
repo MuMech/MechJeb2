@@ -95,6 +95,7 @@ namespace MuMech
             SimManager.Atmosphere = (HighLogic.LoadedSceneIsEditor ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa) * PhysicsGlobals.KpaToAtmospheres;
             SimManager.Mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
             SimManager.vectoredThrust = dVLinearThrust;
+            SimManager.Body = simBody;
 
             Profiler.BeginSample("MechJebModuleStageStats.StartSimulation()");
 

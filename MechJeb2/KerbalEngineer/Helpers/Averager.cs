@@ -38,18 +38,18 @@ namespace KerbalEngineer
                 return Vector3d.zero;
             }
         }
+
+        public void Reset()
+        {
+            sum = Vector3d.zero;
+            count = 0;
+        }
     }
 
     public class WeightedVectorAverager
     {
         private Vector3d sum = Vector3d.zero;
         private double totalweight = 0;
-
-        public void Reset()
-        {
-            sum = Vector3d.zero;
-            totalweight = 0;
-        }
 
         public void Add(Vector3d v, double weight) {
             sum += v * weight;
@@ -66,6 +66,12 @@ namespace KerbalEngineer
 
         public double GetTotalWeight() {
             return totalweight;
+        }
+
+        public void Reset()
+        {
+            sum = Vector3d.zero;
+            totalweight = 0.0;
         }
     }
 }

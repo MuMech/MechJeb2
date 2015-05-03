@@ -51,6 +51,7 @@ namespace KerbalEngineer.VesselSimulator
         public double resourceMass = 0.0;
         public double maxThrustTorque = 0.0;
         public double thrustOffsetAngle = 0.0;
+        public float maxMach = 0.0f;
 
         public void Dump()
         {
