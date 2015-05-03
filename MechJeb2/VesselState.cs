@@ -189,7 +189,7 @@ namespace MuMech
         public bool parachuteDeployed;
         
         // Resource information keyed by resource Id.
-        public Dictionary<int, ResourceInfo> resources;
+        public Dictionary<int, ResourceInfo> resources = new Dictionary<int, ResourceInfo>();
 
         public CelestialBody mainBody;
 
@@ -748,7 +748,7 @@ namespace MuMech
         {
             // Convert the resource information from the einfo and iinfo format
             // to the more useful ResourceInfo format.
-            resources = new Dictionary<int, ResourceInfo>();
+            resources.Clear();
             foreach (var info in einfo.resourceRequired)
             {
                 int id = info.Key;
@@ -1192,7 +1192,7 @@ namespace MuMech
                     return sum;
                 }
             }
-            public IntakeData[] intakes;
+            public IntakeData[] intakes = new IntakeData[0];
 
             public struct IntakeData
             {
