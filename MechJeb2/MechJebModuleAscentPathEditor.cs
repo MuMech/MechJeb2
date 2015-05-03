@@ -41,6 +41,7 @@ namespace MuMech
             double oldTurnEndAltitude = path.turnEndAltitude;
             double oldTurnShapeExponent = path.turnShapeExponent;
             double oldTurnEndAngle = path.turnEndAngle;
+            double oldAutoTurnPerc = path.autoTurnPerc;
 
             GUILayout.BeginHorizontal();
             path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
@@ -55,6 +56,10 @@ namespace MuMech
                 GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude,-1,2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
+                GUILayout.Label("Turn start velocity: ");
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 0) + "m/s", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn end altitude: ");
                 GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude,-1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
@@ -62,6 +67,7 @@ namespace MuMech
             else
             {
                 GuiUtils.SimpleTextBox("Turn start altitude:", path.turnStartAltitude, "km");
+                GuiUtils.SimpleTextBox("Turn start velocity:", path.turnStartVelocity, "m/s");
                 GuiUtils.SimpleTextBox("Turn end altitude:", path.turnEndAltitude, "km");
             }
 
@@ -85,6 +91,7 @@ namespace MuMech
                 path.turnEndAltitude != oldTurnEndAltitude ||
                 path.turnShapeExponent != oldTurnShapeExponent ||
                 path.turnEndAngle != oldTurnEndAngle ||
+                path.autoTurnPerc != oldAutoTurnPerc ||
                 !pathTextureDrawnBefore)
             {
                 UpdatePathTexture();
@@ -113,7 +120,7 @@ namespace MuMech
             double downrange = 0;
             while (alt < (path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) && downrange < pathTexture.width * scale)
             {
-                double desiredAngle = (alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt));
+                double desiredAngle = (alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
                 alt += scale * Math.Sin(desiredAngle * Math.PI / 180);
                 downrange += scale * Math.Cos(desiredAngle * Math.PI / 180);
                 for (int x = (int)(downrange / scale); x <= (downrange / scale) + 2 && x < pathTexture.width; x++)
