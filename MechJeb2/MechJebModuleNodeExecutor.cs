@@ -231,11 +231,8 @@ namespace MuMech
                     stageAvgAccel *= vesselState.throttleLimit;
                 }
 
-                if (halfDvLeft < stageBurnDv)
-                {
-                    halfBurnTime = burnTime + halfDvLeft / stageAvgAccel;
-                    halfDvLeft = 0;
-                }
+                halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
+                halfDvLeft = Math.Max(0, halfDvLeft - stageBurnDv);
 
                 burnTime += stageBurnDv / stageAvgAccel;
 
