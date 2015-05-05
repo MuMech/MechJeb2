@@ -1,62 +1,53 @@
-﻿namespace KerbalEngineer.VesselSimulator
+﻿using System.Collections.Generic;
+
+namespace KerbalEngineer
 {
-    using System.Collections.Generic;
+    /// <summary>
+    ///     Pool of object
+    /// </summary>
+    public class Pool<T> {
+        
+        private readonly Stack<T> values = new Stack<T>();
 
-    public class Pool<T> where T : new()
-    {
-        private static List<T> available = new List<T>();
-        private static List<T> inUse = new List<T>();
+        private readonly CreateDelegate<T> create;
+        private readonly ResetDelegate<T> reset;
 
-        public static int PoolCount
-        {
-            get
-            {
-                return available.Count + inUse.Count;
+        public delegate R CreateDelegate<out R>();
+        public delegate void ResetDelegate<in T1>(T1 a);
+        
+        /// <summary>
+        ///     Creates an empty pool with the specified object creation and reset delegates.
+        /// </summary>
+        public Pool(CreateDelegate<T> create, ResetDelegate<T> reset) {
+            this.create = create;
+            this.reset = reset;
+        }
+
+        /// <summary>
+        ///     Borrows an object from the pool.
+        /// </summary>
+        public T Borrow() {
+            lock (values) {
+                return values.Count > 0 ? values.Pop() : create();
             }
         }
-
-        public static T GetPoolObject()
-        {
-            return new T();
-            T obj;
-            if (available.Count > 0)
-            {
-                obj = available[0];
-                available.RemoveAt(0);
+        
+        /// <summary>
+        ///     Release an object, reset it and returns it to the pool.
+        /// </summary>
+        public void Release(T value) {
+            reset(value);
+            lock (values) {
+                values.Push(value);
             }
-            else
-            {
-                obj = new T();
-            }
-
-            inUse.Add(obj);
-            return obj;
         }
-
-        public static void Release(T obj)
+        
+        /// <summary>
+        ///     Current size of the pool.
+        /// </summary>
+        public int Count()
         {
-            //if (inUse.Contains(obj))
-            //{
-            //    inUse.Remove(obj);
-            //    available.Add(obj);
-            //}
-        }
-
-        public static void Release(List<T> objList)
-        {
-            //for (int i = 0; i < objList.Count; ++i)
-            //{
-            //    Release(objList[i]);
-            //}
-        }
-
-        public static void ReleaseAll()
-        {
-            //for (int i = 0; i < inUse.Count; ++i)
-            //{
-            //    available.Add(inUse[i]);
-            //}
-            //inUse.Clear();
+            return values.Count;
         }
     }
 }

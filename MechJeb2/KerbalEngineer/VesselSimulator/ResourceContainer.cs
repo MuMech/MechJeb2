@@ -19,6 +19,7 @@
 
 #region Using Directives
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -30,15 +31,17 @@ namespace KerbalEngineer.VesselSimulator
 {
     public class ResourceContainer
     {
-        private Hashtable resources = new Hashtable();
+        private Dictionary<int, double> resources = new Dictionary<int, double>();
+        private List<int> types = new List<int>();
 
         public double this[int type]
         {
             get
             {
-                if (this.resources.ContainsKey(type))
+                double value;
+                if (this.resources.TryGetValue(type, out value))
                 {
-                    return (double)this.resources[type];
+                    return value;
                 }
 
                 return 0d;
@@ -52,6 +55,7 @@ namespace KerbalEngineer.VesselSimulator
                 else
                 {
                     this.resources.Add(type, value);
+                    this.types.Add(type);
                 }
             }
         }
@@ -60,13 +64,6 @@ namespace KerbalEngineer.VesselSimulator
         {
             get
             {
-                List<int> types = new List<int>();
-
-                foreach (int key in this.resources.Keys)
-                {
-                    types.Add(key);
-                }
-
                 return types;
             }
         }
@@ -92,7 +89,7 @@ namespace KerbalEngineer.VesselSimulator
             {
                 foreach (int type in this.resources.Keys)
                 {
-                    if ((double)this.resources[type] > SimManager.RESOURCE_MIN)
+                    if (this.resources[type] > SimManager.RESOURCE_MIN)
                     {
                         return false;
                     }
@@ -111,7 +108,7 @@ namespace KerbalEngineer.VesselSimulator
         {
             foreach (int type in types)
             {
-                if (this.HasType(type) && (double)this.resources[type] > SimManager.RESOURCE_MIN)
+                if (this.HasType(type) && this.resources[type] > SimManager.RESOURCE_MIN)
                 {
                     return false;
                 }
@@ -124,17 +121,19 @@ namespace KerbalEngineer.VesselSimulator
         {
             if (this.resources.ContainsKey(type))
             {
-                this.resources[type] = (double)this.resources[type] + amount;
+                this.resources[type] = this.resources[type] + amount;
             }
             else
             {
                 this.resources.Add(type, amount);
+                this.types.Add(type);
             }
         }
 
         public void Reset()
         {
             this.resources.Clear();
+            this.types.Clear();
         }
 
         public void Debug()
@@ -148,7 +147,7 @@ namespace KerbalEngineer.VesselSimulator
         public double GetResourceMass(int type)
         {
             double density = GetResourceDensity(type);
-            return density == 0d ? 0d : (double)this.resources[type] * density;
+            return density == 0d ? 0d : this.resources[type] * density;
         }
 
         public static ResourceFlowMode GetResourceFlowMode(int type)
@@ -158,7 +157,7 @@ namespace KerbalEngineer.VesselSimulator
 
         public static ResourceTransferMode GetResourceTransferMode(int type)
         {
-            return PartResourceLibrary.Instance.GetDefinition(type).resourceTransferMode;
+            return PartResourceLibrary.Instance.GetDefinition(type).resourceTransferMode;;
         }
 
         public static float GetResourceDensity(int type)

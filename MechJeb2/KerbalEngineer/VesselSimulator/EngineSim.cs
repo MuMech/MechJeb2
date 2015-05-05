@@ -26,80 +26,111 @@ namespace KerbalEngineer.VesselSimulator
     using Helpers;
     using UnityEngine;
 
-    public class EngineSim : Pool<EngineSim>
+    public class EngineSim
     {
-        public double actualThrust = 0.0;
-        public List<AppliedForce> appliedForces = new List<AppliedForce>();
+        private static readonly Pool<EngineSim> pool = new Pool<EngineSim>(Create, Reset);
+
+        private readonly ResourceContainer resourceConsumptions = new ResourceContainer();
+
+        public double actualThrust = 0;
         public bool isActive = false;
         public double isp = 0;
         public PartSim partSim;
+        public List<AppliedForce> appliedForces = new List<AppliedForce>();
         public float maxMach;
 
         public double thrust = 0;
 
         // Add thrust vector to account for directional losses
         public Vector3 thrustVec;
-        private readonly ResourceContainer resourceConsumptions = new ResourceContainer();
 
-        public EngineSim Initialise(PartSim theEngine,
-            double atmosphere,
-            float machNumber,
-            float maxFuelFlow,
-            float minFuelFlow,
-            float thrustPercentage,
-            Vector3 vecThrust,
-            FloatCurve atmosphereCurve,
-            bool atmChangeFlow,
-            FloatCurve atmCurve,
-            FloatCurve velCurve,
-            float currentThrottle,
-            bool throttleLocked,
-            List<Propellant> propellants,
-            bool active,
-            float resultingThrust,
-            List<Transform> thrustTransforms)
+        private static EngineSim Create()
         {
+            return new EngineSim();
+        }
+
+        private static void Reset(EngineSim engineSim)
+        {
+            engineSim.resourceConsumptions.Reset();
+            engineSim.actualThrust = 0;
+            engineSim.isActive = false;
+            engineSim.isp = 0;
+            for (int i = 0; i < engineSim.appliedForces.Count; i++)
+            {
+                engineSim.appliedForces[i].Release();
+            }
+            engineSim.appliedForces.Clear();
+            engineSim.thrust = 0;
+            engineSim.maxMach = 0f;
+        }
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
+
+        public static EngineSim New(PartSim theEngine,
+                         double atmosphere,
+                         float machNumber,
+                         float maxFuelFlow,
+                         float minFuelFlow,
+                         float thrustPercentage,
+                         Vector3 vecThrust,
+                         FloatCurve atmosphereCurve,
+                         bool atmChangeFlow,
+                         FloatCurve atmCurve,
+                         FloatCurve velCurve,
+                         float currentThrottle,
+                         float IspG,
+                         bool throttleLocked,
+                         List<Propellant> propellants,
+                         bool active,
+                         float resultingThrust,
+                         List<Transform> thrustTransforms)
+        {
+            EngineSim engineSim = pool.Borrow();
+
             StringBuilder buffer = null;
 
-            isp = 0.0;
-            maxMach = 0.0f;
-            actualThrust = 0.0;
-            partSim = theEngine;
-            isActive = active;
-            thrustVec = vecThrust;
-            resourceConsumptions.Reset();
-            appliedForces.Clear();
+            engineSim.isp = 0.0;
+            engineSim.maxMach = 0.0f;
+            engineSim.actualThrust = 0.0;
+            engineSim.partSim = theEngine;
+            engineSim.isActive = active;
+            engineSim.thrustVec = vecThrust;
+            engineSim.resourceConsumptions.Reset();
+            engineSim.appliedForces.Clear();
 
             double flowRate = 0.0;
-            if (partSim.hasVessel)
+            if (engineSim.partSim.hasVessel)
             {
-                float flowModifier = GetFlowModifier(atmChangeFlow, atmCurve, partSim.part.atmDensity, velCurve, machNumber, ref maxMach);
-                isp = atmosphereCurve.Evaluate((float)atmosphere);
-                thrust = GetThrust(Mathf.Lerp(minFuelFlow, maxFuelFlow, GetThrustPercent(thrustPercentage)) * flowModifier, isp);
-                actualThrust = isActive ? resultingThrust : 0.0;
+                float flowModifier = GetFlowModifier(atmChangeFlow, atmCurve, engineSim.partSim.part.atmDensity, velCurve, machNumber, ref engineSim.maxMach);
+                engineSim.isp = atmosphereCurve.Evaluate((float)atmosphere);
+                engineSim.thrust = GetThrust(Mathf.Lerp(minFuelFlow, maxFuelFlow, GetThrustPercent(thrustPercentage)) * flowModifier, engineSim.isp);
+                engineSim.actualThrust = engineSim.isActive ? resultingThrust : 0.0;
 
                 if (throttleLocked)
                 {
-                    flowRate = GetFlowRate(thrust, isp);
+                    flowRate = GetFlowRate(engineSim.thrust, engineSim.isp);
                 }
                 else
                 {
-                    if (currentThrottle > 0.0f && partSim.isLanded == false)
+                    if (currentThrottle > 0.0f && engineSim.partSim.isLanded == false)
                     {
-                        flowRate = GetFlowRate(actualThrust, isp);
+                        flowRate = GetFlowRate(engineSim.actualThrust, engineSim.isp);
                     }
                     else
                     {
-                        flowRate = GetFlowRate(thrust, isp);
+                        flowRate = GetFlowRate(engineSim.thrust, engineSim.isp);
                     }
                 }
             }
             else
             {
-                float flowModifier = GetFlowModifier(atmChangeFlow, atmCurve, SimManager.Body.GetDensity(FlightGlobals.getStaticPressure(0, SimManager.Body), FlightGlobals.getExternalTemperature(0, SimManager.Body)), velCurve, machNumber, ref maxMach);
-                isp = atmosphereCurve.Evaluate((float)atmosphere);
-                thrust = GetThrust(Mathf.Lerp(minFuelFlow, maxFuelFlow, GetThrustPercent(thrustPercentage)) * flowModifier, isp);
-                flowRate = GetFlowRate(thrust, isp);
+                float flowModifier = GetFlowModifier(atmChangeFlow, atmCurve, SimManager.Body.GetDensity(FlightGlobals.getStaticPressure(0, SimManager.Body), FlightGlobals.getExternalTemperature(0, SimManager.Body)), velCurve, machNumber, ref engineSim.maxMach);
+                engineSim.isp = atmosphereCurve.Evaluate((float)atmosphere);
+                engineSim.thrust = GetThrust(Mathf.Lerp(minFuelFlow, maxFuelFlow, GetThrustPercent(thrustPercentage)) * flowModifier, engineSim.isp);
+                flowRate = GetFlowRate(engineSim.thrust, engineSim.isp);
             }
 
             if (SimManager.logOutput)
@@ -107,6 +138,10 @@ namespace KerbalEngineer.VesselSimulator
                 buffer = new StringBuilder(1024);
                 buffer.AppendFormat("flowRate = {0:g6}\n", flowRate);
             }
+
+            engineSim.thrust = flowRate * (engineSim.isp * IspG);
+            // I did not look into the diff between those 2 so I made them equal...
+            engineSim.actualThrust = engineSim.thrust;
 
             float flowMass = 0f;
             for (int i = 0; i < propellants.Count; ++i)
@@ -132,9 +167,14 @@ namespace KerbalEngineer.VesselSimulator
                 double consumptionRate = propellant.ratio * flowRate / flowMass;
                 if (SimManager.logOutput)
                 {
-                    buffer.AppendFormat("Add consumption({0}, {1}:{2:d}) = {3:g6}\n", ResourceContainer.GetResourceName(propellant.id), theEngine.name, theEngine.partId, consumptionRate);
+                    buffer.AppendFormat(
+                        "Add consumption({0}, {1}:{2:d}) = {3:g6}\n",
+                        ResourceContainer.GetResourceName(propellant.id),
+                        theEngine.name,
+                        theEngine.partId,
+                        consumptionRate);
                 }
-                resourceConsumptions.Add(propellant.id, consumptionRate);
+                engineSim.resourceConsumptions.Add(propellant.id, consumptionRate);
             }
 
             if (SimManager.logOutput)
@@ -142,17 +182,18 @@ namespace KerbalEngineer.VesselSimulator
                 MonoBehaviour.print(buffer);
             }
 
-            appliedForces.Clear();
-            double thrustPerThrustTransform = thrust / thrustTransforms.Count;
-            for (int i = 0; i < thrustTransforms.Count; ++i)
+            double thrustPerThrustTransform = engineSim.thrust / thrustTransforms.Count;
+            for (int i = 0; i < thrustTransforms.Count; i++)
             {
                 Transform thrustTransform = thrustTransforms[i];
                 Vector3d direction = thrustTransform.forward.normalized;
                 Vector3d position = thrustTransform.position;
-                appliedForces.Add(new AppliedForce(direction * thrustPerThrustTransform, position));
+
+                AppliedForce appliedForce = AppliedForce.New(direction * thrustPerThrustTransform, position);
+                engineSim.appliedForces.Add(appliedForce);
             }
 
-            return this;
+            return engineSim;
         }
 
         public ResourceContainer ResourceConsumptions
@@ -217,53 +258,67 @@ namespace KerbalEngineer.VesselSimulator
             buffer.AppendFormat("[thrust = {0:g6}, actual = {1:g6}, isp = {2:g6}\n", thrust, actualThrust, isp);
         }
 
+        // A dictionary to hold a set of parts for each resource
+        Dictionary<int, HashSet<PartSim>> sourcePartSets = new Dictionary<int, HashSet<PartSim>>();
+
+        Dictionary<int, HashSet<PartSim>> stagePartSets = new Dictionary<int, HashSet<PartSim>>();
+
+        HashSet<PartSim> visited = new HashSet<PartSim>();
+
         public bool SetResourceDrains(List<PartSim> allParts, List<PartSim> allFuelLines, HashSet<PartSim> drainingParts)
         {
             LogMsg log = null;
-
-            // A dictionary to hold a set of parts for each resource
-            Dictionary<int, HashSet<PartSim>> sourcePartSets = new Dictionary<int, HashSet<PartSim>>();
-
-            for (int i = 0; i < resourceConsumptions.Types.Count; ++i)
+            
+            foreach (HashSet<PartSim> sourcePartSet in sourcePartSets.Values)
             {
-                int type = resourceConsumptions.Types[i];
+                sourcePartSet.Clear();
+            }
 
-                HashSet<PartSim> sourcePartSet = null;
+            for (int index = 0; index < this.resourceConsumptions.Types.Count; index++)
+            {
+                int type = this.resourceConsumptions.Types[index];
+
+                HashSet<PartSim> sourcePartSet;
+                if (!sourcePartSets.TryGetValue(type, out sourcePartSet))
+                {
+                    sourcePartSet = new HashSet<PartSim>();
+                    sourcePartSets.Add(type, sourcePartSet);
+                }
+
                 switch (ResourceContainer.GetResourceFlowMode(type))
                 {
                     case ResourceFlowMode.NO_FLOW:
                         if (partSim.resources[type] > SimManager.RESOURCE_MIN && partSim.resourceFlowStates[type] != 0)
                         {
-                            sourcePartSet = new HashSet<PartSim>();
+                            //sourcePartSet = new HashSet<PartSim>();
                             //MonoBehaviour.print("SetResourceDrains(" + name + ":" + partId + ") setting sources to just this");
                             sourcePartSet.Add(partSim);
                         }
                         break;
 
                     case ResourceFlowMode.ALL_VESSEL:
-                        for (int j = 0; j < allParts.Count; ++j)
+                        for (int i = 0; i < allParts.Count; i++)
                         {
-                            PartSim aPartSim = allParts[j];
+                            PartSim aPartSim = allParts[i];
                             if (aPartSim.resources[type] > SimManager.RESOURCE_MIN && aPartSim.resourceFlowStates[type] != 0)
                             {
-                                if (sourcePartSet == null)
-                                {
-                                    sourcePartSet = new HashSet<PartSim>();
-                                }
-
                                 sourcePartSet.Add(aPartSim);
                             }
                         }
                         break;
 
                     case ResourceFlowMode.STAGE_PRIORITY_FLOW:
-                        Dictionary<int, HashSet<PartSim>> stagePartSets = new Dictionary<int, HashSet<PartSim>>();
-                        int maxStage = -1;
+
+                        foreach (HashSet<PartSim> stagePartSet in stagePartSets.Values)
+                        {
+                            stagePartSet.Clear();
+                        }
+                        var maxStage = -1;
 
                         //Logger.Log(type);
-                        for (int j = 0; j < allParts.Count; ++j)
+                        for (int i = 0; i < allParts.Count; i++)
                         {
-                            PartSim aPartSim = allParts[j];
+                            var aPartSim = allParts[i];
                             if (aPartSim.resources[type] <= SimManager.RESOURCE_MIN || aPartSim.resourceFlowStates[type] == 0)
                             {
                                 continue;
@@ -294,14 +349,14 @@ namespace KerbalEngineer.VesselSimulator
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        HashSet<PartSim> visited = new HashSet<PartSim>();
+                        visited.Clear();
 
                         if (SimManager.logOutput)
                         {
                             log = new LogMsg();
                             log.buf.AppendLine("Find " + ResourceContainer.GetResourceName(type) + " sources for " + partSim.name + ":" + partSim.partId);
                         }
-                        sourcePartSet = partSim.GetSourceSet(type, allParts, visited, log, "");
+                        partSim.GetSourceSet(type, allParts, visited, sourcePartSet, log, "");
                         if (SimManager.logOutput)
                         {
                             MonoBehaviour.print(log.buf);
@@ -313,7 +368,8 @@ namespace KerbalEngineer.VesselSimulator
                         break;
                 }
 
-                if (sourcePartSet != null && sourcePartSet.Count > 0)
+
+                if (sourcePartSet.Count > 0)
                 {
                     sourcePartSets[type] = sourcePartSet;
                     if (SimManager.logOutput)
@@ -328,13 +384,13 @@ namespace KerbalEngineer.VesselSimulator
                     }
                 }
             }
-
+            
             // If we don't have sources for all the needed resources then return false without setting up any drains
-            for (int i = 0; i < resourceConsumptions.Types.Count; ++i)
+            for (int i = 0; i < this.resourceConsumptions.Types.Count; i++)
             {
-                int type = resourceConsumptions.Types[i];
-
-                if (!sourcePartSets.ContainsKey(type))
+                int type = this.resourceConsumptions.Types[i];
+                HashSet<PartSim> sourcePartSet; 
+                if (!sourcePartSets.TryGetValue(type, out sourcePartSet) || sourcePartSet.Count == 0)
                 {
                     if (SimManager.logOutput)
                     {
@@ -345,12 +401,10 @@ namespace KerbalEngineer.VesselSimulator
                     return false;
                 }
             }
-
             // Now we set the drains on the members of the sets and update the draining parts set
-            for (int i = 0; i < resourceConsumptions.Types.Count; ++i)
+            for (int i = 0; i < this.resourceConsumptions.Types.Count; i++)
             {
-                int type = resourceConsumptions.Types[i];
-
+                int type = this.resourceConsumptions.Types[i];
                 HashSet<PartSim> sourcePartSet = sourcePartSets[type];
                 // Loop through the members of the set 
                 double amount = resourceConsumptions[type] / sourcePartSet.Count;
@@ -358,14 +412,15 @@ namespace KerbalEngineer.VesselSimulator
                 {
                     if (SimManager.logOutput)
                     {
-                        MonoBehaviour.print("Adding drain of " + amount + " " + ResourceContainer.GetResourceName(type) + " to " + partSim.name + ":" + partSim.partId);
+                        MonoBehaviour.print(
+                            "Adding drain of " + amount + " " + ResourceContainer.GetResourceName(type) + " to " + partSim.name + ":" +
+                            partSim.partId);
                     }
 
                     partSim.resourceDrains.Add(type, amount);
                     drainingParts.Add(partSim);
                 }
             }
-
             return true;
         }
     }

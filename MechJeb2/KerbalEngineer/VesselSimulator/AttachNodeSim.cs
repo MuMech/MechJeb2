@@ -26,11 +26,38 @@ namespace KerbalEngineer.VesselSimulator
     using System;
     using System.Text;
 
-    internal class AttachNodeSim : Pool<AttachNodeSim>
+    internal class AttachNodeSim
     {
+
+        private static readonly Pool<AttachNodeSim> pool = new Pool<AttachNodeSim>(Create, Reset);
+
         public PartSim attachedPartSim;
         public String id;
         public AttachNode.NodeType nodeType;
+
+        private static AttachNodeSim Create()
+        {
+            return new AttachNodeSim();
+        }
+
+        public static AttachNodeSim New(PartSim partSim, String newId, AttachNode.NodeType newNodeType)
+        {
+            AttachNodeSim nodeSim = pool.Borrow();
+
+            nodeSim.attachedPartSim = partSim;
+            nodeSim.nodeType = newNodeType;
+            nodeSim.id = newId;
+
+            return nodeSim;
+        }
+
+        static private void Reset(AttachNodeSim attachNodeSim) { }
+
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
 
         public void DumpToBuffer(StringBuilder buffer)
         {
@@ -48,15 +75,6 @@ namespace KerbalEngineer.VesselSimulator
             buffer.Append(nodeType);
             buffer.Append(":");
             buffer.Append(id);
-        }
-
-        public AttachNodeSim Initialise(PartSim partSim, String newId, AttachNode.NodeType newNodeType)
-        {
-            attachedPartSim = partSim;
-            nodeType = newNodeType;
-            id = newId;
-
-            return this;
         }
     }
 }

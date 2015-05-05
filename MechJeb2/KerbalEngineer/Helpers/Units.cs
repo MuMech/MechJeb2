@@ -87,6 +87,17 @@ namespace KerbalEngineer.Helpers
             return value.ToString("F" + decimals) + "°";
         }
 
+        public static string ToAngleDMS(double value)
+        {
+            double absAngle = Math.Abs(value);
+            int deg = (int)Math.Floor(absAngle);
+            double rem = absAngle - deg;
+            int min = (int)Math.Floor(rem * 60);
+            rem -= ((double)min / 60);
+            int sec = (int)Math.Floor(rem * 3600);
+            return String.Format("{0:0}° {1:00}' {2:00}\"", deg, min, sec); 
+        }
+
         public static string ToDistance(double value, int decimals = 1)
         {
             if (Math.Abs(value) < 1000000.0)

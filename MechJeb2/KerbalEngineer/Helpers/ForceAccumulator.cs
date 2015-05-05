@@ -19,19 +19,39 @@
 
 using System;
 using System.Collections.Generic;
+using KerbalEngineer.VesselSimulator;
 
 namespace KerbalEngineer
 {
     // a (force, application point) tuple
     public class AppliedForce
     {
+        private static readonly Pool<AppliedForce> pool = new Pool<AppliedForce>(Create, Reset);
+
         public Vector3d vector;
         public Vector3d applicationPoint;
 
-        public AppliedForce(Vector3d vector, Vector3d applicationPoint) {
-            this.vector = vector;
-            this.applicationPoint = applicationPoint;
+        static private AppliedForce Create()
+        {
+            return new AppliedForce();
         }
+
+        static private void Reset(AppliedForce appliedForce) { }
+
+        static public AppliedForce New(Vector3d vector, Vector3d applicationPoint)
+        {
+            AppliedForce force = pool.Borrow();
+            force.vector = vector;
+            force.applicationPoint = applicationPoint;
+            return force;
+        }
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
+
+
     }
 
 	// This class was mostly adapted from FARCenterQuery, part of FAR, by ferram4, GPLv3
@@ -47,7 +67,7 @@ namespace KerbalEngineer
 	// some amount of residual torque. The line with the least amount of residual torque is chosen.
 	public class ForceAccumulator
 	{
-		// Total force.
+	    // Total force.
 		private Vector3d totalForce = Vector3d.zero;
 		// Torque needed to compensate if force were applied at origin.
 		private Vector3d totalZeroOriginTorque = Vector3d.zero;
