@@ -39,6 +39,12 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
+            if (mainBody.atmosphere)
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label("The current version does not properly land vessel on bodies with atmosphere", s);
+            }
             if (core.target.PositionTargetExists)
             {
                 GUILayout.Label("Target coordinates:");
