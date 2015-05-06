@@ -27,18 +27,20 @@ namespace MuMech
         //the ship's drag coefficient. In this equation b has units of inverse length. So 1/b
         //is a characteristic length: a ship that travels this distance through air will lose a significant
         //fraction of its initial velocity
-        public static double DragLength(this CelestialBody body, Vector3d pos, double dragCoeff)
+        public static double DragLength(this CelestialBody body, Vector3d pos, double dragCoeff, double mass)
         {
             double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body), FlightGlobals.getExternalTemperature(pos, body));
 
+            if (airDensity <= 0) return Double.MaxValue;
+
             //MechJebCore.print("DragLength " + airDensity.ToString("F5") + " " +  dragCoeff.ToString("F5"));
 
-            return 1.0 / (0.5 * PhysicsGlobals.DragMultiplier * airDensity * dragCoeff);
+            return mass / (0.0005 * PhysicsGlobals.DragMultiplier * airDensity * dragCoeff);
         }
 
-        public static double DragLength(this CelestialBody body, double altitudeASL, double dragCoeff)
+        public static double DragLength(this CelestialBody body, double altitudeASL, double dragCoeff, double mass)
         {
-            return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeff);
+            return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeff, mass);
         }
 
         //CelestialBody.maxAtmosphereAltitude doesn't actually give the upper edge of

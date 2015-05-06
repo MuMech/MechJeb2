@@ -62,7 +62,7 @@ namespace MuMech
                     (errorPrediction.outcome == ReentrySimulation.Outcome.LANDED);
             }
         }
-        double LandingAltitude // The altitude above sea level of the terrain at the landing site
+        public double LandingAltitude // The altitude above sea level of the terrain at the landing site
         {
             get
             {
@@ -461,7 +461,7 @@ namespace MuMech
                 // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
                 // should end a safe height above the landing site in order to allow braking from terminal velocity
 #warning Drag Length is quite large now without parachutes, check this better
-                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, VesselAverageDrag() + ParachuteAddedDragCoef());
+                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, VesselAverageDrag() + ParachuteAddedDragCoef(), vesselState.mass);
 
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
                 return 2 * landingSiteDragLength + LandingAltitude;
@@ -483,7 +483,8 @@ namespace MuMech
         //expect to get slowed to near terminal velocity before impacting the ground. 
         public bool UseAtmosphereToBrake()
         {
-            if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
+            //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
+            if (mainBody.RealMaxAtmosphereAltitude() > 0)
             {
                 return true;
             }
@@ -497,17 +498,20 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part part = vessel.parts[i];
-                if (part.DragCubes.None)
+                if (part.DragCubes.None || part.ShieldedFromAirstream) 
                 {
                     continue;
                 }
-
-                float partDragCoef = 0;
+                //DragCubeList.CubeData data = part.DragCubes.AddSurfaceDragDirection(Vector3.back, 1);
+                //
+                //dragCoef += data.areaDrag;
+                
+                float partAreaDrag = 0;
                 for (int f = 0; f < 6; f++)
                 {
-                    partDragCoef = part.DragCubes.WeightedDrag[f];
+                    partAreaDrag = part.DragCubes.WeightedDrag[f] * part.DragCubes.AreaOccluded[f]; // * PhysicsGlobals.DragCurveValue(0.5, machNumber) but I ll assume it is 1 for now
                 }
-                dragCoef += partDragCoef / 6;
+                dragCoef += partAreaDrag / 6;
             }
             return dragCoef * PhysicsGlobals.DragCubeMultiplier;
         }
@@ -623,10 +627,14 @@ namespace MuMech
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
+
+            if (terrainRadius < pos.magnitude)
+                return Double.MaxValue;
+
             double vSpeed = Vector3d.Dot(vel, pos.normalized);
             double ToF = (vSpeed + Math.Sqrt(vSpeed * vSpeed + 2 * g * (pos.magnitude - terrainRadius))) / g;
 
-            MechJebCore.print("ToF = " + ToF.ToString("F2"));
+            //MechJebCore.print("ToF = " + ToF.ToString("F2"));
             return 0.8 * (thrust - g) * ToF;
         }
     }

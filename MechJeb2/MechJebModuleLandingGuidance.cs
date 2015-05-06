@@ -114,6 +114,11 @@ namespace MuMech
                 {
                     GUILayout.Label("Status: " + core.landing.status);
 
+                    GUILayout.Label("Debug Info:");
+                    GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
+                    var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
+                    GUILayout.Label("Drag Leng: " + ( dragLength != Double.MaxValue ? dragLength.ToString("F2") : "infinite"));
+
                     string parachuteInfo = core.landing.ParachuteControlInfo;
                     if (null != parachuteInfo)
                     {

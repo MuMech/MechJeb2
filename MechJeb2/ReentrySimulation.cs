@@ -169,7 +169,7 @@ namespace MuMech
                 result.input_multiplierHasError = this.input_multiplierHasError;
                 result.input_dt = this.input_dt;
 
-                MechJebCore.print("Sim Start");
+                //MechJebCore.print("Sim Start");
  
                 if (orbitReenters)
                 {
@@ -195,7 +195,7 @@ namespace MuMech
                     RecordTrajectory();
                 }
 
-                MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
+                //MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
 
                 result.id = Guid.NewGuid();
                 result.body = mainBody;

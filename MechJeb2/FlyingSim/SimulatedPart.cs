@@ -69,8 +69,8 @@ namespace MuMech
             //DragMultiplier = PhysicsGlobals.DragMultiplier;
 
 
-            if (p.dragModel != Part.DragModel.CUBE)
-                MechJebCore.print(p.name + " " + p.dragModel);
+            //if (p.dragModel != Part.DragModel.CUBE)
+            //    MechJebCore.print(p.name + " " + p.dragModel);
 
             //oPart = p;
 
