@@ -111,6 +111,7 @@ namespace MuMech
         }
 
         IDescentSpeedPolicy descentSpeedPolicy;
+        public double vesselAverageDrag;
 
         public MechJebModuleLandingAutopilot(MechJebCore core)
             : base(core)
@@ -214,6 +215,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            vesselAverageDrag = VesselAverageDrag();
             base.OnFixedUpdate();
             DeployParachutes();
         }
@@ -461,7 +463,7 @@ namespace MuMech
                 // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
                 // should end a safe height above the landing site in order to allow braking from terminal velocity
 #warning Drag Length is quite large now without parachutes, check this better
-                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, VesselAverageDrag() + ParachuteAddedDragCoef(), vesselState.mass);
+                double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
 
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
                 return 2 * landingSiteDragLength + LandingAltitude;
@@ -483,8 +485,10 @@ namespace MuMech
         //expect to get slowed to near terminal velocity before impacting the ground. 
         public bool UseAtmosphereToBrake()
         {
+            double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
+
             //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
-            if (mainBody.RealMaxAtmosphereAltitude() > 0)
+            if (mainBody.RealMaxAtmosphereAltitude() > 0 && landingSiteDragLength < 0.7 * mainBody.RealMaxAtmosphereAltitude()) // the ratio is totally arbitrary until I get something better
             {
                 return true;
             }
