@@ -206,11 +206,6 @@ namespace MuMech
                 double stageBurnDv = Math.Min(s.deltaV, dvLeft);
                 dvLeft -= stageBurnDv;
 
-                if (halfDvLeft > stageBurnDv)
-                {
-                    halfDvLeft -= stageBurnDv;
-                }
-
                 double stageBurnFraction = stageBurnDv / s.deltaV;
 
                 // Delta-V is proportional to ln(m0 / m1) (where m0 is initial
