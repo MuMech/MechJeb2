@@ -13,8 +13,6 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                Debug.Log("UntargetedDeorbit");
-
                 if (orbit.PeA < -0.1 * mainBody.Radius)
                 {
                     core.thrust.targetThrottle = 0;
