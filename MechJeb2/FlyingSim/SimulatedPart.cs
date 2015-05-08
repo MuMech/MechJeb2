@@ -9,7 +9,7 @@ namespace MuMech
     public class SimulatedPart
     {
 
-        private DragCubeList cubes;
+        protected DragCubeList cubes;
         
         public double totalMass = 0;
         public bool shieldedFromAirstream;
@@ -19,7 +19,7 @@ namespace MuMech
 
         private float areaDrag;
         private Vector3 liftForce;
-
+        
         //private float DragCubeMultiplier;
         //private float DragMultiplier;
 
@@ -42,9 +42,9 @@ namespace MuMech
             return part;
         }
 
-        private void Set(Part p, ReentrySimulation.SimCurves _simCurves)
+        protected virtual void Set(Part p, ReentrySimulation.SimCurves _simCurves)
         {
-            totalMass = p.mass + p.GetResourceMass() + p.GetPhysicslessChildMass();
+            totalMass = p.TotalMass();
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
             noDrag = p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
@@ -53,18 +53,12 @@ namespace MuMech
 
             simCurves = _simCurves;
 
-
-            // TODO : choose either method : 
-            // - use the part cube but have the risk that the part change the cubes values (stagging, ...) while we do the sim
-            // - use a copy of the cubes but use more mem
-            cubes = p.DragCubes;
-            //cubes = new DragCubeList();
-            //CopyDragCubesList(p.DragCubes, cubes);
+            cubes = new DragCubeList();
+            CopyDragCubesList(p.DragCubes, cubes);
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
             vesselToPart = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up)).Inverse();
             
-
             //DragCubeMultiplier = PhysicsGlobals.DragCubeMultiplier;
             //DragMultiplier = PhysicsGlobals.DragMultiplier;
 
@@ -76,7 +70,7 @@ namespace MuMech
 
         }
 
-        public Vector3 Drag(Vector3 vesselVelocity, float dynamicPressurekPa,  float mach)
+        public virtual Vector3 Drag(Vector3 vesselVelocity, float dynamicPressurekPa,  float mach)
         {
             if (shieldedFromAirstream || noDrag)
                 return Vector3.zero;
@@ -141,7 +135,7 @@ namespace MuMech
             return drag;
         }
 
-        public Vector3 Lift(Vector3 vesselVelocity, float dynamicPressurekPa, float mach)
+        public virtual Vector3 Lift(Vector3 vesselVelocity, float dynamicPressurekPa, float mach)
         {
             if (shieldedFromAirstream || hasLiftModule)
                 return Vector3.zero;
@@ -183,8 +177,17 @@ namespace MuMech
             return liftVector;
         }
 
+        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        {
+            return false;
+        }
 
-        public static void CopyDragCubesList(DragCubeList source, DragCubeList dest)
+        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        {
+            return false;
+        }
+
+        protected static void CopyDragCubesList(DragCubeList source, DragCubeList dest)
         {
             dest.ClearCubes();
 
@@ -213,7 +216,7 @@ namespace MuMech
             // We are missing PostOcclusionArea but it seems to be used in Thermal only
         }
 
-        private static void CopyDragCube(DragCube source, DragCube dest)
+        protected static void CopyDragCube(DragCube source, DragCube dest)
         {
             dest.Name = source.Name;
             dest.Weight = source.Weight;
@@ -232,7 +235,7 @@ namespace MuMech
 
         // Unfortunately the DragCubeList SetDrag method is not thread safe
         // so here is a thread safe version
-        private void SetDrag(Vector3 dragVector, float machNumber)
+        protected void SetDrag(Vector3 dragVector, float machNumber)
         {
             areaDrag = 0f;
             liftForce = Vector3.zero;
@@ -258,7 +261,7 @@ namespace MuMech
             }
         }
 
-        private float DragCurveValue(float dotNormalized, float mach)
+        protected float DragCurveValue(float dotNormalized, float mach)
         {
             float surfaceDrag = simCurves.DragCurveSurface.Evaluate(mach);
             float multiplier = simCurves.DragCurveMultiplier.Evaluate(mach);
@@ -269,6 +272,79 @@ namespace MuMech
             }
             float tipDrag = simCurves.DragCurveTip.Evaluate(mach);
             return Mathf.Lerp(surfaceDrag, tipDrag, (dotNormalized - 0.5f) * 2f) * multiplier;
+        }
+
+
+        protected void SetCubeWeight(string name, float newWeight)
+        {
+            int count = cubes.Cubes.Count;
+            if (count == 0)
+            {
+                return;
+            }
+
+            bool noChange = true;
+            for (int i = count - 1; i >= 0; i--)
+            {
+                if (cubes.Cubes[i].Name == name && cubes.Cubes[i].Weight != newWeight)
+                {
+                    cubes.Cubes[i].Weight = newWeight;
+                    noChange = false;
+                }
+            }
+
+            if (noChange)
+                return;
+
+            ResetCubeArray(cubes.WeightedArea);
+            ResetCubeArray(cubes.WeightedDrag);
+            
+            float weight = 0f;
+            for (int i = count - 1; i >= 0; i--)
+            {
+                DragCube dc = cubes.Cubes[i];
+                if (dc.Weight != 0f)
+                {
+                    weight = weight + dc.Weight;
+                    AddCubeArray(cubes.WeightedArea, dc.Area, dc.Weight);
+                    AddCubeArray(cubes.WeightedDrag, dc.Drag, dc.Weight);
+                }
+            }
+            if (weight != 0f)
+            {
+                float invWeight = 1f / weight;
+                MultiplyCubeArray(cubes.WeightedArea, invWeight);
+                MultiplyCubeArray(cubes.WeightedDrag, invWeight);
+            }
+            else
+            {
+                ResetCubeArray(cubes.WeightedArea);
+                ResetCubeArray(cubes.WeightedDrag);
+            }
+        }
+
+        private static void ResetCubeArray(float[] arr)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                arr[i] = 0f;
+            }
+        }
+
+        private static void AddCubeArray(float[] outputArray, float[] inputArray, float multiply = 1f)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                outputArray[i] = outputArray[i] + inputArray[i] * multiply;
+            }
+        }
+
+        private static void MultiplyCubeArray(float[] arr, float multiply)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                arr[i] = arr[i] * multiply;
+            }
         }
 
     }

@@ -168,9 +168,6 @@ namespace MuMech
                         StartSimulation(false);
                     }
 
-#warning remove later
-                    runErrorSimulations = false;
-
                     // We also periodically run simulations containing deliberate errors if we have been asked to do so by the landing autopilot.
                     if (this.runErrorSimulations && !errorSimulationRunning && errorStopwatch.ElapsedMilliseconds >= millisecondsBetweenErrorSimulations)
                     {
@@ -213,54 +210,6 @@ namespace MuMech
 
             Orbit patch = GetReenteringPatch() ?? orbit;
 
-            // Work out a mass for the total ship, a DragMass for everything except the parachutes that will be used (including the stowed parachutes that will not be used) and list of parchutes that will be used.
-            double totalMass =0;
-            double dragMassExcludingUsedParachutes = 0;
-            List<SimulatedParachute> usableChutes = new List<SimulatedParachute>();
-
-            for (int index = 0; index < vessel.parts.Count; index++)
-            {
-                Part p = vessel.parts[index];
-                if (p.IsPhysicallySignificant())
-                {
-                    bool partIsParachute = false;
-                    double partDrag = 0;
-                    double partMass = p.TotalMass();
-
-                    totalMass += partMass;
-
-                    // Is this part a parachute?
-                    for (int i = 0; i < p.Modules.Count; i++)
-                    {
-                        PartModule pm = p.Modules[i];
-                        if (!pm.isEnabled)
-                        {
-                            continue;
-                        }
-
-                        if (pm is ModuleParachute)
-                        {
-                            ModuleParachute chute = (ModuleParachute)pm;
-                            // This is a parachute, but is it one that will be used in the landing / rentry simulation?
-                            if (deployChutes && p.inverseStage >= limitChutesStage)
-                            {
-                                // This chute will be used in the simualtion. Add it to the list of useage parachutes.
-                                usableChutes.Add(new SimulatedParachute(chute, patch.StartUT));
-                                partIsParachute = true;
-                            }
-                        }
-                    }
-
-                    if (!partIsParachute)
-                    {
-                        // Part is not a parachute. Just use its drag value.
-                        partDrag = p.maximum_drag;
-                    }
-
-                    dragMassExcludingUsedParachutes += partDrag * partMass;
-                }
-            }
-
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
             if(null !=this.result)
             {
@@ -280,11 +229,11 @@ namespace MuMech
             // The curves used for the simes are not thread safe so we need a copy used only by the thread
             ReentrySimulation.SimCurves simCurves = new ReentrySimulation.SimCurves(patch.referenceBody);
 
-            SimulatedVessel simVessel = SimulatedVessel.New(vessel, simCurves);
+            SimulatedVessel simVessel = SimulatedVessel.New(vessel, simCurves, patch.StartUT, deployChutes ? limitChutesStage : -1);
 
-            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, usableChutes, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime);
+            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime);
 
-            MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
+            //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);

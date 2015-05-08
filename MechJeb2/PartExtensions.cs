@@ -30,7 +30,7 @@ namespace MuMech
 
         public static float TotalMass(this Part p)
         {
-            return p.mass + p.GetPhysicslessChildMass() + p.GetResourceMass();
+            return p.mass + p.GetPhysicslessChildMass() + p.GetResourceMass() + p.GetModuleMass(0);
         }
 
 

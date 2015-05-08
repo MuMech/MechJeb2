@@ -46,7 +46,7 @@ namespace MuMech
                 // We are not in .90 anymore. Turning while under drag is a bad idea
                 if (vesselState.drag > 0.1)
                 {
-                    return this;
+                    return new CoastToDeceleration(core);
                 }
 
                 Vector3d deltaV = core.landing.ComputeCourseCorrection(true);

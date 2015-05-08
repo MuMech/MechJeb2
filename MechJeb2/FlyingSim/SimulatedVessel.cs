@@ -16,15 +16,14 @@ namespace MuMech
 
         private ReentrySimulation.SimCurves simCurves;
 
-        static public SimulatedVessel New(Vessel v, ReentrySimulation.SimCurves simCurves)
+        static public SimulatedVessel New(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
         {
             SimulatedVessel vessel = new SimulatedVessel();
-            vessel.Set(v, simCurves);
+            vessel.Set(v, simCurves, startTime, limitChutesStage);
             return vessel;
         }
 
-
-        private void Set(Vessel v, ReentrySimulation.SimCurves _simCurves)
+        private void Set(Vessel v, ReentrySimulation.SimCurves _simCurves, double startTime, int limitChutesStage)
         {
             totalMass = 0;
 
@@ -38,7 +37,21 @@ namespace MuMech
 
             for (int i=0; i < count; i++)
             {
-                SimulatedPart simulatedPart = SimulatedPart.New(oParts[i], simCurves);
+                SimulatedPart simulatedPart = null;
+                bool special = false;
+                for (int j = 0; j < oParts[i].Modules.Count; j++)
+                {
+                    if (oParts[i].Modules[j] is ModuleParachute)
+                    {
+                        special = true;
+                        simulatedPart = SimulatedParachute.New((ModuleParachute)oParts[i].Modules[j], simCurves, startTime, limitChutesStage);
+                    }
+                }
+                if (!special)
+                {
+                    simulatedPart = SimulatedPart.New(oParts[i], simCurves);
+                }
+                
                 parts.Add(simulatedPart);
                 totalMass += simulatedPart.totalMass;
             }
@@ -57,8 +70,6 @@ namespace MuMech
             return -localVelocity.normalized * drag.magnitude;
         }
 
-
-
         public Vector3 Lift(Vector3 localVelocity, float dynamicPressurekPa, float mach)
         {
             Vector3 lift = Vector3.zero;
@@ -70,5 +81,29 @@ namespace MuMech
             }
             return lift;
         }
+
+
+        public bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double t, double parachuteSemiDeployMultiplier)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (parts[i].SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool Simulate(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        {
+            bool deploying = false;
+            for (int i = 0; i < count; i++)
+            {
+                deploying = deploying || parts[i].Simulate(altATGL, altASL, endASL, pressure, time, semiDeployMultiplier);
+            }
+            return deploying;
+        }
+
     }
 }

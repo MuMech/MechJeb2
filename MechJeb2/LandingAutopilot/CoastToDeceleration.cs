@@ -63,7 +63,7 @@ namespace MuMech
                     double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!vesselState.parachuteDeployed) // However if there is already a parachute deployed, then do not bother trying to correct the course as we will not have any attitude control anyway.
+                        if (!vesselState.parachuteDeployed || vesselState.drag <= 0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
                             core.warp.MinimumWarp();
                             core.rcs.enabled = false;
@@ -91,11 +91,18 @@ namespace MuMech
 
                 if (core.landing.PredictionReady)
                 {
-                    double decelerationStartTime = (core.landing.prediction.trajectory.Any() ? core.landing.prediction.trajectory.First().UT : vesselState.time);
-                    Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
-                    decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
-                    decelerationStartAttitude = decelerationStartAttitude.normalized;
-                    core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, core.landing);
+                    if (vesselState.drag < 0.01)
+                    {
+                        double decelerationStartTime = (core.landing.prediction.trajectory.Any() ? core.landing.prediction.trajectory.First().UT : vesselState.time);
+                        Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
+                        decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
+                        decelerationStartAttitude = decelerationStartAttitude.normalized;
+                        core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, core.landing);
+                    }
+                    else
+                    {
+                        core.attitude.attitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, core.landing);
+                    }
                 }
 
                 //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
