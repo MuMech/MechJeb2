@@ -637,10 +637,6 @@ namespace MuMech
                     }
                     else if (pm is ModuleControlSurface)
                     {
-#warning TEST THIS : instead of using Vector6 use 2 Vector3. One for control at (1,1,1) and the other for (-1,-1,-1). Add them all up and use that as the real available torque
-
-
-                        // TODO : Tweakable for ignorePitch / ignoreYaw  / ignoreRoll 
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
 
                         if (p.ShieldedFromAirstream || cs.deploy)
@@ -651,12 +647,12 @@ namespace MuMech
 
                         Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
-                        // Build a vector that show if the surface is left/right up/down forward/back of the CoM.
+                        // Build a vector that show if the surface is left/right forward/back up/down of the CoM.
                         Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
                         float inverted = relpos.y > 0.01 ? -1 : 1;
-                        relpos.x = inverted *  relpos.x < 0.01 ? -1 : 1;
-                        relpos.y = 1;
-                        relpos.z = inverted * (relpos.z < 0.01 ? -1 : 1);
+                        relpos.x = cs.ignorePitch ? 0 : inverted * (relpos.x < 0.01 ? -1 : 1);
+                        relpos.y = cs.ignoreRoll  ? 0 : 1;
+                        relpos.z = cs.ignoreYaw   ? 0 : inverted * (relpos.z < 0.01 ? -1 : 1);
                         
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
 
