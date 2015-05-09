@@ -108,9 +108,7 @@ namespace KerbalEngineer.VesselSimulator
             partSim.name = partSim.part.partInfo.name;
 
             if (log != null)
-            {
                 log.buf.AppendLine("Create PartSim for " + partSim.name);
-            }
 
             partSim.parent = null;
             partSim.parentAttach = partSim.part.attachMode;
@@ -126,18 +124,19 @@ namespace KerbalEngineer.VesselSimulator
             partSim.cost = partSim.part.GetCostWet();
 
             // Work out if the part should have no physical significance
-            partSim.isNoPhysics = partSim.part.HasModule<LaunchClamp>() ||
-                               partSim.part.physicalSignificance == Part.PhysicalSignificance.NONE ||
+            partSim.isNoPhysics = partSim.part.physicalSignificance == Part.PhysicalSignificance.NONE ||
                                partSim.part.PhysicsSignificance == 1;
 
-            if (!partSim.isNoPhysics)
+            if (partSim.part.HasModule<LaunchClamp>())
+            {
+                if (log != null)
+                  log.buf.AppendLine("Ignoring mass of launch clamp");
+            }
+            else
             {
                 partSim.baseMass = partSim.part.mass;
-            }
-
-            if (SimManager.logOutput)
-            {
-                MonoBehaviour.print((partSim.isNoPhysics ? "Ignoring" : "Using") + " part.mass of " + partSim.part.mass);
+                if (log != null)
+                    log.buf.AppendLine("Using part.mass of " + partSim.part.mass);
             }
 
             for (int i = 0; i < partSim.part.Resources.Count; i++)
@@ -148,17 +147,16 @@ namespace KerbalEngineer.VesselSimulator
                 // This can happen if a resource capacity is 0 and tweakable
                 if (!Double.IsNaN(resource.amount))
                 {
-                    if (SimManager.logOutput)
-                    {
-                        MonoBehaviour.print(resource.resourceName + " = " + resource.amount);
-                    }
+                    if (log != null)
+                        log.buf.AppendLine(resource.resourceName + " = " + resource.amount);
 
                     partSim.resources.Add(resource.info.id, resource.amount);
                     partSim.resourceFlowStates.Add(resource.info.id, resource.flowState ? 1 : 0);
                 }
                 else
                 {
-                    MonoBehaviour.print(resource.resourceName + " is NaN. Skipping.");
+                    if (log != null)
+                        log.buf.AppendLine(resource.resourceName + " is NaN. Skipping.");
                 }
             }
 
@@ -179,10 +177,9 @@ namespace KerbalEngineer.VesselSimulator
 
             partSim.isEngine = partSim.hasMultiModeEngine || partSim.hasModuleEnginesFX || partSim.hasModuleEngines;
 
-            if (SimManager.logOutput)
-            {
-                MonoBehaviour.print("Created " + partSim.name + ". Decoupled in stage " + partSim.decoupledInStage);
-            }
+            if (log != null)
+                log.buf.AppendLine("Created " + partSim.name + ". Decoupled in stage " + partSim.decoupledInStage);
+
             return partSim;
         }
 
@@ -699,16 +696,20 @@ namespace KerbalEngineer.VesselSimulator
                 if (partSimLookup.TryGetValue(part.parent, out parent))
                 {
                     if (log != null)
-                    {
                         log.buf.AppendLine("Parent part is " + parent.name + ":" + parent.partId);
+
+                    if (isNoPhysics)
+                    {
+                        if (log != null)
+                            log.buf.AppendLine("Moving NoPhysics part mass of " + this.baseMass + " to parent part");
+                        parent.baseMass += this.baseMass;
+                        this.baseMass = 0;
                     }
                 }
                 else
                 {
                     if (log != null)
-                    {
                         log.buf.AppendLine("No PartSim for parent part (" + part.parent.partInfo.name + ")");
-                    }
                 }
             }
         }
