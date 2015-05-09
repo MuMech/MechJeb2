@@ -590,8 +590,6 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                #warning may need to check the drag model ?
-                //dragCoef += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier;
                 dragCoef += p.DragCubes.DragCoeff;
 
                 for (int index = 0; index < vesselStatePartExtensions.Count; index++)
@@ -850,7 +848,6 @@ namespace MuMech
         {
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
-            #warning Have someone check that. And clean it
             return Math.Sqrt(localg / drag) * speedSurface;
         }
 
@@ -943,7 +940,7 @@ namespace MuMech
         private static bool stockGimbalIsValid(PartModule p)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
-            return gimbal.initRots.Count() > 0;
+            return gimbal.initRots.Any();
         }
 
         private static Vector3d stockGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
