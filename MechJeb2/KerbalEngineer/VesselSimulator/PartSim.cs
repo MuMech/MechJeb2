@@ -686,6 +686,19 @@ namespace KerbalEngineer.VesselSimulator
                     }
                 }
             }
+
+            if (isNoPhysics)
+            {
+                if (log != null)
+                    log.buf.AppendLine("Moving NoPhysics part mass of " + this.baseMass + " to parent part");
+
+                // Apply this part's mass to the part we have found
+                if (parent != null && !parent.isNoPhysics)
+                    parent.baseMass += this.baseMass;
+
+                // And zero out this part's mass regardless of whether the mass was added to the parent
+                this.baseMass = 0;
+            }
         }
 
         public void SetupParent(Dictionary<Part, PartSim> partSimLookup, LogMsg log)
@@ -697,14 +710,6 @@ namespace KerbalEngineer.VesselSimulator
                 {
                     if (log != null)
                         log.buf.AppendLine("Parent part is " + parent.name + ":" + parent.partId);
-
-                    if (isNoPhysics)
-                    {
-                        if (log != null)
-                            log.buf.AppendLine("Moving NoPhysics part mass of " + this.baseMass + " to parent part");
-                        parent.baseMass += this.baseMass;
-                        this.baseMass = 0;
-                    }
                 }
                 else
                 {
