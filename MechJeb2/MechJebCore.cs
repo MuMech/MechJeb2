@@ -379,6 +379,7 @@ namespace MuMech
         {
             unorderedComputerModules.Remove(module);
             sortedModules.Clear();
+            sortedDisplayModules.Clear();
         }
 
         public void ReloadAllComputerModules()
@@ -387,6 +388,7 @@ namespace MuMech
             foreach (ComputerModule module in unorderedComputerModules) module.OnDestroy();
             unorderedComputerModules.Clear();
             sortedModules.Clear();
+            sortedDisplayModules.Clear();
 
             if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             controlledVessel = null;
