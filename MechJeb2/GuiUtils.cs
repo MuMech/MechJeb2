@@ -255,9 +255,11 @@ namespace MuMech
 
         public static void SetGUIScale(double s)
         {
+            if (scale == s)
+                return;
             scale = Mathf.Clamp((float)s, 0.2f, 5f);
-            scaledScreenHeight = Mathf.RoundToInt(Screen.height / GuiUtils.scale);
-            scaledScreenWidth = Mathf.RoundToInt(Screen.width / GuiUtils.scale);
+            scaledScreenHeight = Mathf.RoundToInt(Screen.height / scale);
+            scaledScreenWidth = Mathf.RoundToInt(Screen.width / scale);
         }
 
         public static void CopyDefaultSkin()
