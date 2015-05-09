@@ -37,6 +37,7 @@ namespace MuMech
         public MechJebModuleNodeExecutor node;
         public MechJebModuleSolarPanelController solarpanel;
         public MechJebModuleLandingAutopilot landing;
+        public MechJebModuleSettings settings;
 
         public VesselState vesselState = new VesselState();
 
@@ -657,6 +658,7 @@ namespace MuMech
             node = GetComputerModule<MechJebModuleNodeExecutor>();
             solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
             landing = GetComputerModule<MechJebModuleLandingAutopilot>();
+            settings = GetComputerModule<MechJebModuleSettings>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
@@ -964,7 +966,7 @@ namespace MuMech
 
                 GuiUtils.ComboBox.DrawGUI();
 
-                GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
+                GuiUtils.LoadSkin((GuiUtils.SkinType)settings.skinId);
 
                 GUI.skin = GuiUtils.skin;
 
