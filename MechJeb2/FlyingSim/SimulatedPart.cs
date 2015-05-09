@@ -187,12 +187,17 @@ namespace MuMech
             return false;
         }
 
+
+        //TODO : rewrite the cube calls to only store and update the minimum needed data ( AreaOccluded + WeightedDrag ?)
+
         protected static void CopyDragCubesList(DragCubeList source, DragCubeList dest)
         {
             dest.ClearCubes();
 
             dest.None = source.None;
-            dest.Procedural = source.Procedural;
+            
+            // Procedural need access to part so things gets bad quick. 
+            dest.Procedural = false; 
 
             for (int i = 0; i < source.Cubes.Count; i++)
             {
@@ -274,9 +279,12 @@ namespace MuMech
             return Mathf.Lerp(surfaceDrag, tipDrag, (dotNormalized - 0.5f) * 2f) * multiplier;
         }
 
-
+        
+        // Need to check and then simplify this, some operations are just redundant.
         protected void SetCubeWeight(string name, float newWeight)
         {
+            float[] WeightedDragOrig = new float[6];
+
             int count = cubes.Cubes.Count;
             if (count == 0)
             {
@@ -298,7 +306,8 @@ namespace MuMech
 
             ResetCubeArray(cubes.WeightedArea);
             ResetCubeArray(cubes.WeightedDrag);
-            
+            ResetCubeArray(WeightedDragOrig);
+
             float weight = 0f;
             for (int i = count - 1; i >= 0; i--)
             {
@@ -308,6 +317,7 @@ namespace MuMech
                     weight = weight + dc.Weight;
                     AddCubeArray(cubes.WeightedArea, dc.Area, dc.Weight);
                     AddCubeArray(cubes.WeightedDrag, dc.Drag, dc.Weight);
+                    AddCubeArray(WeightedDragOrig, dc.Drag, dc.Weight);
                 }
             }
             if (weight != 0f)
@@ -315,12 +325,19 @@ namespace MuMech
                 float invWeight = 1f / weight;
                 MultiplyCubeArray(cubes.WeightedArea, invWeight);
                 MultiplyCubeArray(cubes.WeightedDrag, invWeight);
+                MultiplyCubeArray(WeightedDragOrig, invWeight);
             }
             else
             {
                 ResetCubeArray(cubes.WeightedArea);
                 ResetCubeArray(cubes.WeightedDrag);
+                ResetCubeArray(WeightedDragOrig);
             }
+
+            SetCubeArray(cubes.AreaOccluded, cubes.WeightedArea);
+            SetCubeArray(cubes.WeightedDrag, WeightedDragOrig);
+
+
         }
 
         private static void ResetCubeArray(float[] arr)
@@ -346,6 +363,15 @@ namespace MuMech
                 arr[i] = arr[i] * multiply;
             }
         }
+
+        private static void SetCubeArray(float[] outputArray, float[] inputArray, float multiply = 1f)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                outputArray[i] = inputArray[i] * multiply;
+            }
+        }
+
 
     }
 }
