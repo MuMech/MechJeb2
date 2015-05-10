@@ -41,7 +41,7 @@ namespace MuMech
             this.para = mp;
             this.state = mp.deploymentState;
 
-            willDeploy = para.part.inverseStage >= limitChutesStage;
+            willDeploy = limitChutesStage != -1 && para.part.inverseStage >= limitChutesStage;
 
             // Work out when the chute was put into its current state based on the current drag as compared to the stowed, semi deployed and fully deployed drag
 

@@ -100,7 +100,7 @@ namespace MuMech
             bool deploying = false;
             for (int i = 0; i < count; i++)
             {
-                deploying = deploying || parts[i].Simulate(altATGL, altASL, endASL, pressure, time, semiDeployMultiplier);
+                deploying |= parts[i].Simulate(altATGL, altASL, endASL, pressure, time, semiDeployMultiplier);
             }
             return deploying;
         }
