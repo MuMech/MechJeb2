@@ -4,139 +4,22 @@ using UnityEngine;
 
 namespace MuMech
 {
+#warning not really needed anymore. REMOVE
+
+    
     public class EngineWrapper
     {
-        public readonly PartModule engine;
-
-        public float minThrust
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).minThrust;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).minThrust;
-                else
-                    return 0;
-            }
-        }
-
-        public float maxThrust
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).maxThrust;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).maxThrust;
-                else
-                    return 0;
-            }
-        }
+        public readonly ModuleEngines engine;
 
         public float thrustRatio
         {
             get
             {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).thrustPercentage / 100;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).thrustPercentage / 100;
-                else
-                    return 0;
+                return engine.thrustPercentage / 100;
             }
             set
             {
-                if (engine is ModuleEngines)
-                    (engine as ModuleEngines).thrustPercentage = value * 100;
-                else if (engine is ModuleEnginesFX)
-                    (engine as ModuleEnginesFX).thrustPercentage = value * 100;
-            }
-        }
-
-        public bool throttleLocked
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).throttleLocked;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).throttleLocked;
-                else
-                    return true;
-            }
-        }
-
-        public bool ignited
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).getIgnitionState;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).getIgnitionState;
-                else
-                    return true;
-            }
-        }
-
-        public bool enabled
-        {
-            get
-            {
-                return engine.isEnabled;
-            }
-        }
-
-        public bool flameout
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).getFlameoutState;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).getFlameoutState;
-                else
-                    return false;
-            }
-        }
-
-        public bool useVelocityCurve
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).useVelocityCurve;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).useVelocityCurve;
-                else
-                    return false;
-            }
-        }
-
-        public FloatCurve velocityCurve
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).velocityCurve;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).velocityCurve;
-                else
-                    return null;
-            }
-        }
-
-        public List<Transform> thrustTransforms
-        {
-            get
-            {
-                if (engine is ModuleEngines)
-                    return (engine as ModuleEngines).thrustTransforms;
-                else if (engine is ModuleEnginesFX)
-                    return (engine as ModuleEnginesFX).thrustTransforms;
-                else
-                    return null;
+                engine.thrustPercentage = value * 100;
             }
         }
 
@@ -158,24 +41,18 @@ namespace MuMech
 
             float currentMaxThrust, currentMinThrust;
 
-            currentMaxThrust = maxThrust / (float)(thrustTransforms.Count);
-            currentMinThrust = minThrust / (float)(thrustTransforms.Count);
-            if (useVelocityCurve)
-            {
-                float lambda = velocityCurve.Evaluate((float)(v.orbit.GetVel() - v.mainBody.getRFrmVel(v.CoM)).magnitude);
-                currentMaxThrust *= lambda;
-                currentMinThrust *= lambda;
-            }
+            currentMaxThrust = engine.minFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
+            currentMinThrust = engine.maxFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
 
-            if (throttleLocked)
+            if (engine.throttleLocked)
             {
                 currentMaxThrust *= thrustRatio;
                 currentMinThrust = currentMaxThrust;
             }
 
-            for (int i = 0; i < thrustTransforms.Count; i++)
+            for (int i = 0; i < engine.thrustTransforms.Count; i++)
             {
-                Vector3d thrust_dir = v.transform.rotation.Inverse() * gimbalExt.initialRot(gimbal, thrustTransforms[i], i) * Vector3d.back;
+                Vector3d thrust_dir = v.transform.rotation.Inverse() * gimbalExt.initialRot(gimbal, engine.thrustTransforms[i], i) * Vector3d.back;
 
                 Vector3d pos = v.transform.rotation.Inverse() * (engine.part.transform.position - com);
 
@@ -186,13 +63,11 @@ namespace MuMech
             }
         }
 
-        public EngineWrapper(PartModule module)
+        public EngineWrapper(ModuleEngines module)
         {
-            if (!(module is ModuleEngines) && !(module is ModuleEnginesFX))
-                throw new ArgumentException("module must be a ModuleEngines or ModuleEnginesFX");
-
             engine = module;
         }
     }
+ 
 }
 

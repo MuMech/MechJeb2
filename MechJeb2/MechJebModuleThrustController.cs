@@ -135,6 +135,9 @@ namespace MuMech
         public PIDController pid;
 
         float lastThrottle = 0;
+        bool userCommandingRotation { get { return userCommandingRotationSmoothed > 0; } }
+        int userCommandingRotationSmoothed = 0;
+        bool lastDisableThrusters = false;
 
         public enum TMode
         {
@@ -198,6 +201,23 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            float threshold = 0.1F;
+            bool _userCommandingRotation = !(Mathfx.Approx(s.pitch, s.pitchTrim, threshold)
+                    && Mathfx.Approx(s.yaw, s.yawTrim, threshold)
+                    && Mathfx.Approx(s.roll, s.rollTrim, threshold));
+            bool _userCommandingTranslation = !(Math.Abs(s.X) < threshold
+                        && Math.Abs(s.Y) < threshold
+                        && Math.Abs(s.Z) < threshold);
+
+            if (_userCommandingRotation && !_userCommandingTranslation)
+            {
+                userCommandingRotationSmoothed = 2;
+            }
+            else if (userCommandingRotationSmoothed > 0)
+            {
+                userCommandingRotationSmoothed--;
+            }
+
             if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
 
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
@@ -217,7 +237,7 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
-                            Vector3 hsdir = Vector3.Exclude(vesselState.up, vesselState.surfaceVelocity);
+                            Vector3 hsdir = Vector3.ProjectOnPlane(vesselState.surfaceVelocity, vesselState.up);
                             Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
                             if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
@@ -301,7 +321,7 @@ namespace MuMech
 
             if (limitToPreventOverheats)
             {
-                float limit = TemperatureSafetyThrottle();
+                float limit = (float)TemperatureSafetyThrottle();
                 if(limit < throttleLimit) limiter = LimitMode.Temperature;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
@@ -377,12 +397,12 @@ namespace MuMech
         }
 
         //a throttle setting that throttles down if something is close to overheating
-        float TemperatureSafetyThrottle()
+        double TemperatureSafetyThrottle()
         {
-            float maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
+            double maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
 
             //reduce throttle as the max temp. ratio approaches 1 within the safety margin
-            const float tempSafetyMargin = 0.05f;
+            const double tempSafetyMargin = 0.05f;
             if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
             else return (1 - maxTempRatio) / tempSafetyMargin;
         }
@@ -497,7 +517,9 @@ namespace MuMech
                     groupIds[partIntake] = grpId;
                     intakes.Add(partIntake);
 
-                    foreach (var sympart in part.symmetryCounterparts) {
+                    for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+                    {
+                        var sympart = part.symmetryCounterparts[i];
                         stack.Push(sympart);
                     }
                 }
@@ -513,8 +535,9 @@ namespace MuMech
             {
                 if (airFlowSoFar < requiredFlow)
                 {
-                    foreach (var intake in grp)
+                    for (int i = 0; i < grp.Count; i++)
                     {
+                        var intake = grp[i];
                         double airFlowThisIntake = data[intake].predictedMassFlow;
                         if (!intake.intakeEnabled)
                         {
@@ -525,8 +548,9 @@ namespace MuMech
                 }
                 else
                 {
-                    foreach (var intake in grp)
+                    for (int j = 0; j < grp.Count; j++)
                     {
+                        var intake = grp[j];
                         if (intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
@@ -560,8 +584,27 @@ namespace MuMech
                 tmode_changed = false;
                 FlightInputHandler.SetNeutralControls();
             }
+
+            bool disableThrusters = (userCommandingRotation && !core.rcs.rcsForRotation);
+            if (disableThrusters != lastDisableThrusters)
+            {
+                lastDisableThrusters = disableThrusters;
+                var rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
+                foreach (var pm in rcsModules)
+                {
+                    if (disableThrusters)
+                    {
+                        pm.Disable();
+                    }
+                    else
+                    {
+                        pm.Enable();
+                    }
+                }
+            }
         }
 
+#warning from here remove all the EngineWrapper stuff and move the useful stuff to VesselState.EngineInfo
 
         static void MaxThrust(double[] x, ref double func, double[] grad, object obj)
         {
@@ -572,7 +615,7 @@ namespace MuMech
             for (int i = 0, j = 0; j < el.Count; j++)
             {
                 EngineWrapper e = el[j];
-                if (!e.throttleLocked)
+                if (!e.engine.throttleLocked)
                 {
                     func -= el[j].maxVariableForce.y * x[i];
                     grad[i] = -el[j].maxVariableForce.y;
@@ -584,14 +627,17 @@ namespace MuMech
         public bool ComputeDifferentialThrottle(Vector3d torque)
         {
             List<EngineWrapper> engines = new List<EngineWrapper>();
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
-                foreach (PartModule pm in p.Modules)
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    if (pm is ModuleEngines || pm is ModuleEnginesFX)
+                    PartModule pm = p.Modules[j];
+                    if (pm is ModuleEngines)
                     {
-                        EngineWrapper engine = new EngineWrapper(pm);
-                        if (engine.ignited && !engine.flameout && engine.enabled)
+                        ModuleEngines e = (ModuleEngines)pm;
+                        EngineWrapper engine = new EngineWrapper(e);
+                        if (e.EngineIgnited && !e.flameout && e.enabled)
                         {
                             engine.UpdateForceAndTorque(vesselState.CoM);
                             engines.Add(engine);
@@ -600,11 +646,14 @@ namespace MuMech
                 }
             }
 
-            int n = engines.Where(eng => !eng.throttleLocked).Count();
+            int n = engines.Count(eng => !eng.engine.throttleLocked);
             if (n < 3)
             {
-                foreach (EngineWrapper e in engines)
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    EngineWrapper e = engines[i];
                     e.thrustRatio = 1;
+                }
                 return false;
             }
 
@@ -626,7 +675,7 @@ namespace MuMech
                 C[0,n] -= e.constantTorque.x;
                 C[1,n] -= e.constantTorque.z;
 
-                if (!e.throttleLocked)
+                if (!e.engine.throttleLocked)
                 {
                     C[0,i] = e.maxVariableTorque.x;
                     //C[1,j] = e.maxVariableTorque.y;
@@ -650,8 +699,11 @@ namespace MuMech
             alglib.svd.rmatrixsvd(C, 2, n, 0, 0, 2, ref w, ref u, ref vt);
             if (w[0] >= 10 * w[1])
             {
-                foreach (EngineWrapper e in engines)
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    EngineWrapper e = engines[i];
                     e.thrustRatio = 1;
+                }
                 return false;
             }
 
@@ -683,7 +735,7 @@ namespace MuMech
 
             for (int i = 0, j = 0; j < engines.Count; j++)
             {
-                if (!engines[j].throttleLocked)
+                if (!engines[j].engine.throttleLocked)
                 {
                     engines[j].thrustRatio = (float)x[i];
                     i++;
@@ -695,13 +747,16 @@ namespace MuMech
 
         public void DisableDifferentialThrottle()
         {
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
-                foreach (PartModule pm in p.Modules)
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    if (pm is ModuleEngines || pm is ModuleEnginesFX)
+                    PartModule pm = p.Modules[j];
+                    if (pm is ModuleEngines)
                     {
-                        EngineWrapper engine = new EngineWrapper(pm);
+                        ModuleEngines e = (ModuleEngines)pm;
+                        EngineWrapper engine = new EngineWrapper(e);
                         engine.thrustRatio = 1;
                     }
                 }

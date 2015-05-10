@@ -68,10 +68,16 @@ namespace MuMech
             return vesselState.thrustCurrent / (vesselState.mass * vesselState.gravityForce.magnitude);
         }
 
+        [ValueInfoItem("Atmospheric pressure (Pa)", InfoItem.Category.Misc, format = "F3", units = "Pa")]
+        public double AtmosphericPressurekPA()
+        {
+            return FlightGlobals.getStaticPressure(vesselState.CoM) * 1000;
+        }
+
         [ValueInfoItem("Atmospheric pressure", InfoItem.Category.Misc, format = "F3", units = "atm")]
         public double AtmosphericPressure()
         {
-            return FlightGlobals.getStaticPressure(vesselState.CoM);
+            return FlightGlobals.getStaticPressure(vesselState.CoM) * PhysicsGlobals.KpaToAtmospheres;
         }
 
         [ValueInfoItem("Coordinates", InfoItem.Category.Surface)]
@@ -169,8 +175,9 @@ namespace MuMech
         {
             double rcsThrust = 0;
 
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
+                Part p = vessel.parts[i];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
@@ -178,9 +185,9 @@ namespace MuMech
                         continue;
                     }
 
-                    foreach (float f in pm.thrustForces)
+                    for (int j = 0; j < pm.thrustForces.Count; j++)
                     {
-                        rcsThrust += f * pm.thrusterPower;
+                        rcsThrust += pm.thrustForces[j] * pm.thrusterPower;
                     }
                 }
             }
@@ -207,8 +214,9 @@ namespace MuMech
 
             direction.Normalize();
 
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
@@ -319,7 +327,7 @@ namespace MuMech
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
         public double DryMass()
         {
-            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass);
+            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass + p.GetPhysicslessChildMass());
         }
 
         [ValueInfoItem("Liquid fuel & oxidizer mass", InfoItem.Category.Vessel, showInEditor = true, format = "F2", units = "t")]
@@ -405,12 +413,14 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
-                                  .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
+                //return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
+                //                  .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
+                return 0;
             }
             else
             {
-                return vesselState.massDrag / vesselState.mass;
+#warning Check that ....
+                return vesselState.dragCoef;
             }
         }
 
@@ -434,7 +444,7 @@ namespace MuMech
         [ValueInfoItem("Part count / Max parts", InfoItem.Category.Vessel, showInEditor = true)]
         public string PartCountAndMaxPartCount()
         {
-            return string.Format("{0} / {1}", PartCount(), MaxPartCount());
+            return string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
         }
 
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
@@ -606,7 +616,7 @@ namespace MuMech
         [ValueInfoItem("Atmospheric drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double AtmosphericDrag()
         {
-            return mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude;
+            return vesselState.drag;
         }
 
         [ValueInfoItem("Synodic period", InfoItem.Category.Target)]
@@ -695,6 +705,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoInitialTWR = false; // NK
         [Persistent(pass = (int)Pass.Global)]
+        public bool showAtmoMaxTWR = false;
+        [Persistent(pass = (int)Pass.Global)]
         public bool showMaxTWR = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool showVacDeltaV = true;
@@ -703,23 +715,18 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showAtmoTime = true;
-        [Persistent(pass = (int)Pass.Global)]
         public int TWRbody = 1;
-
-        private FuelFlowSimulation.Stats[] vacStats;
-        private FuelFlowSimulation.Stats[] atmoStats;
-
+        
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
             // Unity throws an exception if we change our layout between the Layout event and 
             // the Repaint event, so only get new data right before the Layout event.
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            KerbalEngineer.VesselSimulator.Stage[] vacStats = stats.vacStats;
+            KerbalEngineer.VesselSimulator.Stage[] atmoStats = stats.atmoStats;
             if (Event.current.type == EventType.Layout)
             {
-                MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-                vacStats = stats.vacStats;
-                atmoStats = stats.atmoStats;
                 stats.RequestUpdate(this);
             }
 
@@ -731,49 +738,41 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
 
-            double geeASL;
             if (HighLogic.LoadedSceneIsEditor)
             {
                 // We're in the VAB/SPH
                 TWRbody = GuiUtils.ComboBox.Box(TWRbody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
-                geeASL = FlightGlobals.Bodies[TWRbody].GeeASL;
-            }
-            else
-            {
-                // We're in flight
-                geeASL = mainBody.GeeASL;
+                stats.editorBody = FlightGlobals.Bodies[TWRbody];
             }
 
             if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
             {
                 // NK detect necessity of atmo initial TWR
-                bool hasMFE = parts.Any(p => p.IsMFE());
+                //bool hasMFE = parts.Any(p => p.IsMFE());
 
                 if (showInitialMass)
                 {
-                    showInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                    showAtmoInitialTWR = hasMFE; // NK
-                    showInitialMass = showFinalMass = showMaxTWR = false;
+                    showInitialTWR = showAtmoInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
+                    showInitialMass =  showMaxTWR = showAtmoMaxTWR = false;
                 }
                 else
                 {
-                    showInitialMass = showInitialTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showAtmoTime = true;
-                    showAtmoInitialTWR = hasMFE; // NK
+                    showInitialMass = showInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
                 }
             }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].startMass.ToString("F1") + " t"));
-            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => vacStats[s].endMass.ToString("F1") + " t"));
-            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
-            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2"))); // NK
-            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].totalMass.ToString("F3") + " t"));
+            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => (vacStats[s].totalMass - vacStats[s].resourceMass).ToString("F3") + " t"));
+            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].thrustToWeight.ToString("F2")));
+            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].maxThrustToWeight.ToString("F2")));
+            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2"))); // NK
+            if (showAtmoMaxTWR) showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].maxThrustToWeight.ToString("F2")));
             if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showAtmoTime) showAtmoTime = !DrawStageStatsColumn("Atmo time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
             if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacTime) showVacTime = !DrawStageStatsColumn("Vac time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].deltaTime)));
+            if (showVacTime) showVacTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].time)));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -801,7 +800,7 @@ namespace MuMech
         }*/
         
         [ValueInfoItem("Stage ΔV (vac)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
-        public float StageDeltaVVacuum()
+        public double StageDeltaVVacuum()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
@@ -812,7 +811,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("Stage ΔV (atmo)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
-        public float StageDeltaVAtmosphere()
+        public double StageDeltaVAtmosphere()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
@@ -828,8 +827,8 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            float atmDv = (stats.atmoStats.Length == 0) ? 0 : stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
-            float vacDv = (stats.vacStats.Length == 0) ? 0 : stats.vacStats[stats.vacStats.Length - 1].deltaV;
+            double atmDv = (stats.atmoStats.Length == 0) ? 0 : stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
+            double vacDv = (stats.vacStats.Length == 0) ? 0 : stats.vacStats[stats.vacStats.Length - 1].deltaV;
 
             return String.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }
@@ -842,8 +841,8 @@ namespace MuMech
 
             if (stats.vacStats.Length == 0 || stats.atmoStats.Length == 0) return 0;
 
-            float vacTimeLeft = stats.vacStats[stats.vacStats.Length - 1].deltaTime;
-            float atmoTimeLeft = stats.atmoStats[stats.atmoStats.Length - 1].deltaTime;
+            float vacTimeLeft = (float)stats.vacStats[stats.vacStats.Length - 1].time;
+            float atmoTimeLeft = (float)stats.atmoStats[stats.atmoStats.Length - 1].time;
             float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
             return timeLeft;
@@ -869,7 +868,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("Total ΔV (vacuum)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
-        public float TotalDeltaVVaccum()
+        public double TotalDeltaVVaccum()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
@@ -877,7 +876,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("Total ΔV (atmo)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
-        public float TotalDeltaVAtmosphere()
+        public double TotalDeltaVAtmosphere()
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
@@ -890,8 +889,8 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            float atmDv = stats.atmoStats.Sum(s => s.deltaV);
-            float vacDv = stats.vacStats.Sum(s => s.deltaV);
+            double atmDv = stats.atmoStats.Sum(s => s.deltaV);
+            double vacDv = stats.vacStats.Sum(s => s.deltaV);
 
             return String.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }
@@ -948,11 +947,21 @@ namespace MuMech
             GUILayout.BeginVertical();
             GUILayout.Label("Planet phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
 
-            foreach (CelestialBody body in FlightGlobals.Bodies)
+            for (int i = 0; i < FlightGlobals.Bodies.Count; i++)
             {
-                if (body == Planetarium.fetch.Sun) continue;
-                if (body.referenceBody != Planetarium.fetch.Sun) continue;
-                if (body.orbit == o) continue;
+                CelestialBody body = FlightGlobals.Bodies[i];
+                if (body == Planetarium.fetch.Sun)
+                {
+                    continue;
+                }
+                if (body.referenceBody != Planetarium.fetch.Sun)
+                {
+                    continue;
+                }
+                if (body.orbit == o)
+                {
+                    continue;
+                }
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
@@ -974,9 +983,13 @@ namespace MuMech
                 Orbit o = orbit;
                 while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
-                foreach (CelestialBody body in o.referenceBody.orbitingBodies)
+                for (int i = 0; i < o.referenceBody.orbitingBodies.Count; i++)
                 {
-                    if (body.orbit == o) continue;
+                    CelestialBody body = o.referenceBody.orbitingBodies[i];
+                    if (body.orbit == o)
+                    {
+                        continue;
+                    }
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));

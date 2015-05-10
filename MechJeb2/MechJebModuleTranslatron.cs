@@ -71,21 +71,8 @@ namespace MuMech
                     autoMode = false;
                 }
 
-                MechJebModuleThrustController.TMode oldMode = core.thrust.tmode;
-                core.thrust.tmode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
-                if (core.thrust.tmode != oldMode)
-                {
-                    core.thrust.trans_spd_act = Convert.ToInt16(trans_spd);
-                    windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
-                    if (core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)
-                    {
-                        core.thrust.users.Remove(this);
-                    }
-                    else
-                    {
-                        core.thrust.users.Add(this);
-                    }
-                }
+                MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
+                SetMode(newMode);
 
                 core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, "Kill H/S", GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
@@ -116,25 +103,7 @@ namespace MuMech
 
             if (GUILayout.Button((abort != AbortStage.OFF) ? "DON'T PANIC!" : "PANIC!!!", sty, GUILayout.ExpandWidth(true)))
             {
-                if (abort != AbortStage.OFF)
-                {
-                    if ((abort == AbortStage.LAND) || (abort == AbortStage.LANDING))
-                    {
-                        core.GetComputerModule<MechJebModuleLandingAutopilot>().StopLanding();
-                    }
-                    else
-                    {
-                        core.thrust.ThrustOff();
-                        core.thrust.users.Remove(this);
-                        core.attitude.attitudeDeactivate();
-                    }
-                    abort = AbortStage.OFF;
-                }
-                else
-                {
-                    abort = AbortStage.THRUSTOFF;
-                    core.thrust.users.Add(this);
-                }
+                PanicSwitch();
             }
 
             GUILayout.EndVertical();
@@ -142,13 +111,56 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
+        public void SetMode(MechJebModuleThrustController.TMode newMode)
+        {
+            MechJebModuleThrustController.TMode oldMode = core.thrust.tmode;
+            core.thrust.tmode = newMode;
+            if (core.thrust.tmode != oldMode)
+            {
+                core.thrust.trans_spd_act = Convert.ToInt16(trans_spd);
+                windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
+                if (core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)
+                {
+                    core.thrust.users.Remove(this);
+                }
+                else
+                {
+                    core.thrust.users.Add(this);
+                }
+            }
+        }
+
+        public void PanicSwitch()
+        {
+            if (abort != AbortStage.OFF)
+            {
+                if ((abort == AbortStage.LAND) || (abort == AbortStage.LANDING))
+                {
+                    core.GetComputerModule<MechJebModuleLandingAutopilot>().StopLanding();
+                }
+                else
+                {
+                    core.thrust.ThrustOff();
+                    core.thrust.users.Remove(this);
+                    core.attitude.attitudeDeactivate();
+                }
+                abort = AbortStage.OFF;
+            }
+            else
+            {
+                abort = AbortStage.THRUSTOFF;
+                core.thrust.users.Add(this);
+            }
+        }
+
         public void recursiveDecouple()
         {
             int minStage = Staging.lastStage;
-            foreach (Part child in part.vessel.parts)
+            for (int i = 0; i < part.vessel.parts.Count; i++)
             {
+                Part child = part.vessel.parts[i];
                 // TODO Sarbian : Cleanup - not sure if any mod still use those and they are not supported in other part of the code
-                if ((child is LiquidEngine) || (child is LiquidFuelEngine) || (child is SolidRocket) || (child is AtmosphericEngine) || child.Modules.Contains("ModuleEngines") || child.Modules.Contains("ModuleEnginesFX"))
+                if (child.HasModule<ModuleEngines>() || child.HasModule<ModuleEnginesFX>())
                 {
                     if (child.inverseStage < minStage)
                     {
@@ -157,16 +169,18 @@ namespace MuMech
                 }
             }
             List<Part> decouplers = new List<Part>();
-            foreach (Part child in part.vessel.parts)
+            for (int i = 0; i < part.vessel.parts.Count; i++)
             {
-                if ((child.inverseStage > minStage) && ((child is Decoupler) || (child is DecouplerGUI) || (child is RadialDecoupler) || child.Modules.Contains("ModuleDecouple") || child.Modules.Contains("ModuleAnchoredDecoupler")))
+                Part child = part.vessel.parts[i];
+                if ((child.inverseStage > minStage) &&
+                    (child.HasModule<ModuleDecouple>() || child.HasModule<ModuleAnchoredDecoupler>()))
                 {
                     decouplers.Add(child);
                 }
             }
-            foreach (Part decoupler in decouplers)
+            for (int i = 0; i < decouplers.Count; i++)
             {
-                decoupler.force_activate();
+                decouplers[i].force_activate();
             }
             if (part.vessel == FlightGlobals.ActiveVessel)
             {

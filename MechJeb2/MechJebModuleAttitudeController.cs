@@ -59,14 +59,13 @@ namespace MuMech
 
         protected bool attitudeChanged = false;
 
-        protected AttitudeReference _oldAttitudeReference = AttitudeReference.INERTIAL;
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
-        
+
         public override void OnModuleEnabled()
         {
             timeCount = 50;
         }
-        
+
         public AttitudeReference attitudeReference
         {
             get
@@ -77,7 +76,6 @@ namespace MuMech
             {
                 if (_attitudeReference != value)
                 {
-                    _oldAttitudeReference = _attitudeReference;
                     _attitudeReference = value;
                     attitudeChanged = true;
                 }
@@ -106,7 +104,7 @@ namespace MuMech
         }
 
         protected Quaternion _requestedAttitude = Quaternion.identity;
-        public Quaternion RequestedAttitude 
+        public Quaternion RequestedAttitude
         {
             get { return _requestedAttitude; }
         }
@@ -143,7 +141,7 @@ namespace MuMech
         }
 
         public override void OnStart(PartModule.StartState state)
-        {            
+        {
             pid = new PIDControllerV2(0, 0, 0, 1, -1);
             setPIDParameters();
             lastAct = Vector3d.zero;
@@ -270,7 +268,7 @@ namespace MuMech
         {
             //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
             double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
-            
+
             Vector3 up, dir = direction;
 
             // TODO : Fix that so it does not roll when it should not. Current fix is a "hack" that set required roll to 0 if !attitudeRollMatters
@@ -382,7 +380,7 @@ namespace MuMech
 
                 // ( MoI / avaiable torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
-                
+
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox
 
@@ -396,7 +394,7 @@ namespace MuMech
                 Vector3d err = new Vector3d(
                                                 -rotDirection.y * Math.PI,
                                                 rotDirection.x * Math.PI,
-                                                attitudeRollMatters?((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
+                                                attitudeRollMatters ? ((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
                                             );
 
                 err += inertia.Reorder(132) / 2;
@@ -439,7 +437,7 @@ namespace MuMech
 
             if (attitudeKILLROT)
             {
-                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll) 
+                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll)
                 {
                     attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
                     lastReferencePart = vessel.GetReferenceTransformPart();
@@ -483,7 +481,7 @@ namespace MuMech
                 {
                     if (RCS_auto)
                     {
-                        if (attitudeRCScontrol && core.rcs.users.Count==0)
+                        if (attitudeRCScontrol && core.rcs.users.Count == 0)
                         {
                             part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
                         }

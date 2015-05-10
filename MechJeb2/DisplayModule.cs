@@ -88,12 +88,14 @@ namespace MuMech
 //            }
             
             bool allowDrag = true;
-            if (core.GetComputerModule<MechJebModuleSettings>().useTitlebarDragging)
+            if (core.settings.useTitlebarDragging)
             {
-            	allowDrag = Mouse.screenPos.x >= windowPos.xMin + 3 && Mouse.screenPos.x <= windowPos.xMin + windowPos.width - 3 &&
-							Mouse.screenPos.y >= windowPos.yMin + 3 && Mouse.screenPos.y <= windowPos.yMin + 17;
+                float x = Mouse.screenPos.x / GuiUtils.scale;
+                float y = Mouse.screenPos.y / GuiUtils.scale;
+                allowDrag = x >= windowPos.xMin + 3 && x <= windowPos.xMin + windowPos.width - 3 &&
+                            y >= windowPos.yMin + 3 && y <= windowPos.yMin + 17;
             }
-            
+
             if (draggable && allowDrag)
                 GUI.DragWindow();
         }

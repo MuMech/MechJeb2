@@ -75,8 +75,6 @@ namespace MuMech
 
                 GUILayout.Label("Overdrive increases power when possible, at the cost of RCS fuel efficiency.");
 
-                balancer.rcsForRotation = GUILayout.Toggle(balancer.rcsForRotation, "Use RCS for rotation");
-
                 // Advanced options
                 balancer.advancedOptions = GUILayout.Toggle(balancer.advancedOptions, "Advanced options");
                 if (balancer.advancedOptions)

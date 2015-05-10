@@ -52,7 +52,7 @@ namespace MuMech
 
             if (core.target.Target != null && core.target.Name == TARGET_NAME)
             {
-                double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL);
+                double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
                 double heading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
                 Vector3d horizontalDir = Math.Cos(heading) * vesselState.north + Math.Sin(heading) * vesselState.east;
                 Vector3d dir = Math.Cos(angle) * horizontalDir + Math.Sin(angle) * vesselState.up;
@@ -106,21 +106,28 @@ namespace MuMech
             autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
             if (autopilot.forceRoll)
             {
-                GuiUtils.SimpleTextBox(" climb ", autopilot.verticalRoll, "º", 30f);
-                GuiUtils.SimpleTextBox(" turn ", autopilot.turnRoll, "º", 30f);
+                GuiUtils.SimpleTextBox("climb", autopilot.verticalRoll, "º", 30f);
+                GuiUtils.SimpleTextBox("turn", autopilot.turnRoll, "º", 30f);
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
             if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
-            autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit angle of attack to", s, GUILayout.Width(150));
+            autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA to", s, GUILayout.ExpandWidth(true));
             autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
-            GUILayout.Label("º", GUILayout.ExpandWidth(false));
+            GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(25);
             if (autopilot.limitAoA) {
-                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50);
+                GUIStyle sl = new GUIStyle(GUI.skin.label);
+                if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
+                    sl.normal.textColor = sl.hover.textColor = Color.green;
+                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50, sl);
             }
+            GUILayout.EndHorizontal();
+
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");

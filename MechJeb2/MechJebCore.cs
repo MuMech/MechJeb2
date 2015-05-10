@@ -19,6 +19,10 @@ namespace MuMech
         private List<ComputerModule> modulesToLoad = new List<ComputerModule>();
 
         private Dictionary<object, IEnumerable<ComputerModule>> sortedModules = new Dictionary<object, IEnumerable<ComputerModule>>();
+        private Dictionary<object, IEnumerable<DisplayModule>> sortedDisplayModules = new Dictionary<object, IEnumerable<DisplayModule>>();
+
+        // Reference to the parts base config. See Onload for explanation
+        private static Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
 
         private static List<Type> moduleRegistry;
 
@@ -32,6 +36,8 @@ namespace MuMech
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
         public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleLandingAutopilot landing;
+        public MechJebModuleSettings settings;
 
         public VesselState vesselState = new VesselState();
 
@@ -39,11 +45,225 @@ namespace MuMech
 
         public string version = "";
 
+        private bool deactivateControl = false; 
+
+        public MechJebCore MasterMechJeb
+        {
+            get { return vessel.GetMasterMechJeb(); }
+        }
+
+        // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
+        public bool DeactivateControl
+        {
+            get
+            {
+                MechJebCore mj = vessel.GetMasterMechJeb();
+                return mj != null && vessel.GetMasterMechJeb().deactivateControl;
+            }
+            set
+            {
+                MechJebCore mj = vessel.GetMasterMechJeb();
+                if (mj != null )
+                    vessel.GetMasterMechJeb().deactivateControl = value;
+            }
+        }
+
         [KSPField(isPersistant = false)]
         public string blacklist = "";
 
         [KSPField]
         public ConfigNode partSettings;
+
+        [KSPAction("Orbit Prograde")]
+        public void OnOrbitProgradeAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.PROGRADE);
+        }
+
+        [KSPAction("Orbit Retrograde")]
+        public void OnOrbitRetrogradeAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RETROGRADE);
+        }
+
+        [KSPAction("Orbit Normal")]
+        public void OnOrbitNormalAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_PLUS);
+        }
+
+        [KSPAction("Orbit Antinormal")]
+        public void OnOrbitAntinormalAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_MINUS);
+        }
+
+        [KSPAction("Orbit Radial In")]
+        public void OnOrbitRadialInAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_MINUS);
+        }
+
+        [KSPAction("Orbit Radial Out")]
+        public void OnOrbitRadialOutAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_PLUS);
+        }
+
+        [KSPAction("Orbit Kill Rotation")]
+        public void OnKillRotationAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
+        }
+
+        [KSPAction("Deactivate SmartASS")]
+        public void OnDeactivateSmartASSAction(KSPActionParam param)
+        {
+            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
+        }
+
+        private void EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target target)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if(masterMechJeb != null)
+            {
+                MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
+
+                if (masterSmartASS != null && !masterSmartASS.hidden)
+                {
+                    masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
+                    masterSmartASS.target = target;
+
+                    masterSmartASS.Engage();
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+        
+        [KSPAction("PANIC!")]
+        public void OnPanicAction(KSPActionParam param)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    moduleTranslatron.PanicSwitch();
+                }
+            }
+        }
+
+        [KSPAction("Translatron OFF")]
+        public void OnTranslatronOffAction(KSPActionParam param)
+        {
+            EngageTranslatronControl(MechJebModuleThrustController.TMode.OFF);
+        }
+
+        [KSPAction("Translatron Keep Vert")]
+        public void OnTranslatronKeepVertAction(KSPActionParam param)
+        {
+            EngageTranslatronControl(MechJebModuleThrustController.TMode.KEEP_VERTICAL);
+        }
+
+        [KSPAction("Translatron Zero speed")]
+        public void OnTranslatronZeroSpeedAction(KSPActionParam param)
+        {
+            SetTranslatronSpeed(0);
+        }
+
+        [KSPAction("Translatron +1 speed")]
+        public void OnTranslatronPlusOneSpeedAction(KSPActionParam param)
+        {
+            SetTranslatronSpeed(1, true);
+        }
+
+        [KSPAction("Translatron -1 speed")]
+        public void OnTranslatronMinusOneSpeedAction(KSPActionParam param)
+        {
+            SetTranslatronSpeed(-1, true);
+        }
+
+        [KSPAction("Translatron Toggle H/S")]
+        public void OnTranslatronToggleHSAction(KSPActionParam param)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    thrust.trans_kill_h = !thrust.trans_kill_h;
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
+        private void EngageTranslatronControl(MechJebModuleThrustController.TMode mode)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    if ((thrust.users.Count > 1) && !thrust.users.Contains(moduleTranslatron))
+                        return;
+
+                    moduleTranslatron.SetMode(mode);
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
+        private void SetTranslatronSpeed(float speed, bool relative=false)
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
+
+                if (moduleTranslatron != null && !moduleTranslatron.hidden)
+                {
+                    thrust.trans_spd_act = (relative ? thrust.trans_spd_act : 0) + speed;
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
 
         private bool weLockedInputs = false;
         private float lastSettingsSaveTime;
@@ -94,23 +314,36 @@ namespace MuMech
         {
             return unorderedComputerModules.OfType<T>().FirstOrDefault();//returns null if no matches
         }
+
         public IEnumerable<T> GetComputerModules<T>() where T : ComputerModule
         {
-            System.Type key = typeof(T);
-            if (sortedModules.ContainsKey(key))
-                return sortedModules[key].Cast<T>();
-            sortedModules[key] = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m);
-            return sortedModules[key].Cast<T>();
+            Type key = typeof(T);
+            IEnumerable<ComputerModule> value;
+            if (sortedModules.TryGetValue(key, out value))
+                return value.Cast<T>();
+            sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
+            return value.Cast<T>();
         }
 
         // Return the list of modules of type T in the order specified by comparer function
         // Be sure to always use the same instance of comparer in order to avoid memory leaks
         public IEnumerable<T> GetComputerModules<T>(IComparer<T> comparer) where T : ComputerModule
         {
-            if (sortedModules.ContainsKey(comparer))
-                return sortedModules[comparer].Cast<T>();
-            sortedModules[comparer] = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>();
-            return sortedModules[comparer].Cast<T>();
+            IEnumerable<ComputerModule> value;
+            if (sortedModules.TryGetValue(comparer, out value))
+                return value.Cast<T>();
+            sortedModules[comparer] = value = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>().ToList();
+            return value.Cast<T>();
+        }
+
+        // Added because the generic version eats memory like candy when casting from ComputerModule to DisplayModule (.Cast<T>())
+        public IEnumerable<DisplayModule> GetDisplayModules(IComparer<DisplayModule> comparer)
+        {
+            IEnumerable<DisplayModule> value;
+            if (sortedDisplayModules.TryGetValue(comparer, out value))
+                return value;
+            sortedDisplayModules[comparer] = value = unorderedComputerModules.OfType<DisplayModule>().OrderBy(m => m, comparer).ToList();
+            return value;
         }
 
         public ComputerModule GetComputerModule(string type)
@@ -122,6 +355,7 @@ namespace MuMech
         {
             unorderedComputerModules.Add(module);
             sortedModules.Clear();
+            sortedDisplayModules.Clear();
         }
 
         public void AddComputerModuleLater(ComputerModule module)
@@ -139,6 +373,7 @@ namespace MuMech
                 unorderedComputerModules.AddRange(modulesToLoad);
                 sortedModules.Clear();
                 modulesToLoad.Clear();
+                sortedDisplayModules.Clear();
             }
         }
 
@@ -146,6 +381,7 @@ namespace MuMech
         {
             unorderedComputerModules.Remove(module);
             sortedModules.Clear();
+            sortedDisplayModules.Clear();
         }
 
         public void ReloadAllComputerModules()
@@ -154,6 +390,7 @@ namespace MuMech
             foreach (ComputerModule module in unorderedComputerModules) module.OnDestroy();
             unorderedComputerModules.Clear();
             sortedModules.Clear();
+            sortedDisplayModules.Clear();
 
             if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             controlledVessel = null;
@@ -180,8 +417,8 @@ namespace MuMech
                 OnLoad(null);
             }
 
-            GameEvents.onShowUI.Add(new EventVoid.OnEvent(this.ShowGUI));
-            GameEvents.onHideUI.Add(new EventVoid.OnEvent(this.HideGUI));
+            GameEvents.onShowUI.Add(this.ShowGUI);
+            GameEvents.onHideUI.Add(this.HideGUI);
 
             lastSettingsSaveTime = Time.time;
 
@@ -275,6 +512,10 @@ namespace MuMech
                     print("Focus changed! Forcing " + lastFocus.vesselName + " to save");
                     lastFocus.GetMasterMechJeb().OnSave(null);
                 }
+
+                // Clear the modules cache
+                sortedModules.Clear();
+                sortedDisplayModules.Clear();
 
                 OnLoad(null); // Force Global reload
 
@@ -398,6 +639,7 @@ namespace MuMech
                 foreach (Type t in moduleRegistry)
                 {
                     if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
+                        && (t != typeof(AutopilotModule))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
                         AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
@@ -419,6 +661,8 @@ namespace MuMech
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
             solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            landing = GetComputerModule<MechJebModuleLandingAutopilot>();
+            settings = GetComputerModule<MechJebModuleSettings>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
@@ -434,9 +678,19 @@ namespace MuMech
 
                 base.OnLoad(sfsNode); //is this necessary?
 
-                if (partSettings == null && sfsNode != null)
+
+                // With the Unity 4.6 upgrade of KSP 1.0 we inherited a serialization problem
+                // with object with high depth like config nodes
+                // so the partmodule config node passed was not ok.
+                // So we use a static dir to save the part config node.
+                if (!savedConfig.ContainsKey(part.name))
                 {
-                    partSettings = sfsNode;
+                    if (HighLogic.LoadedScene == GameScenes.LOADING)
+                        savedConfig.Add(part.name, sfsNode);
+                }
+                else
+                {
+                    partSettings = savedConfig[part.name];
                 }
 
                 LoadComputerModules();
@@ -647,7 +901,7 @@ namespace MuMech
 
         private void OnFlyByWire(FlightCtrlState s)
         {
-            if (!CheckControlledVessel() || this != vessel.GetMasterMechJeb())
+            if (deactivateControl || !CheckControlledVessel() || this != vessel.GetMasterMechJeb())
             {
                 return;
             }
@@ -716,9 +970,7 @@ namespace MuMech
 
                 GuiUtils.ComboBox.DrawGUI();
 
-                GuiUtils.LoadSkin((GuiUtils.SkinType)GetComputerModule<MechJebModuleSettings>().skinId);
-
-                GuiUtils.CheckSkin();
+                GuiUtils.LoadSkin((GuiUtils.SkinType)settings.skinId);
 
                 GUI.skin = GuiUtils.skin;
 
@@ -783,3 +1035,4 @@ namespace MuMech
         }
     }
 }
+

@@ -528,6 +528,15 @@ namespace MuMech
 			}
 		}
 
+		public MechJebWaypoint SelectedWaypoint() {
+			return (selIndex > -1 ? ap.Waypoints[selIndex] : null);
+		}
+		
+		public int SelectedWaypointIndex {
+			get { return selIndex; }
+			set { selIndex = value; }
+		}
+		
 		public override GUILayoutOption[] WindowOptions()
 		{
 			return new GUILayoutOption[] { GUILayout.Width(500), GUILayout.Height(400) };
@@ -545,20 +554,20 @@ namespace MuMech
 				for (int i = 0; i < ap.Waypoints.Count; i++)
 				{
 					var wp = ap.Waypoints[i];
+					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : 0);
 					if (MapView.MapIsEnabled && i == selIndex)
 					{
-						MuMech.GLUtils.DrawMapViewGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 250);
+						MuMech.GLUtils.DrawMapViewGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 100);
 					}
 					if (i >= ap.WaypointIndex)
 					{
 						if (ap.WaypointIndex > -1)
 						{
-							eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (i == ap.WaypointIndex ? (float)Math.Round(ap.etaSpeed, 1) : wp.MaxSpeed));
+							eta += GuiUtils.FromToETA((i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position, (ap.etaSpeed > 0.1 && ap.etaSpeed < maxSpeed ? (float)Math.Round(ap.etaSpeed, 1) : maxSpeed));
 						}
 						dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
-					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val);
-					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : 0);
 					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
 					                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
@@ -600,24 +609,24 @@ namespace MuMech
 						GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
 						tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(50));
 						float.TryParse(tmpRadius, out wp.Radius);
-						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.Radius = wp.Radius); }
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.Radius = wp.Radius); }
 						
 						GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
 						tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(40));
 						float.TryParse(tmpMinSpeed, out wp.MinSpeed);
-						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
 						
 						GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
 						tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
 						float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
-						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
 						
 						GUILayout.FlexibleSpace();
 						if (GUILayout.Button("QS", (wp.Quicksave ? styleQuicksave : styleInactive), GUILayout.ExpandWidth(false)))
 						{
 							if (alt)
 							{
-								ap.Waypoints.ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
+								ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
 							}
 							else
 							{

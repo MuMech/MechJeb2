@@ -110,10 +110,9 @@ namespace MuMech
 
             gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.surfaceVelocity.normalized, vesselState.gravityForce);
             gravityLosses -= vesselState.deltaT * Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
-            double dragAccel = mainBody.DragAccel(vesselState.CoM, vesselState.orbitalVelocity, vesselState.massDrag / vesselState.mass).magnitude;
-            dragLosses += vesselState.deltaT * dragAccel;
+            dragLosses += vesselState.deltaT * vesselState.drag;
 
-            maxDragGees = Math.Max(maxDragGees, dragAccel / 9.81);
+            maxDragGees = Math.Max(maxDragGees, vesselState.drag / 9.81);
 
             double circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
             double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
