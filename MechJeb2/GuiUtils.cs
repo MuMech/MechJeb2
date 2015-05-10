@@ -255,7 +255,7 @@ namespace MuMech
 
         public static void SetGUIScale(double s)
         {
-            if (scale == s && scaledScreenWidth == 1 && scaledScreenHeight == 1)
+            if (scale == s && scaledScreenWidth != 1 && scaledScreenHeight != 1)
                 return;
             scale = Mathf.Clamp((float)s, 0.2f, 5f);
             scaledScreenHeight = Mathf.RoundToInt(Screen.height / scale);
