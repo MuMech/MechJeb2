@@ -145,8 +145,8 @@ namespace MuMech
                 return;
 
             SetupMainToolbarButton();
-           
-            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().Where( m => !m.hidden))
+
+            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
             {
                 Button button;
                 if (!toolbarButtons.ContainsKey(module))
@@ -187,7 +187,7 @@ namespace MuMech
                     button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += (b) =>
                     {
-                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModules<DisplayModule>().FirstOrDefault(m => m == module);
+                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetDisplayModules(DisplayOrder.instance).FirstOrDefault(m => m == module);
                         if (mod != null)
                         {
                             mod.enabled = !mod.enabled;
@@ -344,8 +344,11 @@ namespace MuMech
                 }
             }
 
-            SetupAppLauncher();
-            SetupToolBarButtons();
+            if (vessel.isActiveVessel)
+            {
+                SetupAppLauncher();
+                SetupToolBarButtons();
+            }
         }
 
         class DisplayOrder : IComparer<DisplayModule>

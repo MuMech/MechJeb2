@@ -355,6 +355,7 @@ namespace MuMech
         {
             unorderedComputerModules.Add(module);
             sortedModules.Clear();
+            sortedDisplayModules.Clear();
         }
 
         public void AddComputerModuleLater(ComputerModule module)
@@ -372,6 +373,7 @@ namespace MuMech
                 unorderedComputerModules.AddRange(modulesToLoad);
                 sortedModules.Clear();
                 modulesToLoad.Clear();
+                sortedDisplayModules.Clear();
             }
         }
 
@@ -512,8 +514,8 @@ namespace MuMech
                 }
 
                 // Clear the modules cache
-                sortedDisplayModules.Clear();
                 sortedModules.Clear();
+                sortedDisplayModules.Clear();
 
                 OnLoad(null); // Force Global reload
 
