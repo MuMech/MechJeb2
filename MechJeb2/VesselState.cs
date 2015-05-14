@@ -633,6 +633,10 @@ namespace MuMech
                             parachuteDeployed = true;
                         }
                     }
+                    else if (pm is ModuleAeroSurface)
+                    {
+                        // TODO ...
+                    }
                     else if (pm is ModuleControlSurface)
                     {
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
@@ -649,7 +653,7 @@ namespace MuMech
                         Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
                         float inverted = relpos.y > 0.01 ? -1 : 1;
                         relpos.x = cs.ignorePitch ? 0 : inverted * (relpos.x < 0.01 ? -1 : 1);
-                        relpos.y = cs.ignoreRoll  ? 0 : 1;
+                        relpos.y = cs.ignoreRoll  ? 0 : inverted;
                         relpos.z = cs.ignoreYaw   ? 0 : inverted * (relpos.z < 0.01 ? -1 : 1);
                         
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
