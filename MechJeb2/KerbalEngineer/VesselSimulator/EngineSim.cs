@@ -86,11 +86,10 @@ namespace KerbalEngineer.VesselSimulator
                          List<Propellant> propellants,
                          bool active,
                          float resultingThrust,
-                         List<Transform> thrustTransforms)
+                         List<Transform> thrustTransforms,
+                        LogMsg log)
         {
             EngineSim engineSim = pool.Borrow();
-
-            StringBuilder buffer = null;
 
             engineSim.isp = 0.0;
             engineSim.maxMach = 0.0f;
@@ -133,11 +132,7 @@ namespace KerbalEngineer.VesselSimulator
                 flowRate = GetFlowRate(engineSim.thrust, engineSim.isp);
             }
 
-            if (SimManager.logOutput)
-            {
-                buffer = new StringBuilder(1024);
-                buffer.AppendFormat("flowRate = {0:g6}\n", flowRate);
-            }
+            if (log != null) log.buf.AppendFormat("flowRate = {0:g6}\n", flowRate);
 
             engineSim.thrust = flowRate * (engineSim.isp * IspG);
             // I did not look into the diff between those 2 so I made them equal...
@@ -150,10 +145,7 @@ namespace KerbalEngineer.VesselSimulator
                 flowMass += propellant.ratio * ResourceContainer.GetResourceDensity(propellant.id);
             }
 
-            if (SimManager.logOutput)
-            {
-                buffer.AppendFormat("flowMass = {0:g6}\n", flowMass);
-            }
+            if (log != null) log.buf.AppendFormat("flowMass = {0:g6}\n", flowMass);
 
             for (int i = 0; i < propellants.Count; ++i)
             {
@@ -165,21 +157,13 @@ namespace KerbalEngineer.VesselSimulator
                 }
 
                 double consumptionRate = propellant.ratio * flowRate / flowMass;
-                if (SimManager.logOutput)
-                {
-                    buffer.AppendFormat(
+                if (log != null) log.buf.AppendFormat(
                         "Add consumption({0}, {1}:{2:d}) = {3:g6}\n",
                         ResourceContainer.GetResourceName(propellant.id),
                         theEngine.name,
                         theEngine.partId,
                         consumptionRate);
-                }
                 engineSim.resourceConsumptions.Add(propellant.id, consumptionRate);
-            }
-
-            if (SimManager.logOutput)
-            {
-                MonoBehaviour.print(buffer);
             }
 
             double thrustPerThrustTransform = engineSim.thrust / thrustTransforms.Count;

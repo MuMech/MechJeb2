@@ -404,8 +404,7 @@ namespace KerbalEngineer.VesselSimulator
             }
             catch (Exception e)
             {
-                MonoBehaviour.print("Exception in StartSimulation: " + e);
-                Logger.Exception(e);
+                Logger.Exception(e, "SimManager.StartSimulation()");
                 failMessage = e.ToString();
                 lock (locker)
                 {
