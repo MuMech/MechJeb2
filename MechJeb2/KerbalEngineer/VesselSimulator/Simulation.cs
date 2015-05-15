@@ -119,7 +119,7 @@ namespace KerbalEngineer.VesselSimulator
                 for (int i = 0; i < allParts.Count; ++i)
                 {
                     PartSim partSim = allParts[i];
-                    vectorAverager.Add(partSim.centerOfMass, partSim.GetMass(currentStage, true));
+                    vectorAverager.Add(partSim.centerOfMass, partSim.GetMass(currentStage));
                 }
 
                 return vectorAverager.Get();
@@ -394,12 +394,6 @@ namespace KerbalEngineer.VesselSimulator
                     this._timer.Start();
                 }
 
-                // Update the masses of the parts to correctly handle "no physics" parts
-                this.UpdatePartMasses();
-
-                if (log != null)
-                    this.allParts[0].DumpPartToBuffer(log.buf, "", this.allParts);
-
                 // Update active engines and resource drains
                 this.UpdateResourceDrains();
 
@@ -419,11 +413,11 @@ namespace KerbalEngineer.VesselSimulator
 
                 // Store various things in the Stage object
                 stage.thrust = this.totalStageThrust;
-                if (log != null) log.buf.AppendLine("stage.thrust = " + stage.thrust);
+                //MonoBehaviour.print("stage.thrust = " + stage.thrust);
                 stage.thrustToWeight = this.totalStageThrust / (this.stageStartMass * this.gravity);
                 stage.maxThrustToWeight = stage.thrustToWeight;
-                if (log != null) log.buf.AppendLine("StageMass = " + stageStartMass);
-                if (log != null) log.buf.AppendLine("Initial maxTWR = " + stage.maxThrustToWeight);
+                //MonoBehaviour.print("StageMass = " + stageStartMass);
+                //MonoBehaviour.print("Initial maxTWR = " + stage.maxThrustToWeight);
                 stage.actualThrust = this.totalStageActualThrust;
                 stage.actualThrustToWeight = this.totalStageActualThrust / (this.stageStartMass * this.gravity);
 
@@ -654,40 +648,6 @@ namespace KerbalEngineer.VesselSimulator
             FreePooledObject();
             
             return stages;
-        }
-
-        public void UpdatePartMasses()
-        {
-            for (int i = 0; i < this.allParts.Count; i++)
-            {
-                this.allParts[i].baseMass = this.allParts[i].realMass;
-                this.allParts[i].baseMassForCoM = this.allParts[i].realMass;
-            }
-
-            for (int i = 0; i < this.allParts.Count; i++)
-            {
-                PartSim part = this.allParts[i];
-                // If the part has a parent
-                if (part.parent != null)
-                {
-                    if (part.isNoPhysics)
-                    {
-                        if (part.parent.isNoPhysics && part.parent.parent != null)
-                        {
-                            part.baseMass = 0d;
-                            part.baseMassForCoM = 0d;
-                        }
-                        else
-                        {
-                            part.parent.baseMassForCoM += part.baseMassForCoM;
-                            part.baseMassForCoM = 0d;
-                        }
-                    }
-                }
-            }
-
-            for (int i = 0; i < this.allParts.Count; i++)
-                this.allParts[i].startMass = this.allParts[i].GetMass(currentStage);
         }
 
         // Make sure we free them all, even if they should all be free already at this point

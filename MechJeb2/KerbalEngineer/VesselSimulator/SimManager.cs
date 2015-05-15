@@ -34,7 +34,7 @@ namespace KerbalEngineer.VesselSimulator
     {
         #region Constants
 
-        public const double RESOURCE_MIN = 0.0001;  // The game does not use that anymore but the sim goes mad if I set it to 0...
+        public const double RESOURCE_MIN = 0.0001;
         public const double RESOURCE_PART_EMPTY_THRESH = 0.01;
 
         #endregion
