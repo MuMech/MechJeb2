@@ -19,7 +19,7 @@ namespace MuMech
                     return this;
 
                 // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
-                if (vesselState.drag > 0.1)
+                if (core.landing.deployChutes)
                 {
                     if (core.landing.ParachutesDeployable())
                     {
@@ -40,6 +40,12 @@ namespace MuMech
                 if (vesselState.parachuteDeployed)
                 {
                     core.thrust.targetThrottle = 0;
+                    return new CoastToDeceleration(core);
+                }
+
+                // We are not in .90 anymore. Turning while under drag is a bad idea
+                if (vesselState.drag > 0.1)
+                {
                     return new CoastToDeceleration(core);
                 }
 

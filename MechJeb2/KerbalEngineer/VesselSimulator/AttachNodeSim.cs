@@ -19,13 +19,13 @@
 
 #region Using Directives
 
-using System;
-using System.Text;
-
 #endregion
 
 namespace KerbalEngineer.VesselSimulator
 {
+    using System;
+    using System.Text;
+
     internal class AttachNodeSim
     {
 
@@ -61,20 +61,20 @@ namespace KerbalEngineer.VesselSimulator
 
         public void DumpToBuffer(StringBuilder buffer)
         {
-            if (this.attachedPartSim == null)
+            if (attachedPartSim == null)
             {
                 buffer.Append("<staged>:<n>");
             }
             else
             {
-                buffer.Append(this.attachedPartSim.name);
+                buffer.Append(attachedPartSim.name);
                 buffer.Append(":");
-                buffer.Append(this.attachedPartSim.partId);
+                buffer.Append(attachedPartSim.partId);
             }
             buffer.Append("#");
-            buffer.Append(this.nodeType);
+            buffer.Append(nodeType);
             buffer.Append(":");
-            buffer.Append(this.id);
+            buffer.Append(id);
         }
     }
 }

@@ -125,6 +125,51 @@ namespace MuMech
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
+            if (core.node != null)
+            {
+                if (vessel.patchedConicSolver.maneuverNodes.Any() && !core.node.enabled)
+                {
+                    if (GUILayout.Button("Execute next node"))
+                    {
+                        core.node.ExecuteOneNode(this);
+                    }
+
+                    if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                    {
+                        if (GUILayout.Button("Execute all nodes"))
+                        {
+                            core.node.ExecuteAllNodes(this);
+                        }
+                    }
+                }
+                else if (core.node.enabled)
+                {
+                    if (GUILayout.Button("Abort node execution"))
+                    {
+                        core.node.Abort();
+                    }
+                }
+
+                GUILayout.BeginHorizontal();
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp", GUILayout.ExpandWidth(true));
+                GUILayout.Label("Tolerance:", GUILayout.ExpandWidth(false));
+                core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                {
+                    core.node.tolerance.val += 0.1;
+                }
+                if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                {
+                    core.node.tolerance.val -= core.node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                }
+                if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
+                {
+                    core.node.tolerance.val = 0.1;
+                }
+                GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+            }
+
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);

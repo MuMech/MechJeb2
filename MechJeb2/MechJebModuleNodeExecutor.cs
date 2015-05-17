@@ -189,7 +189,12 @@ namespace MuMech
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
                 var s = stats.vacStats[i];
-                if (s.deltaV <= 0 || s.thrust <= 0)
+
+                // s.number is equal to -1 when KER adds a stage for manually activated engines.
+                // but currently KER code does not report the mass ar available dV for this stage
+                // So we assume a constant mass.
+
+                if (s.number != -1 && (s.deltaV <= 0 || s.thrust <= 0))
                 {
                     if (core.staging.enabled)
                     {
@@ -206,11 +211,6 @@ namespace MuMech
                 double stageBurnDv = Math.Min(s.deltaV, dvLeft);
                 dvLeft -= stageBurnDv;
 
-                if (halfDvLeft > stageBurnDv)
-                {
-                    halfDvLeft -= stageBurnDv;
-                }
-
                 double stageBurnFraction = stageBurnDv / s.deltaV;
 
                 // Delta-V is proportional to ln(m0 / m1) (where m0 is initial
@@ -219,7 +219,18 @@ namespace MuMech
                 //      ln(m0 / m1) * stageBurnFraction = ln(m0 / m1b)
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
-                double stageBurnFinalMass = s.totalMass / Math.Exp(Math.Log(s.totalMass / (s.totalMass - s.resourceMass)) * stageBurnFraction);
+
+
+                double stageBurnFinalMass;
+                // See comment about s.number == -1 a few line before
+                if (s.number == -1)
+                {
+                    stageBurnFinalMass = s.totalMass;
+                }
+                else
+                {
+                    stageBurnFinalMass = s.totalMass / Math.Exp(Math.Log(s.totalMass / (s.totalMass - s.resourceMass)) * stageBurnFraction);
+                }
                 double stageAvgAccel = s.thrust / ((s.totalMass + stageBurnFinalMass) / 2);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
@@ -231,11 +242,8 @@ namespace MuMech
                     stageAvgAccel *= vesselState.throttleLimit;
                 }
 
-                if (halfDvLeft < stageBurnDv)
-                {
-                    halfBurnTime = burnTime + halfDvLeft / stageAvgAccel;
-                    halfDvLeft = 0;
-                }
+                halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
+                halfDvLeft = Math.Max(0, halfDvLeft - stageBurnDv);
 
                 burnTime += stageBurnDv / stageAvgAccel;
 

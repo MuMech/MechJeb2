@@ -32,7 +32,15 @@ namespace MuMech
             else if (vessel == null) return new List<T>();
             else parts = vessel.Parts;
 
-            return (from part in parts from module in part.Modules.OfType<T>() select module).ToList();
+            List<T> list = new List<T>();
+            foreach (Part part in parts)
+            {
+                foreach (T module in part.Modules.OfType<T>())
+                {
+                    list.Add(module);
+                }
+            }
+            return list;
         }
 
         private static float lastFixedTime = 0;
@@ -42,7 +50,7 @@ namespace MuMech
         {
             if (lastFixedTime != Time.fixedTime)
             {
-                masterMechjebs = new Dictionary<Guid, MechJebCore>();
+                masterMechjebs.Clear();
                 lastFixedTime = Time.fixedTime;
             }
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;

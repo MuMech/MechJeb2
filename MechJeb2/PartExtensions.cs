@@ -30,7 +30,7 @@ namespace MuMech
 
         public static float TotalMass(this Part p)
         {
-            return p.mass + p.GetResourceMass();
+            return p.mass + p.GetPhysicslessChildMass() + p.GetResourceMass() + p.GetModuleMass(0);
         }
 
 
@@ -42,8 +42,6 @@ namespace MuMech
                 ModuleEngines eng = m as ModuleEngines;
                 if (eng != null) return !eng.getFlameoutState;
 
-                ModuleEnginesFX engFX = m as ModuleEnginesFX;
-                if (engFX != null) return !engFX.getFlameoutState;
             }
             return false;
         }
@@ -87,7 +85,7 @@ namespace MuMech
             for (int i = 0; i < p.Modules.Count; i++)
             {
                 PartModule m = p.Modules[i];
-                if (m is ModuleEngines || m is ModuleEnginesFX) return true;
+                if (m is ModuleEngines) return true;
             }
             return false;
         }

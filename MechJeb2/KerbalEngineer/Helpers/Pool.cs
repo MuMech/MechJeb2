@@ -49,6 +49,5 @@ namespace KerbalEngineer
         {
             return values.Count;
         }
-
     }
 }

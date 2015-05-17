@@ -22,6 +22,7 @@ namespace KerbalEngineer.VesselSimulator
     #region Using Directives
 
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Reflection;
     using System.Threading;
@@ -33,7 +34,8 @@ namespace KerbalEngineer.VesselSimulator
     {
         #region Constants
 
-        public const double RESOURCE_MIN = 0.0001;  // The game does not use that anymore but the sim goes mad if I set it to 0...
+        public const double RESOURCE_MIN = 0.0001;
+        public const double RESOURCE_PART_EMPTY_THRESH = 0.01;
 
         #endregion
 
@@ -45,7 +47,6 @@ namespace KerbalEngineer.VesselSimulator
         public static bool vectoredThrust = false;
         private static readonly object locker = new object();
         private static readonly Stopwatch timer = new Stopwatch();
-        private static Simulation[] simulations = { new Simulation(), new Simulation() };
 
         private static bool bRequested;
         private static bool bRunning;
@@ -61,8 +62,9 @@ namespace KerbalEngineer.VesselSimulator
         private static bool hasInstalledKIDS;
         private static MethodInfo KIDS_Utils_GetIspMultiplier;
         private static bool bKIDSThrustISP = false;
-        
+        private static List<Part> parts = new List<Part>(); 
 
+        private static Simulation[] simulations = { new Simulation(), new Simulation() };
         #endregion
 
         #region Delegates
@@ -82,6 +84,8 @@ namespace KerbalEngineer.VesselSimulator
         public static double Atmosphere { get; set; }
 
         public static double Gravity { get; set; }
+
+        public static CelestialBody Body { get; set; }
 
         public static Stage LastVacStage { get; private set; }
         public static Stage LastAtmStage { get; private set; }
@@ -272,9 +276,8 @@ namespace KerbalEngineer.VesselSimulator
                 bRequested = false;
                 timer.Reset();
             }
-            //Profiler.BeginSample("SimManager.StartSimulation()");
+
             StartSimulation();
-            //Profiler.EndSample();
         }
 
         private static void ClearResults()
@@ -289,7 +292,6 @@ namespace KerbalEngineer.VesselSimulator
             Simulation[] sims = (Simulation[])simObject;
             try
             {
-                //Profiler.BeginSample("SimManager.RunSimulation().vacSim");
                 
                 VacStages = sims[0].RunSimulation();
                 //Profiler.EndSample();
@@ -324,13 +326,10 @@ namespace KerbalEngineer.VesselSimulator
             }
             catch (Exception e)
             {
-                MonoBehaviour.print("Exception in RunSimulation: " + e);
-                Logger.Exception(e);
+                Logger.Exception(e, "SimManager.RunSimulation()");
                 VacStages = null;
                 LastVacStage = null;
                 failMessage = e.ToString();
-                sims[0].FreePooledObject();
-                sims[1].FreePooledObject();
             }
             lock (locker)
             {
@@ -379,13 +378,13 @@ namespace KerbalEngineer.VesselSimulator
                     timer.Start();
                 }
 
-                var parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : FlightGlobals.ActiveVessel.Parts;
+                parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : FlightGlobals.ActiveVessel.Parts;
 
                 //Profiler.BeginSample("SimManager.StartSimulation().vacSim");
                 bool vacSim = simulations[0].PrepareSimulation(parts, Gravity, 0d, Mach, dumpTree, vectoredThrust, true);
                 //Profiler.EndSample();
                 //Profiler.BeginSample("SimManager.StartSimulation().atmSim");
-                bool atmSim = simulations[1].PrepareSimulation(parts, Gravity, 1d, Mach, dumpTree, vectoredThrust, true);
+                bool atmSim = simulations[1].PrepareSimulation(parts, Gravity, Atmosphere, Mach, dumpTree, vectoredThrust, true);
                 //Profiler.EndSample();
 
                 // This call doesn't ever fail at the moment but we'll check and return a sensible error for display
@@ -405,8 +404,7 @@ namespace KerbalEngineer.VesselSimulator
             }
             catch (Exception e)
             {
-                MonoBehaviour.print("Exception in StartSimulation: " + e);
-                Logger.Exception(e);
+                Logger.Exception(e, "SimManager.StartSimulation()");
                 failMessage = e.ToString();
                 lock (locker)
                 {

@@ -94,7 +94,7 @@ namespace MuMech
                 double headingToWaypoint = vesselState.HeadingFromDirection(vectorToWaypoint);
 
                 Vector3d vectorToRunway = runwayStart - vesselState.CoM;
-                double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
+                double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up) + (vesselState.altitudeTrue - vesselState.altitudeBottom);
                 double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
                 double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
                 double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 0.0F);
@@ -171,7 +171,7 @@ namespace MuMech
             double leftDisplacement = Vector3d.Dot(runwayLeftUnit, vesselState.CoM - runwayStart);
 
             Vector3d vectorToRunway = runwayStart - vesselState.CoM;
-            double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
+            double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up) + (vesselState.altitudeTrue - vesselState.altitudeBottom);
             double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
             double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
 
@@ -243,8 +243,8 @@ namespace MuMech
                 {
                     name = "KSC runway",
                     body = Planetarium.fetch.Home,
-                    start = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 67 },
-                    end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 67 }
+                    start = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 69.01 },
+                    end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 69.01 }
                 });
 
             if (!runways.Any(p => p.name == "Island runway"))
@@ -252,8 +252,8 @@ namespace MuMech
                 {
                     name = "Island runway",
                     body = Planetarium.fetch.Home,
-                    start = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 132 },
-                    end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 132 }
+                    start = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 133.17 },
+                    end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 133.17 }
                 });
         }
 

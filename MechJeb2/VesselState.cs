@@ -65,10 +65,10 @@ namespace MuMech
         public MovingAverage vesselRoll = new MovingAverage();
         [ValueInfoItem("Altitude (ASL)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]
         public MovingAverage altitudeASL = new MovingAverage();
-        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
+        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]
         public MovingAverage altitudeTrue = new MovingAverage();
-        [ValueInfoItem("Surface altitude ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4, siMaxPrecision = 0, units = "m")]
-        double surfaceAltitudeASL;
+        [ValueInfoItem("Surface altitude ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4, siMaxPrecision = -1, units = "m")]
+        public double surfaceAltitudeASL;
 
         [ValueInfoItem("Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
         public MovingAverage orbitApA = new MovingAverage();
@@ -189,7 +189,7 @@ namespace MuMech
         public bool parachuteDeployed;
         
         // Resource information keyed by resource Id.
-        public Dictionary<int, ResourceInfo> resources;
+        public Dictionary<int, ResourceInfo> resources = new Dictionary<int, ResourceInfo>();
 
         public CelestialBody mainBody;
 
@@ -590,8 +590,6 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                #warning may need to check the drag model ?
-                //dragCoef += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier;
                 dragCoef += p.DragCubes.DragCoeff;
 
                 for (int index = 0; index < vesselStatePartExtensions.Count; index++)
@@ -635,12 +633,12 @@ namespace MuMech
                             parachuteDeployed = true;
                         }
                     }
+                    else if (pm is ModuleAeroSurface)
+                    {
+                        // TODO ...
+                    }
                     else if (pm is ModuleControlSurface)
                     {
-#warning TEST THIS : instead of using Vector6 use 2 Vector3. One for control at (1,1,1) and the other for (-1,-1,-1). Add them all up and use that as the real available torque
-
-
-                        // TODO : Tweakable for ignorePitch / ignoreYaw  / ignoreRoll 
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
 
                         if (p.ShieldedFromAirstream || cs.deploy)
@@ -651,12 +649,12 @@ namespace MuMech
 
                         Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
-                        // Build a vector that show if the surface is left/right up/down forward/back of the CoM.
+                        // Build a vector that show if the surface is left/right forward/back up/down of the CoM.
                         Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
                         float inverted = relpos.y > 0.01 ? -1 : 1;
-                        relpos.x = inverted *  relpos.x < 0.01 ? -1 : 1;
-                        relpos.y = 1;
-                        relpos.z = inverted * (relpos.z < 0.01 ? -1 : 1);
+                        relpos.x = cs.ignorePitch ? 0 : inverted * (relpos.x < 0.01 ? -1 : 1);
+                        relpos.y = cs.ignoreRoll  ? 0 : inverted;
+                        relpos.z = cs.ignoreYaw   ? 0 : inverted * (relpos.z < 0.01 ? -1 : 1);
                         
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
 
@@ -748,7 +746,7 @@ namespace MuMech
         {
             // Convert the resource information from the einfo and iinfo format
             // to the more useful ResourceInfo format.
-            resources = new Dictionary<int, ResourceInfo>();
+            resources.Clear();
             foreach (var info in einfo.resourceRequired)
             {
                 int id = info.Key;
@@ -854,8 +852,7 @@ namespace MuMech
         {
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
-            #warning Have someone check that. And clean it
-            return Math.Sqrt(2 * localg * mass / (drag / mass));
+            return Math.Sqrt(localg / drag) * speedSurface;
         }
 
         public double ThrustAccel(double throttle)
@@ -947,7 +944,7 @@ namespace MuMech
         private static bool stockGimbalIsValid(PartModule p)
         {
             ModuleGimbal gimbal = p as ModuleGimbal;
-            return gimbal.initRots.Count() > 0;
+            return gimbal.initRots.Any();
         }
 
         private static Vector3d stockGimbalTorqueVector(PartModule p, int i, Vector3d CoM)
@@ -1192,7 +1189,7 @@ namespace MuMech
                     return sum;
                 }
             }
-            public IntakeData[] intakes;
+            public IntakeData[] intakes = new IntakeData[0];
 
             public struct IntakeData
             {

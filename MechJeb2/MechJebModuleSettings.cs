@@ -52,6 +52,7 @@ namespace MuMech
                 KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_global.cfg").Delete();
                 KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg").Delete();
                 core.ReloadAllComputerModules();
+                GuiUtils.SetGUIScale(1);
             }
 
             GUILayout.Label("Current skin: " + (GuiUtils.SkinType)skinId );

@@ -7,8 +7,30 @@ namespace MuMech
     {
         public class FinalDescent : AutopilotStep
         {
+
+            private IDescentSpeedPolicy aggressivePolicy;
+
             public FinalDescent(MechJebCore core) : base(core)
             {
+            }
+
+            public override AutopilotStep OnFixedUpdate()
+            {
+                double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+
+                if (core.node.autowarp && aggressivePolicy != null)
+                {
+                    double maxVel = 1.02 * aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity);
+
+                    double diffPercent = ((maxVel / vesselState.speedSurface) - 1) * 100;
+                    
+                    if (minalt > 200  && diffPercent > 0 && (Vector3d.Angle(vesselState.forward, -vesselState.surfaceVelocity) < 45))
+                        core.warp.WarpRegularAtRate((float)(diffPercent * diffPercent * diffPercent));
+                    else
+                        core.warp.MinimumWarp(true);
+                    
+                }
+                return this;
             }
 
             public override AutopilotStep Drive(FlightCtrlState s)
@@ -57,7 +79,7 @@ namespace MuMech
                         //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
                         Vector3d estimatedLandingPosition = vesselState.CoM + vesselState.surfaceVelocity.sqrMagnitude / (2 * vesselState.limitedMaxThrustAccel) * vesselState.surfaceVelocity.normalized;
                         double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
-                        IDescentSpeedPolicy aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
+                        aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);  // this constant policy creation is wastefull...
                         core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity));
                     }
                 }
