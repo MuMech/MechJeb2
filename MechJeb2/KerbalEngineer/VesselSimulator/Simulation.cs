@@ -139,6 +139,7 @@ namespace KerbalEngineer.VesselSimulator
                 log.buf.AppendLine("PrepareSimulation started");
                 dumpTree = true;
             }
+            this._timer.Reset();
             this._timer.Start();
 
             // Store the parameters in members for ease of access in other functions
@@ -299,6 +300,7 @@ namespace KerbalEngineer.VesselSimulator
                 MonoBehaviour.print("RunSimulation started");
             }
 
+            this._timer.Reset();
             this._timer.Start();
 
             LogMsg log = null;
@@ -466,6 +468,9 @@ namespace KerbalEngineer.VesselSimulator
                     }
                 }
 
+                // Work around for #591 since I pulled a unfinished KER branch
+                stage.totalMass = this.stageStartMass;
+
                 this.dontStageParts = dontStagePartsLists[this.currentStage];
 
                 if (log != null)
@@ -627,7 +632,8 @@ namespace KerbalEngineer.VesselSimulator
                 for (int j = i; j >= 0; j--)
                 {
                     stages[i].totalCost += stages[j].cost;
-                    stages[i].totalMass += stages[j].mass;
+                    // Work around for #591 since I pulled a unfinished KER branch
+                    //stages[i].totalMass += stages[j].mass;
                     stages[i].totalDeltaV += stages[j].deltaV;
                     stages[i].totalTime += stages[j].time;
                     stages[i].partCount = i > 0 ? stages[i].totalPartCount - stages[i - 1].totalPartCount : stages[i].totalPartCount;
