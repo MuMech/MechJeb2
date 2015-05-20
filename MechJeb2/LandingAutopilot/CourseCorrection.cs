@@ -36,6 +36,13 @@ namespace MuMech
                     return new CoastToDeceleration(core);
                 }
 
+                // If we're off course, but already too low, skip the course correction
+                if (vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5)
+                {
+                    return new DecelerationBurn(core);
+                }
+
+
                 // If a parachute has already been deployed then we will not be able to control attitude anyway, so move back to the coast to deceleration step.
                 if (vesselState.parachuteDeployed)
                 {

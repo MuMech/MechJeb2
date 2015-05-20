@@ -77,14 +77,13 @@ namespace MuMech
                     }
                 }
 
-                /*
-                // Sometimes (on bodies with a thick atmosphere) there is no need for a decleration burn. Check for this so that it is possible to transition into the final decent step.
-                if ((vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5) && core.landing.UseAtmosphereToBrake())
+                // If we're already low, skip directly to the Deceleration burn
+                if (vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5)
                 {
                     core.warp.MinimumWarp();
-                    return new FinalDescent(core);
+                    core.rcs.enabled = false;
+                    return new DecelerationBurn(core);
                 }
-                */
 
                 if (core.attitude.attitudeAngleFromTarget() < 1) { warpReady = true; } // less warp start warp stop jumping
                 if (core.attitude.attitudeAngleFromTarget() > 5) { warpReady = false; } // hopefully
@@ -107,9 +106,16 @@ namespace MuMech
 
                 //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
                 if (warpReady && core.node.autowarp)
-                    core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * Math.Abs(vesselState.speedVertical))));
+                {
+                    // Make sure if we're hovering that we don't go straight into too fast of a warp
+                    // (g * 5 is average velocity falling for 10 seconds from a hover)
+                    double velocityGuess = Math.Max(Math.Abs(vesselState.speedVertical), vesselState.localg * 5);
+                    core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * velocityGuess)));
+                }
                 else
+                {
                     core.warp.MinimumWarp();
+                }
 
                 return this;
             }
