@@ -587,10 +587,12 @@ namespace KerbalEngineer.VesselSimulator
                 if (this.stageStartMass != this.stepStartMass)
                 {
                     stage.isp = stage.deltaV / (Units.GRAVITY * Math.Log(this.stageStartMass / this.stepStartMass));
+                    stage.resourceMass = this.stageStartMass - this.stepEndMass;
                 }
                 else
                 {
                     stage.isp = 0;
+                    stage.resourceMass = 0;
                 }
 
                 // Zero stage time if more than a day (this should be moved into the window code)

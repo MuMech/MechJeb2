@@ -119,6 +119,7 @@ namespace KerbalEngineer.VesselSimulator
             partSim.isFuelLine = partSim.part.HasModule<CModuleFuelLine>();
             partSim.isFuelTank = partSim.part is FuelTank;
             partSim.isSepratron = partSim.IsSepratron();
+            partSim.isFairing = partSim.IsFairing(thePart);
             partSim.inverseStage = partSim.part.inverseStage;
             //MonoBehaviour.print("inverseStage = " + inverseStage);
 
@@ -145,6 +146,14 @@ namespace KerbalEngineer.VesselSimulator
             {
                 partSim.realMass = partSim.part.mass;
                 if (log != null) log.buf.AppendLine("Using part.mass of " + partSim.part.mass);
+            }
+
+            if (partSim.isNoPhysics == false)
+            {
+                if (partSim.hasVessel == false)
+                {
+                    partSim.moduleMass = partSim.part.GetModuleMass(partSim.part.mass);
+                }
             }
 
             for (int i = 0; i < partSim.part.Resources.Count; i++)
