@@ -468,6 +468,8 @@ namespace MuMech
         public bool autoPath = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public float autoTurnPerc = 0.05f;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public float autoTurnSpdFactor = 18.5f;
 
         private double actualTurnStart = 0;
 
@@ -484,7 +486,8 @@ namespace MuMech
         {
             get
             {
-                return turnStartVelocity;
+                var vessel = FlightGlobals.ActiveVessel;
+                return vessel.mainBody.atmosphere ? autoTurnSpdFactor * autoTurnSpdFactor * autoTurnSpdFactor * 0.015625f : double.PositiveInfinity;
             }
         }
 
@@ -502,7 +505,6 @@ namespace MuMech
                 {
                     return Math.Min(30000, targetAlt * 0.85);
                 }
-                //return Math.Max(Math.Min(30000, targetAlt * 0.85), vessel.mainBody.RealMaxAtmosphereAltitude());
             }
         }
 
@@ -511,10 +513,15 @@ namespace MuMech
             return autoPath ? autoTurnStartAltitude : turnStartAltitude;
         }
 
+        public double SpeedAscentEnd()
+        {
+            return autoPath ? autoTurnStartVelocity : turnStartVelocity;
+        }
+
         public bool IsVerticalAscent(double altitude, double velocity)
         {
             actualTurnStart = Math.Min(actualTurnStart, autoTurnStartAltitude);
-            if (altitude < VerticalAscentEnd() && velocity < autoTurnStartVelocity)
+            if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 actualTurnStart = Math.Max(actualTurnStart, altitude );
                 return true;
