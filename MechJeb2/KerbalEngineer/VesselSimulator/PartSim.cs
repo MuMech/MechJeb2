@@ -38,7 +38,7 @@ namespace KerbalEngineer.VesselSimulator
         public double baseMass;
         public double baseMassForCoM;
         public Vector3d centerOfMass;
-        public double cost;
+        public double baseCost;
         public int decoupledInStage;
         public bool fuelCrossFeed;
         public List<PartSim> fuelTargets = new List<PartSim>();
@@ -90,6 +90,7 @@ namespace KerbalEngineer.VesselSimulator
             partSim.resourceDrains.Reset();
             partSim.resourceFlowStates.Reset();
             partSim.resources.Reset();
+            partSim.baseCost = 0d;
             partSim.baseMass = 0d;
             partSim.baseMassForCoM = 0d;
             partSim.startMass = 0d;
@@ -119,11 +120,10 @@ namespace KerbalEngineer.VesselSimulator
             partSim.isFuelLine = partSim.part.HasModule<CModuleFuelLine>();
             partSim.isFuelTank = partSim.part is FuelTank;
             partSim.isSepratron = partSim.IsSepratron();
-            partSim.isFairing = partSim.IsFairing(thePart);
             partSim.inverseStage = partSim.part.inverseStage;
             //MonoBehaviour.print("inverseStage = " + inverseStage);
 
-            partSim.cost = partSim.part.GetCostWet();
+            partSim.baseCost = partSim.part.GetCostDry();
 
             if (log != null)
             {
@@ -148,13 +148,7 @@ namespace KerbalEngineer.VesselSimulator
                 if (log != null) log.buf.AppendLine("Using part.mass of " + partSim.part.mass);
             }
 
-            if (partSim.isNoPhysics == false)
-            {
-                if (partSim.hasVessel == false)
-                {
-                    partSim.moduleMass = partSim.part.GetModuleMass(partSim.part.mass);
-                }
-            }
+            partSim.moduleMass = partSim.part.GetModuleMass((float)partSim.realMass);
 
             for (int i = 0; i < partSim.part.Resources.Count; i++)
             {
@@ -417,6 +411,9 @@ namespace KerbalEngineer.VesselSimulator
 
         public double GetMass(int currentStage, bool forCoM = false)
         {
+            if (decoupledInStage >= currentStage)
+                return 0d;
+
             double mass = forCoM ? baseMassForCoM : baseMass;
 
             for (int i = 0; i < resources.Types.Count; ++i)
@@ -431,7 +428,22 @@ namespace KerbalEngineer.VesselSimulator
 
             return mass;
         }
-                
+
+        public double GetCost(int currentStage)
+        {
+            if (decoupledInStage >= currentStage)
+                return 0d;
+
+            double cost = baseCost;
+
+            for (int i = 0; i < resources.Types.Count; ++i)
+            {
+                cost += resources.GetResourceCost(resources.Types[i]);
+            }
+
+            return cost;
+        }
+
         public void ReleasePart()
         {
             this.part = null;

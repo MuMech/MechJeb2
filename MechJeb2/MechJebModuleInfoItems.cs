@@ -719,6 +719,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
+        public bool showISP = true;
+        [Persistent(pass = (int)Pass.Global)]
         public int TWRBody = 1;
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
@@ -762,14 +764,14 @@ namespace MuMech
             {
                 case 0:
                     showInitialTWR = showAtmoInitialTWR = showVacDeltaV = showAtmoDeltaV = showVacTime = true;
-                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showMaxTWR = showAtmoMaxTWR = false;
+                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showMaxTWR = showAtmoMaxTWR = showISP = false;
                     break;
                 case 1:
                     showInitialMass = showFinalMass = showInitialTWR = showAtmoInitialTWR = showMaxTWR = showAtmoMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
-                    showStagedMass = showBurnedMass = false;
+                    showStagedMass = showBurnedMass = showISP = false;
                     break;
                 case 2:
-                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
+                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = showISP = true;
                     break;
             }
 
@@ -785,6 +787,7 @@ namespace MuMech
             if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].maxThrustToWeight.ToString("F2")));
             if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2")));
             if (showAtmoMaxTWR) showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].maxThrustToWeight.ToString("F2")));
+            if (showAtmoMaxTWR) showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
             if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacTime) showVacTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].time)));
