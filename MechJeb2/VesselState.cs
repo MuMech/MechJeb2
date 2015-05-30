@@ -157,9 +157,12 @@ namespace MuMech
         [ValueInfoItem("Speed of sound", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
         public double speedOfSound;
 
-        [ValueInfoItem("Drag Coef", InfoItem.Category.Vessel, format = "F2")]
+        [ValueInfoItem("Drag Coefficient", InfoItem.Category.Vessel, format = "F2")]
         public double dragCoef;
-        
+
+        // Product of the drag surface area, drag coefficient and the physic multiplers
+        public double areaDrag;
+
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
@@ -263,14 +266,6 @@ namespace MuMech
 
 
         public DragCubeList cube = new DragCubeList();
-
-
-        [ValueInfoItem("Drag Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
-        public double dragScalar;
-
-        [ValueInfoItem("Lift Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
-        public double liftScalar;
-
 
         private void TestStuff(Vessel vessel)
         {
@@ -571,6 +566,7 @@ namespace MuMech
             pureLiftV = Vector3d.zero;
 
             dragCoef = 0;
+            areaDrag = 0;
 
 
             for (int i = 0; i < vessel.parts.Count; i++)
@@ -578,7 +574,7 @@ namespace MuMech
                 Part p = vessel.parts[i];
 
                 pureDragV += -p.dragVectorDir * p.dragScalar;
-                
+
                 if (!p.hasLiftModule)
                 {
                     Vector3 bodyLift = p.transform.rotation * (p.bodyLiftScalar * p.DragCubes.LiftForce);
@@ -591,7 +587,8 @@ namespace MuMech
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
                 dragCoef += p.DragCubes.DragCoeff;
-
+                areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+                                
                 for (int index = 0; index < vesselStatePartExtensions.Count; index++)
                 {
                     VesselStatePartExtension vspe = vesselStatePartExtensions[index];
@@ -738,7 +735,7 @@ namespace MuMech
             lift = Vector3d.Dot(force, liftDir);
             // Lift is the part (pureDrag + PureLift) applied in the "Up" direction
             liftUp = Vector3d.Dot(force, up);
-            
+
             maxEngineResponseTime = einfo.maxResponseTime;
         }
 
@@ -851,8 +848,8 @@ namespace MuMech
         public double TerminalVelocityStockKSP()
         {
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
-
-            return Math.Sqrt(localg / drag) * speedSurface;
+            
+            return Math.Sqrt((2000 * mass * localg) / (areaDrag * vesselRef.atmDensity));
         }
 
         public double ThrustAccel(double throttle)
