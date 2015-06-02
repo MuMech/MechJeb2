@@ -431,9 +431,10 @@ namespace MuMech
             bool userCommandingPitchYaw = (Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F) ? false : true) || (Mathfx.Approx(s.yaw, s.yawTrim, 0.1F) ? false : true);
             bool userCommandingRoll = (Mathfx.Approx(s.roll, s.rollTrim, 0.1F) ? false : true);
 
-            // Disable the new SAS so it won't interfere. 
-            // Todo : enable it when it's a good idea or the user had it enabled before
+            // Disable the new SAS so it won't interfere. But enable it while in timewarp for compatibility with PersistentRotation 
+            if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRateIndex == 0)
             part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+
 
             if (attitudeKILLROT)
             {
