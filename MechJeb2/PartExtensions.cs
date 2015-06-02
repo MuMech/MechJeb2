@@ -90,18 +90,6 @@ namespace MuMech
             return false;
         }
 
-        public static bool IsMFE(this Part p)
-        {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                if(m.ClassName == "ModuleEngineConfigs" || m.ClassName == "ModuleHybridEngine" || m.ClassName == "ModuleHybridEngines") return true;
-            }
-            return false;
-        }
-
-            
-
         public static bool IsParachute(this Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)

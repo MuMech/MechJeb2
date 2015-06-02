@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.Threading;
-using KerbalEngineer.VesselSimulator;
 
 namespace MuMech
 {
@@ -19,29 +18,8 @@ namespace MuMech
         [ToggleInfoItem("ΔV include cosine losses", InfoItem.Category.Thrust, showInEditor = true)]
         public bool dVLinearThrust = true;
 
-        public Stage atmLastStage { get; private set; }
-        public Stage vacLastStage { get; private set; }
-
-        public Stage[] atmoStats = {};
-        public Stage[] vacStats = {};
-
-        private bool resultWaiting = false;
-
-        public CelestialBody editorBody;
-        private CelestialBody simBody;
-
-        public override void OnStart(PartModule.StartState state)
-        {
-            SimManager.UpdateModSettings();
-            SimManager.OnReady -= this.GetStageInfo;
-            SimManager.OnReady += this.GetStageInfo;
-            base.OnAwake();
-        }
-
-        private void GetStageInfo()
-        {
-            resultWaiting = true;
-        }
+        public FuelFlowSimulation.Stats[] atmoStats = { };
+        public FuelFlowSimulation.Stats[] vacStats = { };
 
         public void RequestUpdate(object controller)
         {
@@ -51,7 +29,25 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor) TryStartSimulation();
         }
 
-        private bool updateRequested = false;
+        public CelestialBody editorBody;
+
+        protected bool updateRequested = false;
+        protected bool simulationRunning = false;
+        protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+
+        long millisecondsBetweenSimulations;
+
+        public override void OnModuleEnabled()
+        {
+            millisecondsBetweenSimulations = 0;
+            stopwatch.Start();
+        }
+
+        public override void OnModuleDisabled()
+        {
+            stopwatch.Stop();
+            stopwatch.Reset();
+        }
 
         public override void OnFixedUpdate()
         {
@@ -60,48 +56,93 @@ namespace MuMech
 
         public void TryStartSimulation()
         {
-            if (resultWaiting)
+            if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && !simulationRunning)
             {
-                atmLastStage = SimManager.LastAtmStage;
-                vacLastStage = SimManager.LastVacStage;
-
-                atmoStats = SimManager.AtmStages;
-                vacStats = SimManager.VacStages;
-
-                resultWaiting = false;
-            }
-
-            // I m cheating with the isActiveVessel. Need to add multiple ship handling but it is
-            // an edge case that only triggers if 2 nearby ships burn nodes. is this worth the complexity ?
-            if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && SimManager.ResultsReady())
-            {
-                if (updateRequested)
+                //We should be running simulations periodically, but one is not running right now. 
+                //Check if enough time has passed since the last one to start a new one:
+                if (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
                 {
-                    updateRequested = false;
-                    StartSimulation();
-                }
-                else
-                {
-                    users.Clear();
+                    if (updateRequested)
+                    {
+                        updateRequested = false;
+
+                        stopwatch.Stop();
+                        stopwatch.Reset();
+
+                        StartSimulation();
+                    }
+                    else
+                    {
+                        users.Clear();
+                    }
                 }
             }
         }
 
         protected void StartSimulation()
         {
-            simBody = HighLogic.LoadedSceneIsEditor ? editorBody ?? Planetarium.fetch.Home : vessel.mainBody;
-            SimManager.Gravity = 9.81 * simBody.GeeASL;
+            try
+            {
+                simulationRunning = true;
+                stopwatch.Start(); //starts a timer that times how long the simulation takes
 
-            SimManager.Atmosphere = (HighLogic.LoadedSceneIsEditor ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa) * PhysicsGlobals.KpaToAtmospheres;
-            SimManager.Mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
-            SimManager.vectoredThrust = dVLinearThrust;
-            SimManager.Body = simBody;
+                //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
+                List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+                FuelFlowSimulation[] sims = { new FuelFlowSimulation(parts, dVLinearThrust), new FuelFlowSimulation(parts, dVLinearThrust) };
 
-            Profiler.BeginSample("MechJebModuleStageStats.StartSimulation()");
+                //Run the simulation in a separate thread
+                ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+                //RunSimulation(sims);
+            }
+            catch (Exception e)
+            {
+                print(string.Format("Exception in MechJebModuleStageStats.StartSimulation(): {0}{1}{2}", e, Environment.NewLine, e.StackTrace));
+                
+                // Stop timing the simulation
+                stopwatch.Stop();
+                millisecondsBetweenSimulations = 500;
+                stopwatch.Reset();
 
-            SimManager.RequestSimulation();
-            SimManager.TryStartSimulation();
-            Profiler.EndSample();
+                // Start counting down the time to the next simulation
+                stopwatch.Start();
+                simulationRunning = false;
+            }
+        }
+
+        protected void RunSimulation(object o)
+        {
+            try
+            {
+                CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
+
+                double staticPressure = (HighLogic.LoadedSceneIsEditor ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa) * PhysicsGlobals.KpaToAtmospheres;
+                double atmDensity = (HighLogic.LoadedSceneIsEditor ? simBody.GetDensity(simBody.GetPressure(0), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
+                double mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
+
+
+                //Run the simulation
+                FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;
+                FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressure, atmDensity, mach);
+                FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0, 0.0 , mach);
+                atmoStats = newAtmoStats;
+                vacStats = newVacStats;
+            }
+            catch (Exception e)
+            {
+                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e.StackTrace);
+            }
+
+            //see how long the simulation took
+            stopwatch.Stop();
+            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+            stopwatch.Reset();
+
+            //set the delay before the next simulation
+            millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
+
+            //start the stopwatch that will count off this delay
+            stopwatch.Start();
+            simulationRunning = false;
         }
     }
 }
