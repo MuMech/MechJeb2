@@ -16,6 +16,8 @@ namespace MuMech
         // Keep all Operation objects so parameters are saved
         Operation[] operation = Operation.getAvailableOperations();
         string[] operationNames;
+
+        [Persistent(pass = (int)Pass.Global)]
         int operationId = 0;
 
         // Creation or replacement mode
@@ -23,6 +25,8 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
+            operationId = Mathf.Clamp(operationId, 0, operation.Length - 1);
+
             GUILayout.BeginVertical();
 
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
