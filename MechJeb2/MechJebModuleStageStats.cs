@@ -30,6 +30,8 @@ namespace MuMech
         }
 
         public CelestialBody editorBody;
+        public bool liveSLT = true;
+
 
         protected bool updateRequested = false;
         protected bool simulationRunning = false;
@@ -115,10 +117,9 @@ namespace MuMech
             {
                 CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
 
-                double staticPressure = (HighLogic.LoadedSceneIsEditor ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa) * PhysicsGlobals.KpaToAtmospheres;
-                double atmDensity = (HighLogic.LoadedSceneIsEditor ? simBody.GetDensity(simBody.GetPressure(0), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
+                double staticPressure = (HighLogic.LoadedSceneIsEditor || !liveSLT ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa) * PhysicsGlobals.KpaToAtmospheres;
+                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT ? simBody.GetDensity(simBody.GetPressure(0), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
                 double mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
-
 
                 //Run the simulation
                 FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;

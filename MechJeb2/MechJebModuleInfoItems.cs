@@ -738,11 +738,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showISP = true;
         [Persistent(pass = (int)Pass.Global)]
+        public bool liveSLT = true;
+        [Persistent(pass = (int)Pass.Global)]
         public int TWRBody = 1;
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
 
-        private string[] StageDisplayStates = new[] {"Short stats", "All stats", "Debug stats"};
+        private string[] StageDisplayStates = new[] {"Short stats", "Long stats", "Full stats"};
 		
 		private FuelFlowSimulation.Stats[] vacStats;
         private FuelFlowSimulation.Stats[] atmoStats;
@@ -779,13 +781,26 @@ namespace MuMech
             else
             {
                 // We're in flight
+                stats.editorBody = mainBody;
                 geeASL = mainBody.GeeASL;
             }
+            
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
             }
 
+            if (!HighLogic.LoadedSceneIsEditor)
+            {
+                if (GUILayout.Button(liveSLT ? "Live SLT" : "0Alt SLT", GUILayout.ExpandWidth(false)))
+                {
+                    liveSLT = !liveSLT;
+                }
+                stats.liveSLT = liveSLT;
+            }
+
+            GUILayout.EndHorizontal();
+            
             switch (StageDisplayState)
             {
                 case 0:
@@ -801,19 +816,17 @@ namespace MuMech
                     break;
             }
 
-            GUILayout.EndHorizontal();
-
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
             if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start Mass", stages.Select(s => vacStats[s].startMass.ToString("F3") + " t"));
             if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => vacStats[s].endMass.ToString("F3") + " t"));
-            //if (showStagedMass) showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => vacStats[s].mass.ToString("F3") + " t"));
-            //if (showBurnedMass) showFinalMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => vacStats[s].resourceMass.ToString("F3") + " t"));
+            if (showStagedMass) showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => vacStats[s].stagedMass.ToString("F3") + " t"));
+            if (showBurnedMass) showFinalMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => vacStats[s].resourceMass.ToString("F3") + " t"));
             if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
             if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
             if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));
             if (showAtmoMaxTWR) showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));
-            //if (showISP) showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
+            if (showISP) showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
             if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacTime) showVacTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].deltaTime)));

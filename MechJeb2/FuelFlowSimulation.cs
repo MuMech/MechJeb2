@@ -67,6 +67,8 @@ namespace MuMech
         {
             Stats[] stages = new Stats[simStage];
 
+            int maxStages = simStage - 1;
+
             //print("SimulateAllStages starting from stage " + simStage + "; ticks from start = " + (Environment.TickCount - startTick));
             SimulateStageActivation();
 
@@ -74,6 +76,8 @@ namespace MuMech
             {
                 //print("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
                 stages[simStage] = SimulateStage(throttle, staticPressure, atmDensity, machNumber);
+                if (simStage != maxStages)
+                    stages[simStage].stagedMass = stages[simStage + 1].endMass - stages[simStage].startMass;
                 //print("Staging at t = " + t);
                 SimulateStageActivation();
             }
@@ -102,6 +106,7 @@ namespace MuMech
             stats.startMass = VesselMass(simStage);
             stats.startThrust = VesselThrust(throttle, staticPressure, atmDensity, machNumber);
             stats.endMass = stats.startMass;
+            stats.resourceMass = 0;
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.deltaTime = 0;
             stats.deltaV = 0;
@@ -167,6 +172,8 @@ namespace MuMech
 
             stats.deltaTime = dt;
             stats.endMass = VesselMass(simStage);
+            stats.resourceMass = stats.startMass - stats.endMass;
+            stats.isp = stats.deltaV / (9.80665f * Mathf.Log(stats.startMass / stats.endMass));
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.ComputeTimeStepDeltaV();
 
@@ -305,6 +312,10 @@ namespace MuMech
             public float maxAccel;
             public float deltaTime;
             public float deltaV;
+
+            public float resourceMass;
+            public float isp;
+            public float stagedMass;
 
             public double StartTWR(double geeASL) { return startThrust / (9.81 * geeASL * startMass); }
             public double MaxTWR(double geeASL) { return maxAccel / (9.81 * geeASL); }
@@ -541,7 +552,7 @@ namespace MuMech
         // SetupFuelLineSources*()
         public void SetupRegularSources(Part part, Dictionary<Part, FuelNode> nodeLookup)
         {
-            // When fuelCrossFeed is enabled we can draw fuel through stack and surface attachements
+            // When fuelCrossFeed is enabled we can draw fuel through stack and surface attachment
             if (part.fuelCrossFeed)
             {
                 // Stack nodes:
