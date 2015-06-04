@@ -173,9 +173,9 @@ namespace MuMech
             stats.deltaTime = dt;
             stats.endMass = VesselMass(simStage);
             stats.resourceMass = stats.startMass - stats.endMass;
-            stats.isp = stats.deltaV / (9.80665f * Mathf.Log(stats.startMass / stats.endMass));
             stats.maxAccel = stats.startThrust / stats.endMass;
             stats.ComputeTimeStepDeltaV();
+            stats.isp = stats.startMass == stats.endMass ? 0 : stats.deltaV / (9.80665f * Mathf.Log(stats.startMass / stats.endMass));
 
             t += dt;
 
@@ -317,8 +317,8 @@ namespace MuMech
             public float isp;
             public float stagedMass;
 
-            public double StartTWR(double geeASL) { return startThrust / (9.81 * geeASL * startMass); }
-            public double MaxTWR(double geeASL) { return maxAccel / (9.81 * geeASL); }
+            public double StartTWR(double geeASL) { return startThrust / (9.80665 * geeASL * startMass); }
+            public double MaxTWR(double geeASL) { return maxAccel / (9.80665 * geeASL); }
 
             //Computes the deltaV from the other fields. Only valid when the thrust is constant over the time interval represented.
             public void ComputeTimeStepDeltaV()
@@ -340,10 +340,12 @@ namespace MuMech
                 {
                     startMass = this.startMass,
                     endMass = s.endMass,
+                    resourceMass = startMass - endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
                     deltaTime = this.deltaTime + s.deltaTime,
-                    deltaV = this.deltaV + s.deltaV
+                    deltaV = this.deltaV + s.deltaV,
+                    isp = this.startMass == s.endMass ? 0 : (this.deltaV + s.deltaV) / (9.80665f * Mathf.Log(this.startMass / s.endMass))
                 };
             }
         }
@@ -363,6 +365,7 @@ namespace MuMech
 
         readonly FloatCurve atmosphereCurve;  //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
         readonly bool atmChangeFlow;
+        readonly bool useAtmCurve;
         readonly FloatCurve atmCurve;
         readonly bool useVelCurve;
         readonly FloatCurve velCurve;
@@ -465,13 +468,14 @@ namespace MuMech
 
                     atmosphereCurve = new FloatCurve(engine.atmosphereCurve.Curve.keys);
                     atmChangeFlow = engine.atmChangeFlow;
+                    useAtmCurve = engine.useAtmCurve;
                     atmCurve = new FloatCurve(engine.atmCurve.Curve.keys);
                     useVelCurve = engine.useVelCurve;
                     velCurve = new FloatCurve(engine.velCurve.Curve.keys);
-                    
 
-                    propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
-                    propellantRatios = engine.propellants.Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && prop.name != "IntakeAir" ).ToDictionary(prop => prop.id, prop => prop.ratio);
+
+                    propellantSumRatioTimesDensity = engine.propellants.Where(prop => !prop.ignoreForIsp).Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
+                    propellantRatios = engine.propellants.Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp ).ToDictionary(prop => prop.id, prop => prop.ratio);
                 }
             }
         }
@@ -507,9 +511,8 @@ namespace MuMech
         {
             if (isEngine)
             {
-                //float flowModifier = GetFlowModifier(atmChangeFlow, atmCurve, SimManager.Body.GetDensity(FlightGlobals.getStaticPressure(0, SimManager.Body), FlightGlobals.getExternalTemperature(0, SimManager.Body)), velCurve, machNumber, ref engineSim.maxMach);
                 float flowModifier = GetFlowModifier(atmDensity, machNumber);
-
+                
                 float massFlowRate = Mathf.Lerp(minFuelFlow, maxFuelFlow, throttle * 0.01f * thrustPercentage) * flowModifier;
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
@@ -818,7 +821,7 @@ namespace MuMech
             if (atmChangeFlow)
             {
                 flowModifier = (float)(atmDensity / 1.225);
-                if (atmCurve != null)
+                if (useAtmCurve)
                 {
                     flowModifier = atmCurve.Evaluate(flowModifier);
                 }
