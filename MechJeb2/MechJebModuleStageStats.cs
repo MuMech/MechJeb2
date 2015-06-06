@@ -26,7 +26,10 @@ namespace MuMech
             users.Add(controller);
             updateRequested = true;
 
-            if (HighLogic.LoadedSceneIsEditor) TryStartSimulation();
+            if (HighLogic.LoadedSceneIsEditor && editorBody != null)
+            {
+                TryStartSimulation();
+            }
         }
 
         public CelestialBody editorBody;
@@ -60,7 +63,7 @@ namespace MuMech
         {
             if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && !simulationRunning)
             {
-                //We should be running simulations periodically, but one is not running right now. 
+                //We should be running simulations periodically, but one is not running right now.
                 //Check if enough time has passed since the last one to start a new one:
                 if (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
                 {
@@ -98,8 +101,8 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                print(string.Format("Exception in MechJebModuleStageStats.StartSimulation(): {0}{1}{2}", e, Environment.NewLine, e.StackTrace));
-                
+                print("Exception in MechJebModuleStageStats.StartSimulation(): " + e + "\n" + e.StackTrace);
+
                 // Stop timing the simulation
                 stopwatch.Stop();
                 millisecondsBetweenSimulations = 500;
