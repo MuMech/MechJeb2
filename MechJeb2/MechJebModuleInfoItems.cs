@@ -359,13 +359,7 @@ namespace MuMech
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.fetch.ship.parts
-                               where part.inverseStage == Staging.lastStage
-                               from engine in part.Modules.OfType<ModuleEnginesFX>()
-                                 where engine.isEnabled
-                               select engine);
-                return 1000 * (engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)) +
-                    enginesfx.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)));
+                return 1000 * engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
             }
             else
             {
@@ -382,13 +376,7 @@ namespace MuMech
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.fetch.ship.parts
-                                 where part.inverseStage == Staging.lastStage
-                                 from engine in part.Modules.OfType<ModuleEnginesFX>()
-                                 where engine.isEnabled
-                                 select engine);
-                return 1000 * (engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust))
-                    + enginesfx.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust)));
+                return 1000 * engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));
             }
             else
             {

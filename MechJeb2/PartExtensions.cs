@@ -22,8 +22,9 @@ namespace MuMech
             for (int i = 0; i < part.Modules.Count; i++)
             {
                 PartModule pm = part.Modules[i];
-                if (pm is T)
-                    return (T)pm;
+                T module = pm as T;
+                if (module != null)
+                    return module;
             }
             return null;
         }
