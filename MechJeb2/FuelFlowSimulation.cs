@@ -53,9 +53,9 @@ namespace MuMech
 
             // Add a fake stage if we are beyond the first one
             // Mostly usefull for the Node Executor who use the last stage info
-            // and fail to get proper info when the ship was never staged and 
+            // and fail to get proper info when the ship was never staged and
             // some engine were activated manually
-            if (Staging.CurrentStage > Staging.lastStage) 
+            if (Staging.CurrentStage > Staging.lastStage)
                 simStage++;
 
             t = 0;
@@ -91,7 +91,7 @@ namespace MuMech
         {
             MonoBehaviour.print("[MechJeb2] " + message);
         }
-        
+
         //Simulate (the rest of) the current stage of the simulated rocket,
         //and return stats for the stage
         public Stats SimulateStage(float throttle, double staticPressure, double atmDensity, double machNumber)
@@ -126,7 +126,7 @@ namespace MuMech
             return stats;
         }
 
-        //Simulate a single time step, and return stats for the time step. 
+        //Simulate a single time step, and return stats for the time step.
         // - desiredDt is the requested time step size. Often the actual time step size
         //   with be less than this. The actual step size is reported in dt.
         public Stats SimulateTimeStep(float desiredDt, float throttle, double staticPressure, double atmDensity, double machNumber, out float dt)
@@ -351,7 +351,7 @@ namespace MuMech
         }
     }
 
-    //A FuelNode is a compact summary of a Part, containing only the information needed to run the fuel flow simulation. 
+    //A FuelNode is a compact summary of a Part, containing only the information needed to run the fuel flow simulation.
     public class FuelNode
     {
         readonly DefaultableDictionary<int, float> resources = new DefaultableDictionary<int, float>(0);       //the resources contained in the part
@@ -369,7 +369,7 @@ namespace MuMech
         readonly FloatCurve atmCurve;
         readonly bool useVelCurve;
         readonly FloatCurve velCurve;
-        
+
         readonly Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
         readonly float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
@@ -384,7 +384,7 @@ namespace MuMech
 
         readonly float fwdThrustRatio = 1; // % of thrust moving the ship forwad
         readonly float g;                  // value of g used for engine flow rate / isp
-        
+
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
@@ -396,7 +396,7 @@ namespace MuMech
         public string partName; //for debugging
 
         public FuelNode(Part part, bool dVLinearThrust)
-        {            
+        {
             if (part.IsPhysicallySignificant())
             {
                 dryMass = part.mass + part.GetPhysicslessChildMass();
@@ -418,7 +418,7 @@ namespace MuMech
             for (int i = 0; i < part.Resources.Count; i++)
             {
                 PartResource r = part.Resources[i];
-                if (r.info.density > 0 && r.name != "IntakeAir")
+                if (r.info.density > 0 && r.info.name != "IntakeAir")
                 {
                     if (r.flowState)
                     {
@@ -448,7 +448,7 @@ namespace MuMech
 
                     g = engine.g;
 
-                    // If we take into account the engine rotation 
+                    // If we take into account the engine rotation
                     if (dVLinearThrust)
                     {
                         Vector3 thrust = Vector3d.zero;
@@ -512,7 +512,7 @@ namespace MuMech
             if (isEngine)
             {
                 float flowModifier = GetFlowModifier(atmDensity, machNumber);
-                
+
                 float massFlowRate = Mathf.Lerp(minFuelFlow, maxFuelFlow, throttle * 0.01f * thrustPercentage) * flowModifier;
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
@@ -544,7 +544,7 @@ namespace MuMech
             if (fuelLine != null && fuelLine.target != null)
             {
                 FuelNode targetNode;
-                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode)) 
+                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode))
                     targetNode.fuelLineSources.Add(this);
             }
         }
@@ -630,7 +630,7 @@ namespace MuMech
             return resourceDrains.Keys.Where(id => resources[id] > DRAINED).Min(id => resources[id] / resourceDrains[id]);
         }
 
-        //Returns an enumeration of the resources this part burns 
+        //Returns an enumeration of the resources this part burns
         public IEnumerable<int> BurnedResources()
         {
             return resourceConsumptions.Keys;
@@ -653,8 +653,8 @@ namespace MuMech
                         if (resources[type] < DRAINED) return false;
                         break;
 
-                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:  
-                    case ResourceFlowMode.ALL_VESSEL: 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                    case ResourceFlowMode.ALL_VESSEL:
                         //check if any part contains the needed resource:
                         if (!vessel.Any(n => n.resources[type] > DRAINED)) return false;
                         break;
@@ -750,7 +750,7 @@ namespace MuMech
         {
             int fuelLookupID = nextFuelLookupID++;
             HashSet<FuelNode> sources = new HashSet<FuelNode>();
-            bool success = FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, 0);          
+            bool success = FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, 0);
             return sources;
         }
 
@@ -772,7 +772,7 @@ namespace MuMech
             {
                 success |= fuelLineSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1);
             }
-            if (success) 
+            if (success)
             {
                 return true;
             }
@@ -804,8 +804,8 @@ namespace MuMech
                 }
             }
 
-            // If we are fuel crossfeed capable and surface-mounted to our parent, 
-            // try to draw fuel from our parent (Kashua rule #7) 
+            // If we are fuel crossfeed capable and surface-mounted to our parent,
+            // try to draw fuel from our parent (Kashua rule #7)
             if (surfaceMountParent != null)
             {
                 return surfaceMountParent.FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level+1);
