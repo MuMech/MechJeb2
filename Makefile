@@ -64,18 +64,18 @@ build/%.dll: ${MECHJEBFILES}
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
 
 package: build ${MECHJEBFILES}
-	mkdir -p package/MechJeb2/Plugins
-	cp -r Parts package/MechJeb2/
-	cp build/MechJeb2.dll package/MechJeb2/Plugins/
-	cp LICENSE.md README.md package/MechJeb2/
+	mkdir -p package/GameData/MechJeb2/Plugins
+	cp -r Parts package/GameData/MechJeb2/
+	cp build/MechJeb2.dll package/GameData/MechJeb2/Plugins/
+	cp LICENSE.md README.md package/GameData/MechJeb2/
 
 %.tar.gz:
-	${TAR} zcf $@ package/MechJeb2
+	(cd package && ${TAR} zcf ../$@ GameData/MechJeb2)
 
 tar.gz: package MechJeb-${VERSION}.tar.gz
 
 %.zip:
-	${ZIP} -9 -r $@ package/MechJeb2
+	(cd package && ${ZIP} -9 -r ../$@ GameData/MechJeb2)
 
 zip: package MechJeb-${VERSION}.zip
 
