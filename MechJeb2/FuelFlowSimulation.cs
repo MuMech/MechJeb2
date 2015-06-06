@@ -469,10 +469,11 @@ namespace MuMech
                     atmosphereCurve = new FloatCurve(engine.atmosphereCurve.Curve.keys);
                     atmChangeFlow = engine.atmChangeFlow;
                     useAtmCurve = engine.useAtmCurve;
-                    atmCurve = new FloatCurve(engine.atmCurve.Curve.keys);
+                    if (useAtmCurve)
+                        atmCurve = new FloatCurve(engine.atmCurve.Curve.keys);
                     useVelCurve = engine.useVelCurve;
-                    velCurve = new FloatCurve(engine.velCurve.Curve.keys);
-
+                    if (useAtmCurve)
+                        velCurve = new FloatCurve(engine.velCurve.Curve.keys);
 
                     propellantSumRatioTimesDensity = engine.propellants.Where(prop => !prop.ignoreForIsp).Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
                     propellantRatios = engine.propellants.Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp ).ToDictionary(prop => prop.id, prop => prop.ratio);
