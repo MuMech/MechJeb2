@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //This class just exists to collect miscellaneous info item functions in one place. 
+    //This class just exists to collect miscellaneous info item functions in one place.
     //If any of these functions are useful in another module, they should be moved there.
     public class MechJebModuleInfoItems : ComputerModule
     {
@@ -17,7 +17,7 @@ namespace MuMech
         {
             get
             {
-                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.fetch.ship.parts : 
+                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.fetch.ship.parts :
                     ((vessel == null) ? new List<Part>() : vessel.Parts);
             }
         }
@@ -257,7 +257,7 @@ namespace MuMech
             float gForRCS;
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
-            
+
             foreach (ModuleRCS pm in vessel.GetModules<ModuleRCS>())
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
@@ -317,7 +317,7 @@ namespace MuMech
         {
             SpaceCenterFacility rolloutFacility = (EditorDriver.editorFacility == EditorFacility.VAB) ? SpaceCenterFacility.LaunchPad : SpaceCenterFacility.Runway;
             float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility));
-            
+
             if(maximumVesselMass < float.MaxValue)
                 return string.Format("{0} t", maximumVesselMass.ToString("F3"));
             else
@@ -732,15 +732,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
 
-        private string[] StageDisplayStates = new[] {"Short stats", "Long stats", "Full stats"};
-        
+        private static readonly string[] StageDisplayStates = {"Short stats", "Long stats", "Full stats", "Custom"};
+
         private FuelFlowSimulation.Stats[] vacStats;
         private FuelFlowSimulation.Stats[] atmoStats;
 
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
-            // Unity throws an exception if we change our layout between the Layout event and 
+            // Unity throws an exception if we change our layout between the Layout event and
             // the Repaint event, so only get new data right before the Layout event.
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             if (Event.current.type == EventType.Layout)
@@ -772,7 +772,7 @@ namespace MuMech
                 stats.editorBody = mainBody;
                 geeASL = mainBody.GeeASL;
             }
-            
+
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
@@ -788,7 +788,7 @@ namespace MuMech
             }
 
             GUILayout.EndHorizontal();
-            
+
             switch (StageDisplayState)
             {
                 case 0:
@@ -806,18 +806,23 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start Mass", stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));
-            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));
-            if (showStagedMass) showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));
-            if (showBurnedMass) showFinalMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));
-            if (showVacInitialTWR) showVacInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
-            if (showVacMaxTWR) showVacMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
-            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));
-            if (showAtmoMaxTWR) showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));
-            if (showISP) showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
-            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showTime) showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+            bool noChange = true;
+            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn("Start Mass", stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));
+            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));
+            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));
+            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));
+            if (showVacInitialTWR) noChange &= showVacInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
+            if (showVacMaxTWR) noChange &= showVacMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showAtmoInitialTWR) noChange &= showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));
+            if (showAtmoMaxTWR) noChange &= showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
+            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+
+            if (!noChange)
+                StageDisplayState = 3;
+
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -843,7 +848,7 @@ namespace MuMech
 
             stats.RequestUpdate(this);
         }*/
-        
+
         [ValueInfoItem("Stage ΔV (vac)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
         public double StageDeltaVVacuum()
         {
@@ -1077,10 +1082,10 @@ namespace MuMech
                 case Vessel.Situations.SPLASHED:
                     return mainBody.theName + (biome == "" ? "'s oceans" : biome);
                 case Vessel.Situations.FLYING:
-                    if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)                        
+                    if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
                         return "Flying over " + mainBody.theName + biome;
-                    else                
+                    else
                         //ExperimentSituations.FlyingHigh
                         return "Upper atmosphere of " + mainBody.theName + biome;
                 default:
