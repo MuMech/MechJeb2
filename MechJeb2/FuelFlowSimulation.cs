@@ -107,7 +107,7 @@ namespace MuMech
             stats.startThrust = VesselThrust(throttle, staticPressure, atmDensity, machNumber);
             stats.endMass = stats.startMass;
             stats.resourceMass = 0;
-            stats.maxAccel = stats.startThrust / stats.endMass;
+            stats.maxAccel = stats.endMass > 0 ? stats.startThrust / stats.endMass : 0;
             stats.deltaTime = 0;
             stats.deltaV = 0;
 
@@ -173,9 +173,9 @@ namespace MuMech
             stats.deltaTime = dt;
             stats.endMass = VesselMass(simStage);
             stats.resourceMass = stats.startMass - stats.endMass;
-            stats.maxAccel = stats.startThrust / stats.endMass;
+            stats.maxAccel = stats.endMass > 0 ? stats.startThrust / stats.endMass : 0;
             stats.ComputeTimeStepDeltaV();
-            stats.isp = stats.startMass == stats.endMass ? 0 : stats.deltaV / (9.80665f * Mathf.Log(stats.startMass / stats.endMass));
+            stats.isp = stats.startMass > stats.endMass ? stats.deltaV / (9.80665f * Mathf.Log(stats.startMass / stats.endMass)) : 0;
 
             t += dt;
 
@@ -317,7 +317,7 @@ namespace MuMech
             public float isp;
             public float stagedMass;
 
-            public double StartTWR(double geeASL) { return startThrust / (9.80665 * geeASL * startMass); }
+            public double StartTWR(double geeASL) { return startMass > 0 ? startThrust / (9.80665 * geeASL * startMass) : 0; }
             public double MaxTWR(double geeASL) { return maxAccel / (9.80665 * geeASL); }
 
             //Computes the deltaV from the other fields. Only valid when the thrust is constant over the time interval represented.
@@ -340,7 +340,7 @@ namespace MuMech
                 {
                     startMass = this.startMass,
                     endMass = s.endMass,
-                    resourceMass = startMass - endMass,
+                    resourceMass = startMass - s.endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
                     deltaTime = this.deltaTime + s.deltaTime,
@@ -391,9 +391,11 @@ namespace MuMech
         public bool isEngine = false;   //whether this part is an engine
 
         readonly float dryMass = 0; //the mass of this part, not counting resource mass
-        readonly float fairingMass = 0; //the mass of the fairinf of
+        readonly float fairingMass = 0; //the mass of the fairing of this part
 
         public string partName; //for debugging
+
+        public float moduleMass; // for debugging
 
         public FuelNode(Part part, bool dVLinearThrust)
         {
@@ -401,13 +403,10 @@ namespace MuMech
             {
                 dryMass = part.mass + part.GetPhysicslessChildMass();
 
+                moduleMass = part.GetModuleMass(part.partInfo.partPrefab.mass);
                 if (part.HasModule<ModuleProceduralFairing>())
                 {
-                    fairingMass = part.GetModuleMass(part.mass);
-                }
-                else
-                {
-                    dryMass += part.GetModuleMass(part.mass);
+                    fairingMass = moduleMass;
                 }
             }
 
@@ -600,8 +599,15 @@ namespace MuMech
         //because the simulated node may have lost resources, and thus mass, during the simulation.
         public float Mass(int simStage)
         {
-                return dryMass + resources.Keys.Sum(id => resources[id]*MuUtils.ResourceDensity(id)) +
-                       (inverseStage < simStage ? fairingMass : 0);
+            //print("\n(" + simStage + ") " + partName.PadRight(25) + " dryMass " + dryMass.ToString("F3")
+            //          + " ResMass " + (resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id))).ToString("F3")
+            //          + " Fairing Mass " + (inverseStage < simStage ? fairingMass : 0).ToString("F3")
+            //          + " (" + fairingMass.ToString("F3") + ")"
+            //          + " ModuleMass " + moduleMass.ToString("F3")
+            //          );
+
+            return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id)) +
+                   (inverseStage < simStage ? fairingMass : 0);
         }
 
         public float EngineThrust(double atmospheres, double atmDensity, double machNumber)
