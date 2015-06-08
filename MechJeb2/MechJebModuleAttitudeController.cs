@@ -26,6 +26,7 @@ namespace MuMech
         public PIDControllerV2 pid;
         public Vector3d lastAct = Vector3d.zero;
         public Vector3d pidAction;  //info
+        public Vector3d error;  //info
         protected float timeCount = 0;
         protected Part lastReferencePart;
 
@@ -271,9 +272,7 @@ namespace MuMech
 
             Vector3 up, dir = direction;
 
-            // TODO : Fix that so it does not roll when it should not. Current fix is a "hack" that set required roll to 0 if !attitudeRollMatters
-
-            if (!enabled || (ang_diff > 45))
+            if (!enabled)
             {
                 up = attitudeWorldToReference(-vessel.GetTransform().forward, reference);
             }
@@ -360,15 +359,11 @@ namespace MuMech
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
                 Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * _requestedAttitude);
 
-                Vector3d deltaEuler = new Vector3d(
-                                                        (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
-                                                        -((delta.eulerAngles.y > 180) ? (delta.eulerAngles.y - 360.0F) : delta.eulerAngles.y),
-                                                        (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
-                                                    );
+                Vector3d deltaEuler = delta.DeltaEuler();
 
                 Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
                 if (core.thrust.differentialThrottleSuccess)
-                    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2;
+                    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
                 Vector3d inertia = Vector3d.Scale(
                                                         vesselState.angularMomentum.Sign(),
@@ -378,7 +373,7 @@ namespace MuMech
                                                         )
                                                     );
 
-                // ( MoI / avaiable torque ) factor:
+                // ( MoI / available torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
 
                 // Find out the real shorter way to turn were we wan to.
@@ -389,15 +384,17 @@ namespace MuMech
 
                 double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
                 Vector2d rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
-                rotDirection = rotDirection.normalized * turnAngle / 180.0f;
+                rotDirection = rotDirection.normalized * turnAngle / 180.0;
 
-                Vector3d err = new Vector3d(
+                error = new Vector3d(
                                                 -rotDirection.y * Math.PI,
                                                 rotDirection.x * Math.PI,
-                                                attitudeRollMatters ? ((delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z) * Math.PI / 180.0F : 0F
+                    attitudeRollMatters && turnAngle < 45
+                        ? deltaEuler.z * Mathf.Deg2Rad
+                        : 0F
                                             );
 
-                err += inertia.Reorder(132) / 2;
+                Vector3d err = error + inertia.Reorder(132) / 2d;
                 err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
                                    Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
                                    Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
@@ -413,7 +410,7 @@ namespace MuMech
                 pidAction = pid.Compute(err, omega);
 
                 // low pass filter,  wf = 1/Tf:
-                Vector3d act = lastAct + (pidAction - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));
+                Vector3d act = lastAct + (pidAction - lastAct) * (1.0 / ((Tf / TimeWarp.fixedDeltaTime) + 1.0));
                 lastAct = act;
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);

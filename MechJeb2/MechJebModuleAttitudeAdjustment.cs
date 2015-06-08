@@ -89,6 +89,11 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
+                    GUILayout.Label("Error", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.error * Mathf.Rad2Deg), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
                     GUILayout.Label("prop. action.", GUILayout.ExpandWidth(true));
                     GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.propAct), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
@@ -160,7 +165,7 @@ namespace MuMech
 
             MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
 
-            
+
             GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
 
             arrows.seeThrough = GUILayout.Toggle(arrows.seeThrough, "Visible through object");
@@ -180,7 +185,7 @@ namespace MuMech
             arrows.requestedAttitudeArrowActive = GUILayout.Toggle(arrows.requestedAttitudeArrowActive, "Requested Attitude (Gray)");
 
             arrows.debugArrowActive = GUILayout.Toggle(arrows.debugArrowActive, "Debug (Magenta)");
-            
+
 
             GUILayout.EndVertical();
 
