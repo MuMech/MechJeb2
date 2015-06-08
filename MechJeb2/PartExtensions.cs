@@ -65,17 +65,22 @@ namespace MuMech
                     if (!mAnchoredDecoupler.isDecoupled) return true;
                     break;
                 }
+
+                if (m.ClassName == "ProceduralFairingDecoupler")
+                {
+                    return true;
+                }
             }
             return false;
         }
 
 
-        //Any engine that is decoupled in the same stage in 
+        //Any engine that is decoupled in the same stage in
         //which it activates we call a sepratron.
         public static bool IsSepratron(this Part p)
         {
-            return p.ActivatesEvenIfDisconnected 
-                && p.IsEngine() 
+            return p.ActivatesEvenIfDisconnected
+                && p.IsEngine()
                 && p.IsDecoupledInStage(p.inverseStage)
                 && !p.isControlSource;
         }
