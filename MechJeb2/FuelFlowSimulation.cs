@@ -293,7 +293,7 @@ namespace MuMech
 
         public float VesselThrust(float throttle, double staticPressure, double atmDensity, double machNumber)
         {
-            return throttle * FindActiveEngines().Sum(eng => eng.EngineThrust(staticPressure, atmDensity, machNumber));
+            return FindActiveEngines().Sum(eng => eng.EngineThrust(throttle, staticPressure, atmDensity, machNumber));
         }
 
         //Returns a list of engines that fire during the current simulated stage.
@@ -610,13 +610,13 @@ namespace MuMech
                    (inverseStage < simStage ? fairingMass : 0);
         }
 
-        public float EngineThrust(double atmospheres, double atmDensity, double machNumber)
+        public float EngineThrust(float throttle, double atmospheres, double atmDensity, double machNumber)
         {
             float Isp = atmosphereCurve.Evaluate((float)atmospheres);
 
             float flowModifier = GetFlowModifier(atmDensity, machNumber);
 
-            float thrust = Mathf.Lerp(minFuelFlow, maxFuelFlow, 0.01f * thrustPercentage) * flowModifier * Isp * g;
+            float thrust = Mathf.Lerp(minFuelFlow, maxFuelFlow, throttle * 0.01f * thrustPercentage) * flowModifier * Isp * g;
 
             return thrust * fwdThrustRatio;
         }
