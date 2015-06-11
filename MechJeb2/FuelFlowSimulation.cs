@@ -401,7 +401,8 @@ namespace MuMech
         {
             if (!part.IsLaunchClamp())
             {
-                dryMass = part.mass;
+                //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + part.GetModuleMass(part.partInfo.partPrefab.mass).ToString("F4"));
+                dryMass = part.mass; // Intentionally ignore the physic flag.
 
                 moduleMass = part.GetModuleMass(part.partInfo.partPrefab.mass);
                 if (part.HasModule<ModuleProceduralFairing>())
