@@ -267,8 +267,7 @@ namespace MuMech
 
         public bool attitudeTo(Vector3d direction, AttitudeReference reference, object controller)
         {
-            //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(reference) * direction, vesselState.forward));
-            double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
+            //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
 
             Vector3 up, dir = direction;
 
@@ -357,7 +356,8 @@ namespace MuMech
             {
                 // Direction we want to be facing
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
-                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * _requestedAttitude);
+                Transform vesselTransform = vessel.ReferenceTransform;
+                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
 
                 Vector3d deltaEuler = delta.DeltaEuler();
 
@@ -379,20 +379,24 @@ namespace MuMech
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox
 
-                Vector3d tgtLocalUp = vessel.ReferenceTransform.transform.rotation.Inverse() * _requestedAttitude * Vector3d.forward;
+                Vector3d tgtLocalUp = vesselTransform.transform.rotation.Inverse() * _requestedAttitude * Vector3d.forward;
                 Vector3d curLocalUp = Vector3d.up;
 
                 double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
                 Vector2d rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
                 rotDirection = rotDirection.normalized * turnAngle / 180.0;
 
+                Vector3 normVec = Vector3.Cross(_requestedAttitude * Vector3.forward, vesselTransform.up);
+                Quaternion targetDeRotated = Quaternion.AngleAxis((float)turnAngle, normVec) * _requestedAttitude;
+                float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) * Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
+
                 error = new Vector3d(
-                                                -rotDirection.y * Math.PI,
-                                                rotDirection.x * Math.PI,
-                    attitudeRollMatters && turnAngle < 45
-                        ? deltaEuler.z * Mathf.Deg2Rad
+                    -rotDirection.y * Math.PI,
+                    rotDirection.x * Math.PI,
+                    attitudeRollMatters
+                        ? rollError * Mathf.Deg2Rad
                         : 0F
-                                            );
+                    );
 
                 Vector3d err = error + inertia.Reorder(132) / 2d;
                 err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
@@ -403,8 +407,8 @@ namespace MuMech
                 // angular velocity:
                 Vector3d omega;
                 omega.x = vessel.angularVelocity.x;
-                omega.y = vessel.angularVelocity.z; // y <=> z 
-                omega.z = vessel.angularVelocity.y; // z <=> y 
+                omega.y = vessel.angularVelocity.z; // y <=> z
+                omega.z = vessel.angularVelocity.y; // z <=> y
                 omega.Scale(NormFactor);
 
                 pidAction = pid.Compute(err, omega);
@@ -428,9 +432,9 @@ namespace MuMech
             bool userCommandingPitchYaw = (Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F) ? false : true) || (Mathfx.Approx(s.yaw, s.yawTrim, 0.1F) ? false : true);
             bool userCommandingRoll = (Mathfx.Approx(s.roll, s.rollTrim, 0.1F) ? false : true);
 
-            // Disable the new SAS so it won't interfere. But enable it while in timewarp for compatibility with PersistentRotation 
+            // Disable the new SAS so it won't interfere. But enable it while in timewarp for compatibility with PersistentRotation
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRateIndex == 0)
-            part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
 
 
             if (attitudeKILLROT)
@@ -497,6 +501,6 @@ namespace MuMech
                     }
                 }
             }
-        } // end of SetFlightCtrlState 
+        } // end of SetFlightCtrlState
     }
 }
