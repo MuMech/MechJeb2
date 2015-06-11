@@ -29,12 +29,6 @@ namespace MuMech
             return null;
         }
 
-        public static float TotalMass(this Part p)
-        {
-            return p.mass + p.GetPhysicslessChildMass() + p.GetResourceMass() + p.GetModuleMass(p.mass);
-        }
-
-
         public static bool EngineHasFuel(this Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)

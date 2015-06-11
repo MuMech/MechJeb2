@@ -819,7 +819,7 @@ namespace MuMech
                 }
 
                 //Compute the contributions to the vessel inertia tensor due to the part mass and position
-                float partMass = p.TotalMass();
+                float partMass = rigidbody.mass;
                 Vector3 partPosition = vesselTransform.InverseTransformDirection(rigidbody.worldCenterOfMass - CoM);
 
                 for (int i = 0; i < 3; i++)

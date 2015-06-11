@@ -307,9 +307,7 @@ namespace MuMech
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts
-                                  .Where(p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass());
-            else return vesselState.mass;
+            return HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.GetTotalMass() : vesselState.mass;
         }
 
         [ValueInfoItem("Max vessel mass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)]

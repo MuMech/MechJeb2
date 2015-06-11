@@ -399,9 +399,9 @@ namespace MuMech
 
         public FuelNode(Part part, bool dVLinearThrust)
         {
-            if (part.IsPhysicallySignificant())
+            if (!part.IsLaunchClamp())
             {
-                dryMass = part.mass + part.GetPhysicslessChildMass();
+                dryMass = part.mass;
 
                 moduleMass = part.GetModuleMass(part.partInfo.partPrefab.mass);
                 if (part.HasModule<ModuleProceduralFairing>())
