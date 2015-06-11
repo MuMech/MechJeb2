@@ -153,7 +153,7 @@ namespace MuMech
         {
             try
             {
-                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel));
+                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel),1);
             }
             catch
             {
