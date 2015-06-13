@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -62,6 +59,8 @@ namespace MuMech
 
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
 
+        protected Vector3d _axisControl = Vector3d.one;
+
         public override void OnModuleEnabled()
         {
             timeCount = 50;
@@ -98,6 +97,7 @@ namespace MuMech
                 {
                     _oldAttitudeTarget = _attitudeTarget;
                     _lastAttitudeTarget = value;
+                    AxisControl(true, true, true);
                     attitudeChanged = true;
                 }
                 _attitudeTarget = value;
@@ -110,14 +110,19 @@ namespace MuMech
             get { return _requestedAttitude; }
         }
 
-        protected bool _attitudeRollMatters = false;
         public bool attitudeRollMatters
         {
             get
             {
-                return _attitudeRollMatters;
+                return _axisControl.z > 0;
             }
         }
+
+        public Vector3d AxisState
+        {
+            get { return new Vector3d(_axisControl.x, _axisControl.y, _axisControl.z);}
+        }
+
 
         [Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
         public bool useSAS = false;
@@ -154,9 +159,9 @@ namespace MuMech
             Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
 
             Vector3d ratio = new Vector3d(
-                                    torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
-                                    torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
-                                    torque.z != 0 ? vesselState.MoI.z / torque.z : 0
+                torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
+                torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
+                torque.z != 0 ? vesselState.MoI.z / torque.z : 0
                 );
 
             Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
@@ -170,6 +175,13 @@ namespace MuMech
             pid.Kp = pid.Kd / (kpFactor * Math.Sqrt(2) * Tf);
             pid.Ki = pid.Kp / (kiFactor * Math.Sqrt(2) * Tf);
             pid.intAccum = Vector3.ClampMagnitude(pid.intAccum, 5);
+        }
+
+        public void AxisControl(bool pitch, bool yaw, bool roll)
+        {
+            _axisControl.x = pitch ? 1 : 0;
+            _axisControl.y = yaw ? 1 : 0;
+            _axisControl.z = roll ? 1 : 0;
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
@@ -260,8 +272,7 @@ namespace MuMech
             users.Add(controller);
             attitudeReference = reference;
             attitudeTarget = attitude;
-            _attitudeRollMatters = true;
-
+            AxisControl(true, true, true);
             return true;
         }
 
@@ -281,7 +292,7 @@ namespace MuMech
             }
             Vector3.OrthoNormalize(ref dir, ref up);
             attitudeTo(Quaternion.LookRotation(dir, up), reference, controller);
-            _attitudeRollMatters = false;
+            AxisControl(true, true, false);
             return true;
         }
 
@@ -366,12 +377,12 @@ namespace MuMech
                     torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
                 Vector3d inertia = Vector3d.Scale(
-                                                        vesselState.angularMomentum.Sign(),
-                                                        Vector3d.Scale(
-                                                            Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                                                            Vector3d.Scale(torque, vesselState.MoI).Invert()
-                                                        )
-                                                    );
+                    vesselState.angularMomentum.Sign(),
+                    Vector3d.Scale(
+                        Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
+                        Vector3d.Scale(torque, vesselState.MoI).Invert()
+                        )
+                    );
 
                 // ( MoI / available torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
@@ -394,15 +405,17 @@ namespace MuMech
                 error = new Vector3d(
                     -rotDirection.y * Math.PI,
                     rotDirection.x * Math.PI,
-                    attitudeRollMatters
-                        ? rollError * Mathf.Deg2Rad
-                        : 0F
+                    rollError * Mathf.Deg2Rad
                     );
 
+                error.Scale(_axisControl);
+
                 Vector3d err = error + inertia.Reorder(132) / 2d;
-                err = new Vector3d(Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
-                                   Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
-                                   Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
+                err = new Vector3d(
+                    Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
+                    Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
+                    Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
+
                 err.Scale(NormFactor);
 
                 // angular velocity:
@@ -449,12 +462,6 @@ namespace MuMech
             if (userCommandingPitchYaw || userCommandingRoll)
             {
                 pid.Reset();
-            }
-
-            if (!attitudeRollMatters)
-            {
-                attitudeTo(Quaternion.LookRotation(attitudeTarget * Vector3d.forward, attitudeWorldToReference(-vessel.GetTransform().forward, attitudeReference)), attitudeReference, null);
-                _attitudeRollMatters = false;
             }
 
             if (!userCommandingRoll)

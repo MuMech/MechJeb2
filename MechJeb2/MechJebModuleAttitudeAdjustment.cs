@@ -114,8 +114,8 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("AttitudeRollMatters ", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(core.attitude.attitudeRollMatters ? "true" : "false", GUILayout.ExpandWidth(false));
+                    GUILayout.Label("Axis Control ", GUILayout.ExpandWidth(true));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisState, "F0"), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
