@@ -122,7 +122,7 @@ namespace MuMech
 
             double halfBurnTime;
             double burnTime = BurnTime(dVLeft, out halfBurnTime);
-            
+
             double timeToNode = node.UT - vesselState.time;
 
             if (timeToNode < halfBurnTime)
@@ -215,7 +215,7 @@ namespace MuMech
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
                 double stageBurnFinalMass = s.startMass / Math.Exp(Math.Log(s.startMass / s.endMass) * stageBurnFraction);
-                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2);
+                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2d);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's

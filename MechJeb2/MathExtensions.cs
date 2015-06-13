@@ -52,6 +52,24 @@ namespace MuMech
                 );
         }
 
+        public static Vector3d Clamp(this Vector3d value, double min, double max)
+        {
+            return new Vector3d(
+                Clamp(value.x, min, max),
+                Clamp(value.y, min, max),
+                Clamp(value.z, min, max)
+                );
+        }
+
+        public static double Clamp(double val, double min, double max)
+        {
+            if (val <= min)
+                return min;
+            if (val >= max)
+                return max;
+            return val;
+        }
+
         public static float AngleInPlane(this Vector3 vector, Vector3 planeNormal, Vector3 other)
         {
             Vector3 v1 = vector.ProjectIntoPlane(planeNormal);

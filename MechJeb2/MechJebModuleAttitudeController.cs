@@ -20,7 +20,7 @@ namespace MuMech
 
     public class MechJebModuleAttitudeController : ComputerModule
     {
-        public PIDControllerV2 pid;
+        public PIDControllerV3 pid;
         public Vector3d lastAct = Vector3d.zero;
         public Vector3d pidAction;  //info
         public Vector3d error;  //info
@@ -34,7 +34,10 @@ namespace MuMech
         public bool Tf_autoTune = true;
 
         [Persistent(pass = (int)Pass.Global)]
-        public double Tf = 0.3;
+        public double Tf = 0; // not used any more but kept so it loads from old configs
+        public Vector3d TfV = new Vector3d(0.3, 0.3, 0.3);
+        [Persistent(pass = (int)Pass.Global)]
+        private Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f);  // use the serialize since Vector3d does not
         [Persistent(pass = (int)Pass.Global)]
         public double TfMin = 0.1;
         [Persistent(pass = (int)Pass.Global)]
@@ -148,10 +151,30 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            pid = new PIDControllerV2(0, 0, 0, 1, -1);
+            pid = new PIDControllerV3(Vector3d.zero, Vector3d.zero, Vector3d.zero, 1, -1);
             setPIDParameters();
             lastAct = Vector3d.zero;
             base.OnStart(state);
+        }
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+            if (Tf > 0)
+            {
+                TfV = new Vector3d(Tf, Tf, Tf);
+                Tf = 0;
+            }
+            else
+            {
+                TfV = TfVec;
+            }
+        }
+
+        public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            TfVec = TfV;
+            base.OnSave(local, type, global);
         }
 
         public void tuneTf()
@@ -160,21 +183,46 @@ namespace MuMech
 
             Vector3d ratio = new Vector3d(
                 torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
-                torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
-                torque.z != 0 ? vesselState.MoI.z / torque.z : 0
+                torque.z != 0 ? vesselState.MoI.z / torque.z : 0,   //y <=> z
+                torque.y != 0 ? vesselState.MoI.y / torque.y : 0    //z <=> y
                 );
 
-            Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
-            Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
+            TfV = 0.05 * ratio;
+
+            TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, 1.0);
+            TfV = TfV.Clamp(TfMin, TfMax);
+
+            //Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
+            //Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
             setPIDParameters();
         }
 
         public void setPIDParameters()
         {
-            pid.Kd = kdFactor / Tf;
-            pid.Kp = pid.Kd / (kpFactor * Math.Sqrt(2) * Tf);
-            pid.Ki = pid.Kp / (kiFactor * Math.Sqrt(2) * Tf);
-            pid.intAccum = Vector3.ClampMagnitude(pid.intAccum, 5);
+            Vector3d invTf = TfV.Invert();
+            pid.Kd = kdFactor * invTf;
+
+            pid.Kp = (1 / (kpFactor * Math.Sqrt(2))) * pid.Kd;
+            pid.Kp.Scale(invTf);
+
+            pid.Ki = (1 / (kiFactor * Math.Sqrt(2))) * pid.Kp;
+            pid.Ki.Scale(invTf);
+
+            pid.intAccum = pid.intAccum.Clamp(-5, 5);
+        }
+
+        public void ResetConfig()
+        {
+            TfMin = 0.1;
+            TfMax = 0.5;
+            kpFactor = 3;
+            kiFactor = 6;
+            kdFactor = 0.5;
+
+            if (Tf_autoTune)
+                tuneTf();
+
+            setPIDParameters();
         }
 
         public void AxisControl(bool pitch, bool yaw, bool roll)
@@ -428,7 +476,10 @@ namespace MuMech
                 pidAction = pid.Compute(err, omega);
 
                 // low pass filter,  wf = 1/Tf:
-                Vector3d act = lastAct + (pidAction - lastAct) * (1.0 / ((Tf / TimeWarp.fixedDeltaTime) + 1.0));
+                Vector3d act = lastAct;
+                act.x += (pidAction.x - lastAct.x) * (1.0 / ((TfV.x / TimeWarp.fixedDeltaTime) + 1.0));
+                act.y += (pidAction.y - lastAct.y) * (1.0 / ((TfV.y / TimeWarp.fixedDeltaTime) + 1.0));
+                act.z += (pidAction.z - lastAct.z) * (1.0 / ((TfV.z / TimeWarp.fixedDeltaTime) + 1.0));
                 lastAct = act;
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);
