@@ -41,8 +41,8 @@ namespace MuMech
 
             float currentMaxThrust, currentMinThrust;
 
-            currentMaxThrust = engine.minFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
-            currentMinThrust = engine.maxFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
+            currentMaxThrust = engine.maxFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
+            currentMinThrust = engine.minFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
 
             if (engine.throttleLocked)
             {
@@ -52,9 +52,8 @@ namespace MuMech
 
             for (int i = 0; i < engine.thrustTransforms.Count; i++)
             {
-                Vector3d thrust_dir = v.transform.rotation.Inverse() * gimbalExt.initialRot(gimbal, engine.thrustTransforms[i], i) * Vector3d.back;
-
-                Vector3d pos = v.transform.rotation.Inverse() * (engine.part.transform.position - com);
+                Vector3d thrust_dir = v.ReferenceTransform.rotation.Inverse() * gimbalExt.initialRot(gimbal, engine.thrustTransforms[i], i) * Vector3d.back;
+                Vector3d pos = v.ReferenceTransform.rotation.Inverse() * (engine.part.transform.position - com);
 
                 _maxVariableForce += (currentMaxThrust - currentMinThrust) * thrust_dir;
                 _constantForce += currentMinThrust * thrust_dir;
