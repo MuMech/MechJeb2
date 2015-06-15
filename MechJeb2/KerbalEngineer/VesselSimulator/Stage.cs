@@ -63,6 +63,7 @@ namespace KerbalEngineer.VesselSimulator
             str.AppendFormat("totalTime     : {0:g6}\n", this.totalTime);
             str.AppendFormat("mass          : {0:g6}\n", this.mass);
             str.AppendFormat("totalMass     : {0:g6}\n", this.totalMass);
+            str.AppendFormat("resourceMass  : {0:g6}\n", this.resourceMass);
             str.AppendFormat("isp           : {0:g6}\n", this.isp);
             str.AppendFormat("thrust        : {0:g6}\n", this.thrust);
             str.AppendFormat("actualThrust  : {0:g6}\n", this.actualThrust);

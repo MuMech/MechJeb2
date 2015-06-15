@@ -10,7 +10,7 @@ namespace MuMech
     {
 
         protected DragCubeList cubes;
-        
+
         public double totalMass = 0;
         public bool shieldedFromAirstream;
         public bool noDrag;
@@ -19,7 +19,7 @@ namespace MuMech
 
         private float areaDrag;
         private Vector3 liftForce;
-        
+
         //private float DragCubeMultiplier;
         //private float DragMultiplier;
 
@@ -44,10 +44,12 @@ namespace MuMech
 
         protected virtual void Set(Part p, ReentrySimulation.SimCurves _simCurves)
         {
-            totalMass = p.TotalMass();
+            Rigidbody rigidbody = p.rb;
+
+            totalMass = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
-            noDrag = p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
+            noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
             hasLiftModule = p.hasLiftModule;
             bodyLiftMultiplier = p.bodyLiftMultiplier * PhysicsGlobals.BodyLiftMultiplier;
 
@@ -58,7 +60,7 @@ namespace MuMech
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
             vesselToPart = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up)).Inverse();
-            
+
             //DragCubeMultiplier = PhysicsGlobals.DragCubeMultiplier;
             //DragMultiplier = PhysicsGlobals.DragMultiplier;
 
@@ -97,10 +99,10 @@ namespace MuMech
             //{
             //    msg += "\n AreaDrag " + cubes.AreaDrag.ToString("f4") + " vs " + oPart.DragCubes.AreaDrag.ToString("f4");
             //    //msg += "\n mach "     + mach.ToString("f4")           + " vs " + oPart.machNumber.ToString("f4");
-            //    
+            //
             //    msg += "\n dragDir " + MuUtils.PrettyPrint(dragDir)             + " vs " + MuUtils.PrettyPrint(oPart.dragVectorDirLocal)    + " " + Vector3.Angle(dragDir, oPart.dragVectorDirLocal).ToString("F3") + "°";
             //    //msg += "\n dragVel " + MuUtils.PrettyPrint(vesselVelocity.normalized) + " vs " + MuUtils.PrettyPrint(oPart.dragVector.normalized) + " " + Vector3.Angle(vesselVelocity.normalized, oPart.dragVector).ToString("F3") + "°";
-            //    
+            //
             //    msg += "\n Real° " + MuUtils.PrettyPrint(oPart.dragVectorDirLocal) + " " + Vector3.Angle(oPart.dragVectorDirLocal, Vector3.down).ToString("F3") + "°";
             //    msg += "\n Sim°  " + MuUtils.PrettyPrint(dragDir)                  + " " + Vector3.Angle(dragDir, Vector3.down).ToString("F3") + "°";
             //
@@ -113,7 +115,7 @@ namespace MuMech
             //    msg += "\n Ups " + MuUtils.PrettyPrint(quatUp) + " vs " + MuUtils.PrettyPrint(shipUp) + " " + Vector3.Angle(quatUp, shipUp).ToString("F3") + "°";
             //
             //
-            //    
+            //
             //    //msg += "\n AreaOccluded ";
             //    //for (int i = 0; i < 6; i++)
             //    //{
@@ -144,7 +146,7 @@ namespace MuMech
 
 
             float bodyLiftScalar = bodyLiftMultiplier * dynamicPressurekPa * simCurves.LiftMachCurve.Evaluate(mach);
-            
+
             // direction of the lift in a vessel centric reference
             Vector3 liftV = vesselToPart.Inverse() * liftForce * bodyLiftScalar;
 
@@ -165,7 +167,7 @@ namespace MuMech
             //
             //    Vector3 localBodyL = oPart.vessel.transform.InverseTransformDirection(bodyL);
             //    msg += "\n liftV " + MuUtils.PrettyPrint(liftV) + " vs " + MuUtils.PrettyPrint(localBodyL) + " " + Vector3.Angle(liftV, localBodyL).ToString("F3") + "°";
-            //    
+            //
             //    msg += "\n liftForce " + MuUtils.PrettyPrint(cubes.LiftForce) + " vs " + MuUtils.PrettyPrint(oPart.DragCubes.LiftForce) + " " + Vector3.Angle(cubes.LiftForce, oPart.DragCubes.LiftForce).ToString("F3") + "°";
             //    msg += "\n Normals " + MuUtils.PrettyPrint(-vesselVelocity) + " vs " + MuUtils.PrettyPrint(-oPart.dragVectorDir) + " " + Vector3.Angle(-vesselVelocity, -oPart.dragVectorDir).ToString("F3") + "°";
             //
@@ -195,9 +197,9 @@ namespace MuMech
             dest.ClearCubes();
 
             dest.None = source.None;
-            
-            // Procedural need access to part so things gets bad quick. 
-            dest.Procedural = false; 
+
+            // Procedural need access to part so things gets bad quick.
+            dest.Procedural = false;
 
             for (int i = 0; i < source.Cubes.Count; i++)
             {
@@ -205,7 +207,7 @@ namespace MuMech
                 CopyDragCube(source.Cubes[i], c);
                 dest.Cubes.Add(c);
             }
-            
+
             dest.SetDragWeights();
 
             for (int i=0; i<6; i++)
@@ -279,7 +281,7 @@ namespace MuMech
             return Mathf.Lerp(surfaceDrag, tipDrag, (dotNormalized - 0.5f) * 2f) * multiplier;
         }
 
-        
+
         // Need to check and then simplify this, some operations are just redundant.
         protected void SetCubeWeight(string name, float newWeight)
         {

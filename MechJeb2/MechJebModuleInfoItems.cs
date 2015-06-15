@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    //This class just exists to collect miscellaneous info item functions in one place. 
+    //This class just exists to collect miscellaneous info item functions in one place.
     //If any of these functions are useful in another module, they should be moved there.
     public class MechJebModuleInfoItems : ComputerModule
     {
@@ -17,7 +17,7 @@ namespace MuMech
         {
             get
             {
-                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.fetch.ship.parts : 
+                return (HighLogic.LoadedSceneIsEditor) ? EditorLogic.fetch.ship.parts :
                     ((vessel == null) ? new List<Part>() : vessel.Parts);
             }
         }
@@ -153,7 +153,7 @@ namespace MuMech
         {
             try
             {
-                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel));
+                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel),1);
             }
             catch
             {
@@ -257,7 +257,7 @@ namespace MuMech
             float gForRCS;
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
-            
+
             foreach (ModuleRCS pm in vessel.GetModules<ModuleRCS>())
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
@@ -307,9 +307,7 @@ namespace MuMech
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts
-                                  .Where(p => p.IsPhysicallySignificant()).Sum(p => p.TotalMass());
-            else return vesselState.mass;
+            return HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.GetTotalMass() : vesselState.mass;
         }
 
         [ValueInfoItem("Max vessel mass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)]
@@ -317,7 +315,7 @@ namespace MuMech
         {
             SpaceCenterFacility rolloutFacility = (EditorDriver.editorFacility == EditorFacility.VAB) ? SpaceCenterFacility.LaunchPad : SpaceCenterFacility.Runway;
             float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility));
-            
+
             if(maximumVesselMass < float.MaxValue)
                 return string.Format("{0} t", maximumVesselMass.ToString("F3"));
             else
@@ -359,13 +357,7 @@ namespace MuMech
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.fetch.ship.parts
-                               where part.inverseStage == Staging.lastStage
-                               from engine in part.Modules.OfType<ModuleEnginesFX>()
-                                 where engine.isEnabled
-                               select engine);
-                return 1000 * (engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)) +
-                    enginesfx.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust)));
+                return 1000 * engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
             }
             else
             {
@@ -382,13 +374,7 @@ namespace MuMech
                                where part.inverseStage == Staging.lastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
-                var enginesfx = (from part in EditorLogic.fetch.ship.parts
-                                 where part.inverseStage == Staging.lastStage
-                                 from engine in part.Modules.OfType<ModuleEnginesFX>()
-                                 where engine.isEnabled
-                                 select engine);
-                return 1000 * (engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust))
-                    + enginesfx.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust)));
+                return 1000 * engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));
             }
             else
             {
@@ -413,8 +399,25 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                //return EditorLogic.fetch.ship.parts.Where(p => p.IsPhysicallySignificant())
-                //                  .Sum(p => p.TotalMass() * p.maximum_drag) / VesselMass();
+                // Still not working...
+
+                //double dragCoef = 0;
+                //for (int i = 0; i < EditorLogic.fetch.ship.parts.Count; i++)
+                //{
+                //    Part p = EditorLogic.fetch.ship.parts[i];
+                //    if (p.ShieldedFromAirstream)
+                //    {
+                //        continue;
+                //    }
+                //
+                //    Vector3d dragDir = -p.partTransform.InverseTransformDirection(vessel.GetTransform().up);
+                //
+                //    DragCubeList.CubeData data = p.DragCubes.AddSurfaceDragDirection(dragDir, 0.1f);
+                //
+                //    dragCoef += data.dragCoeff;
+                //}
+                //return dragCoef;
+
                 return 0;
             }
             else
@@ -495,24 +498,17 @@ namespace MuMech
         [ValueInfoItem("Time to closest approach", InfoItem.Category.Target)]
         public string TargetTimeToClosestApproach()
         {
-        	if (core.target.Target != null && vesselState.altitudeTrue < 1000.0) { return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(vessel.CoM, core.target.Transform.position)); }
+            if (core.target.Target != null && vesselState.altitudeTrue < 1000.0) { return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(vessel.CoM, core.target.Transform.position)); }
             if (!core.target.NormalTargetExists) return "N/A";
-			if (vesselState.altitudeTrue < 1000.0) {
-				double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
-				double b = (vessel.mainBody.transform.position - core.target.Transform.position).magnitude;
-				double c = Vector3d.Distance(vessel.transform.position, core.target.Position);
-				double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
-				return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
-			}
-            if (!core.target.NormalTargetExists) return "N/A";
-			if (vesselState.altitudeTrue < 1000.0) {
-				double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
-				double b = (vessel.mainBody.transform.position - core.target.Transform.position).magnitude;
-				double c = Vector3d.Distance(vessel.transform.position, core.target.Position);
-				double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
-				return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
-			}
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (vesselState.altitudeTrue < 1000.0) {
+                double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
+                double b = (vessel.mainBody.transform.position - core.target.Transform.position).magnitude;
+                double c = Vector3d.Distance(vessel.transform.position, core.target.Position);
+                double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+                return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
+            }
             return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
@@ -522,7 +518,8 @@ namespace MuMech
             if (!core.target.NormalTargetExists) return "N/A";
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
-			return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time), -1) + "m";
+            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            return MuUtils.ToSI(orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time), -1) + "m";
         }
 
         [ValueInfoItem("Rel. vel. at closest approach", InfoItem.Category.Target)]
@@ -531,7 +528,12 @@ namespace MuMech
             if (!core.target.NormalTargetExists) return "N/A";
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
+            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+
             double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+
+            if (double.IsNaN(UT)) { return "N/A"; }
+
             double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
             return MuUtils.ToSI(relVel, -1) + "m/s";
         }
@@ -632,6 +634,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
             return orbit.PhaseAngle(core.target.TargetOrbit, vesselState.time).ToString("F2") + "º";
         }
@@ -697,36 +700,51 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)Pass.Global)]
+        public bool showStagedMass = false;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showBurnedMass = false;
+        [Persistent(pass = (int)Pass.Global)]
         public bool showInitialMass = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool showFinalMass = false;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showInitialTWR = true;
+        public bool showVacInitialTWR = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoInitialTWR = false; // NK
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoMaxTWR = false;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showMaxTWR = false;
+        public bool showVacMaxTWR = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool showVacDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showVacTime = true;
+        public bool showTime = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoDeltaV = true;
         [Persistent(pass = (int)Pass.Global)]
-        public int TWRbody = 1;
-        
+        public bool showISP = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool liveSLT = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public int TWRBody = 1;
+        [Persistent(pass = (int)Pass.Global)]
+        public int StageDisplayState = 0;
+
+        private static readonly string[] StageDisplayStates = {"Short stats", "Long stats", "Full stats", "Custom"};
+
+        private FuelFlowSimulation.Stats[] vacStats;
+        private FuelFlowSimulation.Stats[] atmoStats;
+
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
-            // Unity throws an exception if we change our layout between the Layout event and 
+            // Unity throws an exception if we change our layout between the Layout event and
             // the Repaint event, so only get new data right before the Layout event.
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-            KerbalEngineer.VesselSimulator.Stage[] vacStats = stats.vacStats;
-            KerbalEngineer.VesselSimulator.Stage[] atmoStats = stats.atmoStats;
             if (Event.current.type == EventType.Layout)
             {
+                vacStats = stats.vacStats;
+                atmoStats = stats.atmoStats;
                 stats.RequestUpdate(this);
             }
 
@@ -738,41 +756,71 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
 
+            double geeASL;
             if (HighLogic.LoadedSceneIsEditor)
             {
                 // We're in the VAB/SPH
-                TWRbody = GuiUtils.ComboBox.Box(TWRbody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
-                stats.editorBody = FlightGlobals.Bodies[TWRbody];
+                TWRBody = GuiUtils.ComboBox.Box(TWRBody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
+                stats.editorBody = FlightGlobals.Bodies[TWRBody];
+                geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
             }
-
-            if (GUILayout.Button("All stats", GUILayout.ExpandWidth(false)))
+            else
             {
-                // NK detect necessity of atmo initial TWR
-                //bool hasMFE = parts.Any(p => p.IsMFE());
-
-                if (showInitialMass)
-                {
-                    showInitialTWR = showAtmoInitialTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
-                    showInitialMass =  showMaxTWR = showAtmoMaxTWR = false;
-                }
-                else
-                {
-                    showInitialMass = showInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showMaxTWR = showVacDeltaV = showVacTime = showAtmoDeltaV = true;
-                }
+                // We're in flight
+                stats.editorBody = mainBody;
+                geeASL = mainBody.GeeASL;
             }
+
+            if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
+            {
+                StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
+            }
+
+            if (!HighLogic.LoadedSceneIsEditor)
+            {
+                if (GUILayout.Button(liveSLT ? "Live SLT" : "0Alt SLT", GUILayout.ExpandWidth(false)))
+                {
+                    liveSLT = !liveSLT;
+                }
+                stats.liveSLT = liveSLT;
+            }
+
             GUILayout.EndHorizontal();
+
+            switch (StageDisplayState)
+            {
+                case 0:
+                    showVacInitialTWR = showAtmoInitialTWR = showVacDeltaV = showAtmoDeltaV = showTime = true;
+                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showVacMaxTWR = showAtmoMaxTWR = showISP = false;
+                    break;
+                case 1:
+                    showInitialMass = showFinalMass = showVacInitialTWR = showAtmoInitialTWR = showVacMaxTWR = showAtmoMaxTWR = showVacDeltaV = showTime = showAtmoDeltaV = true;
+                    showStagedMass = showBurnedMass = showISP = false;
+                    break;
+                case 2:
+                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showVacInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showVacMaxTWR = showVacDeltaV = showTime = showAtmoDeltaV = showISP = true;
+                    break;
+            }
 
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
-            if (showInitialMass) showInitialMass = !DrawStageStatsColumn("Start mass", stages.Select(s => vacStats[s].totalMass.ToString("F3") + " t"));
-            if (showFinalMass) showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => (vacStats[s].totalMass - vacStats[s].resourceMass).ToString("F3") + " t"));
-            if (showInitialTWR) showInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].thrustToWeight.ToString("F2")));
-            if (showMaxTWR) showMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].maxThrustToWeight.ToString("F2")));
-            if (showAtmoInitialTWR) showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].thrustToWeight.ToString("F2"))); // NK
-            if (showAtmoMaxTWR) showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].maxThrustToWeight.ToString("F2")));
-            if (showAtmoDeltaV) showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacDeltaV) showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacTime) showVacTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(vacStats[s].time)));
+            bool noChange = true;
+            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn("Start Mass", stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));
+            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));
+            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));
+            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));
+            if (showVacInitialTWR) noChange &= showVacInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
+            if (showVacMaxTWR) noChange &= showVacMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showAtmoInitialTWR) noChange &= showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));
+            if (showAtmoMaxTWR) noChange &= showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));
+            if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
+            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+
+            if (!noChange)
+                StageDisplayState = 3;
+
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -798,7 +846,7 @@ namespace MuMech
 
             stats.RequestUpdate(this);
         }*/
-        
+
         [ValueInfoItem("Stage ΔV (vac)", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]
         public double StageDeltaVVacuum()
         {
@@ -841,8 +889,8 @@ namespace MuMech
 
             if (stats.vacStats.Length == 0 || stats.atmoStats.Length == 0) return 0;
 
-            float vacTimeLeft = (float)stats.vacStats[stats.vacStats.Length - 1].time;
-            float atmoTimeLeft = (float)stats.atmoStats[stats.atmoStats.Length - 1].time;
+            float vacTimeLeft = (float)stats.vacStats[stats.vacStats.Length - 1].deltaTime;
+            float atmoTimeLeft = (float)stats.atmoStats[stats.atmoStats.Length - 1].deltaTime;
             float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
             return timeLeft;
@@ -1032,10 +1080,10 @@ namespace MuMech
                 case Vessel.Situations.SPLASHED:
                     return mainBody.theName + (biome == "" ? "'s oceans" : biome);
                 case Vessel.Situations.FLYING:
-                    if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)                        
+                    if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
                         return "Flying over " + mainBody.theName + biome;
-                    else                
+                    else
                         //ExperimentSituations.FlyingHigh
                         return "Upper atmosphere of " + mainBody.theName + biome;
                 default:

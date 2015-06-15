@@ -41,6 +41,9 @@ namespace MuMech
 
         public VesselState vesselState = new VesselState();
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"),UI_Toggle(disabledText = "Disabled", enabledText = "Enabled")]
+        public bool running = true;
+
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
 
         public string version = "";

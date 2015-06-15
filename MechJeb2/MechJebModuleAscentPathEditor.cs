@@ -42,22 +42,29 @@ namespace MuMech
             double oldTurnShapeExponent = path.turnShapeExponent;
             double oldTurnEndAngle = path.turnEndAngle;
             double oldAutoTurnPerc = path.autoTurnPerc;
+            double oldAutoTurnSpdPerc = path.autoTurnSpdFactor;
 
-            GUILayout.BeginHorizontal();
             path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
-            if (path.autoPath) path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
-            // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
-            GUILayout.EndHorizontal();
-
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Turn start altitude: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude,-1,2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label("Altitude: ", GUILayout.Width(60));
+                // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
+                path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Turn start velocity: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 0) + "m/s", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label("Velocity: ", GUILayout.Width(60));
+                path.autoTurnSpdFactor =  Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
+                GUILayout.EndHorizontal();
+            }
+            
+            if (path.autoPath)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Turn start when Altitude is ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude, -1, 2) + "m", GUILayout.ExpandWidth(false));
+                GUILayout.Label("or Velocity reach ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn end altitude: ");
@@ -92,6 +99,7 @@ namespace MuMech
                 path.turnShapeExponent != oldTurnShapeExponent ||
                 path.turnEndAngle != oldTurnEndAngle ||
                 path.autoTurnPerc != oldAutoTurnPerc ||
+                path.autoTurnSpdFactor != oldAutoTurnSpdPerc ||
                 !pathTextureDrawnBefore)
             {
                 UpdatePathTexture();

@@ -22,15 +22,15 @@ namespace MuMech
     {
         [Persistent]
         public double _val;
-		public virtual double val
-		{
-			get { return _val; }
-			set
-			{
-				_val = value;
-				_text = (_val / multiplier).ToString();
-			}
-		}
+        public virtual double val
+        {
+            get { return _val; }
+            set
+            {
+                _val = value;
+                _text = (_val / multiplier).ToString();
+            }
+        }
         public readonly double multiplier;
 
         public bool parsed;
@@ -87,15 +87,15 @@ namespace MuMech
             _text = GuiUtils.TimeToDHMS(seconds);
         }
 
-		public override double val
-		{
-			get { return _val; }
-			set
-			{
-				_val = value;
-				_text = GuiUtils.TimeToDHMS(_val);
-			}
-		}
+        public override double val
+        {
+            get { return _val; }
+            set
+            {
+                _val = value;
+                _text = GuiUtils.TimeToDHMS(_val);
+            }
+        }
 
         public override string text
         {
@@ -255,8 +255,6 @@ namespace MuMech
 
         public static void SetGUIScale(double s)
         {
-            if (scale == s && scaledScreenWidth == 1 && scaledScreenHeight == 1)
-                return;
             scale = Mathf.Clamp((float)s, 0.2f, 5f);
             scaledScreenHeight = Mathf.RoundToInt(Screen.height / scale);
             scaledScreenWidth = Mathf.RoundToInt(Screen.width / scale);
@@ -434,15 +432,15 @@ namespace MuMech
         }
         
         public static double ArcDistance(Vector3 From, Vector3 To) {
-        	double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
-        	double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
-        	double c = Vector3d.Distance(From, To);
-        	double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
-        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
+            double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
+            double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
+            double c = Vector3d.Distance(From, To);
+            double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+            return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
         
         public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
-        	return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+            return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
         }
 
         public static bool MouseIsOverWindow(MechJebCore core)
@@ -666,7 +664,7 @@ namespace MuMech
             int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
             int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
 
-            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees.ToString(), minutes.ToString(), seconds.ToString());
+            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
         }
     }
 }

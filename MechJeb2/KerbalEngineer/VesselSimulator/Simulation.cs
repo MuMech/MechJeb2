@@ -119,7 +119,7 @@ namespace KerbalEngineer.VesselSimulator
                 for (int i = 0; i < allParts.Count; ++i)
                 {
                     PartSim partSim = allParts[i];
-                    vectorAverager.Add(partSim.centerOfMass, partSim.GetMass(currentStage));
+                    vectorAverager.Add(partSim.centerOfMass, partSim.GetMass(currentStage, true));
                 }
 
                 return vectorAverager.Get();
@@ -139,6 +139,7 @@ namespace KerbalEngineer.VesselSimulator
                 log.buf.AppendLine("PrepareSimulation started");
                 dumpTree = true;
             }
+            this._timer.Reset();
             this._timer.Start();
 
             // Store the parameters in members for ease of access in other functions
@@ -299,6 +300,7 @@ namespace KerbalEngineer.VesselSimulator
                 MonoBehaviour.print("RunSimulation started");
             }
 
+            this._timer.Reset();
             this._timer.Start();
 
             LogMsg log = null;
@@ -382,13 +384,14 @@ namespace KerbalEngineer.VesselSimulator
             // Create the array of stages that will be returned
             Stage[] stages = new Stage[this.currentStage + 1];
 
+            int startStage = currentStage;
+
             // Loop through the stages
             while (this.currentStage >= 0)
             {
                 if (log != null)
                 {
                     log.buf.AppendLine("Simulating stage " + this.currentStage);
-                    log.buf.AppendLine("ShipMass = " + this.ShipMass);
                     log.Flush();
                     this._timer.Reset();
                     this._timer.Start();
@@ -397,13 +400,18 @@ namespace KerbalEngineer.VesselSimulator
                 // Update active engines and resource drains
                 this.UpdateResourceDrains();
 
+                // Update the masses of the parts to correctly handle "no physics" parts
+                this.stageStartMass = this.UpdatePartMasses();
+
+                if (log != null)
+                    this.allParts[0].DumpPartToBuffer(log.buf, "", this.allParts);
+
                 // Create the Stage object for this stage
                 Stage stage = new Stage();
 
                 this.stageTime = 0d;
                 this.vecStageDeltaV = Vector3.zero;
 
-                this.stageStartMass = this.ShipMass;
                 this.stageStartCom = this.ShipCom;
 
                 this.stepStartMass = this.stageStartMass;
@@ -413,11 +421,11 @@ namespace KerbalEngineer.VesselSimulator
 
                 // Store various things in the Stage object
                 stage.thrust = this.totalStageThrust;
-                //MonoBehaviour.print("stage.thrust = " + stage.thrust);
+                if (log != null) log.buf.AppendLine("stage.thrust = " + stage.thrust);
                 stage.thrustToWeight = this.totalStageThrust / (this.stageStartMass * this.gravity);
                 stage.maxThrustToWeight = stage.thrustToWeight;
-                //MonoBehaviour.print("StageMass = " + stageStartMass);
-                //MonoBehaviour.print("Initial maxTWR = " + stage.maxThrustToWeight);
+                if (log != null) log.buf.AppendLine("StageMass = " + stageStartMass);
+                if (log != null) log.buf.AppendLine("Initial maxTWR = " + stage.maxThrustToWeight);
                 stage.actualThrust = this.totalStageActualThrust;
                 stage.actualThrustToWeight = this.totalStageActualThrust / (this.stageStartMass * this.gravity);
 
@@ -442,22 +450,31 @@ namespace KerbalEngineer.VesselSimulator
 
                 stage.thrustOffsetAngle = Math.Asin(sinThrustOffsetAngle) * 180 / Math.PI;
 
-                // Calculate the cost and mass of this stage and add all engines and tanks that are decoupled
-                // in the next stage to the dontStageParts list
+                // Calculate the total cost of the vessel at this point
+                stage.totalCost = 0d;
                 for (int i = 0; i < allParts.Count; ++i)
                 {
-                    PartSim partSim = allParts[i];
+                    if (this.currentStage > allParts[i].decoupledInStage)
+                        stage.totalCost += allParts[i].GetCost(currentStage);
+                }
 
-                    if (partSim.decoupledInStage == this.currentStage - 1)
-                    {
-                        stage.cost += partSim.cost;
-                        stage.mass += partSim.GetStartMass();
-                    }
+                // The total mass is simply the mass at the start of the stage
+                stage.totalMass = this.stageStartMass;
 
-                    if (partSim.hasVessel == false && partSim.isFairing && partSim.inverseStage == currentStage)
-                    {
-                        stage.mass += partSim.moduleMass;
-                    }
+                // If we have done a previous stage
+                if (currentStage < startStage)
+                {
+                    // Calculate what the previous stage's mass and cost were by subtraction
+                    Stage prev = stages[currentStage + 1];
+                    prev.cost = prev.totalCost - stage.totalCost;
+                    prev.mass = prev.totalMass - stage.totalMass;
+                }
+
+                // The above code will never run for the last stage so set those directly
+                if (currentStage == 0)
+                {
+                    stage.cost = stage.totalCost;
+                    stage.mass = stage.totalMass;
                 }
 
                 this.dontStageParts = dontStagePartsLists[this.currentStage];
@@ -576,10 +593,12 @@ namespace KerbalEngineer.VesselSimulator
                 if (this.stageStartMass != this.stepStartMass)
                 {
                     stage.isp = stage.deltaV / (Units.GRAVITY * Math.Log(this.stageStartMass / this.stepStartMass));
+                    stage.resourceMass = this.stageStartMass - this.stepEndMass;
                 }
                 else
                 {
                     stage.isp = 0;
+                    stage.resourceMass = 0;
                 }
 
                 // Zero stage time if more than a day (this should be moved into the window code)
@@ -620,8 +639,6 @@ namespace KerbalEngineer.VesselSimulator
                 // For each stage we total up the cost, mass, deltaV and time for this stage and all the stages above
                 for (int j = i; j >= 0; j--)
                 {
-                    stages[i].totalCost += stages[j].cost;
-                    stages[i].totalMass += stages[j].mass;
                     stages[i].totalDeltaV += stages[j].deltaV;
                     stages[i].totalTime += stages[j].time;
                     stages[i].partCount = i > 0 ? stages[i].totalPartCount - stages[i - 1].totalPartCount : stages[i].totalPartCount;
@@ -648,6 +665,45 @@ namespace KerbalEngineer.VesselSimulator
             FreePooledObject();
             
             return stages;
+        }
+
+        public double UpdatePartMasses()
+        {
+            for (int i = 0; i < this.allParts.Count; i++)
+            {
+                this.allParts[i].baseMass = this.allParts[i].realMass;
+                this.allParts[i].baseMassForCoM = this.allParts[i].realMass;
+            }
+
+            for (int i = 0; i < this.allParts.Count; i++)
+            {
+                PartSim part = this.allParts[i];
+                // If the part has a parent
+                if (part.parent != null)
+                {
+                    if (part.isNoPhysics)
+                    {
+                        if (part.parent.isNoPhysics && part.parent.parent != null)
+                        {
+                            part.baseMass = 0d;
+                            part.baseMassForCoM = 0d;
+                        }
+                        else
+                        {
+                            part.parent.baseMassForCoM += part.baseMassForCoM;
+                            part.baseMassForCoM = 0d;
+                        }
+                    }
+                }
+            }
+
+            double totalMass = 0d;
+            for (int i = 0; i < this.allParts.Count; i++)
+            {
+                totalMass += this.allParts[i].startMass = this.allParts[i].GetMass(currentStage);
+            }
+
+            return totalMass;
         }
 
         // Make sure we free them all, even if they should all be free already at this point

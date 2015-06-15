@@ -466,7 +466,7 @@ namespace MuMech
                 double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
 
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
-                return 2 * landingSiteDragLength + LandingAltitude;
+                return 1.1 * landingSiteDragLength + LandingAltitude;
             }
             else
             {

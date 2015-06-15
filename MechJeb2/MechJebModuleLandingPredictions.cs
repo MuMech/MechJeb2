@@ -226,7 +226,7 @@ namespace MuMech
                 parachuteMultiplierForThisSimulation *= (1d + ((random.Next(1000000) - 500000d) /10000000d));
             }
 
-            // The curves used for the simes are not thread safe so we need a copy used only by the thread
+            // The curves used for the sim are not thread safe so we need a copy used only by the thread
             ReentrySimulation.SimCurves simCurves = new ReentrySimulation.SimCurves(patch.referenceBody);
 
             SimulatedVessel simVessel = SimulatedVessel.New(vessel, simCurves, patch.StartUT, deployChutes ? limitChutesStage : -1);
