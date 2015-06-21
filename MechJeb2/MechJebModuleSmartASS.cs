@@ -120,7 +120,9 @@ namespace MuMech
         protected void ForceRoll()
         {
             GUILayout.BeginHorizontal();
+            bool _forceRol = forceRol;
             forceRol = GUILayout.Toggle(forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
+            if (_forceRol != forceRol)
             {
                 Engage();
             }
