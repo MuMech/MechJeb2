@@ -36,7 +36,7 @@ namespace MuMech
         public Vector3d angularVelocity;
         public Vector3d angularMomentum;
 
-        public Vector3d radialPlus;   //unit vector in the plane of up and velocityVesselOrbit and perpendicular to velocityVesselOrbit 
+        public Vector3d radialPlus;   //unit vector in the plane of up and velocityVesselOrbit and perpendicular to velocityVesselOrbit
         public Vector3d radialPlusSurface; //unit vector in the plane of up and velocityVesselSurface and perpendicular to velocityVesselSurface
         public Vector3d normalPlus;    //unit vector perpendicular to up and velocityVesselOrbit
         public Vector3d normalPlusSurface;  //unit vector perpendicular to up and velocityVesselSurface
@@ -129,7 +129,7 @@ namespace MuMech
         public Vector3d torqueFromEngine;
         // Variable part of torque related to differential throttle
         public Vector3d torqueFromDiffThrottle;
-        
+
         //public double massDrag;
 
 
@@ -190,7 +190,7 @@ namespace MuMech
         public List<ModuleParachute> parachutes;
 
         public bool parachuteDeployed;
-        
+
         // Resource information keyed by resource Id.
         public Dictionary<int, ResourceInfo> resources = new Dictionary<int, ResourceInfo>();
 
@@ -308,7 +308,7 @@ namespace MuMech
             //cube.SetDrag(vessel.srf_velocity, (float)vessel.mach);
             //
             //double dragScale = cube.AreaDrag * PhysicsGlobals.DragCubeMultiplier;
-            
+
 
            //SimulatedVessel simVessel = SimulatedVessel.New(vessel);
 
@@ -398,7 +398,7 @@ namespace MuMech
 
             // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
             // Originally from ferram4's FAR
-            tmpVec = vessel.ReferenceTransform.up    * Vector3.Dot(vessel.ReferenceTransform.up,    surfaceVelocity.normalized) 
+            tmpVec = vessel.ReferenceTransform.up    * Vector3.Dot(vessel.ReferenceTransform.up,    surfaceVelocity.normalized)
                    + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
             double tempAoS = 180.0/Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
             if (double.IsNaN(tempAoS))
@@ -517,6 +517,8 @@ namespace MuMech
                 }
             }
 
+            Vector3d movingCoM = CoM + (vessel.rb_velocity * Time.deltaTime);
+
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
@@ -524,18 +526,30 @@ namespace MuMech
                 {
                     PartModule mod = p.Modules[m];
 
-                    if (!(mod is ModuleRCS))
+                    if (mod.GetType() != typeof(ModuleRCS)) // ignore derived type. ModuleRCSFX is handled in an ext
                         continue;
                     
                     ModuleRCS rcs = (ModuleRCS)mod;
-                    if ((rcs.rcsEnabled) && (rcs.isEnabled) && (!rcs.isJustForShow))
+                    if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
                         // rcsTorqueAvailable:
                         for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                         {
                             Transform t = rcs.thrusterTransforms[j];
-                            Vector3d thrusterPosition = t.position - CoM;
-                            Vector3d thrusterThrust = -t.up * rcs.thrusterPower;
+                            Vector3d thrusterPosition = t.position - movingCoM;
+
+                            float power = rcs.thrusterPower;
+
+                            if (FlightInputHandler.fetch.precisionMode)
+                            {
+                                float lever = rcs.GetLeverDistance(-t.up, thrusterPosition);
+                                if (lever > 1)
+                                {
+                                    power = power / lever;
+                                }
+                            }
+
+                            Vector3d thrusterThrust = -t.up * power ;
                             // This is a cheap hack to get rcsTorque with the RCS balancer active.
                             if (!rcsbal.enabled)
                             {
@@ -558,7 +572,7 @@ namespace MuMech
 
             torqueAvailable = Vector3d.zero;
             torqueFromEngine = Vector3d.zero;
-            
+
             ctrlTorqueAvailablePos = new Vector3();
             ctrlTorqueAvailableNeg = new Vector3();
 
@@ -588,7 +602,7 @@ namespace MuMech
 
                 dragCoef += p.DragCubes.DragCoeff;
                 areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
-                                
+
                 for (int index = 0; index < vesselStatePartExtensions.Count; index++)
                 {
                     VesselStatePartExtension vspe = vesselStatePartExtensions[index];
@@ -652,7 +666,7 @@ namespace MuMech
                         relpos.x = cs.ignorePitch ? 0 : inverted * (relpos.x < 0.01 ? -1 : 1);
                         relpos.y = cs.ignoreRoll  ? 0 : inverted;
                         relpos.z = cs.ignoreYaw   ? 0 : inverted * (relpos.z < 0.01 ? -1 : 1);
-                        
+
                         Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
 
                         Vector3 nVel;
@@ -697,7 +711,7 @@ namespace MuMech
                     }
                 }
             }
-            
+
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
             torqueAvailable += new Vector3(
                 (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
@@ -842,13 +856,13 @@ namespace MuMech
         {
             return TerminalVelocityCall();
         }
-        
+
         public DTerminalVelocity TerminalVelocityCall;
-                      
+
         public double TerminalVelocityStockKSP()
         {
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
-            
+
             return Math.Sqrt((2000 * mass * localg) / (areaDrag * vesselRef.atmDensity));
         }
 
