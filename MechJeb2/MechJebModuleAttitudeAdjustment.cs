@@ -59,10 +59,10 @@ namespace MuMech
                     GUILayout.Label("Tf (s)", GUILayout.ExpandWidth(true));
                     GUILayout.Label("P", GUILayout.ExpandWidth(false));
                     TfX.text = GUILayout.TextField(TfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.Label("R", GUILayout.ExpandWidth(false));
-                    TfZ.text = GUILayout.TextField(TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                     GUILayout.Label("Y", GUILayout.ExpandWidth(false));
                     TfY.text = GUILayout.TextField(TfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                    GUILayout.Label("R", GUILayout.ExpandWidth(false));
+                    TfZ.text = GUILayout.TextField(TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                     GUILayout.EndHorizontal();
 
                     TfX = Math.Max(0.01, TfX);
@@ -73,7 +73,7 @@ namespace MuMech
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.TfV.xzy), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.TfV), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -100,17 +100,17 @@ namespace MuMech
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Kp", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kp.xzy), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kp), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Ki", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Ki.xzy), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Ki), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Kd", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kd.xzy), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kd), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -143,40 +143,36 @@ namespace MuMech
                     GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisState, "F0"), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
-                    Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Torque", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + core.attitude.torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.torque), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+                    
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Inertia", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + core.attitude.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.inertia), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+                    
+                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.Invert());
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("torque", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(torque), GUILayout.ExpandWidth(false));
+                    GUILayout.Label("MOI / torque", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + ratio.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(ratio), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("|torque|", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(torque.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
-                    GUILayout.EndHorizontal();
-
-                    Vector3d inertia = Vector3d.Scale(
-                        vesselState.angularMomentum.Sign(),
-                        Vector3d.Scale(
-                            Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                            Vector3d.Scale(torque, vesselState.MoI).Invert()
-                            )
-                        );
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("inertia", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(inertia), GUILayout.ExpandWidth(false));
+                    GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vesselState.MoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.MoI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("|inertia|", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(inertia.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.Label("MOI stock", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vessel.MOI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.MOI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
-                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, torque.Invert());
-
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("|MOI| / |Torque|", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(ratio.magnitude.ToString("F3"), GUILayout.ExpandWidth(false));
+                    GUILayout.Label("Angular Velocity", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vessel.angularVelocity.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.angularVelocity), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -245,7 +241,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(150) };
+            return new GUILayoutOption[] { GUILayout.Width(350), GUILayout.Height(150) };
         }
 
         public override string GetName()
