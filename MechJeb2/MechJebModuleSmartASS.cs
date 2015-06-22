@@ -131,6 +131,13 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+            if (target != Target.OFF)
+                Engage();
+        }
+
 
         protected override void WindowGUI(int windowID)
         {
