@@ -517,8 +517,6 @@ namespace MuMech
                 }
             }
 
-            Vector3d movingCoM = CoM + (vessel.rb_velocity * Time.deltaTime);
-
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
@@ -536,7 +534,7 @@ namespace MuMech
                         for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                         {
                             Transform t = rcs.thrusterTransforms[j];
-                            Vector3d thrusterPosition = t.position - movingCoM;
+                            Vector3d thrusterPosition = t.position - CoM;
 
                             float power = rcs.thrusterPower;
 
