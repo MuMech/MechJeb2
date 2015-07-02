@@ -180,17 +180,15 @@ namespace MuMech
             base.OnSave(local, type, global);
         }
 
-        public void tuneTf()
+        public void tuneTf(Vector3d torque)
         {
-            Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
-
             Vector3d ratio = new Vector3d(
                 torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
                 torque.z != 0 ? vesselState.MoI.z / torque.z : 0,   //y <=> z
                 torque.y != 0 ? vesselState.MoI.y / torque.y : 0    //z <=> y
                 );
 
-            TfV = 0.04 * ratio;
+            TfV = 0.05 * ratio;
 
             TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, 1.0);
             TfV = TfV.Clamp(TfMin, TfMax);
@@ -467,7 +465,7 @@ namespace MuMech
                 omega.Scale(NormFactor);
 
                 if (Tf_autoTune)
-                    tuneTf();
+                    tuneTf(torque);
                 setPIDParameters();
 
                 pidAction = pid.Compute(err, omega);
