@@ -16,10 +16,13 @@ namespace MuMech
         public DefaultAscentPath path;
         static Texture2D pathTexture = new Texture2D(400, 100);
         private Boolean pathTextureDrawnBefore = false;
+        private MechJebModuleFlightRecorder recorder;
+        private int lastHistoryIdx = 0;
 
         public override void OnStart(PartModule.StartState state)
         {
             path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
+            recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -100,6 +103,7 @@ namespace MuMech
                 path.turnEndAngle != oldTurnEndAngle ||
                 path.autoTurnPerc != oldAutoTurnPerc ||
                 path.autoTurnSpdFactor != oldAutoTurnSpdPerc ||
+                recorder.historyIdx != lastHistoryIdx ||
                 !pathTextureDrawnBefore)
             {
                 UpdatePathTexture();
@@ -140,7 +144,34 @@ namespace MuMech
                 }
             }
 
+            int t = 0;
+            
+            while (t < recorder.historyIdx - 1)
+            {
+                var r1 = recorder.history[t];
+                int x1 = (int)(r1.downRange / scale);
+                int y1 = (int)(r1.altitudeASL / scale);
+
+                var r2 = recorder.history[t + 1];
+                int x2 = (int)(r2.downRange / scale);
+                int y2 = (int)(r2.altitudeASL / scale);
+
+                t++;
+
+                if (x1 > pathTexture.width || y1 > pathTexture.height || x2 > pathTexture.width || y2 > pathTexture.height)
+                    break;
+
+                MuUtils.DrawLine(pathTexture, x1, y1, x2, y2, Color.white);
+
+                //if (x < pathTexture.width && y < pathTexture.height)
+                //{
+                //    pathTexture.SetPixel(x, y, Color.white);
+                //    pathTexture.SetPixel(x + 1, y, Color.white);
+                //}
+            }
+
             pathTexture.Apply();
+            lastHistoryIdx = recorder.historyIdx;
             pathTextureDrawnBefore = true;
         }
 
