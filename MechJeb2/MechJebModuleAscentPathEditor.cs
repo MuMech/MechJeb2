@@ -145,8 +145,7 @@ namespace MuMech
             }
 
             int t = 0;
-            
-            while (t < recorder.historyIdx - 1)
+            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1)
             {
                 var r1 = recorder.history[t];
                 int x1 = (int)(r1.downRange / scale);
@@ -158,16 +157,8 @@ namespace MuMech
 
                 t++;
 
-                if (x1 > pathTexture.width || y1 > pathTexture.height || x2 > pathTexture.width || y2 > pathTexture.height)
-                    break;
-
-                MuUtils.DrawLine(pathTexture, x1, y1, x2, y2, Color.white);
-
-                //if (x < pathTexture.width && y < pathTexture.height)
-                //{
-                //    pathTexture.SetPixel(x, y, Color.white);
-                //    pathTexture.SetPixel(x + 1, y, Color.white);
-                //}
+                if (x1 >= 0 && y1 >= 0 && x2 >= 0 && y2 >= 0 && x1 < pathTexture.width && y1 < pathTexture.height && x2 < pathTexture.width && y2 < pathTexture.height)
+                    MuUtils.DrawLine(pathTexture, x1, y1, x2, y2, Color.white);
             }
 
             pathTexture.Apply();

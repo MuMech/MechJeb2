@@ -24,7 +24,7 @@ namespace MuMech
 
         public record[] history = new record[1000];
 
-        public int historyIdx = 0;
+        public int historyIdx = -1;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark UT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
@@ -132,9 +132,11 @@ namespace MuMech
             double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
             phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (vesselState.time - markUT) / circularPeriod - angleTraversed);
 
+            int oldHistoryIdx = historyIdx;
+
             historyIdx = Mathf.FloorToInt((float)timeSinceMark);
 
-            if (historyIdx < history.Length)
+            if (historyIdx != oldHistoryIdx && historyIdx < history.Length)
             {
                 history[historyIdx].timeSinceMark = timeSinceMark;
                 history[historyIdx].altitudeASL = vesselState.altitudeASL;
