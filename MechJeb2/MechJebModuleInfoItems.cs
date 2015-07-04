@@ -395,6 +395,12 @@ namespace MuMech
             return MinThrust() / (1000 * VesselMass());
         }
 
+        [ValueInfoItem("G force", InfoItem.Category.Vessel, format = "F4", units = "g", showInEditor = true)]
+        public double Acceleration()
+        {
+            return vessel.geeForce;
+        }
+
         [ValueInfoItem("Drag coefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]
         public double DragCoefficient()
         {
