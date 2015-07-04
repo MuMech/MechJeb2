@@ -110,7 +110,7 @@ namespace MuMech
             get { return prediction.WorldEndPosition(); }
         }
 
-        IDescentSpeedPolicy descentSpeedPolicy;
+        public IDescentSpeedPolicy descentSpeedPolicy;
         public double vesselAverageDrag;
 
         public MechJebModuleLandingAutopilot(MechJebCore core)
