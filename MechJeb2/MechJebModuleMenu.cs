@@ -51,15 +51,15 @@ namespace MuMech
         public bool firstDraw = true;
 
         bool movingButton = false;
-        
+
         [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideButton = false;
 
         [ToggleInfoItem("Use AppLauncher", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool useAppLauncher = true;
-        
+
         // If the Toolbar is loaded and we don't want to display the big menu button
-        public bool HideMenuButton 
+        public bool HideMenuButton
         {
             get
             {
@@ -227,11 +227,23 @@ namespace MuMech
             return r.Replace(name, "_");
         }
 
-        
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            ClearButtons();
+            base.OnLoad(local, type, global);
+        }
+
         // OnDestroy is actually run a bit too often when we have multiple MJ unit that get staged
         // But the edge case may get a bit too complex to handle properly so for now we 
         // recreate the buttons a bit often.
         public override void OnDestroy()
+        {
+            ClearButtons();
+            base.OnDestroy();
+        }
+
+        private void ClearButtons()
         {
             if (mjButton != null)
             {
@@ -244,14 +256,16 @@ namespace MuMech
                 foreach (Button b in toolbarButtons.Values)
                 {
                     if (b.button != null)
+                    {
                         b.button.Destroy();
+                    }
                 }
                 toolbarButtons.Clear();
                 if (menuButton != null)
+                {
                     menuButton.Destroy();
+                }
             }
-
-            base.OnDestroy();
         }
 
         public override void DrawGUI(bool inEditor)
@@ -297,7 +311,7 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                Rect pos = new Rect(GuiUtils.scaledScreenWidth - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height );
+                Rect pos = new Rect(GuiUtils.scaledScreenWidth - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
