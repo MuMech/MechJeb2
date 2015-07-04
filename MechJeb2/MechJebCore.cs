@@ -1005,7 +1005,7 @@ namespace MuMech
         void PreventEditorClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedInputs && mouseOverWindow)
+            if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
                 EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
                 weLockedInputs = true;
@@ -1020,7 +1020,7 @@ namespace MuMech
         void PreventInFlightClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedInputs && mouseOverWindow)
+            if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
                 InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP, "MechJeb_noclick");
                 weLockedInputs = true;
