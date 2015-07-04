@@ -531,6 +531,10 @@ namespace MuMech
                     //if (mod.GetType() != typeof(ModuleRCS)) // ignore derived type. ModuleRCSFX is handled in an ext
                     //    continue;
                     
+
+                    if (!(mod is ModuleRCS))
+                        continue;
+
                     ModuleRCS rcs = (ModuleRCS)mod;
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
