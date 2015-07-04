@@ -209,7 +209,7 @@ namespace MuMech
 
                     if (autopilot.tMinus > 3 * vesselState.deltaT)
                     {
-                        message += ": T-" + MuUtils.ToSI(autopilot.tMinus, 0) + "s";
+                        message += ": T-" + GuiUtils.TimeToDHMS(autopilot.tMinus, 1);
                     }
 
                     GUILayout.Label(message);
