@@ -186,6 +186,8 @@ namespace MuMech
         public Vector3 ctrlTorqueAvailablePos;
         public Vector3 ctrlTorqueAvailableNeg;
 
+        public Vector3d torqueReactionSpeed;
+
         // List of parachutes
         public List<ModuleParachute> parachutes;
 
@@ -576,6 +578,8 @@ namespace MuMech
             ctrlTorqueAvailablePos = new Vector3();
             ctrlTorqueAvailableNeg = new Vector3();
 
+            torqueReactionSpeed = new Vector3();
+
             pureDragV = Vector3d.zero;
             pureLiftV = Vector3d.zero;
 
@@ -696,6 +700,12 @@ namespace MuMech
 
                         ctrlTorqueAvailablePos += ctrlTorquePos;
                         ctrlTorqueAvailableNeg += ctrlTorqueNeg;
+
+                        torqueReactionSpeed += (Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed) * new Vector3(
+                            (Mathf.Abs(ctrlTorquePos.x) + Mathf.Abs(ctrlTorqueNeg.x)) / 2f,
+                            (Mathf.Abs(ctrlTorquePos.y) + Mathf.Abs(ctrlTorqueNeg.y)) / 2f,
+                            (Mathf.Abs(ctrlTorquePos.z) + Mathf.Abs(ctrlTorqueNeg.z)) / 2f);
+
                     }
                     else if (pm is ModuleLiftingSurface)
                     {
@@ -712,11 +722,18 @@ namespace MuMech
                 }
             }
 
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
+            
             torqueAvailable += new Vector3(
                 (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
                 (Mathf.Abs(ctrlTorqueAvailablePos.y) + Mathf.Abs(ctrlTorqueAvailableNeg.y)) / 2f,
                 (Mathf.Abs(ctrlTorqueAvailablePos.z) + Mathf.Abs(ctrlTorqueAvailableNeg.z)) / 2f);
+
+
+            torqueReactionSpeed.Scale(torqueAvailable.Invert());
+
+
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
+
             torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
 
             torqueFromDiffThrottle = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);

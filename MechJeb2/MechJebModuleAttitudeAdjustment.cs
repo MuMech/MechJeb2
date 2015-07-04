@@ -149,6 +149,11 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                     
                     GUILayout.BeginHorizontal();
+                    GUILayout.Label("torqueReactionSpeed", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vesselState.torqueReactionSpeed.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.torqueReactionSpeed), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
                     GUILayout.Label("Inertia", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + core.attitude.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.inertia), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();

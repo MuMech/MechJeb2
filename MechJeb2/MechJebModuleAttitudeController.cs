@@ -190,6 +190,11 @@ namespace MuMech
 
             TfV = 0.05 * ratio;
 
+            Vector3d delayFactor = Vector3d.one + 2 * vesselState.torqueReactionSpeed;
+
+            TfV.Scale(delayFactor);
+
+
             TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, 1.0);
             TfV = TfV.Clamp(TfMin, TfMax);
 
