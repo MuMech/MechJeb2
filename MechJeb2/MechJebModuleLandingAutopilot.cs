@@ -110,7 +110,7 @@ namespace MuMech
             get { return prediction.WorldEndPosition(); }
         }
 
-        IDescentSpeedPolicy descentSpeedPolicy;
+        public IDescentSpeedPolicy descentSpeedPolicy;
         public double vesselAverageDrag;
 
         public MechJebModuleLandingAutopilot(MechJebCore core)
@@ -466,7 +466,7 @@ namespace MuMech
                 double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
 
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
-                return 2 * landingSiteDragLength + LandingAltitude;
+                return 1.1 * landingSiteDragLength + LandingAltitude;
             }
             else
             {

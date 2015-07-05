@@ -22,17 +22,12 @@ namespace MuMech
             for (int i = 0; i < part.Modules.Count; i++)
             {
                 PartModule pm = part.Modules[i];
-                if (pm is T)
-                    return (T)pm;
+                T module = pm as T;
+                if (module != null)
+                    return module;
             }
             return null;
         }
-
-        public static float TotalMass(this Part p)
-        {
-            return p.mass + p.GetPhysicslessChildMass() + p.GetResourceMass() + p.GetModuleMass(0);
-        }
-
 
         public static bool EngineHasFuel(this Part p)
         {
@@ -64,17 +59,22 @@ namespace MuMech
                     if (!mAnchoredDecoupler.isDecoupled) return true;
                     break;
                 }
+
+                if (m.ClassName == "ProceduralFairingDecoupler")
+                {
+                    return true;
+                }
             }
             return false;
         }
 
 
-        //Any engine that is decoupled in the same stage in 
+        //Any engine that is decoupled in the same stage in
         //which it activates we call a sepratron.
         public static bool IsSepratron(this Part p)
         {
-            return p.ActivatesEvenIfDisconnected 
-                && p.IsEngine() 
+            return p.ActivatesEvenIfDisconnected
+                && p.IsEngine()
                 && p.IsDecoupledInStage(p.inverseStage)
                 && !p.isControlSource;
         }
@@ -89,18 +89,6 @@ namespace MuMech
             }
             return false;
         }
-
-        public static bool IsMFE(this Part p)
-        {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                if(m.ClassName == "ModuleEngineConfigs" || m.ClassName == "ModuleHybridEngine" || m.ClassName == "ModuleHybridEngines") return true;
-            }
-            return false;
-        }
-
-            
 
         public static bool IsParachute(this Part p)
         {

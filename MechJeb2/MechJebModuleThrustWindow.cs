@@ -24,6 +24,29 @@ namespace MuMech
             }
         }
 
+        [GeneralInfoItem("Autostage Once", InfoItem.Category.Misc)]
+        public void AutostageOnceItem()
+        {
+            if (core.staging.enabled)
+            {
+                GUILayout.Label("Autostaging" + (core.staging.autostagingOnce ? " once " : " ") + "Active");
+            }
+            if (!core.staging.enabled && GUILayout.Button("Autostage once"))
+            {
+                core.staging.AutostageOnce(this);
+            }
+        }
+
+        [GeneralInfoItem("Autostage", InfoItem.Category.Misc)]
+        public void Autostage()
+        {
+            bool oldAutostage = core.staging.users.Contains(this);
+            bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
+            if (newAutostage && !oldAutostage) core.staging.users.Add(this);
+            if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
+            autostageSavedState = newAutostage;
+        }
+
         // UI stuff
         protected override void WindowGUI(int windowID)
         {
@@ -57,11 +80,7 @@ namespace MuMech
 
             core.solarpanel.AutoDeploySolarPanelsInfoItem();
 
-            bool oldAutostage = core.staging.users.Contains(this);
-            bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
-            if (newAutostage && !oldAutostage) core.staging.users.Add(this);
-            if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
-            autostageSavedState = newAutostage;
+            Autostage();
             
             if (!core.staging.enabled && GUILayout.Button("Autostage once")) core.staging.AutostageOnce(this);
             

@@ -16,10 +16,13 @@ namespace MuMech
         public DefaultAscentPath path;
         static Texture2D pathTexture = new Texture2D(400, 100);
         private Boolean pathTextureDrawnBefore = false;
+        private MechJebModuleFlightRecorder recorder;
+        private int lastHistoryIdx = 0;
 
         public override void OnStart(PartModule.StartState state)
         {
             path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
+            recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -42,22 +45,29 @@ namespace MuMech
             double oldTurnShapeExponent = path.turnShapeExponent;
             double oldTurnEndAngle = path.turnEndAngle;
             double oldAutoTurnPerc = path.autoTurnPerc;
+            double oldAutoTurnSpdPerc = path.autoTurnSpdFactor;
 
-            GUILayout.BeginHorizontal();
             path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
-            if (path.autoPath) path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
-            // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
-            GUILayout.EndHorizontal();
-
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Turn start altitude: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude,-1,2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label("Altitude: ", GUILayout.Width(60));
+                // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
+                path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Turn start velocity: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 0) + "m/s", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label("Velocity: ", GUILayout.Width(60));
+                path.autoTurnSpdFactor =  Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
+                GUILayout.EndHorizontal();
+            }
+            
+            if (path.autoPath)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Turn start when Altitude is ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude, -1, 2) + "m", GUILayout.ExpandWidth(false));
+                GUILayout.Label("or Velocity reach ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn end altitude: ");
@@ -92,6 +102,8 @@ namespace MuMech
                 path.turnShapeExponent != oldTurnShapeExponent ||
                 path.turnEndAngle != oldTurnEndAngle ||
                 path.autoTurnPerc != oldAutoTurnPerc ||
+                path.autoTurnSpdFactor != oldAutoTurnSpdPerc ||
+                recorder.historyIdx != lastHistoryIdx ||
                 !pathTextureDrawnBefore)
             {
                 UpdatePathTexture();
@@ -132,7 +144,25 @@ namespace MuMech
                 }
             }
 
+            int t = 0;
+            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1)
+            {
+                var r1 = recorder.history[t];
+                int x1 = (int)(r1.downRange / scale);
+                int y1 = (int)(r1.altitudeASL / scale);
+
+                var r2 = recorder.history[t + 1];
+                int x2 = (int)(r2.downRange / scale);
+                int y2 = (int)(r2.altitudeASL / scale);
+
+                t++;
+
+                if (x1 >= 0 && y1 >= 0 && x2 >= 0 && y2 >= 0 && x1 < pathTexture.width && y1 < pathTexture.height && x2 < pathTexture.width && y2 < pathTexture.height)
+                    MuUtils.DrawLine(pathTexture, x1, y1, x2, y2, Color.white);
+            }
+
             pathTexture.Apply();
+            lastHistoryIdx = recorder.historyIdx;
             pathTextureDrawnBefore = true;
         }
 

@@ -160,7 +160,7 @@ namespace MuMech
             {
                 Part child = part.vessel.parts[i];
                 // TODO Sarbian : Cleanup - not sure if any mod still use those and they are not supported in other part of the code
-                if (child.HasModule<ModuleEngines>() || child.HasModule<ModuleEnginesFX>())
+                if (child.HasModule<ModuleEngines>())
                 {
                     if (child.inverseStage < minStage)
                     {

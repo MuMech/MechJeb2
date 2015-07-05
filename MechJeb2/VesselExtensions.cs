@@ -56,7 +56,7 @@ namespace MuMech
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
             if (!masterMechjebs.ContainsKey(vesselKey))
             {
-                MechJebCore mj = vessel.GetModules<MechJebCore>().Max();
+                MechJebCore mj = vessel.GetModules<MechJebCore>().FirstOrDefault(p => p.running);
                 if (mj != null)
                     masterMechjebs.Add(vesselKey, mj);
                 return mj;

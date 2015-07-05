@@ -51,7 +51,7 @@ namespace MuMech
                 {
                     simulatedPart = SimulatedPart.New(oParts[i], simCurves);
                 }
-                
+
                 parts.Add(simulatedPart);
                 totalMass += simulatedPart.totalMass;
             }
@@ -60,7 +60,7 @@ namespace MuMech
         public Vector3 Drag(Vector3 localVelocity, float dynamicPressurekPa, float mach)
         {
             Vector3 drag = Vector3.zero;
-            
+
             for (int i = 0; i < count; i++)
             {
                 SimulatedPart part = parts[i];
@@ -73,7 +73,7 @@ namespace MuMech
         public Vector3 Lift(Vector3 localVelocity, float dynamicPressurekPa, float mach)
         {
             Vector3 lift = Vector3.zero;
-            
+
             for (int i = 0; i < count; i++)
             {
                 SimulatedPart part = parts[i];

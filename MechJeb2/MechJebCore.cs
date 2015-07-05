@@ -41,11 +41,14 @@ namespace MuMech
 
         public VesselState vesselState = new VesselState();
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "Disabled", enabledText = "Enabled")]
+        public bool running = true;
+
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
 
         public string version = "";
 
-        private bool deactivateControl = false; 
+        private bool deactivateControl = false;
 
         public MechJebCore MasterMechJeb
         {
@@ -63,7 +66,7 @@ namespace MuMech
             set
             {
                 MechJebCore mj = vessel.GetMasterMechJeb();
-                if (mj != null )
+                if (mj != null)
                     vessel.GetMasterMechJeb().deactivateControl = value;
             }
         }
@@ -126,7 +129,7 @@ namespace MuMech
         {
             MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
 
-            if(masterMechJeb != null)
+            if (masterMechJeb != null)
             {
                 MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
 
@@ -147,7 +150,7 @@ namespace MuMech
                 Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
             }
         }
-        
+
         [KSPAction("PANIC!")]
         public void OnPanicAction(KSPActionParam param)
         {
@@ -242,7 +245,7 @@ namespace MuMech
             }
         }
 
-        private void SetTranslatronSpeed(float speed, bool relative=false)
+        private void SetTranslatronSpeed(float speed, bool relative = false)
         {
             MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
 
@@ -354,6 +357,11 @@ namespace MuMech
         public void AddComputerModule(ComputerModule module)
         {
             unorderedComputerModules.Add(module);
+            ClearModulesCache();
+        }
+
+        private void ClearModulesCache()
+        {
             sortedModules.Clear();
             sortedDisplayModules.Clear();
         }
@@ -371,17 +379,15 @@ namespace MuMech
             if (modulesToLoad.Count > 0)
             {
                 unorderedComputerModules.AddRange(modulesToLoad);
-                sortedModules.Clear();
                 modulesToLoad.Clear();
-                sortedDisplayModules.Clear();
+                ClearModulesCache();
             }
         }
 
         public void RemoveComputerModule(ComputerModule module)
         {
             unorderedComputerModules.Remove(module);
-            sortedModules.Clear();
-            sortedDisplayModules.Clear();
+            ClearModulesCache();
         }
 
         public void ReloadAllComputerModules()
@@ -389,8 +395,7 @@ namespace MuMech
             //Dispose of all the existing computer modules
             foreach (ComputerModule module in unorderedComputerModules) module.OnDestroy();
             unorderedComputerModules.Clear();
-            sortedModules.Clear();
-            sortedDisplayModules.Clear();
+            ClearModulesCache();
 
             if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             controlledVessel = null;
@@ -399,6 +404,8 @@ namespace MuMech
             OnLoad(null);
             OnStart(HighLogic.LoadedSceneIsEditor ? PartModule.StartState.Editor : PartModule.StartState.Flying);
         }
+
+
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -409,7 +416,7 @@ namespace MuMech
             //However, if you press ctrl-Z, a new PartModule object gets created, on which the
             //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
             //check whether we have loaded any computer modules.
-            
+
             //if (state == StartState.Editor && computerModules.Count == 0)
             // Seems to happend when launching without comming from the VAB too.
             if (unorderedComputerModules.Count == 0)
@@ -417,8 +424,8 @@ namespace MuMech
                 OnLoad(null);
             }
 
-            GameEvents.onShowUI.Add(this.ShowGUI);
-            GameEvents.onHideUI.Add(this.HideGUI);
+            GameEvents.onShowUI.Add(ShowGUI);
+            GameEvents.onHideUI.Add(HideGUI);
 
             lastSettingsSaveTime = Time.time;
 
@@ -514,8 +521,7 @@ namespace MuMech
                 }
 
                 // Clear the modules cache
-                sortedModules.Clear();
-                sortedDisplayModules.Clear();
+                ClearModulesCache();
 
                 OnLoad(null); // Force Global reload
 
@@ -582,7 +588,7 @@ namespace MuMech
             GetComputerModule<MechJebModuleMenu>().OnMenuUpdate(); // Allow the menu movement, even while in Editor
 
             if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
-            
+
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
                 try
@@ -714,7 +720,7 @@ namespace MuMech
                 }
 
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                String vesselName = vessel != null?string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())):""; // Strip illegal char from the filename
+                String vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
                 if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vesselName + ".cfg"))
                 {
                     try
@@ -872,8 +878,8 @@ namespace MuMech
                 OnSave(null);
             }
 
-            GameEvents.onShowUI.Remove(new EventVoid.OnEvent(this.ShowGUI));
-            GameEvents.onHideUI.Remove(new EventVoid.OnEvent(this.HideGUI));
+            GameEvents.onShowUI.Remove(ShowGUI);
+            GameEvents.onHideUI.Remove(HideGUI);
 
             if (weLockedInputs)
             {
@@ -1002,7 +1008,7 @@ namespace MuMech
         void PreventEditorClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedInputs && mouseOverWindow)
+            if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
                 EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
                 weLockedInputs = true;
@@ -1017,7 +1023,7 @@ namespace MuMech
         void PreventInFlightClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedInputs && mouseOverWindow)
+            if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
                 InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP, "MechJeb_noclick");
                 weLockedInputs = true;

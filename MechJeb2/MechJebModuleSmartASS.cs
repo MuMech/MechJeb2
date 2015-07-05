@@ -75,6 +75,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean forcePitch = true;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean forceYaw = true;
+
+
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDisableSmartASS = true;
         [GeneralInfoItem("Disable SmartASS automatically", InfoItem.Category.Misc)]
@@ -113,13 +120,22 @@ namespace MuMech
         protected void ForceRoll()
         {
             GUILayout.BeginHorizontal();
+            bool _forceRol = forceRol;
             forceRol = GUILayout.Toggle(forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
+            if (_forceRol != forceRol)
             {
                 Engage();
             }
             rol.text = GUILayout.TextField(rol.text, GUILayout.Width(30));
             GUILayout.Label("°", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+        }
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+            if (target != Target.OFF)
+                Engage();
         }
 
 
@@ -210,124 +226,147 @@ namespace MuMech
                         TargetButton(Target.VERTICAL_PLUS);
                         GUILayout.EndHorizontal();
                         if (target == Target.SURFACE) {
+                            bool changed = false;
                         	GUILayout.BeginHorizontal();
+                            forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("HDG", srfHdg, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                             	srfHdg -= val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfHdg += val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
                                 srfHdg = 0;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("90", GUILayout.Width(35))) {
                                 srfHdg = 90;
-                                Engage(false);
+                                changed = true;
                             }
                             GUILayout.EndHorizontal();
                         	GUILayout.BeginHorizontal();
+                            forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("PIT", srfPit, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                                 srfPit -= val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfPit += val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
                                 srfPit = 0;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("90", GUILayout.Width(35))) {
                                 srfPit = 90;
-                                Engage(false);
+                                changed = true;
                             }
                             GUILayout.EndHorizontal();
                         	GUILayout.BeginHorizontal();
+                            forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfRol, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                                 srfRol -= val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfRol += val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
                                 srfRol = 0;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("180", GUILayout.Width(35))) {
                                 srfRol = 180;
-                                Engage(false);
+                                changed = true;
                             }
                             GUILayout.EndHorizontal();
                             if (GUILayout.Button("EXECUTE")) {
                                 Engage();
                             }
-                        } else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE) {
+                            if (changed)
+                            {
+                                Engage(false);
+                            }
+                            core.attitude.AxisControl(forcePitch, forceYaw, forceRol);
+                        } else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE)
+                        {
+                            bool changed = false;
                             GUILayout.BeginHorizontal();
+                            forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                                 srfVelRol -= val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfVelRol += val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
                                 srfVelRol = -vesselState.vesselRoll.value;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
                                 srfVelRol = 0;
-                                Engage(false);
+                                changed = true;
                             }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
+                            forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                                 srfVelPit -= val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfVelPit += val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
                                 srfVelPit = vesselState.AoA.value;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
                                 srfVelPit = 0;
-                                Engage(false);
+                                changed = true;
                             }
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
+                            forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 37);
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false))) {
                                 srfVelYaw -= val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false))) {
                                 srfVelYaw += val;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false))) {
                                 srfVelYaw = -vesselState.AoS.value;
-                                Engage(false);
+                                changed = true;
                             }
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false))) {
                                 srfVelYaw = 0;
-                                Engage(false);
+                                changed = true;
                             }
                             GUILayout.EndHorizontal();
+                            if (GUILayout.Button("EXECUTE"))
+                            {
+                                Engage();
+                            }
+                            if (changed)
+                            {
+                                Engage(false);
+                            }
+                            core.attitude.AxisControl(forcePitch, forceYaw, forceRol);
                         }
                         break;
                     case Mode.TARGET:
@@ -454,7 +493,7 @@ namespace MuMech
                     reference = advReference;
                     break;
                 case Target.SURFACE_PROGRADE:
-                    attitude = Quaternion.AngleAxis(-(float) srfVelRol, Vector3.forward) *
+                    attitude = Quaternion.AngleAxis(-(float)srfVelRol, Vector3.forward) *
                         Quaternion.AngleAxis(-(float)srfVelPit, Vector3.right) *
                         Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
                     reference = AttitudeReference.SURFACE_VELOCITY;

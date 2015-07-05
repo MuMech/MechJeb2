@@ -127,7 +127,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (core.node.autowarp) 
+                    if (core.node.autowarp)
                         core.warp.WarpToUT(launchTime - warpCountDown);
                 }
                 lastTMinus = tMinus;
@@ -179,6 +179,12 @@ namespace MuMech
 
         void DriveVerticalAscent(FlightCtrlState s)
         {
+            if (timedLaunch)
+            {
+                status = "Awaiting liftoff";
+                return;
+            }
+
             if (!ascentPath.IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface)) mode = AscentMode.GRAVITY_TURN;
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
@@ -379,15 +385,15 @@ namespace MuMech
             // might reignite. There won't be enough control authority to counteract that much momentum change.
             // - Starwaster
             core.thrust.targetThrottle = 0;
-            
+
             double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
-            
+
             Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
                 + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
-            
-            
+
+
             core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
             if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
@@ -468,6 +474,8 @@ namespace MuMech
         public bool autoPath = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public float autoTurnPerc = 0.05f;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public float autoTurnSpdFactor = 18.5f;
 
         private double actualTurnStart = 0;
 
@@ -484,7 +492,8 @@ namespace MuMech
         {
             get
             {
-                return turnStartVelocity;
+                var vessel = FlightGlobals.ActiveVessel;
+                return vessel.mainBody.atmosphere ? autoTurnSpdFactor * autoTurnSpdFactor * autoTurnSpdFactor * 0.015625f : double.PositiveInfinity;
             }
         }
 
@@ -502,7 +511,6 @@ namespace MuMech
                 {
                     return Math.Min(30000, targetAlt * 0.85);
                 }
-                //return Math.Max(Math.Min(30000, targetAlt * 0.85), vessel.mainBody.RealMaxAtmosphereAltitude());
             }
         }
 
@@ -511,10 +519,15 @@ namespace MuMech
             return autoPath ? autoTurnStartAltitude : turnStartAltitude;
         }
 
+        public double SpeedAscentEnd()
+        {
+            return autoPath ? autoTurnStartVelocity : turnStartVelocity;
+        }
+
         public bool IsVerticalAscent(double altitude, double velocity)
         {
             actualTurnStart = Math.Min(actualTurnStart, autoTurnStartAltitude);
-            if (altitude < VerticalAscentEnd() && velocity < autoTurnStartVelocity)
+            if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 actualTurnStart = Math.Max(actualTurnStart, altitude );
                 return true;
@@ -538,7 +551,7 @@ namespace MuMech
     {
         //Computes the time until the phase angle between the launchpad and the target equals the given angle.
         //The convention used is that phase angle is the angle measured starting at the target and going east until
-        //you get to the launchpad. 
+        //you get to the launchpad.
         //The time returned will not be exactly accurate unless the target is in an exactly circular orbit. However,
         //the time returned will go to exactly zero when the desired phase angle is reached.
         public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target)
@@ -571,7 +584,7 @@ namespace MuMech
             return phaseAngleDifference / phaseAngleRate;
         }
 
-        //Computes the time required for the given launch location to rotate under the target orbital plane. 
+        //Computes the time required for the given launch location to rotate under the target orbital plane.
         //If the latitude is too high for the launch location to ever actually rotate under the target plane,
         //returns the time of closest approach to the target plane.
         //I have a wonderful proof of this formula which this comment is too short to contain.

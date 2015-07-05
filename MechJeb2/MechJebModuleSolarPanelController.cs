@@ -48,6 +48,9 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
+                if (p.ShieldedFromAirstream)
+                    continue;
+
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
                     if (isDeployable(sa))
@@ -72,6 +75,8 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
+                if (p.ShieldedFromAirstream)
+                    continue;
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
                     if (isDeployable(sa))
@@ -87,6 +92,8 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
+                if (p.ShieldedFromAirstream)
+                    continue;
                 foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
                 {
                     if (isDeployable(sa) &&
