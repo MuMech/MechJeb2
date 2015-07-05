@@ -8,7 +8,8 @@ namespace MuMech
 {
     public class MechJebModuleAscentPathEditor : DisplayModule
     {
-        public MechJebModuleAscentPathEditor(MechJebCore core) : base(core)
+        public MechJebModuleAscentPathEditor(MechJebCore core)
+            : base(core)
         {
             hidden = true;
         }
@@ -57,10 +58,10 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Velocity: ", GUILayout.Width(60));
-                path.autoTurnSpdFactor =  Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
+                path.autoTurnSpdFactor = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
                 GUILayout.EndHorizontal();
             }
-            
+
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
@@ -71,7 +72,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn end altitude: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude,-1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude, -1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
             else
@@ -145,7 +146,7 @@ namespace MuMech
             }
 
             int t = 0;
-            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1)
+            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1 && t < recorder.history.Length)
             {
                 var r1 = recorder.history[t];
                 int x1 = (int)(r1.downRange / scale);
