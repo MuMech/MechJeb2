@@ -77,6 +77,9 @@ namespace MuMech
         [KSPField]
         public ConfigNode partSettings;
 
+        [KSPField(isPersistant = false)]
+        public bool eduMode = false;
+
         [KSPAction("Orbit Prograde")]
         public void OnOrbitProgradeAction(KSPActionParam param)
         {

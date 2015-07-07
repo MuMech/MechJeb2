@@ -87,7 +87,7 @@ namespace MuMech
         [GeneralInfoItem("Disable SmartASS automatically", InfoItem.Category.Misc)]
         public void AutoDisableSmartASS()
         {
-            autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, "Disable SmartASS automatically");
+            autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, core.eduMode ? "Disable SmartACS automatically" : "Disable SmartASS automatically");
         }
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
@@ -541,7 +541,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Smart A.S.S.";
+            return core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
         }
     }
 }
