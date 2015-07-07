@@ -146,7 +146,7 @@ namespace MuMech
             }
 
             int t = 0;
-            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1 && t < recorder.history.Length)
+            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1 && t < recorder.history.Length - 1)
             {
                 var r1 = recorder.history[t];
                 int x1 = (int)(r1.downRange / scale);
