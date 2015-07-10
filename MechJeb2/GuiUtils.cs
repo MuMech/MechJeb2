@@ -22,15 +22,15 @@ namespace MuMech
     {
         [Persistent]
         public double _val;
-		public virtual double val
-		{
-			get { return _val; }
-			set
-			{
-				_val = value;
-				_text = (_val / multiplier).ToString();
-			}
-		}
+        public virtual double val
+        {
+            get { return _val; }
+            set
+            {
+                _val = value;
+                _text = (_val / multiplier).ToString();
+            }
+        }
         public readonly double multiplier;
 
         public bool parsed;
@@ -87,15 +87,15 @@ namespace MuMech
             _text = GuiUtils.TimeToDHMS(seconds);
         }
 
-		public override double val
-		{
-			get { return _val; }
-			set
-			{
-				_val = value;
-				_text = GuiUtils.TimeToDHMS(_val);
-			}
-		}
+        public override double val
+        {
+            get { return _val; }
+            set
+            {
+                _val = value;
+                _text = GuiUtils.TimeToDHMS(_val);
+            }
+        }
 
         public override string text
         {
@@ -256,8 +256,8 @@ namespace MuMech
         public static void SetGUIScale(double s)
         {
             scale = Mathf.Clamp((float)s, 0.2f, 5f);
-            scaledScreenHeight = Mathf.RoundToInt(Screen.height / GuiUtils.scale);
-            scaledScreenWidth = Mathf.RoundToInt(Screen.width / GuiUtils.scale);
+            scaledScreenHeight = Mathf.RoundToInt(Screen.height / scale);
+            scaledScreenWidth = Mathf.RoundToInt(Screen.width / scale);
         }
 
         public static void CopyDefaultSkin()
@@ -313,31 +313,12 @@ namespace MuMech
             }
         }
 
-        public static void CheckSkin()
+        public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100, GUIStyle rightLabelStyle=null)
         {
-            GUI.skin = null;
-            if (GUI.skin.name == "LazorSkin")
-            {
-                Texture2D tex = new Texture2D(64, 31, TextureFormat.ARGB32, false);
-                tex.LoadImage(Properties.Resources.default_gui_window);
-                GUI.skin.window.normal.background = GUI.skin.window.onNormal.background = tex;
-                GUI.skin.window.normal.textColor = GUI.skin.window.onNormal.textColor = XKCDColors.Pink;
-
-                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
-                tex.LoadImage(Properties.Resources.default_toggle_on);
-                GUI.skin.toggle.onNormal.background = GUI.skin.toggle.onHover.background = GUI.skin.toggle.onActive.background = tex;
-                tex = new Texture2D(20, 20, TextureFormat.ARGB32, false);
-                tex.LoadImage(Properties.Resources.default_toggle_off);
-                GUI.skin.toggle.normal.background = GUI.skin.toggle.hover.background = GUI.skin.toggle.active.background = tex;
-
-                GUI.skin.name = "LazorSkinBow";
-            }
-        }
-
-        public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100)
-        {
+            if (rightLabelStyle == null)
+                rightLabelStyle = GUI.skin.label;
             GUILayout.BeginHorizontal();
-            GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label(leftLabel, rightLabelStyle, GUILayout.ExpandWidth(true));
             ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(width));
             GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
@@ -450,12 +431,16 @@ namespace MuMech
             return parsedSomething;
         }
         
+        public static double ArcDistance(Vector3 From, Vector3 To) {
+            double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
+            double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
+            double c = Vector3d.Distance(From, To);
+            double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+            return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
+        }
+        
         public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
-        	double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
-        	double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
-        	double c = Vector3d.Distance(From, To);
-        	double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
-        	return ang * FlightGlobals.ActiveVessel.mainBody.Radius / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+            return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
         }
 
         public static bool MouseIsOverWindow(MechJebCore core)

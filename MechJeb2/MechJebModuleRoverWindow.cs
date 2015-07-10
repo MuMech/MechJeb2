@@ -42,14 +42,22 @@ namespace MuMech
 			}
 			
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
+			GUILayout.BeginHorizontal();
 			ed.registry.Find(i => i.id == "Editable:RoverController.heading").DrawItem();
+			if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.heading.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); }
+			if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.heading.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); }
+			GUILayout.EndHorizontal();
 			ed.registry.Find(i => i.id == "Value:RoverController.headingErr").DrawItem();
 			ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
+			GUILayout.BeginHorizontal();
 			ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
+			if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.speed.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); }
+			if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.speed.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); }
+			GUILayout.EndHorizontal();
 			ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.StabilityControl").DrawItem();
-            
-            if (!core.GetComputerModule<MechJebModuleSettings>().hideBrakeOnEject)
+
+            if (!core.settings.hideBrakeOnEject)
             {
             	ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
             }
@@ -101,22 +109,16 @@ namespace MuMech
 			GUILayout.EndHorizontal();
 			
 			GUILayout.BeginHorizontal();
-			if (autopilot.WaypointIndex == -1) {
-				if (autopilot.Waypoints.Count > 0) {
+			if (autopilot.Waypoints.Count > 0) {
+				if (!autopilot.ControlHeading || !autopilot.ControlSpeed) {
 					if (GUILayout.Button("Follow")) {
 						autopilot.WaypointIndex = 0;
 						autopilot.ControlHeading = autopilot.ControlSpeed = true;
 						autopilot.LoopWaypoints = alt;
 					}
 				}
-				else {
-//					if (GUILayout.Button("No Waypoints")) {
-//					}
-				}
-			}
-			else {
-				if (GUILayout.Button("Stop")) {
-					autopilot.WaypointIndex = -1;
+				else if (GUILayout.Button("Stop")) {
+					// autopilot.WaypointIndex = -1; // more annoying than helpful
 					autopilot.ControlHeading = autopilot.ControlSpeed = autopilot.LoopWaypoints = false;
 				}
 			}

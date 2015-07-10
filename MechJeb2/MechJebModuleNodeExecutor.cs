@@ -12,7 +12,6 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
         public const double leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
-        public const double leadFraction = 0.5; //how early to start the burn, given as a fraction of the burn time
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
@@ -24,7 +23,8 @@ namespace MuMech
                 return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
-            return GuiUtils.TimeToDHMS(BurnTime(dV));
+            double halfBurnTIme;
+            return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTIme));
         }
 
         [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
@@ -34,7 +34,9 @@ namespace MuMech
                 return "-";
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dV = node.GetBurnVector(orbit).magnitude;
-            return GuiUtils.TimeToDHMS(node.UT - BurnTime(dV) * leadFraction - vesselState.time);
+            double halfBurnTIme;
+            double burnTIme = BurnTime(dV, out halfBurnTIme);
+            return GuiUtils.TimeToDHMS(node.UT - halfBurnTIme - vesselState.time);
         }
 
         public void ExecuteOneNode(object controller)
@@ -118,11 +120,12 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            double burnTime = BurnTime(dVLeft);
-            
+            double halfBurnTime;
+            double burnTime = BurnTime(dVLeft, out halfBurnTime);
+
             double timeToNode = node.UT - vesselState.time;
 
-            if (timeToNode < burnTime * leadFraction)
+            if (timeToNode < halfBurnTime)
             {
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -133,7 +136,7 @@ namespace MuMech
             {
                 if (core.attitude.attitudeAngleFromTarget() < 1 || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
-                    core.warp.WarpToUT(node.UT - burnTime * leadFraction - leadTime);
+                    core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }
                 else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
                 {
@@ -168,11 +171,13 @@ namespace MuMech
             }
         }
 
-        private double BurnTime(double dv)
+        private double BurnTime(double dv, out double halfBurnTime)
         {
             double dvLeft = dv;
+            double halfDvLeft = dv / 2;
 
             double burnTime = 0;
+            halfBurnTime = 0;
 
             // Old code:
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
@@ -180,10 +185,23 @@ namespace MuMech
             var stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
+            double lastStageBurnTime = 0;
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
                 var s = stats.vacStats[i];
-                if (s.deltaV <= 0 || s.startThrust <= 0) continue;
+                if (s.deltaV <= 0 || s.startThrust <= 0)
+                {
+                    if (core.staging.enabled)
+                    {
+                        // We staged again before autostagePreDelay is elapsed.
+                        // Add the remaining wait time
+                        if (burnTime - lastStageBurnTime < core.staging.autostagePreDelay && i != stats.vacStats.Length - 1)
+                            burnTime += core.staging.autostagePreDelay - (burnTime - lastStageBurnTime);
+                        burnTime += core.staging.autostagePreDelay;
+                        lastStageBurnTime = burnTime;
+                    }
+                    continue;
+                }
 
                 double stageBurnDv = Math.Min(s.deltaV, dvLeft);
                 dvLeft -= stageBurnDv;
@@ -197,7 +215,7 @@ namespace MuMech
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
                 double stageBurnFinalMass = s.startMass / Math.Exp(Math.Log(s.startMass / s.endMass) * stageBurnFraction);
-                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2);
+                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2d);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
@@ -208,7 +226,11 @@ namespace MuMech
                     stageAvgAccel *= vesselState.throttleLimit;
                 }
 
+                halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
+                halfDvLeft = Math.Max(0, halfDvLeft - stageBurnDv);
+
                 burnTime += stageBurnDv / stageAvgAccel;
+
             }
 
             return burnTime;

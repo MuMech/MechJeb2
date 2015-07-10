@@ -10,15 +10,11 @@ namespace MuMech
     {
         public Vector3d positive = Vector3d.zero, negative = Vector3d.zero;
 
-        public enum Direction { FORWARD, BACK, UP, DOWN, RIGHT, LEFT };
-        public static Dictionary<Direction, Vector3d> directions = new Dictionary<Direction, Vector3d> {
-            { Direction.FORWARD, Vector3d.forward },
-            { Direction.BACK, Vector3d.back },
-            { Direction.UP, Vector3d.up },
-            { Direction.DOWN, Vector3d.down },
-            { Direction.RIGHT, Vector3d.right },
-            { Direction.LEFT, Vector3d.left }
-        };
+        public enum Direction { FORWARD=0, BACK=1, UP=2, DOWN=3, RIGHT=4, LEFT=5 };
+
+        public static readonly Vector3d[] directions = { Vector3d.forward, Vector3d.back, Vector3d.up, Vector3d.down, Vector3d.right, Vector3d.left };
+
+        public static readonly Direction[] Values = (Direction[])Enum.GetValues(typeof (Direction));
 
         public double forward { get { return positive.z; } set { positive.z = value; } }
         public double back { get { return negative.z; } set { negative.z = value; } }
@@ -83,9 +79,10 @@ namespace MuMech
 
         public void Add(Vector3d vector)
         {
-            foreach (Direction d in Enum.GetValues(typeof(Direction)))
+            for (int i = 0; i < Values.Length; i++)
             {
-                double projection = Vector3d.Dot(vector, directions[d]);
+                Direction d = Values[i];
+                double projection = Vector3d.Dot(vector, directions[(int)d]);
                 if (projection > 0)
                 {
                     this[d] += projection;
@@ -96,9 +93,10 @@ namespace MuMech
         public double GetMagnitude(Vector3d direction)
         {
             double sqrMagnitude = 0;
-            foreach (Direction d in Enum.GetValues(typeof(Direction)))
+            for (int i = 0; i < Values.Length; i++)
             {
-                double projection = Vector3d.Dot(direction.normalized, directions[d]);
+                Direction d = Values[i];
+                double projection = Vector3d.Dot(direction.normalized, directions[(int)d]);
                 if (projection > 0)
                 {
                     sqrMagnitude += Math.Pow(projection * this[d], 2);

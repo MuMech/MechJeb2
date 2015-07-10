@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace MuMech
@@ -18,10 +20,7 @@ namespace MuMech
             showInEditor = true;
 
             if (toolbarButtons == null)
-                toolbarButtons = new Dictionary<string, IButton>();
-
-            if (actualIcons == null)
-                actualIcons = new Dictionary<string, string>();
+                toolbarButtons = new Dictionary<DisplayModule, Button>();
         }
 
         public enum WindowStat
@@ -31,6 +30,13 @@ namespace MuMech
             NORMAL,
             OPENING,
             CLOSING
+        }
+
+        private struct Button
+        {
+            public IButton button;
+            public String texturePath;
+            public String texturePathActive;
         }
 
         [Persistent(pass = (int)Pass.Global)]
@@ -45,15 +51,15 @@ namespace MuMech
         public bool firstDraw = true;
 
         bool movingButton = false;
-        
+
         [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideButton = false;
 
         [ToggleInfoItem("Use AppLauncher", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool useAppLauncher = true;
-        
+
         // If the Toolbar is loaded and we don't want to display the big menu button
-        public bool HideMenuButton 
+        public bool HideMenuButton
         {
             get
             {
@@ -61,8 +67,8 @@ namespace MuMech
             }
         }
 
-        private static Dictionary<string, IButton> toolbarButtons;
-        private static Dictionary<string, string> actualIcons;
+        private static Dictionary<DisplayModule, Button> toolbarButtons;
+        const string Qmark = "MechJeb2/Icons/QMark";
 
         IButton menuButton;
 
@@ -83,7 +89,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>(DisplayOrder.instance))
+            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance))
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
@@ -139,9 +145,62 @@ namespace MuMech
                 return;
 
             SetupMainToolbarButton();
-            foreach (DisplayModule module in core.GetComputerModules<DisplayModule>().OrderBy(m => m, DisplayOrder.instance))
+
+            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
             {
-                SetupToolbarButton(module, module.isActive());
+                Button button;
+                if (!toolbarButtons.ContainsKey(module))
+                {
+
+                    Debug.Log("Create button for module " + module.GetName());
+
+                    String name = GetCleanName(module.GetName());
+
+                    String TexturePath = "MechJeb2/Icons/" + name;
+                    String TexturePathActive = TexturePath + "_active";
+
+                    button = new Button();
+                    button.button = ToolbarManager.Instance.add("MechJeb2", name);
+
+                    if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
+                    {
+                        button.texturePath = Qmark;
+                        print("No icon for " + name);
+                    }
+                    else
+                    {
+                        button.texturePath = TexturePath;
+                    }
+
+                    if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
+                    {
+                        button.texturePathActive = TexturePath;
+                        //print("No icon for " + name + "_active");
+                    }
+                    else
+                    {
+                        button.texturePathActive = TexturePathActive;
+                    }
+
+                    toolbarButtons[module] = button;
+
+                    button.button.ToolTip = "MechJeb " + module.GetName();
+                    button.button.OnClick += (b) =>
+                    {
+                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetDisplayModules(DisplayOrder.instance).FirstOrDefault(m => m == module);
+                        if (mod != null)
+                        {
+                            mod.enabled = !mod.enabled;
+                        }
+                    };
+                }
+                else
+                {
+                    button = toolbarButtons[module];
+                }
+
+                button.button.Visible = module.showInCurrentScene;
+                button.button.TexturePath = module.isActive() ? button.texturePathActive : button.texturePath;
             }
         }
 
@@ -160,66 +219,31 @@ namespace MuMech
             menuButton.Visible = true;
         }
 
-        const string Qmark = "MechJeb2/Icons/QMark";
 
-        public void SetupToolbarButton(DisplayModule module, bool active)
+        private string GetCleanName(string name)
         {
-            if (!ToolbarManager.ToolbarAvailable)
-                return;
-
-            IButton button;
-            String name = CleanName(module.GetName());
-            if (!toolbarButtons.ContainsKey(name))
-            {
-                if (module.hidden)
-                    return;
-                print("Adding button for " + name);
-                button = ToolbarManager.Instance.add("MechJeb2", name);
-                toolbarButtons[name] = button;
-                button.ToolTip = "MechJeb " + module.GetName();
-                button.OnClick += (b) =>
-                {
-                    DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModules<DisplayModule>().FirstOrDefault(m => m.GetName() == module.GetName());
-                    if (mod != null)
-                    {
-                        mod.enabled = !mod.enabled;
-                    }
-                };
-            }
-            else
-            {
-                button = toolbarButtons[name];
-            }
-            button.Visible = module.showInCurrentScene && !module.hidden;
-            String TexturePath = "MechJeb2/Icons/" + name;
-            String TexturePathActive = TexturePath + "_active";
-
-            if (!actualIcons.ContainsKey(TexturePath))
-            {
-                if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
-                {
-                    actualIcons[TexturePath] = Qmark;
-                    print("No icon for " + name);
-                }
-                else
-                    actualIcons[TexturePath] = TexturePath;
-            }
-
-            if (active && !actualIcons.ContainsKey(TexturePathActive))
-            {
-                if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
-                {
-                    actualIcons[TexturePathActive] = TexturePath;
-                    print("No icon for " + name + "_active");
-                }
-                else
-                    actualIcons[TexturePathActive] = TexturePathActive;
-            }
-
-            button.TexturePath = active ? actualIcons[TexturePathActive] : actualIcons[TexturePath];
+            string regexSearch = " .:" + new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            Regex r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            return r.Replace(name, "_");
         }
 
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            ClearButtons();
+            base.OnLoad(local, type, global);
+        }
+
+        // OnDestroy is actually run a bit too often when we have multiple MJ unit that get staged
+        // But the edge case may get a bit too complex to handle properly so for now we 
+        // recreate the buttons a bit often.
         public override void OnDestroy()
+        {
+            ClearButtons();
+            base.OnDestroy();
+        }
+
+        private void ClearButtons()
         {
             if (mjButton != null)
             {
@@ -229,29 +253,23 @@ namespace MuMech
 
             if (ToolbarManager.ToolbarAvailable)
             {
-                foreach (IButton b in toolbarButtons.Values)
+                foreach (Button b in toolbarButtons.Values)
                 {
-                    if (b != null)
-                        b.Destroy();
+                    if (b.button != null)
+                    {
+                        b.button.Destroy();
+                    }
                 }
                 toolbarButtons.Clear();
                 if (menuButton != null)
+                {
                     menuButton.Destroy();
+                }
             }
-
-            base.OnDestroy();
         }
 
-        public static string CleanName(String name)
-        {
-            return name.Replace('.', '_').Replace(' ', '_').Replace(':', '_').Replace('/', '_');
-        }
-        
         public override void DrawGUI(bool inEditor)
         {
-            SetupAppLauncher();
-            SetupToolBarButtons();
-
             switch (windowStat)
             {
                 case WindowStat.OPENING:
@@ -293,7 +311,7 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                Rect pos = new Rect(GuiUtils.scaledScreenWidth - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height );
+                Rect pos = new Rect(GuiUtils.scaledScreenWidth - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
             }
             else
@@ -339,6 +357,12 @@ namespace MuMech
                     movingButton = false;
                 }
             }
+
+            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+            {
+                SetupAppLauncher();
+                SetupToolBarButtons();
+            }
         }
 
         class DisplayOrder : IComparer<DisplayModule>
@@ -352,7 +376,7 @@ namespace MuMech
                 bool customB = b is MechJebModuleCustomInfoWindow;
                 if (!customA && customB) return -1;
                 if (customA && !customB) return 1;
-                return a.GetName().CompareTo(b.GetName());
+                return String.Compare(a.GetName(), b.GetName(), StringComparison.Ordinal);
             }
         }
     }

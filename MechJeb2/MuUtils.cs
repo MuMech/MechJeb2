@@ -44,14 +44,20 @@ namespace MuMech
             return ret;
         }
 
+        public static string padPositive(double x, string format = "F3")
+        {
+            string s = x.ToString(format);
+            return s[0] == '-' ? s : " " + s;
+        }
+
         public static string PrettyPrint(Vector3d vector, string format = "F3")
         {
-            return "[" + (vector.x >= 0 ? " " : "") + vector.x.ToString(format) + ", " + (vector.y >= 0 ? " " : "") + vector.y.ToString(format) + ", " + (vector.z >= 0 ? " " : "") + vector.z.ToString(format) + "]";
+            return "[" + padPositive(vector.x, format) + ", " + padPositive(vector.y, format) + ", " + padPositive(vector.z, format) + " ]";
         }
 
         public static string PrettyPrint(Quaternion quaternion, string format = "F3")
         {
-            return "[" + (quaternion.x >= 0 ? " " : "") + quaternion.x.ToString(format) + ", " + (quaternion.y >= 0 ? " " : "") + quaternion.y.ToString(format) + ", " + (quaternion.z >= 0 ? " " : "") + quaternion.z.ToString(format) + ", " + (quaternion.w >= 0 ? " " : "") + quaternion.w.ToString(format) + "]";
+            return "[" + padPositive(quaternion.x, format) + ", " + padPositive(quaternion.y, format) + ", " + padPositive(quaternion.z, format) + ", " + padPositive(quaternion.w ,format) + "]";
         }
 
         //For some reason, Math doesn't have the inverse hyperbolic trigonometric functions:
@@ -172,6 +178,54 @@ namespace MuMech
 			list[indexA] = list[indexB];
 			list[indexB] = tmp;
 			return list;
+        }
+
+        public static void DrawLine(Texture2D tex, int x1, int y1, int x2, int y2, Color col)
+        {
+            int dy = y2 - y1;
+            int dx = x2 - x1;
+            int stepx, stepy;
+
+            if (dy < 0) { dy = -dy; stepy = -1; }
+            else { stepy = 1; }
+            if (dx < 0) { dx = -dx; stepx = -1; }
+            else { stepx = 1; }
+            dy <<= 1;
+            dx <<= 1;
+
+            float fraction = 0;
+
+            tex.SetPixel(x1, y1, col);
+            if (dx > dy)
+            {
+                fraction = dy - (dx >> 1);
+                while (Mathf.Abs(x1 - x2) > 1)
+                {
+                    if (fraction >= 0)
+                    {
+                        y1 += stepy;
+                        fraction -= dx;
+                    }
+                    x1 += stepx;
+                    fraction += dy;
+                    tex.SetPixel(x1, y1, col);
+                }
+            }
+            else
+            {
+                fraction = dx - (dy >> 1);
+                while (Mathf.Abs(y1 - y2) > 1)
+                {
+                    if (fraction >= 0)
+                    {
+                        x1 += stepx;
+                        fraction -= dy;
+                    }
+                    y1 += stepy;
+                    fraction += dx;
+                    tex.SetPixel(x1, y1, col);
+                }
+            }
         }
     }
 

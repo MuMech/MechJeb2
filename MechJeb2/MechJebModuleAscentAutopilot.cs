@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,11 +25,17 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool correctiveSteering = true;
+        public bool correctiveSteering = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool _autostage;
+        public EditableDouble verticalRoll = new EditableDouble(0);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble turnRoll = new EditableDouble(0);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool autodeploySolarPanels = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool _autostage = true;
         public bool autostage
         {
             get { return _autostage; }
@@ -47,11 +53,12 @@ namespace MuMech
 
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool limitAoA = false;
+        public bool limitAoA = true;
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble maxAoA = 5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(1000, 1);
+        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(2500);
         public bool limitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -60,14 +67,30 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
+        public bool timedLaunch = false;
+        public double launchTime = 0;
+
+        public double currentMaxAoA = 0;
+
+        public double tMinus
+        {
+            get { return launchTime - vesselState.time; }
+        }
+
         //internal state:
-        enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
+        enum AscentMode { RETRACT_SOLAR_PANELS, VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE };
         AscentMode mode;
         bool placedCircularizeNode = false;
+        private double lastTMinus = 999;
+
 
         public override void OnModuleEnabled()
         {
-            mode = AscentMode.VERTICAL_ASCENT;
+            if (autodeploySolarPanels && mainBody.atmosphere)
+                mode = AscentMode.RETRACT_SOLAR_PANELS;
+            else
+                mode = AscentMode.VERTICAL_ASCENT;
+
             placedCircularizeNode = false;
 
             core.attitude.users.Add(this);
@@ -87,11 +110,41 @@ namespace MuMech
             status = "Off";
         }
 
+        public void StartCountdown(double time)
+        {
+            timedLaunch = true;
+            launchTime = time;
+            lastTMinus = 999;
+        }
+
+        public override void OnFixedUpdate()
+        {
+            if (timedLaunch)
+            {
+                if (tMinus < 3 * vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
+                {
+                    if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
+                        Staging.ActivateNextStage();
+                    timedLaunch = false;
+                }
+                else
+                {
+                    if (core.node.autowarp)
+                        core.warp.WarpToUT(launchTime - warpCountDown);
+                }
+                lastTMinus = tMinus;
+            }
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             limitingAoA = false;
             switch (mode)
             {
+                case AscentMode.RETRACT_SOLAR_PANELS:
+                    DriveRetractSolarPanels(s);
+                    break;
+
                 case AscentMode.VERTICAL_ASCENT:
                     DriveVerticalAscent(s);
                     break;
@@ -110,19 +163,41 @@ namespace MuMech
             }
         }
 
+        void DriveRetractSolarPanels(FlightCtrlState s)
+        {
+            if (autoThrottle) core.thrust.targetThrottle = 0.0f;
+
+            if (timedLaunch && tMinus > 10.0)
+            {
+                status = "Awaiting liftoff";
+                return;
+            }
+
+            status = "Retracting solar panels";
+            core.solarpanel.RetractAll();
+            if (core.solarpanel.AllRetracted())
+                mode = AscentMode.VERTICAL_ASCENT;
+        }
+
         void DriveVerticalAscent(FlightCtrlState s)
         {
-            if (vesselState.altitudeASL > ascentPath.VerticalAscentEnd()) mode = AscentMode.GRAVITY_TURN;
+            if (timedLaunch)
+            {
+                status = "Awaiting liftoff";
+                return;
+            }
+
+            if (!ascentPath.IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface)) mode = AscentMode.GRAVITY_TURN;
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
             //during the vertical ascent we just thrust straight up at max throttle
-            if (forceRoll && !correctiveSteering && vesselState.altitudeTrue > 25)
+            if (forceRoll && vesselState.altitudeTrue > 50)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
-            	core.attitude.attitudeTo(90 - desiredInclination, 90, 0, this);
+                core.attitude.attitudeTo(90 - desiredInclination, 90, verticalRoll, this);
             }
             else
             {
-            	core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+                core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
@@ -182,7 +257,7 @@ namespace MuMech
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (vesselState.altitudeASL < ascentPath.VerticalAscentEnd())
+            if (ascentPath.IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface))
             {
                 mode = AscentMode.VERTICAL_ASCENT;
                 return;
@@ -209,12 +284,12 @@ namespace MuMech
             double verticalSpeedForDesiredApoapsis = Math.Sqrt(2 * potentialDifferenceWithApoapsis);
             double referenceFrameBlend = Mathf.Clamp((float)(vesselState.speedOrbital / verticalSpeedForDesiredApoapsis), 0.0F, 1.0F);
 
-            Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vessel.srf_velocity.normalized
-                                               + referenceFrameBlend * vessel.obt_velocity.normalized).normalized;
+            Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
+                                               + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
             double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
-            double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL);
+            double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
             Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
                                          + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
@@ -228,7 +303,7 @@ namespace MuMech
                 const double Kp = 5.0; //control gain
 
                 //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-                double difficulty = vessel.srf_velocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
+                double difficulty = vesselState.surfaceVelocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
                 if (difficulty > 5) difficulty = 5;
 
                 if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
@@ -245,20 +320,15 @@ namespace MuMech
 
             desiredThrustVector = desiredThrustVector.normalized;
 
-            limitingAoA = limitAoA && vessel.altitude < mainBody.maxAtmosphereAltitude && Vector3.Angle(vessel.srf_velocity, desiredThrustVector) > maxAoA;
-
-            if (limitingAoA)
+            if (limitAoA)
             {
-                Vector3d limitedVector = Vector3.RotateTowards(vessel.srf_velocity, desiredThrustVector, (float)(maxAoA * Math.PI / 180), 1).normalized;
+                float fade = vesselState.dynamicPressure < aoALimitFadeoutPressure ? (float)(aoALimitFadeoutPressure / vesselState.dynamicPressure) : 1;
+                currentMaxAoA = Math.Min(fade * maxAoA, 180d);
+                limitingAoA = vessel.altitude < mainBody.atmosphereDepth && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > currentMaxAoA;
 
-                if (aoALimitFadeoutPressure > 0 && vesselState.dynamicPressure < aoALimitFadeoutPressure)
+                if (limitingAoA)
                 {
-                    float fade = (float)(vesselState.dynamicPressure / aoALimitFadeoutPressure);
-                    desiredThrustVector = Vector3.RotateTowards(desiredThrustVector, limitedVector, Mathf.PI, fade);
-                }
-                else
-                {
-                    desiredThrustVector = limitedVector;
+                    desiredThrustVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(currentMaxAoA * Mathf.Deg2Rad), 1).normalized;
                 }
             }
 
@@ -266,7 +336,7 @@ namespace MuMech
             {
                 var pitch = 90 - Vector3.Angle(vesselState.up, desiredThrustVector);
                 var hdg = core.rover.HeadingToPos(vessel.CoM, vessel.CoM + desiredThrustVector);
-                core.attitude.attitudeTo(hdg, pitch, 0, this);
+                core.attitude.attitudeTo(hdg, pitch, turnRoll, this);
             }
             else
             {
@@ -290,9 +360,13 @@ namespace MuMech
             //if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             //    || (vesselState.limitedMaxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
 
-            // Sarbian : removed the special case for now. Some ship where turning whil still in atmosphere
+            // Sarbian : removed the special case for now. Some ship where turning while still in atmosphere
+
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
+                if (autodeploySolarPanels)
+                    core.solarpanel.ExtendAll();
+
                 mode = AscentMode.CIRCULARIZE;
                 core.warp.MinimumWarp();
                 return;
@@ -307,10 +381,25 @@ namespace MuMech
             }
 
             //point prograde and thrust gently if our apoapsis falls below the target
-            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+            //core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
+
+            // Actually I have a better idea: Don't initiate orientation changes when there's a chance that our main engine
+            // might reignite. There won't be enough control authority to counteract that much momentum change.
+            // - Starwaster
             core.thrust.targetThrottle = 0;
+
+            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+            Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
+            double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
+
+            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
+                + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
+
+
+            core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
             if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
+                core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.INERTIAL, this);
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
@@ -348,7 +437,8 @@ namespace MuMech
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
                 double UT = orbit.NextApoapsisTime(vesselState.time);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                //Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit, UT, desiredOrbitAltitude + mainBody.Radius);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 
@@ -364,18 +454,20 @@ namespace MuMech
     public interface IAscentPath
     {
         //altitude at which to stop going straight up
-        double VerticalAscentEnd();
+        bool IsVerticalAscent(double altitude, double velocity);
 
         //controls the ascent path
-        double FlightPathAngle(double altitude);
+        double FlightPathAngle(double altitude, double velocity);
     }
 
     public class DefaultAscentPath : IAscentPath
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(5000, 1000);
+        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(500, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(70000, 1000);
+        public EditableDoubleMult turnStartVelocity = new EditableDoubleMult(100);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(60000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -383,7 +475,11 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoPath = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public float autoTurnPerc = 0.1f;
+        public float autoTurnPerc = 0.05f;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public float autoTurnSpdFactor = 18.5f;
+
+        private double actualTurnStart = 0;
 
         public double autoTurnStartAltitude
         {
@@ -394,33 +490,62 @@ namespace MuMech
             }
         }
 
+        public double autoTurnStartVelocity
+        {
+            get
+            {
+                var vessel = FlightGlobals.ActiveVessel;
+                return vessel.mainBody.atmosphere ? autoTurnSpdFactor * autoTurnSpdFactor * autoTurnSpdFactor * 0.015625f : double.PositiveInfinity;
+            }
+        }
+
         public double autoTurnEndAltitude
         {
             get
             {
                 var vessel = FlightGlobals.ActiveVessel;
                 var targetAlt = vessel.GetMasterMechJeb().GetComputerModule<MechJebModuleAscentAutopilot>().desiredOrbitAltitude;
-                return Math.Max(Math.Min(30000, targetAlt * 0.85), vessel.mainBody.RealMaxAtmosphereAltitude());
+                if (vessel.mainBody.atmosphere)
+                {
+                    return Math.Min(vessel.mainBody.RealMaxAtmosphereAltitude() * 0.85, targetAlt);
+                }
+                else
+                {
+                    return Math.Min(30000, targetAlt * 0.85);
+                }
             }
         }
 
         public double VerticalAscentEnd()
         {
-            if (autoPath)
-                return autoTurnStartAltitude;
-            else
-                return turnStartAltitude;
+            return autoPath ? autoTurnStartAltitude : turnStartAltitude;
         }
 
-        public double FlightPathAngle(double altitude)
+        public double SpeedAscentEnd()
         {
-            var turnEnd = (autoPath ? autoTurnEndAltitude : turnEndAltitude );
+            return autoPath ? autoTurnStartVelocity : turnStartVelocity;
+        }
 
-            if (altitude < VerticalAscentEnd()) return 90.0;
+        public bool IsVerticalAscent(double altitude, double velocity)
+        {
+            actualTurnStart = Math.Min(actualTurnStart, autoTurnStartAltitude);
+            if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
+            {
+                actualTurnStart = Math.Max(actualTurnStart, altitude);
+                return true;
+            }
+            return false;
+        }
+
+        public double FlightPathAngle(double altitude, double velocity)
+        {
+            var turnEnd = (autoPath ? autoTurnEndAltitude : turnEndAltitude);
+
+            if (IsVerticalAscent(altitude, velocity)) return 90.0;
 
             if (altitude > turnEnd) return turnEndAngle;
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - VerticalAscentEnd()) / (turnEnd - VerticalAscentEnd()), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
+            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - actualTurnStart) / (turnEnd - actualTurnStart), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
         }
     }
 
@@ -428,14 +553,14 @@ namespace MuMech
     {
         //Computes the time until the phase angle between the launchpad and the target equals the given angle.
         //The convention used is that phase angle is the angle measured starting at the target and going east until
-        //you get to the launchpad. 
+        //you get to the launchpad.
         //The time returned will not be exactly accurate unless the target is in an exactly circular orbit. However,
         //the time returned will go to exactly zero when the desired phase angle is reached.
         public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target)
         {
             double launchpadAngularRate = 360 / launchBody.rotationPeriod;
             double targetAngularRate = 360.0 / target.period;
-            if (Vector3d.Dot(target.SwappedOrbitNormal(), launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
+            if (Vector3d.Dot(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
 
             Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
             Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
@@ -461,16 +586,16 @@ namespace MuMech
             return phaseAngleDifference / phaseAngleRate;
         }
 
-        //Computes the time required for the given launch location to rotate under the target orbital plane. 
+        //Computes the time required for the given launch location to rotate under the target orbital plane.
         //If the latitude is too high for the launch location to ever actually rotate under the target plane,
         //returns the time of closest approach to the target plane.
         //I have a wonderful proof of this formula which this comment is too short to contain.
         public static double TimeToPlane(CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
         {
-            double inc = Math.Abs(Vector3d.Angle(target.SwappedOrbitNormal(), launchBody.angularVelocity));
-            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, target.SwappedOrbitNormal()).normalized; // I don't understand the sign here, but this seems to work
+            double inc = Math.Abs(Vector3d.Angle(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity));
+            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.GetOrbitNormal().Reorder(132).normalized).normalized; // I don't understand the sign here, but this seems to work
             b *= launchBody.Radius * Math.Sin(Math.PI / 180 * launchLatitude) / Math.Tan(Math.PI / 180 * inc);
-            Vector3d c = Vector3d.Cross(target.SwappedOrbitNormal(), launchBody.angularVelocity).normalized;
+            Vector3d c = Vector3d.Cross(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity).normalized;
             double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(Math.PI / 180 * launchLatitude), 2) - b.sqrMagnitude;
             if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
             c *= Math.Sqrt(cMagnitudeSquared);

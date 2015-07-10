@@ -529,5 +529,33 @@ namespace MuMech
             }
             return result;
         }
+
+
+        public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
+        {
+            if (orbit.PeA > 0) throw new ArgumentException("SuicideBurnCountdown: periapsis is above the ground");
+
+            double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
+            angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
+            double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
+            double g = vesselState.localg;
+            double T = vesselState.limitedMaxThrustAccel;
+
+            double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
+            double decelTime = vesselState.speedSurface / effectiveDecel;
+
+            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vessel.srf_velocity;
+            double terrainRadius = vesselState.mainBody.Radius + vesselState.mainBody.TerrainAltitude(estimatedLandingSite);
+            double impactTime = 0;
+            try
+            {
+                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+            }
+            catch (ArgumentException)
+            {
+                return 0;
+            }
+            return impactTime - decelTime / 2 - vesselState.time;
+        }
     }
 }

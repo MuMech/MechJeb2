@@ -5,12 +5,18 @@ ifeq ($(OS),Windows_NT)
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		XDG_DATA_HOME := ${HOME}/.local/share
-		KSPDIR := ${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program
+		ifndef XDG_DATA_HOME
+			XDG_DATA_HOME := ${HOME}/.local/share
+		endif
+		ifndef KSPDIR
+			KSPDIR := ${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program
+		endif
 		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
+		ifndef KSPDIR
+			KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
+		endif
 		MANAGED := ${KSPDIR}/KSP.app/Contents/Data/Managed/
 	endif
 endif
@@ -18,7 +24,13 @@ endif
 MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
 	$(wildcard MechJeb2/Maneuver/*.cs) \
 	$(wildcard MechJeb2/Properties/*.cs) \
-	$(wildcard MechJeb2/alglib/*.cs)
+	$(wildcard MechJeb2/alglib/*.cs) \
+	$(wildcard MechJeb2/LandingAutopilot/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/Extensions/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/Helpers/*.cs) \
+	$(wildcard MechJeb2/KerbalEngineer/VesselSimulator/*.cs) \
+	$(wildcard MechJeb2/FlyingSim/*.cs)
 
 RESGEN2 := resgen2
 GMCS    := gmcs

@@ -18,11 +18,6 @@ namespace MuMech
         [EditableInfoItem("RCS balancer overdrive", InfoItem.Category.Thrust, rightLabel = "%")]
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
-        // RCS for rotation
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        [ToggleInfoItem("Use RCS for rotation", InfoItem.Category.Thrust)]
-        public bool rcsForRotation = true;
-
         // Advanced options
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool advancedOptions = false;
@@ -84,16 +79,23 @@ namespace MuMech
 
             bool firstRcsModule = true;
             string thrusterStates = "";
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    if (!firstRcsModule) thrusterStates += " ";
+                    if (!firstRcsModule)
+                    {
+                        thrusterStates += " ";
+                    }
                     firstRcsModule = false;
                     thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
                     for (int i = 0; i < pm.thrustForces.Count; i++)
                     {
-                        if (i != 0) thrusterStates += ",";
+                        if (i != 0)
+                        {
+                            thrusterStates += ",";
+                        }
                         thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
                     }
                     thrusterStates += ")";
@@ -112,11 +114,15 @@ namespace MuMech
             bool firstRcsModule = true;
             string thrusterStates = "";
 
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    if (!firstRcsModule) thrusterStates += " ";
+                    if (!firstRcsModule)
+                    {
+                        thrusterStates += " ";
+                    }
                     firstRcsModule = false;
                     thrusterStates += pm.thrusterPower.ToString("F1");
                 }
@@ -176,16 +182,7 @@ namespace MuMech
 
             if (s.X == 0 && s.Y == 0 && s.Z == 0)
             {
-                if (rcsForRotation)
-                {
-                    solverThread.ResetThrusterForces();
-                }
-                else
-                {
-                    // We're not translating, and we shouldn't use RCS for
-                    // rotation, so we don't need RCS at all.
-                    cutThrottles = true;
-                }
+                solverThread.ResetThrusterForces();
             }
 
             // Note that FlightCtrlState doesn't use the same axes as the
@@ -250,6 +247,7 @@ namespace MuMech
             return solverThread.calculationTime;
         }
 
+        /*
         public override void OnUpdate()
         {
             // Make thruster exhaust onscreen correspond to actual thrust.
@@ -270,6 +268,7 @@ namespace MuMech
             }
             base.OnUpdate();
         }
+         */
 
         public override void Drive(FlightCtrlState s)
         {

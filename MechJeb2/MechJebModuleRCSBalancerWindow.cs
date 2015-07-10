@@ -75,8 +75,6 @@ namespace MuMech
 
                 GUILayout.Label("Overdrive increases power when possible, at the cost of RCS fuel efficiency.");
 
-                balancer.rcsForRotation = GUILayout.Toggle(balancer.rcsForRotation, "Use RCS for rotation");
-
                 // Advanced options
                 balancer.advancedOptions = GUILayout.Toggle(balancer.advancedOptions, "Advanced options");
                 if (balancer.advancedOptions)
@@ -85,7 +83,7 @@ namespace MuMech
                     //balancer.smartRotation = GUILayout.Toggle(balancer.smartRotation, "Smart rotation");
 
                     GuiUtils.SimpleTextBox("Overdrive scale", balancer.overdriveScale);
-                    GuiUtils.SimpleTextBox("Torque factor", balancer.tuningParamFactorTorque);
+                    GuiUtils.SimpleTextBox("torque factor", balancer.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", balancer.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", balancer.tuningParamFactorWaste);
                 }
