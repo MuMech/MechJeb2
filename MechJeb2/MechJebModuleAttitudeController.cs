@@ -123,7 +123,7 @@ namespace MuMech
 
         public Vector3d AxisState
         {
-            get { return new Vector3d(_axisControl.x, _axisControl.y, _axisControl.z);}
+            get { return new Vector3d(_axisControl.x, _axisControl.y, _axisControl.z); }
         }
 
 
@@ -133,6 +133,9 @@ namespace MuMech
         protected Quaternion lastSAS = new Quaternion();
 
         public double attitudeError;
+        
+        public Vector3d torque;
+        public Vector3d inertia;
 
         public MechJebModuleAttitudeController(MechJebCore core)
             : base(core)
@@ -177,10 +180,8 @@ namespace MuMech
             base.OnSave(local, type, global);
         }
 
-        public void tuneTf()
+        public void tuneTf(Vector3d torque)
         {
-            Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
-
             Vector3d ratio = new Vector3d(
                 torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
                 torque.z != 0 ? vesselState.MoI.z / torque.z : 0,   //y <=> z
@@ -189,12 +190,16 @@ namespace MuMech
 
             TfV = 0.05 * ratio;
 
+            Vector3d delayFactor = Vector3d.one + 2 * vesselState.torqueReactionSpeed;
+
+            TfV.Scale(delayFactor);
+
+
             TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, 1.0);
             TfV = TfV.Clamp(TfMin, TfMax);
 
             //Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
             //Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
-            setPIDParameters();
         }
 
         public void setPIDParameters()
@@ -218,11 +223,6 @@ namespace MuMech
             kpFactor = 3;
             kiFactor = 6;
             kdFactor = 0.5;
-
-            if (Tf_autoTune)
-                tuneTf();
-
-            setPIDParameters();
         }
 
         public void AxisControl(bool pitch, bool yaw, bool roll)
@@ -382,10 +382,6 @@ namespace MuMech
 
                 attitudeChanged = false;
             }
-
-            if (Tf_autoTune)
-                tuneTf();
-
         }
 
         public override void Drive(FlightCtrlState s)
@@ -420,11 +416,11 @@ namespace MuMech
 
                 Vector3d deltaEuler = delta.DeltaEuler();
 
-                Vector3d torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
+                torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
                 if (core.thrust.differentialThrottleSuccess)
                     torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
-                Vector3d inertia = Vector3d.Scale(
+                inertia = Vector3d.Scale(
                     vesselState.angularMomentum.Sign(),
                     Vector3d.Scale(
                         Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
@@ -472,6 +468,10 @@ namespace MuMech
                 omega.y = vessel.angularVelocity.z; // y <=> z
                 omega.z = vessel.angularVelocity.y; // z <=> y
                 omega.Scale(NormFactor);
+
+                if (Tf_autoTune)
+                    tuneTf(torque);
+                setPIDParameters();
 
                 pidAction = pid.Compute(err, omega);
 

@@ -33,6 +33,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnRoll = new EditableDouble(0);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool autodeploySolarPanels = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage = true;
         public bool autostage
         {
@@ -84,7 +86,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            if (core.solarpanel.autodeploySolarPanels && mainBody.atmosphere)
+            if (autodeploySolarPanels && mainBody.atmosphere)
                 mode = AscentMode.RETRACT_SOLAR_PANELS;
             else
                 mode = AscentMode.VERTICAL_ASCENT;
@@ -362,7 +364,7 @@ namespace MuMech
 
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
-                if (core.solarpanel.autodeploySolarPanels)
+                if (autodeploySolarPanels)
                     core.solarpanel.ExtendAll();
 
                 mode = AscentMode.CIRCULARIZE;
@@ -397,7 +399,7 @@ namespace MuMech
             core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
             if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
             {
-                core.attitude.attitudeTo (Vector3d.forward, AttitudeReference.INERTIAL, this);
+                core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.INERTIAL, this);
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
             }
 
@@ -529,7 +531,7 @@ namespace MuMech
             actualTurnStart = Math.Min(actualTurnStart, autoTurnStartAltitude);
             if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
-                actualTurnStart = Math.Max(actualTurnStart, altitude );
+                actualTurnStart = Math.Max(actualTurnStart, altitude);
                 return true;
             }
             return false;
@@ -537,7 +539,7 @@ namespace MuMech
 
         public double FlightPathAngle(double altitude, double velocity)
         {
-            var turnEnd = (autoPath ? autoTurnEndAltitude : turnEndAltitude );
+            var turnEnd = (autoPath ? autoTurnEndAltitude : turnEndAltitude);
 
             if (IsVerticalAscent(altitude, velocity)) return 90.0;
 

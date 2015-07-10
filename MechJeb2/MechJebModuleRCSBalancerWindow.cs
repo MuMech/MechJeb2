@@ -83,7 +83,7 @@ namespace MuMech
                     //balancer.smartRotation = GUILayout.Toggle(balancer.smartRotation, "Smart rotation");
 
                     GuiUtils.SimpleTextBox("Overdrive scale", balancer.overdriveScale);
-                    GuiUtils.SimpleTextBox("Torque factor", balancer.tuningParamFactorTorque);
+                    GuiUtils.SimpleTextBox("torque factor", balancer.tuningParamFactorTorque);
                     GuiUtils.SimpleTextBox("Translate factor", balancer.tuningParamFactorTranslate);
                     GuiUtils.SimpleTextBox("Waste factor", balancer.tuningParamFactorWaste);
                 }

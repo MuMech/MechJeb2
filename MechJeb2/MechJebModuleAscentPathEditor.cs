@@ -8,7 +8,8 @@ namespace MuMech
 {
     public class MechJebModuleAscentPathEditor : DisplayModule
     {
-        public MechJebModuleAscentPathEditor(MechJebCore core) : base(core)
+        public MechJebModuleAscentPathEditor(MechJebCore core)
+            : base(core)
         {
             hidden = true;
         }
@@ -16,10 +17,13 @@ namespace MuMech
         public DefaultAscentPath path;
         static Texture2D pathTexture = new Texture2D(400, 100);
         private Boolean pathTextureDrawnBefore = false;
+        private MechJebModuleFlightRecorder recorder;
+        private int lastHistoryIdx = 0;
 
         public override void OnStart(PartModule.StartState state)
         {
             path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
+            recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -54,10 +58,10 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Velocity: ", GUILayout.Width(60));
-                path.autoTurnSpdFactor =  Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
+                path.autoTurnSpdFactor = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
                 GUILayout.EndHorizontal();
             }
-            
+
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
@@ -68,7 +72,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn end altitude: ");
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude,-1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude, -1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
             else
@@ -100,6 +104,7 @@ namespace MuMech
                 path.turnEndAngle != oldTurnEndAngle ||
                 path.autoTurnPerc != oldAutoTurnPerc ||
                 path.autoTurnSpdFactor != oldAutoTurnSpdPerc ||
+                recorder.historyIdx != lastHistoryIdx ||
                 !pathTextureDrawnBefore)
             {
                 UpdatePathTexture();
@@ -140,7 +145,25 @@ namespace MuMech
                 }
             }
 
+            int t = 0;
+            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1 && t < recorder.history.Length - 1)
+            {
+                var r1 = recorder.history[t];
+                int x1 = (int)(r1.downRange / scale);
+                int y1 = (int)(r1.altitudeASL / scale);
+
+                var r2 = recorder.history[t + 1];
+                int x2 = (int)(r2.downRange / scale);
+                int y2 = (int)(r2.altitudeASL / scale);
+
+                t++;
+
+                if (x1 >= 0 && y1 >= 0 && x2 >= 0 && y2 >= 0 && x1 < pathTexture.width && y1 < pathTexture.height && x2 < pathTexture.width && y2 < pathTexture.height)
+                    MuUtils.DrawLine(pathTexture, x1, y1, x2, y2, Color.white);
+            }
+
             pathTexture.Apply();
+            lastHistoryIdx = recorder.historyIdx;
             pathTextureDrawnBefore = true;
         }
 

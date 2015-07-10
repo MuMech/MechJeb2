@@ -107,8 +107,7 @@ namespace MuMech
                 if (core.landing.enabled)
                 {
                     GUILayout.Label("Status: " + core.landing.status);
-
-                    GUILayout.Label("Debug Info:");
+                    GUILayout.Label("Mode " + core.landing.descentSpeedPolicy.GetType().Name + "(" + core.landing.UseAtmosphereToBrake().ToString() + ")");
                     GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
                     var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
                     GUILayout.Label("Drag Leng: " + ( dragLength != Double.MaxValue ? dragLength.ToString("F2") : "infinite"));

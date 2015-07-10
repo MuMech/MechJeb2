@@ -307,7 +307,8 @@ namespace MuMech
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
-            return HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.GetTotalMass() : vesselState.mass;
+            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts.Sum(p => p.mass + p.GetResourceMass());
+            else return vesselState.mass;
         }
 
         [ValueInfoItem("Max vessel mass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)]
@@ -392,6 +393,12 @@ namespace MuMech
         public double MinAcceleration()
         {
             return MinThrust() / (1000 * VesselMass());
+        }
+
+        [ValueInfoItem("G force", InfoItem.Category.Vessel, format = "F4", units = "g", showInEditor = true)]
+        public double Acceleration()
+        {
+            return vessel.geeForce;
         }
 
         [ValueInfoItem("Drag coefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]
