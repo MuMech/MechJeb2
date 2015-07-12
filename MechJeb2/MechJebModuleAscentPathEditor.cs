@@ -106,7 +106,10 @@ namespace MuMech
                 r.xMax -= GUI.skin.box.margin.right;
                 r.yMax -= GUI.skin.box.margin.bottom;
 
-                DrawnPath(r);
+                float scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / r.height);
+
+                DrawnPath(r, scale, scale, path, Color.red);
+                DrawnTrajectory(r, path, recorder);
             }
 
             GUILayout.EndVertical();
@@ -133,39 +136,44 @@ namespace MuMech
             texture.Apply();
         }
 
-        private void DrawnPath(Rect r)
+        public static void DrawnPath(Rect r, float scaleX, float scaleY, DefaultAscentPath path, Color color)
         {
-            float scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / pathTexture.height); //meters per pixel
 
             float alt = 0;
             float downrange = 0;
             Vector2 p1 = new Vector2(r.xMin, r.yMax);
             Vector2 p2 = new Vector2();
 
-            while (alt < (path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) && downrange < pathTexture.width * scale)
+            while (alt < (path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) && downrange < r.width * scaleX)
             {
                 float desiredAngle = (float)(alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
 
-                alt += scale * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
-                downrange += scale * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
+                alt += scaleY * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
+                downrange += scaleX * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
 
-                p2.x = r.xMin + downrange / scale;
-                p2.y = r.yMax - alt / scale;
+                p2.x = r.xMin + downrange / scaleX;
+                p2.y = r.yMax - alt / scaleY;
 
                 if ((p1 - p2).sqrMagnitude >= 1.0)
                 {
-                    Drawing.DrawLine(p1, p2, Color.red, 2, true);
+                    Drawing.DrawLine(p1, p2, color, 2, true);
                     p1.x = p2.x;
                     p1.y = p2.y;
                 }
             }
+        }
 
+        private static void DrawnTrajectory(Rect r, DefaultAscentPath path, MechJebModuleFlightRecorder recorder)
+        {
             if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
                 return;
 
+            float scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / r.height); //meters per pixel
+
             int t = 1;
 
-            p1 = new Vector2(r.xMin + (float)(recorder.history[0].downRange / scale), r.yMax - (float)(recorder.history[0].altitudeASL / scale));
+            Vector2 p1 = new Vector2(r.xMin + (float)(recorder.history[0].downRange / scale), r.yMax - (float)(recorder.history[0].altitudeASL / scale));
+            Vector2 p2 = new Vector2();
 
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
