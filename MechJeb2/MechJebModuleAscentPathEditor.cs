@@ -16,9 +16,8 @@ namespace MuMech
 
         public DefaultAscentPath path;
         static Texture2D pathTexture = new Texture2D(400, 100);
-        private Boolean pathTextureDrawnBefore = false;
         private MechJebModuleFlightRecorder recorder;
-        private int lastHistoryIdx = 0;
+        private double lastMaxAtmosphereAltitude = -1;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -37,16 +36,18 @@ namespace MuMech
             {
                 GUILayout.Label("Path is null!!!1!!1!1!1111!11eleven");
                 base.WindowGUI(windowID);
+                return;
+            }
+
+            if (lastMaxAtmosphereAltitude != mainBody.RealMaxAtmosphereAltitude())
+            {
+                lastMaxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
+                UpdateAtmoTexture(pathTexture, mainBody, path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude);
             }
 
             GUILayout.BeginVertical();
 
-            double oldTurnStartAltitude = path.turnStartAltitude;
-            double oldTurnEndAltitude = path.turnEndAltitude;
             double oldTurnShapeExponent = path.turnShapeExponent;
-            double oldTurnEndAngle = path.turnEndAngle;
-            double oldAutoTurnPerc = path.autoTurnPerc;
-            double oldAutoTurnSpdPerc = path.autoTurnSpdFactor;
 
             path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
             if (path.autoPath)
@@ -96,75 +97,91 @@ namespace MuMech
 
             GUILayout.Box(pathTexture);
 
-            GUILayout.EndVertical();
-
-            if (path.turnStartAltitude != oldTurnStartAltitude ||
-                path.turnEndAltitude != oldTurnEndAltitude ||
-                path.turnShapeExponent != oldTurnShapeExponent ||
-                path.turnEndAngle != oldTurnEndAngle ||
-                path.autoTurnPerc != oldAutoTurnPerc ||
-                path.autoTurnSpdFactor != oldAutoTurnSpdPerc ||
-                recorder.historyIdx != lastHistoryIdx ||
-                !pathTextureDrawnBefore)
+            if (Event.current.type == EventType.Repaint)
             {
-                UpdatePathTexture();
+                Rect r = GUILayoutUtility.GetLastRect();
+                r.xMin += GUI.skin.box.margin.left;
+                r.yMin += GUI.skin.box.margin.top;
+
+                r.xMax -= GUI.skin.box.margin.right;
+                r.yMax -= GUI.skin.box.margin.bottom;
+
+                DrawnPath(r);
             }
+
+            GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
         }
 
         //redraw the picture of the planned flight path
-        private void UpdatePathTexture()
+        public static void UpdateAtmoTexture(Texture2D texture, CelestialBody mainBody, double maxAltitude)
         {
-            double scale = (path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / pathTexture.height; //meters per pixel
+            double scale = maxAltitude / texture.height; //meters per pixel
 
-            double maxAtmosphereAltitude = part.vessel.mainBody.RealMaxAtmosphereAltitude();
-            for (int y = 0; y < pathTexture.height; y++)
+            double maxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
+            for (int y = 0; y < texture.height; y++)
             {
-                Color c = new Color(0.0F, 0.0F, (float)Math.Max(0.0, 1.0 - y * scale / maxAtmosphereAltitude));
+                Color c = new Color(0.0F, 0.0F, (float)Math.Max(0.0, maxAtmosphereAltitude > 0 ? 1.0 - y * scale / maxAtmosphereAltitude : 0.0F));
 
-                for (int x = 0; x < pathTexture.width; x++)
+                for (int x = 0; x < texture.width; x++)
                 {
-                    pathTexture.SetPixel(x, y, c);
+                    texture.SetPixel(x, y, c);
                 }
             }
 
-            double alt = 0;
-            double downrange = 0;
+            texture.Apply();
+        }
+
+        private void DrawnPath(Rect r)
+        {
+            float scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / pathTexture.height); //meters per pixel
+
+            float alt = 0;
+            float downrange = 0;
+            Vector2 p1 = new Vector2(r.xMin, r.yMax);
+            Vector2 p2 = new Vector2();
+
             while (alt < (path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) && downrange < pathTexture.width * scale)
             {
-                double desiredAngle = (alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
-                alt += scale * Math.Sin(desiredAngle * Math.PI / 180);
-                downrange += scale * Math.Cos(desiredAngle * Math.PI / 180);
-                for (int x = (int)(downrange / scale); x <= (downrange / scale) + 2 && x < pathTexture.width; x++)
+                float desiredAngle = (float)(alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
+
+                alt += scale * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
+                downrange += scale * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
+
+                p2.x = r.xMin + downrange / scale;
+                p2.y = r.yMax - alt / scale;
+
+                if ((p1 - p2).sqrMagnitude >= 1.0)
                 {
-                    for (int y = (int)(alt / scale) - 1; y <= (int)(alt / scale) + 1 && y < pathTexture.height; y++)
-                    {
-                        pathTexture.SetPixel(x, y, Color.red);
-                    }
+                    Drawing.DrawLine(p1, p2, Color.red, 2, true);
+                    p1.x = p2.x;
+                    p1.y = p2.y;
                 }
             }
 
-            int t = 0;
-            while (recorder.historyIdx > 0 && t < recorder.historyIdx - 1 && t < recorder.history.Length - 1)
-            {
-                var r1 = recorder.history[t];
-                int x1 = (int)(r1.downRange / scale);
-                int y1 = (int)(r1.altitudeASL / scale);
+            if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
+                return;
 
-                var r2 = recorder.history[t + 1];
-                int x2 = (int)(r2.downRange / scale);
-                int y2 = (int)(r2.altitudeASL / scale);
+            int t = 1;
+
+            p1 = new Vector2(r.xMin + (float)(recorder.history[0].downRange / scale), r.yMax - (float)(recorder.history[0].altitudeASL / scale));
+
+            while (t <= recorder.historyIdx && t < recorder.history.Length)
+            {
+                var rec = recorder.history[t];
+                p2.x = r.xMin + (float)(rec.downRange / scale);
+                p2.y = r.yMax - (float)(rec.altitudeASL / scale);
+
+                if (r.Contains(p2) && (p1 - p2).sqrMagnitude >= 1.0 || t < 2)
+                {
+                    Drawing.DrawLine(p1, p2, Color.white, 2, true);
+                    p1.x = p2.x;
+                    p1.y = p2.y;
+                }
 
                 t++;
-
-                if (x1 >= 0 && y1 >= 0 && x2 >= 0 && y2 >= 0 && x1 < pathTexture.width && y1 < pathTexture.height && x2 < pathTexture.width && y2 < pathTexture.height)
-                    MuUtils.DrawLine(pathTexture, x1, y1, x2, y2, Color.white);
             }
-
-            pathTexture.Apply();
-            lastHistoryIdx = recorder.historyIdx;
-            pathTextureDrawnBefore = true;
         }
 
         public override string GetName()
