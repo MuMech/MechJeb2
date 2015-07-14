@@ -118,18 +118,35 @@ namespace MuMech
         }
 
         //redraw the picture of the planned flight path
-        public static void UpdateAtmoTexture(Texture2D texture, CelestialBody mainBody, double maxAltitude)
+        public static void UpdateAtmoTexture(Texture2D texture, CelestialBody mainBody, double maxAltitude, bool realAtmo = false)
         {
             double scale = maxAltitude / texture.height; //meters per pixel
 
             double maxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
+            double pressureSeaLevel = mainBody.atmospherePressureSeaLevel;
+
             for (int y = 0; y < texture.height; y++)
             {
-                Color c = new Color(0.0F, 0.0F, (float)Math.Max(0.0, maxAtmosphereAltitude > 0 ? 1.0 - y * scale / maxAtmosphereAltitude : 0.0F));
+                double alt = scale * y;
+
+                if (realAtmo)
+                {
+                    alt = mainBody.GetPressure(alt) / pressureSeaLevel;
+                }
+                else
+                {
+                    alt = 1.0 - alt / maxAtmosphereAltitude;
+                }
+
+                float v = (float)(mainBody.atmosphere ? alt : 0.0F);
+                Color c = new Color(0.0F, 0.0F, v);
 
                 for (int x = 0; x < texture.width; x++)
                 {
                     texture.SetPixel(x, y, c);
+
+                    if (mainBody.atmosphere && (int)(maxAtmosphereAltitude / scale) == y)
+                        texture.SetPixel(x, y, XKCDColors.LightGreyBlue);
                 }
             }
 
