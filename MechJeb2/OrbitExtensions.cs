@@ -525,7 +525,7 @@ namespace MuMech
             while (result.referenceBody != Planetarium.fetch.Sun)
             {
                 result = result.referenceBody.orbit;
-               
+
             }
             return result;
         }
@@ -533,7 +533,8 @@ namespace MuMech
 
         public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
         {
-            if (orbit.PeA > 0) throw new ArgumentException("SuicideBurnCountdown: periapsis is above the ground");
+            if (vesselState.mainBody == null) return 0;
+            if (orbit.PeA > 0) return Double.PositiveInfinity;
 
             double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
