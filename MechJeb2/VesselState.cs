@@ -932,7 +932,7 @@ namespace MuMech
 
         double ComputeVesselBottomAltitude(Vessel vessel)
         {
-            if (vessel.rigidbody == null) return 0;
+            if (vessel == null || vessel.rigidbody == null) return 0;
             double ret = altitudeTrue;
             for (int i = 0; i < vessel.parts.Count; i++)
             {
