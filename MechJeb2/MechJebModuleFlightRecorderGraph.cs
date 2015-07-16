@@ -342,7 +342,7 @@ namespace MuMech
             graphStates[(int)recordType.AoA].maximum = 5;
             graphStates[(int)recordType.AltitudeTrue].maximum = 100;
             graphStates[(int)recordType.Pitch].maximum = 90;
-            graphStates[(int)recordType.Mass].maximum = 5000;
+            graphStates[(int)recordType.Mass].maximum = 5;
         }
 
         private void UpdateScale()
