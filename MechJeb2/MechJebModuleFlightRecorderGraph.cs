@@ -193,6 +193,12 @@ namespace MuMech
             GUI.color = Color.green;
             graphStates[(int)recordType.AoA].display = GUILayout.Toggle(graphStates[(int)recordType.AoA].display, "AoA", GUILayout.ExpandWidth(false));
 
+            GUI.color = XKCDColors.GreenTeal;
+            graphStates[(int)recordType.Pitch].display = GUILayout.Toggle(graphStates[(int)recordType.Pitch].display, "Pitch", GUILayout.ExpandWidth(false));
+
+            GUI.color = XKCDColors.CandyPink;
+            graphStates[(int)recordType.Mass].display = GUILayout.Toggle(graphStates[(int)recordType.Mass].display, "Mass", GUILayout.ExpandWidth(false));
+
             GUI.color = color;
 
             GUILayout.EndHorizontal();
@@ -232,6 +238,12 @@ namespace MuMech
                     DrawnPath(r, recordType.Q, hScale, downrange, Color.cyan);
                 if (graphStates[(int)recordType.AoA].display)
                     DrawnPath(r, recordType.AoA, hScale, downrange, Color.green);
+
+                if (graphStates[(int)recordType.Pitch].display)
+                    DrawnPath(r, recordType.Pitch, hScale, downrange, XKCDColors.GreenTeal);
+
+                if (graphStates[(int)recordType.Mass].display)
+                    DrawnPath(r, recordType.Mass, hScale, downrange, XKCDColors.CandyPink);
 
                 // Fix : the scales are different so the result is not usefull
                 //if (ascentPath)
@@ -300,7 +312,6 @@ namespace MuMech
 
                     if (r.Contains(p1))
                     {
-
                         Drawing.DrawLine(p1, p2, new Color(0.2f, 0.2f, 0.2f), 1, false);
                     }
                 }
@@ -319,6 +330,8 @@ namespace MuMech
             graphStates[(int)recordType.Q].minimum = 0;
             graphStates[(int)recordType.AoA].minimum = -5;
             graphStates[(int)recordType.AltitudeTrue].minimum = 0;
+            graphStates[(int)recordType.Pitch].minimum = 0;
+            graphStates[(int)recordType.Mass].minimum = 0;
 
             graphStates[(int)recordType.AltitudeASL].maximum = mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
             graphStates[(int)recordType.DownRange].maximum = 500;
@@ -328,6 +341,8 @@ namespace MuMech
             graphStates[(int)recordType.Q].maximum = 1000;
             graphStates[(int)recordType.AoA].maximum = 5;
             graphStates[(int)recordType.AltitudeTrue].maximum = 100;
+            graphStates[(int)recordType.Pitch].maximum = 90;
+            graphStates[(int)recordType.Mass].maximum = 5000;
         }
 
         private void UpdateScale()

@@ -25,6 +25,8 @@ namespace MuMech
             public double Q;
             public double AoA;
             public double altitudeTrue;
+            public double pitch;
+            public double mass;
             public int currentStage;
 
             public double this[recordType type]
@@ -51,6 +53,10 @@ namespace MuMech
                             return AoA;
                         case recordType.AltitudeTrue:
                             return altitudeTrue;
+                        case recordType.Pitch:
+                            return pitch;
+                        case recordType.Mass:
+                            return mass;
                         default:
                             return 0;
                     }
@@ -68,7 +74,9 @@ namespace MuMech
             Acceleration,
             Q,
             AoA,
-            AltitudeTrue
+            AltitudeTrue,
+            Pitch,
+            Mass
         }
 
         public record[] history = new record[3000];
@@ -251,6 +259,8 @@ namespace MuMech
             history[idx].acceleration = vessel.geeForce;
             history[idx].Q = vesselState.dynamicPressure;
             history[idx].altitudeTrue = vesselState.altitudeTrue;
+            history[idx].pitch = vesselState.vesselPitch;
+            history[idx].mass = vesselState.mass;
 
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
