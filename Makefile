@@ -33,7 +33,7 @@ MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
 	$(wildcard MechJeb2/FlyingSim/*.cs)
 
 RESGEN2 := resgen2
-GMCS    := gmcs
+GMCS    ?= gmcs
 GIT     := git
 TAR     := tar
 ZIP     := zip
