@@ -280,8 +280,8 @@ namespace MuMech
                 }
                 else
                 {
-                    bool useGimbal = (vesselState.torqueFromEngine.x > vesselState.torqueAvailable.x * 10) ||
-                                     (vesselState.torqueFromEngine.z > vesselState.torqueAvailable.z * 10);
+                    bool useGimbal = (vesselState.torqueFromEngine.x / vessel.ctrlState.mainThrottle > vesselState.torqueAvailable.x * 10) ||
+                                     (vesselState.torqueFromEngine.z / vessel.ctrlState.mainThrottle > vesselState.torqueAvailable.z * 10);
 
                     bool useDiffThrottle = (vesselState.torqueFromDiffThrottle.x > vesselState.torqueAvailable.x * 10) ||
                                            (vesselState.torqueFromDiffThrottle.z > vesselState.torqueAvailable.z * 10);

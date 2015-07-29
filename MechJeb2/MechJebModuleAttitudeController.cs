@@ -367,6 +367,21 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             steeringError.value = attitudeError = attitudeAngleFromTarget();
+
+            if (useSAS)
+                return;
+
+            torque = vesselState.torqueAvailable + vesselState.torqueFromEngine ;
+            if (core.thrust.differentialThrottleSuccess)
+                torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+
+            inertia = Vector3d.Scale(
+                vesselState.angularMomentum.Sign(),
+                Vector3d.Scale(
+                    Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
+                    Vector3d.Scale(torque, vesselState.MoI).Invert()
+                    )
+                );
         }
 
         public override void OnUpdate()
@@ -415,19 +430,7 @@ namespace MuMech
                 Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
 
                 Vector3d deltaEuler = delta.DeltaEuler();
-
-                torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
-                if (core.thrust.differentialThrottleSuccess)
-                    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
-
-                inertia = Vector3d.Scale(
-                    vesselState.angularMomentum.Sign(),
-                    Vector3d.Scale(
-                        Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                        Vector3d.Scale(torque, vesselState.MoI).Invert()
-                        )
-                    );
-
+                
                 // ( MoI / available torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
 
