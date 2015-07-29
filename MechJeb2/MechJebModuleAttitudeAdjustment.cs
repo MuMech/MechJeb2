@@ -16,6 +16,7 @@ namespace MuMech
         public EditableDouble kpFactor;
         public EditableDouble kiFactor;
         public EditableDouble kdFactor;
+		public EditableDouble deadband;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInfos = false;
@@ -92,6 +93,8 @@ namespace MuMech
                 kpFactor = Math.Max(kpFactor, 0.01);
                 GuiUtils.SimpleTextBox("Ki = pid.Kp / (", kiFactor, " * Math.Sqrt(2) * Tf)", 50);
                 kiFactor = Math.Max(kiFactor, 0.01);
+				GuiUtils.SimpleTextBox ("Deadband = ", deadband);
+				core.attitude.deadband = deadband;
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
 

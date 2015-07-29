@@ -49,6 +49,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public double kdFactor = 0.5;
 
+		[Persistent(pass = (int)Pass.Global)]
+		public double deadband = 0.0001;
+
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -477,6 +480,11 @@ namespace MuMech
                 setPIDParameters();
 
                 pidAction = pid.Compute(err, omega);
+
+				// deadband
+				pidAction.x = pidAction.x > deadband ? pidAction.x : 0.0;
+				pidAction.y = pidAction.x > deadband ? pidAction.x : 0.0;
+				pidAction.z = pidAction.x > deadband ? pidAction.x : 0.0;
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
