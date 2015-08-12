@@ -33,7 +33,7 @@ namespace MuMech
         public bool limitDynamicPressure = false;
 
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble maxDynamicPressure = 10000;
+        public EditableDouble maxDynamicPressure = 20000;
 
         [GeneralInfoItem("Limit to Max Q", InfoItem.Category.Thrust)]
         public void LimitToMaxDynamicPressureInfoItem()
