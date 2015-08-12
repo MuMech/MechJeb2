@@ -100,6 +100,7 @@ namespace MuMech
 
             core.thrust.LimitToPreventOverheatsInfoItem();
             core.thrust.LimitToTerminalVelocityInfoItem();
+            core.thrust.LimitToMaxDynamicPressureInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
             GUILayout.BeginHorizontal();
