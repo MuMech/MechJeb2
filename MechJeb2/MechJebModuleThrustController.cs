@@ -121,6 +121,24 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
+        [Persistent(pass = (int)Pass.Local)]
+        public bool limiterMinThrottle = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
+
+        [GeneralInfoItem("Lower throttle limit", InfoItem.Category.Thrust)]
+        public void LimiterMinThrottleInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.MinThrottle) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limiterMinThrottle = GUILayout.Toggle(limiterMinThrottle, "Keep limited throttle over", s, GUILayout.Width(160));
+            minThrottle.text = GUILayout.TextField(minThrottle.text, GUILayout.Width(30));
+            GUILayout.Label("%", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
         [Persistent(pass = (int)Pass.Type)]
         public bool differentialThrottle = false;
 
@@ -143,7 +161,7 @@ namespace MuMech
         // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
         public bool differentialThrottleSuccess = false;
 
-        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure }
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle }
         public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
@@ -368,6 +386,12 @@ namespace MuMech
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
+            if (limiterMinThrottle  && limiter != LimitMode.None && throttleLimit < minThrottle)
+            {
+                limiter = LimitMode.MinThrottle;
+                throttleLimit = (float) minThrottle;
+            }
+
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
             throttleLimit = Mathf.Clamp01(throttleLimit);
 
@@ -422,7 +446,6 @@ namespace MuMech
             return Mathf.Clamp((float)(1.0 - falloff * (velocityRatio - 1.0)), 0.0F, 1.0F);
         }
 
-
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
         float MaximumDynamicPressureThrottle()
         {
@@ -436,7 +459,6 @@ namespace MuMech
             const double falloff = 15.0;
             return Mathf.Clamp((float)(1.0 - falloff * (pressureRatio - 1.0)), 0.0F, 1.0F);
         }
-
 
         //a throttle setting that throttles down if something is close to overheating
         double TemperatureSafetyThrottle()
