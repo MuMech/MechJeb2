@@ -184,8 +184,8 @@ namespace MuMech
             timeSinceMark = 0;
             for (int t = 0; t < maximums.Length; t++)
             {
-                minimums[t] = Double.MaxValue;
-                maximums[t] = Double.MinValue;
+                minimums[t] = double.MaxValue;
+                maximums[t] = double.MinValue;
             }
             historyIdx = 0;
             Record(historyIdx);
