@@ -1093,7 +1093,7 @@ namespace MuMech
                     addResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
 
-                if (!e.getFlameoutState)
+                if (e.isOperational)
                 {
                     Part p = e.part;
 
