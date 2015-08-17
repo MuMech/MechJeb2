@@ -8,6 +8,8 @@ namespace MuMech
 {
     public class VesselState
     {
+        private static bool isLoadedRCSFXExt = false;
+
         private Vessel vesselRef = null;
 
         [ValueInfoItem("Universal Time", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
@@ -226,6 +228,7 @@ namespace MuMech
             GimbalExt stockGimbal = new GimbalExt() { isValid = stockGimbalIsValid, initialRot = stockGimbalInitialRot, torqueVector = stockGimbalTorqueVector };
             gimbalExtDict.Add(typeof(object), nullGimbal);
             gimbalExtDict.Add(typeof(ModuleGimbal), stockGimbal);
+            isLoadedRCSFXExt = (AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.assembly.GetName().Name == "MechJebRCSFXExt") != null);
         }
 
         public VesselState()
@@ -545,7 +548,7 @@ namespace MuMech
                     //    continue;
 
 
-                    if (!(mod is ModuleRCS))
+                    if (!(mod is ModuleRCS) || (mod.ClassName == "ModuleRCSFX" && isLoadedRCSFXExt))
                         continue;
 
                     ModuleRCS rcs = (ModuleRCS)mod;
