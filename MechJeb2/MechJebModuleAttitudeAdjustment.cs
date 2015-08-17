@@ -95,6 +95,17 @@ namespace MuMech
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
 
+                //Lower value of "kWlimit" reduces maximum angular velocity
+				double kWlimit = core.attitude.kWlimit;
+				var nextkWlimit = new EditableDoubleMult(kWlimit, 0.01);
+                GuiUtils.SimpleTextBox("Maximum Relative Angular Velocity", nextkWlimit, "%");
+				nextkWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)nextkWlimit, 0.0F, 1.0F);
+				const int sliderPrecision = 3;
+				if (Math.Round(Math.Abs(nextkWlimit - kWlimit), sliderPrecision) > 0)
+				{
+					core.attitude.kWlimit = Math.Round(nextkWlimit, sliderPrecision);
+				}
+				
                 showInfos = GUILayout.Toggle(showInfos, "Show Numbers");
                 if (showInfos)
                 {

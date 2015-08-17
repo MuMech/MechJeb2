@@ -48,7 +48,8 @@ namespace MuMech
         public double kiFactor = 6;
         [Persistent(pass = (int)Pass.Global)]
         public double kdFactor = 0.5;
-
+		[Persistent(pass = (int)Pass.Global)]
+		public double kWlimit = 0.05;
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -476,7 +477,12 @@ namespace MuMech
                     tuneTf(torque);
                 setPIDParameters();
 
-                pidAction = pid.Compute(err, omega);
+                // angular velocity limit:
+				var Wlimit = new Vector3d( Math.Sqrt(NormFactor.x * Math.PI * kWlimit),
+										   Math.Sqrt(NormFactor.y * Math.PI * kWlimit),
+										   Math.Sqrt(NormFactor.z * Math.PI * kWlimit));
+
+                pidAction = pid.Compute(err, omega, Wlimit);
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
