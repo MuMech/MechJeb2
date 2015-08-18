@@ -545,7 +545,7 @@ namespace MuMech
                     //    continue;
 
 
-                    if (!(mod is ModuleRCS) || (mod.ClassName == "ModuleRCSFX" && isLoadedRCSFXExt))
+                    if (!(mod is ModuleRCS) || (mod.GetType() == typeof(ModuleRCS) && isLoadedRCSFXExt))
                         continue;
 
                     ModuleRCS rcs = (ModuleRCS)mod;
