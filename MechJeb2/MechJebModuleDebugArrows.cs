@@ -56,8 +56,13 @@ namespace MuMech
         public bool debugArrowActive;
         public static DebugArrow debugArrow;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool debugArrow2Active;
+        public static DebugArrow debugArrow2;
+
 
         public static Vector3d debugVector = Vector3d.one;
+        public static Vector3d debugVector2 = Vector3d.one;
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble arrowsLength = new EditableDouble(4);
@@ -96,6 +101,9 @@ namespace MuMech
 
             debugArrow.Destroy();
             debugArrow = null;
+
+            debugArrow2.Destroy();
+            debugArrow2 = null;
         }
 
         // TODO : I should probably use an array and an enum to lower code dup ...
@@ -114,12 +122,13 @@ namespace MuMech
                 podObtVelocityArrow = new DebugArrow(Color.red);
                 comObtVelocityArrow = new DebugArrow(XKCDColors.Orange);
 
-                forwardArrow = new DebugArrow(XKCDColors.NavyBlue);
+                forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
                 avgForwardArrow = new DebugArrow(Color.blue);
 
                 requestedAttitudeArrow = new DebugArrow(Color.gray);
 
                 debugArrow = new DebugArrow(XKCDColors.Fuchsia);
+                debugArrow2 = new DebugArrow(XKCDColors.LightBlue);
             }
 
 
@@ -199,6 +208,17 @@ namespace MuMech
                 debugArrow.SetLength((float)debugVector.magnitude);
                 debugArrow.SeeThrough(seeThrough);
             }
+
+
+            debugArrow2.State(debugArrow2Active);
+            if (debugArrow2Active)
+            {
+                debugArrow2.Set((Vector3d)vessel.ReferenceTransform.position, debugVector2);
+
+                debugArrow2.SetLength((float)debugVector2.magnitude);
+                debugArrow2.SeeThrough(seeThrough);
+            }
+
         }
     }
 
