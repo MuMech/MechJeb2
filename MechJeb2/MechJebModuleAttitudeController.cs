@@ -482,9 +482,9 @@ namespace MuMech
                 pidAction = pid.Compute(err, omega);
 
 				// deadband
-				pidAction.x = pidAction.x > deadband ? pidAction.x : 0.0;
-				pidAction.y = pidAction.x > deadband ? pidAction.x : 0.0;
-				pidAction.z = pidAction.x > deadband ? pidAction.x : 0.0;
+				pidAction.x = Math.Abs(pidAction.x) >= deadband ? pidAction.x : 0.0;
+				pidAction.y = Math.Abs(pidAction.y) >= deadband ? pidAction.y : 0.0;
+				pidAction.z = Math.Abs(pidAction.z) >= deadband ? pidAction.z : 0.0;
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
