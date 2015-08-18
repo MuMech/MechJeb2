@@ -100,8 +100,10 @@ namespace MuMech
 
             core.thrust.LimitToPreventOverheatsInfoItem();
             core.thrust.LimitToTerminalVelocityInfoItem();
+            core.thrust.LimitToMaxDynamicPressureInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
+            core.thrust.LimiterMinThrottleInfoItem();
             GUILayout.BeginHorizontal();
             autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
             if (autopilot.forceRoll)

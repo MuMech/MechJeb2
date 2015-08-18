@@ -146,6 +146,10 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Shift time", GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("-o", GUILayout.ExpandWidth(false)))
+            {
+                node.OnGizmoUpdated(node.DeltaV, node.UT - node.patch.period);
+            }
             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
             {
                 node.OnGizmoUpdated(node.DeltaV, node.UT - timeOffset);
@@ -154,6 +158,10 @@ namespace MuMech
             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 node.OnGizmoUpdated(node.DeltaV, node.UT + timeOffset);
+            }
+            if (GUILayout.Button("+o", GUILayout.ExpandWidth(false)))
+            {
+                node.OnGizmoUpdated(node.DeltaV, node.UT + node.patch.period);
             }
             GUILayout.EndHorizontal();
 

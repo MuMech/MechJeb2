@@ -42,6 +42,12 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public int vSize = 2;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public int timeScale = 0;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int downrangeScale = 0;
+
         public bool ascentPath = false;
 
         static Texture2D backgroundTexture = new Texture2D(1, 512);
@@ -56,6 +62,10 @@ namespace MuMech
         private int height = 256;
 
         private bool paused = false;
+
+        private float hPos = 0;
+
+        private bool follow = true;
 
         private MechJebModuleFlightRecorder recorder;
 
@@ -109,6 +119,24 @@ namespace MuMech
 
             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
             {
+                if (downrange)
+                    downrangeScale--;
+                else
+                    timeScale--;
+            }
+
+            GUILayout.Label( (downrange ? MuUtils.ToSI(Math.Pow(2, downrangeScale), -1, 2) + "m/px" : GuiUtils.TimeToDHMS(precision * Math.Pow(2, timeScale), 1) + "/px"), GUILayout.ExpandWidth(false));
+
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+            {
+                if (downrange)
+                    downrangeScale++;
+                else
+                    timeScale++;
+            }
+
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
                 hSize--;
             }
 
@@ -133,6 +161,8 @@ namespace MuMech
                 vSize++;
             }
 
+            timeScale = Mathf.Clamp(timeScale, 0, 20);
+            downrangeScale = Mathf.Clamp(downrangeScale, 0, 20);
             hSize = Mathf.Clamp(hSize, 1, 20);
             vSize = Mathf.Clamp(vSize, 1, 10);
 
@@ -143,17 +173,15 @@ namespace MuMech
             if (oldRrealAtmo != realAtmo)
                 MechJebModuleAscentPathEditor.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
 
-            GUILayout.Label("Capacity " + (100 * (recorder.historyIdx) / (float)recorder.history.Length).ToString("F1") + "%", GUILayout.ExpandWidth(false));
-
-            GUILayout.Label("Size " + (8 * typeCount * recorder.history.Length >> 10).ToString() + "kB", GUILayout.ExpandWidth(false));
-
-            GUILayout.Label("AoA " + graphStates[(int)recordType.AoA].minimum.ToString("F2") + " " + graphStates[(int)recordType.AoA].maximum.ToString("F2"), GUILayout.ExpandWidth(false));
-
+            //GUILayout.Label("Size " + (8 * typeCount * recorder.history.Length >> 10).ToString() + "kB", GUILayout.ExpandWidth(false));
+            
             GUILayout.Label("Time " + recorder.timeSinceMark.ToString("F0"), GUILayout.ExpandWidth(false));
 
             GUILayout.Label("Downrange " + MuUtils.ToSI(recorder.history[recorder.historyIdx].downRange) + "m", GUILayout.ExpandWidth(false));
 
             GUILayout.Label("", GUILayout.ExpandWidth(true));
+
+            GUILayout.Label((100 * (recorder.historyIdx) / (float)recorder.history.Length).ToString("F1") + "%", GUILayout.ExpandWidth(false));
 
             if (GUILayout.Button("Mark", GUILayout.ExpandWidth(false)))
             {
@@ -175,6 +203,7 @@ namespace MuMech
 
             //ascentPath = GUILayout.Toggle(ascentPath, "Ascent path", GUILayout.ExpandWidth(false));
             stages = GUILayout.Toggle(stages, "Stages", GUILayout.ExpandWidth(false));
+
             GUI.color = Color.white;
             graphStates[(int)recordType.AltitudeASL].display = GUILayout.Toggle(graphStates[(int)recordType.AltitudeASL].display, "Altitude", GUILayout.ExpandWidth(false));
 
@@ -183,10 +212,13 @@ namespace MuMech
 
             GUI.color = Color.red;
             graphStates[(int)recordType.Acceleration].display = GUILayout.Toggle(graphStates[(int)recordType.Acceleration].display, "Acceleration", GUILayout.ExpandWidth(false));
+
             GUI.color = Color.yellow;
             graphStates[(int)recordType.SpeedSurface].display = GUILayout.Toggle(graphStates[(int)recordType.SpeedSurface].display, "Surface speed", GUILayout.ExpandWidth(false));
+
             GUI.color = Color.magenta;
             graphStates[(int)recordType.SpeedOrbital].display = GUILayout.Toggle(graphStates[(int)recordType.SpeedOrbital].display, "Orbital speed", GUILayout.ExpandWidth(false));
+
             GUI.color = Color.cyan;
             graphStates[(int)recordType.Q].display = GUILayout.Toggle(graphStates[(int)recordType.Q].display, "Q", GUILayout.ExpandWidth(false));
 
@@ -205,45 +237,54 @@ namespace MuMech
 
             GUILayout.Box(Texture2D.blackTexture, GUILayout.Width(width), GUILayout.Height(height));
 
+            Rect r = GUILayoutUtility.GetLastRect();
+
+            //double maxDownRange = Math.Max(recorder.maximums[(int)recordType.DownRange], 500);
+            //double hScale = downrange ? (maxDownRange - recorder.minimums[(int)recordType.DownRange]) / width : precision;
+            double hScale = (downrange ? Math.Pow(2, downrangeScale) : precision * Math.Pow(2, timeScale)) ;
+
+            float visibleX = (float) (width * hScale);
+            float maxX = (float) (downrange ? recorder.maximums[(int)recordType.DownRange] : recorder.maximums[(int) recordType.TimeSinceMark]);
+            float rightValue = Mathf.Max(visibleX, maxX);
+            
+            if (follow)
+                hPos = rightValue - visibleX;
+
+            GUILayout.BeginHorizontal();
+            hPos = GUILayout.HorizontalScrollbar(hPos, visibleX, 0, rightValue);
+            follow = GUILayout.Toggle(follow, "", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
             if (Event.current.type == EventType.Repaint)
             {
-                Rect r = GUILayoutUtility.GetLastRect();
-
                 UpdateScale();
 
-                GUI.DrawTexture(r, backgroundTexture, ScaleMode.StretchToFill);
-
-                //r.xMin += GUI.skin.box.margin.left;
-                //r.yMin += GUI.skin.box.margin.top;
-                //
-                //r.xMax -= GUI.skin.box.margin.right;
-                //r.yMax -= GUI.skin.box.margin.bottom;
-                double maxDownRange = Math.Max(recorder.maximums[(int)recordType.DownRange], 500);
-                double hScale = downrange ? (maxDownRange - recorder.minimums[(int)recordType.DownRange]) / width : precision;
-
+                if (graphStates[(int)recordType.AltitudeASL].display || graphStates[(int)recordType.AltitudeTrue].display)
+                    GUI.DrawTexture(r, backgroundTexture, ScaleMode.StretchToFill);
+                
                 if (stages)
                     DrawnStages(r, hScale, downrange);
 
                 if (graphStates[(int)recordType.AltitudeASL].display)
-                    DrawnPath(r, recordType.AltitudeASL, hScale, downrange, Color.white);
+                    DrawnPath(r, recordType.AltitudeASL, hPos, hScale, downrange, Color.white);
                 if (graphStates[(int)recordType.AltitudeTrue].display)
-                    DrawnPath(r, recordType.AltitudeTrue, hScale, downrange, Color.grey);
+                    DrawnPath(r, recordType.AltitudeTrue, hPos, hScale, downrange, Color.grey);
                 if (graphStates[(int)recordType.Acceleration].display)
-                    DrawnPath(r, recordType.Acceleration, hScale, downrange, Color.red);
+                    DrawnPath(r, recordType.Acceleration, hPos, hScale, downrange, Color.red);
                 if (graphStates[(int)recordType.SpeedSurface].display)
-                    DrawnPath(r, recordType.SpeedSurface, hScale, downrange, Color.yellow);
+                    DrawnPath(r, recordType.SpeedSurface, hPos, hScale, downrange, Color.yellow);
                 if (graphStates[(int)recordType.SpeedOrbital].display)
-                    DrawnPath(r, recordType.SpeedOrbital, hScale, downrange, Color.magenta);
+                    DrawnPath(r, recordType.SpeedOrbital, hPos, hScale, downrange, Color.magenta);
                 if (graphStates[(int)recordType.Q].display)
-                    DrawnPath(r, recordType.Q, hScale, downrange, Color.cyan);
+                    DrawnPath(r, recordType.Q, hPos, hScale, downrange, Color.cyan);
                 if (graphStates[(int)recordType.AoA].display)
-                    DrawnPath(r, recordType.AoA, hScale, downrange, Color.green);
+                    DrawnPath(r, recordType.AoA, hPos, hScale, downrange, Color.green);
 
                 if (graphStates[(int)recordType.Pitch].display)
-                    DrawnPath(r, recordType.Pitch, hScale, downrange, XKCDColors.GreenTeal);
+                    DrawnPath(r, recordType.Pitch, hPos, hScale, downrange, XKCDColors.GreenTeal);
 
                 if (graphStates[(int)recordType.Mass].display)
-                    DrawnPath(r, recordType.Mass, hScale, downrange, XKCDColors.CandyPink);
+                    DrawnPath(r, recordType.Mass, hPos, hScale, downrange, XKCDColors.CandyPink);
 
                 // Fix : the scales are different so the result is not usefull
                 //if (ascentPath)
@@ -252,12 +293,13 @@ namespace MuMech
                 width = 128 * hSize;
                 height = 128 * vSize;
             }
+
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
         }
 
-        private void DrawnPath(Rect r, recordType type, double scaleX, bool downRange, Color color)
+        private void DrawnPath(Rect r, recordType type, float minimum, double scaleX, bool downRange, Color color)
         {
             if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
                 return;
@@ -266,17 +308,21 @@ namespace MuMech
 
             double scaleY = (graphState.maximum - graphState.minimum) / height;
 
-            float yBase = r.yMax + (float)(graphState.minimum / scaleY);
+            double invScaleX = 1 / scaleX;
+            double invScaleY = 1 / scaleY;
 
-            Vector2 p1 = new Vector2(r.xMin + (float)((downRange ? recorder.history[0].downRange : recorder.history[0].timeSinceMark) / scaleX), yBase - (float)(recorder.history[0][type] / scaleY));
+            float xBase = (float) (r.xMin - (minimum * invScaleX));
+            float yBase = r.yMax + (float)(graphState.minimum * invScaleY);
+
+            Vector2 p1 = new Vector2(xBase + (float)((downRange ? recorder.history[0].downRange : recorder.history[0].timeSinceMark) * invScaleX), yBase - (float)(recorder.history[0][type] * invScaleY));
             Vector2 p2 = new Vector2();
 
             int t = 1;
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
                 var rec = recorder.history[t];
-                p2.x = r.xMin + (float)((downRange ? rec.downRange : rec.timeSinceMark) / scaleX);
-                p2.y = yBase - (float)(rec[type] / scaleY);
+                p2.x = xBase + (float)((downRange ? rec.downRange : rec.timeSinceMark) * invScaleX);
+                p2.y = yBase - (float)(rec[type] * invScaleY);
 
                 // skip 0 length line but always drawn the first 2 points
                 if (r.Contains(p2) && ((p1 - p2).sqrMagnitude >= 1.0 || t < 2))

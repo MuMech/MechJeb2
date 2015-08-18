@@ -158,6 +158,35 @@ namespace MuMech
             return action;
         }
 
+		public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d Wlimit )
+		{
+			derivativeAct = omega * Kd;
+            Wlimit = Wlimit * Kd;
+
+			// integral actíon + Anti Windup
+			intAccum.x = (Math.Abs(derivativeAct.x) < 0.6 * max) ? intAccum.x + (error.x * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.x;
+			intAccum.y = (Math.Abs(derivativeAct.y) < 0.6 * max) ? intAccum.y + (error.y * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.y;
+			intAccum.z = (Math.Abs(derivativeAct.z) < 0.6 * max) ? intAccum.z + (error.z * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.z;
+
+			propAct = error * Kp;
+
+			Vector3d action = propAct + intAccum;
+
+            // Clamp (propAct + intAccum) to limit the angular velocity:
+			action = new Vector3d(Math.Max(-Wlimit.x, Math.Min(Wlimit.x, action.x)),
+								  Math.Max(-Wlimit.y, Math.Min(Wlimit.y, action.y)),
+								  Math.Max(-Wlimit.z, Math.Min(Wlimit.z, action.z)) );
+            
+            // add. derivative action 
+			action += derivativeAct;
+
+			// action clamp
+			action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),
+								  Math.Max(min, Math.Min(max, action.y)),
+								  Math.Max(min, Math.Min(max, action.z)) );
+			return action;
+		}
+
         public void Reset()
         {
             intAccum = Vector3d.zero;
@@ -202,20 +231,27 @@ namespace MuMech
             Reset();
         }
 
-        public Vector3d Compute(Vector3d error, Vector3d omega)
+        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d Wlimit)
         {
-            derivativeAct = omega;
-            derivativeAct.Scale(Kd);
-
+            derivativeAct = Vector3d.Scale(omega, Kd);
+            Wlimit = Vector3d.Scale(Wlimit, Kd);
+          
             // integral actíon + Anti Windup
             intAccum.x = (Math.Abs(derivativeAct.x) < 0.6 * max) ? intAccum.x + (error.x * Ki.x * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.x;
             intAccum.y = (Math.Abs(derivativeAct.y) < 0.6 * max) ? intAccum.y + (error.y * Ki.y * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.y;
             intAccum.z = (Math.Abs(derivativeAct.z) < 0.6 * max) ? intAccum.z + (error.z * Ki.z * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.z;
 
-            propAct = error;
-            propAct.Scale(Kp);
+            propAct = Vector3d.Scale(error, Kp);
 
-            Vector3d action = propAct + derivativeAct + intAccum;
+            Vector3d action = propAct + intAccum;
+
+            // Clamp (propAct + intAccum) to limit the angular velocity:
+            action = new Vector3d(Math.Max(-Wlimit.x, Math.Min(Wlimit.x, action.x)),
+                                  Math.Max(-Wlimit.y, Math.Min(Wlimit.y, action.y)),
+                                  Math.Max(-Wlimit.z, Math.Min(Wlimit.z, action.z)));
+
+            // add. derivative action 
+            action += derivativeAct;
 
             // action clamp
             action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),

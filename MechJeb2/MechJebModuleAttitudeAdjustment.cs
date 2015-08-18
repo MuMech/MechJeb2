@@ -99,6 +99,17 @@ namespace MuMech
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
 
+                //Lower value of "kWlimit" reduces maximum angular velocity
+				double kWlimit = core.attitude.kWlimit;
+				var nextkWlimit = new EditableDoubleMult(kWlimit, 0.01);
+                GuiUtils.SimpleTextBox("Maximum Relative Angular Velocity", nextkWlimit, "%");
+				nextkWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)nextkWlimit, 0.0F, 1.0F);
+				const int sliderPrecision = 3;
+				if (Math.Round(Math.Abs(nextkWlimit - kWlimit), sliderPrecision) > 0)
+				{
+					core.attitude.kWlimit = Math.Round(nextkWlimit, sliderPrecision);
+				}
+				
                 showInfos = GUILayout.Toggle(showInfos, "Show Numbers");
                 if (showInfos)
                 {
@@ -209,12 +220,14 @@ namespace MuMech
             arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
             arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
             arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
-            arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (Navy Blue)");
+            arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (electric blue)");
             //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
 
-            arrows.requestedAttitudeArrowActive = GUILayout.Toggle(arrows.requestedAttitudeArrowActive, "Requested Attitude (Gray)");
+            arrows.requestedAttitudeArrowActive = GUILayout.Toggle(arrows.requestedAttitudeArrowActive, "Requested Attitude (gray)");
 
-            arrows.debugArrowActive = GUILayout.Toggle(arrows.debugArrowActive, "Debug (Magenta)");
+            arrows.debugArrowActive = GUILayout.Toggle(arrows.debugArrowActive, "Debug (magenta)");
+
+            arrows.debugArrow2Active = GUILayout.Toggle(arrows.debugArrow2Active, "Debug (light blue)");
 
 
             GUILayout.EndVertical();
