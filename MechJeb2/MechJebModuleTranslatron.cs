@@ -27,7 +27,7 @@ namespace MuMech
         protected bool autoMode = false;
 
         [Persistent(pass = (int)Pass.Local)]
-        public string trans_spd = "0";
+        public EditableDouble trans_spd = new EditableDouble(0);
 
         public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
 
@@ -74,16 +74,32 @@ namespace MuMech
                 MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
                 SetMode(newMode);
 
+                float val = (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
+
                 core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, "Kill H/S", GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-                GUILayout.Label("Speed");
-                trans_spd = GUILayout.TextField(trans_spd, GUILayout.ExpandWidth(true));
-                trans_spd = Regex.Replace(trans_spd, @"[^\d.+-]", "");
+                GuiUtils.SimpleTextBox("Speed", trans_spd, "", 37);
+                bool change = false;
+                if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                {
+                    trans_spd -= val;
+                    change = true;
+                }
+                if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                {
+                    trans_spd = 0;
+                    change = true;
+                }
+                if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                {
+                    trans_spd += val;
+                    change = true;
+                }
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button("EXECUTE", sty, GUILayout.ExpandWidth(true)))
+                if (GUILayout.Button("EXECUTE", sty, GUILayout.ExpandWidth(true)) || change)
                 {
-                    core.thrust.trans_spd_act = Convert.ToSingle(trans_spd);
+                    core.thrust.trans_spd_act = (float)trans_spd.val;
                     GUIUtility.keyboardControl = 0;
                 }
             }

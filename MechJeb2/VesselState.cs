@@ -1137,9 +1137,10 @@ namespace MuMech
                         Vector3d torque = gimbalExt.torqueVector(gimbal, i, CoM);
 
                         torqueEngineAvailable.Add(torque * eMinThrust);
-                        torqueEngineVariable.Add(torque * (eMaxThrust - eMinThrust));
+                        torqueEngineVariable.Add(torque * (eCurrentThrust - eMinThrust));
                         if (!e.throttleLocked)
                         {
+                            // TODO : use eCurrentThrust instead of maxThrust and change the relevant code in MechJebModuleThrustController for the Differential throttle
                             torqueDiffThrottle.Add(e.vessel.transform.rotation.Inverse() * Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust));
                         }
                     }

@@ -333,7 +333,7 @@ namespace MuMech
             graphStates[(int)recordType.Pitch].minimum = 0;
             graphStates[(int)recordType.Mass].minimum = 0;
 
-            graphStates[(int)recordType.AltitudeASL].maximum = mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
+            graphStates[(int)recordType.AltitudeASL].maximum = mainBody != null && mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
             graphStates[(int)recordType.DownRange].maximum = 500;
             graphStates[(int)recordType.Acceleration].maximum = 2;
             graphStates[(int)recordType.SpeedOrbital].maximum = 300;

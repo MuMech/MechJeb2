@@ -398,7 +398,7 @@ namespace MuMech
         [ValueInfoItem("G force", InfoItem.Category.Vessel, format = "F4", units = "g", showInEditor = true)]
         public double Acceleration()
         {
-            return vessel.geeForce;
+            return (vessel != null) ? vessel.geeForce : 0;
         }
 
         [ValueInfoItem("Drag coefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]
