@@ -48,6 +48,10 @@ namespace MuMech
         public double kiFactor = 6;
         [Persistent(pass = (int)Pass.Global)]
         public double kdFactor = 0.5;
+
+		[Persistent(pass = (int)Pass.Global)]
+		public double deadband = 0.0001;
+
 		[Persistent(pass = (int)Pass.Global)]
 		public double kWlimit = 0.05;
         [Persistent(pass = (int)Pass.Global)]
@@ -483,6 +487,11 @@ namespace MuMech
 										   Math.Sqrt(NormFactor.z * Math.PI * kWlimit));
 
                 pidAction = pid.Compute(err, omega, Wlimit);
+
+				// deadband
+				pidAction.x = Math.Abs(pidAction.x) >= deadband ? pidAction.x : 0.0;
+				pidAction.y = Math.Abs(pidAction.y) >= deadband ? pidAction.y : 0.0;
+				pidAction.z = Math.Abs(pidAction.z) >= deadband ? pidAction.z : 0.0;
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
