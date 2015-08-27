@@ -998,9 +998,9 @@ namespace MuMech
             double relVelZ = Vector3d.Dot(relVel, vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative velocity:");
-            GUILayout.Label("X: " + MuUtils.padPositive(relVelX, "F2") + " m/s  [L/J]");
-            GUILayout.Label("Y: " + MuUtils.padPositive(relVelY, "F2") + " m/s  [I/K]");
-            GUILayout.Label("Z: " + MuUtils.padPositive(relVelZ, "F2") + " m/s  [H/N]");
+            GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
+            GUILayout.Label("Y: " + MuUtils.PadPositive(relVelY, "F2") + " m/s  [I/K]");
+            GUILayout.Label("Z: " + MuUtils.PadPositive(relVelZ, "F2") + " m/s  [H/N]");
             GUILayout.EndVertical();
         }
 
@@ -1018,9 +1018,9 @@ namespace MuMech
 
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative angular velocity:");
-            GUILayout.Label("P: " + MuUtils.padPositive(relw.x, "F2") + " °/s");
-            GUILayout.Label("Y: " + MuUtils.padPositive(relw.z, "F2") + " °/s");
-            GUILayout.Label("R: " + MuUtils.padPositive(relw.y, "F2") + " °/s");
+            GUILayout.Label("P: " + MuUtils.PadPositive(relw.x, "F2") + " °/s");
+            GUILayout.Label("Y: " + MuUtils.PadPositive(relw.z, "F2") + " °/s");
+            GUILayout.Label("R: " + MuUtils.PadPositive(relw.y, "F2") + " °/s");
             GUILayout.EndVertical();
         }
 
@@ -1039,9 +1039,9 @@ namespace MuMech
             double sepZ = Vector3d.Dot(sep, vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label("Separation from target:");
-            GUILayout.Label("X: " + MuUtils.padPositive(sepX, "F2") + " m  [L/J]");
-            GUILayout.Label("Y: " + MuUtils.padPositive(sepY, "F2") + " m  [I/K]");
-            GUILayout.Label("Z: " + MuUtils.padPositive(sepZ, "F2") + " m  [H/N]");
+            GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");
+            GUILayout.Label("Y: " + MuUtils.PadPositive(sepY, "F2") + " m  [I/K]");
+            GUILayout.Label("Z: " + MuUtils.PadPositive(sepZ, "F2") + " m  [H/N]");
             GUILayout.EndVertical();
         }
 

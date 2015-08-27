@@ -44,7 +44,7 @@ namespace MuMech
             return ret;
         }
 
-        public static string padPositive(double x, string format = "F3")
+        public static string PadPositive(double x, string format = "F3")
         {
             string s = x.ToString(format);
             return s[0] == '-' ? s : " " + s;
@@ -52,12 +52,12 @@ namespace MuMech
 
         public static string PrettyPrint(Vector3d vector, string format = "F3")
         {
-            return "[" + padPositive(vector.x, format) + ", " + padPositive(vector.y, format) + ", " + padPositive(vector.z, format) + " ]";
+            return "[" + PadPositive(vector.x, format) + ", " + PadPositive(vector.y, format) + ", " + PadPositive(vector.z, format) + " ]";
         }
 
         public static string PrettyPrint(Quaternion quaternion, string format = "F3")
         {
-            return "[" + padPositive(quaternion.x, format) + ", " + padPositive(quaternion.y, format) + ", " + padPositive(quaternion.z, format) + ", " + padPositive(quaternion.w ,format) + "]";
+            return "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) + ", " + PadPositive(quaternion.w ,format) + "]";
         }
 
         //For some reason, Math doesn't have the inverse hyperbolic trigonometric functions:
