@@ -1106,7 +1106,7 @@ namespace MuMech
                     float minThrust = e.minFuelFlow * e.flowMultiplier * Isp * e.g / e.thrustTransforms.Count;
 
                     // RealFuels engines reports as operational even when they are shutdown
-                    if (e.finalThrust == 0f)
+                    if (e.finalThrust == 0f && minThrust > 0f)
                         minThrust = maxThrust = 0;
 
                     //MechJebCore.print(maxThrust.ToString("F2") + " " + minThrust.ToString("F2") + " " + e.minFuelFlow.ToString("F2") + " " + e.maxFuelFlow.ToString("F2") + " " + e.flowMultiplier.ToString("F2") + " " + Isp.ToString("F2") + " " + thrustLimiter.ToString("F3"));
