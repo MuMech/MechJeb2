@@ -398,7 +398,7 @@ namespace MuMech
         [ValueInfoItem("G force", InfoItem.Category.Vessel, format = "F4", units = "g", showInEditor = true)]
         public double Acceleration()
         {
-            return vessel.geeForce;
+            return (vessel != null) ? vessel.geeForce : 0;
         }
 
         [ValueInfoItem("Drag coefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]
@@ -544,6 +544,39 @@ namespace MuMech
             double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
             return MuUtils.ToSI(relVel, -1) + "m/s";
         }
+
+		[ValueInfoItem("Periapsis in target SoI", InfoItem.Category.Misc)]
+		public string PeriapsisInTargetSOI()
+		{
+			if (!core.target.NormalTargetExists) return "N/A";
+
+			Orbit o = vessel.orbit;
+			while (o != null && o.referenceBody != vessel.targetObject)
+				o = o.nextPatch;
+
+			if (o == null) return "N/A";
+
+			return MuUtils.ToSI(o.PeA, -1) + "m";
+		}
+
+		[ValueInfoItem("ΔV for capture by target", InfoItem.Category.Misc)]
+		public string TargetCaptureDV()
+		{
+			if (!core.target.NormalTargetExists) return "N/A";
+
+			Orbit o = vessel.orbit;
+			while (o != null && o.referenceBody != vessel.targetObject)
+				o = o.nextPatch;
+
+			if (o == null) return "N/A";
+
+			double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
+			double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
+			double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
+
+			return MuUtils.ToSI(velAtPeriapsis - velCapture, -1) + "m/s";
+		}
+
 
         [ValueInfoItem("Target apoapsis", InfoItem.Category.Target)]
         public string TargetApoapsis()
@@ -965,9 +998,29 @@ namespace MuMech
             double relVelZ = Vector3d.Dot(relVel, vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative velocity:");
-            GUILayout.Label("X: " + relVelX.ToString("F2") + " m/s  [L/J]");
-            GUILayout.Label("Y: " + relVelY.ToString("F2") + " m/s  [I/K]");
-            GUILayout.Label("Z: " + relVelZ.ToString("F2") + " m/s  [H/N]");
+            GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
+            GUILayout.Label("Y: " + MuUtils.PadPositive(relVelY, "F2") + " m/s  [I/K]");
+            GUILayout.Label("Z: " + MuUtils.PadPositive(relVelZ, "F2") + " m/s  [H/N]");
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("Docking guidance: Angular velocity", InfoItem.Category.Target)]
+        public void DockingGuidanceAngularVelocity()
+        {
+            if (!(core.target.Target is Vessel)  || core.target.vessel.rootPart == null || core.target.vessel.rootPart.rb == null)
+            {
+                GUILayout.Label("Target-relative Angular velocity: (N/A)");
+                return;
+            }
+
+            Vessel target = (Vessel)core.target.Target;
+            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.rootPart.rb.angularVelocity - vessel.rootPart.rb.angularVelocity) * Mathf.Rad2Deg;
+
+            GUILayout.BeginVertical();
+            GUILayout.Label("Target-relative angular velocity:");
+            GUILayout.Label("P: " + MuUtils.PadPositive(relw.x, "F2") + " °/s");
+            GUILayout.Label("Y: " + MuUtils.PadPositive(relw.z, "F2") + " °/s");
+            GUILayout.Label("R: " + MuUtils.PadPositive(relw.y, "F2") + " °/s");
             GUILayout.EndVertical();
         }
 
@@ -986,12 +1039,11 @@ namespace MuMech
             double sepZ = Vector3d.Dot(sep, vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label("Separation from target:");
-            GUILayout.Label("X: " + sepX.ToString("F2") + " m  [L/J]");
-            GUILayout.Label("Y: " + sepY.ToString("F2") + " m  [I/K]");
-            GUILayout.Label("Z: " + sepZ.ToString("F2") + " m  [H/N]");
+            GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");
+            GUILayout.Label("Y: " + MuUtils.PadPositive(sepY, "F2") + " m  [I/K]");
+            GUILayout.Label("Z: " + MuUtils.PadPositive(sepZ, "F2") + " m  [H/N]");
             GUILayout.EndVertical();
         }
-
 
         [GeneralInfoItem("All planet phase angles", InfoItem.Category.Orbit)]
         public void AllPlanetPhaseAngles()

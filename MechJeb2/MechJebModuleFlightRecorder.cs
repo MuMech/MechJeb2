@@ -13,18 +13,99 @@ namespace MuMech
     //TODO: make records persistent
     public class MechJebModuleFlightRecorder : ComputerModule
     {
-        public MechJebModuleFlightRecorder(MechJebCore core) : base(core) { priority = 2000; }
-
+        // TODO : this is already nearly an array so use a list and allow to add any generic ValueInfoItem
         public struct record
         {
             public double timeSinceMark;
             public double altitudeASL;
             public double downRange;
+            public double speedSurface;
+            public double speedOrbital;
+            public double acceleration;
+            public double Q;
+            public double AoA;
+            public double altitudeTrue;
+            public double pitch;
+            public double mass;
+            public int currentStage;
+
+            public double this[recordType type]
+            {
+                get
+                {
+                    switch (type)
+                    {
+                        case recordType.TimeSinceMark:
+                            return timeSinceMark;
+                        case recordType.AltitudeASL:
+                            return altitudeASL;
+                        case recordType.DownRange:
+                            return downRange;
+                        case recordType.SpeedSurface:
+                            return speedSurface;
+                        case recordType.SpeedOrbital:
+                            return speedOrbital;
+                        case recordType.Acceleration:
+                            return acceleration;
+                        case recordType.Q:
+                            return Q;
+                        case recordType.AoA:
+                            return AoA;
+                        case recordType.AltitudeTrue:
+                            return altitudeTrue;
+                        case recordType.Pitch:
+                            return pitch;
+                        case recordType.Mass:
+                            return mass;
+                        default:
+                            return 0;
+                    }
+                }
+            }
         }
 
-        public record[] history = new record[1000];
+        public enum recordType
+        {
+            TimeSinceMark,
+            AltitudeASL,
+            DownRange,
+            SpeedSurface,
+            SpeedOrbital,
+            Acceleration,
+            Q,
+            AoA,
+            AltitudeTrue,
+            Pitch,
+            Mass
+        }
+
+        public record[] history = new record[3000];
 
         public int historyIdx = -1;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool downrange = true;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool realAtmo = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool stages = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int hSize = 4;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int vSize = 2;
+
+        private static readonly int typeCount = Enum.GetValues(typeof(recordType)).Length;
+
+        public double[] maximums;
+        public double[] minimums;
+
+        private double precision = 0.2;
+
+        private bool paused = false;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark UT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
@@ -100,15 +181,30 @@ namespace MuMech
             markAltitude = vesselState.altitudeASL;
             markBodyIndex = FlightGlobals.Bodies.IndexOf(mainBody);
             maxDragGees = 0;
-            if (historyIdx > 0)
-                history = new record[1000];
+            timeSinceMark = 0;
+            for (int t = 0; t < maximums.Length; t++)
+            {
+                minimums[t] = double.MaxValue;
+                maximums[t] = double.MinValue;
+            }
             historyIdx = 0;
+            Record(historyIdx);
+        }
+
+        public MechJebModuleFlightRecorder(MechJebCore core)
+            : base(core)
+        {
+            priority = 2000;
+            maximums = new double[typeCount];
+            minimums = new double[typeCount];
         }
 
         public override void OnStart(PartModule.StartState state)
         {
             this.users.Add(this); //flight recorder should always run.
         }
+
+        private double lastRecordTime = 0;
 
         public override void OnFixedUpdate()
         {
@@ -132,15 +228,55 @@ namespace MuMech
             double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
             phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (vesselState.time - markUT) / circularPeriod - angleTraversed);
 
-            int oldHistoryIdx = historyIdx;
+            if (paused)
+                return;
 
-            historyIdx = Mathf.FloorToInt((float)timeSinceMark);
+            //int oldHistoryIdx = historyIdx;
 
-            if (historyIdx != oldHistoryIdx && historyIdx < history.Length)
+            //historyIdx = Mathf.Min(Mathf.FloorToInt((float)(timeSinceMark / precision)), history.Length - 1);
+
+            if (vesselState.time >= (lastRecordTime + precision) && historyIdx < history.Length - 1)
             {
-                history[historyIdx].timeSinceMark = timeSinceMark;
-                history[historyIdx].altitudeASL = vesselState.altitudeASL;
-                history[historyIdx].downRange = GroundDistanceFromMark();
+                lastRecordTime = vesselState.time;
+                historyIdx++;
+                Record(historyIdx);
+                //if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH)
+                //    print("WRP " + historyIdx + " " + history[historyIdx].downRange.ToString("F0") + " " + history[historyIdx].AoA.ToString("F2"));
+                //else
+                //{
+                //    print("STD " + historyIdx + " " + history[historyIdx].downRange.ToString("F0") + " " + history[historyIdx].AoA.ToString("F2"));
+                //}
+            }
+        }
+
+        private void Record(int idx)
+        {
+            history[idx].timeSinceMark = timeSinceMark;
+            history[idx].altitudeASL = vesselState.altitudeASL;
+            history[idx].downRange = GroundDistanceFromMark();
+            history[idx].speedSurface = vesselState.speedSurface;
+            history[idx].speedOrbital = vesselState.speedOrbital;
+            history[idx].acceleration = vessel.geeForce;
+            history[idx].Q = vesselState.dynamicPressure;
+            history[idx].altitudeTrue = vesselState.altitudeTrue;
+            history[idx].pitch = vesselState.vesselPitch;
+            history[idx].mass = vesselState.mass;
+
+            if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
+            {
+                history[idx].currentStage = vessel.currentStage;
+                history[idx].AoA = vesselState.AoA;
+            }
+            else
+            {
+                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : Staging.CurrentStage;
+                history[idx].AoA = idx > 0 ? history[idx - 1].AoA : 0;
+            }
+            for (int t = 0; t < typeCount; t++)
+            {
+                double current = history[idx][(recordType)t];
+                minimums[t] = Math.Min(minimums[t], current);
+                maximums[t] = Math.Max(maximums[t], current);
             }
         }
 
@@ -149,5 +285,26 @@ namespace MuMech
             deltaVExpended += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle);
             steeringLosses += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle) * (1 - Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.forward));
         }
+
+        // TODO : not do the full scale update as often
+        private void UpdateMinMax()
+        {
+            for (int t = 0; t < typeCount; t++)
+            {
+                minimums[t] = Double.MaxValue;
+                maximums[t] = Double.MinValue;
+            }
+
+            for (int i = 0; i <= historyIdx; i++)
+            {
+                record r = history[i];
+                for (int t = 0; t < typeCount; t++)
+                {
+                    minimums[t] = Math.Min(minimums[t], r[(recordType)t]);
+                    maximums[t] = Math.Max(maximums[t], r[(recordType)t]);
+                }
+            }
+        }
+
     }
 }

@@ -49,6 +49,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public double kdFactor = 0.5;
 
+		[Persistent(pass = (int)Pass.Global)]
+		public double deadband = 0.0001;
+
+		[Persistent(pass = (int)Pass.Global)]
+		public double kWlimit = 0.05;
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -367,6 +372,21 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             steeringError.value = attitudeError = attitudeAngleFromTarget();
+
+            if (useSAS)
+                return;
+
+            torque = vesselState.torqueAvailable + vesselState.torqueFromEngine ;
+            if (core.thrust.differentialThrottleSuccess)
+                torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+
+            inertia = Vector3d.Scale(
+                vesselState.angularMomentum.Sign(),
+                Vector3d.Scale(
+                    Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
+                    Vector3d.Scale(torque, vesselState.MoI).Invert()
+                    )
+                );
         }
 
         public override void OnUpdate()
@@ -415,19 +435,7 @@ namespace MuMech
                 Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
 
                 Vector3d deltaEuler = delta.DeltaEuler();
-
-                torque = vesselState.torqueAvailable + vesselState.torqueFromEngine * vessel.ctrlState.mainThrottle;
-                if (core.thrust.differentialThrottleSuccess)
-                    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
-
-                inertia = Vector3d.Scale(
-                    vesselState.angularMomentum.Sign(),
-                    Vector3d.Scale(
-                        Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                        Vector3d.Scale(torque, vesselState.MoI).Invert()
-                        )
-                    );
-
+                
                 // ( MoI / available torque ) factor:
                 Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
 
@@ -473,7 +481,17 @@ namespace MuMech
                     tuneTf(torque);
                 setPIDParameters();
 
-                pidAction = pid.Compute(err, omega);
+                // angular velocity limit:
+				var Wlimit = new Vector3d( Math.Sqrt(NormFactor.x * Math.PI * kWlimit),
+										   Math.Sqrt(NormFactor.y * Math.PI * kWlimit),
+										   Math.Sqrt(NormFactor.z * Math.PI * kWlimit));
+
+                pidAction = pid.Compute(err, omega, Wlimit);
+
+				// deadband
+				pidAction.x = Math.Abs(pidAction.x) >= deadband ? pidAction.x : 0.0;
+				pidAction.y = Math.Abs(pidAction.y) >= deadband ? pidAction.y : 0.0;
+				pidAction.z = Math.Abs(pidAction.z) >= deadband ? pidAction.z : 0.0;
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
