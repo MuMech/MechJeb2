@@ -14,6 +14,7 @@ namespace MuMech
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 
         protected const string TARGET_NAME = "Ascent Path Guidance";
+        protected bool showingGuidance { get { return core.target.Target != null && core.target.Name == TARGET_NAME; } }
 
         public IAscentPath ascentPath = null;
 
@@ -50,7 +51,7 @@ namespace MuMech
         {
             if (ascentPath == null) return;
 
-            if (core.target.Target != null && core.target.Name == TARGET_NAME)
+            if (showingGuidance)
             {
                 double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
                 double heading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
@@ -63,8 +64,6 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-
-            bool showingGuidance = (core.target.Target != null && core.target.Name == TARGET_NAME);
 
             if (showingGuidance)
             {
