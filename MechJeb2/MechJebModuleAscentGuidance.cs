@@ -61,6 +61,26 @@ namespace MuMech
             }
         }
 
+        [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
+        public void ToggleAscentNavballGuidanceInfoItem()
+        {
+            if (showingGuidance)
+            {
+                if (GUILayout.Button("Hide ascent navball guidance"))
+                {
+                    core.target.Unset();
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("Show ascent navball guidance"))
+                {
+                    core.target.SetDirectionTarget(TARGET_NAME);
+                }
+            }
+        }
+
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
