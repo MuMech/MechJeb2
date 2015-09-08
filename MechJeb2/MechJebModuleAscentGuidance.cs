@@ -14,6 +14,7 @@ namespace MuMech
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 
         protected const string TARGET_NAME = "Ascent Path Guidance";
+        protected bool showingGuidance { get { return core.target.Target != null && core.target.Name == TARGET_NAME; } }
 
         public IAscentPath ascentPath = null;
 
@@ -38,7 +39,8 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
+            if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME))
+                core.target.Unset();
             launchingToInterplanetary = false;
             launchingToPlane = false;
             launchingToRendezvous = false;
@@ -50,7 +52,7 @@ namespace MuMech
         {
             if (ascentPath == null) return;
 
-            if (core.target.Target != null && core.target.Name == TARGET_NAME)
+            if (showingGuidance)
             {
                 double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
                 double heading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
@@ -60,21 +62,28 @@ namespace MuMech
             }
         }
 
+        [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
+        public void ToggleAscentNavballGuidanceInfoItem()
+        {
+            if (showingGuidance)
+            {
+                if (GUILayout.Button("Hide ascent navball guidance"))
+                    core.target.Unset();
+            }
+            else
+            {
+                if (GUILayout.Button("Show ascent navball guidance"))
+                    core.target.SetDirectionTarget(TARGET_NAME);
+            }
+        }
+
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
-            bool showingGuidance = (core.target.Target != null && core.target.Name == TARGET_NAME);
-
-            if (showingGuidance)
-            {
-                GUILayout.Label("The purple circle on the navball points along the ascent path.");
-                if (GUILayout.Button("Stop showing navball guidance")) core.target.Unset();
-            }
-            else if (GUILayout.Button("Show navball ascent path guidance"))
-            {
-                core.target.SetDirectionTarget(TARGET_NAME);
-            }
+            GUILayout.Label("When guidance is enabled, the purple circle on the navball points along the ascent path.");
+            ToggleAscentNavballGuidanceInfoItem();
 
             if (autopilot != null)
             {

@@ -34,12 +34,22 @@ namespace MuMech
             return sa.Events["Extend"].active || sa.Events["Retract"].active;
         }
 
-        [GeneralInfoItem("Extend all solar panels", InfoItem.Category.Misc, showInEditor = false)]
-        public void ExtendAllSolarPanelsInfoItem()
+        [GeneralInfoItem("Toggle all solar panels", InfoItem.Category.Misc, showInEditor = false)]
+        public void ToggleAllSolarPanelsInfoItem()
         {
-            if (GUILayout.Button("Extend all solar panels"))
+            if (AllRetracted())
             {
-                ExtendAll();
+                if (GUILayout.Button("Extend all solar panels"))
+                {
+                    ExtendAll();
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("Retract all solar panels"))
+                {
+                    RetractAll();
+                }
             }
         }
 
@@ -58,15 +68,6 @@ namespace MuMech
                         sa.Extend();
                     }
                 }
-            }
-        }
-
-        [GeneralInfoItem("Retract all solar panels", InfoItem.Category.Misc, showInEditor = false)]
-        public void RetractAllSolarPanelsInfoItem()
-        {
-            if (GUILayout.Button("Retract all solar panels"))
-            {
-                RetractAll();
             }
         }
 
