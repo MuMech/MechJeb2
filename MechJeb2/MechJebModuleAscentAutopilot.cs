@@ -82,32 +82,75 @@ namespace MuMech
         AscentMode mode;
         bool placedCircularizeNode = false;
         private double lastTMinus = 999;
+        private bool engaged = false;
 
-
-        public override void OnModuleEnabled()
-        {
-            if (autodeploySolarPanels && mainBody.atmosphere)
-                mode = AscentMode.RETRACT_SOLAR_PANELS;
-            else
-                mode = AscentMode.VERTICAL_ASCENT;
-
-            placedCircularizeNode = false;
-
-            core.attitude.users.Add(this);
-            core.thrust.users.Add(this);
-            if (autostage) core.staging.users.Add(this);
-        }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.attitudeDeactivate();
-            core.thrust.ThrustOff();
-            core.thrust.users.Remove(this);
-            core.staging.users.Remove(this);
+            Engaged = false;
+            NavBallGuidance = false;
+        }
 
-            if (placedCircularizeNode) core.node.Abort();
+        public bool Engaged
+        {
+            get
+            {
+                return engaged;
+            }
+            set
+            {
+                if (value)
+                {
+                    engaged = true;
 
-            status = "Off";
+                    if (autodeploySolarPanels && mainBody.atmosphere)
+                        mode = AscentMode.RETRACT_SOLAR_PANELS;
+                    else
+                        mode = AscentMode.VERTICAL_ASCENT;
+
+                    placedCircularizeNode = false;
+
+                    core.attitude.users.Add(this);
+                    core.thrust.users.Add(this);
+                    if (autostage) core.staging.users.Add(this);
+                }
+                else
+                {
+                    engaged = false;
+
+                    core.attitude.attitudeDeactivate();
+                    core.thrust.ThrustOff();
+                    core.thrust.users.Remove(this);
+                    core.staging.users.Remove(this);
+
+                    if (placedCircularizeNode) core.node.Abort();
+
+                    status = "Off";
+
+                }
+            }
+        }
+
+        protected const string TARGET_NAME = "Ascent Path Guidance";
+
+        public bool NavBallGuidance
+        {
+            get
+            {
+                return core.target.Target != null && core.target.Name == TARGET_NAME;
+            }
+            set
+            {
+                if (value)
+                {
+                    core.target.SetDirectionTarget(TARGET_NAME);
+                }
+                else
+                {
+                    core.target.Unset();
+                }
+
+            }
         }
 
         public void StartCountdown(double time)
@@ -119,47 +162,63 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (timedLaunch)
+            if (NavBallGuidance)
             {
-                if (tMinus < 3 * vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
+                double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
+                double heading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+                Vector3d horizontalDir = Math.Cos(heading) * vesselState.north + Math.Sin(heading) * vesselState.east;
+                Vector3d dir = Math.Cos(angle) * horizontalDir + Math.Sin(angle) * vesselState.up;
+                core.target.UpdateDirectionTarget(dir);
+            }
+
+            if (Engaged)
+            {
+                if (timedLaunch)
                 {
-                    if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
-                        Staging.ActivateNextStage();
-                    timedLaunch = false;
+                    if (tMinus < 3 * vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
+                    {
+                        if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
+                            Staging.ActivateNextStage();
+                        timedLaunch = false;
+                    }
+                    else
+                    {
+                        if (core.node.autowarp)
+                            core.warp.WarpToUT(launchTime - warpCountDown);
+                    }
+                    lastTMinus = tMinus;
                 }
-                else
-                {
-                    if (core.node.autowarp)
-                        core.warp.WarpToUT(launchTime - warpCountDown);
-                }
-                lastTMinus = tMinus;
             }
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            limitingAoA = false;
-            switch (mode)
+            if (Engaged)
             {
-                case AscentMode.RETRACT_SOLAR_PANELS:
-                    DriveRetractSolarPanels(s);
-                    break;
 
-                case AscentMode.VERTICAL_ASCENT:
-                    DriveVerticalAscent(s);
-                    break;
+                limitingAoA = false;
+                switch (mode)
+                {
+                    case AscentMode.RETRACT_SOLAR_PANELS:
+                        DriveRetractSolarPanels(s);
+                        break;
 
-                case AscentMode.GRAVITY_TURN:
-                    DriveGravityTurn(s);
-                    break;
+                    case AscentMode.VERTICAL_ASCENT:
+                        DriveVerticalAscent(s);
+                        break;
 
-                case AscentMode.COAST_TO_APOAPSIS:
-                    DriveCoastToApoapsis(s);
-                    break;
+                    case AscentMode.GRAVITY_TURN:
+                        DriveGravityTurn(s);
+                        break;
 
-                case AscentMode.CIRCULARIZE:
-                    DriveCircularizationBurn(s);
-                    break;
+                    case AscentMode.COAST_TO_APOAPSIS:
+                        DriveCoastToApoapsis(s);
+                        break;
+
+                    case AscentMode.CIRCULARIZE:
+                        DriveCircularizationBurn(s);
+                        break;
+                }
             }
         }
 
