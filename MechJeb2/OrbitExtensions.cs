@@ -102,7 +102,16 @@ namespace MuMech
         //mean motion is rate of increase of the mean anomaly
         public static double MeanMotion(this Orbit o)
         {
-            return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
+            if (o.eccentricity > 1)
+            {
+                return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
+            }
+            else
+            {
+                // The above formula is wrong when using the RealSolarSystem mod, which messes with orbital periods.
+                // This simpler formula should be foolproof for elliptical orbits:
+                return 2 * Math.PI / o.period;
+            }
         }
 
         //distance between two orbiting objects at a given time
@@ -126,7 +135,7 @@ namespace MuMech
                 interval = 100 / a.MeanMotion(); //this should be an interval of time that covers a large chunk of the hyperbolic arc
             }
             double maxTime = UT + interval;
-            int numDivisions = 20;
+            const int numDivisions = 20;
 
             for (int iter = 0; iter < 8; iter++)
             {
@@ -159,7 +168,9 @@ namespace MuMech
         //For hyperbolic orbits, the value can be any number.
         public static double MeanAnomalyAtUT(this Orbit o, double UT)
         {
-            double ret = o.meanAnomalyAtEpoch + o.MeanMotion() * (UT - o.epoch);
+            // We use ObtAtEpoch and not meanAnomalyAtEpoch because somehow meanAnomalyAtEpoch
+            // can be wrong when using the RealSolarSystem mod. ObtAtEpoch is always correct.
+            double ret = (o.ObTAtEpoch + (UT - o.epoch)) * o.MeanMotion();
             if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
             return ret;
         }
@@ -281,22 +292,50 @@ namespace MuMech
             return Math.Abs(MuUtils.ClampDegrees180(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
+        //Returns the vector from the primary to the orbiting body at periapsis
+        //Better than using Orbit.eccVec because that is zero for circular orbits
+        public static Vector3d SwappedRelativePositionAtPeriapsis(this Orbit o)
+        {
+            Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
+            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.SwappedOrbitNormal()) * vectorToAN;
+            return o.PeR * vectorToPe;
+        }
+
+        //Returns the vector from the primary to the orbiting body at apoapsis
+        //Better than using -Orbit.eccVec because that is zero for circular orbits
+        public static Vector3d SwappedRelativePositionAtApoapsis(this Orbit o)
+        {
+            Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
+            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.SwappedOrbitNormal()) * vectorToAN;
+            Vector3d ret = -o.ApR * vectorToPe;
+            if (double.IsNaN(ret.x))
+            {
+                Debug.LogError("OrbitExtensions.SwappedRelativePositionAtApoapsis got a NaN result!");
+                Debug.LogError("o.LAN = " + o.LAN);
+                Debug.LogError("o.inclination = " + o.inclination);
+                Debug.LogError("o.argumentOfPeriapsis = " + o.argumentOfPeriapsis);
+                Debug.LogError("o.SwappedOrbitNormal() = " + o.SwappedOrbitNormal());
+            }
+            return ret;
+        }
+
         //Converts a direction, specified by a Vector3d, into a true anomaly.
         //The vector is projected into the orbital plane and then the true anomaly is
         //computed as the angle this vector makes with the vector pointing to the periapsis.
         //The returned value is always between 0 and 360.
         public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec)
         {
-            Vector3d projected = Vector3d.Exclude(o.SwappedOrbitNormal(), vec);
-            Vector3d vectorToPe = SwapYZ(o.eccVec);
-            double angleFromPe = Math.Abs(Vector3d.Angle(vectorToPe, projected));
+            Vector3d oNormal = o.SwappedOrbitNormal();
+            Vector3d projected = Vector3d.Exclude(oNormal, vec);
+            Vector3d vectorToPe = o.SwappedRelativePositionAtPeriapsis();
+            double angleFromPe = Vector3d.Angle(vectorToPe, projected);
 
             //If the vector points to the infalling part of the orbit then we need to do 360 minus the
             //angle from Pe to get the true anomaly. Test this by taking the the cross product of the
             //orbit normal and vector to the periapsis. This gives a vector that points to center of the 
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
-            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(o.SwappedOrbitNormal(), vectorToPe))) < 90)
+            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
             {
                 return angleFromPe;
             }
@@ -477,6 +516,47 @@ namespace MuMech
             return new Vector3d(Vector3d.Dot(o.RadialPlus(UT), dV),
                                 Vector3d.Dot(-o.NormalPlus(UT), dV),
                                 Vector3d.Dot(o.Prograde(UT), dV));
+        }
+
+        // Return the orbit of the parent body orbiting the sun
+        public static Orbit TopParentOrbit(this Orbit orbit)
+        {
+            Orbit result = orbit;
+            while (result.referenceBody != Planetarium.fetch.Sun)
+            {
+                result = result.referenceBody.orbit;
+
+            }
+            return result;
+        }
+
+
+        public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
+        {
+            if (vesselState.mainBody == null) return 0;
+            if (orbit.PeA > 0) return Double.PositiveInfinity;
+
+            double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
+            angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
+            double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
+            double g = vesselState.localg;
+            double T = vesselState.limitedMaxThrustAccel;
+
+            double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt((2 * g * sine) * (2 * g * sine) + 4 * (T * T - g * g)));
+            double decelTime = vesselState.speedSurface / effectiveDecel;
+
+            Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vessel.srf_velocity;
+            double terrainRadius = vesselState.mainBody.Radius + vesselState.mainBody.TerrainAltitude(estimatedLandingSite);
+            double impactTime = 0;
+            try
+            {
+                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+            }
+            catch (ArgumentException)
+            {
+                return 0;
+            }
+            return impactTime - decelTime / 2 - vesselState.time;
         }
     }
 }

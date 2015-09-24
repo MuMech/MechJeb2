@@ -20,9 +20,44 @@ namespace MuMech
                 if (null != result.body)
                 {
                     result.endASL = result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude);
+                    
+                    
+                    simDragScalar = result.prediction.firstDrag;
+                    simLiftScalar = result.prediction.firstLift;
+                    simDynamicPressurePa = result.prediction.dynamicPressurekPa * 1000;
+                    simMach = result.prediction.mach;
+                    simSpeedOfSound = result.prediction.speedOfSound;
+
+                    //if (result.debugLog != "")
+                    //{
+                    //
+                    //    MechJebCore.print("Now".PadLeft(8)
+                    //               + " Alt:" + vesselState.altitudeASL.ToString("F0").PadLeft(6)
+                    //               + " Vel:" + vesselState.speedOrbital.ToString("F2").PadLeft(8)
+                    //               + " AirVel:" + vesselState.speedSurface.ToString("F2").PadLeft(8)
+                    //               + " SoS:" +  vesselState.speedOfSound.ToString("F2").PadLeft(6)
+                    //               + " mach:" + vesselState.mach.ToString("F2").PadLeft(6)
+                    //               + " dynP:" + (vesselState.dynamicPressure / 1000).ToString("F5").PadLeft(9)
+                    //               + " Temp:" + vessel.atmosphericTemperature.ToString("F2").PadLeft(8)
+                    //               + " Lat:" + vesselState.latitude.ToString("F2").PadLeft(6));
+                    //
+                    //
+                    //    MechJebCore.print(result.debugLog);
+                    //    result.debugLog = "";
+                    //
+                    //    Vector3 scaledPos = ScaledSpace.LocalToScaledSpace(vessel.transform.position);
+                    //    Vector3 sunVector = (FlightGlobals.Bodies[0].scaledBody.transform.position - scaledPos).normalized;
+                    //
+                    //    float sunDot = Vector3.Dot(sunVector, vessel.upAxis);
+                    //    float sunAxialDot = Vector3.Dot(sunVector, vessel.mainBody.bodyTransform.up);
+                    //    MechJebCore.print("sunDot " + sunDot.ToString("F3") + " sunAxialDot " + sunAxialDot.ToString("F3") + " " + PhysicsGlobals.DragUsesAcceleration);
+                    //
+                    //}
+
+
                 }
             }
-            return result; 
+            return result;
         }
         public ReentrySimulation.Result GetErrorResult() 
         {
@@ -33,13 +68,38 @@ namespace MuMech
                     errorResult.endASL = errorResult.body.TerrainAltitude(errorResult.endPosition.latitude, errorResult.endPosition.longitude);
                 }
             }
-            
             return errorResult;
         }
+
+
+
+        //Debug
+
+        [ValueInfoItem("Sim Drag Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        public double simDragScalar;
+
+        [ValueInfoItem("Sim Lift Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        public double simLiftScalar;
+
+        [ValueInfoItem("Sim DynaPressPa", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "pa")]
+        public double simDynamicPressurePa;
+
+        [ValueInfoItem("Sim simMach", InfoItem.Category.Vessel, format = "F2")]
+        public double simMach;
+
+        [ValueInfoItem("Sim SpdOfSnd", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
+        public double simSpeedOfSound;
 
         //inputs:
         [Persistent(pass = (int)Pass.Global)]
         public bool makeAerobrakeNodes = false;
+
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showTrajectory = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool worldTrajectory = true;
 
         public bool deployChutes = false;        
         public int limitChutesStage = 0;
@@ -65,7 +125,7 @@ namespace MuMech
 
         public ManeuverNode aerobrakeNode = null;
 
-        protected int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
+        protected const int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
         protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run.
         // TODO - decide if variable for fixed dt results in a more stable result
         protected bool variabledt = true; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
@@ -148,53 +208,6 @@ namespace MuMech
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
             }
 
-            // Work out a mass for the total ship, a DragMass for everything except the parachutes that will be used (including the stowed parachutes that will not be used) and list of parchutes that will be used.
-            double totalMass =0;
-            double dragMassExcludingUsedParachutes = 0;
-            List<SimulatedParachute> usableChutes = new List<SimulatedParachute>();
-            
-            foreach (Part p in vessel.parts)
-            {
-                if (p.physicalSignificance != Part.PhysicalSignificance.NONE)
-                {
-                    bool partIsParachute = false;
-                    double partDrag =0;
-                    double partMass = p.TotalMass();
-
-                    totalMass += partMass;
-
-                    // Is this part a parachute?
-                    foreach (PartModule pm in p.Modules)
-                    {
-                        if (!pm.isEnabled) continue;
-
-                        if (pm is ModuleParachute)
-                        {
-                            ModuleParachute chute = (ModuleParachute)pm;
-                            partIsParachute = true;
-                            // This is a parachute, but is it one that will be used in the landing / rentry simulation?
-                            if (deployChutes && p.inverseStage >= limitChutesStage)
-                            {
-                                // This chute will be used in the simualtion. Add it to the list of useage parachutes.
-                                usableChutes.Add(new SimulatedParachute(chute));
-                            }
-                            else
-                            {
-                                partDrag = p.maximum_drag;
-                            }
-                        }
-                    }
-
-                    if (false == partIsParachute)
-                    {
-                        // Part is not a parachute. Just use its drag value.
-                        partDrag = p.maximum_drag;
-                    }
-
-                    dragMassExcludingUsedParachutes += partDrag * partMass;
-                }
-            }
-
             Orbit patch = GetReenteringPatch() ?? orbit;
 
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
@@ -210,13 +223,21 @@ namespace MuMech
             if (addParachuteError)
             {
                 System.Random random = new System.Random();
-                parachuteMultiplierForThisSimulation *= ((double)1 + ((double)(random.Next(1000000) - 500000) / (double)10000000));
+                parachuteMultiplierForThisSimulation *= (1d + ((random.Next(1000000) - 500000d) /10000000d));
             }
 
-            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, dragMassExcludingUsedParachutes, usableChutes, totalMass, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt); 
+            // The curves used for the sim are not thread safe so we need a copy used only by the thread
+            ReentrySimulation.SimCurves simCurves = new ReentrySimulation.SimCurves(patch.referenceBody);
+
+            SimulatedVessel simVessel = SimulatedVessel.New(vessel, simCurves, patch.StartUT, deployChutes ? limitChutesStage : -1);
+
+            ReentrySimulation sim = new ReentrySimulation(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime);
+
+            //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
+            //RunSimulation(sim);
         }
 
         protected void RunSimulation(object o)
@@ -269,7 +290,7 @@ namespace MuMech
                         {
                             dt = (newResult.maxdt * ((double)millisecondsToCompletion / (double)1000)) / ((double)1 / ((double)3 * (double)interationsPerSecond));
                             // There is no point in having a dt that is smaller than the physics frame rate as we would be trying to be more precise than the game.
-                            dt = Math.Max(dt, (double)Time.fixedDeltaTime);
+                            dt = Math.Max(dt, sim.min_dt);
                             // Set a sensible upper limit to dt as well. - in this case 10 seconds
                             dt = Math.Min(dt, 10);
                         }
@@ -389,12 +410,19 @@ namespace MuMech
 
         void DoMapView()
         {
-            ReentrySimulation.Result drawnResult = GetResult();
-            if (MapView.MapIsEnabled && this.enabled && drawnResult != null)
+            if (MapView.MapIsEnabled && vessel.isActiveVessel && this.enabled)
             {
-                if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
+                ReentrySimulation.Result drawnResult = GetResult();
+                if (drawnResult != null)
                 {
-                    GLUtils.DrawMapViewGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, 60);
+                    if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
+                        GLUtils.DrawMapViewGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, 60);
+
+                    if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
+                    {
+                        double interval = (drawnResult.endUT - drawnResult.input_UT) / 100;
+                        GLUtils.DrawPath(drawnResult.body, drawnResult.WorldTrajectory(interval, worldTrajectory), Color.red);
+                    }
                 }
             }
         }

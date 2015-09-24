@@ -144,42 +144,53 @@ namespace MuMech
         {
         }
 
+
+        public virtual bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return true;
+        }
+
         public virtual void UnlockCheck()
         {
-            if (!unlockChecked && ResearchAndDevelopment.Instance != null)
+            if (!unlockChecked)
             {
                 bool unlock = true;
 
-                string[] parts = unlockParts.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 0)
+                if (ResearchAndDevelopment.Instance != null)
                 {
-                    unlock = false;
-                    foreach (string p in parts)
+                    string[] parts = unlockParts.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length > 0)
                     {
-                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 && ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.Where(a => a.name == p).First()))
+                        unlock = false;
+                        foreach (string p in parts)
                         {
-                            unlock = true;
-                            break;
+                            if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 && ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
+                            {
+                                unlock = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    string[] techs = unlockTechs.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (techs.Length > 0)
+                    {
+                        if (parts.Length == 0)
+                        {
+                            unlock = false;
+                        }
+                        foreach (string t in techs)
+                        {
+                            if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
+                            {
+                                unlock = true;
+                                break;
+                            }
                         }
                     }
                 }
 
-                string[] techs = unlockTechs.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (techs.Length > 0)
-                {
-                    if (parts.Length == 0)
-                    {
-                        unlock = false;
-                    }
-                    foreach (string t in techs)
-                    {
-                        if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
-                        {
-                            unlock = true;
-                            break;
-                        }
-                    }
-                }
+                unlock = unlock && IsSpaceCenterUpgradeUnlocked();
 
                 unlockChecked = true;
                 if (!unlock)
@@ -248,7 +259,15 @@ namespace MuMech
             }
             else
             {
-                return this.OfType<ComputerModule>().ToList().Exists(c => (c != controlledModule) && c.users.RecursiveUser(user));
+                foreach (object o in this)
+                {
+                    ComputerModule c = o as ComputerModule;
+                    if (c != null && c != controlledModule)
+                    {
+                        if (c.users.RecursiveUser(user)) return true;
+                    }
+                }
+                return false;
             }
         }
     }

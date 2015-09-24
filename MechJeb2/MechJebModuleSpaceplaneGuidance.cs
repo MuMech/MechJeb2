@@ -6,11 +6,15 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleSpaceplaneGuidance : DisplayModule
+    public class MechJebModuleSpaceplaneGuidance : DisplayModule
     {
         MechJebModuleSpaceplaneAutopilot autopilot;
 
         protected bool _showLandingTarget = false;
+
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public int runwayIndex = 0;
+
         public bool showLandingTarget
         {
             get { return _showLandingTarget; }
@@ -25,25 +29,30 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-
             GUIStyle s = new GUIStyle(GUI.skin.label);
             s.alignment = TextAnchor.MiddleCenter;
-            GUILayout.Label("Landing", s);
 
-            Runway[] runways = MechJebModuleSpaceplaneAutopilot.runways;
-            int runwayIndex = Array.IndexOf(runways, autopilot.runway);
-            runwayIndex = GuiUtils.ArrowSelector(runwayIndex, runways.Length, autopilot.runway.name);
-            autopilot.runway = runways[runwayIndex];
+            List<Runway> availableRunways = MechJebModuleSpaceplaneAutopilot.runways.Where(p => p.body == mainBody).ToList();
+            if (runwayIndex > availableRunways.Count)
+                runwayIndex = 0;
 
-            GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autopilot.runway.Start(vesselState.CoM)), 0) + "m");
+            if (availableRunways.Any())
+            {
+                GUILayout.Label("Landing", s);
 
-            showLandingTarget = GUILayout.Toggle(showLandingTarget, "Show landing navball guidance");
+                runwayIndex = GuiUtils.ComboBox.Box(runwayIndex, availableRunways.Select(p => p.name).ToArray(), this);
+                autopilot.runway = availableRunways[runwayIndex];
 
-            if (GUILayout.Button("Autoland")) autopilot.Autoland(this);
-            if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.AUTOLAND
-                && GUILayout.Button("Abort")) autopilot.AutopilotOff();
+                GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autopilot.runway.Start(vesselState.CoM)), 0) + "m");
 
-            GuiUtils.SimpleTextBox("Autoland glideslope:", autopilot.glideslope, "º");
+                showLandingTarget = GUILayout.Toggle(showLandingTarget, "Show landing navball guidance");
+
+                if (GUILayout.Button("Autoland")) autopilot.Autoland(this);
+                if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.AUTOLAND
+                    && GUILayout.Button("Abort")) autopilot.AutopilotOff();
+
+                GuiUtils.SimpleTextBox("Autoland glideslope:", autopilot.glideslope, "º");
+            }
 
             GUILayout.Label("Hold", s);
 

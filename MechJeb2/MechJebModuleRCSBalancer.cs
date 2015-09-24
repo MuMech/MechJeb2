@@ -63,7 +63,7 @@ namespace MuMech
             GuiUtils.SimpleLabel("Status", solverThread.statusString);
 
             string error = solverThread.errorString;
-            if (error != null && error.Length != 0)
+            if (!string.IsNullOrEmpty(error))
             {
                 GUILayout.Label(error, GUILayout.ExpandWidth(true));
             }
@@ -79,16 +79,23 @@ namespace MuMech
 
             bool firstRcsModule = true;
             string thrusterStates = "";
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    if (!firstRcsModule) thrusterStates += " ";
+                    if (!firstRcsModule)
+                    {
+                        thrusterStates += " ";
+                    }
                     firstRcsModule = false;
                     thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
                     for (int i = 0; i < pm.thrustForces.Count; i++)
                     {
-                        if (i != 0) thrusterStates += ",";
+                        if (i != 0)
+                        {
+                            thrusterStates += ",";
+                        }
                         thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
                     }
                     thrusterStates += ")";
@@ -107,11 +114,15 @@ namespace MuMech
             bool firstRcsModule = true;
             string thrusterStates = "";
 
-            foreach (Part p in vessel.parts)
+            for (int index = 0; index < vessel.parts.Count; index++)
             {
+                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
-                    if (!firstRcsModule) thrusterStates += " ";
+                    if (!firstRcsModule)
+                    {
+                        thrusterStates += " ";
+                    }
                     firstRcsModule = false;
                     thrusterStates += pm.thrusterPower.ToString("F1");
                 }
@@ -167,10 +178,11 @@ namespace MuMech
         // Throttles RCS thrusters to keep a vessel balanced during translation.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
+            bool cutThrottles = false;
+
             if (s.X == 0 && s.Y == 0 && s.Z == 0)
             {
                 solverThread.ResetThrusterForces();
-                return;
             }
 
             // Note that FlightCtrlState doesn't use the same axes as the
@@ -195,13 +207,18 @@ namespace MuMech
             RCSSolverKey.SetPrecision(calcPrecision);
             GetThrottles(direction, out throttles, out thrusters);
 
-            // If the throttles we got were bad (due to the threaded calculation
-            // not having completed yet), throttle all RCS thrusters to 0. It's
+            // If the throttles we got were bad (due to the threaded
+            // calculation not having completed yet), cut throttles. It's
             // better to not move at all than move in the wrong direction.
             if (throttles.Length != thrusters.Count)
             {
                 throttles = new double[thrusters.Count];
-                for (int i = 0; i < thrusters.Count; i++)
+                cutThrottles = true;
+            }
+
+            if (cutThrottles)
+            {
+                for (int i = 0; i < throttles.Length; i++)
                 {
                     throttles[i] = 0;
                 }
@@ -230,6 +247,7 @@ namespace MuMech
             return solverThread.calculationTime;
         }
 
+        /*
         public override void OnUpdate()
         {
             // Make thruster exhaust onscreen correspond to actual thrust.
@@ -250,6 +268,7 @@ namespace MuMech
             }
             base.OnUpdate();
         }
+         */
 
         public override void Drive(FlightCtrlState s)
         {

@@ -25,7 +25,7 @@ namespace MuMech
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
 
             string[] units = new string[] { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
-            int unitIndexOffset = 8; //index of "" in the units array
+            const int unitIndexOffset = 8; //index of "" in the units array
             int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
             if (unitIndex < 0) unitIndex = 0;
             if (unitIndex >= units.Length) unitIndex = units.Length - 1;
@@ -44,14 +44,20 @@ namespace MuMech
             return ret;
         }
 
+        public static string PadPositive(double x, string format = "F3")
+        {
+            string s = x.ToString(format);
+            return s[0] == '-' ? s : " " + s;
+        }
+
         public static string PrettyPrint(Vector3d vector, string format = "F3")
         {
-            return "[" + vector.x.ToString(format) + ", " + vector.y.ToString(format) + ", " + vector.z.ToString(format) + "]";
+            return "[" + PadPositive(vector.x, format) + ", " + PadPositive(vector.y, format) + ", " + PadPositive(vector.z, format) + " ]";
         }
 
         public static string PrettyPrint(Quaternion quaternion, string format = "F3")
         {
-            return "[" + quaternion.x.ToString(format) + ", " + quaternion.y.ToString(format) + ", " + quaternion.z.ToString(format) + ", " + quaternion.w.ToString(format) + "]";
+            return "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) + ", " + PadPositive(quaternion.w ,format) + "]";
         }
 
         //For some reason, Math doesn't have the inverse hyperbolic trigonometric functions:
@@ -115,6 +121,20 @@ namespace MuMech
         {
             Orbit ret = new Orbit();
             ret.UpdateFromStateVectors(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
+            if (double.IsNaN(ret.argumentOfPeriapsis))
+            {
+                Vector3d vectorToAN = Quaternion.AngleAxis(-(float)ret.LAN, Planetarium.up) * Planetarium.right;
+                Vector3d vectorToPe = OrbitExtensions.SwapYZ(ret.eccVec);
+                double cosArgumentOfPeriapsis = Vector3d.Dot(vectorToAN, vectorToPe) / (vectorToAN.magnitude * vectorToPe.magnitude);
+                //Squad's UpdateFromStateVectors is missing these checks, which are needed due to finite precision arithmetic:
+                if(cosArgumentOfPeriapsis > 1) {
+                    ret.argumentOfPeriapsis = 0;
+                } else if(cosArgumentOfPeriapsis < -1) {
+                    ret.argumentOfPeriapsis = 180;
+                } else {
+                    ret.argumentOfPeriapsis = Math.Acos(cosArgumentOfPeriapsis);
+                }
+            }
             return ret;
         }
 
@@ -158,6 +178,54 @@ namespace MuMech
 			list[indexA] = list[indexB];
 			list[indexB] = tmp;
 			return list;
+        }
+
+        public static void DrawLine(Texture2D tex, int x1, int y1, int x2, int y2, Color col)
+        {
+            int dy = y2 - y1;
+            int dx = x2 - x1;
+            int stepx, stepy;
+
+            if (dy < 0) { dy = -dy; stepy = -1; }
+            else { stepy = 1; }
+            if (dx < 0) { dx = -dx; stepx = -1; }
+            else { stepx = 1; }
+            dy <<= 1;
+            dx <<= 1;
+
+            float fraction = 0;
+
+            tex.SetPixel(x1, y1, col);
+            if (dx > dy)
+            {
+                fraction = dy - (dx >> 1);
+                while (Mathf.Abs(x1 - x2) > 1)
+                {
+                    if (fraction >= 0)
+                    {
+                        y1 += stepy;
+                        fraction -= dx;
+                    }
+                    x1 += stepx;
+                    fraction += dy;
+                    tex.SetPixel(x1, y1, col);
+                }
+            }
+            else
+            {
+                fraction = dx - (dy >> 1);
+                while (Mathf.Abs(y1 - y2) > 1)
+                {
+                    if (fraction >= 0)
+                    {
+                        x1 += stepx;
+                        fraction -= dy;
+                    }
+                    y1 += stepy;
+                    fraction += dx;
+                    tex.SetPixel(x1, y1, col);
+                }
+            }
         }
     }
 
@@ -294,21 +362,34 @@ namespace MuMech
 
     //Is it silly to have a Matrix2x2 and a Matrix3x3, and not a generic Matrix? Yes.
     //However I don't feel like implementing inverse() for matrices larger than 
-    //2x2, and I want Matrix3x3 to interact nicely with Vector3d.
-    public class Matrix3x3
+    //2x2, and I want Matrix3x3f to interact nicely with Vector3.
+    public class Matrix3x3f
     {
         //row index, then column index
-        private double[,] e = new double[3, 3];
+        private float[,] e = new float[3, 3];
 
-        public double this[int i, int j] 
+        public float this[int i, int j] 
         {
             get { return e[i, j]; }
             set { e[i, j] = value; }
         }
 
-        public static Vector3d operator *(Matrix3x3 M, Vector3d v) 
+		public Matrix3x3f transpose()
+		{
+			Matrix3x3f ret = new Matrix3x3f();
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					ret.e[i, j] = e[j, i];
+				}
+			}
+			return ret;
+		}
+
+        public static Vector3d operator *(Matrix3x3f M, Vector3 v) 
         {
-            Vector3d ret = Vector3d.zero;
+            Vector3 ret = Vector3.zero;
             for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
                     ret[i] += M.e[i, j] * v[j];

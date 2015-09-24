@@ -63,7 +63,7 @@ namespace MuMech
         {
             if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
 
-            if (NormalTargetExists) return Coordinates.ToStringDMS(Orbit.referenceBody.GetLatitude(Position), Orbit.referenceBody.GetLongitude(Position), true);
+            if (NormalTargetExists) return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position), true);
 
             return "N/A";
         }
@@ -106,7 +106,7 @@ namespace MuMech
         {
             get
             {
-                return (target != null && (target is Vessel || target is CelestialBody || target is ModuleDockingNode));
+                return (target != null && (target is Vessel || target is CelestialBody || CanAlign));
             }
         }
 
@@ -118,14 +118,23 @@ namespace MuMech
             }
         }
 
+		public bool CanAlign
+		{
+			get { return target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation; }
+		}
+
         public ITargetable Target
         {
             get { return target; }
         }
 
-        public Orbit Orbit
+        public Orbit TargetOrbit
         {
-            get { return target.GetOrbit(); }
+            get {
+                if (target == null)
+                    return null;
+                return target.GetOrbit();
+            }
         }
 
         public Vector3 Position
@@ -140,7 +149,7 @@ namespace MuMech
 
         public Vector3d RelativeVelocity
         {
-            get { return (vessel.orbit.GetVel() - Orbit.GetVel()); }
+            get { return (vessel.orbit.GetVel() - TargetOrbit.GetVel()); }
         }
 
         public Vector3d RelativePosition
@@ -158,7 +167,7 @@ namespace MuMech
         {
             get
             {
-                if (target is ModuleDockingNode) return -Transform.forward;
+                if (CanAlign) return -Transform.forward;
                 return -Transform.up;
             }
         }
@@ -202,6 +211,11 @@ namespace MuMech
                 }
             }
 
+
+            // .23 temp fix until I understand better what's going on
+            if (targetBody == null)
+                targetBody = vessel.mainBody;
+            
             //Update targets that need updating:
             if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
             else if (target is PositionTarget) ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
@@ -237,7 +251,7 @@ namespace MuMech
                     if (mouseCoords != null)
                     {
                         GLUtils.DrawMapViewGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f));
-                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal());
+                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal() + "\n" + ScienceUtil.GetExperimentBiome(mainBody, mouseCoords.latitude, mouseCoords.longitude));
 
                         if (Input.GetMouseButtonDown(0))
                         {
@@ -301,6 +315,7 @@ namespace MuMech
         public Vector3 GetSrfVelocity() { return Vector3.zero; }
         public Transform GetTransform() { return g.transform; }
         public Vessel GetVessel() { return null; }
+        public VesselTargetModes GetTargetingMode() { return VesselTargetModes.Direction ; }
     }
 
     public class DirectionTarget : PositionTarget

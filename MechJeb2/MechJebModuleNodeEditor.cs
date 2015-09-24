@@ -69,7 +69,7 @@ namespace MuMech
             {
                 prograde = node.DeltaV.z;
                 radialPlus = node.DeltaV.x;
-                normalPlus = -node.DeltaV.y;
+                normalPlus = node.DeltaV.y;
             }
 
             if (gizmo != node.attachedGizmo)
@@ -146,6 +146,10 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Shift time", GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("-o", GUILayout.ExpandWidth(false)))
+            {
+                node.OnGizmoUpdated(node.DeltaV, node.UT - node.patch.period);
+            }
             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
             {
                 node.OnGizmoUpdated(node.DeltaV, node.UT - timeOffset);
@@ -154,6 +158,10 @@ namespace MuMech
             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 node.OnGizmoUpdated(node.DeltaV, node.UT + timeOffset);
+            }
+            if (GUILayout.Button("+o", GUILayout.ExpandWidth(false)))
+            {
+                node.OnGizmoUpdated(node.DeltaV, node.UT + node.patch.period);
             }
             GUILayout.EndHorizontal();
 
@@ -181,16 +189,16 @@ namespace MuMech
                         break;
 
                     case Snap.REL_ASCENDING:
-                        if (core.target.NormalTargetExists && core.target.Orbit.referenceBody == o.referenceBody)
+                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
                         {
-                            if (o.AscendingNodeExists(core.target.Orbit)) UT = o.TimeOfAscendingNode(core.target.Orbit, UT - o.period / 2);
+                            if (o.AscendingNodeExists(core.target.TargetOrbit)) UT = o.TimeOfAscendingNode(core.target.TargetOrbit, UT - o.period / 2);
                         }
                         break;
 
                     case Snap.REL_DESCENDING:
-                        if (core.target.NormalTargetExists && core.target.Orbit.referenceBody == o.referenceBody)
+                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
                         {
-                            if (o.DescendingNodeExists(core.target.Orbit)) UT = o.TimeOfDescendingNode(core.target.Orbit, UT - o.period / 2);
+                            if (o.DescendingNodeExists(core.target.TargetOrbit)) UT = o.TimeOfDescendingNode(core.target.TargetOrbit, UT - o.period / 2);
                         }
                         break;
                 }
@@ -202,6 +210,40 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             RelativityModeSelectUI();
+
+
+            if (core.node != null)
+            {
+                if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && !core.node.enabled)
+                {
+                    if (GUILayout.Button("Execute next node"))
+                    {
+                        core.node.ExecuteOneNode(this);
+                    }
+
+                    if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                    {
+                        if (GUILayout.Button("Execute all nodes"))
+                        {
+                            core.node.ExecuteAllNodes(this);
+                        }
+                    }
+                }
+                else if (core.node.enabled)
+                {
+                    if (GUILayout.Button("Abort node execution"))
+                    {
+                        core.node.Abort();
+                    }
+                }
+
+                GUILayout.BeginHorizontal();
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp", GUILayout.ExpandWidth(true));
+                GUILayout.Label("Tolerance:", GUILayout.ExpandWidth(false));
+                core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.EndVertical();
 
@@ -232,6 +274,11 @@ namespace MuMech
         public override string GetName()
         {
             return "Maneuver Node Editor";
+        }
+
+        public override bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return vessel.patchedConicsUnlocked();
         }
 
         public MechJebModuleNodeEditor(MechJebCore core) : base(core) { }

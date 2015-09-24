@@ -9,6 +9,7 @@ namespace MuMech
     public class DisplayModule : ComputerModule
     {
         public bool hidden = false;
+        public bool locked = false;
 
         public Rect windowPos
         {
@@ -24,22 +25,22 @@ namespace MuMech
                 if (!HighLogic.LoadedSceneIsEditor)
                 {
                     windowVector = new Vector4(
-                        Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
-                        Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
+                        Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
+                        Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
                         value.width, value.height
                     );
-                    windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, Screen.width - 10);
-                    windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, Screen.height - 10);
+                    windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
+                    windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
                 }
                 else
                 {
                     windowVectorEditor = new Vector4(
-                        Math.Min(Math.Max(value.x, 0), Screen.width - value.width),
-                        Math.Min(Math.Max(value.y, 0), Screen.height - value.height),
+                        Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
+                        Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
                         value.width, value.height
                     );
-                    windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, Screen.width - 10);
-                    windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, Screen.height - 10);
+                    windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
+                    windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
                 }
             }
         }
@@ -56,10 +57,6 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
-
-        // Used for the Blizzy Toolbar-Plugin
-        [Persistent(pass = (int)Pass.Global)]
-        public bool useIcon = false;
 
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
@@ -78,19 +75,34 @@ namespace MuMech
             return new GUILayoutOption[0];
         }
 
-        protected virtual void WindowGUI(int windowID)
+        protected void WindowGUI(int windowID, bool draggable)
         {
             if (GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
             {
                 enabled = false;
             }
 
-            if (GUI.Button(new Rect(windowPos.width - 33, 0, 13, 20), "T", GuiUtils.yellowOnHover))
+//            if (GUI.Button(new Rect(windowPos.width - 40, 2, 20, 16), (locked ? "X" : "O"))) // lock button needs an icon, letters look crap
+//            {
+//                locked = !locked;
+//            }
+            
+            bool allowDrag = true;
+            if (core.settings.useTitlebarDragging)
             {
-                useIcon = !useIcon;
+                float x = Mouse.screenPos.x / GuiUtils.scale;
+                float y = Mouse.screenPos.y / GuiUtils.scale;
+                allowDrag = x >= windowPos.xMin + 3 && x <= windowPos.xMin + windowPos.width - 3 &&
+                            y >= windowPos.yMin + 3 && y <= windowPos.yMin + 17;
             }
 
-            GUI.DragWindow();
+            if (draggable && allowDrag)
+                GUI.DragWindow();
+        }
+
+        protected virtual void WindowGUI(int windowID)
+        {
+            WindowGUI(windowID, true);
         }
 
         public virtual void DrawGUI(bool inEditor)
@@ -128,6 +140,7 @@ namespace MuMech
             base.OnSave(local, type, global);
 
             if (global != null) global.AddValue("enabled", enabled);
+//            if (global != null) global.AddValue("locked", locked);
         }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -139,6 +152,27 @@ namespace MuMech
                 bool loadedEnabled;
                 if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled)) enabled = loadedEnabled;
             }
+
+//            if (global != null && global.HasValue("locked"))
+//            {
+//                bool loadedLocked;
+//                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
+//            }
+        }
+
+        public virtual bool isActive()
+        {
+            ComputerModule[] makesActive = { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
+
+            bool active = false;
+            foreach (var m in makesActive)
+            {
+                if (m != null)
+                {
+                    if (active |= m.users.RecursiveUser(this)) break;
+                }
+            }
+            return active;
         }
 
         public override void UnlockCheck()
@@ -148,7 +182,7 @@ namespace MuMech
                 bool prevEn = enabled;
                 enabled = true;
                 base.UnlockCheck();
-                if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0)
+                if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
                 {
                     hidden = !enabled;
                     if (hidden)

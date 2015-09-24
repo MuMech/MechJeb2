@@ -16,9 +16,23 @@ namespace MuMech
 
         double warpIncreaseAttemptTime = 0;
 
+
+        // Turn SAS on during regular warp for compatibility with PersistentRotation 
+        void SetTimeWarpRate(int rateIndex, bool instant)
+        {
+            if (rateIndex != TimeWarp.CurrentRateIndex)
+            {
+                if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+                TimeWarp.SetRate(rateIndex, instant);
+                if (rateIndex == 0)
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+            }
+        }
+
         public void WarpToUT(double UT, double maxRate = 100000)
         {
-            double desiredRate = 1.0 * (UT - vesselState.time);
+            double desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
             if (!vessel.LandedOrSplashed &&
@@ -73,7 +87,7 @@ namespace MuMech
                 if (instantAltitudeASL > mainBody.RealMaxAtmosphereAltitude())
                 {
                     TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
-                    TimeWarp.SetRate(0, true);
+                    SetTimeWarpRate(0, true);
                 }
                 return false;
             }
@@ -87,7 +101,7 @@ namespace MuMech
             if (TimeWarp.WarpMode != TimeWarp.Modes.LOW)
             {
                 TimeWarp.fetch.Mode = TimeWarp.Modes.LOW;
-                TimeWarp.SetRate(0, true);
+                SetTimeWarpRate(0, true);
                 return false;
             }
             return true;
@@ -109,7 +123,7 @@ namespace MuMech
             if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
             warpIncreaseAttemptTime = vesselState.time;
-            TimeWarp.SetRate(TimeWarp.CurrentRateIndex + 1, instant);
+            SetTimeWarpRate(TimeWarp.CurrentRateIndex + 1, instant);
             return true;
         }
 
@@ -123,7 +137,7 @@ namespace MuMech
             if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
             warpIncreaseAttemptTime = vesselState.time;
-            TimeWarp.SetRate(TimeWarp.CurrentRateIndex + 1, instant);
+            SetTimeWarpRate(TimeWarp.CurrentRateIndex + 1, instant);
             return true;
         }
 
@@ -133,7 +147,7 @@ namespace MuMech
 
             if (TimeWarp.CurrentRateIndex == 0) return false; //already at minimum warp
 
-            TimeWarp.SetRate(TimeWarp.CurrentRateIndex - 1, instant);
+            SetTimeWarpRate(TimeWarp.CurrentRateIndex - 1, instant);
             return true;
         }
 
@@ -143,14 +157,14 @@ namespace MuMech
 
             if (TimeWarp.CurrentRateIndex == 0) return false; //already at minimum warp
 
-            TimeWarp.SetRate(TimeWarp.CurrentRateIndex - 1, instant);
+            SetTimeWarpRate(TimeWarp.CurrentRateIndex - 1, instant);
             return true;
         }
 
         public bool MinimumWarp(bool instant = false)
         {
             if (TimeWarp.CurrentRateIndex == 0) return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
-            TimeWarp.SetRate(0, instant);
+            SetTimeWarpRate(0, instant);
             return true;
         }
     }

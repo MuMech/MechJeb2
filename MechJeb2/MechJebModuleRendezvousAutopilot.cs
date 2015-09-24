@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -10,7 +11,11 @@ namespace MuMech
 
         public MechJebModuleRendezvousAutopilot(MechJebCore core) : base(core) { }
 
+        [Persistent(pass = (int)Pass.Global)]
         public EditableDouble desiredDistance = 100;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble maxPhasingOrbits = 5;
+
         public string status = "";
 
         public override void OnModuleEnabled()
@@ -32,7 +37,7 @@ namespace MuMech
                 return;
             }
 
-            core.node.autowarp = core.target.Distance > 1000; //don't warp when close to target, because warping introduces small perturbations
+            core.node.autowarp = core.node.autowarp && core.target.Distance > 1000;
 
             //If we get within the target distance and then next maneuver node is still 
             //far in the future, delete it and we will create a new one to match velocities immediately.
@@ -49,7 +54,7 @@ namespace MuMech
                 //If we have plotted a maneuver, execute it.
                 if (!core.node.enabled) core.node.ExecuteAllNodes(this);
             }
-            else if (core.target.Distance < desiredDistance * 1.05 + 2 
+            else if (core.target.Distance < desiredDistance * 1.05 + 2
                      && core.target.RelativeVelocity.magnitude < 1)
             {
                 //finished
@@ -61,29 +66,29 @@ namespace MuMech
             {
                 //We are within the target distance: match velocities
                 double UT = vesselState.time;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 status = "Within " + desiredDistance.ToString() + "m: matching velocities.";
             }
             else if (core.target.Distance < vesselState.radius / 25)
             {
-                if (orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time) < desiredDistance
-                    && orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time) < vesselState.time + 150)
+                if (orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time) < desiredDistance
+                    && orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time) < vesselState.time + 150)
                 {
                     //We're close to the target, and on a course that will take us closer. Kill relvel at closest approach
-                    double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
+                    double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
 
                     //adjust burn time so as to come to rest at the desired distance from the target:
-                    double approachDistance = orbit.Separation(core.target.Orbit, UT);
-                    double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+                    double approachDistance = orbit.Separation(core.target.TargetOrbit, UT);
+                    double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
                     if (approachDistance < desiredDistance)
                     {
                         UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
                     }
 
                     //if coming in hot, stop early to avoid crashing:
-                    if (approachSpeed > 10) UT -= 1; 
+                    if (approachSpeed > 10) UT -= 1;
 
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
@@ -98,91 +103,101 @@ namespace MuMech
 
                     double UT = vesselState.time + 15;
                     double interceptUT = UT + closingTime;
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.Orbit, interceptUT, 0);
+                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 0);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
                     status = "Close to target: plotting intercept";
                 }
             }
-            else if (orbit.NextClosestApproachDistance(core.target.Orbit, vesselState.time) < core.target.Orbit.semiMajorAxis / 25)
+            else if (orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time) < core.target.TargetOrbit.semiMajorAxis / 25)
             {
                 //We're not close to the target, but we're on an approximate intercept course. 
                 //Kill relative velocities at closest approach
-                double UT = orbit.NextClosestApproachTime(core.target.Orbit, vesselState.time);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.Orbit);
+                double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
 
                 //adjust burn time so as to come to rest at the desired distance from the target:
-                double approachDistance = (orbit.SwappedAbsolutePositionAtUT(UT) - core.target.Orbit.SwappedAbsolutePositionAtUT(UT)).magnitude;
-                double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.Orbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+                double approachDistance = (orbit.SwappedAbsolutePositionAtUT(UT) - core.target.TargetOrbit.SwappedAbsolutePositionAtUT(UT)).magnitude;
+                double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
                 if (approachDistance < desiredDistance)
                 {
                     UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
                 }
 
                 //if coming in hot, stop early to avoid crashing:
-                if (approachSpeed > 10) UT -= 1; 
-                
+                if (approachSpeed > 10) UT -= 1;
+
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
                 status = "On intercept course. Planning to match velocities at closest approach.";
             }
-            else if (orbit.RelativeInclination(core.target.Orbit) < 0.05 && orbit.eccentricity < 0.05 && orbit.SynodicPeriod(core.target.Orbit) < 5 * orbit.period)
+            else if (orbit.RelativeInclination(core.target.TargetOrbit) < 0.05 && orbit.eccentricity < 0.05)
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
-                //Also we are phasing quickly enough that it won't be too long until an intercept window
-                //Plot a Hohmann transfer intercept.
-                double UT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.Orbit, vesselState.time, out UT);
-                vessel.PlaceManeuverNode(orbit, dV, UT);
+                
+                double hohmannUT;
+                Vector3d hohmannDV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out hohmannUT);
 
-                status = "Planning Hohmann transfer for intercept.";
-            }
-            else if (orbit.RelativeInclination(core.target.Orbit) < 0.05 && orbit.eccentricity < 0.05)
-            {
-                //We are in a circular orbit in the right plane, but we aren't phasing quickly enough. Move to a better phasing orbit
-                double lowPhasingRadius = core.target.Orbit.semiMajorAxis / 1.16;
-                double highPhasingRadius = core.target.Orbit.semiMajorAxis * 1.16;
+                double numPhasingOrbits = (hohmannUT - vesselState.time) / orbit.period;
 
-                bool useLowPhasingRadius = (lowPhasingRadius > mainBody.RealMaxAtmosphereAltitude() + 3000 && orbit.semiMajorAxis < core.target.orbit.semiMajorAxis);
+                double actualMaxPhasingOrbits = Math.Max(maxPhasingOrbits, 5); // ignore input values that are unreasonably small
 
-                double phasingOrbitRadius = (useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius);
-
-                if (orbit.ApR < phasingOrbitRadius)
+                if (numPhasingOrbits < actualMaxPhasingOrbits)
                 {
-                    double UT1 = vesselState.time + 15;
-                    Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(orbit, UT1, phasingOrbitRadius);
-                    vessel.PlaceManeuverNode(orbit, dV1, UT1);
-                    Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-                    double UT2 = transferOrbit.NextApoapsisTime(UT1);
-                    Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
-                    vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
-                }
-                else if (orbit.PeR > phasingOrbitRadius)
-                {
-                    double UT1 = vesselState.time + 15;
-                    Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, UT1, phasingOrbitRadius);
-                    vessel.PlaceManeuverNode(orbit, dV1, UT1);
-                    Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-                    double UT2 = transferOrbit.NextPeriapsisTime(UT1);
-                    Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
-                    vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
+                    //It won't be too long until the intercept window. Plot a Hohmann transfer intercept.
+                    vessel.PlaceManeuverNode(orbit, hohmannDV, hohmannUT);
+
+                    status = "Planning Hohmann transfer for intercept after " + numPhasingOrbits.ToString("F2") + " phasing orbits.";
                 }
                 else
                 {
-                    double UT = orbit.NextTimeOfRadius(vesselState.time, phasingOrbitRadius);
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
-                    vessel.PlaceManeuverNode(orbit, dV, UT);
-                }
+                    //We are in a circular orbit in the right plane, but we aren't phasing quickly enough. Move to a better phasing orbit
+                    double axisRatio = Math.Pow(1 + 1.25 / actualMaxPhasingOrbits, 2.0 / 3.0);
+                    double lowPhasingRadius = core.target.TargetOrbit.semiMajorAxis / axisRatio;
+                    double highPhasingRadius = core.target.TargetOrbit.semiMajorAxis * axisRatio;
 
-                status = "Increasing phasing rate by establishing new phasing orbit at " + MuUtils.ToSI(phasingOrbitRadius - mainBody.Radius, 0) + "m";
+                    bool useLowPhasingRadius = (lowPhasingRadius > mainBody.Radius + mainBody.RealMaxAtmosphereAltitude() + 3000) && (orbit.semiMajorAxis < core.target.TargetOrbit.semiMajorAxis);
+                    double phasingOrbitRadius = (useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius);
+
+                    if (orbit.ApR < phasingOrbitRadius)
+                    {
+                        double UT1 = vesselState.time + 15;
+                        Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(orbit, UT1, phasingOrbitRadius);
+                        vessel.PlaceManeuverNode(orbit, dV1, UT1);
+                        Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
+                        double UT2 = transferOrbit.NextApoapsisTime(UT1);
+                        Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
+                        vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
+                    }
+                    else if (orbit.PeR > phasingOrbitRadius)
+                    {
+                        double UT1 = vesselState.time + 15;
+                        Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, UT1, phasingOrbitRadius);
+                        vessel.PlaceManeuverNode(orbit, dV1, UT1);
+                        Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
+                        double UT2 = transferOrbit.NextPeriapsisTime(UT1);
+                        Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
+                        vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
+                    }
+                    else
+                    {
+                        double UT = orbit.NextTimeOfRadius(vesselState.time, phasingOrbitRadius);
+                        Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+                        vessel.PlaceManeuverNode(orbit, dV, UT);
+                    }
+
+                    status = "Next intercept window would be " + numPhasingOrbits.ToString("F1") + " orbits away, "
+                             + "which is more than the maximum of " + maxPhasingOrbits.text + " phasing orbits. "
+                             + "Increasing phasing rate by establishing new phasing orbit at " + MuUtils.ToSI(phasingOrbitRadius - mainBody.Radius, 0) + "m";
+                }
             }
-            else if (orbit.RelativeInclination(core.target.Orbit) < 0.05)
+            else if (orbit.RelativeInclination(core.target.TargetOrbit) < 0.05)
             {
                 //We're not on an intercept course. We're in the right plane, but our orbit isn't circular. Circularize.
 
                 bool circularizeAtPe;
                 if (orbit.eccentricity > 1) circularizeAtPe = true;
-                else circularizeAtPe = Math.Abs(orbit.PeR - core.target.Orbit.semiMajorAxis) < Math.Abs(orbit.ApR - core.target.Orbit.semiMajorAxis);
+                else circularizeAtPe = Math.Abs(orbit.PeR - core.target.TargetOrbit.semiMajorAxis) < Math.Abs(orbit.ApR - core.target.TargetOrbit.semiMajorAxis);
 
                 double UT;
                 if (circularizeAtPe) UT = Math.Max(vesselState.time, orbit.NextPeriapsisTime(vesselState.time));
@@ -199,7 +214,7 @@ namespace MuMech
                 bool ascending;
                 if (orbit.eccentricity < 1)
                 {
-                    if (orbit.TimeOfAscendingNode(core.target.Orbit, vesselState.time) < orbit.TimeOfDescendingNode(core.target.Orbit, vesselState.time))
+                    if (orbit.TimeOfAscendingNode(core.target.TargetOrbit, vesselState.time) < orbit.TimeOfDescendingNode(core.target.TargetOrbit, vesselState.time))
                     {
                         ascending = true;
                     }
@@ -210,7 +225,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (orbit.AscendingNodeExists(core.target.Orbit))
+                    if (orbit.AscendingNodeExists(core.target.TargetOrbit))
                     {
                         ascending = true;
                     }
@@ -222,8 +237,8 @@ namespace MuMech
 
                 double UT;
                 Vector3d dV;
-                if (ascending) dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.Orbit, vesselState.time, out UT);
-                else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.target.Orbit, vesselState.time, out UT);
+                if (ascending) dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
+                else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
 
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 

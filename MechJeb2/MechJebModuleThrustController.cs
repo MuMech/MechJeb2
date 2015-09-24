@@ -28,6 +28,25 @@ namespace MuMech
             limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
         }
 
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool limitDynamicPressure = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble maxDynamicPressure = 20000;
+
+        [GeneralInfoItem("Limit to Max Q", InfoItem.Category.Thrust)]
+        public void LimitToMaxDynamicPressureInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.DynamicPressure) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitDynamicPressure = GUILayout.Toggle(limitDynamicPressure, "Limit Q to", s, GUILayout.Width(140));
+            maxDynamicPressure.text = GUILayout.TextField(maxDynamicPressure.text, GUILayout.Width(80));
+            GUILayout.Label("pa", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventOverheats = false;
 
@@ -102,7 +121,47 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle }
+        [Persistent(pass = (int)Pass.Local)]
+        public bool limiterMinThrottle = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
+
+        [GeneralInfoItem("Lower throttle limit", InfoItem.Category.Thrust)]
+        public void LimiterMinThrottleInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.MinThrottle) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limiterMinThrottle = GUILayout.Toggle(limiterMinThrottle, "Keep limited throttle over", s, GUILayout.Width(160));
+            minThrottle.text = GUILayout.TextField(minThrottle.text, GUILayout.Width(30));
+            GUILayout.Label("%", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        [Persistent(pass = (int)Pass.Type)]
+        public bool differentialThrottle = false;
+
+        [GeneralInfoItem("Differential throttle", InfoItem.Category.Thrust)]
+        public void  DifferentialThrottle()
+        {
+            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (differentialThrottle && vessel.LiftedOff())
+            {
+                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess ? Color.green : Color.yellow;
+            }
+            differentialThrottle = GUILayout.Toggle(differentialThrottle, "Differential throttle", s);
+            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
+                core.thrust.DisableDifferentialThrottle();
+        }
+
+        public Vector3d differentialThrottleDemandedTorque = new Vector3d();
+
+        // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
+        public bool differentialThrottleSuccess = false;
+
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle }
         public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
@@ -113,6 +172,9 @@ namespace MuMech
         public PIDController pid;
 
         float lastThrottle = 0;
+        bool userCommandingRotation { get { return userCommandingRotationSmoothed > 0; } }
+        int userCommandingRotationSmoothed = 0;
+        bool lastDisableThrusters = false;
 
         public enum TMode
         {
@@ -162,8 +224,39 @@ namespace MuMech
             }
         }
 
+        // Call this function to set the throttle for a burn with dV delta-V remaining.
+        // timeConstant controls how quickly we throttle down toward the end of the burn.
+        // This function is nice because it will correctly handle engine spool-up/down times.
+        public void ThrustForDV(double dV, double timeConstant)
+        {
+            timeConstant += vesselState.maxEngineResponseTime;
+            double spooldownDV = vesselState.currentThrustAccel * vesselState.maxEngineResponseTime;
+            double desiredAcceleration = (dV - spooldownDV) / timeConstant;
+
+            targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
+        }
+
         public override void Drive(FlightCtrlState s)
         {
+            float threshold = 0.1F;
+            bool _userCommandingRotation = !(Mathfx.Approx(s.pitch, s.pitchTrim, threshold)
+                    && Mathfx.Approx(s.yaw, s.yawTrim, threshold)
+                    && Mathfx.Approx(s.roll, s.rollTrim, threshold));
+            bool _userCommandingTranslation = !(Math.Abs(s.X) < threshold
+                        && Math.Abs(s.Y) < threshold
+                        && Math.Abs(s.Z) < threshold);
+
+            if (_userCommandingRotation && !_userCommandingTranslation)
+            {
+                userCommandingRotationSmoothed = 2;
+            }
+            else if (userCommandingRotationSmoothed > 0)
+            {
+                userCommandingRotationSmoothed--;
+            }
+
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
+
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
                 double spd = 0;
@@ -181,7 +274,7 @@ namespace MuMech
                         Vector3d rot = Vector3d.up;
                         if (trans_kill_h)
                         {
-                            Vector3 hsdir = Vector3.Exclude(vesselState.up, vesselState.velocityVesselSurface);
+                            Vector3 hsdir = Vector3.ProjectOnPlane(vesselState.surfaceVelocity, vesselState.up);
                             Vector3 dir = -hsdir + vesselState.up * Math.Max(Math.Abs(spd), 20 * mainBody.GeeASL);
                             if ((Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) > 5000) && (hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * mainBody.GeeASL) * 2))
                             {
@@ -199,8 +292,8 @@ namespace MuMech
                 }
 
                 double t_err = (trans_spd_act - spd) / vesselState.maxThrustAccel;
-                if ((tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(vesselState.forward, vesselState.velocityVesselOrbit) < 0) ||
-                   (tmode == TMode.KEEP_SURFACE && Vector3d.Dot(vesselState.forward, vesselState.velocityVesselSurface) < 0))
+                if ((tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(vesselState.forward, vesselState.orbitalVelocity) < 0) ||
+                   (tmode == TMode.KEEP_SURFACE && Vector3d.Dot(vesselState.forward, vesselState.surfaceVelocity) < 0))
                 {
                     //allow thrust to declerate 
                     t_err *= -1;
@@ -224,7 +317,13 @@ namespace MuMech
                 }
                 else
                 {
-                    if ((core.attitude.attitudeError >= 2) && (vesselState.torqueThrustPYAvailable > Math.Min( vesselState.torqueAvailable.x, vesselState.torqueAvailable.z) * 10))
+                    bool useGimbal = (vesselState.torqueFromEngine.x / vessel.ctrlState.mainThrottle > vesselState.torqueAvailable.x * 10) ||
+                                     (vesselState.torqueFromEngine.z / vessel.ctrlState.mainThrottle > vesselState.torqueAvailable.z * 10);
+
+                    bool useDiffThrottle = (vesselState.torqueFromDiffThrottle.x > vesselState.torqueAvailable.x * 10) ||
+                                           (vesselState.torqueFromDiffThrottle.z > vesselState.torqueAvailable.z * 10);
+
+                    if ((core.attitude.attitudeError >= 2) && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
                     }
@@ -257,9 +356,16 @@ namespace MuMech
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
+            if (limitDynamicPressure)
+            {
+                float limit = MaximumDynamicPressureThrottle();
+                if (limit < throttleLimit) limiter = LimitMode.DynamicPressure;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
+            }
+            
             if (limitToPreventOverheats)
             {
-                float limit = TemperatureSafetyThrottle();
+                float limit = (float)TemperatureSafetyThrottle();
                 if(limit < throttleLimit) limiter = LimitMode.Temperature;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
@@ -280,6 +386,12 @@ namespace MuMech
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
+            if (limiterMinThrottle  && limiter != LimitMode.None && throttleLimit < minThrottle)
+            {
+                limiter = LimitMode.MinThrottle;
+                throttleLimit = (float) minThrottle;
+            }
+
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
             throttleLimit = Mathf.Clamp01(throttleLimit);
 
@@ -296,8 +408,28 @@ namespace MuMech
 
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
+            
+            if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
             lastThrottle = s.mainThrottle;
+
+            if (!core.attitude.enabled)
+            {
+                Vector3d act = new Vector3d(s.pitch, s.yaw, s.roll);
+                differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * s.mainThrottle * 0.5f);
+            }
+        }
+
+        public override void OnFixedUpdate()
+        {
+            if (differentialThrottle)
+            {
+                differentialThrottleSuccess = ComputeDifferentialThrottle(differentialThrottleDemandedTorque);
+            }
+            else
+            {
+                differentialThrottleSuccess = false;
+            }
         }
 
         //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
@@ -305,22 +437,36 @@ namespace MuMech
         {
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return 1.0F;
 
-            double velocityRatio = Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.up) / vesselState.TerminalVelocity();
+            double velocityRatio = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.up) / vesselState.TerminalVelocity();
 
             if (velocityRatio < 1.0) return 1.0F; //full throttle if under terminal velocity
 
             //throttle down quickly as we exceed terminal velocity:
-            double falloff = 15.0;
+            const double falloff = 15.0;
             return Mathf.Clamp((float)(1.0 - falloff * (velocityRatio - 1.0)), 0.0F, 1.0F);
         }
 
-        //a throttle setting that throttles down if something is close to overheating
-        float TemperatureSafetyThrottle()
+        //A throttle setting that throttles down when the dynamic pressure exceed a set value
+        float MaximumDynamicPressureThrottle()
         {
-            float maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
+            if (maxDynamicPressure <= 0) return 1.0F;
+
+            double pressureRatio = vesselState.dynamicPressure / maxDynamicPressure;
+
+            if (pressureRatio < 1.0) return 1.0F; //full throttle if under maximum dynamic pressure
+
+            //throttle down quickly as we exceed maximum dynamic pressure:
+            const double falloff = 15.0;
+            return Mathf.Clamp((float)(1.0 - falloff * (pressureRatio - 1.0)), 0.0F, 1.0F);
+        }
+
+        //a throttle setting that throttles down if something is close to overheating
+        double TemperatureSafetyThrottle()
+        {
+            double maxTempRatio = vessel.parts.Max(p => p.temperature / p.maxTemp);
 
             //reduce throttle as the max temp. ratio approaches 1 within the safety margin
-            float tempSafetyMargin = 0.05f;
+            const double tempSafetyMargin = 0.05f;
             if (maxTempRatio < 1 - tempSafetyMargin) return 1.0F;
             else return (1 - maxTempRatio) / tempSafetyMargin;
         }
@@ -435,7 +581,9 @@ namespace MuMech
                     groupIds[partIntake] = grpId;
                     intakes.Add(partIntake);
 
-                    foreach (var sympart in part.symmetryCounterparts) {
+                    for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+                    {
+                        var sympart = part.symmetryCounterparts[i];
                         stack.Push(sympart);
                     }
                 }
@@ -451,8 +599,9 @@ namespace MuMech
             {
                 if (airFlowSoFar < requiredFlow)
                 {
-                    foreach (var intake in grp)
+                    for (int i = 0; i < grp.Count; i++)
                     {
+                        var intake = grp[i];
                         double airFlowThisIntake = data[intake].predictedMassFlow;
                         if (!intake.intakeEnabled)
                         {
@@ -463,8 +612,9 @@ namespace MuMech
                 }
                 else
                 {
-                    foreach (var intake in grp)
+                    for (int j = 0; j < grp.Count; j++)
                     {
+                        var intake = grp[j];
                         if (intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
@@ -483,6 +633,11 @@ namespace MuMech
 
         public override void OnUpdate()
         {
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden)
+            {
+                return;
+            }
+
             if (tmode_changed)
             {
                 if (trans_kill_h && (tmode == TMode.OFF))
@@ -492,6 +647,183 @@ namespace MuMech
                 pid.Reset();
                 tmode_changed = false;
                 FlightInputHandler.SetNeutralControls();
+            }
+
+            bool disableThrusters = (userCommandingRotation && !core.rcs.rcsForRotation);
+            if (disableThrusters != lastDisableThrusters)
+            {
+                lastDisableThrusters = disableThrusters;
+                var rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
+                foreach (var pm in rcsModules)
+                {
+                    if (disableThrusters)
+                    {
+                        pm.Disable();
+                    }
+                    else
+                    {
+                        pm.Enable();
+                    }
+                }
+            }
+        }
+
+#warning from here remove all the EngineWrapper stuff and move the useful stuff to VesselState.EngineInfo
+
+        static void MaxThrust(double[] x, ref double func, double[] grad, object obj)
+        {
+            List<EngineWrapper> el = (List<EngineWrapper>)obj;
+
+            func = 0;
+
+            for (int i = 0, j = 0; j < el.Count; j++)
+            {
+                EngineWrapper e = el[j];
+                if (!e.engine.throttleLocked)
+                {
+                    func -= el[j].maxVariableForce.y * x[i];
+                    grad[i] = -el[j].maxVariableForce.y;
+                    i++;
+                }
+            }
+        }
+
+        public bool ComputeDifferentialThrottle(Vector3d torque)
+        {
+            List<EngineWrapper> engines = new List<EngineWrapper>();
+            for (int i = 0; i < vessel.parts.Count; i++)
+            {
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    PartModule pm = p.Modules[j];
+                    if (pm is ModuleEngines)
+                    {
+                        ModuleEngines e = (ModuleEngines)pm;
+                        EngineWrapper engine = new EngineWrapper(e);
+                        if (e.EngineIgnited && !e.flameout && e.enabled)
+                        {
+                            engine.UpdateForceAndTorque(vesselState.CoM);
+                            engines.Add(engine);
+                        }
+                    }
+                }
+            }
+
+            int n = engines.Count(eng => !eng.engine.throttleLocked);
+            if (n < 3)
+            {
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    EngineWrapper e = engines[i];
+                    e.thrustRatio = 1;
+                }
+                return false;
+            }
+
+            double[,] C = new double[2+2*n,n+1];
+            int[] CT = new int[2+2*n];
+            float mainThrottle = vessel.ctrlState.mainThrottle;
+
+            // FIXME: the solver will throw an exception if the commanded torque is not realisable,
+            // clamp the commanded torque to half the possible torque for now
+            if (double.IsNaN(vesselState.torqueFromDiffThrottle.x)) vesselState.torqueFromDiffThrottle.x = 0;
+            if (double.IsNaN(vesselState.torqueFromDiffThrottle.z)) vesselState.torqueFromDiffThrottle.z = 0;
+            C[0, n] = Mathf.Clamp((float)torque.x, -(float)vesselState.torqueFromDiffThrottle.x * mainThrottle / 2, (float)vesselState.torqueFromDiffThrottle.x * mainThrottle / 2);
+            C[1, n] = Mathf.Clamp((float)torque.z, -(float)vesselState.torqueFromDiffThrottle.z * mainThrottle / 2, (float)vesselState.torqueFromDiffThrottle.z * mainThrottle / 2);
+
+            for (int i = 0, j = 0; j < engines.Count; j++)
+            {
+                var e = engines[j];
+
+                C[0,n] -= e.constantTorque.x;
+                C[1,n] -= e.constantTorque.z;
+
+                if (!e.engine.throttleLocked)
+                {
+                    C[0,i] = e.maxVariableTorque.x;
+                    //C[1,j] = e.maxVariableTorque.y;
+                    C[1,i] = e.maxVariableTorque.z;
+
+                    C[2+2*i,i] = 1;
+                    C[2+2*i,n] = 1;
+                    CT[2+2*i] = -1;
+
+                    C[3+2*i,i] = 1;
+                    C[3+2*i,n] = 0;
+                    CT[3+2*i] = 1;
+
+                    i++;
+                }
+            }
+
+            double[] w = new double[0];
+            double[,] u = new double[0,0];
+            double[,] vt = new double[0,0];
+            alglib.svd.rmatrixsvd(C, 2, n, 0, 0, 2, ref w, ref u, ref vt);
+            if (w[0] >= 10 * w[1])
+            {
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    EngineWrapper e = engines[i];
+                    e.thrustRatio = 1;
+                }
+                return false;
+            }
+
+            // Multiply by mainThrottle later to compute the singular value decomposition correctly
+            for (int i = 0; i < n; i++)
+            {
+                C[0,i] *= mainThrottle;
+                C[1,i] *= mainThrottle;
+            }
+
+            double[] x = new double[n];
+            alglib.minbleicstate state;
+            alglib.minbleicreport rep;
+
+            try
+            {
+                alglib.minbleiccreate(x, out state);
+                alglib.minbleicsetlc(state, C, CT);
+                alglib.minbleicoptimize(state, MaxThrust, null, engines);
+                alglib.minbleicresults(state, out x, out rep);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (x.Any(val => double.IsNaN(val)))
+                return false;
+
+            for (int i = 0, j = 0; j < engines.Count; j++)
+            {
+                if (!engines[j].engine.throttleLocked)
+                {
+                    engines[j].thrustRatio = (float)x[i];
+                    i++;
+                }
+            }
+
+            return true;
+        }
+
+        public void DisableDifferentialThrottle()
+        {
+            for (int i = 0; i < vessel.parts.Count; i++)
+            {
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    PartModule pm = p.Modules[j];
+                    if (pm is ModuleEngines)
+                    {
+                        ModuleEngines e = (ModuleEngines)pm;
+                        EngineWrapper engine = new EngineWrapper(e);
+                        engine.thrustRatio = 1;
+                    }
+                }
             }
         }
     }

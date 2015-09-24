@@ -14,7 +14,7 @@ namespace MuMech
         public float bubbleHeight = 50;
         public float offsetX = 0;
         public float offsetY = 50;
-        public int points = 100;
+        public const int points = 100;
 
         public SpeechBubble(GUIStyle style)
         {
@@ -32,7 +32,7 @@ namespace MuMech
 
         public void drawBubble(Vector2 screenPos, string text, Color bgColor)
         {
-            Vector3 viewportPos = new Vector3(screenPos.x / (float)Screen.width, (Screen.height - screenPos.y) / (float)Screen.height);
+            Vector3 viewportPos = new Vector3(screenPos.x / (float)GuiUtils.scaledScreenWidth, (GuiUtils.scaledScreenHeight - screenPos.y) / (float)GuiUtils.scaledScreenHeight);
             float centerOffsetX = bubbleWidth / 2;
             float centerOffsetY = bubbleHeight / 2;
 
@@ -43,17 +43,17 @@ namespace MuMech
             GL.Begin(GL.TRIANGLES);
             GL.Color(bgColor);
             GL.Vertex3(viewportPos.x, viewportPos.y, 0.1f);
-            GL.Vertex3(viewportPos.x - (bubbleWidth / 3) / (float)Screen.width, viewportPos.y + offsetY / Screen.height, 0.1f);
-            GL.Vertex3(viewportPos.x - (bubbleWidth / 8) / (float)Screen.width, viewportPos.y + offsetY / Screen.height, 0.1f);
+            GL.Vertex3(viewportPos.x - (bubbleWidth / 3) / (float)GuiUtils.scaledScreenWidth, viewportPos.y + offsetY / GuiUtils.scaledScreenHeight, 0.1f);
+            GL.Vertex3(viewportPos.x - (bubbleWidth / 8) / (float)GuiUtils.scaledScreenWidth, viewportPos.y + offsetY / GuiUtils.scaledScreenHeight, 0.1f);
             GL.End();
 
             GL.Begin(GL.TRIANGLES);
             GL.Color(bgColor);
             float dA = Mathf.PI * 2 / points;
-            float cX = (screenPos.x - offsetX) / (float)Screen.width;
-            float cY = (Screen.height - (screenPos.y - offsetY)) / (float)Screen.height;
-            float rX = centerOffsetX / (float)Screen.width;
-            float rY = centerOffsetY / (float)Screen.height;
+            float cX = (screenPos.x - offsetX) / (float)GuiUtils.scaledScreenWidth;
+            float cY = (GuiUtils.scaledScreenHeight - (screenPos.y - offsetY)) / (float)GuiUtils.scaledScreenHeight;
+            float rX = centerOffsetX / (float)GuiUtils.scaledScreenWidth;
+            float rY = centerOffsetY / (float)GuiUtils.scaledScreenHeight;
             for (int i = 0; i < points; i++)
             {
                 GL.Vertex3(cX, cY, 0.1f);

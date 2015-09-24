@@ -2,7 +2,7 @@
 
 namespace MuMech
 {
-    class MechJebModuleRendezvousAutopilotWindow : DisplayModule
+    public class MechJebModuleRendezvousAutopilotWindow : DisplayModule
     {
         public MechJebModuleRendezvousAutopilotWindow(MechJebCore core) : base(core) { }
 
@@ -17,7 +17,7 @@ namespace MuMech
 
             MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 
-            if (core.target.Orbit.referenceBody != orbit.referenceBody)
+            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
                 if (autopilot.enabled)
@@ -42,9 +42,19 @@ namespace MuMech
                 }
 
                 GuiUtils.SimpleTextBox("Desired final distance:", autopilot.desiredDistance, "m");
+                GuiUtils.SimpleTextBox("Max # of phasing orbits:", autopilot.maxPhasingOrbits);
+
+                if (autopilot.maxPhasingOrbits < 5)
+                {
+                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                    s.normal.textColor = Color.yellow;
+                    GUILayout.Label("Max # of phasing orbits must be at least 5.", s);
+                }
 
                 if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
             }
+            
+            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
             GUILayout.EndVertical();
 
@@ -59,6 +69,11 @@ namespace MuMech
         public override string GetName()
         {
             return "Rendezvous Autopilot";
+        }
+
+        public override bool IsSpaceCenterUpgradeUnlocked()
+        {
+            return vessel.patchedConicsUnlocked();
         }
     }
 }

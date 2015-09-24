@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using CompoundParts;
 using UnityEngine;
 
 namespace MuMech
@@ -9,57 +9,107 @@ namespace MuMech
     public class FuelFlowSimulation
     {
         public int simStage; //the simulated rocket's current stage
-        List<FuelNode> nodes; //a list of FuelNodes representing all the parts of the ship
+        readonly List<FuelNode> nodes; //a list of FuelNodes representing all the parts of the ship
         public float t;
 
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
         public FuelFlowSimulation(List<Part> parts, bool dVLinearThrust)
         {
-            //Initialize the simulation
+            // Create FuelNodes corresponding to each Part
             nodes = new List<FuelNode>();
             Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p, dVLinearThrust));
             nodes = nodeLookup.Values.ToList();
 
-            foreach (Part p in parts) nodeLookup[p].FindSourceNodes(p, nodeLookup);
+            // Determine when each part will be decoupled
+            Part rootPart = parts[0]; // hopefully always correct
+            nodeLookup[rootPart].AssignDecoupledInStage(rootPart, nodeLookup, -1);
+
+            // Set up the fuel flow graph
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                for (int i = 0; i < parts.Count; i++)
+                {
+                    Part p = parts[i];
+                    nodeLookup[p].SetupFuelLineSourcesFlight(p, nodeLookup);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < parts.Count; i++)
+                {
+                    Part p = parts[i];
+                    nodeLookup[p].SetupFuelLineSourcesFlight(p, nodeLookup);
+                    nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
+                }
+            }
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Part p = parts[i];
+                nodeLookup[p].SetupRegularSources(p, nodeLookup);
+            }
+
 
             simStage = Staging.lastStage + 1;
+
+            // Add a fake stage if we are beyond the first one
+            // Mostly usefull for the Node Executor who use the last stage info
+            // and fail to get proper info when the ship was never staged and
+            // some engine were activated manually
+            if (Staging.CurrentStage > Staging.lastStage)
+                simStage++;
 
             t = 0;
         }
 
         //Simulate the activation and execution of each stage of the rocket,
         //and return stats for each stage
-        public Stats[] SimulateAllStages(float throttle, float atmospheres)
+        public Stats[] SimulateAllStages(float throttle, double staticPressure, double atmDensity, double machNumber)
         {
             Stats[] stages = new Stats[simStage];
 
-            //Debug.Log("SimulateAllStages starting from stage " + simStage);
+            int maxStages = simStage - 1;
+
+            //print("SimulateAllStages starting from stage " + simStage + "; ticks from start = " + (Environment.TickCount - startTick));
             SimulateStageActivation();
 
             while (simStage >= 0)
             {
-                //Debug.Log("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
-                stages[simStage] = SimulateStage(throttle, atmospheres);
-                //Debug.Log("Staging at t = " + t);
+                //print("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
+                stages[simStage] = SimulateStage(throttle, staticPressure, atmDensity, machNumber);
+                if (simStage != maxStages)
+                    stages[simStage].stagedMass = stages[simStage + 1].endMass - stages[simStage].startMass;
+                //print("Staging at t = " + t);
                 SimulateStageActivation();
             }
+
+            //print("SimulateAllStages ended");
 
             return stages;
         }
 
+        public static void print(object message)
+        {
+            MonoBehaviour.print("[MechJeb2] " + message);
+        }
+
         //Simulate (the rest of) the current stage of the simulated rocket,
         //and return stats for the stage
-        public Stats SimulateStage(float throttle, float atmospheres)
+        public Stats SimulateStage(float throttle, double staticPressure, double atmDensity, double machNumber)
         {
+            //need to set initial consumption rates for VesselThrust and AllowedToStage to work right
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i].SetConsumptionRates(throttle, atmDensity, machNumber);
+            }
+
             Stats stats = new Stats();
-            stats.startMass = VesselMass();
-            stats.startThrust = VesselThrust(throttle, atmospheres);
+            stats.startMass = VesselMass(simStage);
+            stats.startThrust = VesselThrust(throttle, staticPressure, atmDensity, machNumber);
             stats.endMass = stats.startMass;
-            stats.maxAccel = stats.startThrust / stats.endMass;
+            stats.resourceMass = 0;
+            stats.maxAccel = stats.endMass > 0 ? stats.startThrust / stats.endMass : 0;
             stats.deltaTime = 0;
             stats.deltaV = 0;
-
-            foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres); //need to set initial consumption rates for allowedToStage to work right
 
             const int maxSteps = 100;
             int step;
@@ -67,41 +117,53 @@ namespace MuMech
             {
                 if (AllowedToStage()) break;
                 float dt;
-                stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, atmospheres, out dt));
+                stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
             }
 
-            //Debug.Log("Finished stage " + simStage + " after " + step + " steps");
+            //print("Finished stage " + simStage + " after " + step + " steps");
             if (step == maxSteps) throw new Exception("FuelFlowSimulation.SimulateStage reached max step count of " + maxSteps);
 
             return stats;
         }
 
-        //Simulate a single time step, and return stats for the time step. 
+        //Simulate a single time step, and return stats for the time step.
         // - desiredDt is the requested time step size. Often the actual time step size
         //   with be less than this. The actual step size is reported in dt.
-        public Stats SimulateTimeStep(float desiredDt, float throttle, float atmospheres, out float dt)
+        public Stats SimulateTimeStep(float desiredDt, float throttle, double staticPressure, double atmDensity, double machNumber, out float dt)
         {
             Stats stats = new Stats();
 
-            foreach (FuelNode n in nodes) n.ResetDrainRates();
-            foreach (FuelNode n in nodes) n.SetConsumptionRates(throttle, atmospheres);
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i].ResetDrainRates();
+            }
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i].SetConsumptionRates(throttle, atmDensity, machNumber);
+            }
 
-            stats.startMass = VesselMass();
-            stats.startThrust = VesselThrust(throttle, atmospheres); // NK
+            stats.startMass = VesselMass(simStage);
+            stats.startThrust = VesselThrust(throttle, staticPressure, atmDensity, machNumber); // NK
 
             List<FuelNode> engines = FindActiveEngines();
 
             if (engines.Count > 0)
             {
-                foreach (FuelNode n in engines) n.AssignResourceDrainRates(nodes);
+                for (int i = 0; i < engines.Count; i++)
+                {
+                    engines[i].AssignResourceDrainRates(nodes);
+                }
                 //foreach (FuelNode n in nodes) n.DebugDrainRates();
 
                 float maxDt = nodes.Min(n => n.MaxTimeStep());
                 dt = Mathf.Min(desiredDt, maxDt);
 
-                //Debug.Log("Simulating time step of " + dt);
+                //print("Simulating time step of " + dt);
 
-                foreach (FuelNode n in nodes) n.DrainResources(dt);
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    nodes[i].DrainResources(dt);
+                }
             }
             else
             {
@@ -109,9 +171,11 @@ namespace MuMech
             }
 
             stats.deltaTime = dt;
-            stats.endMass = VesselMass();
-            stats.maxAccel = stats.startThrust / stats.endMass;
+            stats.endMass = VesselMass(simStage);
+            stats.resourceMass = stats.startMass - stats.endMass;
+            stats.maxAccel = stats.endMass > 0 ? stats.startThrust / stats.endMass : 0;
             stats.ComputeTimeStepDeltaV();
+            stats.isp = stats.startMass > stats.endMass ? stats.deltaV / (9.80665f * Mathf.Log(stats.startMass / stats.endMass)) : 0;
 
             t += dt;
 
@@ -125,41 +189,48 @@ namespace MuMech
 
             List<FuelNode> decoupledNodes = nodes.Where(n => n.decoupledInStage == simStage).ToList();
 
-            foreach (FuelNode d in decoupledNodes) nodes.Remove(d); //remove the decoupled nodes from the simulated ship
-
-            foreach (FuelNode n in nodes)
+            for (int i = 0; i < decoupledNodes.Count; i++)
             {
-                foreach (FuelNode d in decoupledNodes) n.RemoveSourceNode(d); //remove the decoupled nodes from the remaining nodes' source lists
+                nodes.Remove(decoupledNodes[i]); //remove the decoupled nodes from the simulated ship
+            }
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                for (int j = 0; j < decoupledNodes.Count; j++)
+                {
+                    nodes[i].RemoveSourceNode(decoupledNodes[j]); //remove the decoupled nodes from the remaining nodes' source lists
+                }
             }
         }
 
         //Whether we've used up the current stage
         public bool AllowedToStage()
         {
-            //Debug.Log("Checking whether allowed to stage at t = " + t);
+            //print("Checking whether allowed to stage at t = " + t);
 
             List<FuelNode> activeEngines = FindActiveEngines();
 
-            //Debug.Log("  activeEngines.Count = " + activeEngines.Count);
+            //print("  activeEngines.Count = " + activeEngines.Count);
 
             //if no engines are active, we can always stage
             if (activeEngines.Count == 0)
             {
-                //Debug.Log("Allowed to stage because no active engines");
+                //print("Allowed to stage because no active engines");
                 return true;
             }
 
-            var burnedResources = activeEngines.SelectMany(eng => eng.BurnedResources()).Distinct();
+            List<int> burnedResources = activeEngines.SelectMany(eng => eng.BurnedResources()).Distinct().ToList();
 
             //if staging would decouple an active engine or non-empty fuel tank, we're not allowed to stage
-            foreach (FuelNode n in nodes)
+            for (int i = 0; i < nodes.Count; i++)
             {
-                //Debug.Log(n.partName + " is sepratron? " + n.isSepratron);
+                FuelNode n = nodes[i];
+//print(n.partName + " is sepratron? " + n.isSepratron);
                 if (n.decoupledInStage == (simStage - 1) && !n.isSepratron)
                 {
                     if (activeEngines.Contains(n) || n.ContainsResources(burnedResources))
                     {
-                        //Debug.Log("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
+                        //print("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
                         return false;
                     }
                 }
@@ -170,28 +241,29 @@ namespace MuMech
                 bool activeEnginesWorking = false;
                 bool partDecoupledInNextStage = false;
 
-                foreach (FuelNode n in nodes)
+                for (int i = 0; i < nodes.Count; i++)
                 {
+                    FuelNode n = nodes[i];
                     if (activeEngines.Contains(n))
                     {
                         if (n.CanDrawNeededResources(nodes))
                         {
-                            //Debug.Log("Part " + n.partName + " is an active engine that still has resources to draw on.");
+                            //print("Part " + n.partName + " is an active engine that still has resources to draw on.");
                             activeEnginesWorking = true;
                         }
                     }
 
                     if (n.decoupledInStage == (simStage - 1))
                     {
-                        //Debug.Log("Part " + n.partName + " is decoupled in the next stage.");
+                        //print("Part " + n.partName + " is decoupled in the next stage.");
 
-                        partDecoupledInNextStage = true; 
+                        partDecoupledInNextStage = true;
                     }
                 }
 
                 if (!partDecoupledInNextStage && activeEnginesWorking)
                 {
-                    //Debug.Log("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
+                    //print("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
                     return false;
                 }
             }
@@ -199,30 +271,35 @@ namespace MuMech
             //if this isn't the last stage, we're allowed to stage because doing so wouldn't drop anything important
             if (simStage > 0)
             {
-                //Debug.Log("Allowed to stage because this isn't the last stage");
+                //print("Allowed to stage because this isn't the last stage");
                 return true;
             }
 
-            //Debug.Log("Not allowed to stage because there are active engines and this is the last stage");
+            //print("Not allowed to stage because there are active engines and this is the last stage");
 
             //if this is the last stage, we're not allowed to stage while there are still active engines
             return false;
         }
 
-        public float VesselMass()
+        public float VesselMass(int simStage)
         {
-            return nodes.Sum(n => n.Mass);
+            float sum = 0;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                sum += nodes[i].Mass(simStage);
+            }
+            return sum;
         }
 
-        public float VesselThrust(float throttle, float atmospheres)
+        public float VesselThrust(float throttle, double staticPressure, double atmDensity, double machNumber)
         {
-            return throttle * FindActiveEngines().Sum(eng => (eng.maxThrust * eng.fwdThrustRatio * (eng.correctThrust ? (eng.ispCurve.Evaluate(atmospheres) / eng.ispCurve.Evaluate(0)) : 1f)));
+            return FindActiveEngines().Sum(eng => eng.EngineThrust(throttle, staticPressure, atmDensity, machNumber));
         }
 
         //Returns a list of engines that fire during the current simulated stage.
         public List<FuelNode> FindActiveEngines()
         {
-            //Debug.Log("Finding active engines: excluding resource considerations, there are " + nodes.Where(n => n.isEngine && n.inverseStage >= simStage).Count());
+            //print("Finding active engines: excluding resource considerations, there are " + nodes.Count(n => n.isEngine && n.inverseStage >= simStage));
             return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
 
@@ -236,8 +313,12 @@ namespace MuMech
             public float deltaTime;
             public float deltaV;
 
-            public double StartTWR(double geeASL) { return startThrust / (9.81 * geeASL * startMass); }
-            public double MaxTWR(double geeASL) { return maxAccel / (9.81 * geeASL); }
+            public float resourceMass;
+            public float isp;
+            public float stagedMass;
+
+            public double StartTWR(double geeASL) { return startMass > 0 ? startThrust / (9.80665 * geeASL * startMass) : 0; }
+            public double MaxTWR(double geeASL) { return maxAccel / (9.80665 * geeASL); }
 
             //Computes the deltaV from the other fields. Only valid when the thrust is constant over the time interval represented.
             public void ComputeTimeStepDeltaV()
@@ -259,238 +340,286 @@ namespace MuMech
                 {
                     startMass = this.startMass,
                     endMass = s.endMass,
+                    resourceMass = startMass - s.endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
                     deltaTime = this.deltaTime + s.deltaTime,
-                    deltaV = this.deltaV + s.deltaV
+                    deltaV = this.deltaV + s.deltaV,
+                    isp = this.startMass == s.endMass ? 0 : (this.deltaV + s.deltaV) / (9.80665f * Mathf.Log(this.startMass / s.endMass))
                 };
             }
         }
     }
 
-    //A FuelNode is a compact summary of a Part, containing only the information needed to run the fuel flow simulation. 
+    //A FuelNode is a compact summary of a Part, containing only the information needed to run the fuel flow simulation.
     public class FuelNode
     {
-        DefaultableDictionary<int, float> resources = new DefaultableDictionary<int, float>(0);       //the resources contained in the part
+        readonly DefaultableDictionary<int, float> resources = new DefaultableDictionary<int, float>(0);       //the resources contained in the part
         Dictionary<int, float> resourceConsumptions = new Dictionary<int, float>();                   //the resources this part consumes per unit time when active at full throttle
-        DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
+        readonly DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
 
         // if a resource amount falls below this amount we say that the resource has been drained
         // set to the smallest amount that the user can see is non-zero in the resource tab or by
         // right-clicking.
-        const float DRAINED = 0.005f;
+        static readonly float DRAINED = 0.005f;
 
-        public FloatCurve ispCurve;                     //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
-        public bool correctThrust = false;              // does the engine use a fixed ISP / Variable Thrust
-        Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
-        float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
+        readonly FloatCurve atmosphereCurve;  //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
+        readonly bool atmChangeFlow;
+        readonly bool useAtmCurve;
+        readonly FloatCurve atmCurve;
+        readonly bool useVelCurve;
+        readonly FloatCurve velCurve;
 
-        HashSet<FuelNode> sourceNodes = new HashSet<FuelNode>();  //a set of FuelNodes that this node could draw fuel or resources from (for resources that use the ResourceFlowMode STACK_PRIORITY_SEARCH).
-        FuelNode parent;
-        List<int> resourcesUnobtainableFromParent = new List<int>();
-        bool surfaceMounted;
+        readonly Dictionary<int, float> propellantRatios; //ratios of propellants used by this engine
+        readonly float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
-        public float maxThrust = 0;     //max thrust of this part
-        public float fwdThrustRatio = 1; // % of thrust moving the ship forwad
+        readonly List<FuelNode> fuelLineSources = new List<FuelNode>();
+        readonly List<FuelNode> stackNodeSources = new List<FuelNode>();
+        FuelNode surfaceMountParent = null;
+
+        readonly float maxFuelFlow = 0;     //max fuel flow of this part
+        readonly float minFuelFlow = 0;     //min fuel flow of this part
+
+        readonly float thrustPercentage = 0;
+
+        readonly float fwdThrustRatio = 1; // % of thrust moving the ship forwad
+        readonly float g;                  // value of g used for engine flow rate / isp
+
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
         public bool isEngine = false;   //whether this part is an engine
 
-        bool isFuelLine; //whether this part is a fuel line
-
-        float dryMass = 0; //the mass of this part, not counting resource mass
+        readonly float dryMass = 0; //the mass of this part, not counting resource mass
+        readonly float fairingMass = 0; //the mass of the fairing of this part
 
         public string partName; //for debugging
 
+        public float moduleMass; // for debugging
+
         public FuelNode(Part part, bool dVLinearThrust)
         {
-            bool physicallySignificant = (part.physicalSignificance != Part.PhysicalSignificance.NONE);
-            if (part.HasModule<ModuleLandingGear>() || part.HasModule<LaunchClamp>())
+            if (!part.IsLaunchClamp())
             {
-                //Landing gear set physicalSignificance = NONE when they enter the flight scene
-                //Launch clamp mass should be ignored.
-                physicallySignificant = false;
+                //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + part.GetModuleMass(part.partInfo.partPrefab.mass).ToString("F4"));
+                dryMass = part.mass; // Intentionally ignore the physic flag.
+
+                moduleMass = part.GetModuleMass(part.partInfo.partPrefab.mass);
+                if (part.HasModule<ModuleProceduralFairing>())
+                {
+                    fairingMass = moduleMass;
+                }
             }
-            if (physicallySignificant) dryMass = part.mass;
 
             inverseStage = part.inverseStage;
-            isFuelLine = (part is FuelLine);
-            isSepratron = part.IsSepratron();
             partName = part.partInfo.name;
 
             //note which resources this part has stored
-            foreach (PartResource r in part.Resources)
+            for (int i = 0; i < part.Resources.Count; i++)
             {
-                if (r.info.density > 0 && r.name != "IntakeAir") resources[r.info.id] = (float)r.amount;
-                resourcesUnobtainableFromParent.Add(r.info.id);
+                PartResource r = part.Resources[i];
+                if (r.info.density > 0 && r.info.name != "IntakeAir")
+                {
+                    if (r.flowState)
+                    {
+                        resources[r.info.id] = (float) r.amount;
+                    }
+                    else
+                    {
+                        dryMass += (float) (r.amount*r.info.density); // disabled resources are just dead weight
+                    }
+                }
             }
 
+            // TODO : handle the multiple active ModuleEngine case ( SXT engines with integrated vernier )
+
             //record relevant engine stats
-            ModuleEngines engine = part.Modules.OfType<ModuleEngines>().FirstOrDefault();
+            ModuleEngines engine = part.Modules.OfType<ModuleEngines>().FirstOrDefault(e => e.isEnabled);
             if (engine != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState)
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
+                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
+                        inverseStage = Staging.CurrentStage;
 
                     isEngine = true;
 
-                    // If we take into account the engine rotation 
+                    g = engine.g;
+
+                    // If we take into account the engine rotation
                     if (dVLinearThrust)
                     {
                         Vector3 thrust = Vector3d.zero;
-                        foreach (var t in engine.thrustTransforms)
-                            thrust -= t.forward / engine.thrustTransforms.Count;
+                        for (int i = 0; i < engine.thrustTransforms.Count; i++)
+                        {
+                            thrust -= engine.thrustTransforms[i].forward/engine.thrustTransforms.Count;
+                        }
 
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)engine.part.vessel.GetTransform().up);
+                        Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
 
-                    maxThrust = engine.thrustPercentage / 100f * engine.maxThrust;
+                    thrustPercentage = engine.thrustPercentage;
 
-                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
-                    {
-                        correctThrust = true;
-                        if (HighLogic.LoadedSceneIsFlight && engine.realIsp > 0.0f)
-                            maxThrust = maxThrust * engine.atmosphereCurve.Evaluate(0) / engine.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
-                    }
-                    else
-                        correctThrust = false;
-                    ispCurve = engine.atmosphereCurve;
+                    minFuelFlow = engine.minFuelFlow;
+                    maxFuelFlow = engine.maxFuelFlow;
 
-                    propellantSumRatioTimesDensity = engine.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
-                    propellantRatios = engine.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir" ).ToDictionary(prop => prop.id, prop => prop.ratio);
+                    atmosphereCurve = new FloatCurve(engine.atmosphereCurve.Curve.keys);
+                    atmChangeFlow = engine.atmChangeFlow;
+                    useAtmCurve = engine.useAtmCurve;
+                    if (useAtmCurve)
+                        atmCurve = new FloatCurve(engine.atmCurve.Curve.keys);
+                    useVelCurve = engine.useVelCurve;
+                    if (useAtmCurve)
+                        velCurve = new FloatCurve(engine.velCurve.Curve.keys);
+
+                    propellantSumRatioTimesDensity = engine.propellants.Where(prop => !prop.ignoreForIsp).Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
+                    propellantRatios = engine.propellants.Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp ).ToDictionary(prop => prop.id, prop => prop.ratio);
                 }
-            }
-
-
-            // And do the same for ModuleEnginesFX :(
-            ModuleEnginesFX enginefx = part.Modules.OfType<ModuleEnginesFX>().Where(e => e.isEnabled).FirstOrDefault();
-            if (enginefx != null)
-            {
-                //Only count engines that either are ignited or will ignite in the future:
-                if (HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || enginefx.getIgnitionState)
-                {
-                    //if an engine has been activated early, pretend it is in the current stage:
-                    if (enginefx.getIgnitionState && inverseStage < Staging.CurrentStage) inverseStage = Staging.CurrentStage;
-
-                    isEngine = true;
-
-                    // If we take into account the engine rotation 
-                    if (dVLinearThrust)
-                    {
-                        Vector3 thrust = Vector3d.zero;
-                        foreach (var t in enginefx.thrustTransforms)
-                            thrust -= t.forward / enginefx.thrustTransforms.Count;
-
-                        Vector3 fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? Vector3d.up : (HighLogic.LoadedScene == GameScenes.SPH ? Vector3d.forward : (Vector3d)enginefx.part.vessel.GetTransform().up);
-                        fwdThrustRatio = Vector3.Dot(fwd, thrust);
-                    }
-
-                    maxThrust = enginefx.thrustPercentage / 100f * enginefx.maxThrust;
-
-                    if (part.Modules.Contains("ModuleEngineConfigs") || part.Modules.Contains("ModuleHybridEngine") || part.Modules.Contains("ModuleHybridEngines"))
-                    {
-                        correctThrust = true;
-                        if (HighLogic.LoadedSceneIsFlight && enginefx.realIsp > 0.0f)
-                            maxThrust = maxThrust * enginefx.atmosphereCurve.Evaluate(0) / enginefx.realIsp; //engine.atmosphereCurve.Evaluate((float)FlightGlobals.ActiveVessel.atmDensity);
-                    }
-                    else
-                        correctThrust = false;
-                    ispCurve = enginefx.atmosphereCurve;
-
-                    propellantSumRatioTimesDensity = enginefx.propellants.Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
-                    propellantRatios = enginefx.propellants.Where(prop => PartResourceLibrary.Instance.GetDefinition(prop.id).density > 0 && prop.name != "IntakeAir").ToDictionary(prop => prop.id, prop => prop.ratio);
-                }
-            }
-
-
-
-            //figure out when this part gets decoupled. We do this by looking through this part and all this part's ancestors
-            //and noting which one gets decoupled earliest (i.e., has the highest inverseStage). Some parts never get decoupled
-            //and these are assigned decoupledInStage = -1.
-            decoupledInStage = -1;
-            Part p = part;
-            while (true)
-            {
-                if (p.IsDecoupler() || p.IsLaunchClamp())
-                {
-                    if (p.inverseStage > decoupledInStage) decoupledInStage = p.inverseStage;
-                }
-                if (p.parent == null) break;
-                else p = p.parent;
             }
         }
 
-        public void SetConsumptionRates(float throttle, float atmospheres)
+        // Determine when this part will be decoupled given when its parent will be decoupled.
+        // Then recurse to all of this part's children.
+        public void AssignDecoupledInStage(Part p, Dictionary<Part, FuelNode> nodeLookup, int parentDecoupledInStage)
+        {
+            if (p.IsUnfiredDecoupler() || p.IsLaunchClamp())
+            {
+                decoupledInStage = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
+            }
+            else
+            {
+                decoupledInStage = parentDecoupledInStage;
+            }
+
+            isSepratron = isEngine && (inverseStage == decoupledInStage);
+
+            for (int i = 0; i < p.children.Count; i++)
+            {
+                Part child = p.children[i];
+                nodeLookup[child].AssignDecoupledInStage(child, nodeLookup, decoupledInStage);
+            }
+        }
+
+        public static void print(object message)
+        {
+            MonoBehaviour.print("[MechJeb2] " + message);
+        }
+
+        public void SetConsumptionRates(float throttle, double atmDensity, double machNumber)
         {
             if (isEngine)
             {
-                float Isp = ispCurve.Evaluate(atmospheres);
-                float massFlowRate = throttle * maxThrust / (Isp * 9.81f);
-                if (correctThrust) massFlowRate = massFlowRate * Isp / ispCurve.Evaluate(0); // scale thrust
+                float flowModifier = GetFlowModifier(atmDensity, machNumber);
+
+                float massFlowRate = Mathf.Lerp(minFuelFlow, maxFuelFlow, throttle * 0.01f * thrustPercentage) * flowModifier;
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
                 resourceConsumptions = propellantRatios.Keys.ToDictionary(id => id, id => propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);
             }
         }
 
-        //Find the set of nodes from which we can draw resources according to the STACK_PRIORITY_SEARCH flow scheme.
-        //This gets called after all the FuelNodes have been constructed in order to set up the fuel flow graph
-        public void FindSourceNodes(Part part, Dictionary<Part, FuelNode> nodeLookup)
+        public void SetupFuelLineSourcesFlight(Part part, Dictionary<Part, FuelNode> nodeLookup)
         {
-            //we can draw fuel from any fuel lines that point to this part
-            foreach (Part p in nodeLookup.Keys)
+            // In the flight scene, each part knows which fuel lines point to it.
+            // (actually, fuelLookupTargets also includes attached docking nodes that can
+            // transfer fuel to us).
+            for (int i = 0; i < part.fuelLookupTargets.Count; i++)
             {
-                if (p is FuelLine && ((FuelLine)p).target == part)
+                FuelNode nodeSource;
+                if (nodeLookup.TryGetValue(part.fuelLookupTargets[i], out nodeSource))
                 {
-                    sourceNodes.Add(nodeLookup[p]);
+                    fuelLineSources.Add(nodeSource);
                 }
             }
+        }
 
-            surfaceMounted = true;
-            if (part.parent != null) this.parent = nodeLookup[part.parent];
-
-            //we can (sometimes) draw fuel from stacked parts
-            foreach (AttachNode attachNode in part.attachNodes)
+        public void SetupFuelLineSourcesEditor(Part part, Dictionary<Part, FuelNode> nodeLookup)
+        {
+            // In the editor scene, fuel lines have to inform their targets that they
+            // are valid fuel sources (and in the editor docking nodes attach via regular stack nodes,
+            // so they need no special treatment).
+            CModuleFuelLine fuelLine = part.GetModule<CModuleFuelLine>();
+            if (fuelLine != null && fuelLine.target != null)
             {
-                //decide if it's possible to draw fuel through this node:
-                if (attachNode.attachedPart != null                            //if there is a part attached here            
-                    && attachNode.nodeType == AttachNode.NodeType.Stack        //and the attached part is stacked (rather than surface mounted)
-                    && !(part.NoCrossFeedNodeKey.Length > 0                    //and this part does not forbid fuel flow
-                         && attachNode.id.Contains(part.NoCrossFeedNodeKey)))  //    through this particular node
+                FuelNode targetNode;
+                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode))
+                    targetNode.fuelLineSources.Add(this);
+            }
+        }
+
+        // Find the set of nodes from which we can draw resources according to the STACK_PRIORITY_SEARCH flow scheme.
+        // This gets called after all the FuelNodes have been constructed in order to set up the fuel flow graph.
+        // Note that fuel flow through fuel lines and docked docking nodes is set up separately in
+        // SetupFuelLineSources*()
+        public void SetupRegularSources(Part part, Dictionary<Part, FuelNode> nodeLookup)
+        {
+            // When fuelCrossFeed is enabled we can draw fuel through stack and surface attachment
+            if (part.fuelCrossFeed)
+            {
+                // Stack nodes:
+                for (int i = 0; i < part.attachNodes.Count; i++)
                 {
-                    if (part.fuelCrossFeed) sourceNodes.Add(nodeLookup[attachNode.attachedPart]);
-                    if (attachNode.attachedPart == part.parent) surfaceMounted = false;
+                    AttachNode attachNode = part.attachNodes[i];
+                    if (attachNode.attachedPart != null)
+                    {
+                        // For stack nodes, we can draw fuel unless this node is specifically
+                        // labeled as having crossfeed disabled (Kashua rule #4)
+                        FuelNode fuelnode;
+                        if (attachNode.id != "Strut"
+                            && attachNode.ResourceXFeed
+                            && !(part.NoCrossFeedNodeKey.Length > 0
+                                 && attachNode.id.Contains(part.NoCrossFeedNodeKey))
+                            && nodeLookup.TryGetValue(attachNode.attachedPart, out fuelnode))
+                        {
+                            stackNodeSources.Add(fuelnode);
+                        }
+                    }
+                }
+
+                // If we are surface-mounted to our parent we can draw fuel from it (Kashua rule #7)
+                if (part.attachMode == AttachModes.SRF_ATTACH && part.parent != null)
+                {
+                    surfaceMountParent = nodeLookup[part.parent];
                 }
             }
-
-            //Parts can draw resources from their parents
-            //(exception: surface mounted fuel tanks cannot)
-            if (part.parent != null && part.fuelCrossFeed) sourceNodes.Add(nodeLookup[part.parent]);
-
-            //Debug.Log("source nodes for part " + partName);
-            //foreach (FuelNode n in sourceNodes) Debug.Log("    " + n.partName);
         }
 
         //call this when a node no longer exists, so that this node knows that it's no longer a valid source
         public void RemoveSourceNode(FuelNode n)
         {
-            if (sourceNodes.Contains(n)) sourceNodes.Remove(n);
+            if (fuelLineSources.Contains(n)) fuelLineSources.Remove(n);
+            if (stackNodeSources.Contains(n)) stackNodeSources.Remove(n);
+            if (surfaceMountParent == n) surfaceMountParent = null;
         }
 
 
         //return the mass of the simulated FuelNode. This is not the same as the mass of the Part,
         //because the simulated node may have lost resources, and thus mass, during the simulation.
-        public float Mass
+        public float Mass(int simStage)
         {
-            get
-            {
-                return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id));
-            }
+            //print("\n(" + simStage + ") " + partName.PadRight(25) + " dryMass " + dryMass.ToString("F3")
+            //          + " ResMass " + (resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id))).ToString("F3")
+            //          + " Fairing Mass " + (inverseStage < simStage ? fairingMass : 0).ToString("F3")
+            //          + " (" + fairingMass.ToString("F3") + ")"
+            //          + " ModuleMass " + moduleMass.ToString("F3")
+            //          );
+
+            return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id)) +
+                   (inverseStage < simStage ? fairingMass : 0);
+        }
+
+        public float EngineThrust(float throttle, double atmospheres, double atmDensity, double machNumber)
+        {
+            float Isp = atmosphereCurve.Evaluate((float)atmospheres);
+
+            float flowModifier = GetFlowModifier(atmDensity, machNumber);
+
+            float thrust = Mathf.Lerp(minFuelFlow, maxFuelFlow, throttle * 0.01f * thrustPercentage) * flowModifier * Isp * g;
+
+            return thrust * fwdThrustRatio;
         }
 
         public void ResetDrainRates()
@@ -505,12 +634,11 @@ namespace MuMech
 
         public float MaxTimeStep()
         {
-            if (resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() == 0) return float.MaxValue;
-            //Debug.Log("resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count() = " + resourceDrains.Keys.Where(id => resources[id] > DRAINED).Count());
+            if (!resourceDrains.Keys.Any(id => resources[id] > DRAINED)) return float.MaxValue;
             return resourceDrains.Keys.Where(id => resources[id] > DRAINED).Min(id => resources[id] / resourceDrains[id]);
         }
 
-        //Returns an enumeration of the resources this part burns 
+        //Returns an enumeration of the resources this part burns
         public IEnumerable<int> BurnedResources()
         {
             return resourceConsumptions.Keys;
@@ -533,13 +661,15 @@ namespace MuMech
                         if (resources[type] < DRAINED) return false;
                         break;
 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                     case ResourceFlowMode.ALL_VESSEL:
                         //check if any part contains the needed resource:
                         if (!vessel.Any(n => n.resources[type] > DRAINED)) return false;
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        if (!this.CanSupplyResourceRecursive(type, new List<FuelNode>())) return false;
+                        // check if we can get any of the needed resources
+                        if (!FindFuelSourcesStackPriority(type).Any()) return false;
                         break;
 
                     default:
@@ -554,7 +684,7 @@ namespace MuMech
         {
             foreach (int type in resourceDrains.Keys)
             {
-                Debug.Log(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
+                print(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
             }
         }
 
@@ -570,12 +700,13 @@ namespace MuMech
                         resourceDrains[type] += amount;
                         break;
 
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                     case ResourceFlowMode.ALL_VESSEL:
-                        AssignFuelDrainRateAllVessel(type, amount, vessel);
+                        AssignFuelDrainRateStagePriorityFlow(type, amount, vessel);
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        AssignFuelDrainRateRecursive(type, amount, new List<FuelNode>());
+                        AssignFuelDrainRateStackPriority(type, amount);
                         break;
 
                     default:
@@ -585,104 +716,134 @@ namespace MuMech
             }
         }
 
-        void AssignFuelDrainRateAllVessel(int type, float amount, List<FuelNode> vessel)
+        void AssignFuelDrainRateStagePriorityFlow(int type, float amount, List<FuelNode> vessel)
         {
-            //I don't know how this flow scheme actually works but I'm going to assume
-            //that it drains from the part with the highest possible inverseStage
-            FuelNode source = null;
-            foreach (FuelNode n in vessel)
+            int maxInverseStage = -1;
+            List<FuelNode> sources = new List<FuelNode>();
+            for (int i = 0; i < vessel.Count; i++)
             {
+                FuelNode n = vessel[i];
                 if (n.resources[type] > DRAINED)
                 {
-                    if (source == null || n.inverseStage > source.inverseStage) source = n;
-                }
-            }
-            if (source != null) source.resourceDrains[type] += amount;
-        }
-
-        //We need to drain <totalDrainRate> of resource <type> per second from somewhere.
-        //We're not allowed to drain it through any of the nodes in <visited>.
-        //Decide whether to drain it from this node, or pass the recursive buck
-        //and drain it from some subset of the sources of this node.
-        void AssignFuelDrainRateRecursive(int type, float amount, List<FuelNode> visited)
-        {
-            //if we drain from our sources, newVisted is the set of nodes that those sources
-            //aren't allowed to drain from. We add this node to that list to prevent loops.
-            List<FuelNode> newVisited = new List<FuelNode>(visited);
-            newVisited.Add(this);
-
-            //First see if we can drain fuel through fuel lines. If we can, drain equally through
-            //all active fuel lines that point to this part. 
-            List<FuelNode> fuelLines = new List<FuelNode>();
-            foreach (FuelNode n in sourceNodes)
-            {
-                if (n.isFuelLine && !visited.Contains(n))
-                {
-                    if (n.CanSupplyResourceRecursive(type, newVisited))
+                    if (n.inverseStage > maxInverseStage)
                     {
-                        fuelLines.Add(n);
+                        maxInverseStage = n.inverseStage;
+                        sources.Clear();
+                        sources.Add(n);
+                    }
+                    else if (n.inverseStage == maxInverseStage)
+                    {
+                        sources.Add(n);
                     }
                 }
             }
-            if (fuelLines.Count > 0)
+            for (int i = 0; i < sources.Count; i++)
             {
-                foreach (FuelNode fuelLine in fuelLines)
-                {
-                    fuelLine.AssignFuelDrainRateRecursive(type, amount / fuelLines.Count, newVisited);
-                }
-                return;
-            }
-
-            //If there are no incoming fuel lines, try other sources.
-            //I think there may actually be more structure to the fuel source priority system here. 
-            //For instance, can't a fuel tank drain fuel simultaneously from its top and bottom stack nodes?
-            foreach (FuelNode n in sourceNodes)
-            {
-                if (!visited.Contains(n))
-                {
-                    //Fuel tanks cannot draw from their parents if they are surface mounted:
-                    if (!(surfaceMounted && n == parent && resourcesUnobtainableFromParent.Contains(type)))
-                    {
-                        if (n.CanSupplyResourceRecursive(type, newVisited))
-                        {
-                            n.AssignFuelDrainRateRecursive(type, amount, newVisited);
-                            return;
-                        }
-                    }
-                }
-            }
-
-            //in the final extremity, drain the resource from this part
-            if (this.resources[type] > DRAINED)
-            {
-                this.resourceDrains[type] += amount;
+                sources[i].resourceDrains[type] += amount/sources.Count;
             }
         }
 
-        //determine if this FuelNode can supply fuel itself, or can supply fuel by drawing
-        //from other sources, without drawing through any node in <visited>
-        bool CanSupplyResourceRecursive(int type, List<FuelNode> visited)
+
+        void AssignFuelDrainRateStackPriority(int type, float amount)
         {
-            if (resources[type] > DRAINED) return true;
+            HashSet<FuelNode> sources = FindFuelSourcesStackPriority(type);
+            float amountPerSource = amount / sources.Count();
+            foreach (FuelNode source in sources) source.resourceDrains[type] += amountPerSource;
+        }
 
-            //if we drain from our sources, newVisted is the set of nodes that those sources
-            //aren't allowed to drain from. We add this node to that list to prevent loops.
-            List<FuelNode> newVisited = new List<FuelNode>(visited);
-            newVisited.Add(this);
+        static int nextFuelLookupID = 0;
+        int lastSeenFuelLookupID = -1;
 
-            foreach (FuelNode n in sourceNodes)
+        HashSet<FuelNode> FindFuelSourcesStackPriority(int type)
+        {
+            int fuelLookupID = nextFuelLookupID++;
+            HashSet<FuelNode> sources = new HashSet<FuelNode>();
+            bool success = FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, 0);
+            return sources;
+        }
+
+        bool FindFuelSourcesStackPriorityRecursive(int type, HashSet<FuelNode> sources, int fuelLookupID, int level)
+        {
+            // The fuel flow rules for STACK_PRIORITY_SEARCH are nicely explained in detail by Kashua at
+            // http://forum.kerbalspaceprogram.com/threads/64362-Fuel-Flow-Rules-%280-23-5%29
+
+            // recursive search cannot visit same node twice (Kashua rule #1)
+            if (fuelLookupID == lastSeenFuelLookupID)
             {
-                if (!visited.Contains(n))
-                {
-                    //Fuel tanks cannot draw from their parents if they are surface mounted:
-                    if (!(surfaceMounted && n == parent && resourcesUnobtainableFromParent.Contains(type)))
-                    {
-                        if (n.CanSupplyResourceRecursive(type, newVisited)) return true;
-                    }
-                }   
+                return false;
+            }
+            lastSeenFuelLookupID = fuelLookupID;
+
+            // First try to draw fuel through incoming fuel lines (Kashua rule #2)
+            bool success = false;
+            for (int i = 0; i < fuelLineSources.Count; i++)
+            {
+                success |= fuelLineSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1);
+            }
+            if (success)
+            {
+                return true;
             }
 
+            // Then try to draw fuel through stack nodes (Kashua rule #4 (there is no rule #3))
+            // TODO: only do this search if crossfeed capable!!!
+            for (int i = 0; i < stackNodeSources.Count; i++)
+            {
+                success |= stackNodeSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1);
+            }
+            if (success)
+            {
+                return true;
+            }
+
+            // If we are a container for this resource (and it hasn't been disabled by the right-click menu)...
+            if (resources.Keys.Contains(type))
+            {
+                // If we have some of the resource, return ourselves (Kashua rule #5)
+                // Otherwise return failure (Kashua rule #6)
+                if (resources[type] > DRAINED)
+                {
+                    sources.Add(this);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // If we are fuel crossfeed capable and surface-mounted to our parent,
+            // try to draw fuel from our parent (Kashua rule #7)
+            if (surfaceMountParent != null)
+            {
+                return surfaceMountParent.FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level+1);
+            }
+
+            // If all that fails, give up (Kashua rule #8)
             return false;
         }
+
+        private float GetFlowModifier(double atmDensity, double machNumber)
+        {
+            float flowModifier = 1.0f;
+            if (atmChangeFlow)
+            {
+                flowModifier = (float)(atmDensity / 1.225);
+                if (useAtmCurve)
+                {
+                    flowModifier = atmCurve.Evaluate(flowModifier);
+                }
+            }
+            if (useVelCurve)
+            {
+                flowModifier = flowModifier * velCurve.Evaluate((float)machNumber);
+            }
+            if (flowModifier < 1E-05f)
+            {
+                flowModifier = 1E-05f;
+            }
+            return flowModifier;
+        }
+
     }
 }

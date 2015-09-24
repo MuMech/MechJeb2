@@ -13,81 +13,89 @@ namespace MuMech
     {
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 
-        protected const string TARGET_NAME = "Ascent Path Guidance";
-
-        public IAscentPath ascentPath = null;
-
         public EditableDouble desiredInclination = 0;
 
         public bool launchingToPlane = false;
         public bool launchingToRendezvous = false;
+        public bool launchingToInterplanetary = false;
+        public double interplanetaryWindowUT;
 
         MechJebModuleAscentAutopilot autopilot;
 
         public override void OnStart(PartModule.StartState state)
         {
             autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
-            if(autopilot != null) desiredInclination = autopilot.desiredInclination;
+            if (autopilot != null)
+            {
+                autopilot.users.Add(this);
+                desiredInclination = autopilot.desiredInclination;
+            }
         }
 
-        public override void OnModuleEnabled()
+        public virtual void OnDestroy()
         {
+            // REVIEW: Ideally this would be called when the MechJeb module is switched off, but it doesn't seem to be
+            if (autopilot != null)
+            {
+              autopilot.users.Remove(this);
+            }
         }
 
         public override void OnModuleDisabled()
         {
-            if (core.target.NormalTargetExists && (core.target.Name == TARGET_NAME)) core.target.Unset();
+            launchingToInterplanetary = false;
             launchingToPlane = false;
             launchingToRendezvous = false;
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();
             if (editor != null) editor.enabled = false;
         }
 
-        public override void OnFixedUpdate()
+        [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
+        public void ToggleAscentNavballGuidanceInfoItem()
         {
-            if (ascentPath == null) return;
-
-            if (core.target.Target != null && core.target.Name == TARGET_NAME)
+            if (autopilot != null)
             {
-                double angle = Math.PI / 180 * ascentPath.FlightPathAngle(vesselState.altitudeASL);
-                double heading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
-                Vector3d horizontalDir = Math.Cos(heading) * vesselState.north + Math.Sin(heading) * vesselState.east;
-                Vector3d dir = Math.Cos(angle) * horizontalDir + Math.Sin(angle) * vesselState.up;
-                core.target.UpdateDirectionTarget(dir);
+                GUILayout.Label("AP Enabled" + autopilot.enabled.ToString());
+                GUILayout.Label("AP Engaged" + autopilot.Engaged.ToString());
+                GUILayout.Label("AP Navball" + autopilot.NavBallGuidance.ToString());
+
+                if (autopilot.NavBallGuidance)
+                {
+                    if (GUILayout.Button("Hide ascent navball guidance"))
+                        autopilot.NavBallGuidance = false;
+                }
+                else
+                {
+                    if (GUILayout.Button("Show ascent navball guidance"))
+                        autopilot.NavBallGuidance = true;
+                }
             }
         }
+
 
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
-            bool showingGuidance = (core.target.Target != null && core.target.Name == TARGET_NAME);
-
-            if (showingGuidance)
-            {
-                GUILayout.Label("The purple circle on the navball points along the ascent path.");
-                if (GUILayout.Button("Stop showing navball guidance")) core.target.Unset();
-            }
-            else if (GUILayout.Button("Show navball ascent path guidance"))
-            {
-                core.target.SetDirectionTarget(TARGET_NAME);
-            }
+            GUILayout.Label("When guidance is enabled, the purple circle on the navball points along the ascent path.");
+            ToggleAscentNavballGuidanceInfoItem();
 
             if (autopilot != null)
             {
-                if (autopilot.enabled)
+                if (autopilot.Engaged)
                 {
-                    if (GUILayout.Button("Disengage autopilot")) autopilot.users.Remove(this);
+                    if (GUILayout.Button("Disengage autopilot"))
+                    {
+                        autopilot.Engaged = false;
+                    }
                 }
                 else
                 {
                     if (GUILayout.Button("Engage autopilot"))
                     {
-                        autopilot.users.Add(this);
+                        autopilot.Engaged = true;
                     }
                 }
-
-                ascentPath = autopilot.ascentPath;
 
                 GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
                 autopilot.desiredInclination = desiredInclination;
@@ -97,12 +105,43 @@ namespace MuMech
 
             core.thrust.LimitToPreventOverheatsInfoItem();
             core.thrust.LimitToTerminalVelocityInfoItem();
+            core.thrust.LimitToMaxDynamicPressureInfoItem();
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
+            core.thrust.LimiterMinThrottleInfoItem();
+            GUILayout.BeginHorizontal();
+            autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
+            if (autopilot.forceRoll)
+            {
+                GuiUtils.SimpleTextBox("climb", autopilot.verticalRoll, "º", 30f);
+                GuiUtils.SimpleTextBox("turn", autopilot.turnRoll, "º", 30f);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA to", s, GUILayout.ExpandWidth(true));
+            autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
+            GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(25);
+            if (autopilot.limitAoA)
+            {
+                GUIStyle sl = new GUIStyle(GUI.skin.label);
+                if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
+                    sl.normal.textColor = sl.hover.textColor = Color.green;
+                GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50, sl);
+            }
+            GUILayout.EndHorizontal();
+
             autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
 
             autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
-            if(autopilot.autostage) core.staging.AutostageSettingsInfoItem();
+            if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();
+
+            autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels, "Auto-deploy solar panels");
 
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
@@ -110,60 +149,91 @@ namespace MuMech
             {
                 if (core.target.NormalTargetExists)
                 {
-                    if (!launchingToPlane && !launchingToRendezvous)
+                    if (core.node.autowarp)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Launch countdown:", GUILayout.ExpandWidth(true));
+                        autopilot.warpCountDown.text = GUILayout.TextField(autopilot.warpCountDown.text, GUILayout.Width(60));
+                        GUILayout.Label("s", GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+                    }
+                    if (!launchingToPlane && !launchingToRendezvous && !launchingToInterplanetary)
                     {
                         GUILayout.BeginHorizontal();
                         if (GUILayout.Button("Launch to rendezvous:", GUILayout.ExpandWidth(false)))
                         {
                             launchingToRendezvous = true;
+                            autopilot.StartCountdown(vesselState.time + LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle, mainBody, vesselState.longitude, core.target.TargetOrbit));
                         }
                         autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text, GUILayout.Width(60));
                         GUILayout.Label("º", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
-                    }
-                    if (!launchingToPlane && !launchingToRendezvous && GUILayout.Button("Launch into plane of target"))
-                    {
-                        launchingToPlane = true;
+
+                        if (GUILayout.Button("Launch into plane of target"))
+                        {
+                            launchingToPlane = true;
+                            autopilot.StartCountdown(vesselState.time +
+                                LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.TargetOrbit));
+                        }
+                        if (core.target.TargetOrbit.referenceBody == orbit.referenceBody.referenceBody)
+                        {
+                            if (GUILayout.Button("Launch at interplanetary window"))
+                            {
+                                launchingToInterplanetary = true;
+                                //compute the desired launch date
+                                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(mainBody.orbit, core.target.TargetOrbit, vesselState.time, out interplanetaryWindowUT);
+                                double desiredOrbitPeriod = 2 * Math.PI * Math.Sqrt(Math.Pow(mainBody.Radius + autopilot.desiredOrbitAltitude, 3) / mainBody.gravParameter);
+                                //launch just before the window, but don't try to launch in the past                                
+                                interplanetaryWindowUT -= 3 * desiredOrbitPeriod;
+                                interplanetaryWindowUT = Math.Max(vesselState.time + autopilot.warpCountDown, interplanetaryWindowUT);
+                                autopilot.StartCountdown(interplanetaryWindowUT);
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    launchingToPlane = launchingToRendezvous = false;
+                    launchingToInterplanetary = launchingToPlane = launchingToRendezvous = false;
                     GUILayout.Label("Select a target for a timed launch.");
                 }
 
-                if (launchingToPlane || launchingToRendezvous)
+                if (launchingToInterplanetary || launchingToPlane || launchingToRendezvous)
                 {
-                    double tMinus;
-                    if (launchingToPlane) tMinus = LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.Orbit);
-                    else tMinus = LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle, mainBody, vesselState.longitude, core.target.Orbit);
-
-                    double launchTime = vesselState.time + tMinus;
-
-                    core.warp.WarpToUT(launchTime);
-
-                    if (launchingToPlane)
+                    string message = "";
+                    if (launchingToInterplanetary)
                     {
-                        desiredInclination = core.target.Orbit.inclination;
-                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.Orbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
+                        message = "Launching at interplanetary window";
+                    }
+                    else if (launchingToPlane)
+                    {
+                        desiredInclination = core.target.TargetOrbit.inclination;
+                        desiredInclination *= Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(), Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
+                        message = "Launching to target plane";
+                    }
+                    else if (launchingToRendezvous)
+                    {
+                        message = "Launching to rendezvous";
                     }
 
-                    if (autopilot.enabled) core.warp.WarpToUT(launchTime);
-
-                    GUILayout.Label("Launching to " + (launchingToPlane ? "target plane" : "rendezvous") + ": T-" + MuUtils.ToSI(tMinus, 0) + "s");
-                    if (tMinus < 3 * vesselState.deltaT)
+                    if (autopilot.tMinus > 3 * vesselState.deltaT)
                     {
-                        if (autopilot.enabled) Staging.ActivateNextStage();
-                        launchingToPlane = launchingToRendezvous = false;
+                        message += ": T-" + GuiUtils.TimeToDHMS(autopilot.tMinus, 1);
                     }
 
-                    if (GUILayout.Button("Abort")) launchingToPlane = launchingToRendezvous = false;
+                    GUILayout.Label(message);
+
+                    if (GUILayout.Button("Abort")) launchingToInterplanetary = launchingToPlane = launchingToRendezvous = autopilot.timedLaunch = false;
                 }
             }
 
             if (autopilot != null && autopilot.enabled)
             {
                 GUILayout.Label("Autopilot status: " + autopilot.status);
+            }
+
+            if (!vessel.patchedConicsUnlocked())
+            {
+                GUILayout.Label("Warning: MechJeb is unable to circularize without an upgraded Tracking Station.");
             }
 
             MechJebModuleAscentPathEditor editor = core.GetComputerModule<MechJebModuleAscentPathEditor>();

@@ -12,7 +12,7 @@ namespace MuMech
         {
             return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
         }
-            	    	
+
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)
@@ -43,6 +43,33 @@ namespace MuMech
             return vector - Vector3.Project(vector, planeNormal);
         }
 
+        public static Vector3d DeltaEuler(this Quaternion delta)
+        {
+            return new Vector3d(
+                (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
+                -((delta.eulerAngles.y > 180) ? (delta.eulerAngles.y - 360.0F) : delta.eulerAngles.y),
+                (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
+                );
+        }
+
+        public static Vector3d Clamp(this Vector3d value, double min, double max)
+        {
+            return new Vector3d(
+                Clamp(value.x, min, max),
+                Clamp(value.y, min, max),
+                Clamp(value.z, min, max)
+                );
+        }
+
+        public static double Clamp(double val, double min, double max)
+        {
+            if (val <= min)
+                return min;
+            if (val >= max)
+                return max;
+            return val;
+        }
+
         public static float AngleInPlane(this Vector3 vector, Vector3 planeNormal, Vector3 other)
         {
             Vector3 v1 = vector.ProjectIntoPlane(planeNormal);
@@ -63,5 +90,32 @@ namespace MuMech
 
             return (float)((Math.Atan2(r1.y, r1.x) - Math.Atan2(r2.y, r2.x)) * 180.0 / Math.PI);
         }
+
+		public static Quaternion Add(this Quaternion left, Quaternion right)
+		{
+			return new Quaternion(
+				left.x + right.x,
+				left.y + right.y,
+				left.z + right.z,
+				left.w + right.w);
+		}
+
+		public static Quaternion Mult(this Quaternion left, float lambda)
+		{
+			return new Quaternion(
+				left.x * lambda,
+				left.y * lambda,
+				left.z * lambda,
+				left.w * lambda);
+		}
+
+		public static Quaternion Conj(this Quaternion left)
+		{
+			return new Quaternion(
+				-left.x,
+				-left.y,
+				-left.z,
+				left.w);
+		}
     }
 }

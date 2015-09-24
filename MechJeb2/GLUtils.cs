@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class GLUtils
+    public static class GLUtils
     {
         static Material _material;
         static Material material
@@ -21,7 +21,9 @@ namespace MuMech
         public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0, double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
-            Vector3d center = body.position + body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right) * up;
+            var height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
+            if (height < body.Radius) { height = body.Radius; }
+            Vector3d center = body.position + height * up;
 
             if (IsOccluded(center, body)) return;
 
@@ -102,6 +104,68 @@ namespace MuMech
                     GLVertexMap(points[i + 1]);
                 }
             }
+
+            GL.End();
+            GL.PopMatrix();
+        }
+
+        public static void DrawBoundingBox(CelestialBody mainBody, Vessel vessel, MechJebModuleDockingAutopilot.Box3d box, Color c )
+        {
+            //Vector3d origin = vessel.GetWorldPos3D() - vessel.GetTransform().rotation * box.center ;
+            //Vector3d origin = vessel.GetTransform().TransformPoint(box.center);
+            Vector3d origin = vessel.transform.TransformPoint(box.center);
+
+            Vector3d A1 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, +box.size.y, +box.size.z);
+            Vector3d A2 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, -box.size.y, +box.size.z);
+            Vector3d A3 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, -box.size.y, +box.size.z);
+            Vector3d A4 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, +box.size.y, +box.size.z);
+
+            Vector3d B1 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, +box.size.y, -box.size.z);
+            Vector3d B2 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, -box.size.y, -box.size.z);
+            Vector3d B3 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, -box.size.y, -box.size.z);
+            Vector3d B4 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, +box.size.y, -box.size.z);
+
+            GL.PushMatrix();
+            material.SetPass(0);
+            GL.LoadOrtho();
+            GL.Begin(GL.LINES);
+            GL.Color(c);
+
+            GLVertexMap(A1);
+            GLVertexMap(A2);
+            
+            GLVertexMap(A2);
+            GLVertexMap(A3);
+
+            GLVertexMap(A3);
+            GLVertexMap(A4);
+
+            GLVertexMap(A4);
+            GLVertexMap(A1);
+
+            GLVertexMap(B1);
+            GLVertexMap(B2);
+            
+            GLVertexMap(B2);
+            GLVertexMap(B3);
+
+            GLVertexMap(B3);
+            GLVertexMap(B4);
+
+            GLVertexMap(B4);
+            GLVertexMap(B1);
+
+            GLVertexMap(A1);
+            GLVertexMap(B1);
+
+            GLVertexMap(A2);
+            GLVertexMap(B2);
+
+            GLVertexMap(A3);
+            GLVertexMap(B3);
+
+            GLVertexMap(A4);
+            GLVertexMap(B4);
 
             GL.End();
             GL.PopMatrix();

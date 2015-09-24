@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,8 +10,6 @@ namespace MuMech
     {
         public string status = "";
 
-        public double approachSpeedMult = 0.3; // Approach speed will be approachSpeedMult * maximum safe speed on each axis.
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
         public EditableDouble speedLimit = 1;
@@ -20,119 +18,339 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble overridenSafeDistance = 5;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean overrideSafeDistance = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public Boolean overrideTargetSize = false;
+        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        public EditableDouble overridenTargetSize = 10;
+
+        public float safeDistance = 10;
+        public float targetSize = 5;
+
+        public Boolean drawBoundingBox = false;
+
+        enum DockingStep
+        {
+            INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
+        }
+        DockingStep dockingStep = DockingStep.OFF;
+
+        public struct Box3d
+        {
+            public Vector3 center;
+            public Vector3 size;
+        }
+
+        Vector3d zAxis;
+        public double zSep;
+        public Vector3d lateralSep;
+
+        ITargetable lastTarget;
+
+        const float dockingcorridorRadius = 1;
+        double acquireRange = 0.25;
+
+        public MechJebModuleDockingAutopilot.Box3d vesselBoundingBox;
+        public MechJebModuleDockingAutopilot.Box3d targetBoundingBox;
+
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
         {
+        }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
+            {
+                RenderingManager.AddToPostDrawQueue(1, DrawBoundingBox);
+
+                // Turn off docking AP on successful docking (in case other checks for successful docking fail)
+                GameEvents.onPartCouple.Add((GameEvents.FromToAction<Part, Part> ev) =>
+                {
+                    if (dockingStep != DockingStep.OFF)
+                    {
+                        if (ev.from.vessel == vessel || ev.to.vessel == vessel)
+                        {
+                            EndDocking();
+                        }
+                    }
+                });
+            }
         }
 
         public override void OnModuleEnabled()
         {
             core.rcs.users.Add(this);
             core.attitude.users.Add(this);
+            dockingStep = DockingStep.INIT;
         }
 
         public override void OnModuleDisabled()
         {
             core.rcs.users.Remove(this);
             core.attitude.attitudeDeactivate();
+            dockingStep = DockingStep.OFF;
+            drawBoundingBox = false;
         }
 
         private double FixSpeed(double s)
         {
+            // It's ok if it's a little off?
             if (speedLimit != 0)
             {
-                if (s >  speedLimit) s =  speedLimit;
-                if (s < -speedLimit) s = -speedLimit;
+                if (s >  speedLimit) s =  speedLimit * 1.005;
+                if (s < -speedLimit) s = -speedLimit * 1.005;
             }
             return s;
+        }
+
+        // Get how fast the ship can move on the axis and still be able to stop before reaching the distance.
+        // v2 = u2 + 2 * a * d
+        // initial speed v - final speed u = 0  - distance d
+        // Maximum speed to brake in time = sqrt( 2 * a * d )
+        private double MaxSpeedForDistance(double distance, Vector3d axis)
+        {
+            Vector3d localAxis = vessel.ReferenceTransform.InverseTransformDirection(axis);
+            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.rcs.rcsAccelFactor() / vesselState.mass));
         }
 
         public override void Drive(FlightCtrlState s)
         {
             if (!core.target.NormalTargetExists)
             {
-                users.Clear();
+                EndDocking();
                 return;
             }
 
-            if (forceRol)
-                core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
+            if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
+                return;
+            
+            Vector3d targetVel = core.target.TargetOrbit.GetVel();
+
+            double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
+			double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
+
+            bool align = true;
+
+            double timeToAxis;
+            double timeToTargetSize;
+
+            switch (dockingStep)
+            {
+                case DockingStep.WRONG_SIDE_BACKING_UP:
+                    zApproachSpeed = MaxSpeedForDistance(safeDistance + zSep + 2.0, -zAxis);
+                    latApproachSpeed = 0;
+                    align = false;
+                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side";
+                    break;
+
+                case DockingStep.WRONG_SIDE_LATERAL:
+                    zApproachSpeed = 0;
+                    latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, lateralSep);
+                    status = "Moving away from docking axis at " + latApproachSpeed.ToString("F2") + " m/s to avoid hitting target on backing up";
+                    break;
+
+                case DockingStep.WRONG_SIDE_SWITCHSIDE:
+                    zApproachSpeed = -MaxSpeedForDistance(-zSep + targetSize, -zAxis);
+                    latApproachSpeed = 0;
+                    status = "Moving at " + zApproachSpeed.ToString("F2") + " m/s to get on the correct side of the target.";
+                    break;
+
+                case DockingStep.BACKING_UP:
+                    latApproachSpeed = 0;
+                    zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, -zAxis);
+                    align = false;
+                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s";
+                    break;
+
+                case DockingStep.MOVING_TO_START:
+                    
+                        timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
+                        timeToTargetSize = Math.Abs((zSep - targetSize) / zApproachSpeed);                                               
+
+                        if (timeToTargetSize < timeToAxis && timeToAxis > 0 && timeToTargetSize > 0)
+                        {
+                            zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
+                        }
+                    if (zSep < targetSize)
+                        //zApproachSpeed = 0;
+                        zApproachSpeed *= -1;
+                    
+                    
+                    status = "Moving toward the starting point at " + zApproachSpeed.ToString("F2") + " m/s.";
+                    break;
+
+                case DockingStep.DOCKING:
+                    status = "Moving forward to dock at " + zApproachSpeed.ToString("F2") + " m/s.";
+                    timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
+                    timeToTargetSize = Math.Abs((zSep) / zApproachSpeed);                                               
+                    
+                    if (timeToTargetSize < timeToAxis && timeToAxis > 0 && timeToTargetSize > 0)
+                    {
+                        zApproachSpeed *= Math.Min(timeToTargetSize / (timeToAxis * 2.0), 1);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (!align)
+                core.attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, this);
             else
-                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+                if (forceRol)
+                    core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
+                else
+                    core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+            
 
-            Vector3d targetVel = core.target.Orbit.GetVel();
+            Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
+            core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
 
+        }
+
+
+        public override void OnFixedUpdate()
+        {
+            if (!core.target.NormalTargetExists)
+            {
+                EndDocking();
+                return;
+            }
+
+            UpdateDistance();
+
+            switch (dockingStep)
+            {
+                case DockingStep.INIT:
+                    InitDocking();
+                    break;
+
+                case DockingStep.WRONG_SIDE_BACKING_UP:
+                    if (-zSep > safeDistance)
+                        dockingStep = DockingStep.WRONG_SIDE_LATERAL;
+                    break;
+
+                case DockingStep.WRONG_SIDE_LATERAL:
+                    if (lateralSep.magnitude > safeDistance)
+                        dockingStep = DockingStep.WRONG_SIDE_SWITCHSIDE;
+                    break;
+
+                case DockingStep.WRONG_SIDE_SWITCHSIDE:
+                    if (zSep > 0)
+                        dockingStep = DockingStep.BACKING_UP;
+                    break;
+
+                case DockingStep.BACKING_UP:
+                    if (zSep > targetSize)
+                        dockingStep = DockingStep.MOVING_TO_START;
+                    break;
+
+                case DockingStep.MOVING_TO_START:
+                    if (lateralSep.magnitude < dockingcorridorRadius)
+                        dockingStep = DockingStep.DOCKING;
+                    break;
+
+                case DockingStep.DOCKING:
+                    if (zSep < acquireRange)
+                    {
+                        EndDocking();
+                    }
+				// Added checks to make sure we're still good to dock.
+					else if (lateralSep.magnitude > dockingcorridorRadius) // far from docking axis
+					{
+						if (zSep < 0)  //we're behind the target
+							dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
+						else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
+                        {
+							if (zSep < 1) 
+								dockingStep = DockingStep.MOVING_TO_START;
+                        }
+					}
+
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
+
+        void UpdateDistance()
+        {
             Vector3d separation = core.target.RelativePosition;
+            zAxis = core.target.DockingAxis.normalized;
+            zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
+            lateralSep = Vector3d.Exclude(zAxis, separation);
+        }
 
-            Vector3d zAxis = core.target.DockingAxis;
-            double zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
-            Vector3d lateralSep = Vector3d.Exclude(zAxis, separation);
+        void InitDocking()
+        {
+            lastTarget = core.target.Target;
 
-            // v2 = u2 + 2 * a * s
-            // initial speed v - final speed u = 0  - distance s
-            // Maximum speed to brake in time = sqrt( 2 * a * s )
-            double zApproachSpeed   = FixSpeed( approachSpeedMult * Math.Sqrt( 2 * Math.Abs(zSep) * vesselState.rcsThrustAvailable.GetMagnitude(-zAxis) / vesselState.mass ));
-            double latApproachSpeed = FixSpeed( approachSpeedMult * Math.Sqrt( 2 * lateralSep.magnitude * vesselState.rcsThrustAvailable.GetMagnitude(-lateralSep) / vesselState.mass));
+            try
+            {
+                vesselBoundingBox = vessel.GetBoundingBox();
+                targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
+
+                if (!overrideTargetSize)
+                    targetSize = targetBoundingBox.size.magnitude;
+                else
+                    targetSize = (float)overridenTargetSize.val;
+                
+                if (!overrideSafeDistance)
+                    safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
+                else
+                    safeDistance = (float)overridenSafeDistance.val;
+
+                if (core.target.Target is ModuleDockingNode)
+                    acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.5;
+                else
+                    acquireRange = 0.25;
+
+            }
+            catch (Exception e)
+            {
+                print(e);
+            }
 
             if (zSep < 0)  //we're behind the target
-            {
-                // TODO : Compare to the vessels size to move around it safely
-                if (lateralSep.magnitude < 10) //and we'll hit the target if we back up
-                {
-                    core.rcs.SetTargetWorldVelocity(targetVel + zApproachSpeed * lateralSep.normalized); //move away from the docking axis
-                    status = "Moving away from docking axis at " + zApproachSpeed.ToString("F2") + " m/s to avoid hitting target on backing up";
-                }
+                dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
+            else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
+                if (zSep < targetSize) 
+                    dockingStep = DockingStep.BACKING_UP;
                 else
-                {
-                    double backUpSpeed = FixSpeed(-zApproachSpeed * Math.Max(1, -zSep / 50));
-                    core.rcs.SetTargetWorldVelocity(targetVel + backUpSpeed * zAxis); //back up
-                    status = "Backing up at " + backUpSpeed.ToString("F2") + " m/s to get on the correct side of the target to dock.";
-                }
-            }
-            else //we're in front of the target
+                    dockingStep = DockingStep.MOVING_TO_START;
+            else
+                dockingStep = DockingStep.DOCKING;
+
+        }
+
+        void EndDocking()
+        {
+            dockingStep = DockingStep.OFF;
+            users.Clear();
+            enabled = false;
+        }
+
+        void DrawBoundingBox()
+        {
+            if (drawBoundingBox && vessel == FlightGlobals.ActiveVessel)
             {
-                //move laterally toward the docking axis
-                Vector3d lateralVelocityNeeded = -lateralSep.normalized * latApproachSpeed;
+                vesselBoundingBox = vessel.GetBoundingBox();
+                GLUtils.DrawBoundingBox(vessel.mainBody, vessel, vesselBoundingBox, Color.green);
 
-                double zVelocityNeeded = zApproachSpeed;
-                
-                if (lateralSep.magnitude > 0.2 && lateralSep.magnitude * 10 > zSep)
+                if (core.target.Target != null)
                 {
-                    //we're very far off the docking axis
-                    if (zSep < lateralSep.magnitude)
-                    {
-                        //we're far off the docking axis, but our z separation is small. Back up to increase the z separation
-                        zVelocityNeeded *= -1;
-                        status = "Backing at " + zVelocityNeeded.ToString("F2") + " m/s up and moving toward docking axis.";
-                    }
-                    else
-                    {
-                        //we're not extremely close in z, so keep moving in z but slow enough that we are on docking axis before contact
-                        zVelocityNeeded = Math.Min(zVelocityNeeded, (Math.Max(zSep, 2) * lateralVelocityNeeded.magnitude) / lateralSep.magnitude);
-                        status = "Moving toward the docking axis and dock at " + lateralVelocityNeeded.magnitude.ToString("F2") + " m/s.";
-                    }
+                    Vessel targetVessel = core.target.Target.GetVessel();
+                    targetBoundingBox = targetVessel.GetBoundingBox();
+                    GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetBoundingBox, Color.blue);
                 }
-                else
-                {
-                    if (zSep > 0.4)
-                    {
-                        //we're not extremely far off the docking axis. Approach the along z with a speed determined by our z separation
-                        //but limited by how far we are off the axis
-                        status = "Moving forward to dock at " + zVelocityNeeded.ToString("F2") + " m/s.";
-                    }
-                    else
-                    {
-                        // close enough, turn it off and let the magnetic dock work
-                        users.Clear();
-                        enabled = false;
-                        return;
-                    }
-                }
-
-                Vector3d adjustment = lateralVelocityNeeded + zVelocityNeeded * zAxis.normalized;
-                double magnitude = adjustment.magnitude;
-                if (magnitude > 0) adjustment *= FixSpeed(magnitude) / magnitude;
-                core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
             }
         }
     }

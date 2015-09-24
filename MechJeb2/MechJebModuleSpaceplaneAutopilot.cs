@@ -30,27 +30,13 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
         }
 
-        public static Runway[] runways = 
-        {
-            new Runway //The runway at KSC
-            { 
-                name = "KSC runway",
-                start = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 67 }, 
-                end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 67 } 
-            },
-            new Runway //The runway on the island off the KSC coast.
-            { 
-                name = "Island runway",
-                start = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 132 },
-                end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 132 }
-            }
-        };
+        public static List<Runway> runways;
 
         public enum Mode { AUTOLAND, HOLD, OFF };
         public Mode mode = Mode.OFF;
 
         //autoland parameters
-        public Runway runway = runways[0]; //the runway to land at
+        public Runway runway; //the runway to land at
         public EditableDouble glideslope = 3;      //the FPA to approach at during autoland
         public EditableDouble touchdownPoint = 100; //how many meters down the runway to touch down
 
@@ -59,6 +45,12 @@ namespace MuMech
         public EditableDouble targetHeading = 90;
 
         bool loweredGear = false;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (runways == null && HighLogic.LoadedSceneIsFlight)
+                InitRunwaysList();
+        }
 
         public override void OnModuleDisabled()
         {
@@ -102,7 +94,7 @@ namespace MuMech
                 double headingToWaypoint = vesselState.HeadingFromDirection(vectorToWaypoint);
 
                 Vector3d vectorToRunway = runwayStart - vesselState.CoM;
-                double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
+                double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up) + (vesselState.altitudeTrue - vesselState.altitudeBottom);
                 double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
                 double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
                 double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 0.0F);
@@ -121,17 +113,17 @@ namespace MuMech
 
         public double stableAoA = 0; //we average AoA over time to get an estimate of what pitch will produce what FPA
         public double pitchCorrection = 0; //we average (commanded pitch - actual pitch) over time in order to fix this offset in our commands
-        public float maxYaw = 10.0F;
-        public float maxRoll = 10.0F;
-        public float maxPitchCorrection = 5.0F;
-        public double AoAtimeConstant = 2.0;
-        public double pitchCorrectionTimeConstant = 15.0;
+        public const float maxYaw = 10.0F;
+        public const float maxRoll = 10.0F;
+        public const float maxPitchCorrection = 5.0F;
+        public const double AoAtimeConstant = 2.0;
+        public const double pitchCorrectionTimeConstant = 15.0;
 
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             //horizontal control
-            double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.east),
-                                                                Vector3d.Dot(vesselState.velocityVesselSurface, vesselState.north));
+            double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.surfaceVelocity, vesselState.east),
+                                                                Vector3d.Dot(vesselState.surfaceVelocity, vesselState.north));
             double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
             double noseHeading = velocityHeading + headingTurn;
             double noseRoll = (maxRoll / maxYaw) * headingTurn;
@@ -171,7 +163,7 @@ namespace MuMech
 
             Vector3d vesselUnit = (vesselState.CoM - runwayStart).normalized;
 
-            double leftSpeed = Vector3d.Dot(vesselState.velocityVesselSurface, runwayLeftUnit);
+            double leftSpeed = Vector3d.Dot(vesselState.surfaceVelocity, runwayLeftUnit);
             double verticalSpeed = vesselState.speedVertical;
             double horizontalSpeed = vesselState.speedSurfaceHorizontal;
             double flightPathAngle = 180 / Math.PI * Math.Atan2(verticalSpeed, horizontalSpeed);
@@ -179,7 +171,7 @@ namespace MuMech
             double leftDisplacement = Vector3d.Dot(runwayLeftUnit, vesselState.CoM - runwayStart);
 
             Vector3d vectorToRunway = runwayStart - vesselState.CoM;
-            double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up);
+            double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up) + (vesselState.altitudeTrue - vesselState.altitudeBottom);
             double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
             double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
 
@@ -187,6 +179,82 @@ namespace MuMech
             Vector3d aimDir = aimToward - vesselState.CoM;
 
             return aimDir;
+        }
+
+        private void InitRunwaysList()
+        {
+            runways = new List<Runway>();
+
+            // Import landing sites form a user createded .cfg
+            foreach (var mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
+            {
+                foreach (ConfigNode site in mjConf.config.GetNode("Runways").GetNodes("Runway"))
+                {
+                    string runwayName = site.GetValue("name");
+                    ConfigNode start = site.GetNode("start");
+                    ConfigNode end = site.GetNode("end");
+
+                    if (runwayName == null || start == null || end == null)
+                        continue;
+
+                    string lat = start.GetValue("latitude");
+                    string lon = start.GetValue("longitude");
+                    string alt = start.GetValue("altitude");
+
+                    if (lat == null || lon == null || alt == null)
+                        continue;
+
+                    double startLatitude, startLongitude, startAltitude;
+                    double.TryParse(lat, out startLatitude);
+                    double.TryParse(lon, out startLongitude);
+                    double.TryParse(alt, out startAltitude);
+
+                    lat = end.GetValue("latitude");
+                    lon = end.GetValue("longitude");
+                    alt = end.GetValue("altitude");
+
+                    if (lat == null || lon == null || alt == null)
+                        continue;
+
+                    double endLatitude, endLongitude, endAltitude;
+                    double.TryParse(lat, out endLatitude);
+                    double.TryParse(lon, out endLongitude);
+                    double.TryParse(alt, out endAltitude);
+
+                    string bodyName = site.GetValue("body");
+                    CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
+
+                    if (body != null && !runways.Any(p => p.name == runwayName))
+                    {
+                        runways.Add(new Runway()
+                        {
+                            name = runwayName,
+                            body = body,
+                            start = new Runway.Endpoint { latitude = startLatitude, longitude = startLongitude, altitude = startAltitude },
+                            end = new Runway.Endpoint { latitude = endLatitude, longitude = endLongitude, altitude = endAltitude }
+                        });
+                    }
+                }
+            }
+
+            // Create a default config file in MJ dir for those ?
+            if (!runways.Any(p => p.name == "KSC runway"))
+                runways.Add(new Runway //The runway at KSC
+                {
+                    name = "KSC runway",
+                    body = Planetarium.fetch.Home,
+                    start = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 69.01 },
+                    end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 69.01 }
+                });
+
+            if (!runways.Any(p => p.name == "Island runway"))
+                runways.Add(new Runway //The runway on the island off the KSC coast.
+                {
+                    name = "Island runway",
+                    body = Planetarium.fetch.Home,
+                    start = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 133.17 },
+                    end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 133.17 }
+                });
         }
 
         public MechJebModuleSpaceplaneAutopilot(MechJebCore core) : base(core) { }
@@ -203,11 +271,12 @@ namespace MuMech
             public Vector3d Position()
             {
                 //hardcoded to use Kerbin for the moment:
-                return FlightGlobals.Bodies[1].GetWorldSurfacePosition(latitude, longitude, altitude);
+                return FlightGlobals.currentMainBody.GetWorldSurfacePosition(latitude, longitude, altitude);
             }
         }
 
         public string name;
+        public CelestialBody body;
         public Endpoint start;
         public Endpoint end;
 
@@ -229,7 +298,7 @@ namespace MuMech
 
         public Vector3d Up()
         {
-            return FlightGlobals.Bodies[1].GetSurfaceNVector(start.latitude, start.longitude);
+            return FlightGlobals.currentMainBody.GetSurfaceNVector(start.latitude, start.longitude);
         }
     }
 }
