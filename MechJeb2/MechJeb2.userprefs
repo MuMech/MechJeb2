@@ -1,0 +1,15 @@
+﻿<Properties StartupItem="MechJeb2.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="MechJebModuleThrustController.cs">
+    <Files>
+      <File FileName="MechJebModuleAscentAutopilot.cs" Line="1" Column="1" />
+      <File FileName="PartExtensions.cs" Line="138" Column="65" />
+      <File FileName="VesselExtensions.cs" Line="1" Column="1" />
+      <File FileName="MechJebModuleThrustController.cs" Line="566" Column="29" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

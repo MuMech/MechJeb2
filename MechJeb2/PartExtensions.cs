@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public static class PartExtensions
+	 public static class PartExtensions
     {
         public static bool HasModule<T>(this Part part) where T : PartModule
         {
