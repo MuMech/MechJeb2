@@ -564,7 +564,11 @@ namespace MuMech
         float AccelerationLimitedThrottle()
         {
             double throttleForMaxAccel = (maxAcceleration - vesselState.minThrustAccel) / (vesselState.maxThrustAccel - vesselState.minThrustAccel);
-            return Mathf.Clamp((float)throttleForMaxAccel, 0, 1);
+			float testThrottle = Mathf.Clamp((float)throttleForMaxAccel, 0, 1);
+			if (testThrottle <= 0)
+				return 0.01F;
+			else
+				return testThrottle;
         }
 
         public override void OnUpdate()

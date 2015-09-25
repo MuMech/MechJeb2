@@ -215,7 +215,7 @@ namespace MuMech
         //so that we can precisely match the desired apoapsis instead of overshooting it
         float ThrottleToRaiseApoapsis(double currentApR, double finalApR)
         {
-            float desiredThrottle;
+            float desiredThrottle = 1.0F;
 
             if (currentApR > finalApR + 5.0)
             {
@@ -233,7 +233,9 @@ namespace MuMech
                 raiseApoapsisRatePerThrottle.value = instantRatePerThrottle;
                 double desiredApRate = (finalApR - currentApR) / 1.0;
                 desiredThrottle = Mathf.Clamp((float)(desiredApRate / raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
-        */    }
+
+            */ 
+
             else
             {
                 desiredThrottle = 1.0F; //no recent data point; just use max thrust.
