@@ -348,68 +348,7 @@ namespace MuMech
 
         void DriveCoastToApoapsis(FlightCtrlState s)
         {
-            core.thrust.targetThrottle = 0;
-
-            double circularSpeed = OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, orbit.ApR);
-            double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
-            double circularizeBurnTime = (circularSpeed - apoapsisSpeed) / vesselState.limitedMaxThrustAccel;
-
-            //Once we get above the atmosphere, plan and execute the circularization maneuver.
-            //For orbits near the edge of the atmosphere, we can't wait until we break the atmosphere
-            //to start the burn, so we also compare the timeToAp with the expected circularization burn time.
-            //if ((vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
-            //    || (vesselState.limitedMaxThrustAccel > 0 && orbit.timeToAp < circularizeBurnTime / 1.8))
-
-            // Sarbian : removed the special case for now. Some ship where turning while still in atmosphere
-
-            if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
-            {
-                if (autodeploySolarPanels)
-                    core.solarpanel.ExtendAll();
-
-                mode = AscentMode.CIRCULARIZE;
-                core.warp.MinimumWarp();
-                return;
-            }
-
-            //if our apoapsis has fallen too far, resume the gravity turn
-            if (orbit.ApA < desiredOrbitAltitude - 1000.0)
-            {
-                mode = AscentMode.GRAVITY_TURN;
-                core.warp.MinimumWarp();
-                return;
-            }
-
-            //point prograde and thrust gently if our apoapsis falls below the target
-            //core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.ORBIT, this);
-
-            // Actually I have a better idea: Don't initiate orientation changes when there's a chance that our main engine
-            // might reignite. There won't be enough control authority to counteract that much momentum change.
-            // - Starwaster
-            core.thrust.targetThrottle = 0;
-
-            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
-            Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
-            double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
-
-            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
-                + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
-
-
-            core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
-            if (autoThrottle && orbit.ApA < desiredOrbitAltitude)
-            {
-                core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.INERTIAL, this);
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, desiredOrbitAltitude + mainBody.Radius);
-            }
-
-            if (core.node.autowarp)
-            {
-                //warp at x2 physical warp:
-                core.warp.WarpPhysicsAtRate(2);
-            }
-
-            status = "Coasting to edge of atmosphere";
+            //DO nothing!!
         }
 
         void DriveCircularizationBurn(FlightCtrlState s)
