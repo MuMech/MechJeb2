@@ -219,13 +219,13 @@ namespace MuMech
 
             if (currentApR > finalApR + 5.0)
             {
-                desiredThrottle = 0.0F; //done, throttle down
+                //NOPE! desiredThrottle = 0.0F; //done, throttle down
             }
             else if (orbit.ApA < mainBody.RealMaxAtmosphereAltitude())
             {
                 desiredThrottle = 1.0F; //throttle hard to escape atmosphere
             }
-            else if (raiseApoapsisLastUT > vesselState.time - 1)
+            /*NOPE! else if (raiseApoapsisLastUT > vesselState.time - 1)
             {
                 //reduce throttle as apoapsis nears target
                 double instantRatePerThrottle = (orbit.ApR - raiseApoapsisLastApR) / ((vesselState.time - raiseApoapsisLastUT) * raiseApoapsisLastThrottle);
@@ -233,7 +233,7 @@ namespace MuMech
                 raiseApoapsisRatePerThrottle.value = instantRatePerThrottle;
                 double desiredApRate = (finalApR - currentApR) / 1.0;
                 desiredThrottle = Mathf.Clamp((float)(desiredApRate / raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
-            }
+        */    }
             else
             {
                 desiredThrottle = 1.0F; //no recent data point; just use max thrust.
@@ -244,7 +244,7 @@ namespace MuMech
             raiseApoapsisLastApR = orbit.ApR;
             raiseApoapsisLastUT = vesselState.time;
 
-            return desiredThrottle;
+            return 1.0F;
         }
 
         void DriveGravityTurn(FlightCtrlState s)
