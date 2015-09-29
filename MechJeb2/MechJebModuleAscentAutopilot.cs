@@ -64,6 +64,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble launchLANDifference = 0;
+
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
@@ -485,6 +488,7 @@ namespace MuMech
                 {
                     MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
                     if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
+                    if (recorder != null) launchLANDifference = vesselState.orbitLAN - recorder.markLAN;
 
                     //finished circularize
                     this.users.Clear();
@@ -649,7 +653,7 @@ namespace MuMech
         //If the latitude is too high for the launch location to ever actually rotate under the target plane,
         //returns the time of closest approach to the target plane.
         //I have a wonderful proof of this formula which this comment is too short to contain.
-        public static double TimeToPlane(CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
+        public static double TimeToPlane(double LANDifference, CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
         {
             double inc = Math.Abs(Vector3d.Angle(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity));
             Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.GetOrbitNormal().Reorder(132).normalized).normalized; // I don't understand the sign here, but this seems to work
@@ -668,7 +672,7 @@ namespace MuMech
             double angle2 = Math.Abs(Vector3d.Angle(longitudeVector, a2));
             if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a2), launchBody.angularVelocity) < 0) angle2 = 360 - angle2;
 
-            double angle = Math.Min(angle1, angle2);
+            double angle = Math.Min(angle1, angle2) - LANDifference;
             return (angle / 360) * launchBody.rotationPeriod;
         }
     }
