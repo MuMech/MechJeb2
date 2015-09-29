@@ -134,6 +134,10 @@ namespace MuMech
         public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
+        [ValueInfoItem("Mark LAN", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]
+        public double markLAN = 0;
+
+        [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("Mark latitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_NS)]
         public double markLatitude = 0;
 
@@ -178,6 +182,7 @@ namespace MuMech
             phaseAngleFromMark = 0;
             markLatitude = vesselState.latitude;
             markLongitude = vesselState.longitude;
+            markLAN = vesselState.orbitLAN;
             markAltitude = vesselState.altitudeASL;
             markBodyIndex = FlightGlobals.Bodies.IndexOf(mainBody);
             maxDragGees = 0;

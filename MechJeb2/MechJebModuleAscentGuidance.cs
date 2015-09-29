@@ -168,13 +168,18 @@ namespace MuMech
                         autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text, GUILayout.Width(60));
                         GUILayout.Label("º", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
-
-                        if (GUILayout.Button("Launch into plane of target"))
+                        
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button("Launch into plane of target", GUILayout.ExpandWidth(false)))
                         {
                             launchingToPlane = true;
-                            autopilot.StartCountdown(vesselState.time +
-                                LaunchTiming.TimeToPlane(mainBody, vesselState.latitude, vesselState.longitude, core.target.TargetOrbit));
+
+                            autopilot.StartCountdown(vesselState.time + LaunchTiming.TimeToPlane(autopilot.launchLANDifference, mainBody, vesselState.latitude, vesselState.longitude, core.target.TargetOrbit));
                         }
+                        autopilot.launchLANDifference.text = GUILayout.TextField(autopilot.launchLANDifference.text, GUILayout.Width(60));
+                        GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+
                         if (core.target.TargetOrbit.referenceBody == orbit.referenceBody.referenceBody)
                         {
                             if (GUILayout.Button("Launch at interplanetary window"))
