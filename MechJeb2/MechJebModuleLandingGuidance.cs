@@ -58,16 +58,7 @@ namespace MuMech
                 }
             }
 
-
-            GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Map")) core.target.PickPositionTargetOnMap();
-
-            MechJebModuleLandingSiteEditor editor = core.GetComputerModule<MechJebModuleLandingSiteEditor>();
-            if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit");
-
-            GUILayout.EndHorizontal();
-
+            if (GUILayout.Button("Pick target on map")) core.target.PickPositionTargetOnMap();
 
             List<LandingSite> availableLandingSites = landingSites.Where(p => p.body == mainBody).ToList();
             if (availableLandingSites.Any())
