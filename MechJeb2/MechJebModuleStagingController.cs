@@ -130,9 +130,11 @@ namespace MuMech
             return false;
         }
 
+	// Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
         public List<int> FindBurnedResources()
         {
-            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
+                !p.IsDecoupledInStage(Staging.CurrentStage - 1));
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
             var burnedPropellants = engineModules.SelectMany(eng => eng.propellants);
             List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
