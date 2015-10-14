@@ -161,13 +161,43 @@ namespace MuMech
         // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
         public bool differentialThrottleSuccess = false;
 
-        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle }
+        [Persistent(pass = (int)Pass.Local)]
+        public bool electricThrottle = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDoubleMult electricThrottleLo = new EditableDoubleMult(0.05, 0.01);
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDoubleMult electricThrottleHi = new EditableDoubleMult(0.15, 0.01);
+
+        [GeneralInfoItem("Electric limit", InfoItem.Category.Thrust)]
+        public void LimitElectricInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.Electric)
+            {
+                if (vesselState.throttleLimit <0.001)
+                    s.onHover.textColor = s.onNormal.textColor = Color.red;
+                else
+                    s.onHover.textColor = s.onNormal.textColor = Color.yellow;
+            }
+            else if (ElectricEngineRunning()) s.onHover.textColor = s.onNormal.textColor = Color.green;
+
+            electricThrottle = GUILayout.Toggle(electricThrottle, "Electric limit Lo", s, GUILayout.Width(110));
+            electricThrottleLo.text = GUILayout.TextField(electricThrottleLo.text, GUILayout.Width(30));
+            GUILayout.Label("% Hi", GUILayout.ExpandWidth(false));
+            electricThrottleHi.text = GUILayout.TextField(electricThrottleHi.text, GUILayout.Width(30));
+            GUILayout.Label("%", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle, Electric }
         public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
 
         protected bool tmode_changed = false;
-        
+
 
         public PIDController pid;
 
@@ -362,7 +392,7 @@ namespace MuMech
                 if (limit < throttleLimit) limiter = LimitMode.DynamicPressure;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
-            
+
             if (limitToPreventOverheats)
             {
                 float limit = (float)TemperatureSafetyThrottle();
@@ -374,6 +404,13 @@ namespace MuMech
             {
                 float limit = AccelerationLimitedThrottle();
                 if(limit < throttleLimit) limiter = LimitMode.Acceleration;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
+            }
+
+            if (electricThrottle && ElectricEngineRunning())
+            {
+                float limit = ElectricThrottle();
+                if (limit < throttleLimit) limiter = LimitMode.Electric;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
@@ -622,6 +659,30 @@ namespace MuMech
                     }
                 }
             }
+        }
+
+        bool ElectricEngineRunning() {
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
+            var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
+
+            return engineModules.SelectMany(eng => eng.propellants).Any(p => p.name == "ElectricCharge");
+        }
+
+        float ElectricThrottle()
+        {
+            double totalElectric = vessel.MaxResourceAmount("ElectricCharge");
+            double lowJuice = totalElectric * electricThrottleLo;
+            double highJuice = totalElectric * electricThrottleHi;
+            double curElectric = vessel.TotalResourceAmount("ElectricCharge");
+
+            if (curElectric <= lowJuice)
+                return 0;
+            if (curElectric >= highJuice)
+                return 1;
+            // Avoid divide by zero
+            if (Math.Abs(highJuice - lowJuice) < 0.01)
+                return 1;
+            return Mathf.Clamp((float) ((curElectric - lowJuice) / (highJuice - lowJuice)), 0, 1);
         }
 
         //The throttle setting that will give an acceleration of maxAcceleration

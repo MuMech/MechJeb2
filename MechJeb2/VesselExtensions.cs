@@ -98,6 +98,34 @@ namespace MuMech
             return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
+        public static double MaxResourceAmount(this Vessel vessel, PartResourceDefinition definition)
+        {
+            if (definition == null) return 0;
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+
+            double amount = 0;
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Part p = parts[i];
+                for (int j = 0; j < p.Resources.Count; j++)
+                {
+                    PartResource r = p.Resources[j];
+
+                    if (r.info.id == definition.id)
+                    {
+                        amount += r.maxAmount;
+                    }
+                }
+            }
+
+            return amount;
+        }
+
+        public static double MaxResourceAmount(this Vessel vessel, string resourceName)
+        {
+            return vessel.MaxResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
+        }
+
         public static bool HasElectricCharge(this Vessel vessel)
         {
             if (vessel == null)

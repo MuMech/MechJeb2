@@ -59,6 +59,7 @@ namespace MuMech
             core.thrust.LimitAccelerationInfoItem();
             core.thrust.LimitThrottleInfoItem();
             core.thrust.LimiterMinThrottleInfoItem();
+            core.thrust.LimitElectricInfoItem();
             core.thrust.LimitToPreventFlameoutInfoItem();
             core.thrust.smoothThrottle = GUILayout.Toggle(core.thrust.smoothThrottle, "Smooth throttle");
             core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
