@@ -78,6 +78,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (HighLogic.LoadedSceneIsEditor)
+                return;
+
             width = 128 * hSize;
             height = 128 * vSize;
             recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
