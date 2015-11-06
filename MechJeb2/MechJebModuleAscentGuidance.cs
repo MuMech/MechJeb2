@@ -55,10 +55,6 @@ namespace MuMech
         {
             if (autopilot != null)
             {
-                GUILayout.Label("AP Enabled" + autopilot.enabled.ToString());
-                GUILayout.Label("AP Engaged" + autopilot.Engaged.ToString());
-                GUILayout.Label("AP Navball" + autopilot.NavBallGuidance.ToString());
-
                 if (autopilot.NavBallGuidance)
                 {
                     if (GUILayout.Button("Hide ascent navball guidance"))
