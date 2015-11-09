@@ -185,7 +185,7 @@ namespace MuMech
                         continue;
                     }
 
-                    for (int j = 0; j < pm.thrustForces.Count; j++)
+                    for (int j = 0; j < pm.thrustForces.Length; j++)
                     {
                         rcsThrust += pm.thrustForces[j] * pm.thrusterPower;
                     }
@@ -231,7 +231,7 @@ namespace MuMech
                     // Translate to the vessel's reference frame.
                     pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
 
-                    for (int i = 0; i < pm.thrustForces.Count; i++)
+                    for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
                         float force = pm.thrustForces[i];
                         Transform t = pm.thrusterTransforms[i];
@@ -254,7 +254,7 @@ namespace MuMech
             // Use the average specific impulse of all RCS parts.
             double totalIsp = 0;
             int numThrusters = 0;
-            float gForRCS;
+            double gForRCS = 9.81;
 
             double monopropMass = vessel.TotalResourceMass("MonoPropellant");
 
@@ -269,7 +269,7 @@ namespace MuMech
             double m1 = m0 - monopropMass;
             if (numThrusters == 0 || m1 <= 0) return 0;
             double isp = totalIsp / numThrusters;
-            return isp * 9.81 * Math.Log(m0 / m1);
+            return isp * gForRCS * Math.Log(m0 / m1);
         }
 
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]

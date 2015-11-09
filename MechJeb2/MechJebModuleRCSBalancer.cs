@@ -90,7 +90,7 @@ namespace MuMech
                     }
                     firstRcsModule = false;
                     thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
-                    for (int i = 0; i < pm.thrustForces.Count; i++)
+                    for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
                         if (i != 0)
                         {

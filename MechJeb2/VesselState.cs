@@ -1252,10 +1252,10 @@ namespace MuMech
 
             // Return the number of kg of resource provided per second under certain conditions.
             // We use kg since the numbers are typically small.
-            private double massProvided(double vesselSpeed, Vector3d vesselFwd, double atmDensity,
+            private double massProvided(double vesselSpeed, Vector3d normVesselSpeed, double atmDensity, double staticPressure, float mach,
                     ModuleResourceIntake intake, Vector3d intakeFwd)
             {
-                if (intake.checkForOxygen && !FlightGlobals.currentMainBody.atmosphereContainsOxygen)
+                if ((intake.checkForOxygen && !FlightGlobals.currentMainBody.atmosphereContainsOxygen) || staticPressure < intake.kPaThreshold) // TODO : add the new test (the bool and maybe the attach node ?)
                 {
                     return 0;
                 }
@@ -1263,26 +1263,15 @@ namespace MuMech
                 // This is adapted from code shared by Amram at:
                 // http://forum.kerbalspaceprogram.com/showthread.php?34288-Maching-Bird-Challeng?p=440505
                 // Seems to be accurate for 0.18.2 anyway.
-                double intakeSpeed = intake.maxIntakeSpeed; // airspeed when the intake isn't moving
+                double intakeSpeed = intake.intakeSpeed; // airspeed when the intake isn't moving
 
-                double aoa = Vector3d.Dot(vesselFwd, intakeFwd);
+                double aoa = Vector3d.Dot(normVesselSpeed, intakeFwd);
                 if (aoa < 0) { aoa = 0; }
                 else if (aoa > 1) { aoa = 1; }
 
-                double finalSpeed;
-                if (aoa <= intake.aoaThreshold)
-                {
-                    finalSpeed = intakeSpeed;
-                }
-                else
-                {
-                    // This is labeled as a bug for double-counting intakeSpeed.
-                    // It also double-counts unitScalar...
-                    double airSpeedGUI = vesselSpeed + intakeSpeed;
-                    double airSpeed = airSpeedGUI * intake.unitScalar;
-                    finalSpeed = aoa * (airSpeed + intakeSpeed);
-                }
-                double airVolume = finalSpeed * intake.area * intake.unitScalar;
+                double finalSpeed = intakeSpeed + aoa * vesselSpeed;
+                
+                double airVolume = finalSpeed * intake.area * intake.unitScalar * intake.machCurve.Evaluate(mach);
                 double airmass = atmDensity * airVolume; // tonnes per second
 
                 // TODO: limit by the amount the intake can store
@@ -1299,24 +1288,34 @@ namespace MuMech
 
                 // For each intake, we want to know the min of what will (or can) be provided either now or at the end of the timestep.
                 // 0 means now, 1 means next timestep
-                Vector3d v0 = FlightGlobals.ship_srfVelocity;
+                Vector3d v0 = FlightGlobals.ship_srfVelocity;               // TODO : Using active ship is bad
                 Vector3d v1 = v0 + dT * FlightGlobals.ship_acceleration;
                 Vector3d v0norm = v0.normalized;
                 Vector3d v1norm = v1.normalized;
                 double v0mag = v0.magnitude;
                 double v1mag = v1.magnitude;
 
-                // As with thrust, here too we should get the static pressure at the intake, not at the center of mass.
-                double atmDensity0 = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(), FlightGlobals.getExternalTemperature());
                 float alt1 = (float)(FlightGlobals.ship_altitude + dT * FlightGlobals.ship_verticalSpeed);
-                double atmDensity1 = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt1), FlightGlobals.getExternalTemperature(alt1));
+
+                double staticPressure1 = FlightGlobals.getStaticPressure();
+                double staticPressure2 = FlightGlobals.getStaticPressure(alt1);
+                
+                // As with thrust, here too we should get the static pressure at the intake, not at the center of mass.
+                double atmDensity0 = FlightGlobals.getAtmDensity(staticPressure1, FlightGlobals.getExternalTemperature());
+                double atmDensity1 = FlightGlobals.getAtmDensity(staticPressure2, FlightGlobals.getExternalTemperature(alt1));
+
+                double v0speedOfSound = FlightGlobals.ActiveVessel.mainBody.GetSpeedOfSound(staticPressure1, atmDensity0);
+                double v1speedOfSound = FlightGlobals.ActiveVessel.mainBody.GetSpeedOfSound(staticPressure2, atmDensity1);
+
+                float v0mach = v0speedOfSound > 0 ? (float)(v0.magnitude / v0speedOfSound) : 0;
+                float v1mach = v1speedOfSound > 0 ? (float)(v1.magnitude / v1speedOfSound) : 0;
 
                 intakes = new IntakeData[modules.Count];
                 int idx = 0;
                 for (int index = 0; index < modules.Count; index++)
                 {
                     var intake = modules[index];
-                    Vector3d intakeFwd0 = intake.part.FindModelTransform(intake.intakeTransformName).forward;
+                    Vector3d intakeFwd0 = intake.part.FindModelTransform(intake.intakeTransformName).forward; // TODO : replace with the new public field
                     Vector3d intakeFwd1;
                     {
                         // Rotate the intake by the angular velocity for one timestep, in case the ship is spinning.
@@ -1345,8 +1344,8 @@ namespace MuMech
                             + intakeFwd0[2] * cos[0] * cos[1];*/
                     }
 
-                    double mass0 = massProvided(v0mag, v0norm, atmDensity0, intake, intakeFwd0);
-                    double mass1 = massProvided(v1mag, v1norm, atmDensity1, intake, intakeFwd1);
+                    double mass0 = massProvided(v0mag, v0norm, atmDensity0, staticPressure1, v0mach, intake, intakeFwd0);
+                    double mass1 = massProvided(v1mag, v1norm, atmDensity1, staticPressure2, v1mach, intake, intakeFwd1);
                     double mass = Math.Min(mass0, mass1);
 
                     // Also, we can't have more airflow than what fits in the resource tank of the intake part.
