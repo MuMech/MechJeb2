@@ -694,7 +694,7 @@ namespace MuMech
                         Vector3 liftVector;
                         float liftDot;
                         float absDot;
-                        cs.SetupCoefficients(velocity, p.atmDensity, out nVel, out liftVector, out liftDot, out absDot);
+                        cs.SetupCoefficients(velocity, out nVel, out liftVector, out liftDot, out absDot);
 
                         Quaternion maxRotation = Quaternion.AngleAxis(cs.ctrlSurfaceRange, cs.transform.rotation * Vector3.right);
 
