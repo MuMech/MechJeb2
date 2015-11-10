@@ -32,9 +32,8 @@ namespace MuMech
             }
         }
 
-        public virtual void OnDestroy()
+        public override void OnDestroy()
         {
-            // REVIEW: Ideally this would be called when the MechJeb module is switched off, but it doesn't seem to be
             if (autopilot != null)
             {
               autopilot.users.Remove(this);
