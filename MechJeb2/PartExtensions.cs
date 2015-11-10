@@ -49,20 +49,20 @@ namespace MuMech
                 ModuleDecouple mDecouple = m as ModuleDecouple;
                 if (mDecouple != null)
                 {
-                    if (!mDecouple.isDecoupled) return true;
+                    if (!mDecouple.isDecoupled && p.stagingOn) return true;
                     break;
                 }
 
                 ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
                 if (mAnchoredDecoupler != null)
                 {
-                    if (!mAnchoredDecoupler.isDecoupled) return true;
+                    if (!mAnchoredDecoupler.isDecoupled && p.stagingOn) return true;
                     break;
                 }
 
                 if (m.ClassName == "ProceduralFairingDecoupler")
                 {
-                    return true;
+                    return p.stagingOn;
                 }
             }
             return false;
