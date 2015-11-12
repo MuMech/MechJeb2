@@ -12,9 +12,13 @@ namespace MuMech
         readonly List<FuelNode> nodes; //a list of FuelNodes representing all the parts of the ship
         public float t;
 
+        private double KpaToAtmospheres;
+
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
         public FuelFlowSimulation(List<Part> parts, bool dVLinearThrust)
         {
+            KpaToAtmospheres = PhysicsGlobals.KpaToAtmospheres;
+
             // Create FuelNodes corresponding to each Part
             nodes = new List<FuelNode>();
             Dictionary<Part, FuelNode> nodeLookup = parts.ToDictionary(p => p, p => new FuelNode(p, dVLinearThrust));
@@ -63,11 +67,13 @@ namespace MuMech
 
         //Simulate the activation and execution of each stage of the rocket,
         //and return stats for each stage
-        public Stats[] SimulateAllStages(float throttle, double staticPressure, double atmDensity, double machNumber)
+        public Stats[] SimulateAllStages(float throttle, double staticPressureKpa, double atmDensity, double machNumber)
         {
             Stats[] stages = new Stats[simStage];
 
             int maxStages = simStage - 1;
+
+            double staticPressure = staticPressureKpa * KpaToAtmospheres;
 
             //print("SimulateAllStages starting from stage " + simStage + "; ticks from start = " + (Environment.TickCount - startTick));
             SimulateStageActivation();
