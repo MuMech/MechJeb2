@@ -245,10 +245,13 @@ namespace MuMech
 
         public void ThrustOff()
         {
+            if (vessel == null || vessel.ctrlState == null)
+                return;
+
             targetThrottle = 0;
             vessel.ctrlState.mainThrottle = 0;
             tmode = TMode.OFF;
-            if (vessel == FlightGlobals.ActiveVessel)
+            if (FlightGlobals.ActiveVessel != null && vessel == FlightGlobals.ActiveVessel)
             {
                 FlightInputHandler.state.mainThrottle = 0; //so that the on-screen throttle gauge reflects the autopilot throttle
             }
