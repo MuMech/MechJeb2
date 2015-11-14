@@ -100,6 +100,8 @@ namespace MuMech
         public MovingAverage AoA = new MovingAverage();
         [ValueInfoItem("Angle of Sideslip", InfoItem.Category.Misc, format = "F2", units = "º")]
         public MovingAverage AoS = new MovingAverage();
+        
+        public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
 
         public double radius;  //distance from planet center
 
@@ -886,6 +888,7 @@ namespace MuMech
 
             MoI = new Vector3d(inertiaTensor[0, 0], inertiaTensor[1, 1], inertiaTensor[2, 2]);
             angularMomentum = inertiaTensor * angularVelocity;
+            angularVelocityAvg.value = angularVelocity;
         }
 
         [ValueInfoItem("Terminal velocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]

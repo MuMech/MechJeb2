@@ -271,7 +271,13 @@ namespace MuMech
             double isp = totalIsp / numThrusters;
             return isp * gForRCS * Math.Log(m0 / m1);
         }
-
+        
+        [ValueInfoItem("Angular Velocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]
+        public string angularVelocity()
+        {
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy, "F3") +"°/s" ;
+        }
+        
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double CurrentAcceleration()
         {

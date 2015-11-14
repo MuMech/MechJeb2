@@ -240,9 +240,9 @@ namespace MuMech
             get
             {
                 double tmp = 0;
-                foreach (double i in store)
+                for (int i = 0; i < store.Length; i++)
                 {
-                    tmp += i;
+                    tmp += store[i];
                 }
                 return tmp / storeSize;
             }
@@ -281,6 +281,61 @@ namespace MuMech
         public string ToString(string format)
         {
             return value.ToString(format);
+        }
+    }
+
+    public class MovingAverage3d
+    {
+        private Vector3d[] store;
+        private int storeSize;
+        private int nextIndex = 0;
+
+        public Vector3d value
+        {
+            get
+            {
+                Vector3d tmp = Vector3d.zero;
+                for (int i = 0; i < store.Length; i++)
+                {
+                    tmp += store[i];
+                }
+                return tmp / storeSize;
+            }
+            set
+            {
+                store[nextIndex] = value;
+                nextIndex = (nextIndex + 1) % storeSize;
+            }
+        }
+
+        public MovingAverage3d(int size = 10, Vector3d startingValue = default(Vector3d))
+        {
+            storeSize = size;
+            store = new Vector3d[size];
+            force(startingValue);
+        }
+
+        public void force(Vector3d newValue)
+        {
+            for (int i = 0; i < storeSize; i++)
+            {
+                store[i] = newValue;
+            }
+        }
+
+        public static implicit operator Vector3d(MovingAverage3d v)
+        {
+            return v.value;
+        }
+        
+        public override string ToString()
+        {
+            return value.ToString();
+        }
+
+        public string ToString(string format)
+        {
+            return MuUtils.PrettyPrint(value, format);
         }
     }
 
