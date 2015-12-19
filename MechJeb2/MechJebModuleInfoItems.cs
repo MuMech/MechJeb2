@@ -275,7 +275,7 @@ namespace MuMech
         [ValueInfoItem("Angular Velocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy, "F3") +"°/s" ;
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * 180 / Math.PI, "F3") + "°/s" ;
         }
         
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
