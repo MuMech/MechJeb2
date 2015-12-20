@@ -203,7 +203,7 @@ namespace MuMech
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
         public static double HeadingForLaunchInclination(CelestialBody body, double inclinationDegrees, double latitudeDegrees, double orbVel)
         {
-            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * Math.PI / 180) / Math.Cos(latitudeDegrees * Math.PI / 180);
+            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * MathExtensions.Deg2Rad) / Math.Cos(latitudeDegrees * MathExtensions.Deg2Rad);
             if (Math.Abs(cosDesiredSurfaceAngle) > 1.0)
             {
                 //If inclination < latitude, we get this case: the desired inclination is impossible
@@ -214,12 +214,12 @@ namespace MuMech
             {
                 double betaFixed = Math.Asin(cosDesiredSurfaceAngle);
 
-                double velLaunchSite = body.Radius * body.angularVelocity.magnitude * Math.Cos(latitudeDegrees * Math.PI / 180);
+                double velLaunchSite = body.Radius * body.angularVelocity.magnitude * Math.Cos(latitudeDegrees * MathExtensions.Deg2Rad);
 
                 double vx = orbVel * Math.Sin(betaFixed) - velLaunchSite;
                 double vy = orbVel * Math.Cos(betaFixed);
 
-                double angle = (180 / Math.PI) * Math.Atan(vx / vy);
+                double angle = MathExtensions.Rad2Deg * Math.Atan(vx / vy);
 
                 if (inclinationDegrees < 0) angle = 180 - angle;
 

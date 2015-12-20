@@ -8,6 +8,10 @@ namespace MuMech
 {
     public static class MathExtensions
     {
+
+        public const double Rad2Deg = 180 / Math.PI;
+        public const double Deg2Rad = Math.PI / 180;
+
         public static Vector3d Sign(this Vector3d vector)
         {
             return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
