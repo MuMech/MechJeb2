@@ -191,6 +191,42 @@ namespace MuMech
             }
         }
 
+        //See #676
+        //Computes the heading for a ground launch at the specified latitude accounting for the body rotation.
+        //Both inputs are in degrees.
+        //Convention: At equator, inclination    0 => heading 90 (east) 
+        //                        inclination   90 => heading 0  (north)
+        //                        inclination  -90 => heading 180 (south)
+        //                        inclination ±180 => heading 270 (west)
+        //Returned heading is in degrees and in the range 0 to 360.
+        //If the given latitude is too large, so that an orbit with a given inclination never attains the 
+        //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
+        public static double HeadingForLaunchInclination(CelestialBody body, double inclinationDegrees, double latitudeDegrees, double orbVel)
+        {
+            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * Math.PI / 180) / Math.Cos(latitudeDegrees * Math.PI / 180);
+            if (Math.Abs(cosDesiredSurfaceAngle) > 1.0)
+            {
+                //If inclination < latitude, we get this case: the desired inclination is impossible
+                if (Math.Abs(MuUtils.ClampDegrees180(inclinationDegrees)) < 90) return 90;
+                else return 270;
+            }
+            else
+            {
+                double betaFixed = Math.Asin(cosDesiredSurfaceAngle);
+
+                double velLaunchSite = body.Radius * body.angularVelocity.magnitude * Math.Cos(latitudeDegrees * Math.PI / 180);
+
+                double vx = orbVel * Math.Sin(betaFixed) - velLaunchSite;
+                double vy = orbVel * Math.Cos(betaFixed);
+
+                double angle = (180 / Math.PI) * Math.Atan(vx / vy);
+
+                if (inclinationDegrees < 0) angle = 180 - angle;
+
+                return MuUtils.ClampDegrees360(angle);
+            }
+        }
+
         //Computes the delta-V of the burn required to change an orbit's inclination to a given value
         //at a given UT. If the latitude at that time is too high, so that the desired inclination
         //cannot be attained, the burn returned will achieve as low an inclination as possible (namely, inclination = latitude).
