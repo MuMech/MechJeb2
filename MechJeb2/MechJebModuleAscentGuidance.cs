@@ -92,7 +92,7 @@ namespace MuMech
                 autopilot.desiredInclination = desiredInclination;
 
                 GUIStyle si = new GUIStyle(GUI.skin.label);
-                if (!autopilot.enabled && desiredInclination < vesselState.latitude)
+                if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
                     si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
                 GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
 
