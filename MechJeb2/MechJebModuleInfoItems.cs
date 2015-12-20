@@ -449,7 +449,7 @@ namespace MuMech
         [ValueInfoItem("Max part count", InfoItem.Category.Vessel, showInEditor = true)]
         public string MaxPartCount()
         {
-            float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorEnumExtensions.ToFacility(EditorDriver.editorFacility));
+            float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorDriver.editorFacility.ToFacility());
             int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel);
             if(maxPartCount < int.MaxValue)
                 return maxPartCount.ToString();
@@ -557,7 +557,7 @@ namespace MuMech
 			if (!core.target.NormalTargetExists) return "N/A";
 
 			Orbit o = vessel.orbit;
-			while (o != null && o.referenceBody != vessel.targetObject)
+			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
 				o = o.nextPatch;
 
 			if (o == null) return "N/A";
@@ -571,7 +571,7 @@ namespace MuMech
 			if (!core.target.NormalTargetExists) return "N/A";
 
 			Orbit o = vessel.orbit;
-			while (o != null && o.referenceBody != vessel.targetObject)
+			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
 				o = o.nextPatch;
 
 			if (o == null) return "N/A";
@@ -1186,9 +1186,11 @@ namespace MuMech
                     Texture2D texture = new Texture2D(1, 1);
                     texture.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f));
                     texture.Apply();
-                    _separatorStyle = new GUIStyle();
-                    _separatorStyle.normal.background = texture;
-                    _separatorStyle.padding.left = 50;
+                    _separatorStyle = new GUIStyle
+                    {
+                        normal = {background = texture},
+                        padding = {left = 50}
+                    };
                 }
                 return _separatorStyle;
             }
@@ -1199,5 +1201,14 @@ namespace MuMech
         {
             GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
         }
+
+
+        [ValueInfoItem("Debug String", InfoItem.Category.Misc, showInEditor = true)]
+        public string DebugString()
+        {
+            return VesselState.message;
+        }
+
+
     }
 }

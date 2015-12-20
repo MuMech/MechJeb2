@@ -61,11 +61,12 @@ namespace MuMech
                 if (p.ShieldedFromAirstream)
                     continue;
 
-                foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
+                var solar = p.Modules.GetModules<ModuleDeployableSolarPanel>();
+                for (int j = 0; j < solar.Count; j++)
                 {
-                    if (isDeployable(sa))
+                    if (isDeployable(solar[j]))
                     {
-                        sa.Extend();
+                        solar[j].Extend();
                     }
                 }
             }
@@ -78,11 +79,12 @@ namespace MuMech
                 Part p = vessel.parts[i];
                 if (p.ShieldedFromAirstream)
                     continue;
-                foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
-                {
-                    if (isDeployable(sa))
+                var solar = p.Modules.GetModules<ModuleDeployableSolarPanel>();
+                for (int j = 0; j < solar.Count; j++)
                     {
-                        sa.Retract();
+                    if (isDeployable(solar[j]))
+                    {
+                        solar[j].Retract();
                     }
                 }
             }
@@ -95,9 +97,11 @@ namespace MuMech
                 Part p = vessel.parts[i];
                 if (p.ShieldedFromAirstream)
                     continue;
-                foreach (ModuleDeployableSolarPanel sa in p.Modules.OfType<ModuleDeployableSolarPanel>())
+                var solar = p.Modules.GetModules<ModuleDeployableSolarPanel>();
+                for (int j = 0; j < solar.Count; j++)
                 {
-                    if (isDeployable(sa) &&
+                    ModuleDeployableSolarPanel sa = solar[j];
+                    if (isDeployable(sa) && 
                         ((sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED) ||
                          (sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDING) ||
                          (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTING)))

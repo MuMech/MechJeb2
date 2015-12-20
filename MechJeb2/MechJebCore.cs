@@ -633,13 +633,13 @@ namespace MuMech
             // So we use an other field to store the dev build number ...
             Attribute[] attributes = Attribute.GetCustomAttributes(assembly, typeof(AssemblyInformationalVersionAttribute));
             string dev_version = "";
-            if (attributes != null && attributes.Length != 0)
+            if (attributes.Length > 0)
             {
-                dev_version = ((AssemblyInformationalVersionAttribute)(attributes[0])).InformationalVersion;
+                dev_version = ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
             }
 
             if (dev_version == "")
-                version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
+                version = string.Format("{0}.{1}.{2}", fileVersionInfo.FileMajorPart, fileVersionInfo.FileMinorPart, fileVersionInfo.FileBuildPart);
             else
                 version = dev_version;
 
@@ -651,7 +651,9 @@ namespace MuMech
                         && (t != typeof(AutopilotModule))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
-                        AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
+                        ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
+                        if (constructorInfo != null)
+                            AddComputerModule((ComputerModule)(constructorInfo.Invoke(new object[] { this })));
                     }
                 }
             }
@@ -723,7 +725,7 @@ namespace MuMech
                 }
 
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                String vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
+                string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
                 if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vesselName + ".cfg"))
                 {
                     try
@@ -940,7 +942,7 @@ namespace MuMech
 
         //Setting FlightCtrlState fields to bad values can really mess up the game.
         //Here we do some error checking.
-        public void CheckFlightCtrlState(FlightCtrlState s)
+        private static void CheckFlightCtrlState(FlightCtrlState s)
         {
             if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             if (float.IsNaN(s.yaw)) s.yaw = 0;
