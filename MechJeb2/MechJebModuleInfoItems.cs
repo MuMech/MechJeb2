@@ -1201,14 +1201,5 @@ namespace MuMech
         {
             GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
         }
-
-
-        [ValueInfoItem("Debug String", InfoItem.Category.Misc, showInEditor = true)]
-        public string DebugString()
-        {
-            return VesselState.message;
-        }
-
-
     }
 }

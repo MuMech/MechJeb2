@@ -202,6 +202,14 @@ namespace MuMech
 
         public CelestialBody mainBody;
 
+        // A convenient debug message to display in the UI
+        public static string message;
+        [ValueInfoItem("Debug String", InfoItem.Category.Misc, showInEditor = true)]
+        public string DebugString()
+        {
+            return message;
+        }
+
         // Callbacks for external module
         public delegate void VesselStatePartExtension(Part p);
         public delegate void VesselStatePartModuleExtension(PartModule pm);
@@ -217,7 +225,7 @@ namespace MuMech
             public GimbalExtTorqueVector torqueVector;
         }
 
-        private static Dictionary<System.Type, GimbalExt> gimbalExtDict;
+        private static Dictionary<Type, GimbalExt> gimbalExtDict;
 
         public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
@@ -225,7 +233,7 @@ namespace MuMech
 
         static VesselState()
         {
-            gimbalExtDict = new Dictionary<System.Type, GimbalExt>();
+            gimbalExtDict = new Dictionary<Type, GimbalExt>();
             GimbalExt nullGimbal = new GimbalExt() { isValid = nullGimbalIsValid, initialRot = nullGimbalInitialRot, torqueVector = nullGimbalTorqueVector };
             GimbalExt stockGimbal = new GimbalExt() { isValid = stockGimbalIsValid, initialRot = stockGimbalInitialRot, torqueVector = stockGimbalTorqueVector };
             gimbalExtDict.Add(typeof(object), nullGimbal);
@@ -975,7 +983,7 @@ namespace MuMech
             return gimbalExtDict[typeof(object)];
         }
 
-        // The delgates implentation for the null gimbal ( no gimbal present)
+        // The delegates implementation for the null gimbal ( no gimbal present)
         private static bool nullGimbalIsValid(PartModule p)
         {
             return true;
@@ -1064,9 +1072,9 @@ namespace MuMech
             }
             public Dictionary<int, FuelRequirement> resourceRequired = new Dictionary<int, FuelRequirement>();
 
-            Vector3d CoM;
-            float atmP0; // pressure now
-            float atmP1; // pressure after one timestep
+            private Vector3d CoM;
+            private float atmP0; // pressure now
+            private float atmP1; // pressure after one timestep
 
             public EngineInfo(Vector3d c)
             {
