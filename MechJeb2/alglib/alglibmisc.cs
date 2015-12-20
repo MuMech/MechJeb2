@@ -1,10 +1,11 @@
 /*************************************************************************
+ALGLIB 3.10.0 (source code generated 2015-08-19)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the
+the Free Software Foundation (www.fsf.org); either version 2 of the 
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -34,7 +35,7 @@ public partial class alglib
         MagicV      -   'magic' value used to determine whether State structure
                         was correctly initialized.
     *************************************************************************/
-    public class hqrndstate
+    public class hqrndstate : alglibobject
     {
         //
         // Public declarations
@@ -43,6 +44,11 @@ public partial class alglib
         public hqrndstate()
         {
             _innerobj = new hqrnd.hqrndstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new hqrndstate((hqrnd.hqrndstate)_innerobj.make_copy());
         }
 
         //
@@ -103,8 +109,11 @@ public partial class alglib
     /*************************************************************************
     This function generates random integer number in [0, N)
 
-    1. N must be less than HQRNDMax-1.
-    2. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()
+    1. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()
+    2. N can be any positive number except for very large numbers:
+       * close to 2^31 on 32-bit systems
+       * close to 2^62 on 64-bit systems
+       An exception will be generated if N is too large.
 
       -- ALGLIB --
          Copyright 02.12.2009 by Bochkanov Sergey
@@ -241,7 +250,7 @@ public partial class alglib
     /*************************************************************************
 
     *************************************************************************/
-    public class kdtree
+    public class kdtree : alglibobject
     {
         //
         // Public declarations
@@ -250,6 +259,11 @@ public partial class alglib
         public kdtree()
         {
             _innerobj = new nearestneighbor.kdtree();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new kdtree((nearestneighbor.kdtree)_innerobj.make_copy());
         }
 
         //
@@ -783,6 +797,621 @@ public partial class alglib
 }
 public partial class alglib
 {
+
+
+    /*************************************************************************
+
+    *************************************************************************/
+    public class xdebugrecord1 : alglibobject
+    {
+        //
+        // Public declarations
+        //
+        public int i { get { return _innerobj.i; } set { _innerobj.i = value; } }
+        public complex c { get { return _innerobj.c; } set { _innerobj.c = value; } }
+        public double[] a { get { return _innerobj.a; } set { _innerobj.a = value; } }
+
+        public xdebugrecord1()
+        {
+            _innerobj = new xdebug.xdebugrecord1();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new xdebugrecord1((xdebug.xdebugrecord1)_innerobj.make_copy());
+        }
+
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private xdebug.xdebugrecord1 _innerobj;
+        public xdebug.xdebugrecord1 innerobj { get { return _innerobj; } }
+        public xdebugrecord1(xdebug.xdebugrecord1 obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Creates and returns XDebugRecord1 structure:
+    * integer and complex fields of Rec1 are set to 1 and 1+i correspondingly
+    * array field of Rec1 is set to [2,3]
+
+      -- ALGLIB --
+         Copyright 27.05.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebuginitrecord1(out xdebugrecord1 rec1)
+    {
+        rec1 = new xdebugrecord1();
+        xdebug.xdebuginitrecord1(rec1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Counts number of True values in the boolean 1D array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static int xdebugb1count(bool[] a)
+    {
+
+        int result = xdebug.xdebugb1count(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by NOT(a[i]).
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugb1not(ref bool[] a)
+    {
+
+        xdebug.xdebugb1not(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Appends copy of array to itself.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugb1appendcopy(ref bool[] a)
+    {
+
+        xdebug.xdebugb1appendcopy(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate N-element array with even-numbered elements set to True.
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugb1outeven(int n, out bool[] a)
+    {
+        a = new bool[0];
+        xdebug.xdebugb1outeven(n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of elements in the array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static int xdebugi1sum(int[] a)
+    {
+
+        int result = xdebug.xdebugi1sum(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by -A[I]
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugi1neg(ref int[] a)
+    {
+
+        xdebug.xdebugi1neg(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Appends copy of array to itself.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugi1appendcopy(ref int[] a)
+    {
+
+        xdebug.xdebugi1appendcopy(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate N-element array with even-numbered A[I] set to I, and odd-numbered
+    ones set to 0.
+
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugi1outeven(int n, out int[] a)
+    {
+        a = new int[0];
+        xdebug.xdebugi1outeven(n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of elements in the array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static double xdebugr1sum(double[] a)
+    {
+
+        double result = xdebug.xdebugr1sum(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by -A[I]
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugr1neg(ref double[] a)
+    {
+
+        xdebug.xdebugr1neg(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Appends copy of array to itself.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugr1appendcopy(ref double[] a)
+    {
+
+        xdebug.xdebugr1appendcopy(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate N-element array with even-numbered A[I] set to I*0.25,
+    and odd-numbered ones are set to 0.
+
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugr1outeven(int n, out double[] a)
+    {
+        a = new double[0];
+        xdebug.xdebugr1outeven(n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of elements in the array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static complex xdebugc1sum(complex[] a)
+    {
+
+        complex result = xdebug.xdebugc1sum(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by -A[I]
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugc1neg(ref complex[] a)
+    {
+
+        xdebug.xdebugc1neg(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Appends copy of array to itself.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugc1appendcopy(ref complex[] a)
+    {
+
+        xdebug.xdebugc1appendcopy(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate N-element array with even-numbered A[K] set to (x,y) = (K*0.25, K*0.125)
+    and odd-numbered ones are set to 0.
+
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugc1outeven(int n, out complex[] a)
+    {
+        a = new complex[0];
+        xdebug.xdebugc1outeven(n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Counts number of True values in the boolean 2D array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static int xdebugb2count(bool[,] a)
+    {
+
+        int result = xdebug.xdebugb2count(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by NOT(a[i]).
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugb2not(ref bool[,] a)
+    {
+
+        xdebug.xdebugb2not(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Transposes array.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugb2transpose(ref bool[,] a)
+    {
+
+        xdebug.xdebugb2transpose(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate MxN matrix with elements set to "Sin(3*I+5*J)>0"
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugb2outsin(int m, int n, out bool[,] a)
+    {
+        a = new bool[0,0];
+        xdebug.xdebugb2outsin(m, n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of elements in the array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static int xdebugi2sum(int[,] a)
+    {
+
+        int result = xdebug.xdebugi2sum(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by -a[i,j]
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugi2neg(ref int[,] a)
+    {
+
+        xdebug.xdebugi2neg(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Transposes array.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugi2transpose(ref int[,] a)
+    {
+
+        xdebug.xdebugi2transpose(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate MxN matrix with elements set to "Sign(Sin(3*I+5*J))"
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugi2outsin(int m, int n, out int[,] a)
+    {
+        a = new int[0,0];
+        xdebug.xdebugi2outsin(m, n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of elements in the array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static double xdebugr2sum(double[,] a)
+    {
+
+        double result = xdebug.xdebugr2sum(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by -a[i,j]
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugr2neg(ref double[,] a)
+    {
+
+        xdebug.xdebugr2neg(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Transposes array.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugr2transpose(ref double[,] a)
+    {
+
+        xdebug.xdebugr2transpose(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate MxN matrix with elements set to "Sin(3*I+5*J)"
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugr2outsin(int m, int n, out double[,] a)
+    {
+        a = new double[0,0];
+        xdebug.xdebugr2outsin(m, n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of elements in the array.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static complex xdebugc2sum(complex[,] a)
+    {
+
+        complex result = xdebug.xdebugc2sum(a);
+        return result;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Replace all values in array by -a[i,j]
+    Array is passed using "shared" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugc2neg(ref complex[,] a)
+    {
+
+        xdebug.xdebugc2neg(a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Transposes array.
+    Array is passed using "var" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugc2transpose(ref complex[,] a)
+    {
+
+        xdebug.xdebugc2transpose(ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Generate MxN matrix with elements set to "Sin(3*I+5*J),Cos(3*I+5*J)"
+    Array is passed using "out" convention.
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static void xdebugc2outsincos(int m, int n, out complex[,] a)
+    {
+        a = new complex[0,0];
+        xdebug.xdebugc2outsincos(m, n, ref a);
+        return;
+    }
+
+    /*************************************************************************
+    This is debug function intended for testing ALGLIB interface generator.
+    Never use it in any real life project.
+
+    Returns sum of a[i,j]*(1+b[i,j]) such that c[i,j] is True
+
+      -- ALGLIB --
+         Copyright 11.10.2013 by Bochkanov Sergey
+    *************************************************************************/
+    public static double xdebugmaskedbiasedproductsum(int m, int n, double[,] a, double[,] b, bool[,] c)
+    {
+
+        double result = xdebug.xdebugmaskedbiasedproductsum(m, n, a, b, c);
+        return result;
+    }
+
+}
+public partial class alglib
+{
     public class hqrnd
     {
         /*************************************************************************
@@ -799,7 +1428,6 @@ public partial class alglib
         {
             public int s1;
             public int s2;
-            public double v;
             public int magicv;
             public hqrndstate()
             {
@@ -813,7 +1441,6 @@ public partial class alglib
                 hqrndstate _result = new hqrndstate();
                 _result.s1 = s1;
                 _result.s2 = s2;
-                _result.v = v;
                 _result.magicv = magicv;
                 return _result;
             }
@@ -822,7 +1449,7 @@ public partial class alglib
 
 
 
-        public const int hqrndmax = 2147483563;
+        public const int hqrndmax = 2147483561;
         public const int hqrndm1 = 2147483563;
         public const int hqrndm2 = 2147483399;
         public const int hqrndmagic = 1634357784;
@@ -856,9 +1483,27 @@ public partial class alglib
             int s2,
             hqrndstate state)
         {
+            
+            //
+            // Protection against negative seeds:
+            //
+            //     SEED := -(SEED+1)
+            //
+            // We can use just "-SEED" because there exists such integer number  N
+            // that N<0, -N=N<0 too. (This number is equal to 0x800...000).   Need
+            // to handle such seed correctly forces us to use  a  bit  complicated
+            // formula.
+            //
+            if( s1<0 )
+            {
+                s1 = -(s1+1);
+            }
+            if( s2<0 )
+            {
+                s2 = -(s2+1);
+            }
             state.s1 = s1%(hqrndm1-1)+1;
             state.s2 = s2%(hqrndm2-1)+1;
-            state.v = (double)1/(double)hqrndmax;
             state.magicv = hqrndmagic;
         }
 
@@ -876,7 +1521,7 @@ public partial class alglib
         {
             double result = 0;
 
-            result = state.v*hqrndintegerbase(state);
+            result = (double)(hqrndintegerbase(state)+1)/(double)(hqrndmax+2);
             return result;
         }
 
@@ -884,8 +1529,11 @@ public partial class alglib
         /*************************************************************************
         This function generates random integer number in [0, N)
 
-        1. N must be less than HQRNDMax-1.
-        2. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()
+        1. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()
+        2. N can be any positive number except for very large numbers:
+           * close to 2^31 on 32-bit systems
+           * close to 2^62 on 64-bit systems
+           An exception will be generated if N is too large.
 
           -- ALGLIB --
              Copyright 02.12.2009 by Bochkanov Sergey
@@ -894,22 +1542,104 @@ public partial class alglib
             int n)
         {
             int result = 0;
+            int maxcnt = 0;
             int mx = 0;
+            int a = 0;
+            int b = 0;
 
+            alglib.ap.assert(n>0, "HQRNDUniformI: N<=0!");
+            maxcnt = hqrndmax+1;
             
             //
-            // Correct handling of N's close to RNDBaseMax
-            // (avoiding skewed distributions for RNDBaseMax<>K*N)
+            // Two branches: one for N<=MaxCnt, another for N>MaxCnt.
             //
-            alglib.ap.assert(n>0, "HQRNDUniformI: N<=0!");
-            alglib.ap.assert(n<hqrndmax-1, "HQRNDUniformI: N>=RNDBaseMax-1!");
-            mx = hqrndmax-1-(hqrndmax-1)%n;
-            do
+            if( n>maxcnt )
             {
-                result = hqrndintegerbase(state)-1;
+                
+                //
+                // N>=MaxCnt.
+                //
+                // We have two options here:
+                // a) N is exactly divisible by MaxCnt
+                // b) N is not divisible by MaxCnt
+                //
+                // In both cases we reduce problem on interval spanning [0,N)
+                // to several subproblems on intervals spanning [0,MaxCnt).
+                //
+                if( n%maxcnt==0 )
+                {
+                    
+                    //
+                    // N is exactly divisible by MaxCnt.
+                    //
+                    // [0,N) range is dividided into N/MaxCnt bins,
+                    // each of them having length equal to MaxCnt.
+                    //
+                    // We generate:
+                    // * random bin number B
+                    // * random offset within bin A
+                    // Both random numbers are generated by recursively
+                    // calling HQRNDUniformI().
+                    //
+                    // Result is equal to A+MaxCnt*B.
+                    //
+                    alglib.ap.assert(n/maxcnt<=maxcnt, "HQRNDUniformI: N is too large");
+                    a = hqrnduniformi(state, maxcnt);
+                    b = hqrnduniformi(state, n/maxcnt);
+                    result = a+maxcnt*b;
+                }
+                else
+                {
+                    
+                    //
+                    // N is NOT exactly divisible by MaxCnt.
+                    //
+                    // [0,N) range is dividided into Ceil(N/MaxCnt) bins,
+                    // each of them having length equal to MaxCnt.
+                    //
+                    // We generate:
+                    // * random bin number B in [0, Ceil(N/MaxCnt)-1]
+                    // * random offset within bin A
+                    // * if both of what is below is true
+                    //   1) bin number B is that of the last bin
+                    //   2) A >= N mod MaxCnt
+                    //   then we repeat generation of A/B.
+                    //   This stage is essential in order to avoid bias in the result.
+                    // * otherwise, we return A*MaxCnt+N
+                    //
+                    alglib.ap.assert(n/maxcnt+1<=maxcnt, "HQRNDUniformI: N is too large");
+                    result = -1;
+                    do
+                    {
+                        a = hqrnduniformi(state, maxcnt);
+                        b = hqrnduniformi(state, n/maxcnt+1);
+                        if( b==n/maxcnt && a>=n%maxcnt )
+                        {
+                            continue;
+                        }
+                        result = a+maxcnt*b;
+                    }
+                    while( result<0 );
+                }
             }
-            while( result>=mx );
-            result = result%n;
+            else
+            {
+                
+                //
+                // N<=MaxCnt
+                //
+                // Code below is a bit complicated because we can not simply
+                // return "HQRNDIntegerBase() mod N" - it will be skewed for
+                // large N's in [0.1*HQRNDMax...HQRNDMax].
+                //
+                mx = maxcnt-maxcnt%n;
+                do
+                {
+                    result = hqrndintegerbase(state);
+                }
+                while( result>=mx );
+                result = result%n;
+            }
             return result;
         }
 
@@ -1112,6 +1842,7 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function returns random integer in [0,HQRNDMax]
 
         L'Ecuyer, Efficient and portable combined random number generators
         *************************************************************************/
@@ -1142,6 +1873,7 @@ public partial class alglib
             {
                 result = result+2147483562;
             }
+            result = result-1;
             return result;
         }
 
@@ -2221,6 +2953,8 @@ public partial class alglib
             double ds = 0;
             double s = 0;
             double v = 0;
+            double v0 = 0;
+            double v1 = 0;
             int i_ = 0;
             int i1_ = 0;
 
@@ -2245,8 +2979,9 @@ public partial class alglib
             ny = kdt.ny;
             
             //
-            // select dimension to split:
+            // Select dimension to split:
             // * D is a dimension number
+            // In case bounding box has zero size, we enforce creation of the leaf node.
             //
             d = 0;
             ds = kdt.curboxmax[0]-kdt.curboxmin[0];
@@ -2259,10 +2994,21 @@ public partial class alglib
                     d = i;
                 }
             }
+            if( (double)(ds)==(double)(0) )
+            {
+                kdt.nodes[nodesoffs+0] = i2-i1;
+                kdt.nodes[nodesoffs+1] = i1;
+                nodesoffs = nodesoffs+2;
+                return;
+            }
             
             //
             // Select split position S using sliding midpoint rule,
-            // rearrange points into [I1,I3) and [I3,I2)
+            // rearrange points into [I1,I3) and [I3,I2).
+            //
+            // In case all points has same value of D-th component
+            // (MinV=MaxV) we enforce D-th dimension of bounding
+            // box to become exactly zero and repeat tree construction.
             //
             s = kdt.curboxmin[d]+0.5*ds;
             i1_ = (i1) - (0);
@@ -2299,6 +3045,23 @@ public partial class alglib
                     cntgreater = cntgreater+1;
                 }
             }
+            if( (double)(minv)==(double)(maxv) )
+            {
+                
+                //
+                // In case all points has same value of D-th component
+                // (MinV=MaxV) we enforce D-th dimension of bounding
+                // box to become exactly zero and repeat tree construction.
+                //
+                v0 = kdt.curboxmin[d];
+                v1 = kdt.curboxmax[d];
+                kdt.curboxmin[d] = minv;
+                kdt.curboxmax[d] = maxv;
+                kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i1, i2, maxleafsize);
+                kdt.curboxmin[d] = v0;
+                kdt.curboxmax[d] = v1;
+                return;
+            }
             if( cntless>0 && cntgreater>0 )
             {
                 
@@ -2324,7 +3087,7 @@ public partial class alglib
                     s = minv;
                     if( minidx!=i1 )
                     {
-                        for(i=0; i<=2*kdt.nx+kdt.ny-1; i++)
+                        for(i=0; i<=2*nx+ny-1; i++)
                         {
                             v = kdt.xy[minidx,i];
                             kdt.xy[minidx,i] = kdt.xy[i1,i];
@@ -2347,7 +3110,7 @@ public partial class alglib
                     s = maxv;
                     if( maxidx!=i2-1 )
                     {
-                        for(i=0; i<=2*kdt.nx+kdt.ny-1; i++)
+                        for(i=0; i<=2*nx+ny-1; i++)
                         {
                             v = kdt.xy[maxidx,i];
                             kdt.xy[maxidx,i] = kdt.xy[i2-1,i];
@@ -2830,6 +3593,988 @@ public partial class alglib
             kdt.buf = new double[Math.Max(n, nx)];
             kdt.curboxmin = new double[nx];
             kdt.curboxmax = new double[nx];
+        }
+
+
+    }
+    public class xdebug
+    {
+        public class xdebugrecord1 : apobject
+        {
+            public int i;
+            public complex c;
+            public double[] a;
+            public xdebugrecord1()
+            {
+                init();
+            }
+            public override void init()
+            {
+                a = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                xdebugrecord1 _result = new xdebugrecord1();
+                _result.i = i;
+                _result.c = c;
+                _result.a = (double[])a.Clone();
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Creates and returns XDebugRecord1 structure:
+        * integer and complex fields of Rec1 are set to 1 and 1+i correspondingly
+        * array field of Rec1 is set to [2,3]
+
+          -- ALGLIB --
+             Copyright 27.05.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebuginitrecord1(xdebugrecord1 rec1)
+        {
+            rec1.i = 1;
+            rec1.c.x = 1;
+            rec1.c.y = 1;
+            rec1.a = new double[2];
+            rec1.a[0] = 2;
+            rec1.a[1] = 3;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Counts number of True values in the boolean 1D array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static int xdebugb1count(bool[] a)
+        {
+            int result = 0;
+            int i = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                if( a[i] )
+                {
+                    result = result+1;
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by NOT(a[i]).
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugb1not(bool[] a)
+        {
+            int i = 0;
+
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = !a[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Appends copy of array to itself.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugb1appendcopy(ref bool[] a)
+        {
+            int i = 0;
+            bool[] b = new bool[0];
+
+            b = new bool[alglib.ap.len(a)];
+            for(i=0; i<=alglib.ap.len(b)-1; i++)
+            {
+                b[i] = a[i];
+            }
+            a = new bool[2*alglib.ap.len(b)];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = b[i%alglib.ap.len(b)];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate N-element array with even-numbered elements set to True.
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugb1outeven(int n,
+            ref bool[] a)
+        {
+            int i = 0;
+
+            a = new bool[0];
+
+            a = new bool[n];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = i%2==0;
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of elements in the array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static int xdebugi1sum(int[] a)
+        {
+            int result = 0;
+            int i = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                result = result+a[i];
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by -A[I]
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugi1neg(int[] a)
+        {
+            int i = 0;
+
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = -a[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Appends copy of array to itself.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugi1appendcopy(ref int[] a)
+        {
+            int i = 0;
+            int[] b = new int[0];
+
+            b = new int[alglib.ap.len(a)];
+            for(i=0; i<=alglib.ap.len(b)-1; i++)
+            {
+                b[i] = a[i];
+            }
+            a = new int[2*alglib.ap.len(b)];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = b[i%alglib.ap.len(b)];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate N-element array with even-numbered A[I] set to I, and odd-numbered
+        ones set to 0.
+
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugi1outeven(int n,
+            ref int[] a)
+        {
+            int i = 0;
+
+            a = new int[0];
+
+            a = new int[n];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                if( i%2==0 )
+                {
+                    a[i] = i;
+                }
+                else
+                {
+                    a[i] = 0;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of elements in the array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static double xdebugr1sum(double[] a)
+        {
+            double result = 0;
+            int i = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                result = result+a[i];
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by -A[I]
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugr1neg(double[] a)
+        {
+            int i = 0;
+
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = -a[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Appends copy of array to itself.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugr1appendcopy(ref double[] a)
+        {
+            int i = 0;
+            double[] b = new double[0];
+
+            b = new double[alglib.ap.len(a)];
+            for(i=0; i<=alglib.ap.len(b)-1; i++)
+            {
+                b[i] = a[i];
+            }
+            a = new double[2*alglib.ap.len(b)];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = b[i%alglib.ap.len(b)];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate N-element array with even-numbered A[I] set to I*0.25,
+        and odd-numbered ones are set to 0.
+
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugr1outeven(int n,
+            ref double[] a)
+        {
+            int i = 0;
+
+            a = new double[0];
+
+            a = new double[n];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                if( i%2==0 )
+                {
+                    a[i] = i*0.25;
+                }
+                else
+                {
+                    a[i] = 0;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of elements in the array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static complex xdebugc1sum(complex[] a)
+        {
+            complex result = 0;
+            int i = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                result = result+a[i];
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by -A[I]
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugc1neg(complex[] a)
+        {
+            int i = 0;
+
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = -a[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Appends copy of array to itself.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugc1appendcopy(ref complex[] a)
+        {
+            int i = 0;
+            complex[] b = new complex[0];
+
+            b = new complex[alglib.ap.len(a)];
+            for(i=0; i<=alglib.ap.len(b)-1; i++)
+            {
+                b[i] = a[i];
+            }
+            a = new complex[2*alglib.ap.len(b)];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                a[i] = b[i%alglib.ap.len(b)];
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate N-element array with even-numbered A[K] set to (x,y) = (K*0.25, K*0.125)
+        and odd-numbered ones are set to 0.
+
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugc1outeven(int n,
+            ref complex[] a)
+        {
+            int i = 0;
+
+            a = new complex[0];
+
+            a = new complex[n];
+            for(i=0; i<=alglib.ap.len(a)-1; i++)
+            {
+                if( i%2==0 )
+                {
+                    a[i].x = i*0.250;
+                    a[i].y = i*0.125;
+                }
+                else
+                {
+                    a[i] = 0;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Counts number of True values in the boolean 2D array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static int xdebugb2count(bool[,] a)
+        {
+            int result = 0;
+            int i = 0;
+            int j = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    if( a[i,j] )
+                    {
+                        result = result+1;
+                    }
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by NOT(a[i]).
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugb2not(bool[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = !a[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Transposes array.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugb2transpose(ref bool[,] a)
+        {
+            int i = 0;
+            int j = 0;
+            bool[,] b = new bool[0,0];
+
+            b = new bool[alglib.ap.rows(a), alglib.ap.cols(a)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    b[i,j] = a[i,j];
+                }
+            }
+            a = new bool[alglib.ap.cols(b), alglib.ap.rows(b)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    a[j,i] = b[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate MxN matrix with elements set to "Sin(3*I+5*J)>0"
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugb2outsin(int m,
+            int n,
+            ref bool[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            a = new bool[0,0];
+
+            a = new bool[m, n];
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = (double)(Math.Sin(3*i+5*j))>(double)(0);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of elements in the array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static int xdebugi2sum(int[,] a)
+        {
+            int result = 0;
+            int i = 0;
+            int j = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    result = result+a[i,j];
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by -a[i,j]
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugi2neg(int[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = -a[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Transposes array.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugi2transpose(ref int[,] a)
+        {
+            int i = 0;
+            int j = 0;
+            int[,] b = new int[0,0];
+
+            b = new int[alglib.ap.rows(a), alglib.ap.cols(a)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    b[i,j] = a[i,j];
+                }
+            }
+            a = new int[alglib.ap.cols(b), alglib.ap.rows(b)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    a[j,i] = b[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate MxN matrix with elements set to "Sign(Sin(3*I+5*J))"
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugi2outsin(int m,
+            int n,
+            ref int[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            a = new int[0,0];
+
+            a = new int[m, n];
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = Math.Sign(Math.Sin(3*i+5*j));
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of elements in the array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static double xdebugr2sum(double[,] a)
+        {
+            double result = 0;
+            int i = 0;
+            int j = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    result = result+a[i,j];
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by -a[i,j]
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugr2neg(double[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = -a[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Transposes array.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugr2transpose(ref double[,] a)
+        {
+            int i = 0;
+            int j = 0;
+            double[,] b = new double[0,0];
+
+            b = new double[alglib.ap.rows(a), alglib.ap.cols(a)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    b[i,j] = a[i,j];
+                }
+            }
+            a = new double[alglib.ap.cols(b), alglib.ap.rows(b)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    a[j,i] = b[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate MxN matrix with elements set to "Sin(3*I+5*J)"
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugr2outsin(int m,
+            int n,
+            ref double[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            a = new double[0,0];
+
+            a = new double[m, n];
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = Math.Sin(3*i+5*j);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of elements in the array.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static complex xdebugc2sum(complex[,] a)
+        {
+            complex result = 0;
+            int i = 0;
+            int j = 0;
+
+            result = 0;
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    result = result+a[i,j];
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Replace all values in array by -a[i,j]
+        Array is passed using "shared" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugc2neg(complex[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j] = -a[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Transposes array.
+        Array is passed using "var" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugc2transpose(ref complex[,] a)
+        {
+            int i = 0;
+            int j = 0;
+            complex[,] b = new complex[0,0];
+
+            b = new complex[alglib.ap.rows(a), alglib.ap.cols(a)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    b[i,j] = a[i,j];
+                }
+            }
+            a = new complex[alglib.ap.cols(b), alglib.ap.rows(b)];
+            for(i=0; i<=alglib.ap.rows(b)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(b)-1; j++)
+                {
+                    a[j,i] = b[i,j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Generate MxN matrix with elements set to "Sin(3*I+5*J),Cos(3*I+5*J)"
+        Array is passed using "out" convention.
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdebugc2outsincos(int m,
+            int n,
+            ref complex[,] a)
+        {
+            int i = 0;
+            int j = 0;
+
+            a = new complex[0,0];
+
+            a = new complex[m, n];
+            for(i=0; i<=alglib.ap.rows(a)-1; i++)
+            {
+                for(j=0; j<=alglib.ap.cols(a)-1; j++)
+                {
+                    a[i,j].x = Math.Sin(3*i+5*j);
+                    a[i,j].y = Math.Cos(3*i+5*j);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is debug function intended for testing ALGLIB interface generator.
+        Never use it in any real life project.
+
+        Returns sum of a[i,j]*(1+b[i,j]) such that c[i,j] is True
+
+          -- ALGLIB --
+             Copyright 11.10.2013 by Bochkanov Sergey
+        *************************************************************************/
+        public static double xdebugmaskedbiasedproductsum(int m,
+            int n,
+            double[,] a,
+            double[,] b,
+            bool[,] c)
+        {
+            double result = 0;
+            int i = 0;
+            int j = 0;
+
+            alglib.ap.assert(m>=alglib.ap.rows(a));
+            alglib.ap.assert(m>=alglib.ap.rows(b));
+            alglib.ap.assert(m>=alglib.ap.rows(c));
+            alglib.ap.assert(n>=alglib.ap.cols(a));
+            alglib.ap.assert(n>=alglib.ap.cols(b));
+            alglib.ap.assert(n>=alglib.ap.cols(c));
+            result = 0.0;
+            for(i=0; i<=m-1; i++)
+            {
+                for(j=0; j<=n-1; j++)
+                {
+                    if( c[i,j] )
+                    {
+                        result = result+a[i,j]*(1+b[i,j]);
+                    }
+                }
+            }
+            return result;
         }
 
 

@@ -1,10 +1,11 @@
 /*************************************************************************
+ALGLIB 3.10.0 (source code generated 2015-08-19)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the
+the Free Software Foundation (www.fsf.org); either version 2 of the 
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -60,7 +61,24 @@ public partial class alglib
     public static void rmatrixtranspose(int m, int n, double[,] a, int ia, int ja, ref double[,] b, int ib, int jb)
     {
 
-        ablas.rmatrixtranspose(m, n, a, ia, ja, ref b, ib, jb);
+        ablas.rmatrixtranspose(m, n, a, ia, ja, b, ib, jb);
+        return;
+    }
+
+    /*************************************************************************
+    This code enforces symmetricy of the matrix by copying Upper part to lower
+    one (or vice versa).
+
+    INPUT PARAMETERS:
+        A   -   matrix
+        N   -   number of rows/columns
+        IsUpper - whether we want to copy upper triangle to lower one (True)
+                or vice versa (False).
+    *************************************************************************/
+    public static void rmatrixenforcesymmetricity(ref double[,] a, int n, bool isupper)
+    {
+
+        ablas.rmatrixenforcesymmetricity(a, n, isupper);
         return;
     }
 
@@ -230,6 +248,38 @@ public partial class alglib
     Multiplication result replaces X.
     Cache-oblivious algorithm is used.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     INPUT PARAMETERS
         N   -   matrix size, N>=0
         M   -   matrix size, N>=0
@@ -253,7 +303,15 @@ public partial class alglib
     public static void cmatrixrighttrsm(int m, int n, complex[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref complex[,] x, int i2, int j2)
     {
 
-        ablas.cmatrixrighttrsm(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+        ablas.cmatrixrighttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+        return;
+    }
+
+
+    public static void smp_cmatrixrighttrsm(int m, int n, complex[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref complex[,] x, int i2, int j2)
+    {
+
+        ablas._pexec_cmatrixrighttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
         return;
     }
 
@@ -265,6 +323,38 @@ public partial class alglib
 
     Multiplication result replaces X.
     Cache-oblivious algorithm is used.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS
         N   -   matrix size, N>=0
@@ -289,7 +379,15 @@ public partial class alglib
     public static void cmatrixlefttrsm(int m, int n, complex[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref complex[,] x, int i2, int j2)
     {
 
-        ablas.cmatrixlefttrsm(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+        ablas.cmatrixlefttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+        return;
+    }
+
+
+    public static void smp_cmatrixlefttrsm(int m, int n, complex[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref complex[,] x, int i2, int j2)
+    {
+
+        ablas._pexec_cmatrixlefttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
         return;
     }
 
@@ -301,6 +399,38 @@ public partial class alglib
 
     Multiplication result replaces X.
     Cache-oblivious algorithm is used.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS
         N   -   matrix size, N>=0
@@ -324,7 +454,15 @@ public partial class alglib
     public static void rmatrixrighttrsm(int m, int n, double[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref double[,] x, int i2, int j2)
     {
 
-        ablas.rmatrixrighttrsm(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+        ablas.rmatrixrighttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+        return;
+    }
+
+
+    public static void smp_rmatrixrighttrsm(int m, int n, double[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref double[,] x, int i2, int j2)
+    {
+
+        ablas._pexec_rmatrixrighttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
         return;
     }
 
@@ -336,6 +474,38 @@ public partial class alglib
 
     Multiplication result replaces X.
     Cache-oblivious algorithm is used.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS
         N   -   matrix size, N>=0
@@ -359,7 +529,15 @@ public partial class alglib
     public static void rmatrixlefttrsm(int m, int n, double[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref double[,] x, int i2, int j2)
     {
 
-        ablas.rmatrixlefttrsm(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+        ablas.rmatrixlefttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+        return;
+    }
+
+
+    public static void smp_rmatrixlefttrsm(int m, int n, double[,] a, int i1, int j1, bool isupper, bool isunit, int optype, ref double[,] x, int i2, int j2)
+    {
+
+        ablas._pexec_rmatrixlefttrsm(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
         return;
     }
 
@@ -376,30 +554,72 @@ public partial class alglib
     * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
     * if both Beta and Alpha are zero, C is filled by zeros.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     INPUT PARAMETERS
         N       -   matrix size, N>=0
         K       -   matrix size, K>=0
         Alpha   -   coefficient
         A       -   matrix
-        IA      -   submatrix offset
-        JA      -   submatrix offset
+        IA      -   submatrix offset (row index)
+        JA      -   submatrix offset (column index)
         OpTypeA -   multiplication type:
                     * 0 - A*A^H is calculated
                     * 2 - A^H*A is calculated
         Beta    -   coefficient
-        C       -   matrix
-        IC      -   submatrix offset
-        JC      -   submatrix offset
-        IsUpper -   whether C is upper triangular or lower triangular
+        C       -   preallocated input/output matrix
+        IC      -   submatrix offset (row index)
+        JC      -   submatrix offset (column index)
+        IsUpper -   whether upper or lower triangle of C is updated;
+                    this function updates only one half of C, leaving
+                    other half unchanged (not referenced at all).
 
       -- ALGLIB routine --
          16.12.2009
          Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixsyrk(int n, int k, double alpha, complex[,] a, int ia, int ja, int optypea, double beta, ref complex[,] c, int ic, int jc, bool isupper)
+    public static void cmatrixherk(int n, int k, double alpha, complex[,] a, int ia, int ja, int optypea, double beta, ref complex[,] c, int ic, int jc, bool isupper)
     {
 
-        ablas.cmatrixsyrk(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
+        ablas.cmatrixherk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+        return;
+    }
+
+
+    public static void smp_cmatrixherk(int n, int k, double alpha, complex[,] a, int ia, int ja, int optypea, double beta, ref complex[,] c, int ic, int jc, bool isupper)
+    {
+
+        ablas._pexec_cmatrixherk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
         return;
     }
 
@@ -416,20 +636,52 @@ public partial class alglib
     * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
     * if both Beta and Alpha are zero, C is filled by zeros.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     INPUT PARAMETERS
         N       -   matrix size, N>=0
         K       -   matrix size, K>=0
         Alpha   -   coefficient
         A       -   matrix
-        IA      -   submatrix offset
-        JA      -   submatrix offset
+        IA      -   submatrix offset (row index)
+        JA      -   submatrix offset (column index)
         OpTypeA -   multiplication type:
                     * 0 - A*A^T is calculated
                     * 2 - A^T*A is calculated
         Beta    -   coefficient
-        C       -   matrix
-        IC      -   submatrix offset
-        JC      -   submatrix offset
+        C       -   preallocated input/output matrix
+        IC      -   submatrix offset (row index)
+        JC      -   submatrix offset (column index)
         IsUpper -   whether C is upper triangular or lower triangular
 
       -- ALGLIB routine --
@@ -439,7 +691,15 @@ public partial class alglib
     public static void rmatrixsyrk(int n, int k, double alpha, double[,] a, int ia, int ja, int optypea, double beta, ref double[,] c, int ic, int jc, bool isupper)
     {
 
-        ablas.rmatrixsyrk(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
+        ablas.rmatrixsyrk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+        return;
+    }
+
+
+    public static void smp_rmatrixsyrk(int n, int k, double alpha, double[,] a, int ia, int ja, int optypea, double beta, ref double[,] c, int ic, int jc, bool isupper)
+    {
+
+        ablas._pexec_rmatrixsyrk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
         return;
     }
 
@@ -456,6 +716,44 @@ public partial class alglib
       calculations (not multiplied by zero - just not referenced)
     * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
     * if both Beta and Alpha are zero, C is filled by zeros.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
+    IMPORTANT:
+
+    This function does NOT preallocate output matrix C, it MUST be preallocated
+    by caller prior to calling this function. In case C does not have  enough
+    space to store result, exception will be generated.
 
     INPUT PARAMETERS
         M       -   matrix size, M>0
@@ -477,7 +775,7 @@ public partial class alglib
                     * 1 - transposition
                     * 2 - conjugate transposition
         Beta    -   coefficient
-        C       -   matrix
+        C       -   matrix (PREALLOCATED, large enough to store result)
         IC      -   submatrix offset
         JC      -   submatrix offset
 
@@ -488,12 +786,95 @@ public partial class alglib
     public static void cmatrixgemm(int m, int n, int k, complex alpha, complex[,] a, int ia, int ja, int optypea, complex[,] b, int ib, int jb, int optypeb, complex beta, ref complex[,] c, int ic, int jc)
     {
 
-        ablas.cmatrixgemm(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
+        ablas.cmatrixgemm(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+        return;
+    }
+
+
+    public static void smp_cmatrixgemm(int m, int n, int k, complex alpha, complex[,] a, int ia, int ja, int optypea, complex[,] b, int ib, int jb, int optypeb, complex beta, ref complex[,] c, int ic, int jc)
+    {
+
+        ablas._pexec_cmatrixgemm(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
         return;
     }
 
     /*************************************************************************
+    This subroutine calculates C = alpha*op1(A)*op2(B) +beta*C where:
+    * C is MxN general matrix
+    * op1(A) is MxK matrix
+    * op2(B) is KxN matrix
+    * "op" may be identity transformation, transposition
 
+    Additional info:
+    * cache-oblivious algorithm is used.
+    * multiplication result replaces C. If Beta=0, C elements are not used in
+      calculations (not multiplied by zero - just not referenced)
+    * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
+    * if both Beta and Alpha are zero, C is filled by zeros.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  Because  starting/stopping  worker  thread always
+      ! involves some overhead, parallelism starts to be  profitable  for  N's
+      ! larger than 128.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
+    IMPORTANT:
+
+    This function does NOT preallocate output matrix C, it MUST be preallocated
+    by caller prior to calling this function. In case C does not have  enough
+    space to store result, exception will be generated.
+
+    INPUT PARAMETERS
+        M       -   matrix size, M>0
+        N       -   matrix size, N>0
+        K       -   matrix size, K>0
+        Alpha   -   coefficient
+        A       -   matrix
+        IA      -   submatrix offset
+        JA      -   submatrix offset
+        OpTypeA -   transformation type:
+                    * 0 - no transformation
+                    * 1 - transposition
+        B       -   matrix
+        IB      -   submatrix offset
+        JB      -   submatrix offset
+        OpTypeB -   transformation type:
+                    * 0 - no transformation
+                    * 1 - transposition
+        Beta    -   coefficient
+        C       -   PREALLOCATED output matrix, large enough to store result
+        IC      -   submatrix offset
+        JC      -   submatrix offset
+
+      -- ALGLIB routine --
+         2009-2013
+         Bochkanov Sergey
     *************************************************************************/
     public static void rmatrixgemm(int m, int n, int k, double alpha, double[,] a, int ia, int ja, int optypea, double[,] b, int ib, int jb, int optypeb, double beta, ref double[,] c, int ic, int jc)
     {
@@ -510,6 +891,30 @@ public partial class alglib
         return;
     }
 
+    /*************************************************************************
+    This subroutine is an older version of CMatrixHERK(), one with wrong  name
+    (it is HErmitian update, not SYmmetric). It  is  left  here  for  backward
+    compatibility.
+
+      -- ALGLIB routine --
+         16.12.2009
+         Bochkanov Sergey
+    *************************************************************************/
+    public static void cmatrixsyrk(int n, int k, double alpha, complex[,] a, int ia, int ja, int optypea, double beta, ref complex[,] c, int ic, int jc, bool isupper)
+    {
+
+        ablas.cmatrixsyrk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+        return;
+    }
+
+
+    public static void smp_cmatrixsyrk(int n, int k, double alpha, complex[,] a, int ia, int ja, int optypea, double beta, ref complex[,] c, int ic, int jc, bool isupper)
+    {
+
+        ablas._pexec_cmatrixsyrk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+        return;
+    }
+
 }
 public partial class alglib
 {
@@ -517,6 +922,42 @@ public partial class alglib
 
     /*************************************************************************
     QR decomposition of a rectangular matrix of size MxN
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A   -   matrix A whose indexes range within [0..M-1, 0..N-1].
@@ -557,8 +998,52 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_rmatrixqr(ref double[,] a, int m, int n, out double[] tau)
+    {
+        tau = new double[0];
+        ortfac._pexec_rmatrixqr(ref a, m, n, ref tau);
+        return;
+    }
+
     /*************************************************************************
     LQ decomposition of a rectangular matrix of size MxN
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A   -   matrix A whose indexes range within [0..M-1, 0..N-1].
@@ -599,8 +1084,52 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_rmatrixlq(ref double[,] a, int m, int n, out double[] tau)
+    {
+        tau = new double[0];
+        ortfac._pexec_rmatrixlq(ref a, m, n, ref tau);
+        return;
+    }
+
     /*************************************************************************
     QR decomposition of a rectangular complex matrix of size MxN
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A   -   matrix A whose indexes range within [0..M-1, 0..N-1]
@@ -627,8 +1156,52 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_cmatrixqr(ref complex[,] a, int m, int n, out complex[] tau)
+    {
+        tau = new complex[0];
+        ortfac._pexec_cmatrixqr(ref a, m, n, ref tau);
+        return;
+    }
+
     /*************************************************************************
     LQ decomposition of a rectangular complex matrix of size MxN
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A   -   matrix A whose indexes range within [0..M-1, 0..N-1]
@@ -655,8 +1228,52 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_cmatrixlq(ref complex[,] a, int m, int n, out complex[] tau)
+    {
+        tau = new complex[0];
+        ortfac._pexec_cmatrixlq(ref a, m, n, ref tau);
+        return;
+    }
+
     /*************************************************************************
     Partial unpacking of matrix Q from the QR decomposition of a matrix A
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrices Q and R in compact form.
@@ -680,6 +1297,14 @@ public partial class alglib
     {
         q = new double[0,0];
         ortfac.rmatrixqrunpackq(a, m, n, tau, qcolumns, ref q);
+        return;
+    }
+
+
+    public static void smp_rmatrixqrunpackq(double[,] a, int m, int n, double[] tau, int qcolumns, out double[,] q)
+    {
+        q = new double[0,0];
+        ortfac._pexec_rmatrixqrunpackq(a, m, n, tau, qcolumns, ref q);
         return;
     }
 
@@ -709,6 +1334,42 @@ public partial class alglib
     /*************************************************************************
     Partial unpacking of matrix Q from the LQ decomposition of a matrix A
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         A       -   matrices L and Q in compact form.
                     Output of RMatrixLQ subroutine.
@@ -731,6 +1392,14 @@ public partial class alglib
     {
         q = new double[0,0];
         ortfac.rmatrixlqunpackq(a, m, n, tau, qrows, ref q);
+        return;
+    }
+
+
+    public static void smp_rmatrixlqunpackq(double[,] a, int m, int n, double[] tau, int qrows, out double[,] q)
+    {
+        q = new double[0,0];
+        ortfac._pexec_rmatrixlqunpackq(a, m, n, tau, qrows, ref q);
         return;
     }
 
@@ -760,6 +1429,42 @@ public partial class alglib
     /*************************************************************************
     Partial unpacking of matrix Q from QR decomposition of a complex matrix A.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         A           -   matrices Q and R in compact form.
                         Output of CMatrixQR subroutine .
@@ -782,6 +1487,14 @@ public partial class alglib
     {
         q = new complex[0,0];
         ortfac.cmatrixqrunpackq(a, m, n, tau, qcolumns, ref q);
+        return;
+    }
+
+
+    public static void smp_cmatrixqrunpackq(complex[,] a, int m, int n, complex[] tau, int qcolumns, out complex[,] q)
+    {
+        q = new complex[0,0];
+        ortfac._pexec_cmatrixqrunpackq(a, m, n, tau, qcolumns, ref q);
         return;
     }
 
@@ -811,6 +1524,42 @@ public partial class alglib
     /*************************************************************************
     Partial unpacking of matrix Q from LQ decomposition of a complex matrix A.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that QP decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=512,   achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         A           -   matrices Q and R in compact form.
                         Output of CMatrixLQ subroutine .
@@ -833,6 +1582,14 @@ public partial class alglib
     {
         q = new complex[0,0];
         ortfac.cmatrixlqunpackq(a, m, n, tau, qrows, ref q);
+        return;
+    }
+
+
+    public static void smp_cmatrixlqunpackq(complex[,] a, int m, int n, complex[] tau, int qrows, out complex[,] q)
+    {
+        q = new complex[0,0];
+        ortfac._pexec_cmatrixlqunpackq(a, m, n, tau, qrows, ref q);
         return;
     }
 
@@ -863,7 +1620,25 @@ public partial class alglib
     Reduction of a rectangular matrix to  bidiagonal form
 
     The algorithm reduces the rectangular matrix A to  bidiagonal form by
-    orthogonal transformations P and Q: A = Q*B*P.
+    orthogonal transformations P and Q: A = Q*B*(P^T).
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Multithreaded acceleration is NOT supported for this function  because
+      ! bidiagonal decompostion is inherently sequential in nature.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   source matrix. array[0..M-1, 0..N-1]
@@ -927,6 +1702,23 @@ public partial class alglib
     /*************************************************************************
     Unpacking matrix Q which reduces a matrix to bidiagonal form.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         QP          -   matrices Q and P in compact form.
                         Output of ToBidiagonal subroutine.
@@ -957,6 +1749,23 @@ public partial class alglib
     Multiplication by matrix Q which reduces matrix A to  bidiagonal form.
 
     The algorithm allows pre- or post-multiply by Q or Q'.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         QP          -   matrices Q and P in compact form.
@@ -1092,6 +1901,26 @@ public partial class alglib
     Reduction of a square matrix to  upper Hessenberg form: Q'*A*Q = H,
     where Q is an orthogonal matrix, H - Hessenberg matrix.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         A       -   matrix A with elements [0..N-1, 0..N-1]
         N       -   size of matrix A.
@@ -1131,6 +1960,26 @@ public partial class alglib
 
     /*************************************************************************
     Unpacking matrix Q which reduces matrix A to upper Hessenberg form
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A   -   output of RMatrixHessenberg subroutine.
@@ -1178,6 +2027,26 @@ public partial class alglib
     Reduction of a symmetric matrix which is given by its higher or lower
     triangular part to a tridiagonal matrix using orthogonal similarity
     transformation: Q'*A*Q=T.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix to be transformed
@@ -1256,6 +2125,27 @@ public partial class alglib
     Unpacking matrix Q which reduces symmetric matrix to a tridiagonal
     form.
 
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         A       -   the result of a SMatrixTD subroutine
         N       -   size of matrix A.
@@ -1280,6 +2170,27 @@ public partial class alglib
     Reduction of a Hermitian matrix which is given  by  its  higher  or  lower
     triangular part to a real  tridiagonal  matrix  using  unitary  similarity
     transformation: Q'*A*Q = T.
+
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix to be transformed
@@ -1358,6 +2269,27 @@ public partial class alglib
     Unpacking matrix Q which reduces a Hermitian matrix to a real  tridiagonal
     form.
 
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     Input parameters:
         A       -   the result of a HMatrixTD subroutine
         N       -   size of matrix A.
@@ -1385,6 +2317,26 @@ public partial class alglib
 
     /*************************************************************************
     Singular value decomposition of a bidiagonal matrix (extended algorithm)
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     The algorithm performs the singular value decomposition  of  a  bidiagonal
     matrix B (upper or lower) representing it as B = Q*S*P^T, where Q and  P -
@@ -1444,6 +2396,10 @@ public partial class alglib
         True, if the algorithm has converged.
         False, if the algorithm hasn't converged (rare case).
 
+    NOTE: multiplication U*Q is performed by means of transposition to internal
+          buffer, multiplication and backward transposition. It helps to avoid
+          costly columnwise operations and speed-up algorithm.
+
     Additional information:
         The type of convergence is controlled by the internal  parameter  TOL.
         If the parameter is greater than 0, the singular values will have
@@ -1453,6 +2409,7 @@ public partial class alglib
         where Epsilon is the machine precision. It is not  recommended  to  use
         TOL less than 10*Epsilon since this will  considerably  slow  down  the
         algorithm and may not lead to error decreasing.
+
     History:
         * 31 March, 2007.
             changed MAXITR from 6 to 12.
@@ -1476,6 +2433,27 @@ public partial class alglib
 
     /*************************************************************************
     Singular value decomposition of a rectangular matrix.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is only partially supported (some parts are
+      ! optimized, but most - are not).
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     The algorithm calculates the singular value decomposition of a matrix of
     size MxN: A = U * S * V^T
@@ -1535,6 +2513,16 @@ public partial class alglib
         return result;
     }
 
+
+    public static bool smp_rmatrixsvd(double[,] a, int m, int n, int uneeded, int vtneeded, int additionalmemory, out double[] w, out double[,] u, out double[,] vt)
+    {
+        w = new double[0];
+        u = new double[0,0];
+        vt = new double[0,0];
+        bool result = svd._pexec_rmatrixsvd(a, m, n, uneeded, vtneeded, additionalmemory, ref w, ref u, ref vt);
+        return result;
+    }
+
 }
 public partial class alglib
 {
@@ -1545,6 +2533,26 @@ public partial class alglib
 
     The algorithm finds eigen pairs of a symmetric matrix by reducing it to
     tridiagonal form and using the QL/QR algorithm.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   symmetric matrix which is given by its upper or lower
@@ -1680,6 +2688,26 @@ public partial class alglib
 
     The algorithm finds eigen pairs of a Hermitian matrix by  reducing  it  to
     real tridiagonal form and using the QL/QR algorithm.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   Hermitian matrix which is given  by  its  upper  or  lower
@@ -1830,6 +2858,26 @@ public partial class alglib
 
     The algorithm finds the eigen pairs of a tridiagonal symmetric matrix by
     using an QL/QR algorithm with implicit shifts.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Generally, commercial ALGLIB is several times faster than  open-source
+      ! generic C edition, and many times faster than open-source C# edition.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         D       -   the main diagonal of a tridiagonal matrix.
@@ -2002,7 +3050,31 @@ public partial class alglib
     }
 
     /*************************************************************************
-    Finding eigenvalues and eigenvectors of a general matrix
+    Finding eigenvalues and eigenvectors of a general (unsymmetric) matrix
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison. Speed-up provided by MKL for this particular problem (EVD)
+      ! is really high, because  MKL  uses combination of (a) better low-level
+      ! optimizations, and (b) better EVD algorithms.
+      !
+      ! On one particular SSE-capable  machine  for  N=1024,  commercial  MKL-
+      ! -capable ALGLIB was:
+      ! * 7-10 times faster than open source "generic C" version
+      ! * 15-18 times faster than "pure C#" version
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     The algorithm finds eigenvalues and eigenvectors of a general matrix by
     using the QR algorithm with multiple shifts. The algorithm can find
@@ -2092,6 +3164,17 @@ public partial class alglib
     OUTPUT PARAMETERS:
         A   -   orthogonal NxN matrix, array[0..N-1,0..N-1]
 
+    NOTE: this function uses algorithm  described  in  Stewart, G. W.  (1980),
+          "The Efficient Generation of  Random  Orthogonal  Matrices  with  an
+          Application to Condition Estimators".
+
+          Speaking short, to generate an (N+1)x(N+1) orthogonal matrix, it:
+          * takes an NxN one
+          * takes uniformly distributed unit vector of dimension N+1.
+          * constructs a Householder reflection from the vector, then applies
+            it to the smaller matrix (embedded in the larger size with a 1 at
+            the bottom right corner).
+
       -- ALGLIB routine --
          04.12.2009
          Bochkanov Sergey
@@ -2132,6 +3215,17 @@ public partial class alglib
 
     OUTPUT PARAMETERS:
         A   -   orthogonal NxN matrix, array[0..N-1,0..N-1]
+
+    NOTE: this function uses algorithm  described  in  Stewart, G. W.  (1980),
+          "The Efficient Generation of  Random  Orthogonal  Matrices  with  an
+          Application to Condition Estimators".
+
+          Speaking short, to generate an (N+1)x(N+1) orthogonal matrix, it:
+          * takes an NxN one
+          * takes uniformly distributed unit vector of dimension N+1.
+          * constructs a Householder reflection from the vector, then applies
+            it to the smaller matrix (embedded in the larger size with a 1 at
+            the bottom right corner).
 
       -- ALGLIB routine --
          04.12.2009
@@ -2390,6 +3484,1633 @@ public partial class alglib
 
 
     /*************************************************************************
+    Sparse matrix structure.
+
+    You should use ALGLIB functions to work with sparse matrix. Never  try  to
+    access its fields directly!
+
+    NOTES ON THE SPARSE STORAGE FORMATS
+
+    Sparse matrices can be stored using several formats:
+    * Hash-Table representation
+    * Compressed Row Storage (CRS)
+    * Skyline matrix storage (SKS)
+
+    Each of the formats has benefits and drawbacks:
+    * Hash-table is good for dynamic operations (insertion of new elements),
+      but does not support linear algebra operations
+    * CRS is good for operations like matrix-vector or matrix-matrix products,
+      but its initialization is less convenient - you have to tell row   sizes
+      at the initialization, and you have to fill  matrix  only  row  by  row,
+      from left to right.
+    * SKS is a special format which is used to store triangular  factors  from
+      Cholesky factorization. It does not support  dynamic  modification,  and
+      support for linear algebra operations is very limited.
+
+    Tables below outline information about these two formats:
+
+        OPERATIONS WITH MATRIX      HASH        CRS         SKS
+        creation                    +           +           +
+        SparseGet                   +           +           +
+        SparseRewriteExisting       +           +           +
+        SparseSet                   +
+        SparseAdd                   +
+        SparseGetRow                            +           +
+        SparseGetCompressedRow                  +           +
+        sparse-dense linear algebra             +           +
+    *************************************************************************/
+    public class sparsematrix : alglibobject
+    {
+        //
+        // Public declarations
+        //
+
+        public sparsematrix()
+        {
+            _innerobj = new sparse.sparsematrix();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new sparsematrix((sparse.sparsematrix)_innerobj.make_copy());
+        }
+
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private sparse.sparsematrix _innerobj;
+        public sparse.sparsematrix innerobj { get { return _innerobj; } }
+        public sparsematrix(sparse.sparsematrix obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+
+    /*************************************************************************
+    Temporary buffers for sparse matrix operations.
+
+    You should pass an instance of this structure to factorization  functions.
+    It allows to reuse memory during repeated sparse  factorizations.  You  do
+    not have to call some initialization function - simply passing an instance
+    to factorization function is enough.
+    *************************************************************************/
+    public class sparsebuffers : alglibobject
+    {
+        //
+        // Public declarations
+        //
+
+        public sparsebuffers()
+        {
+            _innerobj = new sparse.sparsebuffers();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new sparsebuffers((sparse.sparsebuffers)_innerobj.make_copy());
+        }
+
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private sparse.sparsebuffers _innerobj;
+        public sparse.sparsebuffers innerobj { get { return _innerobj; } }
+        public sparsebuffers(sparse.sparsebuffers obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+    /*************************************************************************
+    This function creates sparse matrix in a Hash-Table format.
+
+    This function creates Hast-Table matrix, which can be  converted  to  CRS
+    format after its initialization is over. Typical  usage  scenario  for  a
+    sparse matrix is:
+    1. creation in a Hash-Table format
+    2. insertion of the matrix elements
+    3. conversion to the CRS representation
+    4. matrix is passed to some linear algebra algorithm
+
+    Some  information  about  different matrix formats can be found below, in
+    the "NOTES" section.
+
+    INPUT PARAMETERS
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        K           -   K>=0, expected number of non-zero elements in a matrix.
+                        K can be inexact approximation, can be less than actual
+                        number  of  elements  (table will grow when needed) or
+                        even zero).
+                        It is important to understand that although hash-table
+                        may grow automatically, it is better to  provide  good
+                        estimate of data size.
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        All elements of the matrix are zero.
+
+    NOTE 1
+
+    Hash-tables use memory inefficiently, and they have to keep  some  amount
+    of the "spare memory" in order to have good performance. Hash  table  for
+    matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
+    where C is a small constant, about 1.5-2 in magnitude.
+
+    CRS storage, from the other side, is  more  memory-efficient,  and  needs
+    just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
+    in a matrix.
+
+    When you convert from the Hash-Table to CRS  representation, all unneeded
+    memory will be freed.
+
+    NOTE 2
+
+    Comments of SparseMatrix structure outline  information  about  different
+    sparse storage formats. We recommend you to read them before starting  to
+    use ALGLIB sparse matrices.
+
+    NOTE 3
+
+    This function completely  overwrites S with new sparse matrix. Previously
+    allocated storage is NOT reused. If you  want  to reuse already allocated
+    memory, call SparseCreateBuf function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreate(int m, int n, int k, out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreate(m, n, k, s.innerobj);
+        return;
+    }
+    public static void sparsecreate(int m, int n, out sparsematrix s)
+    {
+        int k;
+
+        s = new sparsematrix();
+        k = 0;
+        sparse.sparsecreate(m, n, k, s.innerobj);
+
+        return;
+    }
+
+    /*************************************************************************
+    This version of SparseCreate function creates sparse matrix in Hash-Table
+    format, reusing previously allocated storage as much  as  possible.  Read
+    comments for SparseCreate() for more information.
+
+    INPUT PARAMETERS
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        K           -   K>=0, expected number of non-zero elements in a matrix.
+                        K can be inexact approximation, can be less than actual
+                        number  of  elements  (table will grow when needed) or
+                        even zero).
+                        It is important to understand that although hash-table
+                        may grow automatically, it is better to  provide  good
+                        estimate of data size.
+        S           -   SparseMatrix structure which MAY contain some  already
+                        allocated storage.
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        All elements of the matrix are zero.
+                        Previously allocated storage is reused, if  its  size
+                        is compatible with expected number of non-zeros K.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatebuf(int m, int n, int k, sparsematrix s)
+    {
+
+        sparse.sparsecreatebuf(m, n, k, s.innerobj);
+        return;
+    }
+    public static void sparsecreatebuf(int m, int n, sparsematrix s)
+    {
+        int k;
+
+
+        k = 0;
+        sparse.sparsecreatebuf(m, n, k, s.innerobj);
+
+        return;
+    }
+
+    /*************************************************************************
+    This function creates sparse matrix in a CRS format (expert function for
+    situations when you are running out of memory).
+
+    This function creates CRS matrix. Typical usage scenario for a CRS matrix
+    is:
+    1. creation (you have to tell number of non-zero elements at each row  at
+       this moment)
+    2. insertion of the matrix elements (row by row, from left to right)
+    3. matrix is passed to some linear algebra algorithm
+
+    This function is a memory-efficient alternative to SparseCreate(), but it
+    is more complex because it requires you to know in advance how large your
+    matrix is. Some  information about  different matrix formats can be found
+    in comments on SparseMatrix structure.  We recommend  you  to  read  them
+    before starting to use ALGLIB sparse matrices..
+
+    INPUT PARAMETERS
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        NER         -   number of elements at each row, array[M], NER[I]>=0
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS representation.
+                        You have to fill ALL non-zero elements by calling
+                        SparseSet() BEFORE you try to use this matrix.
+
+    NOTE: this function completely  overwrites  S  with  new  sparse  matrix.
+          Previously allocated storage is NOT reused. If you  want  to  reuse
+          already allocated memory, call SparseCreateCRSBuf function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatecrs(int m, int n, int[] ner, out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreatecrs(m, n, ner, s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function creates sparse matrix in a CRS format (expert function  for
+    situations when you are running out  of  memory).  This  version  of  CRS
+    matrix creation function may reuse memory already allocated in S.
+
+    This function creates CRS matrix. Typical usage scenario for a CRS matrix
+    is:
+    1. creation (you have to tell number of non-zero elements at each row  at
+       this moment)
+    2. insertion of the matrix elements (row by row, from left to right)
+    3. matrix is passed to some linear algebra algorithm
+
+    This function is a memory-efficient alternative to SparseCreate(), but it
+    is more complex because it requires you to know in advance how large your
+    matrix is. Some  information about  different matrix formats can be found
+    in comments on SparseMatrix structure.  We recommend  you  to  read  them
+    before starting to use ALGLIB sparse matrices..
+
+    INPUT PARAMETERS
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        NER         -   number of elements at each row, array[M], NER[I]>=0
+        S           -   sparse matrix structure with possibly preallocated
+                        memory.
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS representation.
+                        You have to fill ALL non-zero elements by calling
+                        SparseSet() BEFORE you try to use this matrix.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatecrsbuf(int m, int n, int[] ner, sparsematrix s)
+    {
+
+        sparse.sparsecreatecrsbuf(m, n, ner, s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function creates sparse matrix in  a  SKS  format  (skyline  storage
+    format). In most cases you do not need this function - CRS format  better
+    suits most use cases.
+
+    INPUT PARAMETERS
+        M, N        -   number of rows(M) and columns (N) in a matrix:
+                        * M=N (as for now, ALGLIB supports only square SKS)
+                        * N>=1
+                        * M>=1
+        D           -   "bottom" bandwidths, array[M], D[I]>=0.
+                        I-th element stores number of non-zeros at I-th  row,
+                        below the diagonal (diagonal itself is not  included)
+        U           -   "top" bandwidths, array[N], U[I]>=0.
+                        I-th element stores number of non-zeros  at I-th row,
+                        above the diagonal (diagonal itself  is not included)
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in SKS representation.
+                        All elements are filled by zeros.
+                        You may use SparseRewriteExisting() to  change  their
+                        values.
+
+    NOTE: this function completely  overwrites  S  with  new  sparse  matrix.
+          Previously allocated storage is NOT reused. If you  want  to  reuse
+          already allocated memory, call SparseCreateSKSBuf function.
+
+      -- ALGLIB PROJECT --
+         Copyright 13.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatesks(int m, int n, int[] d, int[] u, out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreatesks(m, n, d, u, s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This is "buffered"  version  of  SparseCreateSKS()  which  reuses  memory
+    previously allocated in S (of course, memory is reallocated if needed).
+
+    This function creates sparse matrix in  a  SKS  format  (skyline  storage
+    format). In most cases you do not need this function - CRS format  better
+    suits most use cases.
+
+    INPUT PARAMETERS
+        M, N        -   number of rows(M) and columns (N) in a matrix:
+                        * M=N (as for now, ALGLIB supports only square SKS)
+                        * N>=1
+                        * M>=1
+        D           -   "bottom" bandwidths, array[M], 0<=D[I]<=I.
+                        I-th element stores number of non-zeros at I-th row,
+                        below the diagonal (diagonal itself is not included)
+        U           -   "top" bandwidths, array[N], 0<=U[I]<=I.
+                        I-th element stores number of non-zeros at I-th row,
+                        above the diagonal (diagonal itself is not included)
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix in SKS representation.
+                        All elements are filled by zeros.
+                        You may use SparseSet()/SparseAdd() to change their
+                        values.
+
+      -- ALGLIB PROJECT --
+         Copyright 13.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatesksbuf(int m, int n, int[] d, int[] u, sparsematrix s)
+    {
+
+        sparse.sparsecreatesksbuf(m, n, d, u, s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function copies S0 to S1.
+    This function completely deallocates memory owned by S1 before creating a
+    copy of S0. If you want to reuse memory, use SparseCopyBuf.
+
+    NOTE:  this  function  does  not verify its arguments, it just copies all
+    fields of the structure.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopy(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopy(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function copies S0 to S1.
+    Memory already allocated in S1 is reused as much as possible.
+
+    NOTE:  this  function  does  not verify its arguments, it just copies all
+    fields of the structure.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopybuf(sparsematrix s0, sparsematrix s1)
+    {
+
+        sparse.sparsecopybuf(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function efficiently swaps contents of S0 and S1.
+
+      -- ALGLIB PROJECT --
+         Copyright 16.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseswap(sparsematrix s0, sparsematrix s1)
+    {
+
+        sparse.sparseswap(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function adds value to S[i,j] - element of the sparse matrix. Matrix
+    must be in a Hash-Table mode.
+
+    In case S[i,j] already exists in the table, V i added to  its  value.  In
+    case  S[i,j]  is  non-existent,  it  is  inserted  in  the  table.  Table
+    automatically grows when necessary.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        Exception will be thrown for CRS matrix.
+        I           -   row index of the element to modify, 0<=I<M
+        J           -   column index of the element to modify, 0<=J<N
+        V           -   value to add, must be finite number
+
+    OUTPUT PARAMETERS
+        S           -   modified matrix
+
+    NOTE 1:  when  S[i,j]  is exactly zero after modification, it is  deleted
+    from the table.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseadd(sparsematrix s, int i, int j, double v)
+    {
+
+        sparse.sparseadd(s.innerobj, i, j, v);
+        return;
+    }
+
+    /*************************************************************************
+    This function modifies S[i,j] - element of the sparse matrix.
+
+    For Hash-based storage format:
+    * this function can be called at any moment - during matrix initialization
+      or later
+    * new value can be zero or non-zero.  In case new value of S[i,j] is zero,
+      this element is deleted from the table.
+    * this  function  has  no  effect when called with zero V for non-existent
+      element.
+
+    For CRS-bases storage format:
+    * this function can be called ONLY DURING MATRIX INITIALIZATION
+    * new value MUST be non-zero. Exception will be thrown for zero V.
+    * elements must be initialized in correct order -  from top row to bottom,
+      within row - from left to right.
+
+    For SKS storage: NOT SUPPORTED! Use SparseRewriteExisting() to  work  with
+    SKS matrices.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table or CRS representation.
+        I           -   row index of the element to modify, 0<=I<M
+        J           -   column index of the element to modify, 0<=J<N
+        V           -   value to set, must be finite number, can be zero
+
+    OUTPUT PARAMETERS
+        S           -   modified matrix
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseset(sparsematrix s, int i, int j, double v)
+    {
+
+        sparse.sparseset(s.innerobj, i, j, v);
+        return;
+    }
+
+    /*************************************************************************
+    This function returns S[i,j] - element of the sparse matrix.  Matrix  can
+    be in any mode (Hash-Table, CRS, SKS), but this function is less efficient
+    for CRS matrices. Hash-Table and SKS matrices can find  element  in  O(1)
+    time, while  CRS  matrices need O(log(RS)) time, where RS is an number of
+    non-zero elements in a row.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        Exception will be thrown for CRS matrix.
+        I           -   row index of the element to modify, 0<=I<M
+        J           -   column index of the element to modify, 0<=J<N
+
+    RESULT
+        value of S[I,J] or zero (in case no element with such index is found)
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double sparseget(sparsematrix s, int i, int j)
+    {
+
+        double result = sparse.sparseget(s.innerobj, i, j);
+        return result;
+    }
+
+    /*************************************************************************
+    This function returns I-th diagonal element of the sparse matrix.
+
+    Matrix can be in any mode (Hash-Table or CRS storage), but this  function
+    is most efficient for CRS matrices - it requires less than 50 CPU  cycles
+    to extract diagonal element. For Hash-Table matrices we still  have  O(1)
+    query time, but function is many times slower.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table representation.
+                        Exception will be thrown for CRS matrix.
+        I           -   index of the element to modify, 0<=I<min(M,N)
+
+    RESULT
+        value of S[I,I] or zero (in case no element with such index is found)
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double sparsegetdiagonal(sparsematrix s, int i)
+    {
+
+        double result = sparse.sparsegetdiagonal(s.innerobj, i);
+        return result;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product  S*x.  Matrix  S  must  be
+    stored in CRS or SKS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS or SKS format.
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        Y           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y           -   array[M], S*x
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemv(sparsematrix s, double[] x, ref double[] y)
+    {
+
+        sparse.sparsemv(s.innerobj, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product  S^T*x. Matrix S  must  be
+    stored in CRS or SKS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS or SKS format.
+        X           -   array[M], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least M, but we do not check for NAN's or INF's.
+        Y           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y           -   array[N], S^T*x
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemtv(sparsematrix s, double[] x, ref double[] y)
+    {
+
+        sparse.sparsemtv(s.innerobj, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function simultaneously calculates two matrix-vector products:
+        S*x and S^T*x.
+    S must be square (non-rectangular) matrix stored in  CRS  or  SKS  format
+    (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse N*N matrix in CRS or SKS format.
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        Y0          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+        Y1          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y0          -   array[N], S*x
+        Y1          -   array[N], S^T*x
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemv2(sparsematrix s, double[] x, ref double[] y0, ref double[] y1)
+    {
+
+        sparse.sparsemv2(s.innerobj, x, ref y0, ref y1);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product  S*x, when S is  symmetric
+    matrix. Matrix S  must be stored in CRS or SKS format  (exception will be
+    thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*M matrix in CRS or SKS format.
+        IsUpper     -   whether upper or lower triangle of S is given:
+                        * if upper triangle is given,  only   S[i,j] for j>=i
+                          are used, and lower triangle is ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for j<=i
+                          are used, and upper triangle is ignored.
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        Y           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        Y           -   array[M], S*x
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesmv(sparsematrix s, bool isupper, double[] x, ref double[] y)
+    {
+
+        sparse.sparsesmv(s.innerobj, isupper, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates vector-matrix-vector product x'*S*x, where  S is
+    symmetric matrix. Matrix S must be stored in CRS or SKS format (exception
+    will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*M matrix in CRS or SKS format.
+        IsUpper     -   whether upper or lower triangle of S is given:
+                        * if upper triangle is given,  only   S[i,j] for j>=i
+                          are used, and lower triangle is ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for j<=i
+                          are used, and upper triangle is ignored.
+        X           -   array[N], input vector. For  performance  reasons  we
+                        make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+
+    RESULT
+        x'*S*x
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 27.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static double sparsevsmv(sparsematrix s, bool isupper, double[] x)
+    {
+
+        double result = sparse.sparsevsmv(s.innerobj, isupper, x);
+        return result;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-matrix product  S*A.  Matrix  S  must  be
+    stored in CRS or SKS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS or SKS format.
+        A           -   array[N][K], input dense matrix. For  performance reasons
+                        we make only quick checks - we check that array size
+                        is at least N, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B           -   array[M][K], S*A
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemm(sparsematrix s, double[,] a, int k, ref double[,] b)
+    {
+
+        sparse.sparsemm(s.innerobj, a, k, ref b);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-matrix product  S^T*A. Matrix S  must  be
+    stored in CRS or SKS format (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS or SKS format.
+        A           -   array[M][K], input dense matrix. For performance reasons
+                        we make only quick checks - we check that array size  is
+                        at least M, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B           -   array[N][K], S^T*A
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemtm(sparsematrix s, double[,] a, int k, ref double[,] b)
+    {
+
+        sparse.sparsemtm(s.innerobj, a, k, ref b);
+        return;
+    }
+
+    /*************************************************************************
+    This function simultaneously calculates two matrix-matrix products:
+        S*A and S^T*A.
+    S  must  be  square (non-rectangular) matrix stored in CRS or  SKS  format
+    (exception will be thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse N*N matrix in CRS or SKS format.
+        A           -   array[N][K], input dense matrix. For performance reasons
+                        we make only quick checks - we check that array size  is
+                        at least N, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B0          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+        B1          -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B0          -   array[N][K], S*A
+        B1          -   array[N][K], S^T*A
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsemm2(sparsematrix s, double[,] a, int k, ref double[,] b0, ref double[,] b1)
+    {
+
+        sparse.sparsemm2(s.innerobj, a, k, ref b0, ref b1);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-matrix product  S*A, when S  is  symmetric
+    matrix. Matrix S must be stored in CRS or SKS format  (exception  will  be
+    thrown otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse M*M matrix in CRS or SKS format.
+        IsUpper     -   whether upper or lower triangle of S is given:
+                        * if upper triangle is given,  only   S[i,j] for j>=i
+                          are used, and lower triangle is ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for j<=i
+                          are used, and upper triangle is ignored.
+        A           -   array[N][K], input dense matrix. For performance reasons
+                        we make only quick checks - we check that array size is
+                        at least N, but we do not check for NAN's or INF's.
+        K           -   number of columns of matrix (A).
+        B           -   output buffer, possibly preallocated. In case  buffer
+                        size is too small to store  result,  this  buffer  is
+                        automatically resized.
+
+    OUTPUT PARAMETERS
+        B           -   array[M][K], S*A
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesmm(sparsematrix s, bool isupper, double[,] a, int k, ref double[,] b)
+    {
+
+        sparse.sparsesmm(s.innerobj, isupper, a, k, ref b);
+        return;
+    }
+
+    /*************************************************************************
+    This function calculates matrix-vector product op(S)*x, when x is  vector,
+    S is symmetric triangular matrix, op(S) is transposition or no  operation.
+    Matrix S must be stored in CRS or SKS format  (exception  will  be  thrown
+    otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse square matrix in CRS or SKS format.
+        IsUpper     -   whether upper or lower triangle of S is used:
+                        * if upper triangle is given,  only   S[i,j] for  j>=i
+                          are used, and lower triangle is  ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for  j<=i
+                          are used, and upper triangle is ignored.
+        IsUnit      -   unit or non-unit diagonal:
+                        * if True, diagonal elements of triangular matrix  are
+                          considered equal to 1.0. Actual elements  stored  in
+                          S are not referenced at all.
+                        * if False, diagonal stored in S is used
+        OpType      -   operation type:
+                        * if 0, S*x is calculated
+                        * if 1, (S^T)*x is calculated (transposition)
+        X           -   array[N] which stores input  vector.  For  performance
+                        reasons we make only quick  checks  -  we  check  that
+                        array  size  is  at  least  N, but we do not check for
+                        NAN's or INF's.
+        Y           -   possibly  preallocated  input   buffer.  Automatically
+                        resized if its size is too small.
+
+    OUTPUT PARAMETERS
+        Y           -   array[N], op(S)*x
+
+    NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+    You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+    this function.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsetrmv(sparsematrix s, bool isupper, bool isunit, int optype, ref double[] x, ref double[] y)
+    {
+
+        sparse.sparsetrmv(s.innerobj, isupper, isunit, optype, x, ref y);
+        return;
+    }
+
+    /*************************************************************************
+    This function solves linear system op(S)*y=x  where  x  is  vector,  S  is
+    symmetric  triangular  matrix,  op(S)  is  transposition  or no operation.
+    Matrix S must be stored in CRS or SKS format  (exception  will  be  thrown
+    otherwise).
+
+    INPUT PARAMETERS
+        S           -   sparse square matrix in CRS or SKS format.
+        IsUpper     -   whether upper or lower triangle of S is used:
+                        * if upper triangle is given,  only   S[i,j] for  j>=i
+                          are used, and lower triangle is  ignored (it can  be
+                          empty - these elements are not referenced at all).
+                        * if lower triangle is given,  only   S[i,j] for  j<=i
+                          are used, and upper triangle is ignored.
+        IsUnit      -   unit or non-unit diagonal:
+                        * if True, diagonal elements of triangular matrix  are
+                          considered equal to 1.0. Actual elements  stored  in
+                          S are not referenced at all.
+                        * if False, diagonal stored in S is used. It  is  your
+                          responsibility  to  make  sure  that   diagonal   is
+                          non-zero.
+        OpType      -   operation type:
+                        * if 0, S*x is calculated
+                        * if 1, (S^T)*x is calculated (transposition)
+        X           -   array[N] which stores input  vector.  For  performance
+                        reasons we make only quick  checks  -  we  check  that
+                        array  size  is  at  least  N, but we do not check for
+                        NAN's or INF's.
+
+    OUTPUT PARAMETERS
+        X           -   array[N], inv(op(S))*x
+
+    NOTE: this function throws exception when called for  non-CRS/SKS  matrix.
+          You must convert your matrix  with  SparseConvertToCRS/SKS()  before
+          using this function.
+
+    NOTE: no assertion or tests are done during algorithm  operation.   It  is
+          your responsibility to provide invertible matrix to algorithm.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsetrsv(sparsematrix s, bool isupper, bool isunit, int optype, ref double[] x)
+    {
+
+        sparse.sparsetrsv(s.innerobj, isupper, isunit, optype, x);
+        return;
+    }
+
+    /*************************************************************************
+    This procedure resizes Hash-Table matrix. It can be called when you  have
+    deleted too many elements from the matrix, and you want to  free unneeded
+    memory.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseresizematrix(sparsematrix s)
+    {
+
+        sparse.sparseresizematrix(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  is  used  to enumerate all elements of the sparse matrix.
+    Before  first  call  user  initializes  T0 and T1 counters by zero. These
+    counters are used to remember current position in a  matrix;  after  each
+    call they are updated by the function.
+
+    Subsequent calls to this function return non-zero elements of the  sparse
+    matrix, one by one. If you enumerate CRS matrix, matrix is traversed from
+    left to right, from top to bottom. In case you enumerate matrix stored as
+    Hash table, elements are returned in random order.
+
+    EXAMPLE
+        > T0=0
+        > T1=0
+        > while SparseEnumerate(S,T0,T1,I,J,V) do
+        >     ....do something with I,J,V
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in Hash-Table or CRS representation.
+        T0          -   internal counter
+        T1          -   internal counter
+
+    OUTPUT PARAMETERS
+        T0          -   new value of the internal counter
+        T1          -   new value of the internal counter
+        I           -   row index of non-zero element, 0<=I<M.
+        J           -   column index of non-zero element, 0<=J<N
+        V           -   value of the T-th element
+
+    RESULT
+        True in case of success (next non-zero element was retrieved)
+        False in case all non-zero elements were enumerated
+
+    NOTE: you may call SparseRewriteExisting() during enumeration, but it  is
+          THE  ONLY  matrix  modification  function  you  can  call!!!  Other
+          matrix modification functions should not be called during enumeration!
+
+      -- ALGLIB PROJECT --
+         Copyright 14.03.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseenumerate(sparsematrix s, ref int t0, ref int t1, out int i, out int j, out double v)
+    {
+        i = 0;
+        j = 0;
+        v = 0;
+        bool result = sparse.sparseenumerate(s.innerobj, ref t0, ref t1, ref i, ref j, ref v);
+        return result;
+    }
+
+    /*************************************************************************
+    This function rewrites existing (non-zero) element. It  returns  True   if
+    element  exists  or  False,  when  it  is  called for non-existing  (zero)
+    element.
+
+    This function works with any kind of the matrix.
+
+    The purpose of this function is to provide convenient thread-safe  way  to
+    modify  sparse  matrix.  Such  modification  (already  existing element is
+    rewritten) is guaranteed to be thread-safe without any synchronization, as
+    long as different threads modify different elements.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in any kind of representation
+                        (Hash, SKS, CRS).
+        I           -   row index of non-zero element to modify, 0<=I<M
+        J           -   column index of non-zero element to modify, 0<=J<N
+        V           -   value to rewrite, must be finite number
+
+    OUTPUT PARAMETERS
+        S           -   modified matrix
+    RESULT
+        True in case when element exists
+        False in case when element doesn't exist or it is zero
+
+      -- ALGLIB PROJECT --
+         Copyright 14.03.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparserewriteexisting(sparsematrix s, int i, int j, double v)
+    {
+
+        bool result = sparse.sparserewriteexisting(s.innerobj, i, j, v);
+        return result;
+    }
+
+    /*************************************************************************
+    This function returns I-th row of the sparse matrix. Matrix must be stored
+    in CRS or SKS format.
+
+    INPUT PARAMETERS:
+        S           -   sparse M*N matrix in CRS format
+        I           -   row index, 0<=I<M
+        IRow        -   output buffer, can be  preallocated.  In  case  buffer
+                        size  is  too  small  to  store  I-th   row,   it   is
+                        automatically reallocated.
+
+    OUTPUT PARAMETERS:
+        IRow        -   array[M], I-th row.
+
+    NOTE: this function has O(N) running time, where N is a  column  count. It
+          allocates and fills N-element  array,  even  although  most  of  its
+          elemets are zero.
+
+    NOTE: If you have O(non-zeros-per-row) time and memory  requirements,  use
+          SparseGetCompressedRow() function. It  returns  data  in  compressed
+          format.
+
+    NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non  CRS/SKS)
+          is passed, this function throws exception.
+
+      -- ALGLIB PROJECT --
+         Copyright 10.12.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsegetrow(sparsematrix s, int i, ref double[] irow)
+    {
+
+        sparse.sparsegetrow(s.innerobj, i, ref irow);
+        return;
+    }
+
+    /*************************************************************************
+    This function returns I-th row of the sparse matrix IN COMPRESSED FORMAT -
+    only non-zero elements are returned (with their indexes). Matrix  must  be
+    stored in CRS or SKS format.
+
+    INPUT PARAMETERS:
+        S           -   sparse M*N matrix in CRS format
+        I           -   row index, 0<=I<M
+        ColIdx      -   output buffer for column indexes, can be preallocated.
+                        In case buffer size is too small to store I-th row, it
+                        is automatically reallocated.
+        Vals        -   output buffer for values, can be preallocated. In case
+                        buffer size is too small to  store  I-th  row,  it  is
+                        automatically reallocated.
+
+    OUTPUT PARAMETERS:
+        ColIdx      -   column   indexes   of  non-zero  elements,  sorted  by
+                        ascending. Symbolically non-zero elements are  counted
+                        (i.e. if you allocated place for element, but  it  has
+                        zero numerical value - it is counted).
+        Vals        -   values. Vals[K] stores value of  matrix  element  with
+                        indexes (I,ColIdx[K]). Symbolically non-zero  elements
+                        are counted (i.e. if you allocated place for  element,
+                        but it has zero numerical value - it is counted).
+        NZCnt       -   number of symbolically non-zero elements per row.
+
+    NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non  CRS/SKS)
+          is passed, this function throws exception.
+
+    NOTE: this function may allocate additional, unnecessary place for  ColIdx
+          and Vals arrays. It is dictated by  performance  reasons  -  on  SKS
+          matrices it is faster  to  allocate  space  at  the  beginning  with
+          some "extra"-space, than performing two passes over matrix  -  first
+          time to calculate exact space required for data, second  time  -  to
+          store data itself.
+
+      -- ALGLIB PROJECT --
+         Copyright 10.12.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsegetcompressedrow(sparsematrix s, int i, ref int[] colidx, ref double[] vals, out int nzcnt)
+    {
+        nzcnt = 0;
+        sparse.sparsegetcompressedrow(s.innerobj, i, ref colidx, ref vals, ref nzcnt);
+        return;
+    }
+
+    /*************************************************************************
+    This function performs efficient in-place  transpose  of  SKS  matrix.  No
+    additional memory is allocated during transposition.
+
+    This function supports only skyline storage format (SKS).
+
+    INPUT PARAMETERS
+        S       -   sparse matrix in SKS format.
+
+    OUTPUT PARAMETERS
+        S           -   sparse matrix, transposed.
+
+      -- ALGLIB PROJECT --
+         Copyright 16.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsetransposesks(sparsematrix s)
+    {
+
+        sparse.sparsetransposesks(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  in-place  conversion  to  desired sparse storage
+    format.
+
+    INPUT PARAMETERS
+        S0      -   sparse matrix in any format.
+        Fmt     -   desired storage format  of  the  output,  as  returned  by
+                    SparseGetMatrixType() function:
+                    * 0 for hash-based storage
+                    * 1 for CRS
+                    * 2 for SKS
+
+    OUTPUT PARAMETERS
+        S0          -   sparse matrix in requested format.
+
+    NOTE: in-place conversion wastes a lot of memory which is  used  to  store
+          temporaries.  If  you  perform  a  lot  of  repeated conversions, we
+          recommend to use out-of-place buffered  conversion  functions,  like
+          SparseCopyToBuf(), which can reuse already allocated memory.
+
+      -- ALGLIB PROJECT --
+         Copyright 16.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseconvertto(sparsematrix s0, int fmt)
+    {
+
+        sparse.sparseconvertto(s0.innerobj, fmt);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs out-of-place conversion to desired sparse storage
+    format. S0 is copied to S1 and converted on-the-fly. Memory  allocated  in
+    S1 is reused to maximum extent possible.
+
+    INPUT PARAMETERS
+        S0      -   sparse matrix in any format.
+        Fmt     -   desired storage format  of  the  output,  as  returned  by
+                    SparseGetMatrixType() function:
+                    * 0 for hash-based storage
+                    * 1 for CRS
+                    * 2 for SKS
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in requested format.
+
+      -- ALGLIB PROJECT --
+         Copyright 16.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytobuf(sparsematrix s0, int fmt, sparsematrix s1)
+    {
+
+        sparse.sparsecopytobuf(s0.innerobj, fmt, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function performs in-place conversion to Hash table storage.
+
+    INPUT PARAMETERS
+        S           -   sparse matrix in CRS format.
+
+    OUTPUT PARAMETERS
+        S           -   sparse matrix in Hash table format.
+
+    NOTE: this  function  has   no  effect  when  called with matrix which  is
+          already in Hash table mode.
+
+    NOTE: in-place conversion involves allocation of temporary arrays. If  you
+          perform a lot of repeated in- place  conversions,  it  may  lead  to
+          memory fragmentation. Consider using out-of-place SparseCopyToHashBuf()
+          function in this case.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseconverttohash(sparsematrix s)
+    {
+
+        sparse.sparseconverttohash(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to  Hash table storage
+    format. S0 is copied to S1 and converted on-the-fly.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in Hash table format.
+
+    NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
+
+    NOTE: this function de-allocates memory  occupied  by  S1 before  starting
+          conversion. If you perform a  lot  of  repeated  conversions, it may
+          lead to memory fragmentation. In this case we recommend you  to  use
+          SparseCopyToHashBuf() function which re-uses memory in S1 as much as
+          possible.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytohash(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopytohash(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to  Hash table storage
+    format. S0 is copied to S1 and converted on-the-fly. Memory  allocated  in
+    S1 is reused to maximum extent possible.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in Hash table format.
+
+    NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytohashbuf(sparsematrix s0, sparsematrix s1)
+    {
+
+        sparse.sparsecopytohashbuf(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function converts matrix to CRS format.
+
+    Some  algorithms  (linear  algebra ones, for example) require matrices in
+    CRS format. This function allows to perform in-place conversion.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in any format
+
+    OUTPUT PARAMETERS
+        S           -   matrix in CRS format
+
+    NOTE: this   function  has  no  effect  when  called with matrix which is
+          already in CRS mode.
+
+    NOTE: this function allocates temporary memory to store a   copy  of  the
+          matrix. If you perform a lot of repeated conversions, we  recommend
+          you  to  use  SparseCopyToCRSBuf()  function,   which   can   reuse
+          previously allocated memory.
+
+      -- ALGLIB PROJECT --
+         Copyright 14.10.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseconverttocrs(sparsematrix s)
+    {
+
+        sparse.sparseconverttocrs(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
+    copied to S1 and converted on-the-fly.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in CRS format.
+
+    NOTE: if S0 is stored as CRS, it is just copied without conversion.
+
+    NOTE: this function de-allocates memory occupied by S1 before starting CRS
+          conversion. If you perform a lot of repeated CRS conversions, it may
+          lead to memory fragmentation. In this case we recommend you  to  use
+          SparseCopyToCRSBuf() function which re-uses memory in S1 as much  as
+          possible.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytocrs(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopytocrs(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
+    copied to S1 and converted on-the-fly. Memory allocated in S1 is reused to
+    maximum extent possible.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+        S1          -   matrix which may contain some pre-allocated memory, or
+                        can be just uninitialized structure.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in CRS format.
+
+    NOTE: if S0 is stored as CRS, it is just copied without conversion.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytocrsbuf(sparsematrix s0, sparsematrix s1)
+    {
+
+        sparse.sparsecopytocrsbuf(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function performs in-place conversion to SKS format.
+
+    INPUT PARAMETERS
+        S           -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S           -   sparse matrix in SKS format.
+
+    NOTE: this  function  has   no  effect  when  called with matrix which  is
+          already in SKS mode.
+
+    NOTE: in-place conversion involves allocation of temporary arrays. If  you
+          perform a lot of repeated in- place  conversions,  it  may  lead  to
+          memory fragmentation. Consider using out-of-place SparseCopyToSKSBuf()
+          function in this case.
+
+      -- ALGLIB PROJECT --
+         Copyright 15.01.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparseconverttosks(sparsematrix s)
+    {
+
+        sparse.sparseconverttosks(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to SKS storage format.
+    S0 is copied to S1 and converted on-the-fly.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in SKS format.
+
+    NOTE: if S0 is stored as SKS, it is just copied without conversion.
+
+    NOTE: this function de-allocates memory  occupied  by  S1 before  starting
+          conversion. If you perform a  lot  of  repeated  conversions, it may
+          lead to memory fragmentation. In this case we recommend you  to  use
+          SparseCopyToSKSBuf() function which re-uses memory in S1 as much  as
+          possible.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytosks(sparsematrix s0, out sparsematrix s1)
+    {
+        s1 = new sparsematrix();
+        sparse.sparsecopytosks(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This  function  performs  out-of-place  conversion  to SKS format.  S0  is
+    copied to S1 and converted on-the-fly. Memory  allocated  in S1 is  reused
+    to maximum extent possible.
+
+    INPUT PARAMETERS
+        S0          -   sparse matrix in any format.
+
+    OUTPUT PARAMETERS
+        S1          -   sparse matrix in SKS format.
+
+    NOTE: if S0 is stored as SKS, it is just copied without conversion.
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytosksbuf(sparsematrix s0, sparsematrix s1)
+    {
+
+        sparse.sparsecopytosksbuf(s0.innerobj, s1.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    This function returns type of the matrix storage format.
+
+    INPUT PARAMETERS:
+        S           -   sparse matrix.
+
+    RESULT:
+        sparse storage format used by matrix:
+            0   -   Hash-table
+            1   -   CRS (compressed row storage)
+            2   -   SKS (skyline)
+
+    NOTE: future  versions  of  ALGLIB  may  include additional sparse storage
+          formats.
+
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetmatrixtype(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetmatrixtype(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    This function checks matrix storage format and returns True when matrix is
+    stored using Hash table representation.
+
+    INPUT PARAMETERS:
+        S   -   sparse matrix.
+
+    RESULT:
+        True if matrix type is Hash table
+        False if matrix type is not Hash table
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseishash(sparsematrix s)
+    {
+
+        bool result = sparse.sparseishash(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    This function checks matrix storage format and returns True when matrix is
+    stored using CRS representation.
+
+    INPUT PARAMETERS:
+        S   -   sparse matrix.
+
+    RESULT:
+        True if matrix type is CRS
+        False if matrix type is not CRS
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseiscrs(sparsematrix s)
+    {
+
+        bool result = sparse.sparseiscrs(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    This function checks matrix storage format and returns True when matrix is
+    stored using SKS representation.
+
+    INPUT PARAMETERS:
+        S   -   sparse matrix.
+
+    RESULT:
+        True if matrix type is SKS
+        False if matrix type is not SKS
+
+      -- ALGLIB PROJECT --
+         Copyright 20.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparseissks(sparsematrix s)
+    {
+
+        bool result = sparse.sparseissks(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    The function frees all memory occupied by  sparse  matrix.  Sparse  matrix
+    structure becomes unusable after this call.
+
+    OUTPUT PARAMETERS
+        S   -   sparse matrix to delete
+
+      -- ALGLIB PROJECT --
+         Copyright 24.07.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsefree(out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsefree(s.innerobj);
+        return;
+    }
+
+    /*************************************************************************
+    The function returns number of rows of a sparse matrix.
+
+    RESULT: number of rows of a sparse matrix.
+
+      -- ALGLIB PROJECT --
+         Copyright 23.08.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetnrows(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetnrows(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    The function returns number of columns of a sparse matrix.
+
+    RESULT: number of columns of a sparse matrix.
+
+      -- ALGLIB PROJECT --
+         Copyright 23.08.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetncols(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetncols(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    The function returns number of strictly upper triangular non-zero elements
+    in  the  matrix.  It  counts  SYMBOLICALLY non-zero elements, i.e. entries
+    in the sparse matrix data structure. If some element  has  zero  numerical
+    value, it is still counted.
+
+    This function has different cost for different types of matrices:
+    * for hash-based matrices it involves complete pass over entire hash-table
+      with O(NNZ) cost, where NNZ is number of non-zero elements
+    * for CRS and SKS matrix types cost of counting is O(N) (N - matrix size).
+
+    RESULT: number of non-zero elements strictly above main diagonal
+
+      -- ALGLIB PROJECT --
+         Copyright 12.02.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetuppercount(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetuppercount(s.innerobj);
+        return result;
+    }
+
+    /*************************************************************************
+    The function returns number of strictly lower triangular non-zero elements
+    in  the  matrix.  It  counts  SYMBOLICALLY non-zero elements, i.e. entries
+    in the sparse matrix data structure. If some element  has  zero  numerical
+    value, it is still counted.
+
+    This function has different cost for different types of matrices:
+    * for hash-based matrices it involves complete pass over entire hash-table
+      with O(NNZ) cost, where NNZ is number of non-zero elements
+    * for CRS and SKS matrix types cost of counting is O(N) (N - matrix size).
+
+    RESULT: number of non-zero elements strictly below main diagonal
+
+      -- ALGLIB PROJECT --
+         Copyright 12.02.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static int sparsegetlowercount(sparsematrix s)
+    {
+
+        int result = sparse.sparsegetlowercount(s.innerobj);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
     LU decomposition of a general real matrix with row pivoting
 
     A is represented as A = P*L*U, where:
@@ -2402,6 +5123,42 @@ public partial class alglib
     It is optimized for square matrices. As for rectangular matrices:
     * best case - M>>N
     * worst case - N>>M, small M, large N, matrix does not fit in CPU cache
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that LU decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         A       -   array[0..M-1, 0..N-1].
@@ -2427,6 +5184,14 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_rmatrixlu(ref double[,] a, int m, int n, out int[] pivots)
+    {
+        pivots = new int[0];
+        trfac._pexec_rmatrixlu(ref a, m, n, ref pivots);
+        return;
+    }
+
     /*************************************************************************
     LU decomposition of a general complex matrix with row pivoting
 
@@ -2440,6 +5205,42 @@ public partial class alglib
     for square matrices. As for rectangular matrices:
     * best case - M>>N
     * worst case - N>>M, small M, large N, matrix does not fit in CPU cache
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that LU decomposition  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         A       -   array[0..M-1, 0..N-1].
@@ -2465,12 +5266,55 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_cmatrixlu(ref complex[,] a, int m, int n, out int[] pivots)
+    {
+        pivots = new int[0];
+        trfac._pexec_cmatrixlu(ref a, m, n, ref pivots);
+        return;
+    }
+
     /*************************************************************************
     Cache-oblivious Cholesky decomposition
 
     The algorithm computes Cholesky decomposition  of  a  Hermitian  positive-
     definite matrix. The result of an algorithm is a representation  of  A  as
     A=U'*U  or A=L*L' (here X' detones conj(X^T)).
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that Cholesky decomposition is harder
+      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
+      ! several synchronization points which  can  not  be  avoided.  However,
+      ! parallelism starts to be profitable starting from N=500.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         A       -   upper or lower triangle of a factorized matrix.
@@ -2501,12 +5345,55 @@ public partial class alglib
         return result;
     }
 
+
+    public static bool smp_hpdmatrixcholesky(ref complex[,] a, int n, bool isupper)
+    {
+
+        bool result = trfac._pexec_hpdmatrixcholesky(ref a, n, isupper);
+        return result;
+    }
+
     /*************************************************************************
     Cache-oblivious Cholesky decomposition
 
     The algorithm computes Cholesky decomposition  of  a  symmetric  positive-
     definite matrix. The result of an algorithm is a representation  of  A  as
     A=U^T*U  or A=L*L^T
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that Cholesky decomposition is harder
+      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
+      ! several synchronization points which  can  not  be  avoided.  However,
+      ! parallelism starts to be profitable starting from N=500.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         A       -   upper or lower triangle of a factorized matrix.
@@ -2534,6 +5421,246 @@ public partial class alglib
     {
 
         bool result = trfac.spdmatrixcholesky(ref a, n, isupper);
+        return result;
+    }
+
+
+    public static bool smp_spdmatrixcholesky(ref double[,] a, int n, bool isupper)
+    {
+
+        bool result = trfac._pexec_spdmatrixcholesky(ref a, n, isupper);
+        return result;
+    }
+
+    /*************************************************************************
+    Update of Cholesky decomposition: rank-1 update to original A.  "Buffered"
+    version which uses preallocated buffer which is saved  between  subsequent
+    function calls.
+
+    This function uses internally allocated buffer which is not saved  between
+    subsequent  calls.  So,  if  you  perform  a lot  of  subsequent  updates,
+    we  recommend   you   to   use   "buffered"   version   of  this function:
+    SPDMatrixCholeskyUpdateAdd1Buf().
+
+    INPUT PARAMETERS:
+        A       -   upper or lower Cholesky factor.
+                    array with elements [0..N-1, 0..N-1].
+                    Exception is thrown if array size is too small.
+        N       -   size of matrix A, N>0
+        IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                    otherwise A contains a lower one.
+        U       -   array[N], rank-1 update to A: A_mod = A + u*u'
+                    Exception is thrown if array size is too small.
+        BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                    needed. It is recommended to  reuse  this  buffer  if  you
+                    perform a lot of subsequent decompositions.
+
+    OUTPUT PARAMETERS:
+        A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                    triangle contains matrix U, and the elements below the main
+                    diagonal are not modified. Similarly, if IsUpper = False.
+
+    NOTE: this function always succeeds, so it does not return completion code
+
+    NOTE: this function checks sizes of input arrays, but it does  NOT  checks
+          for presence of infinities or NAN's.
+
+      -- ALGLIB --
+         03.02.2014
+         Sergey Bochkanov
+    *************************************************************************/
+    public static void spdmatrixcholeskyupdateadd1(ref double[,] a, int n, bool isupper, double[] u)
+    {
+
+        trfac.spdmatrixcholeskyupdateadd1(a, n, isupper, u);
+        return;
+    }
+
+    /*************************************************************************
+    Update of Cholesky decomposition: "fixing" some variables.
+
+    This function uses internally allocated buffer which is not saved  between
+    subsequent  calls.  So,  if  you  perform  a lot  of  subsequent  updates,
+    we  recommend   you   to   use   "buffered"   version   of  this function:
+    SPDMatrixCholeskyUpdateFixBuf().
+
+    "FIXING" EXPLAINED:
+
+        Suppose we have N*N positive definite matrix A. "Fixing" some variable
+        means filling corresponding row/column of  A  by  zeros,  and  setting
+        diagonal element to 1.
+
+        For example, if we fix 2nd variable in 4*4 matrix A, it becomes Af:
+
+            ( A00  A01  A02  A03 )      ( Af00  0   Af02 Af03 )
+            ( A10  A11  A12  A13 )      (  0    1    0    0   )
+            ( A20  A21  A22  A23 )  =>  ( Af20  0   Af22 Af23 )
+            ( A30  A31  A32  A33 )      ( Af30  0   Af32 Af33 )
+
+        If we have Cholesky decomposition of A, it must be recalculated  after
+        variables were  fixed.  However,  it  is  possible  to  use  efficient
+        algorithm, which needs O(K*N^2)  time  to  "fix"  K  variables,  given
+        Cholesky decomposition of original, "unfixed" A.
+
+    INPUT PARAMETERS:
+        A       -   upper or lower Cholesky factor.
+                    array with elements [0..N-1, 0..N-1].
+                    Exception is thrown if array size is too small.
+        N       -   size of matrix A, N>0
+        IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                    otherwise A contains a lower one.
+        Fix     -   array[N], I-th element is True if I-th  variable  must  be
+                    fixed. Exception is thrown if array size is too small.
+        BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                    needed. It is recommended to  reuse  this  buffer  if  you
+                    perform a lot of subsequent decompositions.
+
+    OUTPUT PARAMETERS:
+        A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                    triangle contains matrix U, and the elements below the main
+                    diagonal are not modified. Similarly, if IsUpper = False.
+
+    NOTE: this function always succeeds, so it does not return completion code
+
+    NOTE: this function checks sizes of input arrays, but it does  NOT  checks
+          for presence of infinities or NAN's.
+
+    NOTE: this  function  is  efficient  only  for  moderate amount of updated
+          variables - say, 0.1*N or 0.3*N. For larger amount of  variables  it
+          will  still  work,  but  you  may  get   better   performance   with
+          straightforward Cholesky.
+
+      -- ALGLIB --
+         03.02.2014
+         Sergey Bochkanov
+    *************************************************************************/
+    public static void spdmatrixcholeskyupdatefix(ref double[,] a, int n, bool isupper, bool[] fix)
+    {
+
+        trfac.spdmatrixcholeskyupdatefix(a, n, isupper, fix);
+        return;
+    }
+
+    /*************************************************************************
+    Update of Cholesky decomposition: rank-1 update to original A.  "Buffered"
+    version which uses preallocated buffer which is saved  between  subsequent
+    function calls.
+
+    See comments for SPDMatrixCholeskyUpdateAdd1() for more information.
+
+    INPUT PARAMETERS:
+        A       -   upper or lower Cholesky factor.
+                    array with elements [0..N-1, 0..N-1].
+                    Exception is thrown if array size is too small.
+        N       -   size of matrix A, N>0
+        IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                    otherwise A contains a lower one.
+        U       -   array[N], rank-1 update to A: A_mod = A + u*u'
+                    Exception is thrown if array size is too small.
+        BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                    needed. It is recommended to  reuse  this  buffer  if  you
+                    perform a lot of subsequent decompositions.
+
+    OUTPUT PARAMETERS:
+        A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                    triangle contains matrix U, and the elements below the main
+                    diagonal are not modified. Similarly, if IsUpper = False.
+
+      -- ALGLIB --
+         03.02.2014
+         Sergey Bochkanov
+    *************************************************************************/
+    public static void spdmatrixcholeskyupdateadd1buf(ref double[,] a, int n, bool isupper, double[] u, ref double[] bufr)
+    {
+
+        trfac.spdmatrixcholeskyupdateadd1buf(a, n, isupper, u, ref bufr);
+        return;
+    }
+
+    /*************************************************************************
+    Update of Cholesky  decomposition:  "fixing"  some  variables.  "Buffered"
+    version which uses preallocated buffer which is saved  between  subsequent
+    function calls.
+
+    See comments for SPDMatrixCholeskyUpdateFix() for more information.
+
+    INPUT PARAMETERS:
+        A       -   upper or lower Cholesky factor.
+                    array with elements [0..N-1, 0..N-1].
+                    Exception is thrown if array size is too small.
+        N       -   size of matrix A, N>0
+        IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                    otherwise A contains a lower one.
+        Fix     -   array[N], I-th element is True if I-th  variable  must  be
+                    fixed. Exception is thrown if array size is too small.
+        BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                    needed. It is recommended to  reuse  this  buffer  if  you
+                    perform a lot of subsequent decompositions.
+
+    OUTPUT PARAMETERS:
+        A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                    triangle contains matrix U, and the elements below the main
+                    diagonal are not modified. Similarly, if IsUpper = False.
+
+      -- ALGLIB --
+         03.02.2014
+         Sergey Bochkanov
+    *************************************************************************/
+    public static void spdmatrixcholeskyupdatefixbuf(ref double[,] a, int n, bool isupper, bool[] fix, ref double[] bufr)
+    {
+
+        trfac.spdmatrixcholeskyupdatefixbuf(a, n, isupper, fix, ref bufr);
+        return;
+    }
+
+    /*************************************************************************
+    Sparse Cholesky decomposition for skyline matrixm using in-place algorithm
+    without allocating additional storage.
+
+    The algorithm computes Cholesky decomposition  of  a  symmetric  positive-
+    definite sparse matrix. The result of an algorithm is a representation  of
+    A as A=U^T*U or A=L*L^T
+
+    This  function  is  a  more  efficient alternative to general, but  slower
+    SparseCholeskyX(), because it does not  create  temporary  copies  of  the
+    target. It performs factorization in-place, which gives  best  performance
+    on low-profile matrices. Its drawback, however, is that it can not perform
+    profile-reducing permutation of input matrix.
+
+    INPUT PARAMETERS:
+        A       -   sparse matrix in skyline storage (SKS) format.
+        N       -   size of matrix A (can be smaller than actual size of A)
+        IsUpper -   if IsUpper=True, then factorization is performed on  upper
+                    triangle. Another triangle is ignored (it may contant some
+                    data, but it is not changed).
+
+
+    OUTPUT PARAMETERS:
+        A       -   the result of factorization, stored in SKS. If IsUpper=True,
+                    then the upper  triangle  contains  matrix  U,  such  that
+                    A = U^T*U. Lower triangle is not changed.
+                    Similarly, if IsUpper = False. In this case L is returned,
+                    and we have A = L*(L^T).
+                    Note that THIS function does not  perform  permutation  of
+                    rows to reduce bandwidth.
+
+    RESULT:
+        If  the  matrix  is  positive-definite,  the  function  returns  True.
+        Otherwise, the function returns False. Contents of A is not determined
+        in such case.
+
+    NOTE: for  performance  reasons  this  function  does NOT check that input
+          matrix  includes  only  finite  values. It is your responsibility to
+          make sure that there are no infinite or NAN values in the matrix.
+
+      -- ALGLIB routine --
+         16.01.2014
+         Bochkanov Sergey
+    *************************************************************************/
+    public static bool sparsecholeskyskyline(sparsematrix a, int n, bool isupper)
+    {
+
+        bool result = trfac.sparsecholeskyskyline(a.innerobj, n, isupper);
         return result;
     }
 
@@ -2982,7 +6109,7 @@ public partial class alglib
     * R1    reciprocal of condition number in 1-norm
     * RInf  reciprocal of condition number in inf-norm
     *************************************************************************/
-    public class matinvreport
+    public class matinvreport : alglibobject
     {
         //
         // Public declarations
@@ -2993,6 +6120,11 @@ public partial class alglib
         public matinvreport()
         {
             _innerobj = new matinv.matinvreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new matinvreport((matinv.matinvreport)_innerobj.make_copy());
         }
 
         //
@@ -3009,6 +6141,42 @@ public partial class alglib
 
     /*************************************************************************
     Inversion of a matrix given by its LU decomposition.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that matrix inversion  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         A       -   LU decomposition of the matrix
@@ -3048,6 +6216,15 @@ public partial class alglib
         matinv.rmatrixluinverse(ref a, pivots, n, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_rmatrixluinverse(ref double[,] a, int[] pivots, int n, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_rmatrixluinverse(ref a, pivots, n, ref info, rep.innerobj);
+        return;
+    }
     public static void rmatrixluinverse(ref double[,] a, int[] pivots, out int info, out matinvreport rep)
     {
         int n;
@@ -3061,8 +6238,58 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_rmatrixluinverse(ref double[,] a, int[] pivots, out int info, out matinvreport rep)
+    {
+        int n;
+        if( (ap.cols(a)!=ap.rows(a)) || (ap.cols(a)!=ap.len(pivots)))
+            throw new alglibexception("Error while calling 'rmatrixluinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        matinv._pexec_rmatrixluinverse(ref a, pivots, n, ref info, rep.innerobj);
+
+        return;
+    }
+
     /*************************************************************************
     Inversion of a general matrix.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that matrix inversion  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix.
@@ -3091,6 +6318,15 @@ public partial class alglib
         matinv.rmatrixinverse(ref a, n, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_rmatrixinverse(ref double[,] a, int n, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_rmatrixinverse(ref a, n, ref info, rep.innerobj);
+        return;
+    }
     public static void rmatrixinverse(ref double[,] a, out int info, out matinvreport rep)
     {
         int n;
@@ -3104,8 +6340,58 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_rmatrixinverse(ref double[,] a, out int info, out matinvreport rep)
+    {
+        int n;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'rmatrixinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        matinv._pexec_rmatrixinverse(ref a, n, ref info, rep.innerobj);
+
+        return;
+    }
+
     /*************************************************************************
     Inversion of a matrix given by its LU decomposition.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that matrix inversion  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         A       -   LU decomposition of the matrix
@@ -3134,6 +6420,15 @@ public partial class alglib
         matinv.cmatrixluinverse(ref a, pivots, n, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_cmatrixluinverse(ref complex[,] a, int[] pivots, int n, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_cmatrixluinverse(ref a, pivots, n, ref info, rep.innerobj);
+        return;
+    }
     public static void cmatrixluinverse(ref complex[,] a, int[] pivots, out int info, out matinvreport rep)
     {
         int n;
@@ -3147,8 +6442,58 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_cmatrixluinverse(ref complex[,] a, int[] pivots, out int info, out matinvreport rep)
+    {
+        int n;
+        if( (ap.cols(a)!=ap.rows(a)) || (ap.cols(a)!=ap.len(pivots)))
+            throw new alglibexception("Error while calling 'cmatrixluinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        matinv._pexec_cmatrixluinverse(ref a, pivots, n, ref info, rep.innerobj);
+
+        return;
+    }
+
     /*************************************************************************
     Inversion of a general matrix.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that matrix inversion  is  harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix
@@ -3173,6 +6518,15 @@ public partial class alglib
         matinv.cmatrixinverse(ref a, n, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_cmatrixinverse(ref complex[,] a, int n, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_cmatrixinverse(ref a, n, ref info, rep.innerobj);
+        return;
+    }
     public static void cmatrixinverse(ref complex[,] a, out int info, out matinvreport rep)
     {
         int n;
@@ -3186,9 +6540,53 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_cmatrixinverse(ref complex[,] a, out int info, out matinvreport rep)
+    {
+        int n;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'cmatrixinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        matinv._pexec_cmatrixinverse(ref a, n, ref info, rep.innerobj);
+
+        return;
+    }
+
     /*************************************************************************
     Inversion of a symmetric positive definite matrix which is given
     by Cholesky decomposition.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+      ! algorithm  -  it  has  lots  of  internal synchronization points which
+      ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+      ! problems (N=thousands) can be efficiently parallelized.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   Cholesky decomposition of the matrix to be inverted:
@@ -3224,6 +6622,15 @@ public partial class alglib
         matinv.spdmatrixcholeskyinverse(ref a, n, isupper, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_spdmatrixcholeskyinverse(ref double[,] a, int n, bool isupper, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_spdmatrixcholeskyinverse(ref a, n, isupper, ref info, rep.innerobj);
+        return;
+    }
     public static void spdmatrixcholeskyinverse(ref double[,] a, out int info, out matinvreport rep)
     {
         int n;
@@ -3239,12 +6646,58 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_spdmatrixcholeskyinverse(ref double[,] a, out int info, out matinvreport rep)
+    {
+        int n;
+        bool isupper;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskyinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        isupper = false;
+        matinv._pexec_spdmatrixcholeskyinverse(ref a, n, isupper, ref info, rep.innerobj);
+
+        return;
+    }
+
     /*************************************************************************
     Inversion of a symmetric positive definite matrix.
 
     Given an upper or lower triangle of a symmetric positive definite matrix,
     the algorithm generates matrix A^-1 and saves the upper or lower triangle
     depending on the input.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+      ! algorithm  -  it  has  lots  of  internal synchronization points which
+      ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+      ! problems (N=thousands) can be efficiently parallelized.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix to be inverted (upper or lower triangle).
@@ -3280,6 +6733,15 @@ public partial class alglib
         matinv.spdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_spdmatrixinverse(ref double[,] a, int n, bool isupper, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_spdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
+        return;
+    }
     public static void spdmatrixinverse(ref double[,] a, out int info, out matinvreport rep)
     {
         int n;
@@ -3298,9 +6760,58 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_spdmatrixinverse(ref double[,] a, out int info, out matinvreport rep)
+    {
+        int n;
+        bool isupper;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'spdmatrixinverse': looks like one of arguments has wrong size");
+        if( !alglib.ap.issymmetric(a) )
+            throw new alglibexception("'a' parameter is not symmetric matrix");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        isupper = false;
+        matinv._pexec_spdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
+        if( !alglib.ap.forcesymmetric(a) )
+            throw new alglibexception("Internal error while forcing symmetricity of 'a' parameter");
+        return;
+    }
+
     /*************************************************************************
     Inversion of a Hermitian positive definite matrix which is given
     by Cholesky decomposition.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+      ! algorithm  -  it  has  lots  of  internal synchronization points which
+      ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+      ! problems (N=thousands) can be efficiently parallelized.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   Cholesky decomposition of the matrix to be inverted:
@@ -3336,6 +6847,15 @@ public partial class alglib
         matinv.hpdmatrixcholeskyinverse(ref a, n, isupper, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_hpdmatrixcholeskyinverse(ref complex[,] a, int n, bool isupper, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_hpdmatrixcholeskyinverse(ref a, n, isupper, ref info, rep.innerobj);
+        return;
+    }
     public static void hpdmatrixcholeskyinverse(ref complex[,] a, out int info, out matinvreport rep)
     {
         int n;
@@ -3351,12 +6871,58 @@ public partial class alglib
         return;
     }
 
+
+    public static void smp_hpdmatrixcholeskyinverse(ref complex[,] a, out int info, out matinvreport rep)
+    {
+        int n;
+        bool isupper;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskyinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        isupper = false;
+        matinv._pexec_hpdmatrixcholeskyinverse(ref a, n, isupper, ref info, rep.innerobj);
+
+        return;
+    }
+
     /*************************************************************************
     Inversion of a Hermitian positive definite matrix.
 
     Given an upper or lower triangle of a Hermitian positive definite matrix,
     the algorithm generates matrix A^-1 and saves the upper or lower triangle
     depending on the input.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+      ! algorithm  -  it  has  lots  of  internal synchronization points which
+      ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+      ! problems (N=thousands) can be efficiently parallelized.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix to be inverted (upper or lower triangle).
@@ -3392,6 +6958,15 @@ public partial class alglib
         matinv.hpdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_hpdmatrixinverse(ref complex[,] a, int n, bool isupper, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_hpdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
+        return;
+    }
     public static void hpdmatrixinverse(ref complex[,] a, out int info, out matinvreport rep)
     {
         int n;
@@ -3405,6 +6980,25 @@ public partial class alglib
         n = ap.cols(a);
         isupper = false;
         matinv.hpdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
+        if( !alglib.ap.forcehermitian(a) )
+            throw new alglibexception("Internal error while forcing Hermitian properties of 'a' parameter");
+        return;
+    }
+
+
+    public static void smp_hpdmatrixinverse(ref complex[,] a, out int info, out matinvreport rep)
+    {
+        int n;
+        bool isupper;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'hpdmatrixinverse': looks like one of arguments has wrong size");
+        if( !alglib.ap.ishermitian(a) )
+            throw new alglibexception("'a' parameter is not Hermitian matrix");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        isupper = false;
+        matinv._pexec_hpdmatrixinverse(ref a, n, isupper, ref info, rep.innerobj);
         if( !alglib.ap.forcehermitian(a) )
             throw new alglibexception("Internal error while forcing Hermitian properties of 'a' parameter");
         return;
@@ -3426,6 +7020,42 @@ public partial class alglib
 
     If  the matrix  has a unit diagonal, the inverse matrix also  has  a  unit
     diagonal, and the diagonal elements are not passed to the algorithm.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that triangular inverse is harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix, array[0..N-1, 0..N-1].
@@ -3455,6 +7085,15 @@ public partial class alglib
         matinv.rmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_rmatrixtrinverse(ref double[,] a, int n, bool isupper, bool isunit, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_rmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
+        return;
+    }
     public static void rmatrixtrinverse(ref double[,] a, bool isupper, out int info, out matinvreport rep)
     {
         int n;
@@ -3466,6 +7105,22 @@ public partial class alglib
         n = ap.cols(a);
         isunit = false;
         matinv.rmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
+
+        return;
+    }
+
+
+    public static void smp_rmatrixtrinverse(ref double[,] a, bool isupper, out int info, out matinvreport rep)
+    {
+        int n;
+        bool isunit;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'rmatrixtrinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        isunit = false;
+        matinv._pexec_rmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
 
         return;
     }
@@ -3486,6 +7141,42 @@ public partial class alglib
 
     If  the matrix  has a unit diagonal, the inverse matrix also  has  a  unit
     diagonal, and the diagonal elements are not passed to the algorithm.
+
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes two  important  improvements  of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * multicore support
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+      ! * about 2-3x faster than ALGLIB for C++ without MKL
+      ! * about 7-10x faster than "pure C#" edition of ALGLIB
+      ! Difference in performance will be more striking  on  newer  CPU's with
+      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+      ! problem whose size is at least 128, with best  efficiency achieved for
+      ! N's larger than 512.
+      !
+      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+      ! of this function. We should note that triangular inverse is harder  to
+      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+      ! many internal synchronization points which can not be avoided. However
+      ! parallelism starts to be profitable starting  from  N=1024,  achieving
+      ! near-linear speedup for N=4096 or higher.
+      !
+      ! In order to use multicore features you have to:
+      ! * use commercial version of ALGLIB
+      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+      !   multicore code will be used (for multicore support)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     Input parameters:
         A       -   matrix, array[0..N-1, 0..N-1].
@@ -3515,6 +7206,15 @@ public partial class alglib
         matinv.cmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
         return;
     }
+
+
+    public static void smp_cmatrixtrinverse(ref complex[,] a, int n, bool isupper, bool isunit, out int info, out matinvreport rep)
+    {
+        info = 0;
+        rep = new matinvreport();
+        matinv._pexec_cmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
+        return;
+    }
     public static void cmatrixtrinverse(ref complex[,] a, bool isupper, out int info, out matinvreport rep)
     {
         int n;
@@ -3530,942 +7230,20 @@ public partial class alglib
         return;
     }
 
-}
-public partial class alglib
-{
 
-
-    /*************************************************************************
-    Sparse matrix
-
-    You should use ALGLIB functions to work with sparse matrix.
-    Never try to access its fields directly!
-    *************************************************************************/
-    public class sparsematrix
+    public static void smp_cmatrixtrinverse(ref complex[,] a, bool isupper, out int info, out matinvreport rep)
     {
-        //
-        // Public declarations
-        //
-
-        public sparsematrix()
-        {
-            _innerobj = new sparse.sparsematrix();
-        }
-
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private sparse.sparsematrix _innerobj;
-        public sparse.sparsematrix innerobj { get { return _innerobj; } }
-        public sparsematrix(sparse.sparsematrix obj)
-        {
-            _innerobj = obj;
-        }
-    }
-
-    /*************************************************************************
-    This function creates sparse matrix in a Hash-Table format.
-
-    This function creates Hast-Table matrix, which can be  converted  to  CRS
-    format after its initialization is over. Typical  usage  scenario  for  a
-    sparse matrix is:
-    1. creation in a Hash-Table format
-    2. insertion of the matrix elements
-    3. conversion to the CRS representation
-    4. matrix is passed to some linear algebra algorithm
-
-    Some  information  about  different matrix formats can be found below, in
-    the "NOTES" section.
-
-    INPUT PARAMETERS
-        M           -   number of rows in a matrix, M>=1
-        N           -   number of columns in a matrix, N>=1
-        K           -   K>=0, expected number of non-zero elements in a matrix.
-                        K can be inexact approximation, can be less than actual
-                        number  of  elements  (table will grow when needed) or
-                        even zero).
-                        It is important to understand that although hash-table
-                        may grow automatically, it is better to  provide  good
-                        estimate of data size.
-
-    OUTPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table representation.
-                        All elements of the matrix are zero.
-
-    NOTE 1.
-
-    Sparse matrices can be stored using either Hash-Table  representation  or
-    Compressed  Row  Storage  representation. Hast-table is better suited for
-    querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
-    initialization), but it is inefficient when you want to make some  linear
-    algebra operations.
-
-    From the other side, CRS is better suited for linear algebra  operations,
-    but initialization is less convenient - you have to tell row sizes at the
-    initialization,  and  you  can  fill matrix only row by row, from left to
-    right. CRS is also very inefficient when you want to find matrix  element
-    by its index.
-
-    Thus,  Hash-Table  representation   does   not   support  linear  algebra
-    operations, while CRS format does not support modification of the  table.
-    Tables below outline information about these two formats:
-
-        OPERATIONS WITH MATRIX      HASH        CRS
-        create                      +           +
-        read element                +           +
-        modify element              +
-        add value to element        +
-        A*x  (dense vector)                     +
-        A'*x (dense vector)                     +
-        A*X  (dense matrix)                     +
-        A'*X (dense matrix)                     +
-
-    NOTE 2.
-
-    Hash-tables use memory inefficiently, and they have to keep  some  amount
-    of the "spare memory" in order to have good performance. Hash  table  for
-    matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
-    where C is a small constant, about 1.5-2 in magnitude.
-
-    CRS storage, from the other side, is  more  memory-efficient,  and  needs
-    just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
-    in a matrix.
-
-    When you convert from the Hash-Table to CRS  representation, all unneeded
-    memory will be freed.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsecreate(int m, int n, int k, out sparsematrix s)
-    {
-        s = new sparsematrix();
-        sparse.sparsecreate(m, n, k, s.innerobj);
-        return;
-    }
-    public static void sparsecreate(int m, int n, out sparsematrix s)
-    {
-        int k;
-
-        s = new sparsematrix();
-        k = 0;
-        sparse.sparsecreate(m, n, k, s.innerobj);
+        int n;
+        bool isunit;
+        if( (ap.cols(a)!=ap.rows(a)))
+            throw new alglibexception("Error while calling 'cmatrixtrinverse': looks like one of arguments has wrong size");
+        info = 0;
+        rep = new matinvreport();
+        n = ap.cols(a);
+        isunit = false;
+        matinv._pexec_cmatrixtrinverse(ref a, n, isupper, isunit, ref info, rep.innerobj);
 
         return;
-    }
-
-    /*************************************************************************
-    This function creates sparse matrix in a CRS format (expert function for
-    situations when you are running out of memory).
-
-    This function creates CRS matrix. Typical usage scenario for a CRS matrix
-    is:
-    1. creation (you have to tell number of non-zero elements at each row  at
-       this moment)
-    2. insertion of the matrix elements (row by row, from left to right)
-    3. matrix is passed to some linear algebra algorithm
-
-    This function is a memory-efficient alternative to SparseCreate(), but it
-    is more complex because it requires you to know in advance how large your
-    matrix is. Some  information about  different matrix formats can be found
-    below, in the "NOTES" section.
-
-    INPUT PARAMETERS
-        M           -   number of rows in a matrix, M>=1
-        N           -   number of columns in a matrix, N>=1
-        NER         -   number of elements at each row, array[M], NER[I]>=0
-
-    OUTPUT PARAMETERS
-        S           -   sparse M*N matrix in CRS representation.
-                        You have to fill ALL non-zero elements by calling
-                        SparseSet() BEFORE you try to use this matrix.
-
-    NOTE 1.
-
-    Sparse matrices can be stored using either Hash-Table  representation  or
-    Compressed  Row  Storage  representation. Hast-table is better suited for
-    querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
-    initialization), but it is inefficient when you want to make some  linear
-    algebra operations.
-
-    From the other side, CRS is better suited for linear algebra  operations,
-    but initialization is less convenient - you have to tell row sizes at the
-    initialization,  and  you  can  fill matrix only row by row, from left to
-    right. CRS is also very inefficient when you want to find matrix  element
-    by its index.
-
-    Thus,  Hash-Table  representation   does   not   support  linear  algebra
-    operations, while CRS format does not support modification of the  table.
-    Tables below outline information about these two formats:
-
-        OPERATIONS WITH MATRIX      HASH        CRS
-        create                      +           +
-        read element                +           +
-        modify element              +
-        add value to element        +
-        A*x  (dense vector)                     +
-        A'*x (dense vector)                     +
-        A*X  (dense matrix)                     +
-        A'*X (dense matrix)                     +
-
-    NOTE 2.
-
-    Hash-tables use memory inefficiently, and they have to keep  some  amount
-    of the "spare memory" in order to have good performance. Hash  table  for
-    matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
-    where C is a small constant, about 1.5-2 in magnitude.
-
-    CRS storage, from the other side, is  more  memory-efficient,  and  needs
-    just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
-    in a matrix.
-
-    When you convert from the Hash-Table to CRS  representation, all unneeded
-    memory will be freed.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsecreatecrs(int m, int n, int[] ner, out sparsematrix s)
-    {
-        s = new sparsematrix();
-        sparse.sparsecreatecrs(m, n, ner, s.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function copies S0 to S1.
-
-    NOTE:  this  function  does  not verify its arguments, it just copies all
-    fields of the structure.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsecopy(sparsematrix s0, out sparsematrix s1)
-    {
-        s1 = new sparsematrix();
-        sparse.sparsecopy(s0.innerobj, s1.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function adds value to S[i,j] - element of the sparse matrix. Matrix
-    must be in a Hash-Table mode.
-
-    In case S[i,j] already exists in the table, V i added to  its  value.  In
-    case  S[i,j]  is  non-existent,  it  is  inserted  in  the  table.  Table
-    automatically grows when necessary.
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table representation.
-                        Exception will be thrown for CRS matrix.
-        I           -   row index of the element to modify, 0<=I<M
-        J           -   column index of the element to modify, 0<=J<N
-        V           -   value to add, must be finite number
-
-    OUTPUT PARAMETERS
-        S           -   modified matrix
-
-    NOTE 1:  when  S[i,j]  is exactly zero after modification, it is  deleted
-    from the table.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparseadd(sparsematrix s, int i, int j, double v)
-    {
-
-        sparse.sparseadd(s.innerobj, i, j, v);
-        return;
-    }
-
-    /*************************************************************************
-    This function modifies S[i,j] - element of the sparse matrix.
-
-    For Hash-based storage format:
-    * new value can be zero or non-zero.  In case new value of S[i,j] is zero,
-      this element is deleted from the table.
-    * this  function  has  no  effect when called with zero V for non-existent
-      element.
-
-    For CRS-bases storage format:
-    * new value MUST be non-zero. Exception will be thrown for zero V.
-    * elements must be initialized in correct order -  from top row to bottom,
-      within row - from left to right.
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table or CRS representation.
-        I           -   row index of the element to modify, 0<=I<M
-        J           -   column index of the element to modify, 0<=J<N
-        V           -   value to set, must be finite number, can be zero
-
-    OUTPUT PARAMETERS
-        S           -   modified matrix
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparseset(sparsematrix s, int i, int j, double v)
-    {
-
-        sparse.sparseset(s.innerobj, i, j, v);
-        return;
-    }
-
-    /*************************************************************************
-    This function returns S[i,j] - element of the sparse matrix.  Matrix  can
-    be in any mode (Hash-Table or CRS), but this function is  less  efficient
-    for CRS matrices.  Hash-Table  matrices can  find element  in O(1)  time,
-    while  CRS  matrices  need O(log(RS)) time, where RS is an number of non-
-    zero elements in a row.
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table representation.
-                        Exception will be thrown for CRS matrix.
-        I           -   row index of the element to modify, 0<=I<M
-        J           -   column index of the element to modify, 0<=J<N
-
-    RESULT
-        value of S[I,J] or zero (in case no element with such index is found)
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static double sparseget(sparsematrix s, int i, int j)
-    {
-
-        double result = sparse.sparseget(s.innerobj, i, j);
-        return result;
-    }
-
-    /*************************************************************************
-    This function returns I-th diagonal element of the sparse matrix.
-
-    Matrix can be in any mode (Hash-Table or CRS storage), but this  function
-    is most efficient for CRS matrices - it requires less than 50 CPU  cycles
-    to extract diagonal element. For Hash-Table matrices we still  have  O(1)
-    query time, but function is many times slower.
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table representation.
-                        Exception will be thrown for CRS matrix.
-        I           -   index of the element to modify, 0<=I<min(M,N)
-
-    RESULT
-        value of S[I,I] or zero (in case no element with such index is found)
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static double sparsegetdiagonal(sparsematrix s, int i)
-    {
-
-        double result = sparse.sparsegetdiagonal(s.innerobj, i);
-        return result;
-    }
-
-    /*************************************************************************
-    This function converts matrix to CRS format.
-
-    Some  algorithms  (linear  algebra ones, for example) require matrices in
-    CRS format.
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in any format
-
-    OUTPUT PARAMETERS
-        S           -   matrix in CRS format
-
-    NOTE:  this  function  has  no  effect  when  called with matrix which is
-    already in CRS mode.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparseconverttocrs(sparsematrix s)
-    {
-
-        sparse.sparseconverttocrs(s.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function calculates matrix-vector product  S*x.  Matrix  S  must  be
-    stored in CRS format (exception will be thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        X           -   array[N], input vector. For  performance  reasons  we
-                        make only quick checks - we check that array size  is
-                        at least N, but we do not check for NAN's or INF's.
-        Y           -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        Y           -   array[M], S*x
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsemv(sparsematrix s, double[] x, ref double[] y)
-    {
-
-        sparse.sparsemv(s.innerobj, x, ref y);
-        return;
-    }
-
-    /*************************************************************************
-    This function calculates matrix-vector product  S^T*x. Matrix S  must  be
-    stored in CRS format (exception will be thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        X           -   array[M], input vector. For  performance  reasons  we
-                        make only quick checks - we check that array size  is
-                        at least M, but we do not check for NAN's or INF's.
-        Y           -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        Y           -   array[N], S^T*x
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsemtv(sparsematrix s, double[] x, ref double[] y)
-    {
-
-        sparse.sparsemtv(s.innerobj, x, ref y);
-        return;
-    }
-
-    /*************************************************************************
-    This function simultaneously calculates two matrix-vector products:
-        S*x and S^T*x.
-    S must be square (non-rectangular) matrix stored in CRS format (exception
-    will be thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse N*N matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        X           -   array[N], input vector. For  performance  reasons  we
-                        make only quick checks - we check that array size  is
-                        at least N, but we do not check for NAN's or INF's.
-        Y0          -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-        Y1          -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        Y0          -   array[N], S*x
-        Y1          -   array[N], S^T*x
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function. It also throws exception when S is non-square.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsemv2(sparsematrix s, double[] x, ref double[] y0, ref double[] y1)
-    {
-
-        sparse.sparsemv2(s.innerobj, x, ref y0, ref y1);
-        return;
-    }
-
-    /*************************************************************************
-    This function calculates matrix-vector product  S*x, when S is  symmetric
-    matrix.  Matrix  S  must  be stored in  CRS  format  (exception  will  be
-    thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse M*M matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        IsUpper     -   whether upper or lower triangle of S is given:
-                        * if upper triangle is given,  only   S[i,j] for j>=i
-                          are used, and lower triangle is ignored (it can  be
-                          empty - these elements are not referenced at all).
-                        * if lower triangle is given,  only   S[i,j] for j<=i
-                          are used, and upper triangle is ignored.
-        X           -   array[N], input vector. For  performance  reasons  we
-                        make only quick checks - we check that array size  is
-                        at least N, but we do not check for NAN's or INF's.
-        Y           -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        Y           -   array[M], S*x
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsesmv(sparsematrix s, bool isupper, double[] x, ref double[] y)
-    {
-
-        sparse.sparsesmv(s.innerobj, isupper, x, ref y);
-        return;
-    }
-
-    /*************************************************************************
-    This function calculates matrix-matrix product  S*A.  Matrix  S  must  be
-    stored in CRS format (exception will be thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        A           -   array[N][K], input dense matrix. For  performance reasons
-                        we make only quick checks - we check that array size
-                        is at least N, but we do not check for NAN's or INF's.
-        K           -   number of columns of matrix (A).
-        B           -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        B           -   array[M][K], S*A
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsemm(sparsematrix s, double[,] a, int k, ref double[,] b)
-    {
-
-        sparse.sparsemm(s.innerobj, a, k, ref b);
-        return;
-    }
-
-    /*************************************************************************
-    This function calculates matrix-matrix product  S^T*A. Matrix S  must  be
-    stored in CRS format (exception will be thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        A           -   array[M][K], input dense matrix. For performance reasons
-                        we make only quick checks - we check that array size  is
-                        at least M, but we do not check for NAN's or INF's.
-        K           -   number of columns of matrix (A).
-        B           -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        B           -   array[N][K], S^T*A
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsemtm(sparsematrix s, double[,] a, int k, ref double[,] b)
-    {
-
-        sparse.sparsemtm(s.innerobj, a, k, ref b);
-        return;
-    }
-
-    /*************************************************************************
-    This function simultaneously calculates two matrix-matrix products:
-        S*A and S^T*A.
-    S must be square (non-rectangular) matrix stored in CRS format (exception
-    will be thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse N*N matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        A           -   array[N][K], input dense matrix. For performance reasons
-                        we make only quick checks - we check that array size  is
-                        at least N, but we do not check for NAN's or INF's.
-        K           -   number of columns of matrix (A).
-        B0          -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-        B1          -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        B0          -   array[N][K], S*A
-        B1          -   array[N][K], S^T*A
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function. It also throws exception when S is non-square.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsemm2(sparsematrix s, double[,] a, int k, ref double[,] b0, ref double[,] b1)
-    {
-
-        sparse.sparsemm2(s.innerobj, a, k, ref b0, ref b1);
-        return;
-    }
-
-    /*************************************************************************
-    This function calculates matrix-matrix product  S*A, when S  is  symmetric
-    matrix.  Matrix  S  must  be stored  in  CRS  format  (exception  will  be
-    thrown otherwise).
-
-    INPUT PARAMETERS
-        S           -   sparse M*M matrix in CRS format (you MUST convert  it
-                        to CRS before calling this function).
-        IsUpper     -   whether upper or lower triangle of S is given:
-                        * if upper triangle is given,  only   S[i,j] for j>=i
-                          are used, and lower triangle is ignored (it can  be
-                          empty - these elements are not referenced at all).
-                        * if lower triangle is given,  only   S[i,j] for j<=i
-                          are used, and upper triangle is ignored.
-        A           -   array[N][K], input dense matrix. For performance reasons
-                        we make only quick checks - we check that array size is
-                        at least N, but we do not check for NAN's or INF's.
-        K           -   number of columns of matrix (A).
-        B           -   output buffer, possibly preallocated. In case  buffer
-                        size is too small to store  result,  this  buffer  is
-                        automatically resized.
-
-    OUTPUT PARAMETERS
-        B           -   array[M][K], S*A
-
-    NOTE: this function throws exception when called for non-CRS matrix.  You
-    must convert your matrix  with  SparseConvertToCRS()  before  using  this
-    function.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsesmm(sparsematrix s, bool isupper, double[,] a, int k, ref double[,] b)
-    {
-
-        sparse.sparsesmm(s.innerobj, isupper, a, k, ref b);
-        return;
-    }
-
-    /*************************************************************************
-    This procedure resizes Hash-Table matrix. It can be called when you  have
-    deleted too many elements from the matrix, and you want to  free unneeded
-    memory.
-
-      -- ALGLIB PROJECT --
-         Copyright 14.10.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparseresizematrix(sparsematrix s)
-    {
-
-        sparse.sparseresizematrix(s.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This  function  is  used  to enumerate all elements of the sparse matrix.
-    Before  first  call  user  initializes  T0 and T1 counters by zero. These
-    counters are used to remember current position in a  matrix;  after  each
-    call they are updated by the function.
-
-    Subsequent calls to this function return non-zero elements of the  sparse
-    matrix, one by one. If you enumerate CRS matrix, matrix is traversed from
-    left to right, from top to bottom. In case you enumerate matrix stored as
-    Hash table, elements are returned in random order.
-
-    EXAMPLE
-        > T0=0
-        > T1=0
-        > while SparseEnumerate(S,T0,T1,I,J,V) do
-        >     ....do something with I,J,V
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table or CRS representation.
-        T0          -   internal counter
-        T1          -   internal counter
-
-    OUTPUT PARAMETERS
-        T0          -   new value of the internal counter
-        T1          -   new value of the internal counter
-        I           -   row index of non-zero element, 0<=I<M.
-        J           -   column index of non-zero element, 0<=J<N
-        V           -   value of the T-th element
-
-    RESULT
-        True in case of success (next non-zero element was retrieved)
-        False in case all non-zero elements were enumerated
-
-      -- ALGLIB PROJECT --
-         Copyright 14.03.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static bool sparseenumerate(sparsematrix s, ref int t0, ref int t1, out int i, out int j, out double v)
-    {
-        i = 0;
-        j = 0;
-        v = 0;
-        bool result = sparse.sparseenumerate(s.innerobj, ref t0, ref t1, ref i, ref j, ref v);
-        return result;
-    }
-
-    /*************************************************************************
-    This function rewrites existing (non-zero) element. It  returns  True   if
-    element  exists  or  False,  when  it  is  called for non-existing  (zero)
-    element.
-
-    The purpose of this function is to provide convenient thread-safe  way  to
-    modify  sparse  matrix.  Such  modification  (already  existing element is
-    rewritten) is guaranteed to be thread-safe without any synchronization, as
-    long as different threads modify different elements.
-
-    INPUT PARAMETERS
-        S           -   sparse M*N matrix in Hash-Table or CRS representation.
-        I           -   row index of non-zero element to modify, 0<=I<M
-        J           -   column index of non-zero element to modify, 0<=J<N
-        V           -   value to rewrite, must be finite number
-
-    OUTPUT PARAMETERS
-        S           -   modified matrix
-    RESULT
-        True in case when element exists
-        False in case when element doesn't exist or it is zero
-
-      -- ALGLIB PROJECT --
-         Copyright 14.03.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static bool sparserewriteexisting(sparsematrix s, int i, int j, double v)
-    {
-
-        bool result = sparse.sparserewriteexisting(s.innerobj, i, j, v);
-        return result;
-    }
-
-    /*************************************************************************
-    This function returns I-th row of the sparse matrix stored in CRS format.
-
-    NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non-CRS)  are
-          passed, this function throws exception.
-
-    INPUT PARAMETERS:
-        S           -   sparse M*N matrix in CRS format
-        I           -   row index, 0<=I<M
-        IRow        -   output buffer, can be  preallocated.  In  case  buffer
-                        size  is  too  small  to  store  I-th   row,   it   is
-                        automatically reallocated.
-
-    OUTPUT PARAMETERS:
-        IRow        -   array[M], I-th row.
-
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsegetrow(sparsematrix s, int i, ref double[] irow)
-    {
-
-        sparse.sparsegetrow(s.innerobj, i, ref irow);
-        return;
-    }
-
-    /*************************************************************************
-    This function performs in-place conversion from CRS format to  Hash  table
-    storage.
-
-    INPUT PARAMETERS
-        S           -   sparse matrix in CRS format.
-
-    OUTPUT PARAMETERS
-        S           -   sparse matrix in Hash table format.
-
-    NOTE:  this  function  has  no  effect  when  called with matrix which is
-    already in Hash table mode.
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparseconverttohash(sparsematrix s)
-    {
-
-        sparse.sparseconverttohash(s.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This  function  performs  out-of-place  conversion  to  Hash table storage
-    format. S0 is copied to S1 and converted on-the-fly.
-
-    INPUT PARAMETERS
-        S0          -   sparse matrix in any format.
-
-    OUTPUT PARAMETERS
-        S1          -   sparse matrix in Hash table format.
-
-    NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsecopytohash(sparsematrix s0, out sparsematrix s1)
-    {
-        s1 = new sparsematrix();
-        sparse.sparsecopytohash(s0.innerobj, s1.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
-    copied to S1 and converted on-the-fly.
-
-    INPUT PARAMETERS
-        S0          -   sparse matrix in any format.
-
-    OUTPUT PARAMETERS
-        S1          -   sparse matrix in CRS format.
-
-    NOTE: if S0 is stored as CRS, it is just copied without conversion.
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsecopytocrs(sparsematrix s0, out sparsematrix s1)
-    {
-        s1 = new sparsematrix();
-        sparse.sparsecopytocrs(s0.innerobj, s1.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function returns type of the matrix storage format.
-
-    INPUT PARAMETERS:
-        S           -   sparse matrix.
-
-    RESULT:
-        sparse storage format used by matrix:
-            0   -   Hash-table
-            1   -   CRS-format
-
-    NOTE: future  versions  of  ALGLIB  may  include additional sparse storage
-          formats.
-
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static int sparsegetmatrixtype(sparsematrix s)
-    {
-
-        int result = sparse.sparsegetmatrixtype(s.innerobj);
-        return result;
-    }
-
-    /*************************************************************************
-    This function checks matrix storage format and returns True when matrix is
-    stored using Hash table representation.
-
-    INPUT PARAMETERS:
-        S   -   sparse matrix.
-
-    RESULT:
-        True if matrix type is Hash table
-        False if matrix type is not Hash table
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static bool sparseishash(sparsematrix s)
-    {
-
-        bool result = sparse.sparseishash(s.innerobj);
-        return result;
-    }
-
-    /*************************************************************************
-    This function checks matrix storage format and returns True when matrix is
-    stored using CRS representation.
-
-    INPUT PARAMETERS:
-        S   -   sparse matrix.
-
-    RESULT:
-        True if matrix type is CRS
-        False if matrix type is not CRS
-
-      -- ALGLIB PROJECT --
-         Copyright 20.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static bool sparseiscrs(sparsematrix s)
-    {
-
-        bool result = sparse.sparseiscrs(s.innerobj);
-        return result;
-    }
-
-    /*************************************************************************
-    The function frees all memory occupied by  sparse  matrix.  Sparse  matrix
-    structure becomes unusable after this call.
-
-    OUTPUT PARAMETERS
-        S   -   sparse matrix to delete
-
-      -- ALGLIB PROJECT --
-         Copyright 24.07.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsefree(out sparsematrix s)
-    {
-        s = new sparsematrix();
-        sparse.sparsefree(s.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    The function returns number of rows of a sparse matrix.
-
-    RESULT: number of rows of a sparse matrix.
-
-      -- ALGLIB PROJECT --
-         Copyright 23.08.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static int sparsegetnrows(sparsematrix s)
-    {
-
-        int result = sparse.sparsegetnrows(s.innerobj);
-        return result;
-    }
-
-    /*************************************************************************
-    The function returns number of columns of a sparse matrix.
-
-    RESULT: number of columns of a sparse matrix.
-
-      -- ALGLIB PROJECT --
-         Copyright 23.08.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static int sparsegetncols(sparsematrix s)
-    {
-
-        int result = sparse.sparsegetncols(s.innerobj);
-        return result;
     }
 
 }
@@ -4484,7 +7262,7 @@ public partial class alglib
 
     You should use ALGLIB functions to work with this object.
     *************************************************************************/
-    public class normestimatorstate
+    public class normestimatorstate : alglibobject
     {
         //
         // Public declarations
@@ -4493,6 +7271,11 @@ public partial class alglib
         public normestimatorstate()
         {
             _innerobj = new normestimator.normestimatorstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new normestimatorstate((normestimator.normestimatorstate)_innerobj.make_copy());
         }
 
         //
@@ -5097,6 +7880,23 @@ public partial class alglib
     Subroutine performing the Schur decomposition of a general matrix by using
     the QR algorithm with multiple shifts.
 
+    COMMERCIAL EDITION OF ALGLIB:
+
+      ! Commercial version of ALGLIB includes one  important  improvement   of
+      ! this function, which can be used from C++ and C#:
+      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      !
+      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! worker threads) acceleration factor which depends on CPU  being  used,
+      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+      ! comparison.
+      !
+      ! Multithreaded acceleration is NOT supported for this function.
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     The source matrix A is represented as S'*A*S = T, where S is an orthogonal
     matrix (Schur vectors), T - upper quasi-triangular matrix (with blocks of
     sizes 1x1 and 2x2 on the main diagonal).
@@ -5145,6 +7945,10 @@ public partial class alglib
 {
     public class ablas
     {
+        public const int rgemmparallelsize = 64;
+        public const int cgemmparallelsize = 64;
+
+
         /*************************************************************************
         Splits matrix length in two parts, left part should match ABLAS block size
 
@@ -5346,7 +8150,7 @@ public partial class alglib
             double[,] a,
             int ia,
             int ja,
-            ref double[,] b,
+            double[,] b,
             int ib,
             int jb)
         {
@@ -5380,14 +8184,54 @@ public partial class alglib
                 if( m>n )
                 {
                     ablassplitlength(a, m, ref s1, ref s2);
-                    rmatrixtranspose(s1, n, a, ia, ja, ref b, ib, jb);
-                    rmatrixtranspose(s2, n, a, ia+s1, ja, ref b, ib, jb+s1);
+                    rmatrixtranspose(s1, n, a, ia, ja, b, ib, jb);
+                    rmatrixtranspose(s2, n, a, ia+s1, ja, b, ib, jb+s1);
                 }
                 else
                 {
                     ablassplitlength(a, n, ref s1, ref s2);
-                    rmatrixtranspose(m, s1, a, ia, ja, ref b, ib, jb);
-                    rmatrixtranspose(m, s2, a, ia, ja+s1, ref b, ib+s1, jb);
+                    rmatrixtranspose(m, s1, a, ia, ja, b, ib, jb);
+                    rmatrixtranspose(m, s2, a, ia, ja+s1, b, ib+s1, jb);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This code enforces symmetricy of the matrix by copying Upper part to lower
+        one (or vice versa).
+
+        INPUT PARAMETERS:
+            A   -   matrix
+            N   -   number of rows/columns
+            IsUpper - whether we want to copy upper triangle to lower one (True)
+                    or vice versa (False).
+        *************************************************************************/
+        public static void rmatrixenforcesymmetricity(double[,] a,
+            int n,
+            bool isupper)
+        {
+            int i = 0;
+            int j = 0;
+
+            if( isupper )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=i+1; j<=n-1; j++)
+                    {
+                        a[j,i] = a[i,j];
+                    }
+                }
+            }
+            else
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=i+1; j<=n-1; j++)
+                    {
+                        a[i,j] = a[j,i];
+                    }
                 }
             }
         }
@@ -5812,6 +8656,38 @@ public partial class alglib
         Multiplication result replaces X.
         Cache-oblivious algorithm is used.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         INPUT PARAMETERS
             N   -   matrix size, N>=0
             M   -   matrix size, N>=0
@@ -5840,7 +8716,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref complex[,] x,
+            complex[,] x,
             int i2,
             int j2)
         {
@@ -5849,11 +8725,23 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( m<=bs && n<=bs )
+            
+            //
+            // Basecase: either MKL-supported code or ALGLIB basecase code
+            //
+            if( ablasmkl.cmatrixrighttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
-                cmatrixrighttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
             }
+            if( m<=bs && n<=bs )
+            {
+                cmatrixrighttrsm2(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                return;
+            }
+            
+            //
+            // Recursive subdivision
+            //
             if( m>=n )
             {
                 
@@ -5861,8 +8749,9 @@ public partial class alglib
                 // Split X: X*A = (X1 X2)^T*A
                 //
                 ablascomplexsplitlength(a, m, ref s1, ref s2);
-                cmatrixrighttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                cmatrixrighttrsm(s2, n, a, i1, j1, isupper, isunit, optype, ref x, i2+s1, j2);
+                cmatrixrighttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                cmatrixrighttrsm(s2, n, a, i1, j1, isupper, isunit, optype, x, i2+s1, j2);
+                return;
             }
             else
             {
@@ -5885,9 +8774,9 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(       )
                     //                  (     A2)
                     //
-                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    cmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1, j1+s1, 0, 1.0, ref x, i2, j2+s1);
-                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
+                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                    cmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1, j1+s1, 0, 1.0, x, i2, j2+s1);
+                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
                     return;
                 }
                 if( isupper && optype!=0 )
@@ -5898,9 +8787,9 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(        )
                     //                  (A12' A2')
                     //
-                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
-                    cmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1, j1+s1, optype, 1.0, ref x, i2, j2);
-                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
+                    cmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1, j1+s1, optype, 1.0, x, i2, j2);
+                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
                 if( !isupper && optype==0 )
@@ -5911,9 +8800,9 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(       )
                     //                  (A21  A2)
                     //
-                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
-                    cmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1+s1, j1, 0, 1.0, ref x, i2, j2);
-                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
+                    cmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1+s1, j1, 0, 1.0, x, i2, j2);
+                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
                 if( !isupper && optype!=0 )
@@ -5924,12 +8813,31 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(        )
                     //                  (     A2')
                     //
-                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    cmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1+s1, j1, optype, 1.0, ref x, i2, j2+s1);
-                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
+                    cmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                    cmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1+s1, j1, optype, 1.0, x, i2, j2+s1);
+                    cmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
                     return;
                 }
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixrighttrsm(int m,
+            int n,
+            complex[,] a,
+            int i1,
+            int j1,
+            bool isupper,
+            bool isunit,
+            int optype,
+            complex[,] x,
+            int i2,
+            int j2)
+        {
+            cmatrixrighttrsm(m,n,a,i1,j1,isupper,isunit,optype,x,i2,j2);
         }
 
 
@@ -5941,6 +8849,38 @@ public partial class alglib
 
         Multiplication result replaces X.
         Cache-oblivious algorithm is used.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS
             N   -   matrix size, N>=0
@@ -5970,7 +8910,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref complex[,] x,
+            complex[,] x,
             int i2,
             int j2)
         {
@@ -5979,11 +8919,23 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( m<=bs && n<=bs )
+            
+            //
+            // Basecase: either MKL-supported code or ALGLIB basecase code
+            //
+            if( ablasmkl.cmatrixlefttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
-                cmatrixlefttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
             }
+            if( m<=bs && n<=bs )
+            {
+                cmatrixlefttrsm2(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                return;
+            }
+            
+            //
+            // Recursive subdivision
+            //
             if( n>=m )
             {
                 
@@ -5991,8 +8943,9 @@ public partial class alglib
                 // Split X: op(A)^-1*X = op(A)^-1*(X1 X2)
                 //
                 ablascomplexsplitlength(x, n, ref s1, ref s2);
-                cmatrixlefttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                cmatrixlefttrsm(m, s2, a, i1, j1, isupper, isunit, optype, ref x, i2, j2+s1);
+                cmatrixlefttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                cmatrixlefttrsm(m, s2, a, i1, j1, isupper, isunit, optype, x, i2, j2+s1);
+                return;
             }
             else
             {
@@ -6009,9 +8962,9 @@ public partial class alglib
                     // A^-1*X* = (       )   *(    )
                     //           (     A2)    ( X2 )
                     //
-                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
-                    cmatrixgemm(s1, n, s2, -1.0, a, i1, j1+s1, 0, x, i2+s1, j2, 0, 1.0, ref x, i2, j2);
-                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
+                    cmatrixgemm(s1, n, s2, -1.0, a, i1, j1+s1, 0, x, i2+s1, j2, 0, 1.0, x, i2, j2);
+                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
                 if( isupper && optype!=0 )
@@ -6022,9 +8975,9 @@ public partial class alglib
                     // A^-1*X = (        )  *(    )
                     //          (A12' A2')   ( X2 )
                     //
-                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    cmatrixgemm(s2, n, s1, -1.0, a, i1, j1+s1, optype, x, i2, j2, 0, 1.0, ref x, i2+s1, j2);
-                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
+                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                    cmatrixgemm(s2, n, s1, -1.0, a, i1, j1+s1, optype, x, i2, j2, 0, 1.0, x, i2+s1, j2);
+                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
                     return;
                 }
                 if( !isupper && optype==0 )
@@ -6035,9 +8988,9 @@ public partial class alglib
                     // A^-1*X = (       )  *(    )
                     //          (A21  A2)   ( X2 )
                     //
-                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                    cmatrixgemm(s2, n, s1, -1.0, a, i1+s1, j1, 0, x, i2, j2, 0, 1.0, ref x, i2+s1, j2);
-                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
+                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                    cmatrixgemm(s2, n, s1, -1.0, a, i1+s1, j1, 0, x, i2, j2, 0, 1.0, x, i2+s1, j2);
+                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
                     return;
                 }
                 if( !isupper && optype!=0 )
@@ -6048,12 +9001,31 @@ public partial class alglib
                     // A^-1*X = (        )  *(    )
                     //          (     A2')   ( X2 )
                     //
-                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
-                    cmatrixgemm(s1, n, s2, -1.0, a, i1+s1, j1, optype, x, i2+s1, j2, 0, 1.0, ref x, i2, j2);
-                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    cmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
+                    cmatrixgemm(s1, n, s2, -1.0, a, i1+s1, j1, optype, x, i2+s1, j2, 0, 1.0, x, i2, j2);
+                    cmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixlefttrsm(int m,
+            int n,
+            complex[,] a,
+            int i1,
+            int j1,
+            bool isupper,
+            bool isunit,
+            int optype,
+            complex[,] x,
+            int i2,
+            int j2)
+        {
+            cmatrixlefttrsm(m,n,a,i1,j1,isupper,isunit,optype,x,i2,j2);
         }
 
 
@@ -6065,6 +9037,38 @@ public partial class alglib
 
         Multiplication result replaces X.
         Cache-oblivious algorithm is used.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS
             N   -   matrix size, N>=0
@@ -6093,7 +9097,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref double[,] x,
+            double[,] x,
             int i2,
             int j2)
         {
@@ -6102,11 +9106,23 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( m<=bs && n<=bs )
+            
+            //
+            // Basecase: MKL or ALGLIB code
+            //
+            if( ablasmkl.rmatrixrighttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
-                rmatrixrighttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
             }
+            if( m<=bs && n<=bs )
+            {
+                rmatrixrighttrsm2(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                return;
+            }
+            
+            //
+            // Recursive subdivision
+            //
             if( m>=n )
             {
                 
@@ -6114,8 +9130,9 @@ public partial class alglib
                 // Split X: X*A = (X1 X2)^T*A
                 //
                 ablassplitlength(a, m, ref s1, ref s2);
-                rmatrixrighttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                rmatrixrighttrsm(s2, n, a, i1, j1, isupper, isunit, optype, ref x, i2+s1, j2);
+                rmatrixrighttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                rmatrixrighttrsm(s2, n, a, i1, j1, isupper, isunit, optype, x, i2+s1, j2);
+                return;
             }
             else
             {
@@ -6138,9 +9155,9 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(       )
                     //                  (     A2)
                     //
-                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     rmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1, j1+s1, 0, 1.0, x, i2, j2+s1);
-                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
+                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
                     return;
                 }
                 if( isupper && optype!=0 )
@@ -6151,9 +9168,9 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(        )
                     //                  (A12' A2')
                     //
-                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
+                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
                     rmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1, j1+s1, optype, 1.0, x, i2, j2);
-                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
                 if( !isupper && optype==0 )
@@ -6164,9 +9181,9 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(       )
                     //                  (A21  A2)
                     //
-                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
+                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
                     rmatrixgemm(m, s1, s2, -1.0, x, i2, j2+s1, 0, a, i1+s1, j1, 0, 1.0, x, i2, j2);
-                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
                 if( !isupper && optype!=0 )
@@ -6177,12 +9194,31 @@ public partial class alglib
                     // X*A^-1 = (X1 X2)*(        )
                     //                  (     A2')
                     //
-                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixrighttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     rmatrixgemm(m, s2, s1, -1.0, x, i2, j2, 0, a, i1+s1, j1, optype, 1.0, x, i2, j2+s1);
-                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2, j2+s1);
+                    rmatrixrighttrsm(m, s2, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2, j2+s1);
                     return;
                 }
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixrighttrsm(int m,
+            int n,
+            double[,] a,
+            int i1,
+            int j1,
+            bool isupper,
+            bool isunit,
+            int optype,
+            double[,] x,
+            int i2,
+            int j2)
+        {
+            rmatrixrighttrsm(m,n,a,i1,j1,isupper,isunit,optype,x,i2,j2);
         }
 
 
@@ -6194,6 +9230,38 @@ public partial class alglib
 
         Multiplication result replaces X.
         Cache-oblivious algorithm is used.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS
             N   -   matrix size, N>=0
@@ -6222,7 +9290,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref double[,] x,
+            double[,] x,
             int i2,
             int j2)
         {
@@ -6231,11 +9299,23 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( m<=bs && n<=bs )
+            
+            //
+            // Basecase: MKL or ALGLIB code
+            //
+            if( ablasmkl.rmatrixlefttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
-                rmatrixlefttrsm2(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
                 return;
             }
+            if( m<=bs && n<=bs )
+            {
+                rmatrixlefttrsm2(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                return;
+            }
+            
+            //
+            // Recursive subdivision
+            //
             if( n>=m )
             {
                 
@@ -6243,8 +9323,8 @@ public partial class alglib
                 // Split X: op(A)^-1*X = op(A)^-1*(X1 X2)
                 //
                 ablassplitlength(x, n, ref s1, ref s2);
-                rmatrixlefttrsm(m, s1, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
-                rmatrixlefttrsm(m, s2, a, i1, j1, isupper, isunit, optype, ref x, i2, j2+s1);
+                rmatrixlefttrsm(m, s1, a, i1, j1, isupper, isunit, optype, x, i2, j2);
+                rmatrixlefttrsm(m, s2, a, i1, j1, isupper, isunit, optype, x, i2, j2+s1);
             }
             else
             {
@@ -6261,9 +9341,9 @@ public partial class alglib
                     // A^-1*X* = (       )   *(    )
                     //           (     A2)    ( X2 )
                     //
-                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
+                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
                     rmatrixgemm(s1, n, s2, -1.0, a, i1, j1+s1, 0, x, i2+s1, j2, 0, 1.0, x, i2, j2);
-                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
                 if( isupper && optype!=0 )
@@ -6274,9 +9354,9 @@ public partial class alglib
                     // A^-1*X = (        )  *(    )
                     //          (A12' A2')   ( X2 )
                     //
-                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     rmatrixgemm(s2, n, s1, -1.0, a, i1, j1+s1, optype, x, i2, j2, 0, 1.0, x, i2+s1, j2);
-                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
+                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
                     return;
                 }
                 if( !isupper && optype==0 )
@@ -6287,9 +9367,9 @@ public partial class alglib
                     // A^-1*X = (       )  *(    )
                     //          (A21  A2)   ( X2 )
                     //
-                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     rmatrixgemm(s2, n, s1, -1.0, a, i1+s1, j1, 0, x, i2, j2, 0, 1.0, x, i2+s1, j2);
-                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
+                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
                     return;
                 }
                 if( !isupper && optype!=0 )
@@ -6300,12 +9380,31 @@ public partial class alglib
                     // A^-1*X = (        )  *(    )
                     //          (     A2')   ( X2 )
                     //
-                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, ref x, i2+s1, j2);
+                    rmatrixlefttrsm(s2, n, a, i1+s1, j1+s1, isupper, isunit, optype, x, i2+s1, j2);
                     rmatrixgemm(s1, n, s2, -1.0, a, i1+s1, j1, optype, x, i2+s1, j2, 0, 1.0, x, i2, j2);
-                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2);
+                    rmatrixlefttrsm(s1, n, a, i1, j1, isupper, isunit, optype, x, i2, j2);
                     return;
                 }
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixlefttrsm(int m,
+            int n,
+            double[,] a,
+            int i1,
+            int j1,
+            bool isupper,
+            bool isunit,
+            int optype,
+            double[,] x,
+            int i2,
+            int j2)
+        {
+            rmatrixlefttrsm(m,n,a,i1,j1,isupper,isunit,optype,x,i2,j2);
         }
 
 
@@ -6322,27 +9421,61 @@ public partial class alglib
         * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
         * if both Beta and Alpha are zero, C is filled by zeros.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         INPUT PARAMETERS
             N       -   matrix size, N>=0
             K       -   matrix size, K>=0
             Alpha   -   coefficient
             A       -   matrix
-            IA      -   submatrix offset
-            JA      -   submatrix offset
+            IA      -   submatrix offset (row index)
+            JA      -   submatrix offset (column index)
             OpTypeA -   multiplication type:
                         * 0 - A*A^H is calculated
                         * 2 - A^H*A is calculated
             Beta    -   coefficient
-            C       -   matrix
-            IC      -   submatrix offset
-            JC      -   submatrix offset
-            IsUpper -   whether C is upper triangular or lower triangular
+            C       -   preallocated input/output matrix
+            IC      -   submatrix offset (row index)
+            JC      -   submatrix offset (column index)
+            IsUpper -   whether upper or lower triangle of C is updated;
+                        this function updates only one half of C, leaving
+                        other half unchanged (not referenced at all).
 
           -- ALGLIB routine --
              16.12.2009
              Bochkanov Sergey
         *************************************************************************/
-        public static void cmatrixsyrk(int n,
+        public static void cmatrixherk(int n,
             int k,
             double alpha,
             complex[,] a,
@@ -6350,7 +9483,7 @@ public partial class alglib
             int ja,
             int optypea,
             double beta,
-            ref complex[,] c,
+            complex[,] c,
             int ic,
             int jc,
             bool isupper)
@@ -6360,11 +9493,23 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( n<=bs && k<=bs )
+            
+            //
+            // Use MKL or ALGLIB basecase code
+            //
+            if( ablasmkl.cmatrixherkmkl(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper) )
             {
-                cmatrixsyrk2(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                 return;
             }
+            if( n<=bs && k<=bs )
+            {
+                cmatrixherk2(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                return;
+            }
+            
+            //
+            // Recursive division of the problem
+            //
             if( k>=n )
             {
                 
@@ -6374,13 +9519,13 @@ public partial class alglib
                 ablascomplexsplitlength(a, k, ref s1, ref s2);
                 if( optypea==0 )
                 {
-                    cmatrixsyrk(n, s1, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    cmatrixsyrk(n, s2, alpha, a, ia, ja+s1, optypea, 1.0, ref c, ic, jc, isupper);
+                    cmatrixherk(n, s1, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    cmatrixherk(n, s2, alpha, a, ia, ja+s1, optypea, 1.0, c, ic, jc, isupper);
                 }
                 else
                 {
-                    cmatrixsyrk(n, s1, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    cmatrixsyrk(n, s2, alpha, a, ia+s1, ja, optypea, 1.0, ref c, ic, jc, isupper);
+                    cmatrixherk(n, s1, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    cmatrixherk(n, s2, alpha, a, ia+s1, ja, optypea, 1.0, c, ic, jc, isupper);
                 }
             }
             else
@@ -6392,33 +9537,53 @@ public partial class alglib
                 ablascomplexsplitlength(a, n, ref s1, ref s2);
                 if( optypea==0 && isupper )
                 {
-                    cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    cmatrixgemm(s1, s2, k, alpha, a, ia, ja, 0, a, ia+s1, ja, 2, beta, ref c, ic, jc+s1);
-                    cmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    cmatrixherk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    cmatrixgemm(s1, s2, k, alpha, a, ia, ja, 0, a, ia+s1, ja, 2, beta, c, ic, jc+s1);
+                    cmatrixherk(s2, k, alpha, a, ia+s1, ja, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
                 if( optypea==0 && !isupper )
                 {
-                    cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    cmatrixgemm(s2, s1, k, alpha, a, ia+s1, ja, 0, a, ia, ja, 2, beta, ref c, ic+s1, jc);
-                    cmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    cmatrixherk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    cmatrixgemm(s2, s1, k, alpha, a, ia+s1, ja, 0, a, ia, ja, 2, beta, c, ic+s1, jc);
+                    cmatrixherk(s2, k, alpha, a, ia+s1, ja, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
                 if( optypea!=0 && isupper )
                 {
-                    cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    cmatrixgemm(s1, s2, k, alpha, a, ia, ja, 2, a, ia, ja+s1, 0, beta, ref c, ic, jc+s1);
-                    cmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    cmatrixherk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    cmatrixgemm(s1, s2, k, alpha, a, ia, ja, 2, a, ia, ja+s1, 0, beta, c, ic, jc+s1);
+                    cmatrixherk(s2, k, alpha, a, ia, ja+s1, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
                 if( optypea!=0 && !isupper )
                 {
-                    cmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    cmatrixgemm(s2, s1, k, alpha, a, ia, ja+s1, 2, a, ia, ja, 0, beta, ref c, ic+s1, jc);
-                    cmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    cmatrixherk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    cmatrixgemm(s2, s1, k, alpha, a, ia, ja+s1, 2, a, ia, ja, 0, beta, c, ic+s1, jc);
+                    cmatrixherk(s2, k, alpha, a, ia, ja+s1, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixherk(int n,
+            int k,
+            double alpha,
+            complex[,] a,
+            int ia,
+            int ja,
+            int optypea,
+            double beta,
+            complex[,] c,
+            int ic,
+            int jc,
+            bool isupper)
+        {
+            cmatrixherk(n,k,alpha,a,ia,ja,optypea,beta,c,ic,jc,isupper);
         }
 
 
@@ -6435,20 +9600,52 @@ public partial class alglib
         * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
         * if both Beta and Alpha are zero, C is filled by zeros.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         INPUT PARAMETERS
             N       -   matrix size, N>=0
             K       -   matrix size, K>=0
             Alpha   -   coefficient
             A       -   matrix
-            IA      -   submatrix offset
-            JA      -   submatrix offset
+            IA      -   submatrix offset (row index)
+            JA      -   submatrix offset (column index)
             OpTypeA -   multiplication type:
                         * 0 - A*A^T is calculated
                         * 2 - A^T*A is calculated
             Beta    -   coefficient
-            C       -   matrix
-            IC      -   submatrix offset
-            JC      -   submatrix offset
+            C       -   preallocated input/output matrix
+            IC      -   submatrix offset (row index)
+            JC      -   submatrix offset (column index)
             IsUpper -   whether C is upper triangular or lower triangular
 
           -- ALGLIB routine --
@@ -6463,7 +9660,7 @@ public partial class alglib
             int ja,
             int optypea,
             double beta,
-            ref double[,] c,
+            double[,] c,
             int ic,
             int jc,
             bool isupper)
@@ -6473,11 +9670,23 @@ public partial class alglib
             int bs = 0;
 
             bs = ablasblocksize(a);
-            if( n<=bs && k<=bs )
+            
+            //
+            // Use MKL or generic basecase code
+            //
+            if( ablasmkl.rmatrixsyrkmkl(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper) )
             {
-                rmatrixsyrk2(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
                 return;
             }
+            if( n<=bs && k<=bs )
+            {
+                rmatrixsyrk2(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                return;
+            }
+            
+            //
+            // Recursive subdivision of the problem
+            //
             if( k>=n )
             {
                 
@@ -6487,13 +9696,13 @@ public partial class alglib
                 ablassplitlength(a, k, ref s1, ref s2);
                 if( optypea==0 )
                 {
-                    rmatrixsyrk(n, s1, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    rmatrixsyrk(n, s2, alpha, a, ia, ja+s1, optypea, 1.0, ref c, ic, jc, isupper);
+                    rmatrixsyrk(n, s1, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    rmatrixsyrk(n, s2, alpha, a, ia, ja+s1, optypea, 1.0, c, ic, jc, isupper);
                 }
                 else
                 {
-                    rmatrixsyrk(n, s1, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
-                    rmatrixsyrk(n, s2, alpha, a, ia+s1, ja, optypea, 1.0, ref c, ic, jc, isupper);
+                    rmatrixsyrk(n, s1, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+                    rmatrixsyrk(n, s2, alpha, a, ia+s1, ja, optypea, 1.0, c, ic, jc, isupper);
                 }
             }
             else
@@ -6505,33 +9714,53 @@ public partial class alglib
                 ablassplitlength(a, n, ref s1, ref s2);
                 if( optypea==0 && isupper )
                 {
-                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
+                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
                     rmatrixgemm(s1, s2, k, alpha, a, ia, ja, 0, a, ia+s1, ja, 1, beta, c, ic, jc+s1);
-                    rmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    rmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
                 if( optypea==0 && !isupper )
                 {
-                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
+                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
                     rmatrixgemm(s2, s1, k, alpha, a, ia+s1, ja, 0, a, ia, ja, 1, beta, c, ic+s1, jc);
-                    rmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    rmatrixsyrk(s2, k, alpha, a, ia+s1, ja, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
                 if( optypea!=0 && isupper )
                 {
-                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
+                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
                     rmatrixgemm(s1, s2, k, alpha, a, ia, ja, 1, a, ia, ja+s1, 0, beta, c, ic, jc+s1);
-                    rmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    rmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
                 if( optypea!=0 && !isupper )
                 {
-                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper);
+                    rmatrixsyrk(s1, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
                     rmatrixgemm(s2, s1, k, alpha, a, ia, ja+s1, 1, a, ia, ja, 0, beta, c, ic+s1, jc);
-                    rmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, ref c, ic+s1, jc+s1, isupper);
+                    rmatrixsyrk(s2, k, alpha, a, ia, ja+s1, optypea, beta, c, ic+s1, jc+s1, isupper);
                     return;
                 }
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixsyrk(int n,
+            int k,
+            double alpha,
+            double[,] a,
+            int ia,
+            int ja,
+            int optypea,
+            double beta,
+            double[,] c,
+            int ic,
+            int jc,
+            bool isupper)
+        {
+            rmatrixsyrk(n,k,alpha,a,ia,ja,optypea,beta,c,ic,jc,isupper);
         }
 
 
@@ -6548,6 +9777,44 @@ public partial class alglib
           calculations (not multiplied by zero - just not referenced)
         * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
         * if both Beta and Alpha are zero, C is filled by zeros.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
+        IMPORTANT:
+
+        This function does NOT preallocate output matrix C, it MUST be preallocated
+        by caller prior to calling this function. In case C does not have  enough
+        space to store result, exception will be generated.
 
         INPUT PARAMETERS
             M       -   matrix size, M>0
@@ -6569,7 +9836,7 @@ public partial class alglib
                         * 1 - transposition
                         * 2 - conjugate transposition
             Beta    -   coefficient
-            C       -   matrix
+            C       -   matrix (PREALLOCATED, large enough to store result)
             IC      -   submatrix offset
             JC      -   submatrix offset
 
@@ -6590,7 +9857,7 @@ public partial class alglib
             int jb,
             int optypeb,
             complex beta,
-            ref complex[,] c,
+            complex[,] c,
             int ic,
             int jc)
         {
@@ -6599,11 +9866,29 @@ public partial class alglib
             int bs = 0;
 
             bs = ablascomplexblocksize(a);
-            if( (m<=bs && n<=bs) && k<=bs )
+            
+            //
+            // Use MKL or ALGLIB basecase code
+            //
+            if( ablasmkl.cmatrixgemmmkl(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc) )
             {
-                cmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
                 return;
             }
+            if( (m<=bs && n<=bs) && k<=bs )
+            {
+                ablasf.cmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                return;
+            }
+            
+            //
+            // SMP support is turned on when M or N are larger than some boundary value.
+            // Magnitude of K is not taken into account because splitting on K does not
+            // allow us to spawn child tasks.
+            //
+            
+            //
+            // Recursive algorithm: parallel splitting on M/N
+            //
             if( m>=n && m>=k )
             {
                 
@@ -6611,14 +9896,14 @@ public partial class alglib
                 // A*B = (A1 A2)^T*B
                 //
                 ablascomplexsplitlength(a, m, ref s1, ref s2);
-                cmatrixgemm(s1, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
+                cmatrixgemm(s1, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
                 if( optypea==0 )
                 {
-                    cmatrixgemm(s2, n, k, alpha, a, ia+s1, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic+s1, jc);
+                    cmatrixgemm(s2, n, k, alpha, a, ia+s1, ja, optypea, b, ib, jb, optypeb, beta, c, ic+s1, jc);
                 }
                 else
                 {
-                    cmatrixgemm(s2, n, k, alpha, a, ia, ja+s1, optypea, b, ib, jb, optypeb, beta, ref c, ic+s1, jc);
+                    cmatrixgemm(s2, n, k, alpha, a, ia, ja+s1, optypea, b, ib, jb, optypeb, beta, c, ic+s1, jc);
                 }
                 return;
             }
@@ -6631,48 +9916,151 @@ public partial class alglib
                 ablascomplexsplitlength(a, n, ref s1, ref s2);
                 if( optypeb==0 )
                 {
-                    cmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    cmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib, jb+s1, optypeb, beta, ref c, ic, jc+s1);
+                    cmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    cmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib, jb+s1, optypeb, beta, c, ic, jc+s1);
                 }
                 else
                 {
-                    cmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    cmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib+s1, jb, optypeb, beta, ref c, ic, jc+s1);
+                    cmatrixgemm(m, s1, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                    cmatrixgemm(m, s2, k, alpha, a, ia, ja, optypea, b, ib+s1, jb, optypeb, beta, c, ic, jc+s1);
                 }
                 return;
             }
-            if( k>=m && k>=n )
+            
+            //
+            // Recursive algorithm: serial splitting on K
+            //
+            
+            //
+            // A*B = (A1 A2)*(B1 B2)^T
+            //
+            ablascomplexsplitlength(a, k, ref s1, ref s2);
+            if( optypea==0 && optypeb==0 )
             {
-                
-                //
-                // A*B = (A1 A2)*(B1 B2)^T
-                //
-                ablascomplexsplitlength(a, k, ref s1, ref s2);
-                if( optypea==0 && optypeb==0 )
-                {
-                    cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    cmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, ref c, ic, jc);
-                }
-                if( optypea==0 && optypeb!=0 )
-                {
-                    cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    cmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, ref c, ic, jc);
-                }
-                if( optypea!=0 && optypeb==0 )
-                {
-                    cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    cmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, ref c, ic, jc);
-                }
-                if( optypea!=0 && optypeb!=0 )
-                {
-                    cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc);
-                    cmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, ref c, ic, jc);
-                }
-                return;
+                cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                cmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
             }
+            if( optypea==0 && optypeb!=0 )
+            {
+                cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                cmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
+            }
+            if( optypea!=0 && optypeb==0 )
+            {
+                cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                cmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
+            }
+            if( optypea!=0 && optypeb!=0 )
+            {
+                cmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                cmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
+            }
+            return;
         }
 
 
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixgemm(int m,
+            int n,
+            int k,
+            complex alpha,
+            complex[,] a,
+            int ia,
+            int ja,
+            int optypea,
+            complex[,] b,
+            int ib,
+            int jb,
+            int optypeb,
+            complex beta,
+            complex[,] c,
+            int ic,
+            int jc)
+        {
+            cmatrixgemm(m,n,k,alpha,a,ia,ja,optypea,b,ib,jb,optypeb,beta,c,ic,jc);
+        }
+
+
+        /*************************************************************************
+        This subroutine calculates C = alpha*op1(A)*op2(B) +beta*C where:
+        * C is MxN general matrix
+        * op1(A) is MxK matrix
+        * op2(B) is KxN matrix
+        * "op" may be identity transformation, transposition
+
+        Additional info:
+        * cache-oblivious algorithm is used.
+        * multiplication result replaces C. If Beta=0, C elements are not used in
+          calculations (not multiplied by zero - just not referenced)
+        * if Alpha=0, A is not used (not multiplied by zero - just not referenced)
+        * if both Beta and Alpha are zero, C is filled by zeros.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  Because  starting/stopping  worker  thread always
+          ! involves some overhead, parallelism starts to be  profitable  for  N's
+          ! larger than 128.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
+        IMPORTANT:
+
+        This function does NOT preallocate output matrix C, it MUST be preallocated
+        by caller prior to calling this function. In case C does not have  enough
+        space to store result, exception will be generated.
+
+        INPUT PARAMETERS
+            M       -   matrix size, M>0
+            N       -   matrix size, N>0
+            K       -   matrix size, K>0
+            Alpha   -   coefficient
+            A       -   matrix
+            IA      -   submatrix offset
+            JA      -   submatrix offset
+            OpTypeA -   transformation type:
+                        * 0 - no transformation
+                        * 1 - transposition
+            B       -   matrix
+            IB      -   submatrix offset
+            JB      -   submatrix offset
+            OpTypeB -   transformation type:
+                        * 0 - no transformation
+                        * 1 - transposition
+            Beta    -   coefficient
+            C       -   PREALLOCATED output matrix, large enough to store result
+            IC      -   submatrix offset
+            JC      -   submatrix offset
+
+          -- ALGLIB routine --
+             2009-2013
+             Bochkanov Sergey
+        *************************************************************************/
         public static void rmatrixgemm(int m,
             int n,
             int k,
@@ -6697,22 +10085,34 @@ public partial class alglib
             bs = ablasblocksize(a);
             
             //
-            // Use basecase code
+            // Check input sizes for correctness
             //
+            alglib.ap.assert(optypea==0 || optypea==1, "RMatrixGEMM: incorrect OpTypeA (must be 0 or 1)");
+            alglib.ap.assert(optypeb==0 || optypeb==1, "RMatrixGEMM: incorrect OpTypeB (must be 0 or 1)");
+            alglib.ap.assert(ic+m<=alglib.ap.rows(c), "RMatrixGEMM: incorect size of output matrix C");
+            alglib.ap.assert(jc+n<=alglib.ap.cols(c), "RMatrixGEMM: incorect size of output matrix C");
+            
+            //
+            // Use MKL or ALGLIB basecase code
+            //
+            if( ablasmkl.rmatrixgemmmkl(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc) )
+            {
+                return;
+            }
             if( (m<=bs && n<=bs) && k<=bs )
             {
-                rmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                ablasf.rmatrixgemmk(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
                 return;
             }
             
             //
-            // SMP support is turned on when M or N are larger than or equal to 4*BlockSize.
+            // SMP support is turned on when M or N are larger than some boundary value.
             // Magnitude of K is not taken into account because splitting on K does not
             // allow us to spawn child tasks.
             //
             
             //
-            // Recursive algorithm
+            // Recursive algorithm: split on M or N
             //
             if( m>=n && m>=k )
             {
@@ -6752,35 +10152,36 @@ public partial class alglib
                 }
                 return;
             }
-            if( k>=m && k>=n )
+            
+            //
+            // Recursive algorithm: split on K
+            //
+            
+            //
+            // A*B = (A1 A2)*(B1 B2)^T
+            //
+            ablassplitlength(a, k, ref s1, ref s2);
+            if( optypea==0 && optypeb==0 )
             {
-                
-                //
-                // A*B = (A1 A2)*(B1 B2)^T
-                //
-                ablassplitlength(a, k, ref s1, ref s2);
-                if( optypea==0 && optypeb==0 )
-                {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
-                }
-                if( optypea==0 && optypeb!=0 )
-                {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
-                }
-                if( optypea!=0 && optypeb==0 )
-                {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
-                }
-                if( optypea!=0 && optypeb!=0 )
-                {
-                    rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
-                    rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
-                }
-                return;
+                rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
             }
+            if( optypea==0 && optypeb!=0 )
+            {
+                rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                rmatrixgemm(m, n, s2, alpha, a, ia, ja+s1, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
+            }
+            if( optypea!=0 && optypeb==0 )
+            {
+                rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib+s1, jb, optypeb, 1.0, c, ic, jc);
+            }
+            if( optypea!=0 && optypeb!=0 )
+            {
+                rmatrixgemm(m, n, s1, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc);
+                rmatrixgemm(m, n, s2, alpha, a, ia+s1, ja, optypea, b, ib, jb+s1, optypeb, 1.0, c, ic, jc);
+            }
+            return;
         }
 
 
@@ -6805,6 +10206,52 @@ public partial class alglib
             int jc)
         {
             rmatrixgemm(m,n,k,alpha,a,ia,ja,optypea,b,ib,jb,optypeb,beta,c,ic,jc);
+        }
+
+
+        /*************************************************************************
+        This subroutine is an older version of CMatrixHERK(), one with wrong  name
+        (it is HErmitian update, not SYmmetric). It  is  left  here  for  backward
+        compatibility.
+
+          -- ALGLIB routine --
+             16.12.2009
+             Bochkanov Sergey
+        *************************************************************************/
+        public static void cmatrixsyrk(int n,
+            int k,
+            double alpha,
+            complex[,] a,
+            int ia,
+            int ja,
+            int optypea,
+            double beta,
+            complex[,] c,
+            int ic,
+            int jc,
+            bool isupper)
+        {
+            cmatrixherk(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper);
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixsyrk(int n,
+            int k,
+            double alpha,
+            complex[,] a,
+            int ia,
+            int ja,
+            int optypea,
+            double beta,
+            complex[,] c,
+            int ic,
+            int jc,
+            bool isupper)
+        {
+            cmatrixsyrk(n,k,alpha,a,ia,ja,optypea,beta,c,ic,jc,isupper);
         }
 
 
@@ -6880,7 +10327,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref complex[,] x,
+            complex[,] x,
             int i2,
             int j2)
         {
@@ -6903,7 +10350,7 @@ public partial class alglib
             //
             // Try to call fast TRSM
             //
-            if( ablasf.cmatrixrighttrsmf(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2) )
+            if( ablasf.cmatrixrighttrsmf(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
                 return;
             }
@@ -7123,7 +10570,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref complex[,] x,
+            complex[,] x,
             int i2,
             int j2)
         {
@@ -7145,7 +10592,7 @@ public partial class alglib
             //
             // Try to call fast TRSM
             //
-            if( ablasf.cmatrixlefttrsmf(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2) )
+            if( ablasf.cmatrixlefttrsmf(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
                 return;
             }
@@ -7367,7 +10814,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref double[,] x,
+            double[,] x,
             int i2,
             int j2)
         {
@@ -7390,7 +10837,7 @@ public partial class alglib
             //
             // Try to use "fast" code
             //
-            if( ablasf.rmatrixrighttrsmf(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2) )
+            if( ablasf.rmatrixrighttrsmf(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
                 return;
             }
@@ -7550,7 +10997,7 @@ public partial class alglib
             bool isupper,
             bool isunit,
             int optype,
-            ref double[,] x,
+            double[,] x,
             int i2,
             int j2)
         {
@@ -7564,7 +11011,7 @@ public partial class alglib
             //
             // Special case
             //
-            if( n*m==0 )
+            if( n==0 || m==0 )
             {
                 return;
             }
@@ -7572,7 +11019,7 @@ public partial class alglib
             //
             // Try fast code
             //
-            if( ablasf.rmatrixlefttrsmf(m, n, a, i1, j1, isupper, isunit, optype, ref x, i2, j2) )
+            if( ablasf.rmatrixlefttrsmf(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2) )
             {
                 return;
             }
@@ -7720,7 +11167,7 @@ public partial class alglib
         /*************************************************************************
         Level 2 subroutine
         *************************************************************************/
-        private static void cmatrixsyrk2(int n,
+        private static void cmatrixherk2(int n,
             int k,
             double alpha,
             complex[,] a,
@@ -7728,7 +11175,7 @@ public partial class alglib
             int ja,
             int optypea,
             double beta,
-            ref complex[,] c,
+            complex[,] c,
             int ic,
             int jc,
             bool isupper)
@@ -7753,7 +11200,7 @@ public partial class alglib
             //
             // Try to call fast SYRK
             //
-            if( ablasf.cmatrixsyrkf(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper) )
+            if( ablasf.cmatrixherkf(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper) )
             {
                 return;
             }
@@ -7876,7 +11323,7 @@ public partial class alglib
             int ja,
             int optypea,
             double beta,
-            ref double[,] c,
+            double[,] c,
             int ic,
             int jc,
             bool isupper)
@@ -7901,7 +11348,7 @@ public partial class alglib
             //
             // Try to call fast SYRK
             //
-            if( ablasf.rmatrixsyrkf(n, k, alpha, a, ia, ja, optypea, beta, ref c, ic, jc, isupper) )
+            if( ablasf.rmatrixsyrkf(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper) )
             {
                 return;
             }
@@ -8013,531 +11460,47 @@ public partial class alglib
         }
 
 
-        /*************************************************************************
-        GEMM kernel
-
-          -- ALGLIB routine --
-             16.12.2009
-             Bochkanov Sergey
-        *************************************************************************/
-        private static void cmatrixgemmk(int m,
-            int n,
-            int k,
-            complex alpha,
-            complex[,] a,
-            int ia,
-            int ja,
-            int optypea,
-            complex[,] b,
-            int ib,
-            int jb,
-            int optypeb,
-            complex beta,
-            ref complex[,] c,
-            int ic,
-            int jc)
-        {
-            int i = 0;
-            int j = 0;
-            complex v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            
-            //
-            // Special case
-            //
-            if( m*n==0 )
-            {
-                return;
-            }
-            
-            //
-            // Try optimized code
-            //
-            if( ablasf.cmatrixgemmf(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, ref c, ic, jc) )
-            {
-                return;
-            }
-            
-            //
-            // Another special case
-            //
-            if( k==0 )
-            {
-                if( beta!=0 )
-                {
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            c[ic+i,jc+j] = beta*c[ic+i,jc+j];
-                        }
-                    }
-                }
-                else
-                {
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            c[ic+i,jc+j] = 0;
-                        }
-                    }
-                }
-                return;
-            }
-            
-            //
-            // General case
-            //
-            if( optypea==0 && optypeb!=0 )
-            {
-                
-                //
-                // A*B'
-                //
-                for(i=0; i<=m-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        if( k==0 || alpha==0 )
-                        {
-                            v = 0;
-                        }
-                        else
-                        {
-                            if( optypeb==1 )
-                            {
-                                i1_ = (jb)-(ja);
-                                v = 0.0;
-                                for(i_=ja; i_<=ja+k-1;i_++)
-                                {
-                                    v += a[ia+i,i_]*b[ib+j,i_+i1_];
-                                }
-                            }
-                            else
-                            {
-                                i1_ = (jb)-(ja);
-                                v = 0.0;
-                                for(i_=ja; i_<=ja+k-1;i_++)
-                                {
-                                    v += a[ia+i,i_]*math.conj(b[ib+j,i_+i1_]);
-                                }
-                            }
-                        }
-                        if( beta==0 )
-                        {
-                            c[ic+i,jc+j] = alpha*v;
-                        }
-                        else
-                        {
-                            c[ic+i,jc+j] = beta*c[ic+i,jc+j]+alpha*v;
-                        }
-                    }
-                }
-                return;
-            }
-            if( optypea==0 && optypeb==0 )
-            {
-                
-                //
-                // A*B
-                //
-                for(i=0; i<=m-1; i++)
-                {
-                    if( beta!=0 )
-                    {
-                        for(i_=jc; i_<=jc+n-1;i_++)
-                        {
-                            c[ic+i,i_] = beta*c[ic+i,i_];
-                        }
-                    }
-                    else
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            c[ic+i,jc+j] = 0;
-                        }
-                    }
-                    if( alpha!=0 )
-                    {
-                        for(j=0; j<=k-1; j++)
-                        {
-                            v = alpha*a[ia+i,ja+j];
-                            i1_ = (jb) - (jc);
-                            for(i_=jc; i_<=jc+n-1;i_++)
-                            {
-                                c[ic+i,i_] = c[ic+i,i_] + v*b[ib+j,i_+i1_];
-                            }
-                        }
-                    }
-                }
-                return;
-            }
-            if( optypea!=0 && optypeb!=0 )
-            {
-                
-                //
-                // A'*B'
-                //
-                for(i=0; i<=m-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        if( alpha==0 )
-                        {
-                            v = 0;
-                        }
-                        else
-                        {
-                            if( optypea==1 )
-                            {
-                                if( optypeb==1 )
-                                {
-                                    i1_ = (jb)-(ia);
-                                    v = 0.0;
-                                    for(i_=ia; i_<=ia+k-1;i_++)
-                                    {
-                                        v += a[i_,ja+i]*b[ib+j,i_+i1_];
-                                    }
-                                }
-                                else
-                                {
-                                    i1_ = (jb)-(ia);
-                                    v = 0.0;
-                                    for(i_=ia; i_<=ia+k-1;i_++)
-                                    {
-                                        v += a[i_,ja+i]*math.conj(b[ib+j,i_+i1_]);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if( optypeb==1 )
-                                {
-                                    i1_ = (jb)-(ia);
-                                    v = 0.0;
-                                    for(i_=ia; i_<=ia+k-1;i_++)
-                                    {
-                                        v += math.conj(a[i_,ja+i])*b[ib+j,i_+i1_];
-                                    }
-                                }
-                                else
-                                {
-                                    i1_ = (jb)-(ia);
-                                    v = 0.0;
-                                    for(i_=ia; i_<=ia+k-1;i_++)
-                                    {
-                                        v += math.conj(a[i_,ja+i])*math.conj(b[ib+j,i_+i1_]);
-                                    }
-                                }
-                            }
-                        }
-                        if( beta==0 )
-                        {
-                            c[ic+i,jc+j] = alpha*v;
-                        }
-                        else
-                        {
-                            c[ic+i,jc+j] = beta*c[ic+i,jc+j]+alpha*v;
-                        }
-                    }
-                }
-                return;
-            }
-            if( optypea!=0 && optypeb==0 )
-            {
-                
-                //
-                // A'*B
-                //
-                if( beta==0 )
-                {
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            c[ic+i,jc+j] = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(i_=jc; i_<=jc+n-1;i_++)
-                        {
-                            c[ic+i,i_] = beta*c[ic+i,i_];
-                        }
-                    }
-                }
-                if( alpha!=0 )
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        for(i=0; i<=m-1; i++)
-                        {
-                            if( optypea==1 )
-                            {
-                                v = alpha*a[ia+j,ja+i];
-                            }
-                            else
-                            {
-                                v = alpha*math.conj(a[ia+j,ja+i]);
-                            }
-                            i1_ = (jb) - (jc);
-                            for(i_=jc; i_<=jc+n-1;i_++)
-                            {
-                                c[ic+i,i_] = c[ic+i,i_] + v*b[ib+j,i_+i1_];
-                            }
-                        }
-                    }
-                }
-                return;
-            }
-        }
-
-
-        /*************************************************************************
-        GEMM kernel
-
-          -- ALGLIB routine --
-             16.12.2009
-             Bochkanov Sergey
-        *************************************************************************/
-        private static void rmatrixgemmk(int m,
-            int n,
-            int k,
-            double alpha,
-            double[,] a,
-            int ia,
-            int ja,
-            int optypea,
-            double[,] b,
-            int ib,
-            int jb,
-            int optypeb,
-            double beta,
-            double[,] c,
-            int ic,
-            int jc)
-        {
-            int i = 0;
-            int j = 0;
-            double v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            
-            //
-            // if matrix size is zero
-            //
-            if( m*n==0 )
-            {
-                return;
-            }
-            
-            //
-            // Try optimized code
-            //
-            if( ablasf.rmatrixgemmf(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc) )
-            {
-                return;
-            }
-            
-            //
-            // if K=0, then C=Beta*C
-            //
-            if( k==0 )
-            {
-                if( (double)(beta)!=(double)(1) )
-                {
-                    if( (double)(beta)!=(double)(0) )
-                    {
-                        for(i=0; i<=m-1; i++)
-                        {
-                            for(j=0; j<=n-1; j++)
-                            {
-                                c[ic+i,jc+j] = beta*c[ic+i,jc+j];
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for(i=0; i<=m-1; i++)
-                        {
-                            for(j=0; j<=n-1; j++)
-                            {
-                                c[ic+i,jc+j] = 0;
-                            }
-                        }
-                    }
-                }
-                return;
-            }
-            
-            //
-            // General case
-            //
-            if( optypea==0 && optypeb!=0 )
-            {
-                
-                //
-                // A*B'
-                //
-                for(i=0; i<=m-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        if( k==0 || (double)(alpha)==(double)(0) )
-                        {
-                            v = 0;
-                        }
-                        else
-                        {
-                            i1_ = (jb)-(ja);
-                            v = 0.0;
-                            for(i_=ja; i_<=ja+k-1;i_++)
-                            {
-                                v += a[ia+i,i_]*b[ib+j,i_+i1_];
-                            }
-                        }
-                        if( (double)(beta)==(double)(0) )
-                        {
-                            c[ic+i,jc+j] = alpha*v;
-                        }
-                        else
-                        {
-                            c[ic+i,jc+j] = beta*c[ic+i,jc+j]+alpha*v;
-                        }
-                    }
-                }
-                return;
-            }
-            if( optypea==0 && optypeb==0 )
-            {
-                
-                //
-                // A*B
-                //
-                for(i=0; i<=m-1; i++)
-                {
-                    if( (double)(beta)!=(double)(0) )
-                    {
-                        for(i_=jc; i_<=jc+n-1;i_++)
-                        {
-                            c[ic+i,i_] = beta*c[ic+i,i_];
-                        }
-                    }
-                    else
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            c[ic+i,jc+j] = 0;
-                        }
-                    }
-                    if( (double)(alpha)!=(double)(0) )
-                    {
-                        for(j=0; j<=k-1; j++)
-                        {
-                            v = alpha*a[ia+i,ja+j];
-                            i1_ = (jb) - (jc);
-                            for(i_=jc; i_<=jc+n-1;i_++)
-                            {
-                                c[ic+i,i_] = c[ic+i,i_] + v*b[ib+j,i_+i1_];
-                            }
-                        }
-                    }
-                }
-                return;
-            }
-            if( optypea!=0 && optypeb!=0 )
-            {
-                
-                //
-                // A'*B'
-                //
-                for(i=0; i<=m-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        if( (double)(alpha)==(double)(0) )
-                        {
-                            v = 0;
-                        }
-                        else
-                        {
-                            i1_ = (jb)-(ia);
-                            v = 0.0;
-                            for(i_=ia; i_<=ia+k-1;i_++)
-                            {
-                                v += a[i_,ja+i]*b[ib+j,i_+i1_];
-                            }
-                        }
-                        if( (double)(beta)==(double)(0) )
-                        {
-                            c[ic+i,jc+j] = alpha*v;
-                        }
-                        else
-                        {
-                            c[ic+i,jc+j] = beta*c[ic+i,jc+j]+alpha*v;
-                        }
-                    }
-                }
-                return;
-            }
-            if( optypea!=0 && optypeb==0 )
-            {
-                
-                //
-                // A'*B
-                //
-                if( (double)(beta)==(double)(0) )
-                {
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            c[ic+i,jc+j] = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    for(i=0; i<=m-1; i++)
-                    {
-                        for(i_=jc; i_<=jc+n-1;i_++)
-                        {
-                            c[ic+i,i_] = beta*c[ic+i,i_];
-                        }
-                    }
-                }
-                if( (double)(alpha)!=(double)(0) )
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        for(i=0; i<=m-1; i++)
-                        {
-                            v = alpha*a[ia+j,ja+i];
-                            i1_ = (jb) - (jc);
-                            for(i_=jc; i_<=jc+n-1;i_++)
-                            {
-                                c[ic+i,i_] = c[ic+i,i_] + v*b[ib+j,i_+i1_];
-                            }
-                        }
-                    }
-                }
-                return;
-            }
-        }
-
-
     }
     public class ortfac
     {
         /*************************************************************************
         QR decomposition of a rectangular matrix of size MxN
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A   -   matrix A whose indexes range within [0..M-1, 0..N-1].
@@ -8692,7 +11655,55 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixqr(ref double[,] a,
+            int m,
+            int n,
+            ref double[] tau)
+        {
+            rmatrixqr(ref a,m,n,ref tau);
+        }
+
+
+        /*************************************************************************
         LQ decomposition of a rectangular matrix of size MxN
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A   -   matrix A whose indexes range within [0..M-1, 0..N-1].
@@ -8846,7 +11857,55 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixlq(ref double[,] a,
+            int m,
+            int n,
+            ref double[] tau)
+        {
+            rmatrixlq(ref a,m,n,ref tau);
+        }
+
+
+        /*************************************************************************
         QR decomposition of a rectangular complex matrix of size MxN
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A   -   matrix A whose indexes range within [0..M-1, 0..N-1]
@@ -8955,9 +12014,9 @@ public partial class alglib
                         // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
                         // Q' = E + Y*T'*Y' = E + TmpA*TmpT'*TmpA'
                         //
-                        ablas.cmatrixgemm(blocksize, n-blockstart-blocksize, rowscount, 1.0, tmpa, 0, 0, 2, a, blockstart, blockstart+blocksize, 0, 0.0, ref tmpr, 0, 0);
-                        ablas.cmatrixgemm(blocksize, n-blockstart-blocksize, blocksize, 1.0, tmpt, 0, 0, 2, tmpr, 0, 0, 0, 0.0, ref tmpr, blocksize, 0);
-                        ablas.cmatrixgemm(rowscount, n-blockstart-blocksize, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, ref a, blockstart, blockstart+blocksize);
+                        ablas.cmatrixgemm(blocksize, n-blockstart-blocksize, rowscount, 1.0, tmpa, 0, 0, 2, a, blockstart, blockstart+blocksize, 0, 0.0, tmpr, 0, 0);
+                        ablas.cmatrixgemm(blocksize, n-blockstart-blocksize, blocksize, 1.0, tmpt, 0, 0, 2, tmpr, 0, 0, 0, 0.0, tmpr, blocksize, 0);
+                        ablas.cmatrixgemm(rowscount, n-blockstart-blocksize, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, a, blockstart, blockstart+blocksize);
                     }
                     else
                     {
@@ -8987,7 +12046,55 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixqr(ref complex[,] a,
+            int m,
+            int n,
+            ref complex[] tau)
+        {
+            cmatrixqr(ref a,m,n,ref tau);
+        }
+
+
+        /*************************************************************************
         LQ decomposition of a rectangular complex matrix of size MxN
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A   -   matrix A whose indexes range within [0..M-1, 0..N-1]
@@ -9095,9 +12202,9 @@ public partial class alglib
                         //
                         // Q  = E + Y*T*Y'  = E + TmpA'*TmpT*TmpA
                         //
-                        ablas.cmatrixgemm(m-blockstart-blocksize, blocksize, columnscount, 1.0, a, blockstart+blocksize, blockstart, 0, tmpa, 0, 0, 2, 0.0, ref tmpr, 0, 0);
-                        ablas.cmatrixgemm(m-blockstart-blocksize, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 0, 0.0, ref tmpr, 0, blocksize);
-                        ablas.cmatrixgemm(m-blockstart-blocksize, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, ref a, blockstart+blocksize, blockstart);
+                        ablas.cmatrixgemm(m-blockstart-blocksize, blocksize, columnscount, 1.0, a, blockstart+blocksize, blockstart, 0, tmpa, 0, 0, 2, 0.0, tmpr, 0, 0);
+                        ablas.cmatrixgemm(m-blockstart-blocksize, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 0, 0.0, tmpr, 0, blocksize);
+                        ablas.cmatrixgemm(m-blockstart-blocksize, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, a, blockstart+blocksize, blockstart);
                     }
                     else
                     {
@@ -9127,7 +12234,55 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixlq(ref complex[,] a,
+            int m,
+            int n,
+            ref complex[] tau)
+        {
+            cmatrixlq(ref a,m,n,ref tau);
+        }
+
+
+        /*************************************************************************
         Partial unpacking of matrix Q from the QR decomposition of a matrix A
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrices Q and R in compact form.
@@ -9279,6 +12434,20 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixqrunpackq(double[,] a,
+            int m,
+            int n,
+            double[] tau,
+            int qcolumns,
+            ref double[,] q)
+        {
+            rmatrixqrunpackq(a,m,n,tau,qcolumns,ref q);
+        }
+
+
+        /*************************************************************************
         Unpacking of matrix R from the QR decomposition of a matrix A
 
         Input parameters:
@@ -9334,6 +12503,42 @@ public partial class alglib
 
         /*************************************************************************
         Partial unpacking of matrix Q from the LQ decomposition of a matrix A
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrices L and Q in compact form.
@@ -9485,6 +12690,20 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixlqunpackq(double[,] a,
+            int m,
+            int n,
+            double[] tau,
+            int qrows,
+            ref double[,] q)
+        {
+            rmatrixlqunpackq(a,m,n,tau,qrows,ref q);
+        }
+
+
+        /*************************************************************************
         Unpacking of matrix L from the LQ decomposition of a matrix A
 
         Input parameters:
@@ -9540,6 +12759,42 @@ public partial class alglib
 
         /*************************************************************************
         Partial unpacking of matrix Q from QR decomposition of a complex matrix A.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A           -   matrices Q and R in compact form.
@@ -9661,9 +12916,9 @@ public partial class alglib
                         //
                         // Q  = E + Y*T*Y'  = E + TmpA*TmpT*TmpA'
                         //
-                        ablas.cmatrixgemm(blocksize, qcolumns, rowscount, 1.0, tmpa, 0, 0, 2, q, blockstart, 0, 0, 0.0, ref tmpr, 0, 0);
-                        ablas.cmatrixgemm(blocksize, qcolumns, blocksize, 1.0, tmpt, 0, 0, 0, tmpr, 0, 0, 0, 0.0, ref tmpr, blocksize, 0);
-                        ablas.cmatrixgemm(rowscount, qcolumns, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, ref q, blockstart, 0);
+                        ablas.cmatrixgemm(blocksize, qcolumns, rowscount, 1.0, tmpa, 0, 0, 2, q, blockstart, 0, 0, 0.0, tmpr, 0, 0);
+                        ablas.cmatrixgemm(blocksize, qcolumns, blocksize, 1.0, tmpt, 0, 0, 0, tmpr, 0, 0, 0, 0.0, tmpr, blocksize, 0);
+                        ablas.cmatrixgemm(rowscount, qcolumns, blocksize, 1.0, tmpa, 0, 0, 0, tmpr, blocksize, 0, 0, 1.0, q, blockstart, 0);
                     }
                     else
                     {
@@ -9690,6 +12945,20 @@ public partial class alglib
                 blockstart = blockstart-ablas.ablascomplexblocksize(a);
                 blocksize = ablas.ablascomplexblocksize(a);
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixqrunpackq(complex[,] a,
+            int m,
+            int n,
+            complex[] tau,
+            int qcolumns,
+            ref complex[,] q)
+        {
+            cmatrixqrunpackq(a,m,n,tau,qcolumns,ref q);
         }
 
 
@@ -9749,6 +13018,42 @@ public partial class alglib
 
         /*************************************************************************
         Partial unpacking of matrix Q from LQ decomposition of a complex matrix A.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that QP decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=512,   achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A           -   matrices Q and R in compact form.
@@ -9869,9 +13174,9 @@ public partial class alglib
                         //
                         // Q'  = E + Y*T'*Y'  = E + TmpA'*TmpT'*TmpA
                         //
-                        ablas.cmatrixgemm(qrows, blocksize, columnscount, 1.0, q, 0, blockstart, 0, tmpa, 0, 0, 2, 0.0, ref tmpr, 0, 0);
-                        ablas.cmatrixgemm(qrows, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 2, 0.0, ref tmpr, 0, blocksize);
-                        ablas.cmatrixgemm(qrows, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, ref q, 0, blockstart);
+                        ablas.cmatrixgemm(qrows, blocksize, columnscount, 1.0, q, 0, blockstart, 0, tmpa, 0, 0, 2, 0.0, tmpr, 0, 0);
+                        ablas.cmatrixgemm(qrows, blocksize, blocksize, 1.0, tmpr, 0, 0, 0, tmpt, 0, 0, 2, 0.0, tmpr, 0, blocksize);
+                        ablas.cmatrixgemm(qrows, columnscount, blocksize, 1.0, tmpr, 0, blocksize, 0, tmpa, 0, 0, 0, 1.0, q, 0, blockstart);
                     }
                     else
                     {
@@ -9898,6 +13203,20 @@ public partial class alglib
                 blockstart = blockstart-ablas.ablascomplexblocksize(a);
                 blocksize = ablas.ablascomplexblocksize(a);
             }
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixlqunpackq(complex[,] a,
+            int m,
+            int n,
+            complex[] tau,
+            int qrows,
+            ref complex[,] q)
+        {
+            cmatrixlqunpackq(a,m,n,tau,qrows,ref q);
         }
 
 
@@ -10035,12 +13354,10 @@ public partial class alglib
         {
             int i = 0;
             int k = 0;
-            int minmn = 0;
             double tmp = 0;
             int i_ = 0;
             int i1_ = 0;
 
-            minmn = Math.Min(m, n);
             k = Math.Min(m, n);
             for(i=0; i<=k-1; i++)
             {
@@ -10077,7 +13394,25 @@ public partial class alglib
         Reduction of a rectangular matrix to  bidiagonal form
 
         The algorithm reduces the rectangular matrix A to  bidiagonal form by
-        orthogonal transformations P and Q: A = Q*B*P.
+        orthogonal transformations P and Q: A = Q*B*(P^T).
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Multithreaded acceleration is NOT supported for this function  because
+          ! bidiagonal decompostion is inherently sequential in nature.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   source matrix. array[0..M-1, 0..N-1]
@@ -10138,7 +13473,6 @@ public partial class alglib
         {
             double[] work = new double[0];
             double[] t = new double[0];
-            int minmn = 0;
             int maxmn = 0;
             int i = 0;
             double ltau = 0;
@@ -10156,7 +13490,6 @@ public partial class alglib
             {
                 return;
             }
-            minmn = Math.Min(m, n);
             maxmn = Math.Max(m, n);
             work = new double[maxmn+1];
             t = new double[maxmn+1];
@@ -10164,12 +13497,37 @@ public partial class alglib
             {
                 tauq = new double[n];
                 taup = new double[n];
+                for(i=0; i<=n-1; i++)
+                {
+                    tauq[i] = 0.0;
+                    taup[i] = 0.0;
+                }
             }
             else
             {
                 tauq = new double[m];
                 taup = new double[m];
+                for(i=0; i<=m-1; i++)
+                {
+                    tauq[i] = 0.0;
+                    taup[i] = 0.0;
+                }
             }
+            
+            //
+            // Try to use MKL code
+            //
+            // NOTE: buffers Work[] and T[] are used for temporary storage of diagonals;
+            // because they are present in A[], we do not use them.
+            //
+            if( ablasmkl.rmatrixbdmkl(a, m, n, work, t, tauq, taup) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB code
+            //
             if( m>=n )
             {
                 
@@ -10300,6 +13658,23 @@ public partial class alglib
         /*************************************************************************
         Unpacking matrix Q which reduces a matrix to bidiagonal form.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+          
         Input parameters:
             QP          -   matrices Q and P in compact form.
                             Output of ToBidiagonal subroutine.
@@ -10369,6 +13744,23 @@ public partial class alglib
 
         The algorithm allows pre- or post-multiply by Q or Q'.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+          
         Input parameters:
             QP          -   matrices Q and P in compact form.
                             Output of ToBidiagonal subroutine.
@@ -10410,6 +13802,7 @@ public partial class alglib
             int istep = 0;
             double[] v = new double[0];
             double[] work = new double[0];
+            double[] dummy = new double[0];
             int mx = 0;
             int i_ = 0;
             int i1_ = 0;
@@ -10419,6 +13812,14 @@ public partial class alglib
                 return;
             }
             alglib.ap.assert((fromtheright && zcolumns==m) || (!fromtheright && zrows==m), "RMatrixBDMultiplyByQ: incorrect Z size!");
+            
+            //
+            // Try to use MKL code
+            //
+            if( ablasmkl.rmatrixbdmultiplybymkl(qp, m, n, tauq, dummy, z, zrows, zcolumns, true, fromtheright, dotranspose) )
+            {
+                return;
+            }
             
             //
             // init
@@ -10644,6 +14045,7 @@ public partial class alglib
             int i = 0;
             double[] v = new double[0];
             double[] work = new double[0];
+            double[] dummy = new double[0];
             int mx = 0;
             int i1 = 0;
             int i2 = 0;
@@ -10841,6 +14243,26 @@ public partial class alglib
         Reduction of a square matrix to  upper Hessenberg form: Q'*A*Q = H,
         where Q is an orthogonal matrix, H - Hessenberg matrix.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         Input parameters:
             A       -   matrix A with elements [0..N-1, 0..N-1]
             N       -   size of matrix A.
@@ -10893,9 +14315,25 @@ public partial class alglib
             {
                 return;
             }
+            
+            //
+            // Allocate place
+            //
             tau = new double[n-2+1];
             t = new double[n+1];
             work = new double[n-1+1];
+            
+            //
+            // MKL version
+            //
+            if( ablasmkl.rmatrixhessenbergmkl(a, n, tau) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version
+            //
             for(i=0; i<=n-2; i++)
             {
                 
@@ -10931,6 +14369,26 @@ public partial class alglib
 
         /*************************************************************************
         Unpacking matrix Q which reduces matrix A to upper Hessenberg form
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A   -   output of RMatrixHessenberg subroutine.
@@ -10987,7 +14445,15 @@ public partial class alglib
             }
             
             //
-            // unpack Q
+            // MKL version
+            //
+            if( ablasmkl.rmatrixhessenbergunpackqmkl(a, n, tau, q) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version: unpack Q
             //
             for(i=0; i<=n-2; i++)
             {
@@ -11056,6 +14522,26 @@ public partial class alglib
         Reduction of a symmetric matrix which is given by its higher or lower
         triangular part to a tridiagonal matrix using orthogonal similarity
         transformation: Q'*A*Q=T.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrix to be transformed
@@ -11158,6 +14644,18 @@ public partial class alglib
             {
                 e = new double[n-2+1];
             }
+            
+            //
+            // Try to use MKL
+            //
+            if( ablasmkl.smatrixtdmkl(a, n, isupper, tau, d, e) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version
+            //
             if( isupper )
             {
                 
@@ -11342,6 +14840,27 @@ public partial class alglib
         Unpacking matrix Q which reduces symmetric matrix to a tridiagonal
         form.
 
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         Input parameters:
             A       -   the result of a SMatrixTD subroutine
             N       -   size of matrix A.
@@ -11397,7 +14916,15 @@ public partial class alglib
             }
             
             //
-            // unpack Q
+            // MKL version
+            //
+            if( ablasmkl.smatrixtdunpackqmkl(a, n, isupper, tau, q) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version: unpack Q
             //
             if( isupper )
             {
@@ -11440,6 +14967,27 @@ public partial class alglib
         Reduction of a Hermitian matrix which is given  by  its  higher  or  lower
         triangular part to a real  tridiagonal  matrix  using  unitary  similarity
         transformation: Q'*A*Q = T.
+
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrix to be transformed
@@ -11526,6 +15074,10 @@ public partial class alglib
             d = new double[0];
             e = new double[0];
 
+            
+            //
+            // Init and test
+            //
             if( n<=0 )
             {
                 return;
@@ -11543,6 +15095,18 @@ public partial class alglib
             t = new complex[n-1+1];
             t2 = new complex[n-1+1];
             t3 = new complex[n-1+1];
+            
+            //
+            // MKL version
+            //
+            if( ablasmkl.hmatrixtdmkl(a, n, isupper, tau, d, e) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version
+            //
             if( isupper )
             {
                 
@@ -11737,6 +15301,27 @@ public partial class alglib
         Unpacking matrix Q which reduces a Hermitian matrix to a real  tridiagonal
         form.
 
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         Input parameters:
             A       -   the result of a HMatrixTD subroutine
             N       -   size of matrix A.
@@ -11776,6 +15361,18 @@ public partial class alglib
             q = new complex[n-1+1, n-1+1];
             v = new complex[n+1];
             work = new complex[n-1+1];
+            
+            //
+            // MKL version
+            //
+            if( ablasmkl.hmatrixtdunpackqmkl(a, n, isupper, tau, q) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version
+            //
             for(i=0; i<=n-1; i++)
             {
                 for(j=0; j<=n-1; j++)
@@ -11790,10 +15387,6 @@ public partial class alglib
                     }
                 }
             }
-            
-            //
-            // unpack Q
-            //
             if( isupper )
             {
                 for(i=0; i<=n-2; i++)
@@ -12207,6 +15800,26 @@ public partial class alglib
         /*************************************************************************
         Singular value decomposition of a bidiagonal matrix (extended algorithm)
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         The algorithm performs the singular value decomposition  of  a  bidiagonal
         matrix B (upper or lower) representing it as B = Q*S*P^T, where Q and  P -
         orthogonal matrices, S - diagonal matrix with non-negative elements on the
@@ -12264,6 +15877,10 @@ public partial class alglib
         Result:
             True, if the algorithm has converged.
             False, if the algorithm hasn't converged (rare case).
+            
+        NOTE: multiplication U*Q is performed by means of transposition to internal
+              buffer, multiplication and backward transposition. It helps to avoid
+              costly columnwise operations and speed-up algorithm.
 
         Additional information:
             The type of convergence is controlled by the internal  parameter  TOL.
@@ -12274,6 +15891,7 @@ public partial class alglib
             where Epsilon is the machine precision. It is not  recommended  to  use
             TOL less than 10*Epsilon since this will  considerably  slow  down  the
             algorithm and may not lead to error decreasing.
+            
         History:
             * 31 March, 2007.
                 changed MAXITR from 6 to 12.
@@ -12296,6 +15914,8 @@ public partial class alglib
             int ncvt)
         {
             bool result = new bool();
+            int i = 0;
+            double[] en = new double[0];
             double[] d1 = new double[0];
             double[] e1 = new double[0];
             int i_ = 0;
@@ -12303,6 +15923,25 @@ public partial class alglib
 
             e = (double[])e.Clone();
 
+            result = false;
+            
+            //
+            // Try to use MKL
+            //
+            en = new double[n];
+            for(i=0; i<=n-2; i++)
+            {
+                en[i] = e[i];
+            }
+            en[n-1] = 0.0;
+            if( ablasmkl.rmatrixbdsvdmkl(d, en, n, isupper, u, nru, c, ncc, vt, ncvt, ref result) )
+            {
+                return result;
+            }
+            
+            //
+            // Use ALGLIB code
+            //
             d1 = new double[n+1];
             i1_ = (0) - (1);
             for(i_=1; i_<=n;i_++)
@@ -12318,7 +15957,7 @@ public partial class alglib
                     e1[i_] = e[i_+i1_];
                 }
             }
-            result = bidiagonalsvddecompositioninternal(ref d1, e1, n, isupper, isfractionalaccuracyrequired, ref u, 0, nru, ref c, 0, ncc, ref vt, 0, ncvt);
+            result = bidiagonalsvddecompositioninternal(d1, e1, n, isupper, isfractionalaccuracyrequired, u, 0, nru, c, 0, ncc, vt, 0, ncvt);
             i1_ = (1) - (0);
             for(i_=0; i_<=n-1;i_++)
             {
@@ -12344,7 +15983,7 @@ public partial class alglib
 
             e = (double[])e.Clone();
 
-            result = bidiagonalsvddecompositioninternal(ref d, e, n, isupper, isfractionalaccuracyrequired, ref u, 1, nru, ref c, 1, ncc, ref vt, 1, ncvt);
+            result = bidiagonalsvddecompositioninternal(d, e, n, isupper, isfractionalaccuracyrequired, u, 1, nru, c, 1, ncc, vt, 1, ncvt);
             return result;
         }
 
@@ -12352,18 +15991,18 @@ public partial class alglib
         /*************************************************************************
         Internal working subroutine for bidiagonal decomposition
         *************************************************************************/
-        private static bool bidiagonalsvddecompositioninternal(ref double[] d,
+        private static bool bidiagonalsvddecompositioninternal(double[] d,
             double[] e,
             int n,
             bool isupper,
             bool isfractionalaccuracyrequired,
-            ref double[,] u,
+            double[,] uu,
             int ustart,
             int nru,
-            ref double[,] c,
+            double[,] c,
             int cstart,
             int ncc,
-            ref double[,] vt,
+            double[,] vt,
             int vstart,
             int ncvt)
         {
@@ -12401,7 +16040,6 @@ public partial class alglib
             double smax = 0;
             double smin = 0;
             double sminl = 0;
-            double sminlo = 0;
             double sminoa = 0;
             double sn = 0;
             double thresh = 0;
@@ -12419,7 +16057,7 @@ public partial class alglib
             double[] vttemp = new double[0];
             double[] ctemp = new double[0];
             double[] etemp = new double[0];
-            bool rightside = new bool();
+            double[,] ut = new double[0,0];
             bool fwddir = new bool();
             double tmp = 0;
             int mm1 = 0;
@@ -12474,8 +16112,12 @@ public partial class alglib
             vttemp = new double[vend+1];
             ctemp = new double[cend+1];
             maxitr = 12;
-            rightside = true;
             fwddir = true;
+            if( nru>0 )
+            {
+                ut = new double[ustart+n, ustart+nru];
+                ablas.rmatrixtranspose(nru, n, uu, ustart, ustart, ut, ustart, ustart);
+            }
             
             //
             // resize E from N-1 to N
@@ -12520,11 +16162,11 @@ public partial class alglib
                 //
                 if( nru>0 )
                 {
-                    rotations.applyrotationsfromtheright(fwddir, ustart, uend, 1+ustart-1, n+ustart-1, work0, work1, ref u, ref utemp);
+                    rotations.applyrotationsfromtheleft(fwddir, 1+ustart-1, n+ustart-1, ustart, uend, work0, work1, ut, utemp);
                 }
                 if( ncc>0 )
                 {
-                    rotations.applyrotationsfromtheleft(fwddir, 1+cstart-1, n+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
+                    rotations.applyrotationsfromtheleft(fwddir, 1+cstart-1, n+cstart-1, cstart, cend, work0, work1, c, ctemp);
                 }
             }
             
@@ -12713,23 +16355,23 @@ public partial class alglib
                         mm1 = m-1+ustart-1;
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            utemp[i_] = cosl*u[i_,mm1];
+                            utemp[i_] = cosl*ut[mm1,i_];
                         }
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            utemp[i_] = utemp[i_] + sinl*u[i_,mm0];
+                            utemp[i_] = utemp[i_] + sinl*ut[mm0,i_];
                         }
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            u[i_,mm0] = cosl*u[i_,mm0];
+                            ut[mm0,i_] = cosl*ut[mm0,i_];
                         }
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            u[i_,mm0] = u[i_,mm0] - sinl*u[i_,mm1];
+                            ut[mm0,i_] = ut[mm0,i_] - sinl*ut[mm1,i_];
                         }
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            u[i_,mm1] = utemp[i_];
+                            ut[mm1,i_] = utemp[i_];
                         }
                     }
                     if( ncc>0 )
@@ -12832,7 +16474,6 @@ public partial class alglib
                                 iterflag = true;
                                 break;
                             }
-                            sminlo = sminl;
                             mu = Math.Abs(d[lll+1])*(mu/(mu+Math.Abs(e[lll])));
                             sminl = Math.Min(sminl, mu);
                         }
@@ -12872,7 +16513,6 @@ public partial class alglib
                                 iterflag = true;
                                 break;
                             }
-                            sminlo = sminl;
                             mu = Math.Abs(d[lll])*(mu/(mu+Math.Abs(e[lll])));
                             sminl = Math.Min(sminl, mu);
                         }
@@ -12968,15 +16608,15 @@ public partial class alglib
                         //
                         if( ncvt>0 )
                         {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, ref vt, ref vttemp);
+                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, vt, vttemp);
                         }
                         if( nru>0 )
                         {
-                            rotations.applyrotationsfromtheright(fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work2, work3, ref u, ref utemp);
+                            rotations.applyrotationsfromtheleft(fwddir, ll+ustart-1, m+ustart-1, ustart, uend, work2, work3, ut, utemp);
                         }
                         if( ncc>0 )
                         {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, ref c, ref ctemp);
+                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, c, ctemp);
                         }
                         
                         //
@@ -13019,15 +16659,15 @@ public partial class alglib
                         //
                         if( ncvt>0 )
                         {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, ref vt, ref vttemp);
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, vt, vttemp);
                         }
                         if( nru>0 )
                         {
-                            rotations.applyrotationsfromtheright(!fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work0, work1, ref u, ref utemp);
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+ustart-1, m+ustart-1, ustart, uend, work0, work1, ut, utemp);
                         }
                         if( ncc>0 )
                         {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, c, ctemp);
                         }
                         
                         //
@@ -13086,15 +16726,15 @@ public partial class alglib
                         //
                         if( ncvt>0 )
                         {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, ref vt, ref vttemp);
+                            rotations.applyrotationsfromtheleft(fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work0, work1, vt, vttemp);
                         }
                         if( nru>0 )
                         {
-                            rotations.applyrotationsfromtheright(fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work2, work3, ref u, ref utemp);
+                            rotations.applyrotationsfromtheleft(fwddir, ll+ustart-1, m+ustart-1, ustart, uend, work2, work3, ut, utemp);
                         }
                         if( ncc>0 )
                         {
-                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, ref c, ref ctemp);
+                            rotations.applyrotationsfromtheleft(fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work2, work3, c, ctemp);
                         }
                         
                         //
@@ -13154,15 +16794,15 @@ public partial class alglib
                         //
                         if( ncvt>0 )
                         {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, ref vt, ref vttemp);
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+vstart-1, m+vstart-1, vstart, vend, work2, work3, vt, vttemp);
                         }
                         if( nru>0 )
                         {
-                            rotations.applyrotationsfromtheright(!fwddir, ustart, uend, ll+ustart-1, m+ustart-1, work0, work1, ref u, ref utemp);
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+ustart-1, m+ustart-1, ustart, uend, work0, work1, ut, utemp);
                         }
                         if( ncc>0 )
                         {
-                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, ref c, ref ctemp);
+                            rotations.applyrotationsfromtheleft(!fwddir, ll+cstart-1, m+cstart-1, cstart, cend, work0, work1, c, ctemp);
                         }
                     }
                 }
@@ -13244,15 +16884,15 @@ public partial class alglib
                         j = n+1-i;
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            utemp[i_] = u[i_,isub+ustart-1];
+                            utemp[i_] = ut[isub+ustart-1,i_];
                         }
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            u[i_,isub+ustart-1] = u[i_,j+ustart-1];
+                            ut[isub+ustart-1,i_] = ut[j+ustart-1,i_];
                         }
                         for(i_=ustart; i_<=uend;i_++)
                         {
-                            u[i_,j+ustart-1] = utemp[i_];
+                            ut[j+ustart-1,i_] = utemp[i_];
                         }
                     }
                     if( ncc>0 )
@@ -13272,6 +16912,14 @@ public partial class alglib
                         }
                     }
                 }
+            }
+            
+            //
+            // Copy U back from temporary storage
+            //
+            if( nru>0 )
+            {
+                ablas.rmatrixtranspose(n, nru, ut, ustart, ustart, uu, ustart, ustart);
             }
             return result;
         }
@@ -13593,6 +17241,27 @@ public partial class alglib
         /*************************************************************************
         Singular value decomposition of a rectangular matrix.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is only partially supported (some parts are
+          ! optimized, but most - are not).
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         The algorithm calculates the singular value decomposition of a matrix of
         size MxN: A = U * S * V^T
 
@@ -13780,7 +17449,7 @@ public partial class alglib
                         blas.copymatrix(u, 0, m-1, 0, n-1, ref a, 0, m-1, 0, n-1);
                         blas.inplacetranspose(ref t2, 0, n-1, 0, n-1, ref work);
                         result = bdsvd.rmatrixbdsvd(ref w, e, n, isupper, false, ref u, 0, ref t2, n, ref vt, ncvt);
-                        blas.matrixmatrixmultiply(a, 0, m-1, 0, n-1, false, t2, 0, n-1, 0, n-1, true, 1.0, ref u, 0, m-1, 0, n-1, 0.0, ref work);
+                        ablas.rmatrixgemm(m, n, n, 1.0, a, 0, 0, 0, t2, 0, 0, 1, 0.0, u, 0, 0);
                     }
                     return result;
                 }
@@ -13853,7 +17522,7 @@ public partial class alglib
                         ortfac.rmatrixbdunpackpt(a, m, m, taup, m, ref t2);
                         result = bdsvd.rmatrixbdsvd(ref w, e, m, isupper, false, ref a, 0, ref u, nru, ref t2, m);
                         blas.copymatrix(vt, 0, m-1, 0, n-1, ref a, 0, m-1, 0, n-1);
-                        blas.matrixmatrixmultiply(t2, 0, m-1, 0, m-1, false, a, 0, m-1, 0, n-1, false, 1.0, ref vt, 0, m-1, 0, n-1, 0.0, ref work);
+                        ablas.rmatrixgemm(m, n, m, 1.0, t2, 0, 0, 0, a, 0, 0, 0, 0.0, vt, 0, 0);
                     }
                     blas.inplacetranspose(ref u, 0, nru-1, 0, ncu-1, ref work);
                     return result;
@@ -13907,6 +17576,23 @@ public partial class alglib
         }
 
 
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static bool _pexec_rmatrixsvd(double[,] a,
+            int m,
+            int n,
+            int uneeded,
+            int vtneeded,
+            int additionalmemory,
+            ref double[] w,
+            ref double[,] u,
+            ref double[,] vt)
+        {
+            return rmatrixsvd(a,m,n,uneeded,vtneeded,additionalmemory,ref w,ref u,ref vt);
+        }
+
+
     }
     public class evd
     {
@@ -13915,6 +17601,26 @@ public partial class alglib
 
         The algorithm finds eigen pairs of a symmetric matrix by reducing it to
         tridiagonal form and using the QL/QR algorithm.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   symmetric matrix which is given by its upper or lower
@@ -14110,6 +17816,26 @@ public partial class alglib
         The algorithm finds eigen pairs of a Hermitian matrix by  reducing  it  to
         real tridiagonal form and using the QL/QR algorithm.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         Input parameters:
             A       -   Hermitian matrix which is given  by  its  upper  or  lower
                         triangular part.
@@ -14151,13 +17877,11 @@ public partial class alglib
             bool result = new bool();
             complex[] tau = new complex[0];
             double[] e = new double[0];
-            double[] work = new double[0];
             double[,] t = new double[0,0];
+            double[,] qz = new double[0,0];
             complex[,] q = new complex[0,0];
             int i = 0;
-            int k = 0;
-            double v = 0;
-            int i_ = 0;
+            int j = 0;
 
             a = (complex[,])a.Clone();
             d = new double[0];
@@ -14186,49 +17910,44 @@ public partial class alglib
             //
             if( result && zneeded!=0 )
             {
-                work = new double[n-1+1];
-                z = new complex[n-1+1, n-1+1];
+                z = new complex[n, n];
+                qz = new double[n, 2*n];
+                
+                //
+                // Calculate Re(Q)*T
+                //
                 for(i=0; i<=n-1; i++)
                 {
-                    
-                    //
-                    // Calculate real part
-                    //
-                    for(k=0; k<=n-1; k++)
+                    for(j=0; j<=n-1; j++)
                     {
-                        work[k] = 0;
+                        qz[i,j] = q[i,j].x;
                     }
-                    for(k=0; k<=n-1; k++)
+                }
+                ablas.rmatrixgemm(n, n, n, 1.0, qz, 0, 0, 0, t, 0, 0, 0, 0.0, qz, 0, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
                     {
-                        v = q[i,k].x;
-                        for(i_=0; i_<=n-1;i_++)
-                        {
-                            work[i_] = work[i_] + v*t[k,i_];
-                        }
+                        z[i,j].x = qz[i,n+j];
                     }
-                    for(k=0; k<=n-1; k++)
+                }
+                
+                //
+                // Calculate Im(Q)*T
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
                     {
-                        z[i,k].x = work[k];
+                        qz[i,j] = q[i,j].y;
                     }
-                    
-                    //
-                    // Calculate imaginary part
-                    //
-                    for(k=0; k<=n-1; k++)
+                }
+                ablas.rmatrixgemm(n, n, n, 1.0, qz, 0, 0, 0, t, 0, 0, 0, 0.0, qz, 0, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
                     {
-                        work[k] = 0;
-                    }
-                    for(k=0; k<=n-1; k++)
-                    {
-                        v = q[i,k].y;
-                        for(i_=0; i_<=n-1;i_++)
-                        {
-                            work[i_] = work[i_] + v*t[k,i_];
-                        }
-                    }
-                    for(k=0; k<=n-1; k++)
-                    {
-                        z[i,k].y = work[k];
+                        z[i,j].y = qz[i,n+j];
                     }
                 }
             }
@@ -14528,6 +18247,26 @@ public partial class alglib
         The algorithm finds the eigen pairs of a tridiagonal symmetric matrix by
         using an QL/QR algorithm with implicit shifts.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Generally, commercial ALGLIB is several times faster than  open-source
+          ! generic C edition, and many times faster than open-source C# edition.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         Input parameters:
             D       -   the main diagonal of a tridiagonal matrix.
                         Array whose index ranges within [0..N-1].
@@ -14580,13 +18319,61 @@ public partial class alglib
             bool result = new bool();
             double[] d1 = new double[0];
             double[] e1 = new double[0];
+            double[] ex = new double[0];
             double[,] z1 = new double[0,0];
             int i = 0;
+            int j = 0;
             int i_ = 0;
             int i1_ = 0;
 
             e = (double[])e.Clone();
 
+            alglib.ap.assert(n>=1, "SMatrixTDEVD: N<=0");
+            alglib.ap.assert(zneeded>=0 && zneeded<=3, "SMatrixTDEVD: incorrect ZNeeded");
+            result = false;
+            
+            //
+            // Preprocess Z: make ZNeeded equal to 0, 1 or 3.
+            // Ensure that memory for Z is allocated.
+            //
+            if( zneeded==2 )
+            {
+                
+                //
+                // Load identity to Z
+                //
+                apserv.rmatrixsetlengthatleast(ref z, n, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        z[i,j] = 0.0;
+                    }
+                    z[i,i] = 1.0;
+                }
+                zneeded = 1;
+            }
+            if( zneeded==3 )
+            {
+                
+                //
+                // Allocate memory
+                //
+                apserv.rmatrixsetlengthatleast(ref z, 1, n);
+            }
+            
+            //
+            // Try to solve problem with MKL
+            //
+            ex = new double[n];
+            for(i=0; i<=n-2; i++)
+            {
+                ex[i] = e[i];
+            }
+            if( ablasmkl.smatrixtdevdmkl(d, ex, n, zneeded, z, ref result) )
+            {
+                return result;
+            }
             
             //
             // Prepare 1-based task
@@ -15281,7 +19068,31 @@ public partial class alglib
 
 
         /*************************************************************************
-        Finding eigenvalues and eigenvectors of a general matrix
+        Finding eigenvalues and eigenvectors of a general (unsymmetric) matrix
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison. Speed-up provided by MKL for this particular problem (EVD)
+          ! is really high, because  MKL  uses combination of (a) better low-level
+          ! optimizations, and (b) better EVD algorithms.
+          !
+          ! On one particular SSE-capable  machine  for  N=1024,  commercial  MKL-
+          ! -capable ALGLIB was:
+          ! * 7-10 times faster than open source "generic C" version
+          ! * 15-18 times faster than "pure C#" version
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         The algorithm finds eigenvalues and eigenvectors of a general matrix by
         using the QR algorithm with multiple shifts. The algorithm can find
@@ -15359,11 +19170,17 @@ public partial class alglib
             double[,] a1 = new double[0,0];
             double[,] vl1 = new double[0,0];
             double[,] vr1 = new double[0,0];
+            double[,] s1 = new double[0,0];
+            double[,] s = new double[0,0];
+            double[,] dummy = new double[0,0];
             double[] wr1 = new double[0];
             double[] wi1 = new double[0];
+            double[] tau = new double[0];
             int i = 0;
+            int info = 0;
+            bool[] sel1 = new bool[0];
+            int m1 = 0;
             int i_ = 0;
-            int i1_ = 0;
 
             a = (double[,])a.Clone();
             wr = new double[0];
@@ -15372,55 +19189,53 @@ public partial class alglib
             vr = new double[0,0];
 
             alglib.ap.assert(vneeded>=0 && vneeded<=3, "RMatrixEVD: incorrect VNeeded!");
-            a1 = new double[n+1, n+1];
-            for(i=1; i<=n; i++)
+            if( vneeded==0 )
             {
-                i1_ = (0) - (1);
-                for(i_=1; i_<=n;i_++)
-                {
-                    a1[i,i_] = a[i-1,i_+i1_];
-                }
+                
+                //
+                // Eigen values only
+                //
+                ortfac.rmatrixhessenberg(ref a, n, ref tau);
+                hsschur.rmatrixinternalschurdecomposition(a, n, 0, 0, ref wr, ref wi, ref dummy, ref info);
+                result = info==0;
+                return result;
             }
-            result = nonsymmetricevd(a1, n, vneeded, ref wr1, ref wi1, ref vl1, ref vr1);
-            if( result )
+            
+            //
+            // Eigen values and vectors
+            //
+            ortfac.rmatrixhessenberg(ref a, n, ref tau);
+            ortfac.rmatrixhessenbergunpackq(a, n, tau, ref s);
+            hsschur.rmatrixinternalschurdecomposition(a, n, 1, 1, ref wr, ref wi, ref s, ref info);
+            result = info==0;
+            if( !result )
             {
-                wr = new double[n-1+1];
-                wi = new double[n-1+1];
-                i1_ = (1) - (0);
-                for(i_=0; i_<=n-1;i_++)
+                return result;
+            }
+            if( vneeded==1 || vneeded==3 )
+            {
+                vr = new double[n, n];
+                for(i=0; i<=n-1; i++)
                 {
-                    wr[i_] = wr1[i_+i1_];
-                }
-                i1_ = (1) - (0);
-                for(i_=0; i_<=n-1;i_++)
-                {
-                    wi[i_] = wi1[i_+i1_];
-                }
-                if( vneeded==2 || vneeded==3 )
-                {
-                    vl = new double[n-1+1, n-1+1];
-                    for(i=0; i<=n-1; i++)
+                    for(i_=0; i_<=n-1;i_++)
                     {
-                        i1_ = (1) - (0);
-                        for(i_=0; i_<=n-1;i_++)
-                        {
-                            vl[i,i_] = vl1[i+1,i_+i1_];
-                        }
-                    }
-                }
-                if( vneeded==1 || vneeded==3 )
-                {
-                    vr = new double[n-1+1, n-1+1];
-                    for(i=0; i<=n-1; i++)
-                    {
-                        i1_ = (1) - (0);
-                        for(i_=0; i_<=n-1;i_++)
-                        {
-                            vr[i,i_] = vr1[i+1,i_+i1_];
-                        }
+                        vr[i,i_] = s[i,i_];
                     }
                 }
             }
+            if( vneeded==2 || vneeded==3 )
+            {
+                vl = new double[n, n];
+                for(i=0; i<=n-1; i++)
+                {
+                    for(i_=0; i_<=n-1;i_++)
+                    {
+                        vl[i,i_] = s[i,i_];
+                    }
+                }
+            }
+            rmatrixinternaltrevc(a, n, vneeded, 1, sel1, ref vl, ref vr, ref m1, ref info);
+            result = info==0;
             return result;
         }
 
@@ -15449,7 +19264,6 @@ public partial class alglib
             int lm1 = 0;
             int lsv = 0;
             int m = 0;
-            int mm = 0;
             int mm1 = 0;
             int nm1 = 0;
             int nmaxit = 0;
@@ -15755,11 +19569,11 @@ public partial class alglib
                                     works[1] = work2[l];
                                     if( !wastranspose )
                                     {
-                                        rotations.applyrotationsfromtheright(false, 1, zrows, l, l+1, workc, works, ref z, ref wtemp);
+                                        rotations.applyrotationsfromtheright(false, 1, zrows, l, l+1, workc, works, z, wtemp);
                                     }
                                     else
                                     {
-                                        rotations.applyrotationsfromtheleft(false, l, l+1, 1, zrows, workc, works, ref z, ref wtemp);
+                                        rotations.applyrotationsfromtheleft(false, l, l+1, 1, zrows, workc, works, z, wtemp);
                                     }
                                 }
                                 else
@@ -15841,11 +19655,11 @@ public partial class alglib
                                 }
                                 if( !wastranspose )
                                 {
-                                    rotations.applyrotationsfromtheright(false, 1, zrows, l, m, workc, works, ref z, ref wtemp);
+                                    rotations.applyrotationsfromtheright(false, 1, zrows, l, m, workc, works, z, wtemp);
                                 }
                                 else
                                 {
-                                    rotations.applyrotationsfromtheleft(false, l, m, 1, zrows, workc, works, ref z, ref wtemp);
+                                    rotations.applyrotationsfromtheleft(false, l, m, 1, zrows, workc, works, z, wtemp);
                                 }
                             }
                             d[l] = d[l]-p;
@@ -15916,11 +19730,11 @@ public partial class alglib
                                     works[1] = s;
                                     if( !wastranspose )
                                     {
-                                        rotations.applyrotationsfromtheright(true, 1, zrows, l-1, l, workc, works, ref z, ref wtemp);
+                                        rotations.applyrotationsfromtheright(true, 1, zrows, l-1, l, workc, works, z, wtemp);
                                     }
                                     else
                                     {
-                                        rotations.applyrotationsfromtheleft(true, l-1, l, 1, zrows, workc, works, ref z, ref wtemp);
+                                        rotations.applyrotationsfromtheleft(true, l-1, l, 1, zrows, workc, works, z, wtemp);
                                     }
                                 }
                                 else
@@ -15987,7 +19801,6 @@ public partial class alglib
                             //
                             if( zneeded>0 )
                             {
-                                mm = l-m+1;
                                 for(i=m; i<=l-1; i++)
                                 {
                                     workc[i-m+1] = work1[i];
@@ -15995,11 +19808,11 @@ public partial class alglib
                                 }
                                 if( !wastranspose )
                                 {
-                                    rotations.applyrotationsfromtheright(true, 1, zrows, m, l, workc, works, ref z, ref wtemp);
+                                    rotations.applyrotationsfromtheright(true, 1, zrows, m, l, workc, works, z, wtemp);
                                 }
                                 else
                                 {
-                                    rotations.applyrotationsfromtheleft(true, m, l, 1, zrows, workc, works, ref z, ref wtemp);
+                                    rotations.applyrotationsfromtheleft(true, m, l, 1, zrows, workc, works, z, wtemp);
                                 }
                             }
                             d[l] = d[l]-p;
@@ -17593,6 +21406,7 @@ public partial class alglib
                                         {
                                             work1[i_] = work1[i_] - ztr*z[i_+i1_,i];
                                         }
+                                        apserv.touchint(ref i2);
                                     }
                                 }
                             }
@@ -18209,6 +22023,126 @@ public partial class alglib
              Courant Institute, Argonne National Lab, and Rice University
              June 30, 1999
         *************************************************************************/
+        private static void rmatrixinternaltrevc(double[,] t,
+            int n,
+            int side,
+            int howmny,
+            bool[] vselect,
+            ref double[,] vl,
+            ref double[,] vr,
+            ref int m,
+            ref int info)
+        {
+            int i = 0;
+            int j = 0;
+            double[,] t1 = new double[0,0];
+            double[,] vl1 = new double[0,0];
+            double[,] vr1 = new double[0,0];
+            bool[] vselect1 = new bool[0];
+
+            vselect = (bool[])vselect.Clone();
+            m = 0;
+            info = 0;
+
+            
+            //
+            // Allocate VL/VR, if needed
+            //
+            if( howmny==2 || howmny==3 )
+            {
+                if( side==1 || side==3 )
+                {
+                    apserv.rmatrixsetlengthatleast(ref vr, n, n);
+                }
+                if( side==2 || side==3 )
+                {
+                    apserv.rmatrixsetlengthatleast(ref vl, n, n);
+                }
+            }
+            
+            //
+            // Try to use MKL kernel
+            //
+            if( ablasmkl.rmatrixinternaltrevcmkl(t, n, side, howmny, vl, vr, ref m, ref info) )
+            {
+                return;
+            }
+            
+            //
+            // ALGLIB version
+            //
+            t1 = new double[n+1, n+1];
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=n-1; j++)
+                {
+                    t1[i+1,j+1] = t[i,j];
+                }
+            }
+            if( howmny==3 )
+            {
+                vselect1 = new bool[n+1];
+                for(i=0; i<=n-1; i++)
+                {
+                    vselect1[1+i] = vselect[i];
+                }
+            }
+            if( (side==2 || side==3) && howmny==1 )
+            {
+                vl1 = new double[n+1, n+1];
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        vl1[i+1,j+1] = vl[i,j];
+                    }
+                }
+            }
+            if( (side==1 || side==3) && howmny==1 )
+            {
+                vr1 = new double[n+1, n+1];
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        vr1[i+1,j+1] = vr[i,j];
+                    }
+                }
+            }
+            internaltrevc(t1, n, side, howmny, vselect1, ref vl1, ref vr1, ref m, ref info);
+            if( side!=1 )
+            {
+                apserv.rmatrixsetlengthatleast(ref vl, n, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        vl[i,j] = vl1[i+1,j+1];
+                    }
+                }
+            }
+            if( side!=2 )
+            {
+                apserv.rmatrixsetlengthatleast(ref vr, n, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        vr[i,j] = vr1[i+1,j+1];
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Internal subroutine
+
+          -- LAPACK routine (version 3.0) --
+             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+             Courant Institute, Argonne National Lab, and Rice University
+             June 30, 1999
+        *************************************************************************/
         private static void internaltrevc(double[,] t,
             int n,
             int side,
@@ -18241,7 +22175,6 @@ public partial class alglib
             double beta = 0;
             double bignum = 0;
             double emax = 0;
-            double ovfl = 0;
             double rec = 0;
             double remax = 0;
             double scl = 0;
@@ -18397,7 +22330,6 @@ public partial class alglib
             // Set the constants to control overflow.
             //
             unfl = math.minrealnumber;
-            ovfl = 1/unfl;
             ulp = math.machineepsilon;
             smlnum = unfl*(n/ulp);
             bignum = (1-ulp)/smlnum;
@@ -20125,207 +24057,6 @@ public partial class alglib
         }
 
 
-        private static bool nonsymmetricevd(double[,] a,
-            int n,
-            int vneeded,
-            ref double[] wr,
-            ref double[] wi,
-            ref double[,] vl,
-            ref double[,] vr)
-        {
-            bool result = new bool();
-            double[,] s = new double[0,0];
-            double[] tau = new double[0];
-            bool[] sel = new bool[0];
-            int i = 0;
-            int info = 0;
-            int m = 0;
-            int i_ = 0;
-
-            a = (double[,])a.Clone();
-            wr = new double[0];
-            wi = new double[0];
-            vl = new double[0,0];
-            vr = new double[0,0];
-
-            alglib.ap.assert(vneeded>=0 && vneeded<=3, "NonSymmetricEVD: incorrect VNeeded!");
-            if( vneeded==0 )
-            {
-                
-                //
-                // Eigen values only
-                //
-                toupperhessenberg(ref a, n, ref tau);
-                hsschur.internalschurdecomposition(ref a, n, 0, 0, ref wr, ref wi, ref s, ref info);
-                result = info==0;
-                return result;
-            }
-            
-            //
-            // Eigen values and vectors
-            //
-            toupperhessenberg(ref a, n, ref tau);
-            unpackqfromupperhessenberg(a, n, tau, ref s);
-            hsschur.internalschurdecomposition(ref a, n, 1, 1, ref wr, ref wi, ref s, ref info);
-            result = info==0;
-            if( !result )
-            {
-                return result;
-            }
-            if( vneeded==1 || vneeded==3 )
-            {
-                vr = new double[n+1, n+1];
-                for(i=1; i<=n; i++)
-                {
-                    for(i_=1; i_<=n;i_++)
-                    {
-                        vr[i,i_] = s[i,i_];
-                    }
-                }
-            }
-            if( vneeded==2 || vneeded==3 )
-            {
-                vl = new double[n+1, n+1];
-                for(i=1; i<=n; i++)
-                {
-                    for(i_=1; i_<=n;i_++)
-                    {
-                        vl[i,i_] = s[i,i_];
-                    }
-                }
-            }
-            internaltrevc(a, n, vneeded, 1, sel, ref vl, ref vr, ref m, ref info);
-            result = info==0;
-            return result;
-        }
-
-
-        private static void toupperhessenberg(ref double[,] a,
-            int n,
-            ref double[] tau)
-        {
-            int i = 0;
-            int ip1 = 0;
-            int nmi = 0;
-            double v = 0;
-            double[] t = new double[0];
-            double[] work = new double[0];
-            int i_ = 0;
-            int i1_ = 0;
-
-            tau = new double[0];
-
-            alglib.ap.assert(n>=0, "ToUpperHessenberg: incorrect N!");
-            
-            //
-            // Quick return if possible
-            //
-            if( n<=1 )
-            {
-                return;
-            }
-            tau = new double[n-1+1];
-            t = new double[n+1];
-            work = new double[n+1];
-            for(i=1; i<=n-1; i++)
-            {
-                
-                //
-                // Compute elementary reflector H(i) to annihilate A(i+2:ihi,i)
-                //
-                ip1 = i+1;
-                nmi = n-i;
-                i1_ = (ip1) - (1);
-                for(i_=1; i_<=nmi;i_++)
-                {
-                    t[i_] = a[i_+i1_,i];
-                }
-                reflections.generatereflection(ref t, nmi, ref v);
-                i1_ = (1) - (ip1);
-                for(i_=ip1; i_<=n;i_++)
-                {
-                    a[i_,i] = t[i_+i1_];
-                }
-                tau[i] = v;
-                t[1] = 1;
-                
-                //
-                // Apply H(i) to A(1:ihi,i+1:ihi) from the right
-                //
-                reflections.applyreflectionfromtheright(ref a, v, t, 1, n, i+1, n, ref work);
-                
-                //
-                // Apply H(i) to A(i+1:ihi,i+1:n) from the left
-                //
-                reflections.applyreflectionfromtheleft(ref a, v, t, i+1, n, i+1, n, ref work);
-            }
-        }
-
-
-        private static void unpackqfromupperhessenberg(double[,] a,
-            int n,
-            double[] tau,
-            ref double[,] q)
-        {
-            int i = 0;
-            int j = 0;
-            double[] v = new double[0];
-            double[] work = new double[0];
-            int ip1 = 0;
-            int nmi = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            q = new double[0,0];
-
-            if( n==0 )
-            {
-                return;
-            }
-            
-            //
-            // init
-            //
-            q = new double[n+1, n+1];
-            v = new double[n+1];
-            work = new double[n+1];
-            for(i=1; i<=n; i++)
-            {
-                for(j=1; j<=n; j++)
-                {
-                    if( i==j )
-                    {
-                        q[i,j] = 1;
-                    }
-                    else
-                    {
-                        q[i,j] = 0;
-                    }
-                }
-            }
-            
-            //
-            // unpack Q
-            //
-            for(i=1; i<=n-1; i++)
-            {
-                
-                //
-                // Apply H(i)
-                //
-                ip1 = i+1;
-                nmi = n-i;
-                i1_ = (ip1) - (1);
-                for(i_=1; i_<=nmi;i_++)
-                {
-                    v[i_] = a[i_+i1_,i];
-                }
-                v[1] = 1;
-                reflections.applyreflectionfromtheright(ref q, tau[i], v, 1, n, i+1, n, ref work);
-            }
-        }
-
-
     }
     public class matgen
     {
@@ -20337,6 +24068,17 @@ public partial class alglib
             
         OUTPUT PARAMETERS:
             A   -   orthogonal NxN matrix, array[0..N-1,0..N-1]
+
+        NOTE: this function uses algorithm  described  in  Stewart, G. W.  (1980),
+              "The Efficient Generation of  Random  Orthogonal  Matrices  with  an
+              Application to Condition Estimators".
+              
+              Speaking short, to generate an (N+1)x(N+1) orthogonal matrix, it:
+              * takes an NxN one
+              * takes uniformly distributed unit vector of dimension N+1.
+              * constructs a Householder reflection from the vector, then applies
+                it to the smaller matrix (embedded in the larger size with a 1 at
+                the bottom right corner).
 
           -- ALGLIB routine --
              04.12.2009
@@ -20392,6 +24134,7 @@ public partial class alglib
             int j = 0;
             double l1 = 0;
             double l2 = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
 
             a = new double[0,0];
 
@@ -20406,6 +24149,7 @@ public partial class alglib
                 a[0,0] = 2*math.randominteger(2)-1;
                 return;
             }
+            hqrnd.hqrndrandomize(rs);
             l1 = 0;
             l2 = Math.Log(1/c);
             for(i=0; i<=n-1; i++)
@@ -20418,7 +24162,7 @@ public partial class alglib
             a[0,0] = Math.Exp(l1);
             for(i=1; i<=n-2; i++)
             {
-                a[i,i] = Math.Exp(math.randomreal()*(l2-l1)+l1);
+                a[i,i] = Math.Exp(hqrnd.hqrnduniformr(rs)*(l2-l1)+l1);
             }
             a[n-1,n-1] = Math.Exp(l2);
             rmatrixrndorthogonalfromtheleft(ref a, n, n);
@@ -20434,6 +24178,17 @@ public partial class alglib
 
         OUTPUT PARAMETERS:
             A   -   orthogonal NxN matrix, array[0..N-1,0..N-1]
+
+        NOTE: this function uses algorithm  described  in  Stewart, G. W.  (1980),
+              "The Efficient Generation of  Random  Orthogonal  Matrices  with  an
+              Application to Condition Estimators".
+              
+              Speaking short, to generate an (N+1)x(N+1) orthogonal matrix, it:
+              * takes an NxN one
+              * takes uniformly distributed unit vector of dimension N+1.
+              * constructs a Householder reflection from the vector, then applies
+                it to the smaller matrix (embedded in the larger size with a 1 at
+                the bottom right corner).
 
           -- ALGLIB routine --
              04.12.2009
@@ -20508,6 +24263,7 @@ public partial class alglib
                 a[0,0] = v;
                 return;
             }
+            hqrnd.hqrndrandomize(state);
             l1 = 0;
             l2 = Math.Log(1/c);
             for(i=0; i<=n-1; i++)
@@ -20520,7 +24276,7 @@ public partial class alglib
             a[0,0] = Math.Exp(l1);
             for(i=1; i<=n-2; i++)
             {
-                a[i,i] = Math.Exp(math.randomreal()*(l2-l1)+l1);
+                a[i,i] = Math.Exp(hqrnd.hqrnduniformr(state)*(l2-l1)+l1);
             }
             a[n-1,n-1] = Math.Exp(l2);
             cmatrixrndorthogonalfromtheleft(ref a, n, n);
@@ -20551,6 +24307,7 @@ public partial class alglib
             int j = 0;
             double l1 = 0;
             double l2 = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
 
             a = new double[0,0];
 
@@ -20569,6 +24326,7 @@ public partial class alglib
             //
             // Prepare matrix
             //
+            hqrnd.hqrndrandomize(rs);
             l1 = 0;
             l2 = Math.Log(1/c);
             for(i=0; i<=n-1; i++)
@@ -20581,7 +24339,7 @@ public partial class alglib
             a[0,0] = Math.Exp(l1);
             for(i=1; i<=n-2; i++)
             {
-                a[i,i] = (2*math.randominteger(2)-1)*Math.Exp(math.randomreal()*(l2-l1)+l1);
+                a[i,i] = (2*hqrnd.hqrnduniformi(rs, 2)-1)*Math.Exp(hqrnd.hqrnduniformr(rs)*(l2-l1)+l1);
             }
             a[n-1,n-1] = Math.Exp(l2);
             
@@ -20615,6 +24373,7 @@ public partial class alglib
             int j = 0;
             double l1 = 0;
             double l2 = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
 
             a = new double[0,0];
 
@@ -20636,6 +24395,7 @@ public partial class alglib
             //
             // Prepare matrix
             //
+            hqrnd.hqrndrandomize(rs);
             l1 = 0;
             l2 = Math.Log(1/c);
             for(i=0; i<=n-1; i++)
@@ -20648,7 +24408,7 @@ public partial class alglib
             a[0,0] = Math.Exp(l1);
             for(i=1; i<=n-2; i++)
             {
-                a[i,i] = Math.Exp(math.randomreal()*(l2-l1)+l1);
+                a[i,i] = Math.Exp(hqrnd.hqrnduniformr(rs)*(l2-l1)+l1);
             }
             a[n-1,n-1] = Math.Exp(l2);
             
@@ -20682,6 +24442,7 @@ public partial class alglib
             int j = 0;
             double l1 = 0;
             double l2 = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
 
             a = new complex[0,0];
 
@@ -20700,6 +24461,7 @@ public partial class alglib
             //
             // Prepare matrix
             //
+            hqrnd.hqrndrandomize(rs);
             l1 = 0;
             l2 = Math.Log(1/c);
             for(i=0; i<=n-1; i++)
@@ -20712,7 +24474,7 @@ public partial class alglib
             a[0,0] = Math.Exp(l1);
             for(i=1; i<=n-2; i++)
             {
-                a[i,i] = (2*math.randominteger(2)-1)*Math.Exp(math.randomreal()*(l2-l1)+l1);
+                a[i,i] = (2*hqrnd.hqrnduniformi(rs, 2)-1)*Math.Exp(hqrnd.hqrnduniformr(rs)*(l2-l1)+l1);
             }
             a[n-1,n-1] = Math.Exp(l2);
             
@@ -20754,6 +24516,7 @@ public partial class alglib
             int j = 0;
             double l1 = 0;
             double l2 = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
 
             a = new complex[0,0];
 
@@ -20775,6 +24538,7 @@ public partial class alglib
             //
             // Prepare matrix
             //
+            hqrnd.hqrndrandomize(rs);
             l1 = 0;
             l2 = Math.Log(1/c);
             for(i=0; i<=n-1; i++)
@@ -20787,7 +24551,7 @@ public partial class alglib
             a[0,0] = Math.Exp(l1);
             for(i=1; i<=n-2; i++)
             {
-                a[i,i] = Math.Exp(math.randomreal()*(l2-l1)+l1);
+                a[i,i] = Math.Exp(hqrnd.hqrnduniformr(rs)*(l2-l1)+l1);
             }
             a[n-1,n-1] = Math.Exp(l2);
             
@@ -20897,7 +24661,7 @@ public partial class alglib
             //
             for(i=0; i<=n-1; i++)
             {
-                tau = 2*math.randominteger(2)-1;
+                tau = 2*hqrnd.hqrnduniformi(state, 2)-1;
                 for(i_=0; i_<=m-1;i_++)
                 {
                     a[i_,i] = tau*a[i_,i];
@@ -20998,7 +24762,7 @@ public partial class alglib
             //
             for(i=0; i<=m-1; i++)
             {
-                tau = 2*math.randominteger(2)-1;
+                tau = 2*hqrnd.hqrnduniformi(state, 2)-1;
                 for(i_=0; i_<=n-1;i_++)
                 {
                     a[i,i_] = tau*a[i,i_];
@@ -21273,7 +25037,7 @@ public partial class alglib
             //
             for(i=0; i<=n-1; i++)
             {
-                tau = 2*math.randominteger(2)-1;
+                tau = 2*hqrnd.hqrnduniformi(state, 2)-1;
                 for(i_=0; i_<=n-1;i_++)
                 {
                     a[i_,i] = tau*a[i_,i];
@@ -21400,6 +25164,5411 @@ public partial class alglib
 
 
     }
+    public class sparse
+    {
+        /*************************************************************************
+        Sparse matrix structure.
+
+        You should use ALGLIB functions to work with sparse matrix. Never  try  to
+        access its fields directly!
+
+        NOTES ON THE SPARSE STORAGE FORMATS
+
+        Sparse matrices can be stored using several formats:
+        * Hash-Table representation
+        * Compressed Row Storage (CRS)
+        * Skyline matrix storage (SKS)
+
+        Each of the formats has benefits and drawbacks:
+        * Hash-table is good for dynamic operations (insertion of new elements),
+          but does not support linear algebra operations
+        * CRS is good for operations like matrix-vector or matrix-matrix products,
+          but its initialization is less convenient - you have to tell row   sizes 
+          at the initialization, and you have to fill  matrix  only  row  by  row,
+          from left to right.
+        * SKS is a special format which is used to store triangular  factors  from
+          Cholesky factorization. It does not support  dynamic  modification,  and
+          support for linear algebra operations is very limited.
+
+        Tables below outline information about these two formats:
+
+            OPERATIONS WITH MATRIX      HASH        CRS         SKS
+            creation                    +           +           +
+            SparseGet                   +           +           +
+            SparseRewriteExisting       +           +           +
+            SparseSet                   +
+            SparseAdd                   +
+            SparseGetRow                            +           +
+            SparseGetCompressedRow                  +           +
+            sparse-dense linear algebra             +           +
+
+        *************************************************************************/
+        public class sparsematrix : apobject
+        {
+            public double[] vals;
+            public int[] idx;
+            public int[] ridx;
+            public int[] didx;
+            public int[] uidx;
+            public int matrixtype;
+            public int m;
+            public int n;
+            public int nfree;
+            public int ninitialized;
+            public int tablesize;
+            public sparsematrix()
+            {
+                init();
+            }
+            public override void init()
+            {
+                vals = new double[0];
+                idx = new int[0];
+                ridx = new int[0];
+                didx = new int[0];
+                uidx = new int[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                sparsematrix _result = new sparsematrix();
+                _result.vals = (double[])vals.Clone();
+                _result.idx = (int[])idx.Clone();
+                _result.ridx = (int[])ridx.Clone();
+                _result.didx = (int[])didx.Clone();
+                _result.uidx = (int[])uidx.Clone();
+                _result.matrixtype = matrixtype;
+                _result.m = m;
+                _result.n = n;
+                _result.nfree = nfree;
+                _result.ninitialized = ninitialized;
+                _result.tablesize = tablesize;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        Temporary buffers for sparse matrix operations.
+
+        You should pass an instance of this structure to factorization  functions.
+        It allows to reuse memory during repeated sparse  factorizations.  You  do
+        not have to call some initialization function - simply passing an instance
+        to factorization function is enough.
+
+        *************************************************************************/
+        public class sparsebuffers : apobject
+        {
+            public int[] d;
+            public int[] u;
+            public sparsematrix s;
+            public sparsebuffers()
+            {
+                init();
+            }
+            public override void init()
+            {
+                d = new int[0];
+                u = new int[0];
+                s = new sparsematrix();
+            }
+            public override alglib.apobject make_copy()
+            {
+                sparsebuffers _result = new sparsebuffers();
+                _result.d = (int[])d.Clone();
+                _result.u = (int[])u.Clone();
+                _result.s = (sparsematrix)s.make_copy();
+                return _result;
+            }
+        };
+
+
+
+
+        public const double desiredloadfactor = 0.66;
+        public const double maxloadfactor = 0.75;
+        public const double growfactor = 2.00;
+        public const int additional = 10;
+        public const int linalgswitch = 16;
+
+
+        /*************************************************************************
+        This function creates sparse matrix in a Hash-Table format.
+
+        This function creates Hast-Table matrix, which can be  converted  to  CRS
+        format after its initialization is over. Typical  usage  scenario  for  a
+        sparse matrix is:
+        1. creation in a Hash-Table format
+        2. insertion of the matrix elements
+        3. conversion to the CRS representation
+        4. matrix is passed to some linear algebra algorithm
+
+        Some  information  about  different matrix formats can be found below, in
+        the "NOTES" section.
+
+        INPUT PARAMETERS
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            K           -   K>=0, expected number of non-zero elements in a matrix.
+                            K can be inexact approximation, can be less than actual
+                            number  of  elements  (table will grow when needed) or 
+                            even zero).
+                            It is important to understand that although hash-table
+                            may grow automatically, it is better to  provide  good
+                            estimate of data size.
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            All elements of the matrix are zero.
+
+        NOTE 1
+
+        Hash-tables use memory inefficiently, and they have to keep  some  amount
+        of the "spare memory" in order to have good performance. Hash  table  for
+        matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
+        where C is a small constant, about 1.5-2 in magnitude.
+
+        CRS storage, from the other side, is  more  memory-efficient,  and  needs
+        just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
+        in a matrix.
+
+        When you convert from the Hash-Table to CRS  representation, all unneeded
+        memory will be freed.
+
+        NOTE 2
+
+        Comments of SparseMatrix structure outline  information  about  different
+        sparse storage formats. We recommend you to read them before starting  to
+        use ALGLIB sparse matrices.
+
+        NOTE 3
+
+        This function completely  overwrites S with new sparse matrix. Previously
+        allocated storage is NOT reused. If you  want  to reuse already allocated
+        memory, call SparseCreateBuf function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreate(int m,
+            int n,
+            int k,
+            sparsematrix s)
+        {
+            sparsecreatebuf(m, n, k, s);
+        }
+
+
+        /*************************************************************************
+        This version of SparseCreate function creates sparse matrix in Hash-Table
+        format, reusing previously allocated storage as much  as  possible.  Read
+        comments for SparseCreate() for more information.
+
+        INPUT PARAMETERS
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            K           -   K>=0, expected number of non-zero elements in a matrix.
+                            K can be inexact approximation, can be less than actual
+                            number  of  elements  (table will grow when needed) or 
+                            even zero).
+                            It is important to understand that although hash-table
+                            may grow automatically, it is better to  provide  good
+                            estimate of data size.
+            S           -   SparseMatrix structure which MAY contain some  already
+                            allocated storage.
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            All elements of the matrix are zero.
+                            Previously allocated storage is reused, if  its  size
+                            is compatible with expected number of non-zeros K.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatebuf(int m,
+            int n,
+            int k,
+            sparsematrix s)
+        {
+            int i = 0;
+
+            alglib.ap.assert(m>0, "SparseCreateBuf: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateBuf: N<=0");
+            alglib.ap.assert(k>=0, "SparseCreateBuf: K<0");
+            
+            //
+            // Hash-table size is max(existing_size,requested_size)
+            //
+            // NOTE: it is important to use ALL available memory for hash table
+            //       because it is impossible to efficiently reallocate table
+            //       without temporary storage. So, if we want table with up to
+            //       1.000.000 elements, we have to create such table from the
+            //       very beginning. Otherwise, the very idea of memory reuse
+            //       will be compromised.
+            //
+            s.tablesize = (int)Math.Round(k/desiredloadfactor+additional);
+            apserv.rvectorsetlengthatleast(ref s.vals, s.tablesize);
+            s.tablesize = alglib.ap.len(s.vals);
+            
+            //
+            // Initialize other fields
+            //
+            s.matrixtype = 0;
+            s.m = m;
+            s.n = n;
+            s.nfree = s.tablesize;
+            apserv.ivectorsetlengthatleast(ref s.idx, 2*s.tablesize);
+            for(i=0; i<=s.tablesize-1; i++)
+            {
+                s.idx[2*i] = -1;
+            }
+        }
+
+
+        /*************************************************************************
+        This function creates sparse matrix in a CRS format (expert function for
+        situations when you are running out of memory).
+
+        This function creates CRS matrix. Typical usage scenario for a CRS matrix 
+        is:
+        1. creation (you have to tell number of non-zero elements at each row  at 
+           this moment)
+        2. insertion of the matrix elements (row by row, from left to right) 
+        3. matrix is passed to some linear algebra algorithm
+
+        This function is a memory-efficient alternative to SparseCreate(), but it
+        is more complex because it requires you to know in advance how large your
+        matrix is. Some  information about  different matrix formats can be found 
+        in comments on SparseMatrix structure.  We recommend  you  to  read  them
+        before starting to use ALGLIB sparse matrices..
+
+        INPUT PARAMETERS
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            NER         -   number of elements at each row, array[M], NER[I]>=0
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS representation.
+                            You have to fill ALL non-zero elements by calling
+                            SparseSet() BEFORE you try to use this matrix.
+                            
+        NOTE: this function completely  overwrites  S  with  new  sparse  matrix.
+              Previously allocated storage is NOT reused. If you  want  to  reuse
+              already allocated memory, call SparseCreateCRSBuf function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatecrs(int m,
+            int n,
+            int[] ner,
+            sparsematrix s)
+        {
+            int i = 0;
+
+            alglib.ap.assert(m>0, "SparseCreateCRS: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateCRS: N<=0");
+            alglib.ap.assert(alglib.ap.len(ner)>=m, "SparseCreateCRS: Length(NER)<M");
+            for(i=0; i<=m-1; i++)
+            {
+                alglib.ap.assert(ner[i]>=0, "SparseCreateCRS: NER[] contains negative elements");
+            }
+            sparsecreatecrsbuf(m, n, ner, s);
+        }
+
+
+        /*************************************************************************
+        This function creates sparse matrix in a CRS format (expert function  for
+        situations when you are running out  of  memory).  This  version  of  CRS
+        matrix creation function may reuse memory already allocated in S.
+
+        This function creates CRS matrix. Typical usage scenario for a CRS matrix 
+        is:
+        1. creation (you have to tell number of non-zero elements at each row  at 
+           this moment)
+        2. insertion of the matrix elements (row by row, from left to right) 
+        3. matrix is passed to some linear algebra algorithm
+
+        This function is a memory-efficient alternative to SparseCreate(), but it
+        is more complex because it requires you to know in advance how large your
+        matrix is. Some  information about  different matrix formats can be found 
+        in comments on SparseMatrix structure.  We recommend  you  to  read  them
+        before starting to use ALGLIB sparse matrices..
+
+        INPUT PARAMETERS
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            NER         -   number of elements at each row, array[M], NER[I]>=0
+            S           -   sparse matrix structure with possibly preallocated
+                            memory.
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS representation.
+                            You have to fill ALL non-zero elements by calling
+                            SparseSet() BEFORE you try to use this matrix.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatecrsbuf(int m,
+            int n,
+            int[] ner,
+            sparsematrix s)
+        {
+            int i = 0;
+            int noe = 0;
+
+            alglib.ap.assert(m>0, "SparseCreateCRSBuf: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateCRSBuf: N<=0");
+            alglib.ap.assert(alglib.ap.len(ner)>=m, "SparseCreateCRSBuf: Length(NER)<M");
+            noe = 0;
+            s.matrixtype = 1;
+            s.ninitialized = 0;
+            s.m = m;
+            s.n = n;
+            apserv.ivectorsetlengthatleast(ref s.ridx, s.m+1);
+            s.ridx[0] = 0;
+            for(i=0; i<=s.m-1; i++)
+            {
+                alglib.ap.assert(ner[i]>=0, "SparseCreateCRSBuf: NER[] contains negative elements");
+                noe = noe+ner[i];
+                s.ridx[i+1] = s.ridx[i]+ner[i];
+            }
+            apserv.rvectorsetlengthatleast(ref s.vals, noe);
+            apserv.ivectorsetlengthatleast(ref s.idx, noe);
+            if( noe==0 )
+            {
+                sparseinitduidx(s);
+            }
+        }
+
+
+        /*************************************************************************
+        This function creates sparse matrix in  a  SKS  format  (skyline  storage
+        format). In most cases you do not need this function - CRS format  better
+        suits most use cases.
+
+        INPUT PARAMETERS
+            M, N        -   number of rows(M) and columns (N) in a matrix:
+                            * M=N (as for now, ALGLIB supports only square SKS)
+                            * N>=1
+                            * M>=1
+            D           -   "bottom" bandwidths, array[M], D[I]>=0.
+                            I-th element stores number of non-zeros at I-th  row,
+                            below the diagonal (diagonal itself is not  included)
+            U           -   "top" bandwidths, array[N], U[I]>=0.
+                            I-th element stores number of non-zeros  at I-th row,
+                            above the diagonal (diagonal itself  is not included)
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in SKS representation.
+                            All elements are filled by zeros.
+                            You may use SparseRewriteExisting() to  change  their
+                            values.
+                            
+        NOTE: this function completely  overwrites  S  with  new  sparse  matrix.
+              Previously allocated storage is NOT reused. If you  want  to  reuse
+              already allocated memory, call SparseCreateSKSBuf function.
+
+          -- ALGLIB PROJECT --
+             Copyright 13.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatesks(int m,
+            int n,
+            int[] d,
+            int[] u,
+            sparsematrix s)
+        {
+            int i = 0;
+
+            alglib.ap.assert(m>0, "SparseCreateSKS: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateSKS: N<=0");
+            alglib.ap.assert(m==n, "SparseCreateSKS: M<>N");
+            alglib.ap.assert(alglib.ap.len(d)>=m, "SparseCreateSKS: Length(D)<M");
+            alglib.ap.assert(alglib.ap.len(u)>=n, "SparseCreateSKS: Length(U)<N");
+            for(i=0; i<=m-1; i++)
+            {
+                alglib.ap.assert(d[i]>=0, "SparseCreateSKS: D[] contains negative elements");
+                alglib.ap.assert(d[i]<=i, "SparseCreateSKS: D[I]>I for some I");
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                alglib.ap.assert(u[i]>=0, "SparseCreateSKS: U[] contains negative elements");
+                alglib.ap.assert(u[i]<=i, "SparseCreateSKS: U[I]>I for some I");
+            }
+            sparsecreatesksbuf(m, n, d, u, s);
+        }
+
+
+        /*************************************************************************
+        This is "buffered"  version  of  SparseCreateSKS()  which  reuses  memory
+        previously allocated in S (of course, memory is reallocated if needed).
+
+        This function creates sparse matrix in  a  SKS  format  (skyline  storage
+        format). In most cases you do not need this function - CRS format  better
+        suits most use cases.
+
+        INPUT PARAMETERS
+            M, N        -   number of rows(M) and columns (N) in a matrix:
+                            * M=N (as for now, ALGLIB supports only square SKS)
+                            * N>=1
+                            * M>=1
+            D           -   "bottom" bandwidths, array[M], 0<=D[I]<=I.
+                            I-th element stores number of non-zeros at I-th row,
+                            below the diagonal (diagonal itself is not included)
+            U           -   "top" bandwidths, array[N], 0<=U[I]<=I.
+                            I-th element stores number of non-zeros at I-th row,
+                            above the diagonal (diagonal itself is not included)
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix in SKS representation.
+                            All elements are filled by zeros.
+                            You may use SparseSet()/SparseAdd() to change their
+                            values.
+
+          -- ALGLIB PROJECT --
+             Copyright 13.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatesksbuf(int m,
+            int n,
+            int[] d,
+            int[] u,
+            sparsematrix s)
+        {
+            int i = 0;
+            int minmn = 0;
+            int nz = 0;
+            int mxd = 0;
+            int mxu = 0;
+
+            alglib.ap.assert(m>0, "SparseCreateSKSBuf: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateSKSBuf: N<=0");
+            alglib.ap.assert(m==n, "SparseCreateSKSBuf: M<>N");
+            alglib.ap.assert(alglib.ap.len(d)>=m, "SparseCreateSKSBuf: Length(D)<M");
+            alglib.ap.assert(alglib.ap.len(u)>=n, "SparseCreateSKSBuf: Length(U)<N");
+            for(i=0; i<=m-1; i++)
+            {
+                alglib.ap.assert(d[i]>=0, "SparseCreateSKSBuf: D[] contains negative elements");
+                alglib.ap.assert(d[i]<=i, "SparseCreateSKSBuf: D[I]>I for some I");
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                alglib.ap.assert(u[i]>=0, "SparseCreateSKSBuf: U[] contains negative elements");
+                alglib.ap.assert(u[i]<=i, "SparseCreateSKSBuf: U[I]>I for some I");
+            }
+            minmn = Math.Min(m, n);
+            s.matrixtype = 2;
+            s.ninitialized = 0;
+            s.m = m;
+            s.n = n;
+            apserv.ivectorsetlengthatleast(ref s.ridx, minmn+1);
+            s.ridx[0] = 0;
+            nz = 0;
+            for(i=0; i<=minmn-1; i++)
+            {
+                nz = nz+1+d[i]+u[i];
+                s.ridx[i+1] = s.ridx[i]+1+d[i]+u[i];
+            }
+            apserv.rvectorsetlengthatleast(ref s.vals, nz);
+            for(i=0; i<=nz-1; i++)
+            {
+                s.vals[i] = 0.0;
+            }
+            apserv.ivectorsetlengthatleast(ref s.didx, m+1);
+            mxd = 0;
+            for(i=0; i<=m-1; i++)
+            {
+                s.didx[i] = d[i];
+                mxd = Math.Max(mxd, d[i]);
+            }
+            s.didx[m] = mxd;
+            apserv.ivectorsetlengthatleast(ref s.uidx, n+1);
+            mxu = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                s.uidx[i] = u[i];
+                mxu = Math.Max(mxu, u[i]);
+            }
+            s.uidx[n] = mxu;
+        }
+
+
+        /*************************************************************************
+        This function copies S0 to S1.
+        This function completely deallocates memory owned by S1 before creating a
+        copy of S0. If you want to reuse memory, use SparseCopyBuf.
+
+        NOTE:  this  function  does  not verify its arguments, it just copies all
+        fields of the structure.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopy(sparsematrix s0,
+            sparsematrix s1)
+        {
+            sparsecopybuf(s0, s1);
+        }
+
+
+        /*************************************************************************
+        This function copies S0 to S1.
+        Memory already allocated in S1 is reused as much as possible.
+
+        NOTE:  this  function  does  not verify its arguments, it just copies all
+        fields of the structure.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopybuf(sparsematrix s0,
+            sparsematrix s1)
+        {
+            int l = 0;
+            int i = 0;
+
+            s1.matrixtype = s0.matrixtype;
+            s1.m = s0.m;
+            s1.n = s0.n;
+            s1.nfree = s0.nfree;
+            s1.ninitialized = s0.ninitialized;
+            s1.tablesize = s0.tablesize;
+            
+            //
+            // Initialization for arrays
+            //
+            l = alglib.ap.len(s0.vals);
+            apserv.rvectorsetlengthatleast(ref s1.vals, l);
+            for(i=0; i<=l-1; i++)
+            {
+                s1.vals[i] = s0.vals[i];
+            }
+            l = alglib.ap.len(s0.ridx);
+            apserv.ivectorsetlengthatleast(ref s1.ridx, l);
+            for(i=0; i<=l-1; i++)
+            {
+                s1.ridx[i] = s0.ridx[i];
+            }
+            l = alglib.ap.len(s0.idx);
+            apserv.ivectorsetlengthatleast(ref s1.idx, l);
+            for(i=0; i<=l-1; i++)
+            {
+                s1.idx[i] = s0.idx[i];
+            }
+            
+            //
+            // Initalization for CRS-parameters
+            //
+            l = alglib.ap.len(s0.uidx);
+            apserv.ivectorsetlengthatleast(ref s1.uidx, l);
+            for(i=0; i<=l-1; i++)
+            {
+                s1.uidx[i] = s0.uidx[i];
+            }
+            l = alglib.ap.len(s0.didx);
+            apserv.ivectorsetlengthatleast(ref s1.didx, l);
+            for(i=0; i<=l-1; i++)
+            {
+                s1.didx[i] = s0.didx[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This function efficiently swaps contents of S0 and S1.
+
+          -- ALGLIB PROJECT --
+             Copyright 16.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseswap(sparsematrix s0,
+            sparsematrix s1)
+        {
+            apserv.swapi(ref s1.matrixtype, ref s0.matrixtype);
+            apserv.swapi(ref s1.m, ref s0.m);
+            apserv.swapi(ref s1.n, ref s0.n);
+            apserv.swapi(ref s1.nfree, ref s0.nfree);
+            apserv.swapi(ref s1.ninitialized, ref s0.ninitialized);
+            apserv.swapi(ref s1.tablesize, ref s0.tablesize);
+            alglib.ap.swap(ref s1.vals, ref s0.vals);
+            alglib.ap.swap(ref s1.ridx, ref s0.ridx);
+            alglib.ap.swap(ref s1.idx, ref s0.idx);
+            alglib.ap.swap(ref s1.uidx, ref s0.uidx);
+            alglib.ap.swap(ref s1.didx, ref s0.didx);
+        }
+
+
+        /*************************************************************************
+        This function adds value to S[i,j] - element of the sparse matrix. Matrix
+        must be in a Hash-Table mode.
+
+        In case S[i,j] already exists in the table, V i added to  its  value.  In
+        case  S[i,j]  is  non-existent,  it  is  inserted  in  the  table.  Table
+        automatically grows when necessary.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            Exception will be thrown for CRS matrix.
+            I           -   row index of the element to modify, 0<=I<M
+            J           -   column index of the element to modify, 0<=J<N
+            V           -   value to add, must be finite number
+
+        OUTPUT PARAMETERS
+            S           -   modified matrix
+            
+        NOTE 1:  when  S[i,j]  is exactly zero after modification, it is  deleted
+        from the table.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseadd(sparsematrix s,
+            int i,
+            int j,
+            double v)
+        {
+            int hashcode = 0;
+            int tcode = 0;
+            int k = 0;
+
+            alglib.ap.assert(s.matrixtype==0, "SparseAdd: matrix must be in the Hash-Table mode to do this operation");
+            alglib.ap.assert(i>=0, "SparseAdd: I<0");
+            alglib.ap.assert(i<s.m, "SparseAdd: I>=M");
+            alglib.ap.assert(j>=0, "SparseAdd: J<0");
+            alglib.ap.assert(j<s.n, "SparseAdd: J>=N");
+            alglib.ap.assert(math.isfinite(v), "SparseAdd: V is not finite number");
+            if( (double)(v)==(double)(0) )
+            {
+                return;
+            }
+            tcode = -1;
+            k = s.tablesize;
+            if( (double)((1-maxloadfactor)*k)>=(double)(s.nfree) )
+            {
+                sparseresizematrix(s);
+                k = s.tablesize;
+            }
+            hashcode = hash(i, j, k);
+            while( true )
+            {
+                if( s.idx[2*hashcode]==-1 )
+                {
+                    if( tcode!=-1 )
+                    {
+                        hashcode = tcode;
+                    }
+                    s.vals[hashcode] = v;
+                    s.idx[2*hashcode] = i;
+                    s.idx[2*hashcode+1] = j;
+                    if( tcode==-1 )
+                    {
+                        s.nfree = s.nfree-1;
+                    }
+                    return;
+                }
+                else
+                {
+                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                    {
+                        s.vals[hashcode] = s.vals[hashcode]+v;
+                        if( (double)(s.vals[hashcode])==(double)(0) )
+                        {
+                            s.idx[2*hashcode] = -2;
+                        }
+                        return;
+                    }
+                    
+                    //
+                    // Is it deleted element?
+                    //
+                    if( tcode==-1 && s.idx[2*hashcode]==-2 )
+                    {
+                        tcode = hashcode;
+                    }
+                    
+                    //
+                    // Next step
+                    //
+                    hashcode = (hashcode+1)%k;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function modifies S[i,j] - element of the sparse matrix.
+
+        For Hash-based storage format:
+        * this function can be called at any moment - during matrix initialization
+          or later
+        * new value can be zero or non-zero.  In case new value of S[i,j] is zero,
+          this element is deleted from the table.
+        * this  function  has  no  effect when called with zero V for non-existent
+          element.
+
+        For CRS-bases storage format:
+        * this function can be called ONLY DURING MATRIX INITIALIZATION
+        * new value MUST be non-zero. Exception will be thrown for zero V.
+        * elements must be initialized in correct order -  from top row to bottom,
+          within row - from left to right.
+          
+        For SKS storage: NOT SUPPORTED! Use SparseRewriteExisting() to  work  with
+        SKS matrices.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table or CRS representation.
+            I           -   row index of the element to modify, 0<=I<M
+            J           -   column index of the element to modify, 0<=J<N
+            V           -   value to set, must be finite number, can be zero
+
+        OUTPUT PARAMETERS
+            S           -   modified matrix
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseset(sparsematrix s,
+            int i,
+            int j,
+            double v)
+        {
+            int hashcode = 0;
+            int tcode = 0;
+            int k = 0;
+
+            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseSet: unsupported matrix storage format");
+            alglib.ap.assert(i>=0, "SparseSet: I<0");
+            alglib.ap.assert(i<s.m, "SparseSet: I>=M");
+            alglib.ap.assert(j>=0, "SparseSet: J<0");
+            alglib.ap.assert(j<s.n, "SparseSet: J>=N");
+            alglib.ap.assert(math.isfinite(v), "SparseSet: V is not finite number");
+            
+            //
+            // Hash-table matrix
+            //
+            if( s.matrixtype==0 )
+            {
+                tcode = -1;
+                k = s.tablesize;
+                if( (double)((1-maxloadfactor)*k)>=(double)(s.nfree) )
+                {
+                    sparseresizematrix(s);
+                    k = s.tablesize;
+                }
+                hashcode = hash(i, j, k);
+                while( true )
+                {
+                    if( s.idx[2*hashcode]==-1 )
+                    {
+                        if( (double)(v)!=(double)(0) )
+                        {
+                            if( tcode!=-1 )
+                            {
+                                hashcode = tcode;
+                            }
+                            s.vals[hashcode] = v;
+                            s.idx[2*hashcode] = i;
+                            s.idx[2*hashcode+1] = j;
+                            if( tcode==-1 )
+                            {
+                                s.nfree = s.nfree-1;
+                            }
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                        {
+                            if( (double)(v)==(double)(0) )
+                            {
+                                s.idx[2*hashcode] = -2;
+                            }
+                            else
+                            {
+                                s.vals[hashcode] = v;
+                            }
+                            return;
+                        }
+                        if( tcode==-1 && s.idx[2*hashcode]==-2 )
+                        {
+                            tcode = hashcode;
+                        }
+                        
+                        //
+                        // Next step
+                        //
+                        hashcode = (hashcode+1)%k;
+                    }
+                }
+            }
+            
+            //
+            // CRS matrix
+            //
+            if( s.matrixtype==1 )
+            {
+                alglib.ap.assert((double)(v)!=(double)(0), "SparseSet: CRS format does not allow you to write zero elements");
+                alglib.ap.assert(s.ridx[i]<=s.ninitialized, "SparseSet: too few initialized elements at some row (you have promised more when called SparceCreateCRS)");
+                alglib.ap.assert(s.ridx[i+1]>s.ninitialized, "SparseSet: too many initialized elements at some row (you have promised less when called SparceCreateCRS)");
+                alglib.ap.assert(s.ninitialized==s.ridx[i] || s.idx[s.ninitialized-1]<j, "SparseSet: incorrect column order (you must fill every row from left to right)");
+                s.vals[s.ninitialized] = v;
+                s.idx[s.ninitialized] = j;
+                s.ninitialized = s.ninitialized+1;
+                
+                //
+                // If matrix has been created then
+                // initiale 'S.UIdx' and 'S.DIdx'
+                //
+                if( s.ninitialized==s.ridx[s.m] )
+                {
+                    sparseinitduidx(s);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function returns S[i,j] - element of the sparse matrix.  Matrix  can
+        be in any mode (Hash-Table, CRS, SKS), but this function is less efficient
+        for CRS matrices. Hash-Table and SKS matrices can find  element  in  O(1)
+        time, while  CRS  matrices need O(log(RS)) time, where RS is an number of
+        non-zero elements in a row.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            Exception will be thrown for CRS matrix.
+            I           -   row index of the element to modify, 0<=I<M
+            J           -   column index of the element to modify, 0<=J<N
+
+        RESULT
+            value of S[I,J] or zero (in case no element with such index is found)
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double sparseget(sparsematrix s,
+            int i,
+            int j)
+        {
+            double result = 0;
+            int hashcode = 0;
+            int k = 0;
+            int k0 = 0;
+            int k1 = 0;
+
+            alglib.ap.assert(i>=0, "SparseGet: I<0");
+            alglib.ap.assert(i<s.m, "SparseGet: I>=M");
+            alglib.ap.assert(j>=0, "SparseGet: J<0");
+            alglib.ap.assert(j<s.n, "SparseGet: J>=N");
+            result = 0.0;
+            if( s.matrixtype==0 )
+            {
+                
+                //
+                // Hash-based storage
+                //
+                result = 0;
+                k = s.tablesize;
+                hashcode = hash(i, j, k);
+                while( true )
+                {
+                    if( s.idx[2*hashcode]==-1 )
+                    {
+                        return result;
+                    }
+                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                    {
+                        result = s.vals[hashcode];
+                        return result;
+                    }
+                    hashcode = (hashcode+1)%k;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseGet: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                k0 = s.ridx[i];
+                k1 = s.ridx[i+1]-1;
+                result = 0;
+                while( k0<=k1 )
+                {
+                    k = (k0+k1)/2;
+                    if( s.idx[k]==j )
+                    {
+                        result = s.vals[k];
+                        return result;
+                    }
+                    if( s.idx[k]<j )
+                    {
+                        k0 = k+1;
+                    }
+                    else
+                    {
+                        k1 = k-1;
+                    }
+                }
+                return result;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS
+                //
+                alglib.ap.assert(s.m==s.n, "SparseGet: non-square SKS matrix not supported");
+                result = 0;
+                if( i==j )
+                {
+                    
+                    //
+                    // Return diagonal element
+                    //
+                    result = s.vals[s.ridx[i]+s.didx[i]];
+                    return result;
+                }
+                if( j<i )
+                {
+                    
+                    //
+                    // Return subdiagonal element at I-th "skyline block"
+                    //
+                    k = s.didx[i];
+                    if( i-j<=k )
+                    {
+                        result = s.vals[s.ridx[i]+k+j-i];
+                    }
+                }
+                else
+                {
+                    
+                    //
+                    // Return superdiagonal element at J-th "skyline block"
+                    //
+                    k = s.uidx[j];
+                    if( j-i<=k )
+                    {
+                        result = s.vals[s.ridx[j+1]-(j-i)];
+                    }
+                    return result;
+                }
+                return result;
+            }
+            alglib.ap.assert(false, "SparseGet: unexpected matrix type");
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns I-th diagonal element of the sparse matrix.
+
+        Matrix can be in any mode (Hash-Table or CRS storage), but this  function
+        is most efficient for CRS matrices - it requires less than 50 CPU  cycles
+        to extract diagonal element. For Hash-Table matrices we still  have  O(1)
+        query time, but function is many times slower.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table representation.
+                            Exception will be thrown for CRS matrix.
+            I           -   index of the element to modify, 0<=I<min(M,N)
+
+        RESULT
+            value of S[I,I] or zero (in case no element with such index is found)
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double sparsegetdiagonal(sparsematrix s,
+            int i)
+        {
+            double result = 0;
+
+            alglib.ap.assert(i>=0, "SparseGetDiagonal: I<0");
+            alglib.ap.assert(i<s.m, "SparseGetDiagonal: I>=M");
+            alglib.ap.assert(i<s.n, "SparseGetDiagonal: I>=N");
+            result = 0;
+            if( s.matrixtype==0 )
+            {
+                result = sparseget(s, i, i);
+                return result;
+            }
+            if( s.matrixtype==1 )
+            {
+                if( s.didx[i]!=s.uidx[i] )
+                {
+                    result = s.vals[s.didx[i]];
+                }
+                return result;
+            }
+            if( s.matrixtype==2 )
+            {
+                alglib.ap.assert(s.m==s.n, "SparseGetDiagonal: non-square SKS matrix not supported");
+                result = s.vals[s.ridx[i]+s.didx[i]];
+                return result;
+            }
+            alglib.ap.assert(false, "SparseGetDiagonal: unexpected matrix type");
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-vector product  S*x.  Matrix  S  must  be
+        stored in CRS or SKS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS or SKS format.
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            Y           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[M], S*x
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemv(sparsematrix s,
+            double[] x,
+            ref double[] y)
+        {
+            double tval = 0;
+            double v = 0;
+            double vv = 0;
+            int i = 0;
+            int j = 0;
+            int lt = 0;
+            int rt = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int n = 0;
+            int m = 0;
+            int d = 0;
+            int u = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseMV: length(X)<N");
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseMV: incorrect matrix type (convert your matrix to CRS/SKS)");
+            apserv.rvectorsetlengthatleast(ref y, s.m);
+            n = s.n;
+            m = s.m;
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                for(i=0; i<=m-1; i++)
+                {
+                    tval = 0;
+                    lt = s.ridx[i];
+                    rt = s.ridx[i+1]-1;
+                    for(j=lt; j<=rt; j++)
+                    {
+                        tval = tval+x[s.idx[j]]*s.vals[j];
+                    }
+                    y[i] = tval;
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(s.m==s.n, "SparseMV: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    v = s.vals[ri+d]*x[i];
+                    if( d>0 )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        i1_ = (lt1)-(lt);
+                        vv = 0.0;
+                        for(i_=lt; i_<=rt;i_++)
+                        {
+                            vv += s.vals[i_]*x[i_+i1_];
+                        }
+                        v = v+vv;
+                    }
+                    y[i] = v;
+                    if( u>0 )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        v = x[i];
+                        i1_ = (lt) - (lt1);
+                        for(i_=lt1; i_<=rt1;i_++)
+                        {
+                            y[i_] = y[i_] + v*s.vals[i_+i1_];
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-vector product  S^T*x. Matrix S  must  be
+        stored in CRS or SKS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS or SKS format.
+            X           -   array[M], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least M, but we do not check for NAN's or INF's.
+            Y           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[N], S^T*x
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemtv(sparsematrix s,
+            double[] x,
+            ref double[] y)
+        {
+            int i = 0;
+            int j = 0;
+            int lt = 0;
+            int rt = 0;
+            int ct = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            double v = 0;
+            double vv = 0;
+            int n = 0;
+            int m = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int d = 0;
+            int u = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseMTV: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.m, "SparseMTV: Length(X)<M");
+            n = s.n;
+            m = s.m;
+            apserv.rvectorsetlengthatleast(ref y, n);
+            for(i=0; i<=n-1; i++)
+            {
+                y[i] = 0;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[m], "SparseMTV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                for(i=0; i<=m-1; i++)
+                {
+                    lt = s.ridx[i];
+                    rt = s.ridx[i+1];
+                    v = x[i];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        ct = s.idx[j];
+                        y[ct] = y[ct]+v*s.vals[j];
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(s.m==s.n, "SparseMV: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    if( d>0 )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        v = x[i];
+                        i1_ = (lt) - (lt1);
+                        for(i_=lt1; i_<=rt1;i_++)
+                        {
+                            y[i_] = y[i_] + v*s.vals[i_+i1_];
+                        }
+                    }
+                    v = s.vals[ri+d]*x[i];
+                    if( u>0 )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        i1_ = (lt1)-(lt);
+                        vv = 0.0;
+                        for(i_=lt; i_<=rt;i_++)
+                        {
+                            vv += s.vals[i_]*x[i_+i1_];
+                        }
+                        v = v+vv;
+                    }
+                    y[i] = v;
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function simultaneously calculates two matrix-vector products:
+            S*x and S^T*x.
+        S must be square (non-rectangular) matrix stored in  CRS  or  SKS  format
+        (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse N*N matrix in CRS or SKS format.
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            Y0          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            Y1          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y0          -   array[N], S*x
+            Y1          -   array[N], S^T*x
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemv2(sparsematrix s,
+            double[] x,
+            ref double[] y0,
+            ref double[] y1)
+        {
+            int l = 0;
+            double tval = 0;
+            int i = 0;
+            int j = 0;
+            double vx = 0;
+            double vs = 0;
+            double v = 0;
+            double vv = 0;
+            double vd0 = 0;
+            double vd1 = 0;
+            int vi = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int n = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int d = 0;
+            int u = 0;
+            int lt = 0;
+            int rt = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseMV2: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(s.m==s.n, "SparseMV2: matrix is non-square");
+            l = alglib.ap.len(x);
+            alglib.ap.assert(l>=s.n, "SparseMV2: Length(X)<N");
+            n = s.n;
+            apserv.rvectorsetlengthatleast(ref y0, l);
+            apserv.rvectorsetlengthatleast(ref y1, l);
+            for(i=0; i<=n-1; i++)
+            {
+                y0[i] = 0;
+                y1[i] = 0;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV2: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                for(i=0; i<=s.m-1; i++)
+                {
+                    tval = 0;
+                    vx = x[i];
+                    j0 = s.ridx[i];
+                    j1 = s.ridx[i+1]-1;
+                    for(j=j0; j<=j1; j++)
+                    {
+                        vi = s.idx[j];
+                        vs = s.vals[j];
+                        tval = tval+x[vi]*vs;
+                        y1[vi] = y1[vi]+vx*vs;
+                    }
+                    y0[i] = tval;
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    vd0 = s.vals[ri+d]*x[i];
+                    vd1 = vd0;
+                    if( d>0 )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        v = x[i];
+                        i1_ = (lt) - (lt1);
+                        for(i_=lt1; i_<=rt1;i_++)
+                        {
+                            y1[i_] = y1[i_] + v*s.vals[i_+i1_];
+                        }
+                        i1_ = (lt1)-(lt);
+                        vv = 0.0;
+                        for(i_=lt; i_<=rt;i_++)
+                        {
+                            vv += s.vals[i_]*x[i_+i1_];
+                        }
+                        vd0 = vd0+vv;
+                    }
+                    if( u>0 )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        v = x[i];
+                        i1_ = (lt) - (lt1);
+                        for(i_=lt1; i_<=rt1;i_++)
+                        {
+                            y0[i_] = y0[i_] + v*s.vals[i_+i1_];
+                        }
+                        i1_ = (lt1)-(lt);
+                        vv = 0.0;
+                        for(i_=lt; i_<=rt;i_++)
+                        {
+                            vv += s.vals[i_]*x[i_+i1_];
+                        }
+                        vd1 = vd1+vv;
+                    }
+                    y0[i] = vd0;
+                    y1[i] = vd1;
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-vector product  S*x, when S is  symmetric
+        matrix. Matrix S  must be stored in CRS or SKS format  (exception will be
+        thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*M matrix in CRS or SKS format.
+            IsUpper     -   whether upper or lower triangle of S is given:
+                            * if upper triangle is given,  only   S[i,j] for j>=i
+                              are used, and lower triangle is ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for j<=i
+                              are used, and upper triangle is ignored.
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            Y           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[M], S*x
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesmv(sparsematrix s,
+            bool isupper,
+            double[] x,
+            ref double[] y)
+        {
+            int n = 0;
+            int i = 0;
+            int j = 0;
+            int id = 0;
+            int lt = 0;
+            int rt = 0;
+            double v = 0;
+            double vv = 0;
+            double vy = 0;
+            double vx = 0;
+            double vd = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int d = 0;
+            int u = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseSMV: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseSMV: length(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseSMV: non-square matrix");
+            n = s.n;
+            apserv.rvectorsetlengthatleast(ref y, n);
+            for(i=0; i<=n-1; i++)
+            {
+                y[i] = 0;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseSMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                for(i=0; i<=n-1; i++)
+                {
+                    if( s.didx[i]!=s.uidx[i] )
+                    {
+                        y[i] = y[i]+s.vals[s.didx[i]]*x[s.idx[s.didx[i]]];
+                    }
+                    if( isupper )
+                    {
+                        lt = s.uidx[i];
+                        rt = s.ridx[i+1];
+                        vy = 0;
+                        vx = x[i];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            id = s.idx[j];
+                            v = s.vals[j];
+                            vy = vy+x[id]*v;
+                            y[id] = y[id]+vx*v;
+                        }
+                        y[i] = y[i]+vy;
+                    }
+                    else
+                    {
+                        lt = s.ridx[i];
+                        rt = s.didx[i];
+                        vy = 0;
+                        vx = x[i];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            id = s.idx[j];
+                            v = s.vals[j];
+                            vy = vy+x[id]*v;
+                            y[id] = y[id]+vx*v;
+                        }
+                        y[i] = y[i]+vy;
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    vd = s.vals[ri+d]*x[i];
+                    if( d>0 && !isupper )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        v = x[i];
+                        i1_ = (lt) - (lt1);
+                        for(i_=lt1; i_<=rt1;i_++)
+                        {
+                            y[i_] = y[i_] + v*s.vals[i_+i1_];
+                        }
+                        i1_ = (lt1)-(lt);
+                        vv = 0.0;
+                        for(i_=lt; i_<=rt;i_++)
+                        {
+                            vv += s.vals[i_]*x[i_+i1_];
+                        }
+                        vd = vd+vv;
+                    }
+                    if( u>0 && isupper )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        v = x[i];
+                        i1_ = (lt) - (lt1);
+                        for(i_=lt1; i_<=rt1;i_++)
+                        {
+                            y[i_] = y[i_] + v*s.vals[i_+i1_];
+                        }
+                        i1_ = (lt1)-(lt);
+                        vv = 0.0;
+                        for(i_=lt; i_<=rt;i_++)
+                        {
+                            vv += s.vals[i_]*x[i_+i1_];
+                        }
+                        vd = vd+vv;
+                    }
+                    y[i] = vd;
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates vector-matrix-vector product x'*S*x, where  S is
+        symmetric matrix. Matrix S must be stored in CRS or SKS format (exception
+        will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*M matrix in CRS or SKS format.
+            IsUpper     -   whether upper or lower triangle of S is given:
+                            * if upper triangle is given,  only   S[i,j] for j>=i
+                              are used, and lower triangle is ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for j<=i
+                              are used, and upper triangle is ignored.
+            X           -   array[N], input vector. For  performance  reasons  we 
+                            make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            
+        RESULT
+            x'*S*x
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 27.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static double sparsevsmv(sparsematrix s,
+            bool isupper,
+            double[] x)
+        {
+            double result = 0;
+            int n = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int id = 0;
+            int lt = 0;
+            int rt = 0;
+            double v = 0;
+            double v0 = 0;
+            double v1 = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int d = 0;
+            int u = 0;
+            int lt1 = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseVSMV: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseVSMV: length(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseVSMV: non-square matrix");
+            n = s.n;
+            result = 0.0;
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseVSMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                for(i=0; i<=n-1; i++)
+                {
+                    if( s.didx[i]!=s.uidx[i] )
+                    {
+                        v = x[s.idx[s.didx[i]]];
+                        result = result+v*s.vals[s.didx[i]]*v;
+                    }
+                    if( isupper )
+                    {
+                        lt = s.uidx[i];
+                        rt = s.ridx[i+1];
+                    }
+                    else
+                    {
+                        lt = s.ridx[i];
+                        rt = s.didx[i];
+                    }
+                    v0 = x[i];
+                    for(j=lt; j<=rt-1; j++)
+                    {
+                        id = s.idx[j];
+                        v1 = x[id];
+                        v = s.vals[j];
+                        result = result+2*v0*v1*v;
+                    }
+                }
+                return result;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    v = x[i];
+                    result = result+v*s.vals[ri+d]*v;
+                    if( d>0 && !isupper )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        k = d-1;
+                        v0 = x[i];
+                        v = 0.0;
+                        for(j=0; j<=k; j++)
+                        {
+                            v = v+x[lt1+j]*s.vals[lt+j];
+                        }
+                        result = result+2*v0*v;
+                    }
+                    if( u>0 && isupper )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        k = u-1;
+                        v0 = x[i];
+                        v = 0.0;
+                        for(j=0; j<=k; j++)
+                        {
+                            v = v+x[lt1+j]*s.vals[lt+j];
+                        }
+                        result = result+2*v0*v;
+                    }
+                }
+                return result;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-matrix product  S*A.  Matrix  S  must  be
+        stored in CRS or SKS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS or SKS format.
+            A           -   array[N][K], input dense matrix. For  performance reasons
+                            we make only quick checks - we check that array size  
+                            is at least N, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).
+            B           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B           -   array[M][K], S*A
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemm(sparsematrix s,
+            double[,] a,
+            int k,
+            ref double[,] b)
+        {
+            double tval = 0;
+            double v = 0;
+            int id = 0;
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int k1 = 0;
+            int lt = 0;
+            int rt = 0;
+            int m = 0;
+            int n = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int d = 0;
+            int u = 0;
+            double vd = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseMM: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseMM: Rows(A)<N");
+            alglib.ap.assert(k>0, "SparseMM: K<=0");
+            m = s.m;
+            n = s.n;
+            k1 = k-1;
+            apserv.rmatrixsetlengthatleast(ref b, m, k);
+            for(i=0; i<=m-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b[i,j] = 0;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[m], "SparseMM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                if( k<linalgswitch )
+                {
+                    for(i=0; i<=m-1; i++)
+                    {
+                        for(j=0; j<=k-1; j++)
+                        {
+                            tval = 0;
+                            lt = s.ridx[i];
+                            rt = s.ridx[i+1];
+                            for(k0=lt; k0<=rt-1; k0++)
+                            {
+                                tval = tval+s.vals[k0]*a[s.idx[k0],j];
+                            }
+                            b[i,j] = tval;
+                        }
+                    }
+                }
+                else
+                {
+                    for(i=0; i<=m-1; i++)
+                    {
+                        lt = s.ridx[i];
+                        rt = s.ridx[i+1];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            id = s.idx[j];
+                            v = s.vals[j];
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[i,i_] = b[i,i_] + v*a[id,i_];
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(m==n, "SparseMM: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    if( d>0 )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b[i,k0] = b[i,k0]+v*a[j,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[i,i_] = b[i,i_] + v*a[j,i_];
+                                }
+                            }
+                        }
+                    }
+                    if( u>0 )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b[j,k0] = b[j,k0]+v*a[i,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[j,i_] = b[j,i_] + v*a[i,i_];
+                                }
+                            }
+                        }
+                    }
+                    vd = s.vals[ri+d];
+                    for(i_=0; i_<=k-1;i_++)
+                    {
+                        b[i,i_] = b[i,i_] + vd*a[i,i_];
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-matrix product  S^T*A. Matrix S  must  be
+        stored in CRS or SKS format (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS or SKS format.
+            A           -   array[M][K], input dense matrix. For performance reasons
+                            we make only quick checks - we check that array size  is
+                            at least M, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).                    
+            B           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B           -   array[N][K], S^T*A
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemtm(sparsematrix s,
+            double[,] a,
+            int k,
+            ref double[,] b)
+        {
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int k1 = 0;
+            int lt = 0;
+            int rt = 0;
+            int ct = 0;
+            double v = 0;
+            int m = 0;
+            int n = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int d = 0;
+            int u = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseMTM: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.m, "SparseMTM: Rows(A)<M");
+            alglib.ap.assert(k>0, "SparseMTM: K<=0");
+            m = s.m;
+            n = s.n;
+            k1 = k-1;
+            apserv.rmatrixsetlengthatleast(ref b, n, k);
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b[i,j] = 0;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[m], "SparseMTM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                if( k<linalgswitch )
+                {
+                    for(i=0; i<=m-1; i++)
+                    {
+                        lt = s.ridx[i];
+                        rt = s.ridx[i+1];
+                        for(k0=lt; k0<=rt-1; k0++)
+                        {
+                            v = s.vals[k0];
+                            ct = s.idx[k0];
+                            for(j=0; j<=k-1; j++)
+                            {
+                                b[ct,j] = b[ct,j]+v*a[i,j];
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for(i=0; i<=m-1; i++)
+                    {
+                        lt = s.ridx[i];
+                        rt = s.ridx[i+1];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            v = s.vals[j];
+                            ct = s.idx[j];
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[ct,i_] = b[ct,i_] + v*a[i,i_];
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(m==n, "SparseMTM: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    if( d>0 )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b[j,k0] = b[j,k0]+v*a[i,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[j,i_] = b[j,i_] + v*a[i,i_];
+                                }
+                            }
+                        }
+                    }
+                    if( u>0 )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b[i,k0] = b[i,k0]+v*a[j,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[i,i_] = b[i,i_] + v*a[j,i_];
+                                }
+                            }
+                        }
+                    }
+                    v = s.vals[ri+d];
+                    for(i_=0; i_<=k-1;i_++)
+                    {
+                        b[i,i_] = b[i,i_] + v*a[i,i_];
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function simultaneously calculates two matrix-matrix products:
+            S*A and S^T*A.
+        S  must  be  square (non-rectangular) matrix stored in CRS or  SKS  format
+        (exception will be thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse N*N matrix in CRS or SKS format.
+            A           -   array[N][K], input dense matrix. For performance reasons
+                            we make only quick checks - we check that array size  is
+                            at least N, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).                    
+            B0          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            B1          -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B0          -   array[N][K], S*A
+            B1          -   array[N][K], S^T*A
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsemm2(sparsematrix s,
+            double[,] a,
+            int k,
+            ref double[,] b0,
+            ref double[,] b1)
+        {
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int lt = 0;
+            int rt = 0;
+            int ct = 0;
+            double v = 0;
+            double tval = 0;
+            int n = 0;
+            int k1 = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int d = 0;
+            int u = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseMM2: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(s.m==s.n, "SparseMM2: matrix is non-square");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseMM2: Rows(A)<N");
+            alglib.ap.assert(k>0, "SparseMM2: K<=0");
+            n = s.n;
+            k1 = k-1;
+            apserv.rmatrixsetlengthatleast(ref b0, n, k);
+            apserv.rmatrixsetlengthatleast(ref b1, n, k);
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b1[i,j] = 0;
+                    b0[i,j] = 0;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMM2: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                if( k<linalgswitch )
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        for(j=0; j<=k-1; j++)
+                        {
+                            tval = 0;
+                            lt = s.ridx[i];
+                            rt = s.ridx[i+1];
+                            v = a[i,j];
+                            for(k0=lt; k0<=rt-1; k0++)
+                            {
+                                ct = s.idx[k0];
+                                b1[ct,j] = b1[ct,j]+s.vals[k0]*v;
+                                tval = tval+s.vals[k0]*a[ct,j];
+                            }
+                            b0[i,j] = tval;
+                        }
+                    }
+                }
+                else
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        lt = s.ridx[i];
+                        rt = s.ridx[i+1];
+                        for(j=lt; j<=rt-1; j++)
+                        {
+                            v = s.vals[j];
+                            ct = s.idx[j];
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b0[i,i_] = b0[i,i_] + v*a[ct,i_];
+                            }
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b1[ct,i_] = b1[ct,i_] + v*a[i,i_];
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(s.m==s.n, "SparseMM2: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    if( d>0 )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b0[i,k0] = b0[i,k0]+v*a[j,k0];
+                                    b1[j,k0] = b1[j,k0]+v*a[i,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b0[i,i_] = b0[i,i_] + v*a[j,i_];
+                                }
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b1[j,i_] = b1[j,i_] + v*a[i,i_];
+                                }
+                            }
+                        }
+                    }
+                    if( u>0 )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b0[j,k0] = b0[j,k0]+v*a[i,k0];
+                                    b1[i,k0] = b1[i,k0]+v*a[j,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b0[j,i_] = b0[j,i_] + v*a[i,i_];
+                                }
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b1[i,i_] = b1[i,i_] + v*a[j,i_];
+                                }
+                            }
+                        }
+                    }
+                    v = s.vals[ri+d];
+                    for(i_=0; i_<=k-1;i_++)
+                    {
+                        b0[i,i_] = b0[i,i_] + v*a[i,i_];
+                    }
+                    for(i_=0; i_<=k-1;i_++)
+                    {
+                        b1[i,i_] = b1[i,i_] + v*a[i,i_];
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-matrix product  S*A, when S  is  symmetric
+        matrix. Matrix S must be stored in CRS or SKS format  (exception  will  be
+        thrown otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse M*M matrix in CRS or SKS format.
+            IsUpper     -   whether upper or lower triangle of S is given:
+                            * if upper triangle is given,  only   S[i,j] for j>=i
+                              are used, and lower triangle is ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for j<=i
+                              are used, and upper triangle is ignored.
+            A           -   array[N][K], input dense matrix. For performance reasons
+                            we make only quick checks - we check that array size is
+                            at least N, but we do not check for NAN's or INF's.
+            K           -   number of columns of matrix (A).  
+            B           -   output buffer, possibly preallocated. In case  buffer
+                            size is too small to store  result,  this  buffer  is
+                            automatically resized.
+            
+        OUTPUT PARAMETERS
+            B           -   array[M][K], S*A
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesmm(sparsematrix s,
+            bool isupper,
+            double[,] a,
+            int k,
+            ref double[,] b)
+        {
+            int i = 0;
+            int j = 0;
+            int k0 = 0;
+            int id = 0;
+            int k1 = 0;
+            int lt = 0;
+            int rt = 0;
+            double v = 0;
+            double vb = 0;
+            double va = 0;
+            int n = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int d = 0;
+            int u = 0;
+            int i_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseSMM: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseSMM: Rows(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseSMM: matrix is non-square");
+            n = s.n;
+            k1 = k-1;
+            apserv.rmatrixsetlengthatleast(ref b, n, k);
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    b[i,j] = 0;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseSMM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                if( k>linalgswitch )
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        for(j=0; j<=k-1; j++)
+                        {
+                            if( s.didx[i]!=s.uidx[i] )
+                            {
+                                id = s.didx[i];
+                                b[i,j] = b[i,j]+s.vals[id]*a[s.idx[id],j];
+                            }
+                            if( isupper )
+                            {
+                                lt = s.uidx[i];
+                                rt = s.ridx[i+1];
+                                vb = 0;
+                                va = a[i,j];
+                                for(k0=lt; k0<=rt-1; k0++)
+                                {
+                                    id = s.idx[k0];
+                                    v = s.vals[k0];
+                                    vb = vb+a[id,j]*v;
+                                    b[id,j] = b[id,j]+va*v;
+                                }
+                                b[i,j] = b[i,j]+vb;
+                            }
+                            else
+                            {
+                                lt = s.ridx[i];
+                                rt = s.didx[i];
+                                vb = 0;
+                                va = a[i,j];
+                                for(k0=lt; k0<=rt-1; k0++)
+                                {
+                                    id = s.idx[k0];
+                                    v = s.vals[k0];
+                                    vb = vb+a[id,j]*v;
+                                    b[id,j] = b[id,j]+va*v;
+                                }
+                                b[i,j] = b[i,j]+vb;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        if( s.didx[i]!=s.uidx[i] )
+                        {
+                            id = s.didx[i];
+                            v = s.vals[id];
+                            for(i_=0; i_<=k-1;i_++)
+                            {
+                                b[i,i_] = b[i,i_] + v*a[s.idx[id],i_];
+                            }
+                        }
+                        if( isupper )
+                        {
+                            lt = s.uidx[i];
+                            rt = s.ridx[i+1];
+                            for(j=lt; j<=rt-1; j++)
+                            {
+                                id = s.idx[j];
+                                v = s.vals[j];
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[i,i_] = b[i,i_] + v*a[id,i_];
+                                }
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[id,i_] = b[id,i_] + v*a[i,i_];
+                                }
+                            }
+                        }
+                        else
+                        {
+                            lt = s.ridx[i];
+                            rt = s.didx[i];
+                            for(j=lt; j<=rt-1; j++)
+                            {
+                                id = s.idx[j];
+                                v = s.vals[j];
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[i,i_] = b[i,i_] + v*a[id,i_];
+                                }
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[id,i_] = b[id,i_] + v*a[i,i_];
+                                }
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(s.m==s.n, "SparseMM2: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    if( d>0 && !isupper )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b[i,k0] = b[i,k0]+v*a[j,k0];
+                                    b[j,k0] = b[j,k0]+v*a[i,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[i,i_] = b[i,i_] + v*a[j,i_];
+                                }
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[j,i_] = b[j,i_] + v*a[i,i_];
+                                }
+                            }
+                        }
+                    }
+                    if( u>0 && isupper )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        for(j=lt1; j<=rt1; j++)
+                        {
+                            v = s.vals[lt+(j-lt1)];
+                            if( k<linalgswitch )
+                            {
+                                
+                                //
+                                // Use loop
+                                //
+                                for(k0=0; k0<=k1; k0++)
+                                {
+                                    b[j,k0] = b[j,k0]+v*a[i,k0];
+                                    b[i,k0] = b[i,k0]+v*a[j,k0];
+                                }
+                            }
+                            else
+                            {
+                                
+                                //
+                                // Use vector operation
+                                //
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[j,i_] = b[j,i_] + v*a[i,i_];
+                                }
+                                for(i_=0; i_<=k-1;i_++)
+                                {
+                                    b[i,i_] = b[i,i_] + v*a[j,i_];
+                                }
+                            }
+                        }
+                    }
+                    v = s.vals[ri+d];
+                    for(i_=0; i_<=k-1;i_++)
+                    {
+                        b[i,i_] = b[i,i_] + v*a[i,i_];
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function calculates matrix-vector product op(S)*x, when x is  vector,
+        S is symmetric triangular matrix, op(S) is transposition or no  operation.
+        Matrix S must be stored in CRS or SKS format  (exception  will  be  thrown
+        otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse square matrix in CRS or SKS format.
+            IsUpper     -   whether upper or lower triangle of S is used:
+                            * if upper triangle is given,  only   S[i,j] for  j>=i
+                              are used, and lower triangle is  ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for  j<=i
+                              are used, and upper triangle is ignored.
+            IsUnit      -   unit or non-unit diagonal:
+                            * if True, diagonal elements of triangular matrix  are
+                              considered equal to 1.0. Actual elements  stored  in
+                              S are not referenced at all.
+                            * if False, diagonal stored in S is used
+            OpType      -   operation type:
+                            * if 0, S*x is calculated
+                            * if 1, (S^T)*x is calculated (transposition)
+            X           -   array[N] which stores input  vector.  For  performance
+                            reasons we make only quick  checks  -  we  check  that
+                            array  size  is  at  least  N, but we do not check for
+                            NAN's or INF's.
+            Y           -   possibly  preallocated  input   buffer.  Automatically 
+                            resized if its size is too small.
+            
+        OUTPUT PARAMETERS
+            Y           -   array[N], op(S)*x
+            
+        NOTE: this function throws exception when called for non-CRS/SKS  matrix.
+        You must convert your matrix with SparseConvertToCRS/SKS()  before  using
+        this function.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsetrmv(sparsematrix s,
+            bool isupper,
+            bool isunit,
+            int optype,
+            double[] x,
+            ref double[] y)
+        {
+            int n = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int j0 = 0;
+            int j1 = 0;
+            double v = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int d = 0;
+            int u = 0;
+            int lt = 0;
+            int rt = 0;
+            int lt1 = 0;
+            int rt1 = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseTRMV: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(optype==0 || optype==1, "SparseTRMV: incorrect operation type (must be 0 or 1)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseTRMV: Length(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseTRMV: matrix is non-square");
+            n = s.n;
+            apserv.rvectorsetlengthatleast(ref y, n);
+            if( isunit )
+            {
+                
+                //
+                // Set initial value of y to x
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    y[i] = x[i];
+                }
+            }
+            else
+            {
+                
+                //
+                // Set initial value of y to 0
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    y[i] = 0;
+                }
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseTRMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                for(i=0; i<=n-1; i++)
+                {
+                    
+                    //
+                    // Depending on IsUpper/IsUnit, select range of indexes to process
+                    //
+                    if( isupper )
+                    {
+                        if( isunit || s.didx[i]==s.uidx[i] )
+                        {
+                            j0 = s.uidx[i];
+                        }
+                        else
+                        {
+                            j0 = s.didx[i];
+                        }
+                        j1 = s.ridx[i+1]-1;
+                    }
+                    else
+                    {
+                        j0 = s.ridx[i];
+                        if( isunit || s.didx[i]==s.uidx[i] )
+                        {
+                            j1 = s.didx[i]-1;
+                        }
+                        else
+                        {
+                            j1 = s.didx[i];
+                        }
+                    }
+                    
+                    //
+                    // Depending on OpType, process subset of I-th row of input matrix
+                    //
+                    if( optype==0 )
+                    {
+                        v = 0.0;
+                        for(j=j0; j<=j1; j++)
+                        {
+                            v = v+s.vals[j]*x[s.idx[j]];
+                        }
+                        y[i] = y[i]+v;
+                    }
+                    else
+                    {
+                        v = x[i];
+                        for(j=j0; j<=j1; j++)
+                        {
+                            k = s.idx[j];
+                            y[k] = y[k]+v*s.vals[j];
+                        }
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(s.m==s.n, "SparseTRMV: non-square SKS matrices are not supported");
+                for(i=0; i<=n-1; i++)
+                {
+                    ri = s.ridx[i];
+                    ri1 = s.ridx[i+1];
+                    d = s.didx[i];
+                    u = s.uidx[i];
+                    if( !isunit )
+                    {
+                        y[i] = y[i]+s.vals[ri+d]*x[i];
+                    }
+                    if( d>0 && !isupper )
+                    {
+                        lt = ri;
+                        rt = ri+d-1;
+                        lt1 = i-d;
+                        rt1 = i-1;
+                        if( optype==0 )
+                        {
+                            i1_ = (lt1)-(lt);
+                            v = 0.0;
+                            for(i_=lt; i_<=rt;i_++)
+                            {
+                                v += s.vals[i_]*x[i_+i1_];
+                            }
+                            y[i] = y[i]+v;
+                        }
+                        else
+                        {
+                            v = x[i];
+                            i1_ = (lt) - (lt1);
+                            for(i_=lt1; i_<=rt1;i_++)
+                            {
+                                y[i_] = y[i_] + v*s.vals[i_+i1_];
+                            }
+                        }
+                    }
+                    if( u>0 && isupper )
+                    {
+                        lt = ri1-u;
+                        rt = ri1-1;
+                        lt1 = i-u;
+                        rt1 = i-1;
+                        if( optype==0 )
+                        {
+                            v = x[i];
+                            i1_ = (lt) - (lt1);
+                            for(i_=lt1; i_<=rt1;i_++)
+                            {
+                                y[i_] = y[i_] + v*s.vals[i_+i1_];
+                            }
+                        }
+                        else
+                        {
+                            i1_ = (lt1)-(lt);
+                            v = 0.0;
+                            for(i_=lt; i_<=rt;i_++)
+                            {
+                                v += s.vals[i_]*x[i_+i1_];
+                            }
+                            y[i] = y[i]+v;
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function solves linear system op(S)*y=x  where  x  is  vector,  S  is
+        symmetric  triangular  matrix,  op(S)  is  transposition  or no operation.
+        Matrix S must be stored in CRS or SKS format  (exception  will  be  thrown
+        otherwise).
+
+        INPUT PARAMETERS
+            S           -   sparse square matrix in CRS or SKS format.
+            IsUpper     -   whether upper or lower triangle of S is used:
+                            * if upper triangle is given,  only   S[i,j] for  j>=i
+                              are used, and lower triangle is  ignored (it can  be
+                              empty - these elements are not referenced at all).
+                            * if lower triangle is given,  only   S[i,j] for  j<=i
+                              are used, and upper triangle is ignored.
+            IsUnit      -   unit or non-unit diagonal:
+                            * if True, diagonal elements of triangular matrix  are
+                              considered equal to 1.0. Actual elements  stored  in
+                              S are not referenced at all.
+                            * if False, diagonal stored in S is used. It  is  your
+                              responsibility  to  make  sure  that   diagonal   is
+                              non-zero.
+            OpType      -   operation type:
+                            * if 0, S*x is calculated
+                            * if 1, (S^T)*x is calculated (transposition)
+            X           -   array[N] which stores input  vector.  For  performance
+                            reasons we make only quick  checks  -  we  check  that
+                            array  size  is  at  least  N, but we do not check for
+                            NAN's or INF's.
+            
+        OUTPUT PARAMETERS
+            X           -   array[N], inv(op(S))*x
+            
+        NOTE: this function throws exception when called for  non-CRS/SKS  matrix.
+              You must convert your matrix  with  SparseConvertToCRS/SKS()  before
+              using this function.
+
+        NOTE: no assertion or tests are done during algorithm  operation.   It  is
+              your responsibility to provide invertible matrix to algorithm.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsetrsv(sparsematrix s,
+            bool isupper,
+            bool isunit,
+            int optype,
+            double[] x)
+        {
+            int n = 0;
+            int fst = 0;
+            int lst = 0;
+            int stp = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            double v = 0;
+            double vd = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int ri = 0;
+            int ri1 = 0;
+            int d = 0;
+            int u = 0;
+            int lt = 0;
+            int lt1 = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseTRSV: incorrect matrix type (convert your matrix to CRS/SKS)");
+            alglib.ap.assert(optype==0 || optype==1, "SparseTRSV: incorrect operation type (must be 0 or 1)");
+            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseTRSV: Length(X)<N");
+            alglib.ap.assert(s.m==s.n, "SparseTRSV: matrix is non-square");
+            n = s.n;
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS format.
+                //
+                // Several branches for different combinations of IsUpper and OpType
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseTRSV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                if( optype==0 )
+                {
+                    
+                    //
+                    // No transposition.
+                    //
+                    // S*x=y with upper or lower triangular S.
+                    //
+                    if( isupper )
+                    {
+                        fst = n-1;
+                        lst = 0;
+                        stp = -1;
+                    }
+                    else
+                    {
+                        fst = 0;
+                        lst = n-1;
+                        stp = 1;
+                    }
+                    i = fst;
+                    while( (stp>0 && i<=lst) || (stp<0 && i>=lst) )
+                    {
+                        
+                        //
+                        // Select range of indexes to process
+                        //
+                        if( isupper )
+                        {
+                            j0 = s.uidx[i];
+                            j1 = s.ridx[i+1]-1;
+                        }
+                        else
+                        {
+                            j0 = s.ridx[i];
+                            j1 = s.didx[i]-1;
+                        }
+                        
+                        //
+                        // Calculate X[I]
+                        //
+                        v = 0.0;
+                        for(j=j0; j<=j1; j++)
+                        {
+                            v = v+s.vals[j]*x[s.idx[j]];
+                        }
+                        if( !isunit )
+                        {
+                            if( s.didx[i]==s.uidx[i] )
+                            {
+                                vd = 0;
+                            }
+                            else
+                            {
+                                vd = s.vals[s.didx[i]];
+                            }
+                        }
+                        else
+                        {
+                            vd = 1.0;
+                        }
+                        k = apserv.saferdiv(x[i]-v, vd, ref v);
+                        alglib.ap.assert(k<=0, "SparseTRSV: near-overflow or division by exact zero");
+                        x[i] = v;
+                        
+                        //
+                        // Next I
+                        //
+                        i = i+stp;
+                    }
+                    return;
+                }
+                if( optype==1 )
+                {
+                    
+                    //
+                    // Transposition.
+                    //
+                    // (S^T)*x=y with upper or lower triangular S.
+                    //
+                    if( isupper )
+                    {
+                        fst = 0;
+                        lst = n-1;
+                        stp = 1;
+                    }
+                    else
+                    {
+                        fst = n-1;
+                        lst = 0;
+                        stp = -1;
+                    }
+                    i = fst;
+                    while( (stp>0 && i<=lst) || (stp<0 && i>=lst) )
+                    {
+                        
+                        //
+                        // X[i] already stores A[i,i]*Y[i], the only thing left
+                        // is to divide by diagonal element.
+                        //
+                        if( !isunit )
+                        {
+                            if( s.didx[i]==s.uidx[i] )
+                            {
+                                vd = 0;
+                            }
+                            else
+                            {
+                                vd = s.vals[s.didx[i]];
+                            }
+                        }
+                        else
+                        {
+                            vd = 1.0;
+                        }
+                        k = apserv.saferdiv(x[i], vd, ref v);
+                        alglib.ap.assert(k<=0, "SparseTRSV: near-overflow or division by exact zero");
+                        x[i] = v;
+                        
+                        //
+                        // For upper triangular case:
+                        //     subtract X[i]*Ai from X[i+1:N-1]
+                        //
+                        // For lower triangular case:
+                        //     subtract X[i]*Ai from X[0:i-1]
+                        //
+                        // (here Ai is I-th row of original, untransposed A).
+                        //
+                        if( isupper )
+                        {
+                            j0 = s.uidx[i];
+                            j1 = s.ridx[i+1]-1;
+                        }
+                        else
+                        {
+                            j0 = s.ridx[i];
+                            j1 = s.didx[i]-1;
+                        }
+                        v = x[i];
+                        for(j=j0; j<=j1; j++)
+                        {
+                            k = s.idx[j];
+                            x[k] = x[k]-s.vals[j]*v;
+                        }
+                        
+                        //
+                        // Next I
+                        //
+                        i = i+stp;
+                    }
+                    return;
+                }
+                alglib.ap.assert(false, "SparseTRSV: internal error");
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS format
+                //
+                alglib.ap.assert(s.m==s.n, "SparseTRSV: non-square SKS matrices are not supported");
+                if( (optype==0 && !isupper) || (optype==1 && isupper) )
+                {
+                    
+                    //
+                    // Lower triangular op(S) (matrix itself can be upper triangular).
+                    //
+                    for(i=0; i<=n-1; i++)
+                    {
+                        
+                        //
+                        // Select range of indexes to process
+                        //
+                        ri = s.ridx[i];
+                        ri1 = s.ridx[i+1];
+                        d = s.didx[i];
+                        u = s.uidx[i];
+                        if( isupper )
+                        {
+                            lt = i-u;
+                            lt1 = ri1-u;
+                            k = u-1;
+                        }
+                        else
+                        {
+                            lt = i-d;
+                            lt1 = ri;
+                            k = d-1;
+                        }
+                        
+                        //
+                        // Calculate X[I]
+                        //
+                        v = 0.0;
+                        for(j=0; j<=k; j++)
+                        {
+                            v = v+s.vals[lt1+j]*x[lt+j];
+                        }
+                        if( isunit )
+                        {
+                            vd = 1;
+                        }
+                        else
+                        {
+                            vd = s.vals[ri+d];
+                        }
+                        k = apserv.saferdiv(x[i]-v, vd, ref v);
+                        alglib.ap.assert(k<=0, "SparseTRSV: near-overflow or division by exact zero");
+                        x[i] = v;
+                    }
+                    return;
+                }
+                if( (optype==1 && !isupper) || (optype==0 && isupper) )
+                {
+                    
+                    //
+                    // Upper triangular op(S) (matrix itself can be lower triangular).
+                    //
+                    for(i=n-1; i>=0; i--)
+                    {
+                        ri = s.ridx[i];
+                        ri1 = s.ridx[i+1];
+                        d = s.didx[i];
+                        u = s.uidx[i];
+                        
+                        //
+                        // X[i] already stores A[i,i]*Y[i], the only thing left
+                        // is to divide by diagonal element.
+                        //
+                        if( isunit )
+                        {
+                            vd = 1;
+                        }
+                        else
+                        {
+                            vd = s.vals[ri+d];
+                        }
+                        k = apserv.saferdiv(x[i], vd, ref v);
+                        alglib.ap.assert(k<=0, "SparseTRSV: near-overflow or division by exact zero");
+                        x[i] = v;
+                        
+                        //
+                        // Subtract product of X[i] and I-th column of "effective" A from
+                        // unprocessed variables.
+                        //
+                        v = x[i];
+                        if( isupper )
+                        {
+                            lt = i-u;
+                            lt1 = ri1-u;
+                            k = u-1;
+                        }
+                        else
+                        {
+                            lt = i-d;
+                            lt1 = ri;
+                            k = d-1;
+                        }
+                        for(j=0; j<=k; j++)
+                        {
+                            x[lt+j] = x[lt+j]-v*s.vals[lt1+j];
+                        }
+                    }
+                    return;
+                }
+                alglib.ap.assert(false, "SparseTRSV: internal error");
+            }
+            alglib.ap.assert(false, "SparseTRSV: internal error");
+        }
+
+
+        /*************************************************************************
+        This procedure resizes Hash-Table matrix. It can be called when you  have
+        deleted too many elements from the matrix, and you want to  free unneeded
+        memory.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseresizematrix(sparsematrix s)
+        {
+            int k = 0;
+            int k1 = 0;
+            int i = 0;
+            double[] tvals = new double[0];
+            int[] tidx = new int[0];
+
+            alglib.ap.assert(s.matrixtype==0, "SparseResizeMatrix: incorrect matrix type");
+            
+            //
+            // Initialization for length and number of non-null elementd
+            //
+            k = s.tablesize;
+            k1 = 0;
+            
+            //
+            // Calculating number of non-null elements
+            //
+            for(i=0; i<=k-1; i++)
+            {
+                if( s.idx[2*i]>=0 )
+                {
+                    k1 = k1+1;
+                }
+            }
+            
+            //
+            // Initialization value for free space
+            //
+            s.tablesize = (int)Math.Round(k1/desiredloadfactor*growfactor+additional);
+            s.nfree = s.tablesize-k1;
+            tvals = new double[s.tablesize];
+            tidx = new int[2*s.tablesize];
+            alglib.ap.swap(ref s.vals, ref tvals);
+            alglib.ap.swap(ref s.idx, ref tidx);
+            for(i=0; i<=s.tablesize-1; i++)
+            {
+                s.idx[2*i] = -1;
+            }
+            for(i=0; i<=k-1; i++)
+            {
+                if( tidx[2*i]>=0 )
+                {
+                    sparseset(s, tidx[2*i], tidx[2*i+1], tvals[i]);
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function return average length of chain at hash-table.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static double sparsegetaveragelengthofchain(sparsematrix s)
+        {
+            double result = 0;
+            int nchains = 0;
+            int talc = 0;
+            int l = 0;
+            int i = 0;
+            int ind0 = 0;
+            int ind1 = 0;
+            int hashcode = 0;
+
+            
+            //
+            // If matrix represent in CRS then return zero and exit
+            //
+            if( s.matrixtype!=0 )
+            {
+                result = 0;
+                return result;
+            }
+            nchains = 0;
+            talc = 0;
+            l = s.tablesize;
+            for(i=0; i<=l-1; i++)
+            {
+                ind0 = 2*i;
+                if( s.idx[ind0]!=-1 )
+                {
+                    nchains = nchains+1;
+                    hashcode = hash(s.idx[ind0], s.idx[ind0+1], l);
+                    while( true )
+                    {
+                        talc = talc+1;
+                        ind1 = 2*hashcode;
+                        if( s.idx[ind0]==s.idx[ind1] && s.idx[ind0+1]==s.idx[ind1+1] )
+                        {
+                            break;
+                        }
+                        hashcode = (hashcode+1)%l;
+                    }
+                }
+            }
+            if( nchains==0 )
+            {
+                result = 0;
+            }
+            else
+            {
+                result = (double)talc/(double)nchains;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This  function  is  used  to enumerate all elements of the sparse matrix.
+        Before  first  call  user  initializes  T0 and T1 counters by zero. These
+        counters are used to remember current position in a  matrix;  after  each
+        call they are updated by the function.
+
+        Subsequent calls to this function return non-zero elements of the  sparse
+        matrix, one by one. If you enumerate CRS matrix, matrix is traversed from
+        left to right, from top to bottom. In case you enumerate matrix stored as
+        Hash table, elements are returned in random order.
+
+        EXAMPLE
+            > T0=0
+            > T1=0
+            > while SparseEnumerate(S,T0,T1,I,J,V) do
+            >     ....do something with I,J,V
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in Hash-Table or CRS representation.
+            T0          -   internal counter
+            T1          -   internal counter
+            
+        OUTPUT PARAMETERS
+            T0          -   new value of the internal counter
+            T1          -   new value of the internal counter
+            I           -   row index of non-zero element, 0<=I<M.
+            J           -   column index of non-zero element, 0<=J<N
+            V           -   value of the T-th element
+            
+        RESULT
+            True in case of success (next non-zero element was retrieved)
+            False in case all non-zero elements were enumerated
+            
+        NOTE: you may call SparseRewriteExisting() during enumeration, but it  is
+              THE  ONLY  matrix  modification  function  you  can  call!!!  Other
+              matrix modification functions should not be called during enumeration!
+
+          -- ALGLIB PROJECT --
+             Copyright 14.03.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseenumerate(sparsematrix s,
+            ref int t0,
+            ref int t1,
+            ref int i,
+            ref int j,
+            ref double v)
+        {
+            bool result = new bool();
+            int sz = 0;
+            int i0 = 0;
+
+            i = 0;
+            j = 0;
+            v = 0;
+
+            result = false;
+            if( t0<0 || (s.matrixtype!=0 && t1<0) )
+            {
+                
+                //
+                // Incorrect T0/T1, terminate enumeration
+                //
+                result = false;
+                return result;
+            }
+            if( s.matrixtype==0 )
+            {
+                
+                //
+                // Hash-table matrix
+                //
+                sz = s.tablesize;
+                for(i0=t0; i0<=sz-1; i0++)
+                {
+                    if( s.idx[2*i0]==-1 || s.idx[2*i0]==-2 )
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        i = s.idx[2*i0];
+                        j = s.idx[2*i0+1];
+                        v = s.vals[i0];
+                        t0 = i0+1;
+                        result = true;
+                        return result;
+                    }
+                }
+                t0 = 0;
+                t1 = 0;
+                result = false;
+                return result;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS matrix
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseEnumerate: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                if( t0>=s.ninitialized )
+                {
+                    t0 = 0;
+                    t1 = 0;
+                    result = false;
+                    return result;
+                }
+                while( t0>s.ridx[t1+1]-1 && t1<s.m )
+                {
+                    t1 = t1+1;
+                }
+                i = t1;
+                j = s.idx[t0];
+                v = s.vals[t0];
+                t0 = t0+1;
+                result = true;
+                return result;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS matrix:
+                // * T0 stores current offset in Vals[] array
+                // * T1 stores index of the diagonal block
+                //
+                alglib.ap.assert(s.m==s.n, "SparseEnumerate: non-square SKS matrices are not supported");
+                if( t0>=s.ridx[s.m] )
+                {
+                    t0 = 0;
+                    t1 = 0;
+                    result = false;
+                    return result;
+                }
+                while( t0>s.ridx[t1+1]-1 && t1<s.m )
+                {
+                    t1 = t1+1;
+                }
+                i0 = t0-s.ridx[t1];
+                if( i0<s.didx[t1]+1 )
+                {
+                    
+                    //
+                    // subdiagonal or diagonal element, row index is T1.
+                    //
+                    i = t1;
+                    j = t1-s.didx[t1]+i0;
+                }
+                else
+                {
+                    
+                    //
+                    // superdiagonal element, column index is T1.
+                    //
+                    i = t1-(s.ridx[t1+1]-t0);
+                    j = t1;
+                }
+                v = s.vals[t0];
+                t0 = t0+1;
+                result = true;
+                return result;
+            }
+            alglib.ap.assert(false, "SparseEnumerate: unexpected matrix type");
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function rewrites existing (non-zero) element. It  returns  True   if
+        element  exists  or  False,  when  it  is  called for non-existing  (zero)
+        element.
+
+        This function works with any kind of the matrix.
+
+        The purpose of this function is to provide convenient thread-safe  way  to
+        modify  sparse  matrix.  Such  modification  (already  existing element is
+        rewritten) is guaranteed to be thread-safe without any synchronization, as
+        long as different threads modify different elements.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in any kind of representation
+                            (Hash, SKS, CRS).
+            I           -   row index of non-zero element to modify, 0<=I<M
+            J           -   column index of non-zero element to modify, 0<=J<N
+            V           -   value to rewrite, must be finite number
+
+        OUTPUT PARAMETERS
+            S           -   modified matrix
+        RESULT
+            True in case when element exists
+            False in case when element doesn't exist or it is zero
+            
+          -- ALGLIB PROJECT --
+             Copyright 14.03.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparserewriteexisting(sparsematrix s,
+            int i,
+            int j,
+            double v)
+        {
+            bool result = new bool();
+            int hashcode = 0;
+            int k = 0;
+            int k0 = 0;
+            int k1 = 0;
+
+            alglib.ap.assert(0<=i && i<s.m, "SparseRewriteExisting: invalid argument I(either I<0 or I>=S.M)");
+            alglib.ap.assert(0<=j && j<s.n, "SparseRewriteExisting: invalid argument J(either J<0 or J>=S.N)");
+            alglib.ap.assert(math.isfinite(v), "SparseRewriteExisting: invalid argument V(either V is infinite or V is NaN)");
+            result = false;
+            
+            //
+            // Hash-table matrix
+            //
+            if( s.matrixtype==0 )
+            {
+                k = s.tablesize;
+                hashcode = hash(i, j, k);
+                while( true )
+                {
+                    if( s.idx[2*hashcode]==-1 )
+                    {
+                        return result;
+                    }
+                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
+                    {
+                        s.vals[hashcode] = v;
+                        result = true;
+                        return result;
+                    }
+                    hashcode = (hashcode+1)%k;
+                }
+            }
+            
+            //
+            // CRS matrix
+            //
+            if( s.matrixtype==1 )
+            {
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseRewriteExisting: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                k0 = s.ridx[i];
+                k1 = s.ridx[i+1]-1;
+                while( k0<=k1 )
+                {
+                    k = (k0+k1)/2;
+                    if( s.idx[k]==j )
+                    {
+                        s.vals[k] = v;
+                        result = true;
+                        return result;
+                    }
+                    if( s.idx[k]<j )
+                    {
+                        k0 = k+1;
+                    }
+                    else
+                    {
+                        k1 = k-1;
+                    }
+                }
+            }
+            
+            //
+            // SKS
+            //
+            if( s.matrixtype==2 )
+            {
+                alglib.ap.assert(s.m==s.n, "SparseRewriteExisting: non-square SKS matrix not supported");
+                if( i==j )
+                {
+                    
+                    //
+                    // Rewrite diagonal element
+                    //
+                    result = true;
+                    s.vals[s.ridx[i]+s.didx[i]] = v;
+                    return result;
+                }
+                if( j<i )
+                {
+                    
+                    //
+                    // Return subdiagonal element at I-th "skyline block"
+                    //
+                    k = s.didx[i];
+                    if( i-j<=k )
+                    {
+                        s.vals[s.ridx[i]+k+j-i] = v;
+                        result = true;
+                    }
+                }
+                else
+                {
+                    
+                    //
+                    // Return superdiagonal element at J-th "skyline block"
+                    //
+                    k = s.uidx[j];
+                    if( j-i<=k )
+                    {
+                        s.vals[s.ridx[j+1]-(j-i)] = v;
+                        result = true;
+                    }
+                }
+                return result;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns I-th row of the sparse matrix. Matrix must be stored
+        in CRS or SKS format.
+
+        INPUT PARAMETERS:
+            S           -   sparse M*N matrix in CRS format
+            I           -   row index, 0<=I<M
+            IRow        -   output buffer, can be  preallocated.  In  case  buffer
+                            size  is  too  small  to  store  I-th   row,   it   is
+                            automatically reallocated.
+         
+        OUTPUT PARAMETERS:
+            IRow        -   array[M], I-th row.
+            
+        NOTE: this function has O(N) running time, where N is a  column  count. It
+              allocates and fills N-element  array,  even  although  most  of  its
+              elemets are zero.
+              
+        NOTE: If you have O(non-zeros-per-row) time and memory  requirements,  use
+              SparseGetCompressedRow() function. It  returns  data  in  compressed
+              format.
+
+        NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non  CRS/SKS)
+              is passed, this function throws exception.
+
+          -- ALGLIB PROJECT --
+             Copyright 10.12.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsegetrow(sparsematrix s,
+            int i,
+            ref double[] irow)
+        {
+            int i0 = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int j = 0;
+            int upperprofile = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseGetRow: S must be CRS/SKS-based matrix");
+            alglib.ap.assert(i>=0 && i<s.m, "SparseGetRow: I<0 or I>=M");
+            
+            //
+            // Prepare output buffer
+            //
+            apserv.rvectorsetlengthatleast(ref irow, s.n);
+            for(i0=0; i0<=s.n-1; i0++)
+            {
+                irow[i0] = 0;
+            }
+            
+            //
+            // Output
+            //
+            if( s.matrixtype==1 )
+            {
+                for(i0=s.ridx[i]; i0<=s.ridx[i+1]-1; i0++)
+                {
+                    irow[s.idx[i0]] = s.vals[i0];
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // Copy subdiagonal and diagonal parts
+                //
+                alglib.ap.assert(s.n==s.m, "SparseGetRow: non-square SKS matrices are not supported");
+                j0 = i-s.didx[i];
+                i0 = -j0+s.ridx[i];
+                for(j=j0; j<=i; j++)
+                {
+                    irow[j] = s.vals[j+i0];
+                }
+                
+                //
+                // Copy superdiagonal part
+                //
+                upperprofile = s.uidx[s.n];
+                j0 = i+1;
+                j1 = Math.Min(s.n-1, i+upperprofile);
+                for(j=j0; j<=j1; j++)
+                {
+                    if( j-i<=s.uidx[j] )
+                    {
+                        irow[j] = s.vals[s.ridx[j+1]-(j-i)];
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function returns I-th row of the sparse matrix IN COMPRESSED FORMAT -
+        only non-zero elements are returned (with their indexes). Matrix  must  be
+        stored in CRS or SKS format.
+
+        INPUT PARAMETERS:
+            S           -   sparse M*N matrix in CRS format
+            I           -   row index, 0<=I<M
+            ColIdx      -   output buffer for column indexes, can be preallocated.
+                            In case buffer size is too small to store I-th row, it
+                            is automatically reallocated.
+            Vals        -   output buffer for values, can be preallocated. In case
+                            buffer size is too small to  store  I-th  row,  it  is
+                            automatically reallocated.
+         
+        OUTPUT PARAMETERS:
+            ColIdx      -   column   indexes   of  non-zero  elements,  sorted  by
+                            ascending. Symbolically non-zero elements are  counted
+                            (i.e. if you allocated place for element, but  it  has
+                            zero numerical value - it is counted).
+            Vals        -   values. Vals[K] stores value of  matrix  element  with
+                            indexes (I,ColIdx[K]). Symbolically non-zero  elements
+                            are counted (i.e. if you allocated place for  element,
+                            but it has zero numerical value - it is counted).
+            NZCnt       -   number of symbolically non-zero elements per row.
+
+        NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non  CRS/SKS)
+              is passed, this function throws exception.
+              
+        NOTE: this function may allocate additional, unnecessary place for  ColIdx
+              and Vals arrays. It is dictated by  performance  reasons  -  on  SKS
+              matrices it is faster  to  allocate  space  at  the  beginning  with
+              some "extra"-space, than performing two passes over matrix  -  first
+              time to calculate exact space required for data, second  time  -  to
+              store data itself.
+
+          -- ALGLIB PROJECT --
+             Copyright 10.12.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsegetcompressedrow(sparsematrix s,
+            int i,
+            ref int[] colidx,
+            ref double[] vals,
+            ref int nzcnt)
+        {
+            int k = 0;
+            int k0 = 0;
+            int j = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int i0 = 0;
+            int upperprofile = 0;
+
+            nzcnt = 0;
+
+            alglib.ap.assert(s.matrixtype==1 || s.matrixtype==2, "SparseGetRow: S must be CRS/SKS-based matrix");
+            alglib.ap.assert(i>=0 && i<s.m, "SparseGetRow: I<0 or I>=M");
+            
+            //
+            // Initialize NZCnt
+            //
+            nzcnt = 0;
+            
+            //
+            // CRS matrix - just copy data
+            //
+            if( s.matrixtype==1 )
+            {
+                nzcnt = s.ridx[i+1]-s.ridx[i];
+                apserv.ivectorsetlengthatleast(ref colidx, nzcnt);
+                apserv.rvectorsetlengthatleast(ref vals, nzcnt);
+                k0 = s.ridx[i];
+                for(k=0; k<=nzcnt-1; k++)
+                {
+                    colidx[k] = s.idx[k0+k];
+                    vals[k] = s.vals[k0+k];
+                }
+                return;
+            }
+            
+            //
+            // SKS matrix - a bit more complex sequence
+            //
+            if( s.matrixtype==2 )
+            {
+                alglib.ap.assert(s.n==s.m, "SparseGetCompressedRow: non-square SKS matrices are not supported");
+                
+                //
+                // Allocate enough place for storage
+                //
+                upperprofile = s.uidx[s.n];
+                apserv.ivectorsetlengthatleast(ref colidx, s.didx[i]+1+upperprofile);
+                apserv.rvectorsetlengthatleast(ref vals, s.didx[i]+1+upperprofile);
+                
+                //
+                // Copy subdiagonal and diagonal parts
+                //
+                j0 = i-s.didx[i];
+                i0 = -j0+s.ridx[i];
+                for(j=j0; j<=i; j++)
+                {
+                    colidx[nzcnt] = j;
+                    vals[nzcnt] = s.vals[j+i0];
+                    nzcnt = nzcnt+1;
+                }
+                
+                //
+                // Copy superdiagonal part
+                //
+                j0 = i+1;
+                j1 = Math.Min(s.n-1, i+upperprofile);
+                for(j=j0; j<=j1; j++)
+                {
+                    if( j-i<=s.uidx[j] )
+                    {
+                        colidx[nzcnt] = j;
+                        vals[nzcnt] = s.vals[s.ridx[j+1]-(j-i)];
+                        nzcnt = nzcnt+1;
+                    }
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        This function performs efficient in-place  transpose  of  SKS  matrix.  No
+        additional memory is allocated during transposition.
+
+        This function supports only skyline storage format (SKS).
+
+        INPUT PARAMETERS
+            S       -   sparse matrix in SKS format.
+
+        OUTPUT PARAMETERS
+            S           -   sparse matrix, transposed.
+
+          -- ALGLIB PROJECT --
+             Copyright 16.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsetransposesks(sparsematrix s)
+        {
+            int n = 0;
+            int d = 0;
+            int u = 0;
+            int i = 0;
+            int k = 0;
+            int t0 = 0;
+            int t1 = 0;
+            double v = 0;
+
+            alglib.ap.assert(s.matrixtype==2, "SparseTransposeSKS: only SKS matrices are supported");
+            alglib.ap.assert(s.m==s.n, "SparseTransposeSKS: non-square SKS matrices are not supported");
+            n = s.n;
+            for(i=1; i<=n-1; i++)
+            {
+                d = s.didx[i];
+                u = s.uidx[i];
+                k = s.uidx[i];
+                s.uidx[i] = s.didx[i];
+                s.didx[i] = k;
+                if( d==u )
+                {
+                    
+                    //
+                    // Upper skyline height equal to lower skyline height,
+                    // simple exchange is needed for transposition
+                    //
+                    t0 = s.ridx[i];
+                    for(k=0; k<=d-1; k++)
+                    {
+                        v = s.vals[t0+k];
+                        s.vals[t0+k] = s.vals[t0+d+1+k];
+                        s.vals[t0+d+1+k] = v;
+                    }
+                }
+                if( d>u )
+                {
+                    
+                    //
+                    // Upper skyline height is less than lower skyline height.
+                    //
+                    // Transposition becomes a bit tricky: we have to rearrange
+                    // "L0 L1 D U" to "U D L0 L1", where |L0|=|U|=u, |L1|=d-u.
+                    //
+                    // In order to do this we perform a sequence of swaps and
+                    // in-place reversals:
+                    // * swap(L0,U)         =>  "U   L1  D   L0"
+                    // * reverse("L1 D L0") =>  "U   L0~ D   L1~" (where X~ is a reverse of X)
+                    // * reverse("L0~ D")   =>  "U   D   L0  L1~"
+                    // * reverse("L1")      =>  "U   D   L0  L1"
+                    //
+                    t0 = s.ridx[i];
+                    t1 = s.ridx[i]+d+1;
+                    for(k=0; k<=u-1; k++)
+                    {
+                        v = s.vals[t0+k];
+                        s.vals[t0+k] = s.vals[t1+k];
+                        s.vals[t1+k] = v;
+                    }
+                    t0 = s.ridx[i]+u;
+                    t1 = s.ridx[i+1]-1;
+                    while( t1>t0 )
+                    {
+                        v = s.vals[t0];
+                        s.vals[t0] = s.vals[t1];
+                        s.vals[t1] = v;
+                        t0 = t0+1;
+                        t1 = t1-1;
+                    }
+                    t0 = s.ridx[i]+u;
+                    t1 = s.ridx[i]+u+u;
+                    while( t1>t0 )
+                    {
+                        v = s.vals[t0];
+                        s.vals[t0] = s.vals[t1];
+                        s.vals[t1] = v;
+                        t0 = t0+1;
+                        t1 = t1-1;
+                    }
+                    t0 = s.ridx[i+1]-(d-u);
+                    t1 = s.ridx[i+1]-1;
+                    while( t1>t0 )
+                    {
+                        v = s.vals[t0];
+                        s.vals[t0] = s.vals[t1];
+                        s.vals[t1] = v;
+                        t0 = t0+1;
+                        t1 = t1-1;
+                    }
+                }
+                if( d<u )
+                {
+                    
+                    //
+                    // Upper skyline height is greater than lower skyline height.
+                    //
+                    // Transposition becomes a bit tricky: we have to rearrange
+                    // "L D U0 U1" to "U0 U1 D L", where |U1|=|L|=d, |U0|=u-d.
+                    //
+                    // In order to do this we perform a sequence of swaps and
+                    // in-place reversals:
+                    // * swap(L,U1)         =>  "U1  D   U0  L"
+                    // * reverse("U1 D U0") =>  "U0~ D   U1~ L" (where X~ is a reverse of X)
+                    // * reverse("U0~")     =>  "U0  D   U1~ L"
+                    // * reverse("D U1~")   =>  "U0  U1  D   L"
+                    //
+                    t0 = s.ridx[i];
+                    t1 = s.ridx[i+1]-d;
+                    for(k=0; k<=d-1; k++)
+                    {
+                        v = s.vals[t0+k];
+                        s.vals[t0+k] = s.vals[t1+k];
+                        s.vals[t1+k] = v;
+                    }
+                    t0 = s.ridx[i];
+                    t1 = s.ridx[i]+u;
+                    while( t1>t0 )
+                    {
+                        v = s.vals[t0];
+                        s.vals[t0] = s.vals[t1];
+                        s.vals[t1] = v;
+                        t0 = t0+1;
+                        t1 = t1-1;
+                    }
+                    t0 = s.ridx[i];
+                    t1 = s.ridx[i]+u-d-1;
+                    while( t1>t0 )
+                    {
+                        v = s.vals[t0];
+                        s.vals[t0] = s.vals[t1];
+                        s.vals[t1] = v;
+                        t0 = t0+1;
+                        t1 = t1-1;
+                    }
+                    t0 = s.ridx[i]+u-d;
+                    t1 = s.ridx[i+1]-d-1;
+                    while( t1>t0 )
+                    {
+                        v = s.vals[t0];
+                        s.vals[t0] = s.vals[t1];
+                        s.vals[t1] = v;
+                        t0 = t0+1;
+                        t1 = t1-1;
+                    }
+                }
+            }
+            k = s.uidx[n];
+            s.uidx[n] = s.didx[n];
+            s.didx[n] = k;
+        }
+
+
+        /*************************************************************************
+        This  function  performs  in-place  conversion  to  desired sparse storage
+        format.
+
+        INPUT PARAMETERS
+            S0      -   sparse matrix in any format.
+            Fmt     -   desired storage format  of  the  output,  as  returned  by
+                        SparseGetMatrixType() function:
+                        * 0 for hash-based storage
+                        * 1 for CRS
+                        * 2 for SKS
+
+        OUTPUT PARAMETERS
+            S0          -   sparse matrix in requested format.
+            
+        NOTE: in-place conversion wastes a lot of memory which is  used  to  store
+              temporaries.  If  you  perform  a  lot  of  repeated conversions, we
+              recommend to use out-of-place buffered  conversion  functions,  like
+              SparseCopyToBuf(), which can reuse already allocated memory.
+
+          -- ALGLIB PROJECT --
+             Copyright 16.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseconvertto(sparsematrix s0,
+            int fmt)
+        {
+            alglib.ap.assert((fmt==0 || fmt==1) || fmt==2, "SparseConvertTo: invalid fmt parameter");
+            if( fmt==0 )
+            {
+                sparseconverttohash(s0);
+                return;
+            }
+            if( fmt==1 )
+            {
+                sparseconverttocrs(s0);
+                return;
+            }
+            if( fmt==2 )
+            {
+                sparseconverttosks(s0);
+                return;
+            }
+            alglib.ap.assert(false, "SparseConvertTo: invalid matrix type");
+        }
+
+
+        /*************************************************************************
+        This  function  performs out-of-place conversion to desired sparse storage
+        format. S0 is copied to S1 and converted on-the-fly. Memory  allocated  in
+        S1 is reused to maximum extent possible.
+
+        INPUT PARAMETERS
+            S0      -   sparse matrix in any format.
+            Fmt     -   desired storage format  of  the  output,  as  returned  by
+                        SparseGetMatrixType() function:
+                        * 0 for hash-based storage
+                        * 1 for CRS
+                        * 2 for SKS
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in requested format.
+
+          -- ALGLIB PROJECT --
+             Copyright 16.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytobuf(sparsematrix s0,
+            int fmt,
+            sparsematrix s1)
+        {
+            alglib.ap.assert((fmt==0 || fmt==1) || fmt==2, "SparseCopyToBuf: invalid fmt parameter");
+            if( fmt==0 )
+            {
+                sparsecopytohashbuf(s0, s1);
+                return;
+            }
+            if( fmt==1 )
+            {
+                sparsecopytocrsbuf(s0, s1);
+                return;
+            }
+            if( fmt==2 )
+            {
+                sparsecopytosksbuf(s0, s1);
+                return;
+            }
+            alglib.ap.assert(false, "SparseCopyToBuf: invalid matrix type");
+        }
+
+
+        /*************************************************************************
+        This function performs in-place conversion to Hash table storage.
+
+        INPUT PARAMETERS
+            S           -   sparse matrix in CRS format.
+
+        OUTPUT PARAMETERS
+            S           -   sparse matrix in Hash table format.
+
+        NOTE: this  function  has   no  effect  when  called with matrix which  is
+              already in Hash table mode.
+
+        NOTE: in-place conversion involves allocation of temporary arrays. If  you
+              perform a lot of repeated in- place  conversions,  it  may  lead  to
+              memory fragmentation. Consider using out-of-place SparseCopyToHashBuf()
+              function in this case.
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseconverttohash(sparsematrix s)
+        {
+            int[] tidx = new int[0];
+            int[] tridx = new int[0];
+            int[] tdidx = new int[0];
+            int[] tuidx = new int[0];
+            double[] tvals = new double[0];
+            int n = 0;
+            int m = 0;
+            int offs0 = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+
+            alglib.ap.assert((s.matrixtype==0 || s.matrixtype==1) || s.matrixtype==2, "SparseConvertToHash: invalid matrix type");
+            if( s.matrixtype==0 )
+            {
+                
+                //
+                // Already in Hash mode
+                //
+                return;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // From CRS to Hash
+                //
+                s.matrixtype = 0;
+                m = s.m;
+                n = s.n;
+                alglib.ap.swap(ref s.idx, ref tidx);
+                alglib.ap.swap(ref s.ridx, ref tridx);
+                alglib.ap.swap(ref s.vals, ref tvals);
+                sparsecreatebuf(m, n, tridx[m], s);
+                for(i=0; i<=m-1; i++)
+                {
+                    for(j=tridx[i]; j<=tridx[i+1]-1; j++)
+                    {
+                        sparseset(s, i, tidx[j], tvals[j]);
+                    }
+                }
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // From SKS to Hash
+                //
+                s.matrixtype = 0;
+                m = s.m;
+                n = s.n;
+                alglib.ap.swap(ref s.ridx, ref tridx);
+                alglib.ap.swap(ref s.didx, ref tdidx);
+                alglib.ap.swap(ref s.uidx, ref tuidx);
+                alglib.ap.swap(ref s.vals, ref tvals);
+                sparsecreatebuf(m, n, tridx[m], s);
+                for(i=0; i<=m-1; i++)
+                {
+                    
+                    //
+                    // copy subdiagonal and diagonal parts of I-th block
+                    //
+                    offs0 = tridx[i];
+                    k = tdidx[i]+1;
+                    for(j=0; j<=k-1; j++)
+                    {
+                        sparseset(s, i, i-tdidx[i]+j, tvals[offs0+j]);
+                    }
+                    
+                    //
+                    // Copy superdiagonal part of I-th block
+                    //
+                    offs0 = tridx[i]+tdidx[i]+1;
+                    k = tuidx[i];
+                    for(j=0; j<=k-1; j++)
+                    {
+                        sparseset(s, i-k+j, i, tvals[offs0+j]);
+                    }
+                }
+                return;
+            }
+            alglib.ap.assert(false, "SparseConvertToHash: invalid matrix type");
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to  Hash table storage
+        format. S0 is copied to S1 and converted on-the-fly.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in Hash table format.
+
+        NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
+
+        NOTE: this function de-allocates memory  occupied  by  S1 before  starting
+              conversion. If you perform a  lot  of  repeated  conversions, it may
+              lead to memory fragmentation. In this case we recommend you  to  use
+              SparseCopyToHashBuf() function which re-uses memory in S1 as much as
+              possible.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytohash(sparsematrix s0,
+            sparsematrix s1)
+        {
+            alglib.ap.assert((s0.matrixtype==0 || s0.matrixtype==1) || s0.matrixtype==2, "SparseCopyToHash: invalid matrix type");
+            sparsecopytohashbuf(s0, s1);
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to  Hash table storage
+        format. S0 is copied to S1 and converted on-the-fly. Memory  allocated  in
+        S1 is reused to maximum extent possible.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in Hash table format.
+
+        NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytohashbuf(sparsematrix s0,
+            sparsematrix s1)
+        {
+            double val = 0;
+            int t0 = 0;
+            int t1 = 0;
+            int i = 0;
+            int j = 0;
+
+            alglib.ap.assert((s0.matrixtype==0 || s0.matrixtype==1) || s0.matrixtype==2, "SparseCopyToHashBuf: invalid matrix type");
+            if( s0.matrixtype==0 )
+            {
+                
+                //
+                // Already hash, just copy
+                //
+                sparsecopybuf(s0, s1);
+                return;
+            }
+            if( s0.matrixtype==1 )
+            {
+                
+                //
+                // CRS storage
+                //
+                t0 = 0;
+                t1 = 0;
+                sparsecreatebuf(s0.m, s0.n, s0.ridx[s0.m], s1);
+                while( sparseenumerate(s0, ref t0, ref t1, ref i, ref j, ref val) )
+                {
+                    sparseset(s1, i, j, val);
+                }
+                return;
+            }
+            if( s0.matrixtype==2 )
+            {
+                
+                //
+                // SKS storage
+                //
+                t0 = 0;
+                t1 = 0;
+                sparsecreatebuf(s0.m, s0.n, s0.ridx[s0.m], s1);
+                while( sparseenumerate(s0, ref t0, ref t1, ref i, ref j, ref val) )
+                {
+                    sparseset(s1, i, j, val);
+                }
+                return;
+            }
+            alglib.ap.assert(false, "SparseCopyToHashBuf: invalid matrix type");
+        }
+
+
+        /*************************************************************************
+        This function converts matrix to CRS format.
+
+        Some  algorithms  (linear  algebra ones, for example) require matrices in
+        CRS format. This function allows to perform in-place conversion.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in any format
+
+        OUTPUT PARAMETERS
+            S           -   matrix in CRS format
+            
+        NOTE: this   function  has  no  effect  when  called with matrix which is
+              already in CRS mode.
+              
+        NOTE: this function allocates temporary memory to store a   copy  of  the
+              matrix. If you perform a lot of repeated conversions, we  recommend
+              you  to  use  SparseCopyToCRSBuf()  function,   which   can   reuse
+              previously allocated memory.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseconverttocrs(sparsematrix s)
+        {
+            int m = 0;
+            int i = 0;
+            int j = 0;
+            double[] tvals = new double[0];
+            int[] tidx = new int[0];
+            int[] temp = new int[0];
+            int[] tridx = new int[0];
+            int nonne = 0;
+            int k = 0;
+            int offs0 = 0;
+            int offs1 = 0;
+
+            m = s.m;
+            if( s.matrixtype==0 )
+            {
+                
+                //
+                // From Hash-table to CRS.
+                // First, create local copy of the hash table.
+                //
+                s.matrixtype = 1;
+                k = s.tablesize;
+                alglib.ap.swap(ref s.vals, ref tvals);
+                alglib.ap.swap(ref s.idx, ref tidx);
+                
+                //
+                // Fill RIdx by number of elements per row:
+                // RIdx[I+1] stores number of elements in I-th row.
+                //
+                // Convert RIdx from row sizes to row offsets.
+                // Set NInitialized
+                //
+                nonne = 0;
+                apserv.ivectorsetlengthatleast(ref s.ridx, s.m+1);
+                for(i=0; i<=s.m; i++)
+                {
+                    s.ridx[i] = 0;
+                }
+                for(i=0; i<=k-1; i++)
+                {
+                    if( tidx[2*i]>=0 )
+                    {
+                        s.ridx[tidx[2*i]+1] = s.ridx[tidx[2*i]+1]+1;
+                        nonne = nonne+1;
+                    }
+                }
+                for(i=0; i<=s.m-1; i++)
+                {
+                    s.ridx[i+1] = s.ridx[i+1]+s.ridx[i];
+                }
+                s.ninitialized = s.ridx[s.m];
+                
+                //
+                // Allocate memory and move elements to Vals/Idx.
+                // Initially, elements are sorted by rows, but unsorted within row.
+                // After initial insertion we sort elements within row.
+                //
+                temp = new int[s.m];
+                for(i=0; i<=s.m-1; i++)
+                {
+                    temp[i] = 0;
+                }
+                apserv.rvectorsetlengthatleast(ref s.vals, nonne);
+                apserv.ivectorsetlengthatleast(ref s.idx, nonne);
+                for(i=0; i<=k-1; i++)
+                {
+                    if( tidx[2*i]>=0 )
+                    {
+                        s.vals[s.ridx[tidx[2*i]]+temp[tidx[2*i]]] = tvals[i];
+                        s.idx[s.ridx[tidx[2*i]]+temp[tidx[2*i]]] = tidx[2*i+1];
+                        temp[tidx[2*i]] = temp[tidx[2*i]]+1;
+                    }
+                }
+                for(i=0; i<=s.m-1; i++)
+                {
+                    tsort.tagsortmiddleir(ref s.idx, ref s.vals, s.ridx[i], s.ridx[i+1]-s.ridx[i]);
+                }
+                
+                //
+                // Initialization 'S.UIdx' and 'S.DIdx'
+                //
+                sparseinitduidx(s);
+                return;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // Already CRS
+                //
+                return;
+            }
+            if( s.matrixtype==2 )
+            {
+                alglib.ap.assert(s.m==s.n, "SparseConvertToCRS: non-square SKS matrices are not supported");
+                
+                //
+                // From SKS to CRS.
+                //
+                // First, create local copy of the SKS matrix (Vals,
+                // Idx, RIdx are stored; DIdx/UIdx for some time are
+                // left in the SparseMatrix structure).
+                //
+                s.matrixtype = 1;
+                alglib.ap.swap(ref s.vals, ref tvals);
+                alglib.ap.swap(ref s.idx, ref tidx);
+                alglib.ap.swap(ref s.ridx, ref tridx);
+                
+                //
+                // Fill RIdx by number of elements per row:
+                // RIdx[I+1] stores number of elements in I-th row.
+                //
+                // Convert RIdx from row sizes to row offsets.
+                // Set NInitialized
+                //
+                apserv.ivectorsetlengthatleast(ref s.ridx, m+1);
+                s.ridx[0] = 0;
+                for(i=1; i<=m; i++)
+                {
+                    s.ridx[i] = 1;
+                }
+                nonne = 0;
+                for(i=0; i<=m-1; i++)
+                {
+                    s.ridx[i+1] = s.didx[i]+s.ridx[i+1];
+                    for(j=i-s.uidx[i]; j<=i-1; j++)
+                    {
+                        s.ridx[j+1] = s.ridx[j+1]+1;
+                    }
+                    nonne = nonne+s.didx[i]+1+s.uidx[i];
+                }
+                for(i=0; i<=s.m-1; i++)
+                {
+                    s.ridx[i+1] = s.ridx[i+1]+s.ridx[i];
+                }
+                s.ninitialized = s.ridx[s.m];
+                
+                //
+                // Allocate memory and move elements to Vals/Idx.
+                // Initially, elements are sorted by rows, and are sorted within row too.
+                // No additional post-sorting is required.
+                //
+                temp = new int[m];
+                for(i=0; i<=m-1; i++)
+                {
+                    temp[i] = 0;
+                }
+                apserv.rvectorsetlengthatleast(ref s.vals, nonne);
+                apserv.ivectorsetlengthatleast(ref s.idx, nonne);
+                for(i=0; i<=m-1; i++)
+                {
+                    
+                    //
+                    // copy subdiagonal and diagonal parts of I-th block
+                    //
+                    offs0 = tridx[i];
+                    offs1 = s.ridx[i]+temp[i];
+                    k = s.didx[i]+1;
+                    for(j=0; j<=k-1; j++)
+                    {
+                        s.vals[offs1+j] = tvals[offs0+j];
+                        s.idx[offs1+j] = i-s.didx[i]+j;
+                    }
+                    temp[i] = temp[i]+s.didx[i]+1;
+                    
+                    //
+                    // Copy superdiagonal part of I-th block
+                    //
+                    offs0 = tridx[i]+s.didx[i]+1;
+                    k = s.uidx[i];
+                    for(j=0; j<=k-1; j++)
+                    {
+                        offs1 = s.ridx[i-k+j]+temp[i-k+j];
+                        s.vals[offs1] = tvals[offs0+j];
+                        s.idx[offs1] = i;
+                        temp[i-k+j] = temp[i-k+j]+1;
+                    }
+                }
+                
+                //
+                // Initialization 'S.UIdx' and 'S.DIdx'
+                //
+                sparseinitduidx(s);
+                return;
+            }
+            alglib.ap.assert(false, "SparseConvertToCRS: invalid matrix type");
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
+        copied to S1 and converted on-the-fly.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in CRS format.
+            
+        NOTE: if S0 is stored as CRS, it is just copied without conversion.
+
+        NOTE: this function de-allocates memory occupied by S1 before starting CRS
+              conversion. If you perform a lot of repeated CRS conversions, it may
+              lead to memory fragmentation. In this case we recommend you  to  use
+              SparseCopyToCRSBuf() function which re-uses memory in S1 as much  as
+              possible.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytocrs(sparsematrix s0,
+            sparsematrix s1)
+        {
+            alglib.ap.assert((s0.matrixtype==0 || s0.matrixtype==1) || s0.matrixtype==2, "SparseCopyToCRS: invalid matrix type");
+            sparsecopytocrsbuf(s0, s1);
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
+        copied to S1 and converted on-the-fly. Memory allocated in S1 is reused to
+        maximum extent possible.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+            S1          -   matrix which may contain some pre-allocated memory, or
+                            can be just uninitialized structure.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in CRS format.
+            
+        NOTE: if S0 is stored as CRS, it is just copied without conversion.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytocrsbuf(sparsematrix s0,
+            sparsematrix s1)
+        {
+            int[] temp = new int[0];
+            int nonne = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int offs0 = 0;
+            int offs1 = 0;
+            int m = 0;
+
+            alglib.ap.assert((s0.matrixtype==0 || s0.matrixtype==1) || s0.matrixtype==2, "SparseCopyToCRSBuf: invalid matrix type");
+            m = s0.m;
+            if( s0.matrixtype==0 )
+            {
+                
+                //
+                // Convert from hash-table to CRS
+                // Done like ConvertToCRS function
+                //
+                s1.matrixtype = 1;
+                s1.m = s0.m;
+                s1.n = s0.n;
+                s1.nfree = s0.nfree;
+                nonne = 0;
+                k = s0.tablesize;
+                apserv.ivectorsetlengthatleast(ref s1.ridx, s1.m+1);
+                for(i=0; i<=s1.m; i++)
+                {
+                    s1.ridx[i] = 0;
+                }
+                temp = new int[s1.m];
+                for(i=0; i<=s1.m-1; i++)
+                {
+                    temp[i] = 0;
+                }
+                
+                //
+                // Number of elements per row
+                //
+                for(i=0; i<=k-1; i++)
+                {
+                    if( s0.idx[2*i]>=0 )
+                    {
+                        s1.ridx[s0.idx[2*i]+1] = s1.ridx[s0.idx[2*i]+1]+1;
+                        nonne = nonne+1;
+                    }
+                }
+                
+                //
+                // Fill RIdx (offsets of rows)
+                //
+                for(i=0; i<=s1.m-1; i++)
+                {
+                    s1.ridx[i+1] = s1.ridx[i+1]+s1.ridx[i];
+                }
+                
+                //
+                // Allocate memory
+                //
+                apserv.rvectorsetlengthatleast(ref s1.vals, nonne);
+                apserv.ivectorsetlengthatleast(ref s1.idx, nonne);
+                for(i=0; i<=k-1; i++)
+                {
+                    if( s0.idx[2*i]>=0 )
+                    {
+                        s1.vals[s1.ridx[s0.idx[2*i]]+temp[s0.idx[2*i]]] = s0.vals[i];
+                        s1.idx[s1.ridx[s0.idx[2*i]]+temp[s0.idx[2*i]]] = s0.idx[2*i+1];
+                        temp[s0.idx[2*i]] = temp[s0.idx[2*i]]+1;
+                    }
+                }
+                
+                //
+                // Set NInitialized
+                //
+                s1.ninitialized = s1.ridx[s1.m];
+                
+                //
+                // Sorting of elements
+                //
+                for(i=0; i<=s1.m-1; i++)
+                {
+                    tsort.tagsortmiddleir(ref s1.idx, ref s1.vals, s1.ridx[i], s1.ridx[i+1]-s1.ridx[i]);
+                }
+                
+                //
+                // Initialization 'S.UIdx' and 'S.DIdx'
+                //
+                sparseinitduidx(s1);
+                return;
+            }
+            if( s0.matrixtype==1 )
+            {
+                
+                //
+                // Already CRS, just copy
+                //
+                sparsecopybuf(s0, s1);
+                return;
+            }
+            if( s0.matrixtype==2 )
+            {
+                alglib.ap.assert(s0.m==s0.n, "SparseCopyToCRS: non-square SKS matrices are not supported");
+                
+                //
+                // From SKS to CRS.
+                //
+                s1.m = s0.m;
+                s1.n = s0.n;
+                s1.matrixtype = 1;
+                
+                //
+                // Fill RIdx by number of elements per row:
+                // RIdx[I+1] stores number of elements in I-th row.
+                //
+                // Convert RIdx from row sizes to row offsets.
+                // Set NInitialized
+                //
+                apserv.ivectorsetlengthatleast(ref s1.ridx, m+1);
+                s1.ridx[0] = 0;
+                for(i=1; i<=m; i++)
+                {
+                    s1.ridx[i] = 1;
+                }
+                nonne = 0;
+                for(i=0; i<=m-1; i++)
+                {
+                    s1.ridx[i+1] = s0.didx[i]+s1.ridx[i+1];
+                    for(j=i-s0.uidx[i]; j<=i-1; j++)
+                    {
+                        s1.ridx[j+1] = s1.ridx[j+1]+1;
+                    }
+                    nonne = nonne+s0.didx[i]+1+s0.uidx[i];
+                }
+                for(i=0; i<=m-1; i++)
+                {
+                    s1.ridx[i+1] = s1.ridx[i+1]+s1.ridx[i];
+                }
+                s1.ninitialized = s1.ridx[m];
+                
+                //
+                // Allocate memory and move elements to Vals/Idx.
+                // Initially, elements are sorted by rows, and are sorted within row too.
+                // No additional post-sorting is required.
+                //
+                temp = new int[m];
+                for(i=0; i<=m-1; i++)
+                {
+                    temp[i] = 0;
+                }
+                apserv.rvectorsetlengthatleast(ref s1.vals, nonne);
+                apserv.ivectorsetlengthatleast(ref s1.idx, nonne);
+                for(i=0; i<=m-1; i++)
+                {
+                    
+                    //
+                    // copy subdiagonal and diagonal parts of I-th block
+                    //
+                    offs0 = s0.ridx[i];
+                    offs1 = s1.ridx[i]+temp[i];
+                    k = s0.didx[i]+1;
+                    for(j=0; j<=k-1; j++)
+                    {
+                        s1.vals[offs1+j] = s0.vals[offs0+j];
+                        s1.idx[offs1+j] = i-s0.didx[i]+j;
+                    }
+                    temp[i] = temp[i]+s0.didx[i]+1;
+                    
+                    //
+                    // Copy superdiagonal part of I-th block
+                    //
+                    offs0 = s0.ridx[i]+s0.didx[i]+1;
+                    k = s0.uidx[i];
+                    for(j=0; j<=k-1; j++)
+                    {
+                        offs1 = s1.ridx[i-k+j]+temp[i-k+j];
+                        s1.vals[offs1] = s0.vals[offs0+j];
+                        s1.idx[offs1] = i;
+                        temp[i-k+j] = temp[i-k+j]+1;
+                    }
+                }
+                
+                //
+                // Initialization 'S.UIdx' and 'S.DIdx'
+                //
+                sparseinitduidx(s1);
+                return;
+            }
+            alglib.ap.assert(false, "SparseCopyToCRSBuf: unexpected matrix type");
+        }
+
+
+        /*************************************************************************
+        This function performs in-place conversion to SKS format.
+
+        INPUT PARAMETERS
+            S           -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S           -   sparse matrix in SKS format.
+
+        NOTE: this  function  has   no  effect  when  called with matrix which  is
+              already in SKS mode.
+
+        NOTE: in-place conversion involves allocation of temporary arrays. If  you
+              perform a lot of repeated in- place  conversions,  it  may  lead  to
+              memory fragmentation. Consider using out-of-place SparseCopyToSKSBuf()
+              function in this case.
+            
+          -- ALGLIB PROJECT --
+             Copyright 15.01.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparseconverttosks(sparsematrix s)
+        {
+            int[] tridx = new int[0];
+            int[] tdidx = new int[0];
+            int[] tuidx = new int[0];
+            double[] tvals = new double[0];
+            int n = 0;
+            int t0 = 0;
+            int t1 = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            double v = 0;
+
+            alglib.ap.assert((s.matrixtype==0 || s.matrixtype==1) || s.matrixtype==2, "SparseConvertToSKS: invalid matrix type");
+            alglib.ap.assert(s.m==s.n, "SparseConvertToSKS: rectangular matrices are not supported");
+            n = s.n;
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // Already in SKS mode
+                //
+                return;
+            }
+            
+            //
+            // Generate internal copy of SKS matrix
+            //
+            apserv.ivectorsetlengthatleast(ref tdidx, n+1);
+            apserv.ivectorsetlengthatleast(ref tuidx, n+1);
+            for(i=0; i<=n; i++)
+            {
+                tdidx[i] = 0;
+                tuidx[i] = 0;
+            }
+            t0 = 0;
+            t1 = 0;
+            while( sparseenumerate(s, ref t0, ref t1, ref i, ref j, ref v) )
+            {
+                if( j<i )
+                {
+                    tdidx[i] = Math.Max(tdidx[i], i-j);
+                }
+                else
+                {
+                    tuidx[j] = Math.Max(tuidx[j], j-i);
+                }
+            }
+            apserv.ivectorsetlengthatleast(ref tridx, n+1);
+            tridx[0] = 0;
+            for(i=1; i<=n; i++)
+            {
+                tridx[i] = tridx[i-1]+tdidx[i-1]+1+tuidx[i-1];
+            }
+            apserv.rvectorsetlengthatleast(ref tvals, tridx[n]);
+            k = tridx[n];
+            for(i=0; i<=k-1; i++)
+            {
+                tvals[i] = 0.0;
+            }
+            t0 = 0;
+            t1 = 0;
+            while( sparseenumerate(s, ref t0, ref t1, ref i, ref j, ref v) )
+            {
+                if( j<=i )
+                {
+                    tvals[tridx[i]+tdidx[i]-(i-j)] = v;
+                }
+                else
+                {
+                    tvals[tridx[j+1]-(j-i)] = v;
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                tdidx[n] = Math.Max(tdidx[n], tdidx[i]);
+                tuidx[n] = Math.Max(tuidx[n], tuidx[i]);
+            }
+            s.matrixtype = 2;
+            s.ninitialized = 0;
+            s.nfree = 0;
+            s.m = n;
+            s.n = n;
+            alglib.ap.swap(ref s.didx, ref tdidx);
+            alglib.ap.swap(ref s.uidx, ref tuidx);
+            alglib.ap.swap(ref s.ridx, ref tridx);
+            alglib.ap.swap(ref s.vals, ref tvals);
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to SKS storage format.
+        S0 is copied to S1 and converted on-the-fly.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in SKS format.
+
+        NOTE: if S0 is stored as SKS, it is just copied without conversion.
+
+        NOTE: this function de-allocates memory  occupied  by  S1 before  starting
+              conversion. If you perform a  lot  of  repeated  conversions, it may
+              lead to memory fragmentation. In this case we recommend you  to  use
+              SparseCopyToSKSBuf() function which re-uses memory in S1 as much  as
+              possible.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytosks(sparsematrix s0,
+            sparsematrix s1)
+        {
+            alglib.ap.assert((s0.matrixtype==0 || s0.matrixtype==1) || s0.matrixtype==2, "SparseCopyToSKS: invalid matrix type");
+            sparsecopytosksbuf(s0, s1);
+        }
+
+
+        /*************************************************************************
+        This  function  performs  out-of-place  conversion  to SKS format.  S0  is
+        copied to S1 and converted on-the-fly. Memory  allocated  in S1 is  reused
+        to maximum extent possible.
+
+        INPUT PARAMETERS
+            S0          -   sparse matrix in any format.
+
+        OUTPUT PARAMETERS
+            S1          -   sparse matrix in SKS format.
+
+        NOTE: if S0 is stored as SKS, it is just copied without conversion.
+
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytosksbuf(sparsematrix s0,
+            sparsematrix s1)
+        {
+            double v = 0;
+            int n = 0;
+            int t0 = 0;
+            int t1 = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+
+            alglib.ap.assert((s0.matrixtype==0 || s0.matrixtype==1) || s0.matrixtype==2, "SparseCopyToSKSBuf: invalid matrix type");
+            alglib.ap.assert(s0.m==s0.n, "SparseCopyToSKSBuf: rectangular matrices are not supported");
+            n = s0.n;
+            if( s0.matrixtype==2 )
+            {
+                
+                //
+                // Already SKS, just copy
+                //
+                sparsecopybuf(s0, s1);
+                return;
+            }
+            
+            //
+            // Generate copy of matrix in the SKS format
+            //
+            apserv.ivectorsetlengthatleast(ref s1.didx, n+1);
+            apserv.ivectorsetlengthatleast(ref s1.uidx, n+1);
+            for(i=0; i<=n; i++)
+            {
+                s1.didx[i] = 0;
+                s1.uidx[i] = 0;
+            }
+            t0 = 0;
+            t1 = 0;
+            while( sparseenumerate(s0, ref t0, ref t1, ref i, ref j, ref v) )
+            {
+                if( j<i )
+                {
+                    s1.didx[i] = Math.Max(s1.didx[i], i-j);
+                }
+                else
+                {
+                    s1.uidx[j] = Math.Max(s1.uidx[j], j-i);
+                }
+            }
+            apserv.ivectorsetlengthatleast(ref s1.ridx, n+1);
+            s1.ridx[0] = 0;
+            for(i=1; i<=n; i++)
+            {
+                s1.ridx[i] = s1.ridx[i-1]+s1.didx[i-1]+1+s1.uidx[i-1];
+            }
+            apserv.rvectorsetlengthatleast(ref s1.vals, s1.ridx[n]);
+            k = s1.ridx[n];
+            for(i=0; i<=k-1; i++)
+            {
+                s1.vals[i] = 0.0;
+            }
+            t0 = 0;
+            t1 = 0;
+            while( sparseenumerate(s0, ref t0, ref t1, ref i, ref j, ref v) )
+            {
+                if( j<=i )
+                {
+                    s1.vals[s1.ridx[i]+s1.didx[i]-(i-j)] = v;
+                }
+                else
+                {
+                    s1.vals[s1.ridx[j+1]-(j-i)] = v;
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                s1.didx[n] = Math.Max(s1.didx[n], s1.didx[i]);
+                s1.uidx[n] = Math.Max(s1.uidx[n], s1.uidx[i]);
+            }
+            s1.matrixtype = 2;
+            s1.ninitialized = 0;
+            s1.nfree = 0;
+            s1.m = n;
+            s1.n = n;
+        }
+
+
+        /*************************************************************************
+        This function returns type of the matrix storage format.
+
+        INPUT PARAMETERS:
+            S           -   sparse matrix.
+
+        RESULT:
+            sparse storage format used by matrix:
+                0   -   Hash-table
+                1   -   CRS (compressed row storage)
+                2   -   SKS (skyline)
+
+        NOTE: future  versions  of  ALGLIB  may  include additional sparse storage
+              formats.
+
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetmatrixtype(sparsematrix s)
+        {
+            int result = 0;
+
+            alglib.ap.assert((s.matrixtype==0 || s.matrixtype==1) || s.matrixtype==2, "SparseGetMatrixType: invalid matrix type");
+            result = s.matrixtype;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function checks matrix storage format and returns True when matrix is
+        stored using Hash table representation.
+
+        INPUT PARAMETERS:
+            S   -   sparse matrix.
+
+        RESULT:
+            True if matrix type is Hash table
+            False if matrix type is not Hash table 
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseishash(sparsematrix s)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert((s.matrixtype==0 || s.matrixtype==1) || s.matrixtype==2, "SparseIsHash: invalid matrix type");
+            result = s.matrixtype==0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function checks matrix storage format and returns True when matrix is
+        stored using CRS representation.
+
+        INPUT PARAMETERS:
+            S   -   sparse matrix.
+
+        RESULT:
+            True if matrix type is CRS
+            False if matrix type is not CRS
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseiscrs(sparsematrix s)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert((s.matrixtype==0 || s.matrixtype==1) || s.matrixtype==2, "SparseIsCRS: invalid matrix type");
+            result = s.matrixtype==1;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function checks matrix storage format and returns True when matrix is
+        stored using SKS representation.
+
+        INPUT PARAMETERS:
+            S   -   sparse matrix.
+
+        RESULT:
+            True if matrix type is SKS
+            False if matrix type is not SKS
+            
+          -- ALGLIB PROJECT --
+             Copyright 20.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparseissks(sparsematrix s)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert((s.matrixtype==0 || s.matrixtype==1) || s.matrixtype==2, "SparseIsSKS: invalid matrix type");
+            result = s.matrixtype==2;
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function frees all memory occupied by  sparse  matrix.  Sparse  matrix
+        structure becomes unusable after this call.
+
+        OUTPUT PARAMETERS
+            S   -   sparse matrix to delete
+            
+          -- ALGLIB PROJECT --
+             Copyright 24.07.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsefree(sparsematrix s)
+        {
+            s.matrixtype = -1;
+            s.m = 0;
+            s.n = 0;
+            s.nfree = 0;
+            s.ninitialized = 0;
+            s.tablesize = 0;
+        }
+
+
+        /*************************************************************************
+        The function returns number of rows of a sparse matrix.
+
+        RESULT: number of rows of a sparse matrix.
+            
+          -- ALGLIB PROJECT --
+             Copyright 23.08.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetnrows(sparsematrix s)
+        {
+            int result = 0;
+
+            result = s.m;
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function returns number of columns of a sparse matrix.
+
+        RESULT: number of columns of a sparse matrix.
+            
+          -- ALGLIB PROJECT --
+             Copyright 23.08.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetncols(sparsematrix s)
+        {
+            int result = 0;
+
+            result = s.n;
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function returns number of strictly upper triangular non-zero elements
+        in  the  matrix.  It  counts  SYMBOLICALLY non-zero elements, i.e. entries
+        in the sparse matrix data structure. If some element  has  zero  numerical
+        value, it is still counted.
+
+        This function has different cost for different types of matrices:
+        * for hash-based matrices it involves complete pass over entire hash-table
+          with O(NNZ) cost, where NNZ is number of non-zero elements
+        * for CRS and SKS matrix types cost of counting is O(N) (N - matrix size).
+
+        RESULT: number of non-zero elements strictly above main diagonal
+            
+          -- ALGLIB PROJECT --
+             Copyright 12.02.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetuppercount(sparsematrix s)
+        {
+            int result = 0;
+            int sz = 0;
+            int i0 = 0;
+            int i = 0;
+
+            result = -1;
+            if( s.matrixtype==0 )
+            {
+                
+                //
+                // Hash-table matrix
+                //
+                result = 0;
+                sz = s.tablesize;
+                for(i0=0; i0<=sz-1; i0++)
+                {
+                    i = s.idx[2*i0];
+                    if( i>=0 && s.idx[2*i0+1]>i )
+                    {
+                        result = result+1;
+                    }
+                }
+                return result;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS matrix
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseGetUpperCount: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                result = 0;
+                sz = s.m;
+                for(i=0; i<=sz-1; i++)
+                {
+                    result = result+(s.ridx[i+1]-s.uidx[i]);
+                }
+                return result;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS matrix
+                //
+                alglib.ap.assert(s.m==s.n, "SparseGetUpperCount: non-square SKS matrices are not supported");
+                result = 0;
+                sz = s.m;
+                for(i=0; i<=sz-1; i++)
+                {
+                    result = result+s.uidx[i];
+                }
+                return result;
+            }
+            alglib.ap.assert(false, "SparseGetUpperCount: internal error");
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function returns number of strictly lower triangular non-zero elements
+        in  the  matrix.  It  counts  SYMBOLICALLY non-zero elements, i.e. entries
+        in the sparse matrix data structure. If some element  has  zero  numerical
+        value, it is still counted.
+
+        This function has different cost for different types of matrices:
+        * for hash-based matrices it involves complete pass over entire hash-table
+          with O(NNZ) cost, where NNZ is number of non-zero elements
+        * for CRS and SKS matrix types cost of counting is O(N) (N - matrix size).
+
+        RESULT: number of non-zero elements strictly below main diagonal
+            
+          -- ALGLIB PROJECT --
+             Copyright 12.02.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static int sparsegetlowercount(sparsematrix s)
+        {
+            int result = 0;
+            int sz = 0;
+            int i0 = 0;
+            int i = 0;
+
+            result = -1;
+            if( s.matrixtype==0 )
+            {
+                
+                //
+                // Hash-table matrix
+                //
+                result = 0;
+                sz = s.tablesize;
+                for(i0=0; i0<=sz-1; i0++)
+                {
+                    i = s.idx[2*i0];
+                    if( i>=0 && s.idx[2*i0+1]<i )
+                    {
+                        result = result+1;
+                    }
+                }
+                return result;
+            }
+            if( s.matrixtype==1 )
+            {
+                
+                //
+                // CRS matrix
+                //
+                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseGetUpperCount: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
+                result = 0;
+                sz = s.m;
+                for(i=0; i<=sz-1; i++)
+                {
+                    result = result+(s.didx[i]-s.ridx[i]);
+                }
+                return result;
+            }
+            if( s.matrixtype==2 )
+            {
+                
+                //
+                // SKS matrix
+                //
+                alglib.ap.assert(s.m==s.n, "SparseGetUpperCount: non-square SKS matrices are not supported");
+                result = 0;
+                sz = s.m;
+                for(i=0; i<=sz-1; i++)
+                {
+                    result = result+s.didx[i];
+                }
+                return result;
+            }
+            alglib.ap.assert(false, "SparseGetUpperCount: internal error");
+            return result;
+        }
+
+
+        /*************************************************************************
+        Procedure for initialization 'S.DIdx' and 'S.UIdx'
+
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        private static void sparseinitduidx(sparsematrix s)
+        {
+            int i = 0;
+            int j = 0;
+            int lt = 0;
+            int rt = 0;
+
+            alglib.ap.assert(s.matrixtype==1, "SparseInitDUIdx: internal error, incorrect matrix type");
+            apserv.ivectorsetlengthatleast(ref s.didx, s.m);
+            apserv.ivectorsetlengthatleast(ref s.uidx, s.m);
+            for(i=0; i<=s.m-1; i++)
+            {
+                s.uidx[i] = -1;
+                s.didx[i] = -1;
+                lt = s.ridx[i];
+                rt = s.ridx[i+1];
+                for(j=lt; j<=rt-1; j++)
+                {
+                    if( i<s.idx[j] && s.uidx[i]==-1 )
+                    {
+                        s.uidx[i] = j;
+                        break;
+                    }
+                    else
+                    {
+                        if( i==s.idx[j] )
+                        {
+                            s.didx[i] = j;
+                        }
+                    }
+                }
+                if( s.uidx[i]==-1 )
+                {
+                    s.uidx[i] = s.ridx[i+1];
+                }
+                if( s.didx[i]==-1 )
+                {
+                    s.didx[i] = s.uidx[i];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This is hash function.
+
+          -- ALGLIB PROJECT --
+             Copyright 14.10.2011 by Bochkanov Sergey
+        *************************************************************************/
+        private static int hash(int i,
+            int j,
+            int tabsize)
+        {
+            int result = 0;
+            hqrnd.hqrndstate r = new hqrnd.hqrndstate();
+
+            hqrnd.hqrndseed(i, j, r);
+            result = hqrnd.hqrnduniformi(r, tabsize);
+            return result;
+        }
+
+
+    }
     public class trfac
     {
         /*************************************************************************
@@ -21416,6 +30585,42 @@ public partial class alglib
         * best case - M>>N
         * worst case - N>>M, small M, large N, matrix does not fit in CPU cache
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that LU decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+          
         INPUT PARAMETERS:
             A       -   array[0..M-1, 0..N-1].
             M       -   number of rows in matrix A.
@@ -21447,6 +30652,18 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixlu(ref double[,] a,
+            int m,
+            int n,
+            ref int[] pivots)
+        {
+            rmatrixlu(ref a,m,n,ref pivots);
+        }
+
+
+        /*************************************************************************
         LU decomposition of a general complex matrix with row pivoting
 
         A is represented as A = P*L*U, where:
@@ -21459,6 +30676,42 @@ public partial class alglib
         for square matrices. As for rectangular matrices:
         * best case - M>>N
         * worst case - N>>M, small M, large N, matrix does not fit in CPU cache
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that LU decomposition  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS:
             A       -   array[0..M-1, 0..N-1].
@@ -21491,11 +30744,58 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixlu(ref complex[,] a,
+            int m,
+            int n,
+            ref int[] pivots)
+        {
+            cmatrixlu(ref a,m,n,ref pivots);
+        }
+
+
+        /*************************************************************************
         Cache-oblivious Cholesky decomposition
 
         The algorithm computes Cholesky decomposition  of  a  Hermitian  positive-
         definite matrix. The result of an algorithm is a representation  of  A  as
         A=U'*U  or A=L*L' (here X' detones conj(X^T)).
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that Cholesky decomposition is harder
+          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
+          ! several synchronization points which  can  not  be  avoided.  However,
+          ! parallelism starts to be profitable starting from N=500.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS:
             A       -   upper or lower triangle of a factorized matrix.
@@ -21537,11 +30837,57 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static bool _pexec_hpdmatrixcholesky(ref complex[,] a,
+            int n,
+            bool isupper)
+        {
+            return hpdmatrixcholesky(ref a,n,isupper);
+        }
+
+
+        /*************************************************************************
         Cache-oblivious Cholesky decomposition
 
         The algorithm computes Cholesky decomposition  of  a  symmetric  positive-
         definite matrix. The result of an algorithm is a representation  of  A  as
         A=U^T*U  or A=L*L^T
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that Cholesky decomposition is harder
+          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
+          ! several synchronization points which  can  not  be  avoided.  However,
+          ! parallelism starts to be profitable starting from N=500.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS:
             A       -   upper or lower triangle of a factorized matrix.
@@ -21578,6 +30924,1121 @@ public partial class alglib
                 return result;
             }
             result = spdmatrixcholeskyrec(ref a, 0, n, isupper, ref tmp);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static bool _pexec_spdmatrixcholesky(ref double[,] a,
+            int n,
+            bool isupper)
+        {
+            return spdmatrixcholesky(ref a,n,isupper);
+        }
+
+
+        /*************************************************************************
+        Update of Cholesky decomposition: rank-1 update to original A.  "Buffered"
+        version which uses preallocated buffer which is saved  between  subsequent
+        function calls.
+
+        This function uses internally allocated buffer which is not saved  between
+        subsequent  calls.  So,  if  you  perform  a lot  of  subsequent  updates,
+        we  recommend   you   to   use   "buffered"   version   of  this function:
+        SPDMatrixCholeskyUpdateAdd1Buf().
+
+        INPUT PARAMETERS:
+            A       -   upper or lower Cholesky factor.
+                        array with elements [0..N-1, 0..N-1].
+                        Exception is thrown if array size is too small.
+            N       -   size of matrix A, N>0
+            IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                        otherwise A contains a lower one.
+            U       -   array[N], rank-1 update to A: A_mod = A + u*u'
+                        Exception is thrown if array size is too small.
+            BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                        needed. It is recommended to  reuse  this  buffer  if  you
+                        perform a lot of subsequent decompositions.
+
+        OUTPUT PARAMETERS:
+            A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                        triangle contains matrix U, and the elements below the main
+                        diagonal are not modified. Similarly, if IsUpper = False.
+                        
+        NOTE: this function always succeeds, so it does not return completion code
+
+        NOTE: this function checks sizes of input arrays, but it does  NOT  checks
+              for presence of infinities or NAN's.
+
+          -- ALGLIB --
+             03.02.2014
+             Sergey Bochkanov
+        *************************************************************************/
+        public static void spdmatrixcholeskyupdateadd1(double[,] a,
+            int n,
+            bool isupper,
+            double[] u)
+        {
+            double[] bufr = new double[0];
+
+            alglib.ap.assert(n>0, "SPDMatrixCholeskyUpdateAdd1: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixCholeskyUpdateAdd1: Rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixCholeskyUpdateAdd1: Cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(u)>=n, "SPDMatrixCholeskyUpdateAdd1: Length(U)<N");
+            spdmatrixcholeskyupdateadd1buf(a, n, isupper, u, ref bufr);
+        }
+
+
+        /*************************************************************************
+        Update of Cholesky decomposition: "fixing" some variables.
+
+        This function uses internally allocated buffer which is not saved  between
+        subsequent  calls.  So,  if  you  perform  a lot  of  subsequent  updates,
+        we  recommend   you   to   use   "buffered"   version   of  this function:
+        SPDMatrixCholeskyUpdateFixBuf().
+
+        "FIXING" EXPLAINED:
+
+            Suppose we have N*N positive definite matrix A. "Fixing" some variable
+            means filling corresponding row/column of  A  by  zeros,  and  setting
+            diagonal element to 1.
+            
+            For example, if we fix 2nd variable in 4*4 matrix A, it becomes Af:
+            
+                ( A00  A01  A02  A03 )      ( Af00  0   Af02 Af03 )
+                ( A10  A11  A12  A13 )      (  0    1    0    0   )
+                ( A20  A21  A22  A23 )  =>  ( Af20  0   Af22 Af23 )
+                ( A30  A31  A32  A33 )      ( Af30  0   Af32 Af33 )
+            
+            If we have Cholesky decomposition of A, it must be recalculated  after
+            variables were  fixed.  However,  it  is  possible  to  use  efficient
+            algorithm, which needs O(K*N^2)  time  to  "fix"  K  variables,  given
+            Cholesky decomposition of original, "unfixed" A.
+
+        INPUT PARAMETERS:
+            A       -   upper or lower Cholesky factor.
+                        array with elements [0..N-1, 0..N-1].
+                        Exception is thrown if array size is too small.
+            N       -   size of matrix A, N>0
+            IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                        otherwise A contains a lower one.
+            Fix     -   array[N], I-th element is True if I-th  variable  must  be
+                        fixed. Exception is thrown if array size is too small.
+            BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                        needed. It is recommended to  reuse  this  buffer  if  you
+                        perform a lot of subsequent decompositions.
+
+        OUTPUT PARAMETERS:
+            A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                        triangle contains matrix U, and the elements below the main
+                        diagonal are not modified. Similarly, if IsUpper = False.
+                        
+        NOTE: this function always succeeds, so it does not return completion code
+
+        NOTE: this function checks sizes of input arrays, but it does  NOT  checks
+              for presence of infinities or NAN's.
+              
+        NOTE: this  function  is  efficient  only  for  moderate amount of updated
+              variables - say, 0.1*N or 0.3*N. For larger amount of  variables  it
+              will  still  work,  but  you  may  get   better   performance   with
+              straightforward Cholesky.
+
+          -- ALGLIB --
+             03.02.2014
+             Sergey Bochkanov
+        *************************************************************************/
+        public static void spdmatrixcholeskyupdatefix(double[,] a,
+            int n,
+            bool isupper,
+            bool[] fix)
+        {
+            double[] bufr = new double[0];
+
+            alglib.ap.assert(n>0, "SPDMatrixCholeskyUpdateFix: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixCholeskyUpdateFix: Rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixCholeskyUpdateFix: Cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(fix)>=n, "SPDMatrixCholeskyUpdateFix: Length(Fix)<N");
+            spdmatrixcholeskyupdatefixbuf(a, n, isupper, fix, ref bufr);
+        }
+
+
+        /*************************************************************************
+        Update of Cholesky decomposition: rank-1 update to original A.  "Buffered"
+        version which uses preallocated buffer which is saved  between  subsequent
+        function calls.
+
+        See comments for SPDMatrixCholeskyUpdateAdd1() for more information.
+
+        INPUT PARAMETERS:
+            A       -   upper or lower Cholesky factor.
+                        array with elements [0..N-1, 0..N-1].
+                        Exception is thrown if array size is too small.
+            N       -   size of matrix A, N>0
+            IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                        otherwise A contains a lower one.
+            U       -   array[N], rank-1 update to A: A_mod = A + u*u'
+                        Exception is thrown if array size is too small.
+            BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                        needed. It is recommended to  reuse  this  buffer  if  you
+                        perform a lot of subsequent decompositions.
+
+        OUTPUT PARAMETERS:
+            A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                        triangle contains matrix U, and the elements below the main
+                        diagonal are not modified. Similarly, if IsUpper = False.
+
+          -- ALGLIB --
+             03.02.2014
+             Sergey Bochkanov
+        *************************************************************************/
+        public static void spdmatrixcholeskyupdateadd1buf(double[,] a,
+            int n,
+            bool isupper,
+            double[] u,
+            ref double[] bufr)
+        {
+            int i = 0;
+            int j = 0;
+            int nz = 0;
+            double cs = 0;
+            double sn = 0;
+            double v = 0;
+            double vv = 0;
+
+            alglib.ap.assert(n>0, "SPDMatrixCholeskyUpdateAdd1Buf: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixCholeskyUpdateAdd1Buf: Rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixCholeskyUpdateAdd1Buf: Cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(u)>=n, "SPDMatrixCholeskyUpdateAdd1Buf: Length(U)<N");
+            
+            //
+            // Find index of first non-zero entry in U
+            //
+            nz = n;
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(u[i])!=(double)(0) )
+                {
+                    nz = i;
+                    break;
+                }
+            }
+            if( nz==n )
+            {
+                
+                //
+                // Nothing to update
+                //
+                return;
+            }
+            
+            //
+            // If working with upper triangular matrix
+            //
+            if( isupper )
+            {
+                
+                //
+                // Perform a sequence of updates which fix variables one by one.
+                // This approach is different from one which is used when we work
+                // with lower triangular matrix.
+                //
+                apserv.rvectorsetlengthatleast(ref bufr, n);
+                for(j=nz; j<=n-1; j++)
+                {
+                    bufr[j] = u[j];
+                }
+                for(i=nz; i<=n-1; i++)
+                {
+                    if( (double)(bufr[i])!=(double)(0) )
+                    {
+                        rotations.generaterotation(a[i,i], bufr[i], ref cs, ref sn, ref v);
+                        a[i,i] = v;
+                        bufr[i] = 0.0;
+                        for(j=i+1; j<=n-1; j++)
+                        {
+                            v = a[i,j];
+                            vv = bufr[j];
+                            a[i,j] = cs*v+sn*vv;
+                            bufr[j] = -(sn*v)+cs*vv;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                
+                //
+                // Calculate rows of modified Cholesky factor, row-by-row
+                // (updates performed during variable fixing are applied
+                // simultaneously to each row)
+                //
+                apserv.rvectorsetlengthatleast(ref bufr, 3*n);
+                for(j=nz; j<=n-1; j++)
+                {
+                    bufr[j] = u[j];
+                }
+                for(i=nz; i<=n-1; i++)
+                {
+                    
+                    //
+                    // Update all previous updates [Idx+1...I-1] to I-th row
+                    //
+                    vv = bufr[i];
+                    for(j=nz; j<=i-1; j++)
+                    {
+                        cs = bufr[n+2*j+0];
+                        sn = bufr[n+2*j+1];
+                        v = a[i,j];
+                        a[i,j] = cs*v+sn*vv;
+                        vv = -(sn*v)+cs*vv;
+                    }
+                    
+                    //
+                    // generate rotation applied to I-th element of update vector
+                    //
+                    rotations.generaterotation(a[i,i], vv, ref cs, ref sn, ref v);
+                    a[i,i] = v;
+                    bufr[n+2*i+0] = cs;
+                    bufr[n+2*i+1] = sn;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Update of Cholesky  decomposition:  "fixing"  some  variables.  "Buffered"
+        version which uses preallocated buffer which is saved  between  subsequent
+        function calls.
+
+        See comments for SPDMatrixCholeskyUpdateFix() for more information.
+
+        INPUT PARAMETERS:
+            A       -   upper or lower Cholesky factor.
+                        array with elements [0..N-1, 0..N-1].
+                        Exception is thrown if array size is too small.
+            N       -   size of matrix A, N>0
+            IsUpper -   if IsUpper=True, then A contains  upper  Cholesky  factor;
+                        otherwise A contains a lower one.
+            Fix     -   array[N], I-th element is True if I-th  variable  must  be
+                        fixed. Exception is thrown if array size is too small.
+            BufR    -   possibly preallocated  buffer;  automatically  resized  if
+                        needed. It is recommended to  reuse  this  buffer  if  you
+                        perform a lot of subsequent decompositions.
+
+        OUTPUT PARAMETERS:
+            A       -   updated factorization.  If  IsUpper=True,  then  the  upper
+                        triangle contains matrix U, and the elements below the main
+                        diagonal are not modified. Similarly, if IsUpper = False.
+
+          -- ALGLIB --
+             03.02.2014
+             Sergey Bochkanov
+        *************************************************************************/
+        public static void spdmatrixcholeskyupdatefixbuf(double[,] a,
+            int n,
+            bool isupper,
+            bool[] fix,
+            ref double[] bufr)
+        {
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int nfix = 0;
+            int idx = 0;
+            double cs = 0;
+            double sn = 0;
+            double v = 0;
+            double vv = 0;
+
+            alglib.ap.assert(n>0, "SPDMatrixCholeskyUpdateFixBuf: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixCholeskyUpdateFixBuf: Rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixCholeskyUpdateFixBuf: Cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(fix)>=n, "SPDMatrixCholeskyUpdateFixBuf: Length(Fix)<N");
+            
+            //
+            // Count number of variables to fix.
+            // Quick exit if NFix=0 or NFix=N
+            //
+            nfix = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                if( fix[i] )
+                {
+                    apserv.inc(ref nfix);
+                }
+            }
+            if( nfix==0 )
+            {
+                
+                //
+                // Nothing to fix
+                //
+                return;
+            }
+            if( nfix==n )
+            {
+                
+                //
+                // All variables are fixed.
+                // Set A to identity and exit.
+                //
+                if( isupper )
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        a[i,i] = 1;
+                        for(j=i+1; j<=n-1; j++)
+                        {
+                            a[i,j] = 0;
+                        }
+                    }
+                }
+                else
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        for(j=0; j<=i-1; j++)
+                        {
+                            a[i,j] = 0;
+                        }
+                        a[i,i] = 1;
+                    }
+                }
+                return;
+            }
+            
+            //
+            // If working with upper triangular matrix
+            //
+            if( isupper )
+            {
+                
+                //
+                // Perform a sequence of updates which fix variables one by one.
+                // This approach is different from one which is used when we work
+                // with lower triangular matrix.
+                //
+                apserv.rvectorsetlengthatleast(ref bufr, n);
+                for(k=0; k<=n-1; k++)
+                {
+                    if( fix[k] )
+                    {
+                        idx = k;
+                        
+                        //
+                        // Quick exit if it is last variable
+                        //
+                        if( idx==n-1 )
+                        {
+                            for(i=0; i<=idx-1; i++)
+                            {
+                                a[i,idx] = 0.0;
+                            }
+                            a[idx,idx] = 1.0;
+                            continue;
+                        }
+                        
+                        //
+                        // We have Cholesky decomposition of quadratic term in A,
+                        // with upper triangle being stored as given below:
+                        //
+                        //         ( U00 u01 U02 )
+                        //     U = (     u11 u12 )
+                        //         (         U22 )
+                        //
+                        // Here u11 is diagonal element corresponding to variable K. We
+                        // want to fix this variable, and we do so by modifying U as follows:
+                        //
+                        //             ( U00  0  U02 )
+                        //     U_mod = (      1   0  )
+                        //             (         U_m )
+                        //
+                        // with U_m = CHOLESKY [ (U22^T)*U22 + (u12^T)*u12 ]
+                        //
+                        // Of course, we can calculate U_m by calculating (U22^T)*U22 explicitly,
+                        // modifying it and performing Cholesky decomposition of modified matrix.
+                        // However, we can treat it as follows:
+                        // * we already have CHOLESKY[(U22^T)*U22], which is equal to U22
+                        // * we have rank-1 update (u12^T)*u12 applied to (U22^T)*U22
+                        // * thus, we can calculate updated Cholesky with O(N^2) algorithm
+                        //   instead of O(N^3) one
+                        //
+                        for(j=idx+1; j<=n-1; j++)
+                        {
+                            bufr[j] = a[idx,j];
+                        }
+                        for(i=0; i<=idx-1; i++)
+                        {
+                            a[i,idx] = 0.0;
+                        }
+                        a[idx,idx] = 1.0;
+                        for(i=idx+1; i<=n-1; i++)
+                        {
+                            a[idx,i] = 0.0;
+                        }
+                        for(i=idx+1; i<=n-1; i++)
+                        {
+                            if( (double)(bufr[i])!=(double)(0) )
+                            {
+                                rotations.generaterotation(a[i,i], bufr[i], ref cs, ref sn, ref v);
+                                a[i,i] = v;
+                                bufr[i] = 0.0;
+                                for(j=i+1; j<=n-1; j++)
+                                {
+                                    v = a[i,j];
+                                    vv = bufr[j];
+                                    a[i,j] = cs*v+sn*vv;
+                                    bufr[j] = -(sn*v)+cs*vv;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                
+                //
+                // Calculate rows of modified Cholesky factor, row-by-row
+                // (updates performed during variable fixing are applied
+                // simultaneously to each row)
+                //
+                apserv.rvectorsetlengthatleast(ref bufr, 3*n);
+                for(k=0; k<=n-1; k++)
+                {
+                    if( fix[k] )
+                    {
+                        idx = k;
+                        
+                        //
+                        // Quick exit if it is last variable
+                        //
+                        if( idx==n-1 )
+                        {
+                            for(i=0; i<=idx-1; i++)
+                            {
+                                a[idx,i] = 0.0;
+                            }
+                            a[idx,idx] = 1.0;
+                            continue;
+                        }
+                        
+                        //
+                        // store column to buffer and clear row/column of A
+                        //
+                        for(j=idx+1; j<=n-1; j++)
+                        {
+                            bufr[j] = a[j,idx];
+                        }
+                        for(i=0; i<=idx-1; i++)
+                        {
+                            a[idx,i] = 0.0;
+                        }
+                        a[idx,idx] = 1.0;
+                        for(i=idx+1; i<=n-1; i++)
+                        {
+                            a[i,idx] = 0.0;
+                        }
+                        
+                        //
+                        // Apply update to rows of A
+                        //
+                        for(i=idx+1; i<=n-1; i++)
+                        {
+                            
+                            //
+                            // Update all previous updates [Idx+1...I-1] to I-th row
+                            //
+                            vv = bufr[i];
+                            for(j=idx+1; j<=i-1; j++)
+                            {
+                                cs = bufr[n+2*j+0];
+                                sn = bufr[n+2*j+1];
+                                v = a[i,j];
+                                a[i,j] = cs*v+sn*vv;
+                                vv = -(sn*v)+cs*vv;
+                            }
+                            
+                            //
+                            // generate rotation applied to I-th element of update vector
+                            //
+                            rotations.generaterotation(a[i,i], vv, ref cs, ref sn, ref v);
+                            a[i,i] = v;
+                            bufr[n+2*i+0] = cs;
+                            bufr[n+2*i+1] = sn;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Sparse Cholesky decomposition for skyline matrixm using in-place algorithm
+        without allocating additional storage.
+
+        The algorithm computes Cholesky decomposition  of  a  symmetric  positive-
+        definite sparse matrix. The result of an algorithm is a representation  of
+        A as A=U^T*U or A=L*L^T
+
+        This  function  is  a  more  efficient alternative to general, but  slower
+        SparseCholeskyX(), because it does not  create  temporary  copies  of  the
+        target. It performs factorization in-place, which gives  best  performance
+        on low-profile matrices. Its drawback, however, is that it can not perform
+        profile-reducing permutation of input matrix.
+
+        INPUT PARAMETERS:
+            A       -   sparse matrix in skyline storage (SKS) format.
+            N       -   size of matrix A (can be smaller than actual size of A)
+            IsUpper -   if IsUpper=True, then factorization is performed on  upper
+                        triangle. Another triangle is ignored (it may contant some
+                        data, but it is not changed).
+            
+
+        OUTPUT PARAMETERS:
+            A       -   the result of factorization, stored in SKS. If IsUpper=True,
+                        then the upper  triangle  contains  matrix  U,  such  that
+                        A = U^T*U. Lower triangle is not changed.
+                        Similarly, if IsUpper = False. In this case L is returned,
+                        and we have A = L*(L^T).
+                        Note that THIS function does not  perform  permutation  of
+                        rows to reduce bandwidth.
+
+        RESULT:
+            If  the  matrix  is  positive-definite,  the  function  returns  True.
+            Otherwise, the function returns False. Contents of A is not determined
+            in such case.
+
+        NOTE: for  performance  reasons  this  function  does NOT check that input
+              matrix  includes  only  finite  values. It is your responsibility to
+              make sure that there are no infinite or NAN values in the matrix.
+
+          -- ALGLIB routine --
+             16.01.2014
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparsecholeskyskyline(sparse.sparsematrix a,
+            int n,
+            bool isupper)
+        {
+            bool result = new bool();
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int jnz = 0;
+            int jnza = 0;
+            int jnzl = 0;
+            double v = 0;
+            double vv = 0;
+            double a12 = 0;
+            int nready = 0;
+            int nadd = 0;
+            int banda = 0;
+            int offsa = 0;
+            int offsl = 0;
+
+            alglib.ap.assert(n>=0, "SparseCholeskySkyline: N<0");
+            alglib.ap.assert(sparse.sparsegetnrows(a)>=n, "SparseCholeskySkyline: rows(A)<N");
+            alglib.ap.assert(sparse.sparsegetncols(a)>=n, "SparseCholeskySkyline: cols(A)<N");
+            alglib.ap.assert(sparse.sparseissks(a), "SparseCholeskySkyline: A is not stored in SKS format");
+            result = false;
+            
+            //
+            // transpose if needed
+            //
+            if( isupper )
+            {
+                sparse.sparsetransposesks(a);
+            }
+            
+            //
+            // Perform Cholesky decomposition:
+            // * we assume than leading NReady*NReady submatrix is done
+            // * having Cholesky decomposition of NReady*NReady submatrix we
+            //   obtain decomposition of larger (NReady+NAdd)*(NReady+NAdd) one.
+            //
+            // Here is algorithm. At the start we have
+            //
+            //     (      |   )
+            //     (  L   |   )
+            // S = (      |   )
+            //     (----------)
+            //     (  A   | B )
+            //
+            // with L being already computed Cholesky factor, A and B being
+            // unprocessed parts of the matrix. Of course, L/A/B are stored
+            // in SKS format.
+            //
+            // Then, we calculate A1:=(inv(L)*A')' and replace A with A1.
+            // Then, we calculate B1:=B-A1*A1'     and replace B with B1
+            //
+            // Finally, we calculate small NAdd*NAdd Cholesky of B1 with
+            // dense solver. Now, L/A1/B1 are Cholesky decomposition of the
+            // larger (NReady+NAdd)*(NReady+NAdd) matrix.
+            //
+            nready = 0;
+            nadd = 1;
+            while( nready<n )
+            {
+                alglib.ap.assert(nadd==1, "SkylineCholesky: internal error");
+                
+                //
+                // Calculate A1:=(inv(L)*A')'
+                //
+                // Elements are calculated row by row (example below is given
+                // for NAdd=1):
+                // * first, we solve L[0,0]*A1[0]=A[0]
+                // * then, we solve  L[1,0]*A1[0]+L[1,1]*A1[1]=A[1]
+                // * then, we move to next row and so on
+                // * during calculation of A1 we update A12 - squared norm of A1
+                //
+                // We extensively use sparsity of both A/A1 and L:
+                // * first, equations from 0 to BANDWIDTH(A1)-1 are completely zero
+                // * second, for I>=BANDWIDTH(A1), I-th equation is reduced from
+                //     L[I,0]*A1[0] + L[I,1]*A1[1] + ... + L[I,I]*A1[I] = A[I]
+                //   to
+                //     L[I,JNZ]*A1[JNZ] + ... + L[I,I]*A1[I] = A[I]
+                //   where JNZ = max(NReady-BANDWIDTH(A1),I-BANDWIDTH(L[i]))
+                //   (JNZ is an index of the firts column where both A and L become
+                //   nonzero).
+                //
+                // NOTE: we rely on details of SparseMatrix internal storage format.
+                //       This is allowed by SparseMatrix specification.
+                //
+                a12 = 0.0;
+                if( a.didx[nready]>0 )
+                {
+                    banda = a.didx[nready];
+                    for(i=nready-banda; i<=nready-1; i++)
+                    {
+                        
+                        //
+                        // Elements of A1[0:I-1] were computed:
+                        // * A1[0:NReady-BandA-1] are zero (sparse)
+                        // * A1[NReady-BandA:I-1] replaced corresponding elements of A
+                        //
+                        // Now it is time to get I-th one.
+                        //
+                        // First, we calculate:
+                        // * JNZA  - index of the first column where A become nonzero
+                        // * JNZL  - index of the first column where L become nonzero
+                        // * JNZ   - index of the first column where both A and L become nonzero
+                        // * OffsA - offset of A[JNZ] in A.Vals
+                        // * OffsL - offset of L[I,JNZ] in A.Vals
+                        //
+                        // Then, we solve SUM(A1[j]*L[I,j],j=JNZ..I-1) + A1[I]*L[I,I] = A[I],
+                        // with A1[JNZ..I-1] already known, and A1[I] unknown.
+                        //
+                        jnza = nready-banda;
+                        jnzl = i-a.didx[i];
+                        jnz = Math.Max(jnza, jnzl);
+                        offsa = a.ridx[nready]+(jnz-jnza);
+                        offsl = a.ridx[i]+(jnz-jnzl);
+                        v = 0.0;
+                        k = i-1-jnz;
+                        for(j=0; j<=k; j++)
+                        {
+                            v = v+a.vals[offsa+j]*a.vals[offsl+j];
+                        }
+                        vv = (a.vals[offsa+k+1]-v)/a.vals[offsl+k+1];
+                        a.vals[offsa+k+1] = vv;
+                        a12 = a12+vv*vv;
+                    }
+                }
+                
+                //
+                // Calculate CHOLESKY(B-A1*A1')
+                //
+                offsa = a.ridx[nready]+a.didx[nready];
+                v = a.vals[offsa];
+                if( (double)(v)<=(double)(a12) )
+                {
+                    result = false;
+                    return result;
+                }
+                a.vals[offsa] = Math.Sqrt(v-a12);
+                
+                //
+                // Increase size of the updated matrix
+                //
+                apserv.inc(ref nready);
+            }
+            
+            //
+            // transpose if needed
+            //
+            if( isupper )
+            {
+                sparse.sparsetransposesks(a);
+            }
+            result = true;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Sparse Cholesky decomposition: "expert" function.
+
+        The algorithm computes Cholesky decomposition  of  a  symmetric  positive-
+        definite sparse matrix. The result is representation of A  as  A=U^T*U  or
+        A=L*L^T
+
+        Triangular factor L or U is written to separate SparseMatrix structure. If
+        output buffer already contrains enough memory to store L/U, this memory is
+        reused.
+
+        INPUT PARAMETERS:
+            A       -   upper or lower triangle of sparse matrix.
+                        Matrix can be in any sparse storage format.
+            N       -   size of matrix A (can be smaller than actual size of A)
+            IsUpper -   if IsUpper=True, then A contains an upper triangle of
+                        a symmetric matrix, otherwise A contains a lower one.
+                        Another triangle is ignored.
+            P0, P1  -   integer arrays:
+                        * for Ordering=-3  -  user-supplied permutation  of  rows/
+                          columns, which complies  to  requirements stated  in the
+                          "OUTPUT PARAMETERS" section.  Both  P0 and  P1  must  be
+                          initialized by user.
+                        * for other values of  Ordering  -  possibly  preallocated
+                          buffer,  which   is   filled   by  internally  generated
+                          permutation. Automatically resized if its  size  is  too
+                          small to store data.
+            Ordering-   sparse matrix reordering algorithm which is used to reduce
+                        fill-in amount:
+                        * -3    use ordering supplied by user in P0/P1
+                        * -2    use random ordering
+                        * -1    use original order
+                        * 0     use best algorithm implemented so far
+                        If input matrix is  given  in  SKS  format,  factorization
+                        function ignores Ordering and uses original order  of  the
+                        columns. The idea is that if you already store  matrix  in
+                        SKS format, it is better not to perform costly reordering.
+            Algo    -   type of algorithm which is used during factorization:
+                        * 0     use best  algorithm  (for  SKS  input  or   output
+                                matrices Algo=2 is used; otherwise Algo=1 is used)
+                        * 1     use CRS-based algorithm
+                        * 2     use skyline-based factorization algorithm.
+                                This algorithm is a  fastest  one  for low-profile
+                                matrices,  but  requires  too  much of memory  for
+                                matrices with large bandwidth.
+            Fmt     -   desired storage format  of  the  output,  as  returned  by
+                        SparseGetMatrixType() function:
+                        * 0 for hash-based storage
+                        * 1 for CRS
+                        * 2 for SKS
+                        If you do not know what format to choose, use 1 (CRS).
+            Buf     -   SparseBuffers structure which is used to store temporaries.
+                        This function may reuse previously allocated  storage,  so
+                        if you perform repeated factorizations it is beneficial to
+                        reuse Buf.
+            C       -   SparseMatrix structure  which  can  be  just  some  random
+                        garbage. In  case  in  contains  enough  memory  to  store
+                        triangular factors, this memory will be reused. Othwerwise,
+                        algorithm will automatically allocate enough memory.
+            
+
+        OUTPUT PARAMETERS:
+            C       -   the result of factorization, stored in desired format.  If
+                        IsUpper=True, then the upper triangle  contains  matrix U,
+                        such  that  (P'*A*P) = U^T*U,  where  P  is  a permutation
+                        matrix (see below). The elements below the  main  diagonal
+                        are zero.
+                        Similarly, if IsUpper = False. In this case L is returned,
+                        and we have (P'*A*P) = L*(L^T).
+            P0      -   permutation  (according   to   Ordering  parameter)  which
+                        minimizes amount of fill-in:
+                        * P0 is array[N]
+                        * permutation is applied to A before  factorization  takes
+                          place, i.e. we have U'*U = L*L' = P'*A*P
+                        * P0[k]=j means that column/row j of A  is  moved  to k-th
+                          position before starting factorization.
+            P1      -   permutation P in another format, array[N]:
+                        * P1[k]=j means that k-th column/row of A is moved to j-th
+                          position
+
+        RESULT:
+            If  the  matrix  is  positive-definite,  the  function  returns  True.
+            Otherwise, the function returns False. Contents of C is not determined
+            in such case.
+
+        NOTE: for  performance  reasons  this  function  does NOT check that input
+              matrix  includes  only  finite  values. It is your responsibility to
+              make sure that there are no infinite or NAN values in the matrix.
+
+          -- ALGLIB routine --
+             16.01.2014
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool sparsecholeskyx(sparse.sparsematrix a,
+            int n,
+            bool isupper,
+            ref int[] p0,
+            ref int[] p1,
+            int ordering,
+            int algo,
+            int fmt,
+            sparse.sparsebuffers buf,
+            sparse.sparsematrix c)
+        {
+            bool result = new bool();
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int t0 = 0;
+            int t1 = 0;
+            double v = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
+
+            alglib.ap.assert(n>=0, "SparseMatrixCholeskyBuf: N<0");
+            alglib.ap.assert(sparse.sparsegetnrows(a)>=n, "SparseMatrixCholeskyBuf: rows(A)<N");
+            alglib.ap.assert(sparse.sparsegetncols(a)>=n, "SparseMatrixCholeskyBuf: cols(A)<N");
+            alglib.ap.assert(ordering>=-3 && ordering<=0, "SparseMatrixCholeskyBuf: invalid Ordering parameter");
+            alglib.ap.assert(algo>=0 && algo<=2, "SparseMatrixCholeskyBuf: invalid Algo parameter");
+            hqrnd.hqrndrandomize(rs);
+            
+            //
+            // Perform some quick checks.
+            // Because sparse matrices are expensive data structures, these
+            // checks are better to perform during early stages of the factorization.
+            //
+            result = false;
+            if( n<1 )
+            {
+                return result;
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(sparse.sparsegetdiagonal(a, i))<=(double)(0) )
+                {
+                    return result;
+                }
+            }
+            
+            //
+            // First, determine appropriate ordering:
+            // * for SKS inputs, Ordering=-1 is automatically chosen (overrides user settings)
+            //
+            if( ordering==0 )
+            {
+                ordering = -1;
+            }
+            if( sparse.sparseissks(a) )
+            {
+                ordering = -1;
+            }
+            if( ordering==-3 )
+            {
+                
+                //
+                // User-supplied ordering.
+                // Check its correctness.
+                //
+                alglib.ap.assert(alglib.ap.len(p0)>=n, "SparseCholeskyX: user-supplied permutation is too short");
+                alglib.ap.assert(alglib.ap.len(p1)>=n, "SparseCholeskyX: user-supplied permutation is too short");
+                for(i=0; i<=n-1; i++)
+                {
+                    alglib.ap.assert(p0[i]>=0 && p0[i]<n, "SparseCholeskyX: user-supplied permutation includes values outside of [0,N)");
+                    alglib.ap.assert(p1[i]>=0 && p1[i]<n, "SparseCholeskyX: user-supplied permutation includes values outside of [0,N)");
+                    alglib.ap.assert(p1[p0[i]]==i, "SparseCholeskyX: user-supplied permutation is inconsistent - P1 is not inverse of P0");
+                }
+            }
+            if( ordering==-2 )
+            {
+                
+                //
+                // Use random ordering
+                //
+                apserv.ivectorsetlengthatleast(ref p0, n);
+                apserv.ivectorsetlengthatleast(ref p1, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    p0[i] = i;
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    j = i+hqrnd.hqrnduniformi(rs, n-i);
+                    if( j!=i )
+                    {
+                        k = p0[i];
+                        p0[i] = p0[j];
+                        p0[j] = k;
+                    }
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    p1[p0[i]] = i;
+                }
+            }
+            if( ordering==-1 )
+            {
+                
+                //
+                // Use initial ordering
+                //
+                apserv.ivectorsetlengthatleast(ref p0, n);
+                apserv.ivectorsetlengthatleast(ref p1, n);
+                for(i=0; i<=n-1; i++)
+                {
+                    p0[i] = i;
+                    p1[i] = i;
+                }
+            }
+            
+            //
+            // Determine algorithm to use:
+            // * for SKS input or output - use SKS solver (overrides user settings)
+            // * default is to use Algo=1
+            //
+            if( algo==0 )
+            {
+                algo = 1;
+            }
+            if( sparse.sparseissks(a) || fmt==2 )
+            {
+                algo = 2;
+            }
+            algo = 2;
+            if( algo==2 )
+            {
+                
+                //
+                // Skyline Cholesky with non-skyline output.
+                //
+                // Call CholeskyX() recursively with Buf.S as output matrix,
+                // then perform conversion from SKS to desired format. We can
+                // use Buf.S in reccurrent call because SKS-to-SKS CholeskyX()
+                // does not uses this field.
+                //
+                if( fmt!=2 )
+                {
+                    result = sparsecholeskyx(a, n, isupper, ref p0, ref p1, -3, algo, 2, buf, buf.s);
+                    if( result )
+                    {
+                        sparse.sparsecopytobuf(buf.s, fmt, c);
+                    }
+                    return result;
+                }
+                
+                //
+                // Skyline Cholesky with skyline output
+                //
+                if( sparse.sparseissks(a) && ordering==-1 )
+                {
+                    
+                    //
+                    // Non-permuted skyline matrix.
+                    //
+                    // Quickly copy matrix to output buffer without permutation.
+                    //
+                    // NOTE: Buf.D is used as dummy vector filled with zeros.
+                    //
+                    apserv.ivectorsetlengthatleast(ref buf.d, n);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        buf.d[i] = 0;
+                    }
+                    if( isupper )
+                    {
+                        
+                        //
+                        // Create strictly upper-triangular matrix,
+                        // copy upper triangle of input.
+                        //
+                        sparse.sparsecreatesksbuf(n, n, buf.d, a.uidx, c);
+                        for(i=0; i<=n-1; i++)
+                        {
+                            t0 = a.ridx[i+1]-a.uidx[i]-1;
+                            t1 = a.ridx[i+1]-1;
+                            k = c.ridx[i+1]-c.uidx[i]-1;
+                            for(j=t0; j<=t1; j++)
+                            {
+                                c.vals[k] = a.vals[j];
+                                k = k+1;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Create strictly lower-triangular matrix,
+                        // copy lower triangle of input.
+                        //
+                        sparse.sparsecreatesksbuf(n, n, a.didx, buf.d, c);
+                        for(i=0; i<=n-1; i++)
+                        {
+                            t0 = a.ridx[i];
+                            t1 = a.ridx[i]+a.didx[i];
+                            k = c.ridx[i];
+                            for(j=t0; j<=t1; j++)
+                            {
+                                c.vals[k] = a.vals[j];
+                                k = k+1;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    
+                    //
+                    // Non-identity permutations OR non-skyline input:
+                    // * investigate profile of permuted A
+                    // * create skyline matrix in output buffer
+                    // * copy input with permutation
+                    //
+                    apserv.ivectorsetlengthatleast(ref buf.d, n);
+                    apserv.ivectorsetlengthatleast(ref buf.u, n);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        buf.d[i] = 0;
+                        buf.u[i] = 0;
+                    }
+                    t0 = 0;
+                    t1 = 0;
+                    while( sparse.sparseenumerate(a, ref t0, ref t1, ref i, ref j, ref v) )
+                    {
+                        if( (isupper && j>=i) || (!isupper && j<=i) )
+                        {
+                            i = p1[i];
+                            j = p1[j];
+                            if( (j<i && isupper) || (j>i && !isupper) )
+                            {
+                                apserv.swapi(ref i, ref j);
+                            }
+                            if( i>j )
+                            {
+                                buf.d[i] = Math.Max(buf.d[i], i-j);
+                            }
+                            else
+                            {
+                                buf.u[j] = Math.Max(buf.u[j], j-i);
+                            }
+                        }
+                    }
+                    sparse.sparsecreatesksbuf(n, n, buf.d, buf.u, c);
+                    t0 = 0;
+                    t1 = 0;
+                    while( sparse.sparseenumerate(a, ref t0, ref t1, ref i, ref j, ref v) )
+                    {
+                        if( (isupper && j>=i) || (!isupper && j<=i) )
+                        {
+                            i = p1[i];
+                            j = p1[j];
+                            if( (j<i && isupper) || (j>i && !isupper) )
+                            {
+                                apserv.swapi(ref j, ref i);
+                            }
+                            sparse.sparserewriteexisting(c, i, j, v);
+                        }
+                    }
+                }
+                result = sparsecholeskyskyline(c, n, isupper);
+                return result;
+            }
+            alglib.ap.assert(false, "SparseCholeskyX: internal error - unexpected algorithm");
             return result;
         }
 
@@ -21883,6 +32344,11 @@ public partial class alglib
             //
             // special cases
             //
+            // NOTE: we do not use MKL to accelerate Cholesky basecase
+            //       because basecase cost is negligible when compared to
+            //       the cost of entire decomposition (most time is spent
+            //       in GEMM snd SYRK).
+            //
             if( n==1 )
             {
                 if( (double)(a[offs,offs])>(double)(0) )
@@ -21916,13 +32382,13 @@ public partial class alglib
             {
                 if( isupper )
                 {
-                    ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 1, ref a, offs, offs+n1);
-                    ablas.rmatrixsyrk(n2, n1, -1.0, a, offs, offs+n1, 1, 1.0, ref a, offs+n1, offs+n1, isupper);
+                    ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 1, a, offs, offs+n1);
+                    ablas.rmatrixsyrk(n2, n1, -1.0, a, offs, offs+n1, 1, 1.0, a, offs+n1, offs+n1, isupper);
                 }
                 else
                 {
-                    ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 1, ref a, offs+n1, offs);
-                    ablas.rmatrixsyrk(n2, n1, -1.0, a, offs+n1, offs, 0, 1.0, ref a, offs+n1, offs+n1, isupper);
+                    ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 1, a, offs+n1, offs);
+                    ablas.rmatrixsyrk(n2, n1, -1.0, a, offs+n1, offs, 0, 1.0, a, offs+n1, offs+n1, isupper);
                 }
                 result = spdmatrixcholeskyrec(ref a, offs+n1, n2, isupper, ref tmp);
                 if( !result )
@@ -21994,7 +32460,7 @@ public partial class alglib
                         a[i_,pivots[offs+i]] = tmp[i_+i1_];
                     }
                 }
-                ablas.cmatrixrighttrsm(m-n, n, a, offs, offs, true, true, 0, ref a, offs+n, offs);
+                ablas.cmatrixrighttrsm(m-n, n, a, offs, offs, true, true, 0, a, offs+n, offs);
                 return;
             }
             
@@ -22025,8 +32491,8 @@ public partial class alglib
                         }
                     }
                 }
-                ablas.cmatrixrighttrsm(m2, m1, a, offs, offs, true, true, 0, ref a, offs+m1, offs);
-                ablas.cmatrixgemm(m-m1, n-m1, m1, -1.0, a, offs+m1, offs, 0, a, offs, offs+m1, 0, 1.0, ref a, offs+m1, offs+m1);
+                ablas.cmatrixrighttrsm(m2, m1, a, offs, offs, true, true, 0, a, offs+m1, offs);
+                ablas.cmatrixgemm(m-m1, n-m1, m1, -1.0, a, offs+m1, offs, 0, a, offs, offs+m1, 0, 1.0, a, offs+m1, offs+m1);
                 cmatrixluprec(ref a, offs+m1, m-m1, n-m1, ref pivots, ref tmp);
                 for(i=0; i<=m2-1; i++)
                 {
@@ -22115,7 +32581,7 @@ public partial class alglib
                         }
                     }
                 }
-                ablas.rmatrixrighttrsm(m-n, n, a, offs, offs, true, true, 0, ref a, offs+n, offs);
+                ablas.rmatrixrighttrsm(m-n, n, a, offs, offs, true, true, 0, a, offs+n, offs);
                 return;
             }
             
@@ -22146,7 +32612,7 @@ public partial class alglib
                         }
                     }
                 }
-                ablas.rmatrixrighttrsm(m2, m1, a, offs, offs, true, true, 0, ref a, offs+m1, offs);
+                ablas.rmatrixrighttrsm(m2, m1, a, offs, offs, true, true, 0, a, offs+m1, offs);
                 ablas.rmatrixgemm(m-m1, n-m1, m1, -1.0, a, offs+m1, offs, 0, a, offs, offs+m1, 0, 1.0, a, offs+m1, offs+m1);
                 rmatrixluprec(ref a, offs+m1, m-m1, n-m1, ref pivots, ref tmp);
                 for(i=0; i<=m2-1; i++)
@@ -22230,7 +32696,7 @@ public partial class alglib
                         a[pivots[offs+i],i_] = tmp[i_+i1_];
                     }
                 }
-                ablas.cmatrixlefttrsm(m, n-m, a, offs, offs, false, true, 0, ref a, offs, offs+m);
+                ablas.cmatrixlefttrsm(m, n-m, a, offs, offs, false, true, 0, a, offs, offs+m);
                 return;
             }
             
@@ -22261,8 +32727,8 @@ public partial class alglib
                         }
                     }
                 }
-                ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, false, true, 0, ref a, offs, offs+n1);
-                ablas.cmatrixgemm(m-n1, n-n1, n1, -1.0, a, offs+n1, offs, 0, a, offs, offs+n1, 0, 1.0, ref a, offs+n1, offs+n1);
+                ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, false, true, 0, a, offs, offs+n1);
+                ablas.cmatrixgemm(m-n1, n-n1, n1, -1.0, a, offs+n1, offs, 0, a, offs, offs+n1, 0, 1.0, a, offs+n1, offs+n1);
                 cmatrixplurec(ref a, offs+n1, m-n1, n-n1, ref pivots, ref tmp);
                 for(i=0; i<=n2-1; i++)
                 {
@@ -22311,8 +32777,12 @@ public partial class alglib
 
             
             //
-            // Kernel case
+            // Basecases
             //
+            if( ablasmkl.rmatrixplumkl(ref a, offs, m, n, ref pivots) )
+            {
+                return;
+            }
             if( Math.Min(m, n)<=ablas.ablasblocksize(a) )
             {
                 rmatrixplu2(ref a, offs, m, n, ref pivots, ref tmp);
@@ -22345,7 +32815,7 @@ public partial class alglib
                         a[pivots[offs+i],i_] = tmp[i_+i1_];
                     }
                 }
-                ablas.rmatrixlefttrsm(m, n-m, a, offs, offs, false, true, 0, ref a, offs, offs+m);
+                ablas.rmatrixlefttrsm(m, n-m, a, offs, offs, false, true, 0, a, offs, offs+m);
                 return;
             }
             
@@ -22376,7 +32846,7 @@ public partial class alglib
                         }
                     }
                 }
-                ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, false, true, 0, ref a, offs, offs+n1);
+                ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, false, true, 0, a, offs, offs+n1);
                 ablas.rmatrixgemm(m-n1, n-n1, n1, -1.0, a, offs+n1, offs, 0, a, offs, offs+n1, 0, 1.0, a, offs+n1, offs+n1);
                 rmatrixplurec(ref a, offs+n1, m-n1, n-n1, ref pivots, ref tmp);
                 for(i=0; i<=n2-1; i++)
@@ -22829,6 +33299,9 @@ public partial class alglib
             //
             // special cases
             //
+            // NOTE: we do not use MKL for basecases because their price is only
+            //       minor part of overall running time for N>256.
+            //
             if( n==1 )
             {
                 if( (double)(a[offs,offs].x)>(double)(0) )
@@ -22862,13 +33335,13 @@ public partial class alglib
             {
                 if( isupper )
                 {
-                    ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 2, ref a, offs, offs+n1);
-                    ablas.cmatrixsyrk(n2, n1, -1.0, a, offs, offs+n1, 2, 1.0, ref a, offs+n1, offs+n1, isupper);
+                    ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 2, a, offs, offs+n1);
+                    ablas.cmatrixherk(n2, n1, -1.0, a, offs, offs+n1, 2, 1.0, a, offs+n1, offs+n1, isupper);
                 }
                 else
                 {
-                    ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 2, ref a, offs+n1, offs);
-                    ablas.cmatrixsyrk(n2, n1, -1.0, a, offs+n1, offs, 0, 1.0, ref a, offs+n1, offs+n1, isupper);
+                    ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 2, a, offs+n1, offs);
+                    ablas.cmatrixherk(n2, n1, -1.0, a, offs+n1, offs, 0, 1.0, a, offs+n1, offs+n1, isupper);
                 }
                 result = hpdmatrixcholeskyrec(ref a, offs+n1, n2, isupper, ref tmp);
                 if( !result )
@@ -24096,9 +34569,6 @@ public partial class alglib
             double ainvnm = 0;
             double maxgrowth = 0;
             double s = 0;
-            bool mupper = new bool();
-            bool mtrans = new bool();
-            bool munit = new bool();
 
             rc = 0;
 
@@ -24119,9 +34589,6 @@ public partial class alglib
             {
                 kase1 = 2;
             }
-            mupper = true;
-            mtrans = true;
-            munit = true;
             iwork = new int[n+1];
             tmp = new double[n];
             
@@ -24997,7 +35464,6 @@ public partial class alglib
             double su = 0;
             double sl = 0;
             bool mupper = new bool();
-            bool mtrans = new bool();
             bool munit = new bool();
             int i_ = 0;
             int i1_ = 0;
@@ -25022,7 +35488,6 @@ public partial class alglib
                 kase1 = 2;
             }
             mupper = true;
-            mtrans = true;
             munit = true;
             iwork = new int[n+1];
             tmp = new double[n];
@@ -26116,8 +36581,47 @@ public partial class alglib
 
 
 
+        public const int parallelsize = 64;
+
+
         /*************************************************************************
         Inversion of a matrix given by its LU decomposition.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that matrix inversion  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS:
             A       -   LU decomposition of the matrix
@@ -26161,6 +36665,7 @@ public partial class alglib
             int j = 0;
             int k = 0;
             double v = 0;
+            apserv.sinteger sinfo = new apserv.sinteger();
 
             info = 0;
 
@@ -26203,7 +36708,9 @@ public partial class alglib
             // Call cache-oblivious code
             //
             work = new double[n];
-            rmatrixluinverserec(ref a, 0, n, ref work, ref info, rep);
+            sinfo.val = 1;
+            rmatrixluinverserec(ref a, 0, n, ref work, sinfo, rep);
+            info = sinfo.val;
             
             //
             // apply permutations
@@ -26222,7 +36729,56 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixluinverse(ref double[,] a,
+            int[] pivots,
+            int n,
+            ref int info,
+            matinvreport rep)
+        {
+            rmatrixluinverse(ref a,pivots,n,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a general matrix.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that matrix inversion  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrix.
@@ -26263,7 +36819,55 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixinverse(ref double[,] a,
+            int n,
+            ref int info,
+            matinvreport rep)
+        {
+            rmatrixinverse(ref a,n,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a matrix given by its LU decomposition.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that matrix inversion  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS:
             A       -   LU decomposition of the matrix
@@ -26357,7 +36961,56 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixluinverse(ref complex[,] a,
+            int[] pivots,
+            int n,
+            ref int info,
+            matinvreport rep)
+        {
+            cmatrixluinverse(ref a,pivots,n,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a general matrix.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that matrix inversion  is  harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrix
@@ -26394,8 +37047,50 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixinverse(ref complex[,] a,
+            int n,
+            ref int info,
+            matinvreport rep)
+        {
+            cmatrixinverse(ref a,n,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a symmetric positive definite matrix which is given
         by Cholesky decomposition.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+          ! algorithm  -  it  has  lots  of  internal synchronization points which
+          ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+          ! problems (N=thousands) can be efficiently parallelized.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   Cholesky decomposition of the matrix to be inverted:
@@ -26491,11 +37186,54 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_spdmatrixcholeskyinverse(ref double[,] a,
+            int n,
+            bool isupper,
+            ref int info,
+            matinvreport rep)
+        {
+            spdmatrixcholeskyinverse(ref a,n,isupper,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a symmetric positive definite matrix.
 
         Given an upper or lower triangle of a symmetric positive definite matrix,
         the algorithm generates matrix A^-1 and saves the upper or lower triangle
         depending on the input.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+          ! algorithm  -  it  has  lots  of  internal synchronization points which
+          ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+          ! problems (N=thousands) can be efficiently parallelized.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrix to be inverted (upper or lower triangle).
@@ -26549,8 +37287,51 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_spdmatrixinverse(ref double[,] a,
+            int n,
+            bool isupper,
+            ref int info,
+            matinvreport rep)
+        {
+            spdmatrixinverse(ref a,n,isupper,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a Hermitian positive definite matrix which is given
         by Cholesky decomposition.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+          ! algorithm  -  it  has  lots  of  internal synchronization points which
+          ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+          ! problems (N=thousands) can be efficiently parallelized.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   Cholesky decomposition of the matrix to be inverted:
@@ -26646,12 +37427,55 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_hpdmatrixcholeskyinverse(ref complex[,] a,
+            int n,
+            bool isupper,
+            ref int info,
+            matinvreport rep)
+        {
+            hpdmatrixcholeskyinverse(ref a,n,isupper,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Inversion of a Hermitian positive definite matrix.
 
         Given an upper or lower triangle of a Hermitian positive definite matrix,
         the algorithm generates matrix A^-1 and saves the upper or lower triangle
         depending on the input.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of  this  function.  However,  Cholesky  inversion  is  a  "difficult"
+          ! algorithm  -  it  has  lots  of  internal synchronization points which
+          ! prevents efficient  parallelization  of  algorithm.  Only  very  large
+          ! problems (N=thousands) can be efficiently parallelized.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+          
         Input parameters:
             A       -   matrix to be inverted (upper or lower triangle).
                         Array with elements [0..N-1,0..N-1].
@@ -26704,6 +37528,19 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_hpdmatrixinverse(ref complex[,] a,
+            int n,
+            bool isupper,
+            ref int info,
+            matinvreport rep)
+        {
+            hpdmatrixinverse(ref a,n,isupper,ref info,rep);
+        }
+
+
+        /*************************************************************************
         Triangular matrix inverse (real)
 
         The subroutine inverts the following types of matrices:
@@ -26720,6 +37557,42 @@ public partial class alglib
         If  the matrix  has a unit diagonal, the inverse matrix also  has  a  unit
         diagonal, and the diagonal elements are not passed to the algorithm.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that triangular inverse is harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+          
         Input parameters:
             A       -   matrix, array[0..N-1, 0..N-1].
             N       -   size of matrix A (optional) :
@@ -26751,6 +37624,7 @@ public partial class alglib
             int i = 0;
             int j = 0;
             double[] tmp = new double[0];
+            apserv.sinteger sinfo = new apserv.sinteger();
 
             info = 0;
 
@@ -26758,7 +37632,6 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixTRInverse: cols(A)<N!");
             alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixTRInverse: rows(A)<N!");
             alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper), "RMatrixTRInverse: A contains infinite or NaN values!");
-            info = 1;
             
             //
             // calculate condition numbers
@@ -26784,7 +37657,23 @@ public partial class alglib
             // Invert
             //
             tmp = new double[n];
-            rmatrixtrinverserec(ref a, 0, n, isupper, isunit, ref tmp, ref info, rep);
+            sinfo.val = 1;
+            rmatrixtrinverserec(a, 0, n, isupper, isunit, tmp, sinfo, rep);
+            info = sinfo.val;
+        }
+
+
+        /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_rmatrixtrinverse(ref double[,] a,
+            int n,
+            bool isupper,
+            bool isunit,
+            ref int info,
+            matinvreport rep)
+        {
+            rmatrixtrinverse(ref a,n,isupper,isunit,ref info,rep);
         }
 
 
@@ -26804,6 +37693,42 @@ public partial class alglib
 
         If  the matrix  has a unit diagonal, the inverse matrix also  has  a  unit
         diagonal, and the diagonal elements are not passed to the algorithm.
+
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes two  important  improvements  of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * multicore support
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
+          ! * about 2-3x faster than ALGLIB for C++ without MKL
+          ! * about 7-10x faster than "pure C#" edition of ALGLIB
+          ! Difference in performance will be more striking  on  newer  CPU's with
+          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
+          ! problem whose size is at least 128, with best  efficiency achieved for
+          ! N's larger than 512.
+          !
+          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
+          ! of this function. We should note that triangular inverse is harder  to
+          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
+          ! many internal synchronization points which can not be avoided. However
+          ! parallelism starts to be profitable starting  from  N=1024,  achieving
+          ! near-linear speedup for N=4096 or higher.
+          !
+          ! In order to use multicore features you have to:
+          ! * use commercial version of ALGLIB
+          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
+          !   multicore code will be used (for multicore support)
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         Input parameters:
             A       -   matrix, array[0..N-1, 0..N-1].
@@ -26874,7 +37799,231 @@ public partial class alglib
 
 
         /*************************************************************************
+        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
+        *************************************************************************/
+        public static void _pexec_cmatrixtrinverse(ref complex[,] a,
+            int n,
+            bool isupper,
+            bool isunit,
+            ref int info,
+            matinvreport rep)
+        {
+            cmatrixtrinverse(ref a,n,isupper,isunit,ref info,rep);
+        }
+
+
+        /*************************************************************************
+        Recursive subroutine for SPD inversion.
+
+        NOTE: this function expects that matris is strictly positive-definite.
+
+          -- ALGLIB routine --
+             10.02.2010
+             Bochkanov Sergey
+        *************************************************************************/
+        public static void spdmatrixcholeskyinverserec(ref double[,] a,
+            int offs,
+            int n,
+            bool isupper,
+            ref double[] tmp)
+        {
+            int i = 0;
+            int j = 0;
+            double v = 0;
+            int n1 = 0;
+            int n2 = 0;
+            apserv.sinteger sinfo2 = new apserv.sinteger();
+            matinvreport rep2 = new matinvreport();
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( n<1 )
+            {
+                return;
+            }
+            
+            //
+            // Base case
+            //
+            if( n<=ablas.ablasblocksize(a) )
+            {
+                sinfo2.val = 1;
+                rmatrixtrinverserec(a, offs, n, isupper, false, tmp, sinfo2, rep2);
+                alglib.ap.assert(sinfo2.val>0, "SPDMatrixCholeskyInverseRec: integrity check failed");
+                if( isupper )
+                {
+                    
+                    //
+                    // Compute the product U * U'.
+                    // NOTE: we never assume that diagonal of U is real
+                    //
+                    for(i=0; i<=n-1; i++)
+                    {
+                        if( i==0 )
+                        {
+                            
+                            //
+                            // 1x1 matrix
+                            //
+                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
+                        }
+                        else
+                        {
+                            
+                            //
+                            // (I+1)x(I+1) matrix,
+                            //
+                            // ( A11  A12 )   ( A11^H        )   ( A11*A11^H+A12*A12^H  A12*A22^H )
+                            // (          ) * (              ) = (                                )
+                            // (      A22 )   ( A12^H  A22^H )   ( A22*A12^H            A22*A22^H )
+                            //
+                            // A11 is IxI, A22 is 1x1.
+                            //
+                            i1_ = (offs) - (0);
+                            for(i_=0; i_<=i-1;i_++)
+                            {
+                                tmp[i_] = a[i_+i1_,offs+i];
+                            }
+                            for(j=0; j<=i-1; j++)
+                            {
+                                v = a[offs+j,offs+i];
+                                i1_ = (j) - (offs+j);
+                                for(i_=offs+j; i_<=offs+i-1;i_++)
+                                {
+                                    a[offs+j,i_] = a[offs+j,i_] + v*tmp[i_+i1_];
+                                }
+                            }
+                            v = a[offs+i,offs+i];
+                            for(i_=offs; i_<=offs+i-1;i_++)
+                            {
+                                a[i_,offs+i] = v*a[i_,offs+i];
+                            }
+                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
+                        }
+                    }
+                }
+                else
+                {
+                    
+                    //
+                    // Compute the product L' * L
+                    // NOTE: we never assume that diagonal of L is real
+                    //
+                    for(i=0; i<=n-1; i++)
+                    {
+                        if( i==0 )
+                        {
+                            
+                            //
+                            // 1x1 matrix
+                            //
+                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
+                        }
+                        else
+                        {
+                            
+                            //
+                            // (I+1)x(I+1) matrix,
+                            //
+                            // ( A11^H  A21^H )   ( A11      )   ( A11^H*A11+A21^H*A21  A21^H*A22 )
+                            // (              ) * (          ) = (                                )
+                            // (        A22^H )   ( A21  A22 )   ( A22^H*A21            A22^H*A22 )
+                            //
+                            // A11 is IxI, A22 is 1x1.
+                            //
+                            i1_ = (offs) - (0);
+                            for(i_=0; i_<=i-1;i_++)
+                            {
+                                tmp[i_] = a[offs+i,i_+i1_];
+                            }
+                            for(j=0; j<=i-1; j++)
+                            {
+                                v = a[offs+i,offs+j];
+                                i1_ = (0) - (offs);
+                                for(i_=offs; i_<=offs+j;i_++)
+                                {
+                                    a[offs+j,i_] = a[offs+j,i_] + v*tmp[i_+i1_];
+                                }
+                            }
+                            v = a[offs+i,offs+i];
+                            for(i_=offs; i_<=offs+i-1;i_++)
+                            {
+                                a[offs+i,i_] = v*a[offs+i,i_];
+                            }
+                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
+                        }
+                    }
+                }
+                return;
+            }
+            
+            //
+            // Recursive code: triangular factor inversion merged with
+            // UU' or L'L multiplication
+            //
+            ablas.ablassplitlength(a, n, ref n1, ref n2);
+            
+            //
+            // form off-diagonal block of trangular inverse
+            //
+            if( isupper )
+            {
+                for(i=0; i<=n1-1; i++)
+                {
+                    for(i_=offs+n1; i_<=offs+n-1;i_++)
+                    {
+                        a[offs+i,i_] = -1*a[offs+i,i_];
+                    }
+                }
+                ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 0, a, offs, offs+n1);
+                ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 0, a, offs, offs+n1);
+            }
+            else
+            {
+                for(i=0; i<=n2-1; i++)
+                {
+                    for(i_=offs; i_<=offs+n1-1;i_++)
+                    {
+                        a[offs+n1+i,i_] = -1*a[offs+n1+i,i_];
+                    }
+                }
+                ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 0, a, offs+n1, offs);
+                ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 0, a, offs+n1, offs);
+            }
+            
+            //
+            // invert first diagonal block
+            //
+            spdmatrixcholeskyinverserec(ref a, offs, n1, isupper, ref tmp);
+            
+            //
+            // update first diagonal block with off-diagonal block,
+            // update off-diagonal block
+            //
+            if( isupper )
+            {
+                ablas.rmatrixsyrk(n1, n2, 1.0, a, offs, offs+n1, 0, 1.0, a, offs, offs, isupper);
+                ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 1, a, offs, offs+n1);
+            }
+            else
+            {
+                ablas.rmatrixsyrk(n1, n2, 1.0, a, offs+n1, offs, 1, 1.0, a, offs, offs, isupper);
+                ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 1, a, offs+n1, offs);
+            }
+            
+            //
+            // invert second diagonal block
+            //
+            spdmatrixcholeskyinverserec(ref a, offs+n1, n2, isupper, ref tmp);
+        }
+
+
+        /*************************************************************************
         Triangular matrix inversion, recursive subroutine
+
+        NOTE: this function sets Info on failure, leaves it unchanged on success.
+
+        NOTE: only Tmp[Offs:Offs+N-1] is modified, other entries of the temporary array are not modified
 
           -- ALGLIB --
              05.02.2010, Bochkanov Sergey.
@@ -26882,13 +38031,13 @@ public partial class alglib
              Courant Institute, Argonne National Lab, and Rice University
              February 29, 1992.
         *************************************************************************/
-        private static void rmatrixtrinverserec(ref double[,] a,
+        private static void rmatrixtrinverserec(double[,] a,
             int offs,
             int n,
             bool isupper,
             bool isunit,
-            ref double[] tmp,
-            ref int info,
+            double[] tmp,
+            apserv.sinteger info,
             matinvreport rep)
         {
             int n1 = 0;
@@ -26898,11 +38047,10 @@ public partial class alglib
             double v = 0;
             double ajj = 0;
             int i_ = 0;
-            int i1_ = 0;
 
             if( n<1 )
             {
-                info = -1;
+                info.val = -1;
                 return;
             }
             
@@ -26923,7 +38071,7 @@ public partial class alglib
                         {
                             if( (double)(a[offs+j,offs+j])==(double)(0) )
                             {
-                                info = -3;
+                                info.val = -3;
                                 return;
                             }
                             a[offs+j,offs+j] = 1/a[offs+j,offs+j];
@@ -26939,20 +38087,18 @@ public partial class alglib
                         //
                         if( j>0 )
                         {
-                            i1_ = (offs+0) - (0);
-                            for(i_=0; i_<=j-1;i_++)
+                            for(i_=offs+0; i_<=offs+j-1;i_++)
                             {
-                                tmp[i_] = a[i_+i1_,offs+j];
+                                tmp[i_] = a[i_,offs+j];
                             }
                             for(i=0; i<=j-1; i++)
                             {
                                 if( i<j-1 )
                                 {
-                                    i1_ = (i+1)-(offs+i+1);
                                     v = 0.0;
                                     for(i_=offs+i+1; i_<=offs+j-1;i_++)
                                     {
-                                        v += a[offs+i,i_]*tmp[i_+i1_];
+                                        v += a[offs+i,i_]*tmp[i_];
                                     }
                                 }
                                 else
@@ -26961,11 +38107,11 @@ public partial class alglib
                                 }
                                 if( !isunit )
                                 {
-                                    a[offs+i,offs+j] = v+a[offs+i,offs+i]*tmp[i];
+                                    a[offs+i,offs+j] = v+a[offs+i,offs+i]*tmp[offs+i];
                                 }
                                 else
                                 {
-                                    a[offs+i,offs+j] = v+tmp[i];
+                                    a[offs+i,offs+j] = v+tmp[offs+i];
                                 }
                             }
                             for(i_=offs+0; i_<=offs+j-1;i_++)
@@ -26987,7 +38133,7 @@ public partial class alglib
                         {
                             if( (double)(a[offs+j,offs+j])==(double)(0) )
                             {
-                                info = -3;
+                                info.val = -3;
                                 return;
                             }
                             a[offs+j,offs+j] = 1/a[offs+j,offs+j];
@@ -27003,20 +38149,18 @@ public partial class alglib
                             //
                             // Compute elements j+1:n of j-th column.
                             //
-                            i1_ = (offs+j+1) - (j+1);
-                            for(i_=j+1; i_<=n-1;i_++)
+                            for(i_=offs+j+1; i_<=offs+n-1;i_++)
                             {
-                                tmp[i_] = a[i_+i1_,offs+j];
+                                tmp[i_] = a[i_,offs+j];
                             }
                             for(i=j+1; i<=n-1; i++)
                             {
                                 if( i>j+1 )
                                 {
-                                    i1_ = (j+1)-(offs+j+1);
                                     v = 0.0;
                                     for(i_=offs+j+1; i_<=offs+i-1;i_++)
                                     {
-                                        v += a[offs+i,i_]*tmp[i_+i1_];
+                                        v += a[offs+i,i_]*tmp[i_];
                                     }
                                 }
                                 else
@@ -27025,11 +38169,11 @@ public partial class alglib
                                 }
                                 if( !isunit )
                                 {
-                                    a[offs+i,offs+j] = v+a[offs+i,offs+i]*tmp[i];
+                                    a[offs+i,offs+j] = v+a[offs+i,offs+i]*tmp[offs+i];
                                 }
                                 else
                                 {
-                                    a[offs+i,offs+j] = v+tmp[i];
+                                    a[offs+i,offs+j] = v+tmp[offs+i];
                                 }
                             }
                             for(i_=offs+j+1; i_<=offs+n-1;i_++)
@@ -27057,8 +38201,9 @@ public partial class alglib
                             a[offs+i,i_] = -1*a[offs+i,i_];
                         }
                     }
-                    ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, isupper, isunit, 0, ref a, offs, offs+n1);
-                    ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, isunit, 0, ref a, offs, offs+n1);
+                    ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, isunit, 0, a, offs, offs+n1);
+                    ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, isupper, isunit, 0, a, offs, offs+n1);
+                    rmatrixtrinverserec(a, offs+n1, n2, isupper, isunit, tmp, info, rep);
                 }
                 else
                 {
@@ -27069,12 +38214,12 @@ public partial class alglib
                             a[offs+n1+i,i_] = -1*a[offs+n1+i,i_];
                         }
                     }
-                    ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, isupper, isunit, 0, ref a, offs+n1, offs);
-                    ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, isunit, 0, ref a, offs+n1, offs);
+                    ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, isunit, 0, a, offs+n1, offs);
+                    ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, isupper, isunit, 0, a, offs+n1, offs);
+                    rmatrixtrinverserec(a, offs+n1, n2, isupper, isunit, tmp, info, rep);
                 }
-                rmatrixtrinverserec(ref a, offs+n1, n2, isupper, isunit, ref tmp, ref info, rep);
             }
-            rmatrixtrinverserec(ref a, offs, n1, isupper, isunit, ref tmp, ref info, rep);
+            rmatrixtrinverserec(a, offs, n1, isupper, isunit, tmp, info, rep);
         }
 
 
@@ -27262,8 +38407,8 @@ public partial class alglib
                             a[offs+i,i_] = -1*a[offs+i,i_];
                         }
                     }
-                    ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, isupper, isunit, 0, ref a, offs, offs+n1);
-                    ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, isunit, 0, ref a, offs, offs+n1);
+                    ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, isupper, isunit, 0, a, offs, offs+n1);
+                    ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, isunit, 0, a, offs, offs+n1);
                 }
                 else
                 {
@@ -27274,8 +38419,8 @@ public partial class alglib
                             a[offs+n1+i,i_] = -1*a[offs+n1+i,i_];
                         }
                     }
-                    ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, isupper, isunit, 0, ref a, offs+n1, offs);
-                    ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, isunit, 0, ref a, offs+n1, offs);
+                    ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, isupper, isunit, 0, a, offs+n1, offs);
+                    ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, isunit, 0, a, offs+n1, offs);
                 }
                 cmatrixtrinverserec(ref a, offs+n1, n2, isupper, isunit, ref tmp, ref info, rep);
             }
@@ -27287,7 +38432,7 @@ public partial class alglib
             int offs,
             int n,
             ref double[] work,
-            ref int info,
+            apserv.sinteger info,
             matinvreport rep)
         {
             int i = 0;
@@ -27300,7 +38445,7 @@ public partial class alglib
 
             if( n<1 )
             {
-                info = -1;
+                info.val = -1;
                 return;
             }
             
@@ -27313,8 +38458,8 @@ public partial class alglib
                 //
                 // Form inv(U)
                 //
-                rmatrixtrinverserec(ref a, offs, n, true, false, ref work, ref info, rep);
-                if( info<=0 )
+                rmatrixtrinverserec(a, offs, n, true, false, work, info, rep);
+                if( info.val<=0 )
                 {
                     return;
                 }
@@ -27371,20 +38516,20 @@ public partial class alglib
             //
             // X := inv(U1)*U12*inv(U2)
             //
-            ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, true, false, 0, ref a, offs, offs+n1);
-            ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, true, false, 0, ref a, offs, offs+n1);
+            ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, true, false, 0, a, offs, offs+n1);
+            ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, true, false, 0, a, offs, offs+n1);
             
             //
             // Y := inv(L2)*L12*inv(L1)
             //
-            ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, false, true, 0, ref a, offs+n1, offs);
-            ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, false, true, 0, ref a, offs+n1, offs);
+            ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, false, true, 0, a, offs+n1, offs);
+            ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, false, true, 0, a, offs+n1, offs);
             
             //
             // W := inv(L1*U1)+X*Y
             //
-            rmatrixluinverserec(ref a, offs, n1, ref work, ref info, rep);
-            if( info<=0 )
+            rmatrixluinverserec(ref a, offs, n1, ref work, info, rep);
+            if( info.val<=0 )
             {
                 return;
             }
@@ -27394,7 +38539,7 @@ public partial class alglib
             // X := -X*inv(L2)
             // Y := -inv(U2)*Y
             //
-            ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, false, true, 0, ref a, offs, offs+n1);
+            ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, false, true, 0, a, offs, offs+n1);
             for(i=0; i<=n1-1; i++)
             {
                 for(i_=offs+n1; i_<=offs+n-1;i_++)
@@ -27402,7 +38547,7 @@ public partial class alglib
                     a[offs+i,i_] = -1*a[offs+i,i_];
                 }
             }
-            ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, true, false, 0, ref a, offs+n1, offs);
+            ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, true, false, 0, a, offs+n1, offs);
             for(i=0; i<=n2-1; i++)
             {
                 for(i_=offs; i_<=offs+n1-1;i_++)
@@ -27414,7 +38559,7 @@ public partial class alglib
             //
             // Z := inv(L2*U2)
             //
-            rmatrixluinverserec(ref a, offs+n1, n2, ref work, ref info, rep);
+            rmatrixluinverserec(ref a, offs+n1, n2, ref work, info, rep);
         }
 
 
@@ -27506,14 +38651,14 @@ public partial class alglib
             //
             // X := inv(U1)*U12*inv(U2)
             //
-            ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, true, false, 0, ref a, offs, offs+n1);
-            ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, true, false, 0, ref a, offs, offs+n1);
+            ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, true, false, 0, a, offs, offs+n1);
+            ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, true, false, 0, a, offs, offs+n1);
             
             //
             // Y := inv(L2)*L12*inv(L1)
             //
-            ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, false, true, 0, ref a, offs+n1, offs);
-            ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, false, true, 0, ref a, offs+n1, offs);
+            ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, false, true, 0, a, offs+n1, offs);
+            ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, false, true, 0, a, offs+n1, offs);
             
             //
             // W := inv(L1*U1)+X*Y
@@ -27523,13 +38668,13 @@ public partial class alglib
             {
                 return;
             }
-            ablas.cmatrixgemm(n1, n1, n2, 1.0, a, offs, offs+n1, 0, a, offs+n1, offs, 0, 1.0, ref a, offs, offs);
+            ablas.cmatrixgemm(n1, n1, n2, 1.0, a, offs, offs+n1, 0, a, offs+n1, offs, 0, 1.0, a, offs, offs);
             
             //
             // X := -X*inv(L2)
             // Y := -inv(U2)*Y
             //
-            ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, false, true, 0, ref a, offs, offs+n1);
+            ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, false, true, 0, a, offs, offs+n1);
             for(i=0; i<=n1-1; i++)
             {
                 for(i_=offs+n1; i_<=offs+n-1;i_++)
@@ -27537,7 +38682,7 @@ public partial class alglib
                     a[offs+i,i_] = -1*a[offs+i,i_];
                 }
             }
-            ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, true, false, 0, ref a, offs+n1, offs);
+            ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, true, false, 0, a, offs+n1, offs);
             for(i=0; i<=n2-1; i++)
             {
                 for(i_=offs; i_<=offs+n1-1;i_++)
@@ -27550,208 +38695,6 @@ public partial class alglib
             // Z := inv(L2*U2)
             //
             cmatrixluinverserec(ref a, offs+n1, n2, ref work, ref info, rep);
-        }
-
-
-        /*************************************************************************
-        Recursive subroutine for SPD inversion.
-
-          -- ALGLIB routine --
-             10.02.2010
-             Bochkanov Sergey
-        *************************************************************************/
-        private static void spdmatrixcholeskyinverserec(ref double[,] a,
-            int offs,
-            int n,
-            bool isupper,
-            ref double[] tmp)
-        {
-            int i = 0;
-            int j = 0;
-            double v = 0;
-            int n1 = 0;
-            int n2 = 0;
-            int info2 = 0;
-            matinvreport rep2 = new matinvreport();
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( n<1 )
-            {
-                return;
-            }
-            
-            //
-            // Base case
-            //
-            if( n<=ablas.ablasblocksize(a) )
-            {
-                rmatrixtrinverserec(ref a, offs, n, isupper, false, ref tmp, ref info2, rep2);
-                if( isupper )
-                {
-                    
-                    //
-                    // Compute the product U * U'.
-                    // NOTE: we never assume that diagonal of U is real
-                    //
-                    for(i=0; i<=n-1; i++)
-                    {
-                        if( i==0 )
-                        {
-                            
-                            //
-                            // 1x1 matrix
-                            //
-                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
-                        }
-                        else
-                        {
-                            
-                            //
-                            // (I+1)x(I+1) matrix,
-                            //
-                            // ( A11  A12 )   ( A11^H        )   ( A11*A11^H+A12*A12^H  A12*A22^H )
-                            // (          ) * (              ) = (                                )
-                            // (      A22 )   ( A12^H  A22^H )   ( A22*A12^H            A22*A22^H )
-                            //
-                            // A11 is IxI, A22 is 1x1.
-                            //
-                            i1_ = (offs) - (0);
-                            for(i_=0; i_<=i-1;i_++)
-                            {
-                                tmp[i_] = a[i_+i1_,offs+i];
-                            }
-                            for(j=0; j<=i-1; j++)
-                            {
-                                v = a[offs+j,offs+i];
-                                i1_ = (j) - (offs+j);
-                                for(i_=offs+j; i_<=offs+i-1;i_++)
-                                {
-                                    a[offs+j,i_] = a[offs+j,i_] + v*tmp[i_+i1_];
-                                }
-                            }
-                            v = a[offs+i,offs+i];
-                            for(i_=offs; i_<=offs+i-1;i_++)
-                            {
-                                a[i_,offs+i] = v*a[i_,offs+i];
-                            }
-                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
-                        }
-                    }
-                }
-                else
-                {
-                    
-                    //
-                    // Compute the product L' * L
-                    // NOTE: we never assume that diagonal of L is real
-                    //
-                    for(i=0; i<=n-1; i++)
-                    {
-                        if( i==0 )
-                        {
-                            
-                            //
-                            // 1x1 matrix
-                            //
-                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
-                        }
-                        else
-                        {
-                            
-                            //
-                            // (I+1)x(I+1) matrix,
-                            //
-                            // ( A11^H  A21^H )   ( A11      )   ( A11^H*A11+A21^H*A21  A21^H*A22 )
-                            // (              ) * (          ) = (                                )
-                            // (        A22^H )   ( A21  A22 )   ( A22^H*A21            A22^H*A22 )
-                            //
-                            // A11 is IxI, A22 is 1x1.
-                            //
-                            i1_ = (offs) - (0);
-                            for(i_=0; i_<=i-1;i_++)
-                            {
-                                tmp[i_] = a[offs+i,i_+i1_];
-                            }
-                            for(j=0; j<=i-1; j++)
-                            {
-                                v = a[offs+i,offs+j];
-                                i1_ = (0) - (offs);
-                                for(i_=offs; i_<=offs+j;i_++)
-                                {
-                                    a[offs+j,i_] = a[offs+j,i_] + v*tmp[i_+i1_];
-                                }
-                            }
-                            v = a[offs+i,offs+i];
-                            for(i_=offs; i_<=offs+i-1;i_++)
-                            {
-                                a[offs+i,i_] = v*a[offs+i,i_];
-                            }
-                            a[offs+i,offs+i] = math.sqr(a[offs+i,offs+i]);
-                        }
-                    }
-                }
-                return;
-            }
-            
-            //
-            // Recursive code: triangular factor inversion merged with
-            // UU' or L'L multiplication
-            //
-            ablas.ablassplitlength(a, n, ref n1, ref n2);
-            
-            //
-            // form off-diagonal block of trangular inverse
-            //
-            if( isupper )
-            {
-                for(i=0; i<=n1-1; i++)
-                {
-                    for(i_=offs+n1; i_<=offs+n-1;i_++)
-                    {
-                        a[offs+i,i_] = -1*a[offs+i,i_];
-                    }
-                }
-                ablas.rmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 0, ref a, offs, offs+n1);
-                ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 0, ref a, offs, offs+n1);
-            }
-            else
-            {
-                for(i=0; i<=n2-1; i++)
-                {
-                    for(i_=offs; i_<=offs+n1-1;i_++)
-                    {
-                        a[offs+n1+i,i_] = -1*a[offs+n1+i,i_];
-                    }
-                }
-                ablas.rmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 0, ref a, offs+n1, offs);
-                ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 0, ref a, offs+n1, offs);
-            }
-            
-            //
-            // invert first diagonal block
-            //
-            spdmatrixcholeskyinverserec(ref a, offs, n1, isupper, ref tmp);
-            
-            //
-            // update first diagonal block with off-diagonal block,
-            // update off-diagonal block
-            //
-            if( isupper )
-            {
-                ablas.rmatrixsyrk(n1, n2, 1.0, a, offs, offs+n1, 0, 1.0, ref a, offs, offs, isupper);
-                ablas.rmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 1, ref a, offs, offs+n1);
-            }
-            else
-            {
-                ablas.rmatrixsyrk(n1, n2, 1.0, a, offs+n1, offs, 1, 1.0, ref a, offs, offs, isupper);
-                ablas.rmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 1, ref a, offs+n1, offs);
-            }
-            
-            //
-            // invert second diagonal block
-            //
-            spdmatrixcholeskyinverserec(ref a, offs+n1, n2, isupper, ref tmp);
         }
 
 
@@ -27914,8 +38857,8 @@ public partial class alglib
                         a[offs+i,i_] = -1*a[offs+i,i_];
                     }
                 }
-                ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 0, ref a, offs, offs+n1);
-                ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 0, ref a, offs, offs+n1);
+                ablas.cmatrixlefttrsm(n1, n2, a, offs, offs, isupper, false, 0, a, offs, offs+n1);
+                ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 0, a, offs, offs+n1);
             }
             else
             {
@@ -27926,8 +38869,8 @@ public partial class alglib
                         a[offs+n1+i,i_] = -1*a[offs+n1+i,i_];
                     }
                 }
-                ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 0, ref a, offs+n1, offs);
-                ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 0, ref a, offs+n1, offs);
+                ablas.cmatrixrighttrsm(n2, n1, a, offs, offs, isupper, false, 0, a, offs+n1, offs);
+                ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 0, a, offs+n1, offs);
             }
             
             //
@@ -27941,2283 +38884,19 @@ public partial class alglib
             //
             if( isupper )
             {
-                ablas.cmatrixsyrk(n1, n2, 1.0, a, offs, offs+n1, 0, 1.0, ref a, offs, offs, isupper);
-                ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 2, ref a, offs, offs+n1);
+                ablas.cmatrixherk(n1, n2, 1.0, a, offs, offs+n1, 0, 1.0, a, offs, offs, isupper);
+                ablas.cmatrixrighttrsm(n1, n2, a, offs+n1, offs+n1, isupper, false, 2, a, offs, offs+n1);
             }
             else
             {
-                ablas.cmatrixsyrk(n1, n2, 1.0, a, offs+n1, offs, 2, 1.0, ref a, offs, offs, isupper);
-                ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 2, ref a, offs+n1, offs);
+                ablas.cmatrixherk(n1, n2, 1.0, a, offs+n1, offs, 2, 1.0, a, offs, offs, isupper);
+                ablas.cmatrixlefttrsm(n2, n1, a, offs+n1, offs+n1, isupper, false, 2, a, offs+n1, offs);
             }
             
             //
             // invert second diagonal block
             //
             hpdmatrixcholeskyinverserec(ref a, offs+n1, n2, isupper, ref tmp);
-        }
-
-
-    }
-    public class sparse
-    {
-        /*************************************************************************
-        Sparse matrix
-
-        You should use ALGLIB functions to work with sparse matrix.
-        Never try to access its fields directly!
-        *************************************************************************/
-        public class sparsematrix : apobject
-        {
-            public double[] vals;
-            public int[] idx;
-            public int[] ridx;
-            public int[] didx;
-            public int[] uidx;
-            public int matrixtype;
-            public int m;
-            public int n;
-            public int nfree;
-            public int ninitialized;
-            public sparsematrix()
-            {
-                init();
-            }
-            public override void init()
-            {
-                vals = new double[0];
-                idx = new int[0];
-                ridx = new int[0];
-                didx = new int[0];
-                uidx = new int[0];
-            }
-            public override alglib.apobject make_copy()
-            {
-                sparsematrix _result = new sparsematrix();
-                _result.vals = (double[])vals.Clone();
-                _result.idx = (int[])idx.Clone();
-                _result.ridx = (int[])ridx.Clone();
-                _result.didx = (int[])didx.Clone();
-                _result.uidx = (int[])uidx.Clone();
-                _result.matrixtype = matrixtype;
-                _result.m = m;
-                _result.n = n;
-                _result.nfree = nfree;
-                _result.ninitialized = ninitialized;
-                return _result;
-            }
-        };
-
-
-
-
-        public const double desiredloadfactor = 0.66;
-        public const double maxloadfactor = 0.75;
-        public const double growfactor = 2.00;
-        public const int additional = 10;
-        public const int linalgswitch = 16;
-
-
-        /*************************************************************************
-        This function creates sparse matrix in a Hash-Table format.
-
-        This function creates Hast-Table matrix, which can be  converted  to  CRS
-        format after its initialization is over. Typical  usage  scenario  for  a
-        sparse matrix is:
-        1. creation in a Hash-Table format
-        2. insertion of the matrix elements
-        3. conversion to the CRS representation
-        4. matrix is passed to some linear algebra algorithm
-
-        Some  information  about  different matrix formats can be found below, in
-        the "NOTES" section.
-
-        INPUT PARAMETERS
-            M           -   number of rows in a matrix, M>=1
-            N           -   number of columns in a matrix, N>=1
-            K           -   K>=0, expected number of non-zero elements in a matrix.
-                            K can be inexact approximation, can be less than actual
-                            number  of  elements  (table will grow when needed) or 
-                            even zero).
-                            It is important to understand that although hash-table
-                            may grow automatically, it is better to  provide  good
-                            estimate of data size.
-
-        OUTPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table representation.
-                            All elements of the matrix are zero.
-
-        NOTE 1.
-
-        Sparse matrices can be stored using either Hash-Table  representation  or
-        Compressed  Row  Storage  representation. Hast-table is better suited for
-        querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
-        initialization), but it is inefficient when you want to make some  linear 
-        algebra operations.
-
-        From the other side, CRS is better suited for linear algebra  operations,
-        but initialization is less convenient - you have to tell row sizes at the
-        initialization,  and  you  can  fill matrix only row by row, from left to 
-        right. CRS is also very inefficient when you want to find matrix  element 
-        by its index.
-
-        Thus,  Hash-Table  representation   does   not   support  linear  algebra
-        operations, while CRS format does not support modification of the  table.
-        Tables below outline information about these two formats:
-
-            OPERATIONS WITH MATRIX      HASH        CRS
-            create                      +           +
-            read element                +           +
-            modify element              +           
-            add value to element        +
-            A*x  (dense vector)                     +
-            A'*x (dense vector)                     +
-            A*X  (dense matrix)                     +
-            A'*X (dense matrix)                     +
-
-        NOTE 2.
-
-        Hash-tables use memory inefficiently, and they have to keep  some  amount
-        of the "spare memory" in order to have good performance. Hash  table  for
-        matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
-        where C is a small constant, about 1.5-2 in magnitude.
-
-        CRS storage, from the other side, is  more  memory-efficient,  and  needs
-        just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
-        in a matrix.
-
-        When you convert from the Hash-Table to CRS  representation, all unneeded
-        memory will be freed.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsecreate(int m,
-            int n,
-            int k,
-            sparsematrix s)
-        {
-            int i = 0;
-            int sz = 0;
-
-            alglib.ap.assert(m>0, "SparseCreate: M<=0");
-            alglib.ap.assert(n>0, "SparseCreate: N<=0");
-            alglib.ap.assert(k>=0, "SparseCreate: K<0");
-            sz = (int)Math.Round(k/desiredloadfactor+additional);
-            s.matrixtype = 0;
-            s.m = m;
-            s.n = n;
-            s.nfree = sz;
-            s.vals = new double[sz];
-            s.idx = new int[2*sz];
-            for(i=0; i<=sz-1; i++)
-            {
-                s.idx[2*i] = -1;
-            }
-        }
-
-
-        /*************************************************************************
-        This function creates sparse matrix in a CRS format (expert function for
-        situations when you are running out of memory).
-
-        This function creates CRS matrix. Typical usage scenario for a CRS matrix 
-        is:
-        1. creation (you have to tell number of non-zero elements at each row  at 
-           this moment)
-        2. insertion of the matrix elements (row by row, from left to right) 
-        3. matrix is passed to some linear algebra algorithm
-
-        This function is a memory-efficient alternative to SparseCreate(), but it
-        is more complex because it requires you to know in advance how large your
-        matrix is. Some  information about  different matrix formats can be found 
-        below, in the "NOTES" section.
-
-        INPUT PARAMETERS
-            M           -   number of rows in a matrix, M>=1
-            N           -   number of columns in a matrix, N>=1
-            NER         -   number of elements at each row, array[M], NER[I]>=0
-
-        OUTPUT PARAMETERS
-            S           -   sparse M*N matrix in CRS representation.
-                            You have to fill ALL non-zero elements by calling
-                            SparseSet() BEFORE you try to use this matrix.
-
-        NOTE 1.
-
-        Sparse matrices can be stored using either Hash-Table  representation  or
-        Compressed  Row  Storage  representation. Hast-table is better suited for
-        querying   and   dynamic   operations   (thus,  it  is  used  for  matrix
-        initialization), but it is inefficient when you want to make some  linear 
-        algebra operations.
-
-        From the other side, CRS is better suited for linear algebra  operations,
-        but initialization is less convenient - you have to tell row sizes at the
-        initialization,  and  you  can  fill matrix only row by row, from left to 
-        right. CRS is also very inefficient when you want to find matrix  element 
-        by its index.
-
-        Thus,  Hash-Table  representation   does   not   support  linear  algebra
-        operations, while CRS format does not support modification of the  table.
-        Tables below outline information about these two formats:
-
-            OPERATIONS WITH MATRIX      HASH        CRS
-            create                      +           +
-            read element                +           +
-            modify element              +           
-            add value to element        +
-            A*x  (dense vector)                     +
-            A'*x (dense vector)                     +
-            A*X  (dense matrix)                     +
-            A'*X (dense matrix)                     +
-
-        NOTE 2.
-
-        Hash-tables use memory inefficiently, and they have to keep  some  amount
-        of the "spare memory" in order to have good performance. Hash  table  for
-        matrix with K non-zero elements will  need  C*K*(8+2*sizeof(int))  bytes,
-        where C is a small constant, about 1.5-2 in magnitude.
-
-        CRS storage, from the other side, is  more  memory-efficient,  and  needs
-        just K*(8+sizeof(int))+M*sizeof(int) bytes, where M is a number  of  rows
-        in a matrix.
-
-        When you convert from the Hash-Table to CRS  representation, all unneeded
-        memory will be freed.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsecreatecrs(int m,
-            int n,
-            int[] ner,
-            sparsematrix s)
-        {
-            int i = 0;
-            int noe = 0;
-
-            alglib.ap.assert(m>0, "SparseCreateCRS: M<=0");
-            alglib.ap.assert(n>0, "SparseCreateCRS: N<=0");
-            alglib.ap.assert(alglib.ap.len(ner)>=m, "SparseCreateCRS: Length(NER)<M");
-            noe = 0;
-            s.matrixtype = 1;
-            s.ninitialized = 0;
-            s.m = m;
-            s.n = n;
-            s.ridx = new int[s.m+1];
-            s.ridx[0] = 0;
-            for(i=0; i<=s.m-1; i++)
-            {
-                alglib.ap.assert(ner[i]>=0, "SparseCreateCRS: NER[] contains negative elements");
-                noe = noe+ner[i];
-                s.ridx[i+1] = s.ridx[i]+ner[i];
-            }
-            s.vals = new double[noe];
-            s.idx = new int[noe];
-            if( noe==0 )
-            {
-                sparseinitduidx(s);
-            }
-        }
-
-
-        /*************************************************************************
-        This function copies S0 to S1.
-
-        NOTE:  this  function  does  not verify its arguments, it just copies all
-        fields of the structure.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsecopy(sparsematrix s0,
-            sparsematrix s1)
-        {
-            int l = 0;
-            int i = 0;
-
-            s1.matrixtype = s0.matrixtype;
-            s1.m = s0.m;
-            s1.n = s0.n;
-            s1.nfree = s0.nfree;
-            s1.ninitialized = s0.ninitialized;
-            
-            //
-            // Initialization for arrays
-            //
-            l = alglib.ap.len(s0.vals);
-            s1.vals = new double[l];
-            for(i=0; i<=l-1; i++)
-            {
-                s1.vals[i] = s0.vals[i];
-            }
-            l = alglib.ap.len(s0.ridx);
-            s1.ridx = new int[l];
-            for(i=0; i<=l-1; i++)
-            {
-                s1.ridx[i] = s0.ridx[i];
-            }
-            l = alglib.ap.len(s0.idx);
-            s1.idx = new int[l];
-            for(i=0; i<=l-1; i++)
-            {
-                s1.idx[i] = s0.idx[i];
-            }
-            
-            //
-            // Initalization for CRS-parameters
-            //
-            l = alglib.ap.len(s0.uidx);
-            s1.uidx = new int[l];
-            for(i=0; i<=l-1; i++)
-            {
-                s1.uidx[i] = s0.uidx[i];
-            }
-            l = alglib.ap.len(s0.didx);
-            s1.didx = new int[l];
-            for(i=0; i<=l-1; i++)
-            {
-                s1.didx[i] = s0.didx[i];
-            }
-        }
-
-
-        /*************************************************************************
-        This function adds value to S[i,j] - element of the sparse matrix. Matrix
-        must be in a Hash-Table mode.
-
-        In case S[i,j] already exists in the table, V i added to  its  value.  In
-        case  S[i,j]  is  non-existent,  it  is  inserted  in  the  table.  Table
-        automatically grows when necessary.
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table representation.
-                            Exception will be thrown for CRS matrix.
-            I           -   row index of the element to modify, 0<=I<M
-            J           -   column index of the element to modify, 0<=J<N
-            V           -   value to add, must be finite number
-
-        OUTPUT PARAMETERS
-            S           -   modified matrix
-            
-        NOTE 1:  when  S[i,j]  is exactly zero after modification, it is  deleted
-        from the table.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparseadd(sparsematrix s,
-            int i,
-            int j,
-            double v)
-        {
-            int hashcode = 0;
-            int tcode = 0;
-            int k = 0;
-
-            alglib.ap.assert(s.matrixtype==0, "SparseAdd: matrix must be in the Hash-Table mode to do this operation");
-            alglib.ap.assert(i>=0, "SparseAdd: I<0");
-            alglib.ap.assert(i<s.m, "SparseAdd: I>=M");
-            alglib.ap.assert(j>=0, "SparseAdd: J<0");
-            alglib.ap.assert(j<s.n, "SparseAdd: J>=N");
-            alglib.ap.assert(math.isfinite(v), "SparseAdd: V is not finite number");
-            if( (double)(v)==(double)(0) )
-            {
-                return;
-            }
-            tcode = -1;
-            k = alglib.ap.len(s.vals);
-            if( (double)((1-maxloadfactor)*k)>=(double)(s.nfree) )
-            {
-                sparseresizematrix(s);
-                k = alglib.ap.len(s.vals);
-            }
-            hashcode = hash(i, j, k);
-            while( true )
-            {
-                if( s.idx[2*hashcode]==-1 )
-                {
-                    if( tcode!=-1 )
-                    {
-                        hashcode = tcode;
-                    }
-                    s.vals[hashcode] = v;
-                    s.idx[2*hashcode] = i;
-                    s.idx[2*hashcode+1] = j;
-                    if( tcode==-1 )
-                    {
-                        s.nfree = s.nfree-1;
-                    }
-                    return;
-                }
-                else
-                {
-                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
-                    {
-                        s.vals[hashcode] = s.vals[hashcode]+v;
-                        if( (double)(s.vals[hashcode])==(double)(0) )
-                        {
-                            s.idx[2*hashcode] = -2;
-                        }
-                        return;
-                    }
-                    
-                    //
-                    // Is it deleted element?
-                    //
-                    if( tcode==-1 && s.idx[2*hashcode]==-2 )
-                    {
-                        tcode = hashcode;
-                    }
-                    
-                    //
-                    // Next step
-                    //
-                    hashcode = (hashcode+1)%k;
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function modifies S[i,j] - element of the sparse matrix.
-
-        For Hash-based storage format:
-        * new value can be zero or non-zero.  In case new value of S[i,j] is zero,
-          this element is deleted from the table.
-        * this  function  has  no  effect when called with zero V for non-existent
-          element.
-
-        For CRS-bases storage format:
-        * new value MUST be non-zero. Exception will be thrown for zero V.
-        * elements must be initialized in correct order -  from top row to bottom,
-          within row - from left to right.
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table or CRS representation.
-            I           -   row index of the element to modify, 0<=I<M
-            J           -   column index of the element to modify, 0<=J<N
-            V           -   value to set, must be finite number, can be zero
-
-        OUTPUT PARAMETERS
-            S           -   modified matrix
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparseset(sparsematrix s,
-            int i,
-            int j,
-            double v)
-        {
-            int hashcode = 0;
-            int tcode = 0;
-            int k = 0;
-
-            alglib.ap.assert(i>=0, "SparseSet: I<0");
-            alglib.ap.assert(i<s.m, "SparseSet: I>=M");
-            alglib.ap.assert(j>=0, "SparseSet: J<0");
-            alglib.ap.assert(j<s.n, "SparseSet: J>=N");
-            alglib.ap.assert(math.isfinite(v), "SparseSet: V is not finite number");
-            
-            //
-            // Hash-table matrix
-            //
-            if( s.matrixtype==0 )
-            {
-                tcode = -1;
-                k = alglib.ap.len(s.vals);
-                if( (double)((1-maxloadfactor)*k)>=(double)(s.nfree) )
-                {
-                    sparseresizematrix(s);
-                    k = alglib.ap.len(s.vals);
-                }
-                hashcode = hash(i, j, k);
-                while( true )
-                {
-                    if( s.idx[2*hashcode]==-1 )
-                    {
-                        if( (double)(v)!=(double)(0) )
-                        {
-                            if( tcode!=-1 )
-                            {
-                                hashcode = tcode;
-                            }
-                            s.vals[hashcode] = v;
-                            s.idx[2*hashcode] = i;
-                            s.idx[2*hashcode+1] = j;
-                            if( tcode==-1 )
-                            {
-                                s.nfree = s.nfree-1;
-                            }
-                        }
-                        return;
-                    }
-                    else
-                    {
-                        if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
-                        {
-                            if( (double)(v)==(double)(0) )
-                            {
-                                s.idx[2*hashcode] = -2;
-                            }
-                            else
-                            {
-                                s.vals[hashcode] = v;
-                            }
-                            return;
-                        }
-                        if( tcode==-1 && s.idx[2*hashcode]==-2 )
-                        {
-                            tcode = hashcode;
-                        }
-                        
-                        //
-                        // Next step
-                        //
-                        hashcode = (hashcode+1)%k;
-                    }
-                }
-            }
-            
-            //
-            // CRS matrix
-            //
-            if( s.matrixtype==1 )
-            {
-                alglib.ap.assert((double)(v)!=(double)(0), "SparseSet: CRS format does not allow you to write zero elements");
-                alglib.ap.assert(s.ridx[i]<=s.ninitialized, "SparseSet: too few initialized elements at some row (you have promised more when called SparceCreateCRS)");
-                alglib.ap.assert(s.ridx[i+1]>s.ninitialized, "SparseSet: too many initialized elements at some row (you have promised less when called SparceCreateCRS)");
-                alglib.ap.assert(s.ninitialized==s.ridx[i] || s.idx[s.ninitialized-1]<j, "SparseSet: incorrect column order (you must fill every row from left to right)");
-                s.vals[s.ninitialized] = v;
-                s.idx[s.ninitialized] = j;
-                s.ninitialized = s.ninitialized+1;
-                
-                //
-                // If matrix has been created then
-                // initiale 'S.UIdx' and 'S.DIdx'
-                //
-                if( s.ninitialized==s.ridx[s.m] )
-                {
-                    sparseinitduidx(s);
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function returns S[i,j] - element of the sparse matrix.  Matrix  can
-        be in any mode (Hash-Table or CRS), but this function is  less  efficient
-        for CRS matrices.  Hash-Table  matrices can  find element  in O(1)  time, 
-        while  CRS  matrices  need O(log(RS)) time, where RS is an number of non-
-        zero elements in a row.
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table representation.
-                            Exception will be thrown for CRS matrix.
-            I           -   row index of the element to modify, 0<=I<M
-            J           -   column index of the element to modify, 0<=J<N
-
-        RESULT
-            value of S[I,J] or zero (in case no element with such index is found)
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static double sparseget(sparsematrix s,
-            int i,
-            int j)
-        {
-            double result = 0;
-            int hashcode = 0;
-            int k = 0;
-            int k0 = 0;
-            int k1 = 0;
-
-            alglib.ap.assert(i>=0, "SparseGet: I<0");
-            alglib.ap.assert(i<s.m, "SparseGet: I>=M");
-            alglib.ap.assert(j>=0, "SparseGet: J<0");
-            alglib.ap.assert(j<s.n, "SparseGet: J>=N");
-            k = alglib.ap.len(s.vals);
-            result = 0;
-            if( s.matrixtype==0 )
-            {
-                hashcode = hash(i, j, k);
-                while( true )
-                {
-                    if( s.idx[2*hashcode]==-1 )
-                    {
-                        return result;
-                    }
-                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
-                    {
-                        result = s.vals[hashcode];
-                        return result;
-                    }
-                    hashcode = (hashcode+1)%k;
-                }
-            }
-            if( s.matrixtype==1 )
-            {
-                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseGet: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-                k0 = s.ridx[i];
-                k1 = s.ridx[i+1]-1;
-                while( k0<=k1 )
-                {
-                    k = (k0+k1)/2;
-                    if( s.idx[k]==j )
-                    {
-                        result = s.vals[k];
-                        return result;
-                    }
-                    if( s.idx[k]<j )
-                    {
-                        k0 = k+1;
-                    }
-                    else
-                    {
-                        k1 = k-1;
-                    }
-                }
-                return result;
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function returns I-th diagonal element of the sparse matrix.
-
-        Matrix can be in any mode (Hash-Table or CRS storage), but this  function
-        is most efficient for CRS matrices - it requires less than 50 CPU  cycles
-        to extract diagonal element. For Hash-Table matrices we still  have  O(1)
-        query time, but function is many times slower.
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table representation.
-                            Exception will be thrown for CRS matrix.
-            I           -   index of the element to modify, 0<=I<min(M,N)
-
-        RESULT
-            value of S[I,I] or zero (in case no element with such index is found)
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static double sparsegetdiagonal(sparsematrix s,
-            int i)
-        {
-            double result = 0;
-
-            alglib.ap.assert(i>=0, "SparseGetDiagonal: I<0");
-            alglib.ap.assert(i<s.m, "SparseGetDiagonal: I>=M");
-            alglib.ap.assert(i<s.n, "SparseGetDiagonal: I>=N");
-            result = 0;
-            if( s.matrixtype==0 )
-            {
-                result = sparseget(s, i, i);
-                return result;
-            }
-            if( s.matrixtype==1 )
-            {
-                if( s.didx[i]!=s.uidx[i] )
-                {
-                    result = s.vals[s.didx[i]];
-                }
-                return result;
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function converts matrix to CRS format.
-
-        Some  algorithms  (linear  algebra ones, for example) require matrices in
-        CRS format.
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in any format
-
-        OUTPUT PARAMETERS
-            S           -   matrix in CRS format
-            
-        NOTE:  this  function  has  no  effect  when  called with matrix which is 
-        already in CRS mode.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparseconverttocrs(sparsematrix s)
-        {
-            int i = 0;
-            double[] tvals = new double[0];
-            int[] tidx = new int[0];
-            int[] temp = new int[0];
-            int nonne = 0;
-            int k = 0;
-
-            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseConvertToCRS: invalid matrix type");
-            if( s.matrixtype==1 )
-            {
-                return;
-            }
-            s.matrixtype = 1;
-            nonne = 0;
-            k = alglib.ap.len(s.vals);
-            alglib.ap.swap(ref s.vals, ref tvals);
-            alglib.ap.swap(ref s.idx, ref tidx);
-            s.ridx = new int[s.m+1];
-            for(i=0; i<=s.m; i++)
-            {
-                s.ridx[i] = 0;
-            }
-            temp = new int[s.m];
-            for(i=0; i<=s.m-1; i++)
-            {
-                temp[i] = 0;
-            }
-            
-            //
-            // Number of elements per row
-            //
-            for(i=0; i<=k-1; i++)
-            {
-                if( tidx[2*i]>=0 )
-                {
-                    s.ridx[tidx[2*i]+1] = s.ridx[tidx[2*i]+1]+1;
-                    nonne = nonne+1;
-                }
-            }
-            
-            //
-            // Fill RIdx (offsets of rows)
-            //
-            for(i=0; i<=s.m-1; i++)
-            {
-                s.ridx[i+1] = s.ridx[i+1]+s.ridx[i];
-            }
-            
-            //
-            // Allocate memory
-            //
-            s.vals = new double[nonne];
-            s.idx = new int[nonne];
-            for(i=0; i<=k-1; i++)
-            {
-                if( tidx[2*i]>=0 )
-                {
-                    s.vals[s.ridx[tidx[2*i]]+temp[tidx[2*i]]] = tvals[i];
-                    s.idx[s.ridx[tidx[2*i]]+temp[tidx[2*i]]] = tidx[2*i+1];
-                    temp[tidx[2*i]] = temp[tidx[2*i]]+1;
-                }
-            }
-            
-            //
-            // Set NInitialized
-            //
-            s.ninitialized = s.ridx[s.m];
-            
-            //
-            // Sorting of elements
-            //
-            for(i=0; i<=s.m-1; i++)
-            {
-                tsort.tagsortmiddleir(ref s.idx, ref s.vals, s.ridx[i], s.ridx[i+1]-s.ridx[i]);
-            }
-            
-            //
-            // Initialization 'S.UIdx' and 'S.DIdx'
-            //
-            sparseinitduidx(s);
-        }
-
-
-        /*************************************************************************
-        This function calculates matrix-vector product  S*x.  Matrix  S  must  be
-        stored in CRS format (exception will be thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            X           -   array[N], input vector. For  performance  reasons  we 
-                            make only quick checks - we check that array size  is
-                            at least N, but we do not check for NAN's or INF's.
-            Y           -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            Y           -   array[M], S*x
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsemv(sparsematrix s,
-            double[] x,
-            ref double[] y)
-        {
-            double tval = 0;
-            int i = 0;
-            int j = 0;
-            int lt = 0;
-            int rt = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseMV: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseMV: length(X)<N");
-            apserv.rvectorsetlengthatleast(ref y, s.m);
-            for(i=0; i<=s.m-1; i++)
-            {
-                tval = 0;
-                lt = s.ridx[i];
-                rt = s.ridx[i+1];
-                for(j=lt; j<=rt-1; j++)
-                {
-                    tval = tval+x[s.idx[j]]*s.vals[j];
-                }
-                y[i] = tval;
-            }
-        }
-
-
-        /*************************************************************************
-        This function calculates matrix-vector product  S^T*x. Matrix S  must  be
-        stored in CRS format (exception will be thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            X           -   array[M], input vector. For  performance  reasons  we 
-                            make only quick checks - we check that array size  is
-                            at least M, but we do not check for NAN's or INF's.
-            Y           -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            Y           -   array[N], S^T*x
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsemtv(sparsematrix s,
-            double[] x,
-            ref double[] y)
-        {
-            int i = 0;
-            int j = 0;
-            int lt = 0;
-            int rt = 0;
-            int ct = 0;
-            double v = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseMTV: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMTV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(alglib.ap.len(x)>=s.m, "SparseMTV: Length(X)<M");
-            apserv.rvectorsetlengthatleast(ref y, s.n);
-            for(i=0; i<=s.n-1; i++)
-            {
-                y[i] = 0;
-            }
-            for(i=0; i<=s.m-1; i++)
-            {
-                lt = s.ridx[i];
-                rt = s.ridx[i+1];
-                v = x[i];
-                for(j=lt; j<=rt-1; j++)
-                {
-                    ct = s.idx[j];
-                    y[ct] = y[ct]+v*s.vals[j];
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function simultaneously calculates two matrix-vector products:
-            S*x and S^T*x.
-        S must be square (non-rectangular) matrix stored in CRS format (exception  
-        will be thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse N*N matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            X           -   array[N], input vector. For  performance  reasons  we 
-                            make only quick checks - we check that array size  is
-                            at least N, but we do not check for NAN's or INF's.
-            Y0          -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            Y1          -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            Y0          -   array[N], S*x
-            Y1          -   array[N], S^T*x
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function. It also throws exception when S is non-square.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsemv2(sparsematrix s,
-            double[] x,
-            ref double[] y0,
-            ref double[] y1)
-        {
-            int l = 0;
-            double tval = 0;
-            int i = 0;
-            int j = 0;
-            double vx = 0;
-            double vs = 0;
-            int vi = 0;
-            int j0 = 0;
-            int j1 = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseMV2: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(s.m==s.n, "SparseMV2: matrix is non-square");
-            l = alglib.ap.len(x);
-            alglib.ap.assert(l>=s.n, "SparseMV2: Length(X)<N");
-            apserv.rvectorsetlengthatleast(ref y0, l);
-            apserv.rvectorsetlengthatleast(ref y1, l);
-            for(i=0; i<=s.n-1; i++)
-            {
-                y1[i] = 0;
-            }
-            for(i=0; i<=s.m-1; i++)
-            {
-                tval = 0;
-                vx = x[i];
-                j0 = s.ridx[i];
-                j1 = s.ridx[i+1]-1;
-                for(j=j0; j<=j1; j++)
-                {
-                    vi = s.idx[j];
-                    vs = s.vals[j];
-                    tval = tval+x[vi]*vs;
-                    y1[vi] = y1[vi]+vx*vs;
-                }
-                y0[i] = tval;
-            }
-        }
-
-
-        /*************************************************************************
-        This function calculates matrix-vector product  S*x, when S is  symmetric
-        matrix.  Matrix  S  must  be stored in  CRS  format  (exception  will  be
-        thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse M*M matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            IsUpper     -   whether upper or lower triangle of S is given:
-                            * if upper triangle is given,  only   S[i,j] for j>=i
-                              are used, and lower triangle is ignored (it can  be
-                              empty - these elements are not referenced at all).
-                            * if lower triangle is given,  only   S[i,j] for j<=i
-                              are used, and upper triangle is ignored.
-            X           -   array[N], input vector. For  performance  reasons  we 
-                            make only quick checks - we check that array size  is
-                            at least N, but we do not check for NAN's or INF's.
-            Y           -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            Y           -   array[M], S*x
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsesmv(sparsematrix s,
-            bool isupper,
-            double[] x,
-            ref double[] y)
-        {
-            int i = 0;
-            int j = 0;
-            int id = 0;
-            int lt = 0;
-            int rt = 0;
-            double v = 0;
-            double vy = 0;
-            double vx = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseSMV: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseSMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(alglib.ap.len(x)>=s.n, "SparseSMV: length(X)<N");
-            alglib.ap.assert(s.m==s.n, "SparseSMV: non-square matrix");
-            apserv.rvectorsetlengthatleast(ref y, s.m);
-            for(i=0; i<=s.m-1; i++)
-            {
-                y[i] = 0;
-            }
-            for(i=0; i<=s.m-1; i++)
-            {
-                if( s.didx[i]!=s.uidx[i] )
-                {
-                    y[i] = y[i]+s.vals[s.didx[i]]*x[s.idx[s.didx[i]]];
-                }
-                if( isupper )
-                {
-                    lt = s.uidx[i];
-                    rt = s.ridx[i+1];
-                    vy = 0;
-                    vx = x[i];
-                    for(j=lt; j<=rt-1; j++)
-                    {
-                        id = s.idx[j];
-                        v = s.vals[j];
-                        vy = vy+x[id]*v;
-                        y[id] = y[id]+vx*v;
-                    }
-                    y[i] = y[i]+vy;
-                }
-                else
-                {
-                    lt = s.ridx[i];
-                    rt = s.didx[i];
-                    vy = 0;
-                    vx = x[i];
-                    for(j=lt; j<=rt-1; j++)
-                    {
-                        id = s.idx[j];
-                        v = s.vals[j];
-                        vy = vy+x[id]*v;
-                        y[id] = y[id]+vx*v;
-                    }
-                    y[i] = y[i]+vy;
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function calculates matrix-matrix product  S*A.  Matrix  S  must  be
-        stored in CRS format (exception will be thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            A           -   array[N][K], input dense matrix. For  performance reasons
-                            we make only quick checks - we check that array size  
-                            is at least N, but we do not check for NAN's or INF's.
-            K           -   number of columns of matrix (A).
-            B           -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            B           -   array[M][K], S*A
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsemm(sparsematrix s,
-            double[,] a,
-            int k,
-            ref double[,] b)
-        {
-            double tval = 0;
-            double v = 0;
-            int id = 0;
-            int i = 0;
-            int j = 0;
-            int k0 = 0;
-            int lt = 0;
-            int rt = 0;
-            int i_ = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseMV: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMV: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseMV: Rows(A)<N");
-            alglib.ap.assert(k>0, "SparseMV: K<=0");
-            apserv.rmatrixsetlengthatleast(ref b, s.m, k);
-            if( k<linalgswitch )
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        tval = 0;
-                        lt = s.ridx[i];
-                        rt = s.ridx[i+1];
-                        for(k0=lt; k0<=rt-1; k0++)
-                        {
-                            tval = tval+s.vals[k0]*a[s.idx[k0],j];
-                        }
-                        b[i,j] = tval;
-                    }
-                }
-            }
-            else
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        b[i,j] = 0;
-                    }
-                }
-                for(i=0; i<=s.m-1; i++)
-                {
-                    lt = s.ridx[i];
-                    rt = s.ridx[i+1];
-                    for(j=lt; j<=rt-1; j++)
-                    {
-                        id = s.idx[j];
-                        v = s.vals[j];
-                        for(i_=0; i_<=k-1;i_++)
-                        {
-                            b[i,i_] = b[i,i_] + v*a[id,i_];
-                        }
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function calculates matrix-matrix product  S^T*A. Matrix S  must  be
-        stored in CRS format (exception will be thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            A           -   array[M][K], input dense matrix. For performance reasons
-                            we make only quick checks - we check that array size  is
-                            at least M, but we do not check for NAN's or INF's.
-            K           -   number of columns of matrix (A).                    
-            B           -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            B           -   array[N][K], S^T*A
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsemtm(sparsematrix s,
-            double[,] a,
-            int k,
-            ref double[,] b)
-        {
-            int i = 0;
-            int j = 0;
-            int k0 = 0;
-            int lt = 0;
-            int rt = 0;
-            int ct = 0;
-            double v = 0;
-            int i_ = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseMTM: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMTM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(alglib.ap.rows(a)>=s.m, "SparseMTM: Rows(A)<M");
-            alglib.ap.assert(k>0, "SparseMTM: K<=0");
-            apserv.rmatrixsetlengthatleast(ref b, s.n, k);
-            for(i=0; i<=s.n-1; i++)
-            {
-                for(j=0; j<=k-1; j++)
-                {
-                    b[i,j] = 0;
-                }
-            }
-            if( k<linalgswitch )
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    lt = s.ridx[i];
-                    rt = s.ridx[i+1];
-                    for(k0=lt; k0<=rt-1; k0++)
-                    {
-                        v = s.vals[k0];
-                        ct = s.idx[k0];
-                        for(j=0; j<=k-1; j++)
-                        {
-                            b[ct,j] = b[ct,j]+v*a[i,j];
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    lt = s.ridx[i];
-                    rt = s.ridx[i+1];
-                    for(j=lt; j<=rt-1; j++)
-                    {
-                        v = s.vals[j];
-                        ct = s.idx[j];
-                        for(i_=0; i_<=k-1;i_++)
-                        {
-                            b[ct,i_] = b[ct,i_] + v*a[i,i_];
-                        }
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function simultaneously calculates two matrix-matrix products:
-            S*A and S^T*A.
-        S must be square (non-rectangular) matrix stored in CRS format (exception  
-        will be thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse N*N matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            A           -   array[N][K], input dense matrix. For performance reasons
-                            we make only quick checks - we check that array size  is
-                            at least N, but we do not check for NAN's or INF's.
-            K           -   number of columns of matrix (A).                    
-            B0          -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            B1          -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            B0          -   array[N][K], S*A
-            B1          -   array[N][K], S^T*A
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function. It also throws exception when S is non-square.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsemm2(sparsematrix s,
-            double[,] a,
-            int k,
-            ref double[,] b0,
-            ref double[,] b1)
-        {
-            int i = 0;
-            int j = 0;
-            int k0 = 0;
-            int lt = 0;
-            int rt = 0;
-            int ct = 0;
-            double v = 0;
-            double tval = 0;
-            int i_ = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseMM2: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseMM2: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(s.m==s.n, "SparseMM2: matrix is non-square");
-            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseMM2: Rows(A)<N");
-            alglib.ap.assert(k>0, "SparseMM2: K<=0");
-            apserv.rmatrixsetlengthatleast(ref b0, s.m, k);
-            apserv.rmatrixsetlengthatleast(ref b1, s.n, k);
-            for(i=0; i<=s.n-1; i++)
-            {
-                for(j=0; j<=k-1; j++)
-                {
-                    b1[i,j] = 0;
-                }
-            }
-            if( k<linalgswitch )
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        tval = 0;
-                        lt = s.ridx[i];
-                        rt = s.ridx[i+1];
-                        v = a[i,j];
-                        for(k0=lt; k0<=rt-1; k0++)
-                        {
-                            ct = s.idx[k0];
-                            b1[ct,j] = b1[ct,j]+s.vals[k0]*v;
-                            tval = tval+s.vals[k0]*a[ct,j];
-                        }
-                        b0[i,j] = tval;
-                    }
-                }
-            }
-            else
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        b0[i,j] = 0;
-                    }
-                }
-                for(i=0; i<=s.m-1; i++)
-                {
-                    lt = s.ridx[i];
-                    rt = s.ridx[i+1];
-                    for(j=lt; j<=rt-1; j++)
-                    {
-                        v = s.vals[j];
-                        ct = s.idx[j];
-                        for(i_=0; i_<=k-1;i_++)
-                        {
-                            b0[i,i_] = b0[i,i_] + v*a[ct,i_];
-                        }
-                        for(i_=0; i_<=k-1;i_++)
-                        {
-                            b1[ct,i_] = b1[ct,i_] + v*a[i,i_];
-                        }
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function calculates matrix-matrix product  S*A, when S  is  symmetric
-        matrix.  Matrix  S  must  be stored  in  CRS  format  (exception  will  be
-        thrown otherwise).
-
-        INPUT PARAMETERS
-            S           -   sparse M*M matrix in CRS format (you MUST convert  it
-                            to CRS before calling this function).
-            IsUpper     -   whether upper or lower triangle of S is given:
-                            * if upper triangle is given,  only   S[i,j] for j>=i
-                              are used, and lower triangle is ignored (it can  be
-                              empty - these elements are not referenced at all).
-                            * if lower triangle is given,  only   S[i,j] for j<=i
-                              are used, and upper triangle is ignored.
-            A           -   array[N][K], input dense matrix. For performance reasons
-                            we make only quick checks - we check that array size is
-                            at least N, but we do not check for NAN's or INF's.
-            K           -   number of columns of matrix (A).  
-            B           -   output buffer, possibly preallocated. In case  buffer
-                            size is too small to store  result,  this  buffer  is
-                            automatically resized.
-            
-        OUTPUT PARAMETERS
-            B           -   array[M][K], S*A
-            
-        NOTE: this function throws exception when called for non-CRS matrix.  You
-        must convert your matrix  with  SparseConvertToCRS()  before  using  this
-        function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsesmm(sparsematrix s,
-            bool isupper,
-            double[,] a,
-            int k,
-            ref double[,] b)
-        {
-            int i = 0;
-            int j = 0;
-            int k0 = 0;
-            int id = 0;
-            int lt = 0;
-            int rt = 0;
-            double v = 0;
-            double vb = 0;
-            double va = 0;
-            int i_ = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseSMM: incorrect matrix type (convert your matrix to CRS)");
-            alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseSMM: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-            alglib.ap.assert(alglib.ap.rows(a)>=s.n, "SparseSMM: Rows(X)<N");
-            alglib.ap.assert(s.m==s.n, "SparseSMM: matrix is non-square");
-            apserv.rmatrixsetlengthatleast(ref b, s.m, k);
-            for(i=0; i<=s.m-1; i++)
-            {
-                for(j=0; j<=k-1; j++)
-                {
-                    b[i,j] = 0;
-                }
-            }
-            if( k>linalgswitch )
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    for(j=0; j<=k-1; j++)
-                    {
-                        if( s.didx[i]!=s.uidx[i] )
-                        {
-                            id = s.didx[i];
-                            b[i,j] = b[i,j]+s.vals[id]*a[s.idx[id],j];
-                        }
-                        if( isupper )
-                        {
-                            lt = s.uidx[i];
-                            rt = s.ridx[i+1];
-                            vb = 0;
-                            va = a[i,j];
-                            for(k0=lt; k0<=rt-1; k0++)
-                            {
-                                id = s.idx[k0];
-                                v = s.vals[k0];
-                                vb = vb+a[id,j]*v;
-                                b[id,j] = b[id,j]+va*v;
-                            }
-                            b[i,j] = b[i,j]+vb;
-                        }
-                        else
-                        {
-                            lt = s.ridx[i];
-                            rt = s.didx[i];
-                            vb = 0;
-                            va = a[i,j];
-                            for(k0=lt; k0<=rt-1; k0++)
-                            {
-                                id = s.idx[k0];
-                                v = s.vals[k0];
-                                vb = vb+a[id,j]*v;
-                                b[id,j] = b[id,j]+va*v;
-                            }
-                            b[i,j] = b[i,j]+vb;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for(i=0; i<=s.m-1; i++)
-                {
-                    if( s.didx[i]!=s.uidx[i] )
-                    {
-                        id = s.didx[i];
-                        v = s.vals[id];
-                        for(i_=0; i_<=k-1;i_++)
-                        {
-                            b[i,i_] = b[i,i_] + v*a[s.idx[id],i_];
-                        }
-                    }
-                    if( isupper )
-                    {
-                        lt = s.uidx[i];
-                        rt = s.ridx[i+1];
-                        for(j=lt; j<=rt-1; j++)
-                        {
-                            id = s.idx[j];
-                            v = s.vals[j];
-                            for(i_=0; i_<=k-1;i_++)
-                            {
-                                b[i,i_] = b[i,i_] + v*a[id,i_];
-                            }
-                            for(i_=0; i_<=k-1;i_++)
-                            {
-                                b[id,i_] = b[id,i_] + v*a[i,i_];
-                            }
-                        }
-                    }
-                    else
-                    {
-                        lt = s.ridx[i];
-                        rt = s.didx[i];
-                        for(j=lt; j<=rt-1; j++)
-                        {
-                            id = s.idx[j];
-                            v = s.vals[j];
-                            for(i_=0; i_<=k-1;i_++)
-                            {
-                                b[i,i_] = b[i,i_] + v*a[id,i_];
-                            }
-                            for(i_=0; i_<=k-1;i_++)
-                            {
-                                b[id,i_] = b[id,i_] + v*a[i,i_];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This procedure resizes Hash-Table matrix. It can be called when you  have
-        deleted too many elements from the matrix, and you want to  free unneeded
-        memory.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparseresizematrix(sparsematrix s)
-        {
-            int k = 0;
-            int k1 = 0;
-            int i = 0;
-            double[] tvals = new double[0];
-            int[] tidx = new int[0];
-
-            alglib.ap.assert(s.matrixtype==0, "SparseResizeMatrix: incorrect matrix type");
-            
-            //
-            // Initialization for length and number of non-null elementd
-            //
-            k = alglib.ap.len(s.vals);
-            k1 = 0;
-            
-            //
-            // Calculating number of non-null elements
-            //
-            for(i=0; i<=k-1; i++)
-            {
-                if( s.idx[2*i]>=0 )
-                {
-                    k1 = k1+1;
-                }
-            }
-            
-            //
-            // Initialization value for free space
-            //
-            s.nfree = (int)Math.Round(k1/desiredloadfactor*growfactor+additional)-k1;
-            tvals = new double[s.nfree+k1];
-            tidx = new int[2*(s.nfree+k1)];
-            alglib.ap.swap(ref s.vals, ref tvals);
-            alglib.ap.swap(ref s.idx, ref tidx);
-            for(i=0; i<=s.nfree+k1-1; i++)
-            {
-                s.idx[2*i] = -1;
-            }
-            for(i=0; i<=k-1; i++)
-            {
-                if( tidx[2*i]>=0 )
-                {
-                    sparseset(s, tidx[2*i], tidx[2*i+1], tvals[i]);
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function return average length of chain at hash-table.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static double sparsegetaveragelengthofchain(sparsematrix s)
-        {
-            double result = 0;
-            int nchains = 0;
-            int talc = 0;
-            int l = 0;
-            int i = 0;
-            int ind0 = 0;
-            int ind1 = 0;
-            int hashcode = 0;
-
-            
-            //
-            // If matrix represent in CRS then return zero and exit
-            //
-            if( s.matrixtype==1 )
-            {
-                result = 0;
-                return result;
-            }
-            nchains = 0;
-            talc = 0;
-            l = alglib.ap.len(s.vals);
-            for(i=0; i<=l-1; i++)
-            {
-                ind0 = 2*i;
-                if( s.idx[ind0]!=-1 )
-                {
-                    nchains = nchains+1;
-                    hashcode = hash(s.idx[ind0], s.idx[ind0+1], l);
-                    while( true )
-                    {
-                        talc = talc+1;
-                        ind1 = 2*hashcode;
-                        if( s.idx[ind0]==s.idx[ind1] && s.idx[ind0+1]==s.idx[ind1+1] )
-                        {
-                            break;
-                        }
-                        hashcode = (hashcode+1)%l;
-                    }
-                }
-            }
-            if( nchains==0 )
-            {
-                result = 0;
-            }
-            else
-            {
-                result = (double)talc/(double)nchains;
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        This  function  is  used  to enumerate all elements of the sparse matrix.
-        Before  first  call  user  initializes  T0 and T1 counters by zero. These
-        counters are used to remember current position in a  matrix;  after  each
-        call they are updated by the function.
-
-        Subsequent calls to this function return non-zero elements of the  sparse
-        matrix, one by one. If you enumerate CRS matrix, matrix is traversed from
-        left to right, from top to bottom. In case you enumerate matrix stored as
-        Hash table, elements are returned in random order.
-
-        EXAMPLE
-            > T0=0
-            > T1=0
-            > while SparseEnumerate(S,T0,T1,I,J,V) do
-            >     ....do something with I,J,V
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table or CRS representation.
-            T0          -   internal counter
-            T1          -   internal counter
-            
-        OUTPUT PARAMETERS
-            T0          -   new value of the internal counter
-            T1          -   new value of the internal counter
-            I           -   row index of non-zero element, 0<=I<M.
-            J           -   column index of non-zero element, 0<=J<N
-            V           -   value of the T-th element
-            
-        RESULT
-            True in case of success (next non-zero element was retrieved)
-            False in case all non-zero elements were enumerated
-
-          -- ALGLIB PROJECT --
-             Copyright 14.03.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool sparseenumerate(sparsematrix s,
-            ref int t0,
-            ref int t1,
-            ref int i,
-            ref int j,
-            ref double v)
-        {
-            bool result = new bool();
-            int sz = 0;
-            int i0 = 0;
-
-            i = 0;
-            j = 0;
-            v = 0;
-
-            if( t0<0 || (s.matrixtype==1 && t1<0) )
-            {
-                result = false;
-                return result;
-            }
-            
-            //
-            // Hash-table matrix
-            //
-            if( s.matrixtype==0 )
-            {
-                sz = alglib.ap.len(s.vals);
-                for(i0=t0; i0<=sz-1; i0++)
-                {
-                    if( s.idx[2*i0]==-1 || s.idx[2*i0]==-2 )
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        i = s.idx[2*i0];
-                        j = s.idx[2*i0+1];
-                        v = s.vals[i0];
-                        t0 = i0+1;
-                        result = true;
-                        return result;
-                    }
-                }
-                t0 = 0;
-                result = false;
-                return result;
-            }
-            
-            //
-            // CRS matrix
-            //
-            if( s.matrixtype==1 && t0<s.ninitialized )
-            {
-                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseEnumerate: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-                while( t0>s.ridx[t1+1]-1 && t1<s.m )
-                {
-                    t1 = t1+1;
-                }
-                i = t1;
-                j = s.idx[t0];
-                v = s.vals[t0];
-                t0 = t0+1;
-                result = true;
-                return result;
-            }
-            t0 = 0;
-            t1 = 0;
-            result = false;
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function rewrites existing (non-zero) element. It  returns  True   if
-        element  exists  or  False,  when  it  is  called for non-existing  (zero)
-        element.
-
-        The purpose of this function is to provide convenient thread-safe  way  to
-        modify  sparse  matrix.  Such  modification  (already  existing element is
-        rewritten) is guaranteed to be thread-safe without any synchronization, as
-        long as different threads modify different elements.
-
-        INPUT PARAMETERS
-            S           -   sparse M*N matrix in Hash-Table or CRS representation.
-            I           -   row index of non-zero element to modify, 0<=I<M
-            J           -   column index of non-zero element to modify, 0<=J<N
-            V           -   value to rewrite, must be finite number
-
-        OUTPUT PARAMETERS
-            S           -   modified matrix
-        RESULT
-            True in case when element exists
-            False in case when element doesn't exist or it is zero
-            
-          -- ALGLIB PROJECT --
-             Copyright 14.03.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool sparserewriteexisting(sparsematrix s,
-            int i,
-            int j,
-            double v)
-        {
-            bool result = new bool();
-            int hashcode = 0;
-            int k = 0;
-            int k0 = 0;
-            int k1 = 0;
-
-            alglib.ap.assert(0<=i && i<s.m, "SparseRewriteExisting: invalid argument I(either I<0 or I>=S.M)");
-            alglib.ap.assert(0<=j && j<s.n, "SparseRewriteExisting: invalid argument J(either J<0 or J>=S.N)");
-            alglib.ap.assert(math.isfinite(v), "SparseRewriteExisting: invalid argument V(either V is infinite or V is NaN)");
-            result = false;
-            
-            //
-            // Hash-table matrix
-            //
-            if( s.matrixtype==0 )
-            {
-                k = alglib.ap.len(s.vals);
-                hashcode = hash(i, j, k);
-                while( true )
-                {
-                    if( s.idx[2*hashcode]==-1 )
-                    {
-                        return result;
-                    }
-                    if( s.idx[2*hashcode]==i && s.idx[2*hashcode+1]==j )
-                    {
-                        s.vals[hashcode] = v;
-                        result = true;
-                        return result;
-                    }
-                    hashcode = (hashcode+1)%k;
-                }
-            }
-            
-            //
-            // CRS matrix
-            //
-            if( s.matrixtype==1 )
-            {
-                alglib.ap.assert(s.ninitialized==s.ridx[s.m], "SparseRewriteExisting: some rows/elements of the CRS matrix were not initialized (you must initialize everything you promised to SparseCreateCRS)");
-                k0 = s.ridx[i];
-                k1 = s.ridx[i+1]-1;
-                while( k0<=k1 )
-                {
-                    k = (k0+k1)/2;
-                    if( s.idx[k]==j )
-                    {
-                        s.vals[k] = v;
-                        result = true;
-                        return result;
-                    }
-                    if( s.idx[k]<j )
-                    {
-                        k0 = k+1;
-                    }
-                    else
-                    {
-                        k1 = k-1;
-                    }
-                }
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function returns I-th row of the sparse matrix stored in CRS format.
-
-        NOTE: when  incorrect  I  (outside  of  [0,M-1]) or  matrix (non-CRS)  are
-              passed, this function throws exception.
-
-        INPUT PARAMETERS:
-            S           -   sparse M*N matrix in CRS format
-            I           -   row index, 0<=I<M
-            IRow        -   output buffer, can be  preallocated.  In  case  buffer
-                            size  is  too  small  to  store  I-th   row,   it   is
-                            automatically reallocated.
-         
-        OUTPUT PARAMETERS:
-            IRow        -   array[M], I-th row.
-
-
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsegetrow(sparsematrix s,
-            int i,
-            ref double[] irow)
-        {
-            int i0 = 0;
-
-            alglib.ap.assert(s.matrixtype==1, "SparseGetRow: S must be CRS-based matrix");
-            alglib.ap.assert(i>=0 && i<s.m, "SparseGetRow: I<0 or I>=M");
-            apserv.rvectorsetlengthatleast(ref irow, s.n);
-            for(i0=0; i0<=s.n-1; i0++)
-            {
-                irow[i0] = 0;
-            }
-            for(i0=s.ridx[i]; i0<=s.ridx[i+1]-1; i0++)
-            {
-                irow[s.idx[i0]] = s.vals[i0];
-            }
-        }
-
-
-        /*************************************************************************
-        This function performs in-place conversion from CRS format to  Hash  table
-        storage.
-
-        INPUT PARAMETERS
-            S           -   sparse matrix in CRS format.
-
-        OUTPUT PARAMETERS
-            S           -   sparse matrix in Hash table format.
-
-        NOTE:  this  function  has  no  effect  when  called with matrix which is 
-        already in Hash table mode.
-            
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparseconverttohash(sparsematrix s)
-        {
-            int[] tidx = new int[0];
-            int[] tridx = new int[0];
-            double[] tvals = new double[0];
-            int tn = 0;
-            int tm = 0;
-            int i = 0;
-            int j = 0;
-
-            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseConvertToHash: invalid matrix type");
-            if( s.matrixtype==0 )
-            {
-                return;
-            }
-            s.matrixtype = 0;
-            tm = s.m;
-            tn = s.n;
-            alglib.ap.swap(ref s.idx, ref tidx);
-            alglib.ap.swap(ref s.ridx, ref tridx);
-            alglib.ap.swap(ref s.vals, ref tvals);
-            
-            //
-            // Delete RIdx
-            //
-            s.ridx = new int[0];
-            sparsecreate(tm, tn, tridx[tm], s);
-            
-            //
-            // Fill the matrix
-            //
-            for(i=0; i<=tm-1; i++)
-            {
-                for(j=tridx[i]; j<=tridx[i+1]-1; j++)
-                {
-                    sparseset(s, i, tidx[j], tvals[j]);
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This  function  performs  out-of-place  conversion  to  Hash table storage
-        format. S0 is copied to S1 and converted on-the-fly.
-
-        INPUT PARAMETERS
-            S0          -   sparse matrix in any format.
-
-        OUTPUT PARAMETERS
-            S1          -   sparse matrix in Hash table format.
-
-        NOTE: if S0 is stored as Hash-table, it is just copied without conversion.
-
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsecopytohash(sparsematrix s0,
-            sparsematrix s1)
-        {
-            double val = 0;
-            int t0 = 0;
-            int t1 = 0;
-            int i = 0;
-            int j = 0;
-
-            alglib.ap.assert(s0.matrixtype==0 || s0.matrixtype==1, "SparseCopyToHash: invalid matrix type");
-            if( s0.matrixtype==0 )
-            {
-                sparsecopy(s0, s1);
-            }
-            else
-            {
-                t0 = 0;
-                t1 = 0;
-                sparsecreate(s0.m, s0.n, s0.ridx[s0.m], s1);
-                while( sparseenumerate(s0, ref t0, ref t1, ref i, ref j, ref val) )
-                {
-                    sparseset(s1, i, j, val);
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This  function  performs  out-of-place  conversion  to  CRS format.  S0 is
-        copied to S1 and converted on-the-fly.
-
-        INPUT PARAMETERS
-            S0          -   sparse matrix in any format.
-
-        OUTPUT PARAMETERS
-            S1          -   sparse matrix in CRS format.
-            
-        NOTE: if S0 is stored as CRS, it is just copied without conversion.
-
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsecopytocrs(sparsematrix s0,
-            sparsematrix s1)
-        {
-            int[] temp = new int[0];
-            int nonne = 0;
-            int i = 0;
-            int k = 0;
-
-            alglib.ap.assert(s0.matrixtype==0 || s0.matrixtype==1, "SparseCopyToCRS: invalid matrix type");
-            if( s0.matrixtype==1 )
-            {
-                sparsecopy(s0, s1);
-            }
-            else
-            {
-                
-                //
-                // Done like ConvertToCRS function
-                //
-                s1.matrixtype = 1;
-                s1.m = s0.m;
-                s1.n = s0.n;
-                s1.nfree = s0.nfree;
-                nonne = 0;
-                k = alglib.ap.len(s0.vals);
-                s1.ridx = new int[s1.m+1];
-                for(i=0; i<=s1.m; i++)
-                {
-                    s1.ridx[i] = 0;
-                }
-                temp = new int[s1.m];
-                for(i=0; i<=s1.m-1; i++)
-                {
-                    temp[i] = 0;
-                }
-                
-                //
-                // Number of elements per row
-                //
-                for(i=0; i<=k-1; i++)
-                {
-                    if( s0.idx[2*i]>=0 )
-                    {
-                        s1.ridx[s0.idx[2*i]+1] = s1.ridx[s0.idx[2*i]+1]+1;
-                        nonne = nonne+1;
-                    }
-                }
-                
-                //
-                // Fill RIdx (offsets of rows)
-                //
-                for(i=0; i<=s1.m-1; i++)
-                {
-                    s1.ridx[i+1] = s1.ridx[i+1]+s1.ridx[i];
-                }
-                
-                //
-                // Allocate memory
-                //
-                s1.vals = new double[nonne];
-                s1.idx = new int[nonne];
-                for(i=0; i<=k-1; i++)
-                {
-                    if( s0.idx[2*i]>=0 )
-                    {
-                        s1.vals[s1.ridx[s0.idx[2*i]]+temp[s0.idx[2*i]]] = s0.vals[i];
-                        s1.idx[s1.ridx[s0.idx[2*i]]+temp[s0.idx[2*i]]] = s0.idx[2*i+1];
-                        temp[s0.idx[2*i]] = temp[s0.idx[2*i]]+1;
-                    }
-                }
-                
-                //
-                // Set NInitialized
-                //
-                s1.ninitialized = s1.ridx[s1.m];
-                
-                //
-                // Sorting of elements
-                //
-                for(i=0; i<=s1.m-1; i++)
-                {
-                    tsort.tagsortmiddleir(ref s1.idx, ref s1.vals, s1.ridx[i], s1.ridx[i+1]-s1.ridx[i]);
-                }
-                
-                //
-                // Initialization 'S.UIdx' and 'S.DIdx'
-                //
-                sparseinitduidx(s1);
-            }
-        }
-
-
-        /*************************************************************************
-        This function returns type of the matrix storage format.
-
-        INPUT PARAMETERS:
-            S           -   sparse matrix.
-
-        RESULT:
-            sparse storage format used by matrix:
-                0   -   Hash-table
-                1   -   CRS-format
-
-        NOTE: future  versions  of  ALGLIB  may  include additional sparse storage
-              formats.
-
-            
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static int sparsegetmatrixtype(sparsematrix s)
-        {
-            int result = 0;
-
-            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseGetMatrixType: invalid matrix type");
-            result = s.matrixtype;
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function checks matrix storage format and returns True when matrix is
-        stored using Hash table representation.
-
-        INPUT PARAMETERS:
-            S   -   sparse matrix.
-
-        RESULT:
-            True if matrix type is Hash table
-            False if matrix type is not Hash table 
-            
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool sparseishash(sparsematrix s)
-        {
-            bool result = new bool();
-
-            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseIsHash: invalid matrix type");
-            result = s.matrixtype==0;
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function checks matrix storage format and returns True when matrix is
-        stored using CRS representation.
-
-        INPUT PARAMETERS:
-            S   -   sparse matrix.
-
-        RESULT:
-            True if matrix type is CRS
-            False if matrix type is not CRS
-            
-          -- ALGLIB PROJECT --
-             Copyright 20.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool sparseiscrs(sparsematrix s)
-        {
-            bool result = new bool();
-
-            alglib.ap.assert(s.matrixtype==0 || s.matrixtype==1, "SparseIsCRS: invalid matrix type");
-            result = s.matrixtype==1;
-            return result;
-        }
-
-
-        /*************************************************************************
-        The function frees all memory occupied by  sparse  matrix.  Sparse  matrix
-        structure becomes unusable after this call.
-
-        OUTPUT PARAMETERS
-            S   -   sparse matrix to delete
-            
-          -- ALGLIB PROJECT --
-             Copyright 24.07.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsefree(sparsematrix s)
-        {
-            s.matrixtype = -1;
-            s.m = 0;
-            s.n = 0;
-            s.nfree = 0;
-            s.ninitialized = 0;
-        }
-
-
-        /*************************************************************************
-        The function returns number of rows of a sparse matrix.
-
-        RESULT: number of rows of a sparse matrix.
-            
-          -- ALGLIB PROJECT --
-             Copyright 23.08.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static int sparsegetnrows(sparsematrix s)
-        {
-            int result = 0;
-
-            result = s.m;
-            return result;
-        }
-
-
-        /*************************************************************************
-        The function returns number of columns of a sparse matrix.
-
-        RESULT: number of columns of a sparse matrix.
-            
-          -- ALGLIB PROJECT --
-             Copyright 23.08.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static int sparsegetncols(sparsematrix s)
-        {
-            int result = 0;
-
-            result = s.n;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Procedure for initialization 'S.DIdx' and 'S.UIdx'
-
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        private static void sparseinitduidx(sparsematrix s)
-        {
-            int i = 0;
-            int j = 0;
-            int lt = 0;
-            int rt = 0;
-
-            s.didx = new int[s.m];
-            s.uidx = new int[s.m];
-            for(i=0; i<=s.m-1; i++)
-            {
-                s.uidx[i] = -1;
-                s.didx[i] = -1;
-                lt = s.ridx[i];
-                rt = s.ridx[i+1];
-                for(j=lt; j<=rt-1; j++)
-                {
-                    if( i<s.idx[j] && s.uidx[i]==-1 )
-                    {
-                        s.uidx[i] = j;
-                        break;
-                    }
-                    else
-                    {
-                        if( i==s.idx[j] )
-                        {
-                            s.didx[i] = j;
-                        }
-                    }
-                }
-                if( s.uidx[i]==-1 )
-                {
-                    s.uidx[i] = s.ridx[i+1];
-                }
-                if( s.didx[i]==-1 )
-                {
-                    s.didx[i] = s.uidx[i];
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This is hash function.
-
-          -- ALGLIB PROJECT --
-             Copyright 14.10.2011 by Bochkanov Sergey
-        *************************************************************************/
-        private static int hash(int i,
-            int j,
-            int tabsize)
-        {
-            int result = 0;
-            hqrnd.hqrndstate r = new hqrnd.hqrndstate();
-
-            hqrnd.hqrndseed(i, j, r);
-            result = hqrnd.hqrnduniformi(r, tabsize);
-            return result;
         }
 
 
@@ -30338,7 +39017,7 @@ public partial class alglib
             double sqrtscalea,
             int n,
             bool isupper,
-            ref double[] xb,
+            double[] xb,
             ref double[] tmp)
         {
             int i = 0;
@@ -32791,6 +41470,23 @@ public partial class alglib
         Subroutine performing the Schur decomposition of a general matrix by using
         the QR algorithm with multiple shifts.
 
+        COMMERCIAL EDITION OF ALGLIB:
+
+          ! Commercial version of ALGLIB includes one  important  improvement   of
+          ! this function, which can be used from C++ and C#:
+          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          !
+          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! worker threads) acceleration factor which depends on CPU  being  used,
+          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
+          ! comparison.
+          !
+          ! Multithreaded acceleration is NOT supported for this function.
+          !
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         The source matrix A is represented as S'*A*S = T, where S is an orthogonal
         matrix (Schur vectors), T - upper quasi-triangular matrix (with blocks of
         sizes 1x1 and 2x2 on the main diagonal).
@@ -32835,11 +41531,7 @@ public partial class alglib
             double[] tau = new double[0];
             double[] wi = new double[0];
             double[] wr = new double[0];
-            double[,] a1 = new double[0,0];
-            double[,] s1 = new double[0,0];
             int info = 0;
-            int i = 0;
-            int j = 0;
 
             s = new double[0,0];
 
@@ -32851,36 +41543,10 @@ public partial class alglib
             ortfac.rmatrixhessenbergunpackq(a, n, tau, ref s);
             
             //
-            // Convert from 0-based arrays to 1-based,
-            // then call InternalSchurDecomposition
-            // Awkward, of course, but Schur decompisiton subroutine
-            // is too complex to fix it.
+            // Schur decomposition
             //
-            //
-            a1 = new double[n+1, n+1];
-            s1 = new double[n+1, n+1];
-            for(i=1; i<=n; i++)
-            {
-                for(j=1; j<=n; j++)
-                {
-                    a1[i,j] = a[i-1,j-1];
-                    s1[i,j] = s[i-1,j-1];
-                }
-            }
-            hsschur.internalschurdecomposition(ref a1, n, 1, 1, ref wr, ref wi, ref s1, ref info);
+            hsschur.rmatrixinternalschurdecomposition(a, n, 1, 1, ref wr, ref wi, ref s, ref info);
             result = info==0;
-            
-            //
-            // convert from 1-based arrays to -based
-            //
-            for(i=1; i<=n; i++)
-            {
-                for(j=1; j<=n; j++)
-                {
-                    a[i-1,j-1] = a1[i,j];
-                    s[i-1,j-1] = s1[i,j];
-                }
-            }
             return result;
         }
 
