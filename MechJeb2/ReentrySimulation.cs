@@ -475,7 +475,7 @@ namespace MuMech
 
             Vector3d localLift = vessel.Lift(localVel, dynamicPressurekPa, mach);
 
-            QuaternionD vesselToWorld = Quaternion.FromToRotation(localVel, airVel);
+            QuaternionD vesselToWorld = Quaternion.FromToRotation(localVel, airVel); // QuaternionD.FromToRotation is not working in Unity 4.3
 
             return vesselToWorld * localLift;
         }
