@@ -15,10 +15,10 @@ namespace MuMech
         public bool shieldedFromAirstream;
         public bool noDrag;
         public bool hasLiftModule;
-        private float bodyLiftMultiplier;
+        private double bodyLiftMultiplier;
 
-        private float areaDrag;
-        private Vector3 liftForce;
+        private double areaDrag;
+        private Vector3d liftForce;
 
         //private float DragCubeMultiplier;
         //private float DragMultiplier;
@@ -33,9 +33,10 @@ namespace MuMech
         //public Part oPart;
 
 
-        private Quaternion vesselToPart;
+        private QuaternionD vesselToPart;
+        private QuaternionD partToVessel;
 
-        static public SimulatedPart New(Part p, ReentrySimulation.SimCurves simCurve)
+        public static SimulatedPart New(Part p, ReentrySimulation.SimCurves simCurve)
         {
             SimulatedPart part = new SimulatedPart();
             part.Set(p, simCurve);
@@ -59,7 +60,9 @@ namespace MuMech
             CopyDragCubesList(p.DragCubes, cubes);
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
-            vesselToPart = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up)).Inverse();
+            // QuaternionD.LookRotation is not working...
+            partToVessel = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up));
+            vesselToPart = Quaternion.Inverse(partToVessel);
 
             //DragCubeMultiplier = PhysicsGlobals.DragCubeMultiplier;
             //DragMultiplier = PhysicsGlobals.DragMultiplier;
@@ -72,18 +75,17 @@ namespace MuMech
 
         }
 
-        public virtual Vector3 Drag(Vector3 vesselVelocity, float dynamicPressurekPa,  float mach)
+        public virtual Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
         {
             if (shieldedFromAirstream || noDrag)
-                return Vector3.zero;
+                return Vector3d.zero;
 
-            Vector3 dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
+            Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
 
             // Use our thread safe version of SetDrag
             SetDrag(-dragVectorDirLocal, mach);
 
-#warning do some of this math once per frame
-            Vector3 drag = -vesselVelocity.normalized * areaDrag * dynamicPressurekPa * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+            Vector3d drag = -vesselVelocity.normalized * areaDrag * dragFactor;
 
 
             //bool delta = false;
@@ -137,21 +139,15 @@ namespace MuMech
             return drag;
         }
 
-        public virtual Vector3 Lift(Vector3 vesselVelocity, float dynamicPressurekPa, float mach)
+        public virtual Vector3d Lift(Vector3d vesselVelocity, double liftFactor)
         {
             if (shieldedFromAirstream || hasLiftModule)
-                return Vector3.zero;
-
-#warning obviously move out of here and evaluate once per mach value
-
-
-            float bodyLiftScalar = bodyLiftMultiplier * dynamicPressurekPa * simCurves.LiftMachCurve.Evaluate(mach);
-
+                return Vector3d.zero;
+            
             // direction of the lift in a vessel centric reference
-            Vector3 liftV = vesselToPart.Inverse() * liftForce * bodyLiftScalar;
+            Vector3d liftV = partToVessel * (liftForce * bodyLiftMultiplier * liftFactor);
 
-            Vector3 liftVector = Vector3.ProjectOnPlane(liftV, -vesselVelocity);
-
+            Vector3d liftVector = MathExtensions.ProjectOnPlane(liftV, -vesselVelocity);
 
             // cubes.LiftForce OK
 
@@ -242,18 +238,18 @@ namespace MuMech
 
         // Unfortunately the DragCubeList SetDrag method is not thread safe
         // so here is a thread safe version
-        protected void SetDrag(Vector3 dragVector, float machNumber)
+        protected void SetDrag(Vector3d dragVector, float machNumber)
         {
-            areaDrag = 0f;
-            liftForce = Vector3.zero;
+            areaDrag = 0;
+            liftForce = Vector3d.zero;
             if (cubes.None)
             {
                 return;
             }
             for (int i = 0; i < 6; i++)
             {
-                Vector3 faceDirection = DragCubeList.GetFaceDirection((DragCube.DragFace)i);
-                float dragDot = Vector3.Dot(dragVector, faceDirection);
+                Vector3d faceDirection = DragCubeList.GetFaceDirection((DragCube.DragFace)i);
+                float dragDot = (float) Vector3d.Dot(dragVector, faceDirection);
                 float dragValue = DragCurveValue((dragDot + 1f) * 0.5f, machNumber);
                 float faceAreaDrag = cubes.AreaOccluded[i] * dragValue;
                 areaDrag = areaDrag + faceAreaDrag * cubes.WeightedDrag[i];

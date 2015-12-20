@@ -16,7 +16,7 @@ namespace MuMech
 
         private ReentrySimulation.SimCurves simCurves;
 
-        static public SimulatedVessel New(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
+        public static SimulatedVessel New(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
         {
             SimulatedVessel vessel = new SimulatedVessel();
             vessel.Set(v, simCurves, startTime, limitChutesStage);
@@ -41,10 +41,11 @@ namespace MuMech
                 bool special = false;
                 for (int j = 0; j < oParts[i].Modules.Count; j++)
                 {
-                    if (oParts[i].Modules[j] is ModuleParachute)
+                    ModuleParachute mp = oParts[i].Modules[j] as ModuleParachute;
+                    if (mp != null)
                     {
                         special = true;
-                        simulatedPart = SimulatedParachute.New((ModuleParachute)oParts[i].Modules[j], simCurves, startTime, limitChutesStage);
+                        simulatedPart = SimulatedParachute.New(mp, simCurves, startTime, limitChutesStage);
                     }
                 }
                 if (!special)
@@ -57,27 +58,29 @@ namespace MuMech
             }
         }
 
-        public Vector3 Drag(Vector3 localVelocity, float dynamicPressurekPa, float mach)
+        public Vector3d Drag(Vector3d localVelocity, double dynamicPressurekPa, float mach)
         {
-            Vector3 drag = Vector3.zero;
+            Vector3d drag = Vector3d.zero;
+
+            double dragFactor = dynamicPressurekPa * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
 
             for (int i = 0; i < count; i++)
             {
-                SimulatedPart part = parts[i];
-                drag += part.Drag(localVelocity, dynamicPressurekPa, mach);
+                drag += parts[i].Drag(localVelocity, dragFactor, mach);
             }
 
             return -localVelocity.normalized * drag.magnitude;
         }
 
-        public Vector3 Lift(Vector3 localVelocity, float dynamicPressurekPa, float mach)
+        public Vector3d Lift(Vector3d localVelocity, float dynamicPressurekPa, float mach)
         {
-            Vector3 lift = Vector3.zero;
+            Vector3d lift = Vector3d.zero;
+
+            double liftFactor = dynamicPressurekPa * simCurves.LiftMachCurve.Evaluate(mach);
 
             for (int i = 0; i < count; i++)
             {
-                SimulatedPart part = parts[i];
-                lift += part.Lift(localVelocity, dynamicPressurekPa, mach);
+                lift += parts[i].Lift(localVelocity, liftFactor);
             }
             return lift;
         }

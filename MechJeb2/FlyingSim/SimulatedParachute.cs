@@ -8,27 +8,27 @@ namespace MuMech
 {
     public class SimulatedParachute : SimulatedPart
     {
-        ModuleParachute para;
+        private ModuleParachute para;
 
-        ModuleParachute.deploymentStates state;
+        private ModuleParachute.deploymentStates state;
 
-        double openningTime;
+        private double openningTime;
 
         // Store some data about when and how the parachute opened during the simulation which will be useful for debugging
-        double activatedASL = 0;
-        double activatedAGL = 0;
-        double semiDeployASL = 0;
-        double semiDeployAGL = 0;
-        double fullDeployASL = 0;
-        double fullDeployAGL = 0;
-        double targetASLAtSemiDeploy = 0;
-        double targetASLAtFullDeploy = 0;
-        float deployLevel = 0;
+        //double activatedASL = 0;
+        //double activatedAGL = 0;
+        //double semiDeployASL = 0;
+        //double semiDeployAGL = 0;
+        //double fullDeployASL = 0;
+        //double fullDeployAGL = 0;
+        //double targetASLAtSemiDeploy = 0;
+        //double targetASLAtFullDeploy = 0;
+        private float deployLevel = 0;
         public bool deploying = false;
 
         private bool willDeploy = false;
 
-        new static public SimulatedParachute New(ModuleParachute mp, ReentrySimulation.SimCurves simCurve, double startTime, int limitChutesStage)
+        public static SimulatedParachute New(ModuleParachute mp, ReentrySimulation.SimCurves simCurve, double startTime, int limitChutesStage)
         {
             SimulatedParachute part = new SimulatedParachute();
             part.Set(mp.part, simCurve);
@@ -84,12 +84,12 @@ namespace MuMech
         }
 
 
-        public override Vector3 Drag(Vector3 vesselVelocity, float dynamicPressurekPa, float mach)
+        public override Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
         {
             if (state != ModuleParachute.deploymentStates.SEMIDEPLOYED && state != ModuleParachute.deploymentStates.DEPLOYED)
-                return base.Drag(vesselVelocity, dynamicPressurekPa, mach);
+                return base.Drag(vesselVelocity, dragFactor, mach);
 
-            return Vector3.zero;
+            return Vector3d.zero;
 
         }
 
@@ -137,16 +137,16 @@ namespace MuMech
                     if (altATGL < semiDeployMultiplier * para.deployAltitude)
                     {
                         state = ModuleParachute.deploymentStates.ACTIVE;
-                        activatedAGL = altATGL;
-                        activatedASL = altASL;
+                        //activatedAGL = altATGL;
+                        //activatedASL = altASL;
                         // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
                         if (pressure >= para.minAirPressureToOpen)
                         {
                             state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                             openningTime = time;
-                            semiDeployAGL = altATGL;
-                            semiDeployASL = altASL;
-                            targetASLAtSemiDeploy = endASL;
+                            //semiDeployAGL = altATGL;
+                            //semiDeployASL = altASL;
+                            //targetASLAtSemiDeploy = endASL;
                         }
                     }
                     break;
@@ -155,9 +155,9 @@ namespace MuMech
                     {
                         state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                         openningTime = time;
-                        semiDeployAGL = altATGL;
-                        semiDeployASL = altASL;
-                        targetASLAtSemiDeploy = endASL;
+                        //semiDeployAGL = altATGL;
+                        //semiDeployASL = altASL;
+                        //targetASLAtSemiDeploy = endASL;
                     }
 
                     break;
@@ -166,9 +166,9 @@ namespace MuMech
                     {
                         state = ModuleParachute.deploymentStates.DEPLOYED;
                         openningTime = time;
-                        fullDeployAGL = altATGL;
-                        fullDeployASL = altASL;
-                        targetASLAtFullDeploy = endASL;
+                        //fullDeployAGL = altATGL;
+                        //fullDeployASL = altASL;
+                        //targetASLAtFullDeploy = endASL;
                     }
                     break;
             }

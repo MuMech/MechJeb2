@@ -427,7 +427,7 @@ namespace MuMech
 
             // TODO : check if it is forward, back, up or down...
             // Lift works with a velocity in SHIP coordinate and return a vector in ship coordinate
-            Vector3 shipDrag = vessel.Drag(localVel, dynamicPressurekPa, mach);
+            Vector3d shipDrag = vessel.Drag(localVel, dynamicPressurekPa, mach);
 
             //if (once)
             //{
@@ -475,7 +475,7 @@ namespace MuMech
 
             Vector3d localLift = vessel.Lift(localVel, dynamicPressurekPa, mach);
 
-            Quaternion vesselToWorld = Quaternion.FromToRotation(localVel, airVel);
+            QuaternionD vesselToWorld = Quaternion.FromToRotation(localVel, airVel);
 
             return vesselToWorld * localLift;
         }
