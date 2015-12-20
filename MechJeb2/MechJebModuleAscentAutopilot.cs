@@ -200,7 +200,7 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             if (forceRoll && vesselState.altitudeTrue > 50)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
-                double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude));
+                double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude));
                 core.attitude.attitudeTo(desiredHeading, 90, verticalRoll, this);
             }
             else
