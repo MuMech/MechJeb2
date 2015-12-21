@@ -18,9 +18,13 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble autostagePreDelay = 0.5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble autostagePostDelay = 1.0;
-        [Persistent(pass = (int)Pass.Type)]
-        public EditableInt autostageLimit = 0;
+		public EditableDouble autostagePostDelay = 1.0;
+		[Persistent(pass = (int)Pass.Type)]
+		public EditableInt autostageLimit = 0;
+		[Persistent(pass = (int)Pass.Type)]
+		public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
+		[Persistent(pass = (int)Pass.Type)]
+		public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
 
         public bool autostagingOnce = false;
 
@@ -48,6 +52,10 @@ namespace MuMech
             GUILayout.Label("s", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
+			GUILayout.Label("Deploy fairing when:");
+			GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
+			GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
+
             GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
 
             GUILayout.EndVertical();
@@ -68,53 +76,60 @@ namespace MuMech
         double stageCountdownStart = 0;
 
         public override void OnUpdate()
-        {
-            if (!vessel.isActiveVessel) return;
-            
-            //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
-            //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (vessel.LiftedOff() && Staging.CurrentStage > 0 && Staging.CurrentStage > autostageLimit
-                && vesselState.time - lastStageTime > autostagePostDelay)
-            {
-                //don't decouple active or idle engines or tanks
-                List<int> burnedResources = FindBurnedResources();
-                if (!InverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel, burnedResources))
-                {
-                    //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
-                    if (!HasStayingChutes(Staging.CurrentStage - 1, vessel))
-                    {
-                        //only fire decouplers to drop deactivated engines or tanks
-                        bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
-                        if (!firesDecoupler || InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
-                        {
-                            //When we find that we're allowed to stage, start a countdown (with a 
-                            //length given by autostagePreDelay) and only stage once that countdown finishes,
-                            if (countingDown)
-                            {
-                                if (vesselState.time - stageCountdownStart > autostagePreDelay)
-                                {
-                                    if (firesDecoupler)
-                                    {
-                                        //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                                        lastStageTime = vesselState.time;
-                                    }
+		{
+			if (!vessel.isActiveVessel)
+				return;
 
-                                    Staging.ActivateNextStage();
-                                    countingDown = false;
+			//if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
+			//and if we are allowed to continue staging, and if we didn't just fire the previous stage
+			if (!vessel.LiftedOff() || Staging.CurrentStage <= 0 || Staging.CurrentStage <= autostageLimit
+			   || vesselState.time - lastStageTime < autostagePostDelay)
+				return;
 
-                                    if (autostagingOnce) users.Clear();
-                                }
-                            }
-                            else
-                            {
-                                countingDown = true;
-                                stageCountdownStart = vesselState.time;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+			//don't decouple active or idle engines or tanks
+			List<int> burnedResources = FindBurnedResources();
+			if (InverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel, burnedResources))
+				return;
+
+			//Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
+			if (HasStayingChutes(Staging.CurrentStage - 1, vessel))
+				return;
+
+			//only fire decouplers to drop deactivated engines or tanks
+			bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
+			if (firesDecoupler && !InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
+				return;
+
+			//only decouple fairings if the dynamic pressure and altitude conditions are respected
+			if (HasFairing(Staging.CurrentStage - 1, vessel) &&
+			    (core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude))
+				return;
+
+			//When we find that we're allowed to stage, start a countdown (with a
+			//length given by autostagePreDelay) and only stage once that countdown finishes,
+			if (countingDown)
+			{
+				if (vesselState.time - stageCountdownStart > autostagePreDelay)
+				{
+					if (firesDecoupler)
+					{
+						//if we decouple things, delay the next stage a bit to avoid exploding the debris
+						lastStageTime = vesselState.time;
+					}
+
+					Staging.ActivateNextStage();
+					countingDown = false;
+
+					if (autostagingOnce)
+						users.Clear();
+				}
+			}
+			else
+			{
+				countingDown = true;
+				stageCountdownStart = vesselState.time;
+			}
+		}
 
         //determine whether it's safe to activate inverseStage
         public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources)
@@ -249,5 +264,11 @@ namespace MuMech
 
             return false;
         }
+
+		// determine if there is a fairing to be deployed
+		public static bool HasFairing(int inverseStage, Vessel v)
+		{
+			return v.parts.Any(p => p.HasModule<ModuleProceduralFairing>() && p.inverseStage == inverseStage);
+		}
     }
 }
