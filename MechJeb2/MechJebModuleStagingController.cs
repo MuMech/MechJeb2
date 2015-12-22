@@ -101,8 +101,8 @@ namespace MuMech
 				return;
 
 			//only decouple fairings if the dynamic pressure and altitude conditions are respected
-			if (HasFairing(Staging.CurrentStage - 1, vessel) &&
-			    (core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude))
+			if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude) &&
+			    HasFairing(Staging.CurrentStage - 1, vessel))
 				return;
 
 			//When we find that we're allowed to stage, start a countdown (with a
