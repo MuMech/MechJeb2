@@ -52,7 +52,7 @@ namespace MuMech
             GUILayout.Label("s", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
-			GUILayout.Label("Deploy fairing when:");
+			GUILayout.Label("Stage fairings when:");
 			GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
 			GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
 
