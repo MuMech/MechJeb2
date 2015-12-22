@@ -9,6 +9,7 @@ namespace MuMech
     public class VesselState
     {
         private static bool isLoadedRCSFXExt = false;
+        public static bool isLoadedProceduralFairing = false;
 
         private Vessel vesselRef = null;
 
@@ -239,6 +240,7 @@ namespace MuMech
             gimbalExtDict.Add(typeof(object), nullGimbal);
             gimbalExtDict.Add(typeof(ModuleGimbal), stockGimbal);
             isLoadedRCSFXExt = (AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.assembly.GetName().Name == "MechJebRCSFXExt") != null);
+            isLoadedProceduralFairing = (AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.assembly.GetName().Name == "ProceduralFairings") != null);
         }
 
         public VesselState()

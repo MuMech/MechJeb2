@@ -268,7 +268,7 @@ namespace MuMech
 		// determine if there is a fairing to be deployed
 		public static bool HasFairing(int inverseStage, Vessel v)
 		{
-			return v.parts.Any(p => p.HasModule<ModuleProceduralFairing>() && p.inverseStage == inverseStage);
+			return v.parts.Any(p => (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))) && p.inverseStage == inverseStage);
 		}
     }
 }

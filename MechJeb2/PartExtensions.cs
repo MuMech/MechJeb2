@@ -59,11 +59,6 @@ namespace MuMech
                     if (!mAnchoredDecoupler.isDecoupled && p.stagingOn) return true;
                     break;
                 }
-
-                if (m.ClassName == "ProceduralFairingDecoupler")
-                {
-                    return p.stagingOn;
-                }
             }
             return false;
         }
