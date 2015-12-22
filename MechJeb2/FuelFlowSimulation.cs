@@ -424,9 +424,9 @@ namespace MuMech
             for (int i = 0; i < part.Resources.Count; i++)
             {
                 PartResource r = part.Resources[i];
-                if (r.info.density > 0 && r.info.name != "IntakeAir")
+                if (r.info.density > 0)
                 {
-                    if (r.flowState)
+                    if (r.flowState && r.info.name != "IntakeAir")
                     {
                         resources[r.info.id] = (float) r.amount;
                     }
