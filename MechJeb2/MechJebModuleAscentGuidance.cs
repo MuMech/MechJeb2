@@ -97,7 +97,7 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
 
                 core.thrust.LimitToPreventOverheatsInfoItem();
-                core.thrust.LimitToTerminalVelocityInfoItem();
+                //core.thrust.LimitToTerminalVelocityInfoItem();
                 core.thrust.LimitToMaxDynamicPressureInfoItem();
                 core.thrust.LimitAccelerationInfoItem();
                 core.thrust.LimitThrottleInfoItem();
