@@ -568,7 +568,7 @@ namespace MuMech
 		[ValueInfoItem("ΔV for capture by target", InfoItem.Category.Misc)]
 		public string TargetCaptureDV()
 		{
-			if (!core.target.NormalTargetExists) return "N/A";
+			if (!core.target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
 
 			Orbit o = vessel.orbit;
 			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
