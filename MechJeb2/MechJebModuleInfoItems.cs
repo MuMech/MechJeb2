@@ -127,23 +127,26 @@ namespace MuMech
         [ValueInfoItem("Time to impact", InfoItem.Category.Misc)]
         public string TimeToImpact()
         {
-            if (orbit.PeA > 0) return "N/A";
+            if (orbit.PeA > 0 || vessel.Landed) return "N/A";
 
             double impactTime = vesselState.time;
             try
             {
-            for (int iter = 0; iter < 10; iter++)
-            {
-                Vector3d impactPosition = orbit.SwappedAbsolutePositionAtUT(impactTime);
-                double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
-                impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
-            }
+                for (int iter = 0; iter < 10; iter++)
+                {
+                    Vector3d impactPosition = orbit.SwappedAbsolutePositionAtUT(impactTime);
+                    double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
+                    impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+                }
             }
             catch (ArgumentException)
             {
                 return GuiUtils.TimeToDHMS(0);
             }
-
+            catch (ArithmeticException)
+            {
+                return GuiUtils.TimeToDHMS(0);
+            }
 
             return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
         }
@@ -543,12 +546,24 @@ namespace MuMech
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
             if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+            try
+            {
+                double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
 
-            if (double.IsNaN(UT)) { return "N/A"; }
+                if (double.IsNaN(UT))
+                {
+                    return "N/A";
+                }
 
-            double relVel = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
-            return MuUtils.ToSI(relVel, -1) + "m/s";
+                double relVel =
+                    (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT))
+                        .magnitude;
+                return MuUtils.ToSI(relVel, -1) + "m/s";
+            }
+            catch
+            {
+                return "N/A";
+            }
         }
 
 		[ValueInfoItem("Periapsis in target SoI", InfoItem.Category.Misc)]
