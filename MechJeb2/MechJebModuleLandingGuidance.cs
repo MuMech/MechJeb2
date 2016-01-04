@@ -236,24 +236,29 @@ namespace MuMech
                 }
             }
 
-            // Create a default config file in MJ dir for those ?
-            if (!landingSites.Any(p => p.name == "KSC Pad"))
-                landingSites.Add(new LandingSite()
-                {
-                    name = "KSC Pad",
-                    latitude = -0.09694444,
-                    longitude = -74.5575,
-                    body = Planetarium.fetch.Home
-                });
 
-            if (!landingSites.Any(p => p.name == "VAB"))
-                landingSites.Add(new LandingSite()
-                {
-                    name = "VAB",
-                    latitude = -0.09694444,
-                    longitude = -74.617,
-                    body = Planetarium.fetch.Home
-                });
+            if (GameDatabase.Instance.GetConfigs("REALSOLARSYSTEM").Length == 0)
+            {
+                // Don't add the default site if RSS is present
+                // Create a default config file in MJ dir for those ?
+                if (!landingSites.Any(p => p.name == "KSC Pad"))
+                    landingSites.Add(new LandingSite()
+                    {
+                        name = "KSC Pad",
+                        latitude = -0.09694444,
+                        longitude = -74.5575,
+                        body = Planetarium.fetch.Home
+                    });
+
+                if (!landingSites.Any(p => p.name == "VAB"))
+                    landingSites.Add(new LandingSite()
+                    {
+                        name = "VAB",
+                        latitude = -0.09694444,
+                        longitude = -74.617,
+                        body = Planetarium.fetch.Home
+                    });
+            }
 
             // Import KerbTown/Kerbal-Konstructs launch site
             foreach (var config in GameDatabase.Instance.GetConfigs("STATIC"))
@@ -291,42 +296,47 @@ namespace MuMech
             }
 
             // Import RSS Launch sites
-            UrlDir.UrlConfig rssSites = GameDatabase.Instance.GetConfigs("REALSOLARSYSTEM").FirstOrDefault();
+            UrlDir.UrlConfig rssSites = GameDatabase.Instance.GetConfigs("KSCSWITCHER").FirstOrDefault();
             if (rssSites != null)
             {
-                foreach (ConfigNode site in rssSites.config.GetNode("LaunchSites").GetNodes("Site"))
+                ConfigNode launchSites = rssSites.config.GetNode("LaunchSites");
+                if (launchSites != null)
                 {
-                    string launchSiteName = site.GetValue("displayName");
-                    ConfigNode pqsCity = site.GetNode("PQSCity");
-                    if (pqsCity == null)
+                    foreach (ConfigNode site in launchSites.GetNodes("Site"))
                     {
-                        continue;
-                    }
-
-                    string lat = pqsCity.GetValue("latitude");
-                    string lon = pqsCity.GetValue("longitude");
-
-                    if (launchSiteName == null || lat == null || lon == null)
-                    {
-                        continue;
-                    }
-
-                    double latitude, longitude;
-                    double.TryParse(lat, out latitude);
-                    double.TryParse(lon, out longitude);
-
-                    if (!landingSites.Any(p => p.name == launchSiteName))
-                    {
-                        landingSites.Add(new LandingSite()
+                        string launchSiteName = site.GetValue("displayName");
+                        ConfigNode pqsCity = site.GetNode("PQSCity");
+                        if (pqsCity == null)
                         {
-                            name = launchSiteName,
-                            latitude = latitude,
-                            longitude = longitude,
-                            body = Planetarium.fetch.Home
-                        });
+                            continue;
+                        }
+
+                        string lat = pqsCity.GetValue("latitude");
+                        string lon = pqsCity.GetValue("longitude");
+
+                        if (launchSiteName == null || lat == null || lon == null)
+                        {
+                            continue;
+                        }
+
+                        double latitude, longitude;
+                        double.TryParse(lat, out latitude);
+                        double.TryParse(lon, out longitude);
+
+                        if (!landingSites.Any(p => p.name == launchSiteName))
+                        {
+                            landingSites.Add(new LandingSite()
+                            {
+                                name = launchSiteName,
+                                latitude = latitude,
+                                longitude = longitude,
+                                body = Planetarium.fetch.Home
+                            });
+                        }
                     }
                 }
             }
+
             if (landingSiteIdx > landingSites.Count)
             {
                 landingSiteIdx = 0;
