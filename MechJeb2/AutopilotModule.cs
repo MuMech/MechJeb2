@@ -57,7 +57,15 @@ namespace MuMech
             }
         }
 
-        public bool active { get { return current_step != null; } }
+        public bool active
+        {
+            get { return current_step != null; }
+        }
+
+        public AutopilotStep CurrentStep
+        {
+            get { return current_step; }
+        }
     }
 
     public class AutopilotStep
