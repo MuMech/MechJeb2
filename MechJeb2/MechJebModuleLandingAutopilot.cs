@@ -165,7 +165,8 @@ namespace MuMech
             this.users.Clear();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.rcs.enabled = false;
+            if (core.landing.rcsAdjustment)
+                core.rcs.enabled = false;
             setStep(null);
         }
 
@@ -233,7 +234,8 @@ namespace MuMech
             predictor.descentSpeedPolicy = null;
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.rcs.enabled = false;
+            if (core.landing.rcsAdjustment)
+                core.rcs.enabled = false;
             setStep(null);
         }
 
