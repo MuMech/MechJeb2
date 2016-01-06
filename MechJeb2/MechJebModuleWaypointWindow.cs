@@ -201,7 +201,7 @@ namespace MuMech
 		
 		public WaypointMode Mode = WaypointMode.Rover;
 		public MechJebModuleRoverController ap;
-		public static List<MechJebWaypointRoute> Routes;
+		public static List<MechJebWaypointRoute> Routes = new List<MechJebWaypointRoute>();
 		[EditableInfoItem("Moho Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble MohoMapdist = 5000;
 		[EditableInfoItem("Eve Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
@@ -271,7 +271,7 @@ namespace MuMech
 				renderer = MechJebRouteRenderer.AttachToMapView(core);
 				renderer.enabled = enabled;
 			}
-			if (Routes == null) { Routes = new List<MechJebWaypointRoute>(); }
+
 //			GameObject obj = new GameObject("LineRenderer");
 //			redLine = obj.AddComponent<LineRenderer>();
 //			redLine.useWorldSpace = true;
