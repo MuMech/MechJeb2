@@ -478,7 +478,7 @@ namespace MuMech
                     if (useAtmCurve)
                         atmCurve = new FloatCurve(engine.atmCurve.Curve.keys);
                     useVelCurve = engine.useVelCurve;
-                    if (useAtmCurve)
+                    if (useVelCurve)
                         velCurve = new FloatCurve(engine.velCurve.Curve.keys);
 
                     propellantSumRatioTimesDensity = engine.propellants.Where(prop => !prop.ignoreForIsp).Sum(prop => prop.ratio * MuUtils.ResourceDensity(prop.id));
