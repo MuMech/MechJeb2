@@ -363,6 +363,7 @@ namespace MuMech
         readonly DefaultableDictionary<int, float> resources = new DefaultableDictionary<int, float>(0);       //the resources contained in the part
         Dictionary<int, float> resourceConsumptions = new Dictionary<int, float>();                   //the resources this part consumes per unit time when active at full throttle
         readonly DefaultableDictionary<int, float> resourceDrains = new DefaultableDictionary<int, float>(0);  //the resources being drained from this part per unit time at the current simulation time
+        readonly DefaultableDictionary<int, bool> freeResources = new DefaultableDictionary<int, bool>(false);  //the resources that are "free" and assumed to be infinite like IntakeAir
 
         // if a resource amount falls below this amount we say that the resource has been drained
         // set to the smallest amount that the user can see is non-zero in the resource tab or by
@@ -402,7 +403,7 @@ namespace MuMech
         public string partName; //for debugging
 
         public float moduleMass; // for debugging
-
+        
         public FuelNode(Part part, bool dVLinearThrust)
         {
             if (!part.IsLaunchClamp())
@@ -419,14 +420,14 @@ namespace MuMech
 
             inverseStage = part.inverseStage;
             partName = part.partInfo.name;
-
+            
             //note which resources this part has stored
             for (int i = 0; i < part.Resources.Count; i++)
             {
                 PartResource r = part.Resources[i];
                 if (r.info.density > 0)
                 {
-                    if (r.flowState && r.info.name != "IntakeAir")
+                    if (r.flowState)
                     {
                         resources[r.info.id] = (float) r.amount;
                     }
@@ -435,6 +436,13 @@ namespace MuMech
                         dryMass += (float) (r.amount*r.info.density); // disabled resources are just dead weight
                     }
                 }
+                if (r.info.name == "IntakeAir")
+                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeAir").id] = true;
+                // Those two are in the CRP.
+                if (r.info.name == "IntakeLqd")
+                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeLqd").id] = true;
+                if (r.info.name == "IntakeAtm")
+                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeAtm").id] = true;
             }
 
             // TODO : handle the multiple active ModuleEngine case ( SXT engines with integrated vernier )
@@ -635,7 +643,9 @@ namespace MuMech
 
         public void DrainResources(float dt)
         {
-            foreach (int type in resourceDrains.Keys) resources[type] -= dt * resourceDrains[type];
+            foreach (int type in resourceDrains.Keys)
+                if (!freeResources[type])
+                    resources[type] -= dt * resourceDrains[type];
         }
 
         public float MaxTimeStep()
@@ -698,6 +708,9 @@ namespace MuMech
         {
             foreach (int type in resourceConsumptions.Keys)
             {
+                if (freeResources[type])
+                    continue;
+
                 float amount = resourceConsumptions[type];
 
                 switch (PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode)
@@ -745,16 +758,18 @@ namespace MuMech
             }
             for (int i = 0; i < sources.Count; i++)
             {
-                sources[i].resourceDrains[type] += amount/sources.Count;
+                if (!freeResources[type])
+                    sources[i].resourceDrains[type] += amount/sources.Count;
             }
         }
-
 
         void AssignFuelDrainRateStackPriority(int type, float amount)
         {
             HashSet<FuelNode> sources = FindFuelSourcesStackPriority(type);
             float amountPerSource = amount / sources.Count();
-            foreach (FuelNode source in sources) source.resourceDrains[type] += amountPerSource;
+            foreach (FuelNode source in sources)
+                if (!freeResources[type])
+                    source.resourceDrains[type] += amountPerSource;
         }
 
         static int nextFuelLookupID = 0;
