@@ -109,15 +109,15 @@ namespace MuMech
                     GUILayout.Label("Status: " + core.landing.status);
                     GUILayout.Label("Step: " + (core.landing.CurrentStep != null ? core.landing.CurrentStep.GetType().Name : "N/A"));
                     GUILayout.Label("Mode " + (core.landing.descentSpeedPolicy != null ? core.landing.descentSpeedPolicy.GetType().Name : "N/A") + " (" + core.landing.UseAtmosphereToBrake().ToString() + ")");
-                    GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
-                    var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
-                    GUILayout.Label("Drag Length: " + ( dragLength < double.MaxValue ? dragLength.ToString("F2") : "infinite"));
-
-                    string parachuteInfo = core.landing.ParachuteControlInfo;
-                    if (null != parachuteInfo)
-                    {
-                        GUILayout.Label(parachuteInfo);
-                    }
+                    //GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
+                    //var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
+                    //GUILayout.Label("Drag Length: " + ( dragLength < double.MaxValue ? dragLength.ToString("F2") : "infinite"));
+                    //
+                    //string parachuteInfo = core.landing.ParachuteControlInfo;
+                    //if (null != parachuteInfo)
+                    //{
+                    //    GUILayout.Label(parachuteInfo);
+                    //}
                 }
             }
 
