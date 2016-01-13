@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
@@ -72,7 +73,40 @@ namespace MuMech
         // debug
         public static bool once = true;
 
-        public ReentrySimulation(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt)
+
+        private static readonly Pool<ReentrySimulation> pool = new Pool<ReentrySimulation>(Create, Reset);
+
+        public static int PoolSize
+        {
+            get { return pool.Size; }
+        }
+
+        private static ReentrySimulation Create()
+        {
+            return new ReentrySimulation();
+        }
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
+
+        private static void Reset(ReentrySimulation obj)
+        {
+        }
+
+        public static ReentrySimulation Borrow(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel,
+            SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL,
+            double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL,
+            bool _multiplierHasError, double _dt, double _min_dt)
+        {
+            ReentrySimulation sim = pool.Borrow();
+            sim.Init(_initialOrbit, _UT, _vessel, _simcurves, _descentSpeedPolicy, _decelEndAltitudeASL, _maxThrustAccel, _parachuteSemiDeployMultiplier, _probableLandingSiteASL, _multiplierHasError, _dt, _min_dt);
+            return sim;
+        }
+
+
+        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt)
         {
             // Store all the input values as they were given
             input_initialOrbit = _initialOrbit;
@@ -124,7 +158,7 @@ namespace MuMech
 
             maxDragGees = 0;
             deltaVExpended = 0;
-            trajectory = new List<AbsoluteVector>();
+            trajectory = ListPool<AbsoluteVector>.Instance.Borrow();
 
             simCurves = _simcurves;
 
@@ -136,7 +170,7 @@ namespace MuMech
 
         public Result RunSimulation()
         {
-            result = new Result();
+            result = Result.Borrow();
             try
             {
                 // First put all the problem parameters into the result, to aid debugging.
@@ -151,7 +185,7 @@ namespace MuMech
                 result.input_dt = this.input_dt;
 
                 //MechJebCore.print("Sim Start");
- 
+
                 if (orbitReenters)
                 {
                     t = startUT;
@@ -159,7 +193,8 @@ namespace MuMech
                 }
                 else
                 {
-                    result.outcome = Outcome.NO_REENTRY; return result; 
+                    result.outcome = Outcome.NO_REENTRY;
+                    return result;
                 }
 
                 result.startPosition = referenceFrame.ToAbsolute(x, t);
@@ -167,9 +202,21 @@ namespace MuMech
                 double maxT = t + maxSimulatedTime;
                 while (true)
                 {
-                    if (Landed()) { result.outcome = Outcome.LANDED; break; }
-                    if (Aerobraked()) { result.outcome = Outcome.AEROBRAKED; break; }
-                    if (t > maxT) { result.outcome = Outcome.TIMED_OUT; break; }
+                    if (Landed())
+                    {
+                        result.outcome = Outcome.LANDED;
+                        break;
+                    }
+                    if (Aerobraked())
+                    {
+                        result.outcome = Outcome.AEROBRAKED;
+                        break;
+                    }
+                    if (t > maxT)
+                    {
+                        result.outcome = Outcome.TIMED_OUT;
+                        break;
+                    }
 
                     RK4Step();
                     LimitSpeed();
@@ -196,6 +243,10 @@ namespace MuMech
             {
                 Debug.LogError("Exception thrown during Rentry Simulation" + ex.StackTrace + ex.Message);
                 result.outcome = Outcome.ERROR;
+            }
+            finally
+            {
+                vessel.Release();
             }
             return result;
         }
@@ -743,6 +794,35 @@ namespace MuMech
 
             public string debugLog;
 
+            private static readonly Pool<Result> pool = new Pool<Result>(Create, Reset);
+
+            public static int PoolSize
+            {
+                get { return pool.Size; }
+            }
+
+            private static Result Create()
+            {
+                return new Result();
+            }
+
+            public void Release()
+            {
+                if (trajectory !=null)
+                    ListPool<AbsoluteVector>.Instance.Release(trajectory);
+                pool.Release(this);
+            }
+
+            private static void Reset(Result obj)
+            {
+            }
+
+            public static Result Borrow()
+            {
+                Result result = pool.Borrow();
+                return result;
+            }
+
             // debuging
             public prediction prediction;
 
@@ -770,7 +850,7 @@ namespace MuMech
             {
                 if (!trajectory.Any()) return new List<Vector3d>();
 
-                List<Vector3d> ret = new List<Vector3d>();
+                List<Vector3d> ret = new List<Vector3d>(trajectory.Count);
                 if (world)
                     ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
                 else

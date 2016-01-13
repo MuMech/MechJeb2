@@ -178,7 +178,7 @@ namespace MuMech
             // If the latest prediction is a landing, aerobrake or no-reentry prediciton then keep it.
             // However if it is any other sort or result it is not much use to us, so do not bother!
             {
-                ReentrySimulation.Result result = predictor.GetResult();
+                ReentrySimulation.Result result = predictor.Result;
                 if (null != result)
                 {
                     if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)

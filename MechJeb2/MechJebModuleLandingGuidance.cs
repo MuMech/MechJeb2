@@ -157,7 +157,7 @@ namespace MuMech
         
         void DrawGUIPrediction()
         {
-            ReentrySimulation.Result result = predictor.GetResult();
+            ReentrySimulation.Result result = predictor.Result;
             if (result != null)
             {
                 switch (result.outcome)

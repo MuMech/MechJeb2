@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
@@ -28,15 +29,36 @@ namespace MuMech
 
         private bool willDeploy = false;
 
-        public static SimulatedParachute New(ModuleParachute mp, ReentrySimulation.SimCurves simCurve, double startTime, int limitChutesStage)
+        private static readonly Pool<SimulatedParachute> pool = new Pool<SimulatedParachute>(Create, Reset);
+
+        public new static int PoolSize
         {
-            SimulatedParachute part = new SimulatedParachute();
-            part.Set(mp.part, simCurve);
-            part.Set(mp, startTime, limitChutesStage);
+            get { return pool.Size; }
+        }
+
+        private static SimulatedParachute Create()
+        {
+            return new SimulatedParachute();
+        }
+
+        public override void Release()
+        {
+            pool.Release(this);
+        }
+
+        private static void Reset(SimulatedParachute obj)
+        {
+        }
+
+        public static SimulatedParachute Borrow(ModuleParachute mp, ReentrySimulation.SimCurves simCurve, double startTime, int limitChutesStage)
+        {
+            SimulatedParachute part = pool.Borrow();
+            part.Init(mp.part, simCurve);
+            part.Init(mp, startTime, limitChutesStage);
             return part;
         }
 
-        public void Set(ModuleParachute mp, double startTime, int limitChutesStage)
+        private void Init(ModuleParachute mp, double startTime, int limitChutesStage)
         {
             this.para = mp;
             this.state = mp.deploymentState;

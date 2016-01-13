@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
@@ -16,14 +17,37 @@ namespace MuMech
 
         private ReentrySimulation.SimCurves simCurves;
 
-        public static SimulatedVessel New(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
+        private static readonly Pool<SimulatedVessel> pool = new Pool<SimulatedVessel>(Create, Reset);
+
+        public static int PoolSize
         {
-            SimulatedVessel vessel = new SimulatedVessel();
-            vessel.Set(v, simCurves, startTime, limitChutesStage);
+            get { return pool.Size; }
+        }
+
+        private static SimulatedVessel Create()
+        {
+            return new SimulatedVessel();
+        }
+
+        public void Release()
+        {
+            pool.Release(this);
+        }
+        
+        private static void Reset(SimulatedVessel obj)
+        {
+            SimulatedPart.Release(obj.parts);
+            obj.parts.Clear();
+        }
+
+        public static SimulatedVessel Borrow(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
+        {
+            SimulatedVessel vessel = pool.Borrow();
+            vessel.Init(v, simCurves, startTime, limitChutesStage);
             return vessel;
         }
 
-        private void Set(Vessel v, ReentrySimulation.SimCurves _simCurves, double startTime, int limitChutesStage)
+        private void Init(Vessel v, ReentrySimulation.SimCurves _simCurves, double startTime, int limitChutesStage)
         {
             totalMass = 0;
 
@@ -45,12 +69,12 @@ namespace MuMech
                     if (mp != null)
                     {
                         special = true;
-                        simulatedPart = SimulatedParachute.New(mp, simCurves, startTime, limitChutesStage);
+                        simulatedPart = SimulatedParachute.Borrow(mp, simCurves, startTime, limitChutesStage);
                     }
                 }
                 if (!special)
                 {
-                    simulatedPart = SimulatedPart.New(oParts[i], simCurves);
+                    simulatedPart = SimulatedPart.Borrow(oParts[i], simCurves);
                 }
 
                 parts.Add(simulatedPart);

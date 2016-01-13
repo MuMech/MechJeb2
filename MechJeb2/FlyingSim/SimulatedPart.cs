@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
 {
     public class SimulatedPart
     {
-
         protected DragCubeList cubes;
 
         public double totalMass = 0;
@@ -32,18 +32,46 @@ namespace MuMech
         // Remove after test
         //public Part oPart;
 
-
         private QuaternionD vesselToPart;
         private QuaternionD partToVessel;
 
-        public static SimulatedPart New(Part p, ReentrySimulation.SimCurves simCurve)
+        private static readonly Pool<SimulatedPart> pool = new Pool<SimulatedPart>(Create, Reset);
+
+        public static int PoolSize
         {
-            SimulatedPart part = new SimulatedPart();
-            part.Set(p, simCurve);
+            get { return pool.Size; }
+        }
+
+        private static SimulatedPart Create()
+        {
+            return new SimulatedPart();
+        }
+
+        public virtual void Release()
+        {
+            pool.Release(this);
+        }
+
+        public static void Release(List<SimulatedPart> objList)
+        {
+            for (int i = 0; i < objList.Count; ++i)
+            {
+                objList[i].Release();
+            }
+        }
+
+        private static void Reset(SimulatedPart obj)
+        {
+        }
+
+        public static SimulatedPart Borrow(Part p, ReentrySimulation.SimCurves simCurve)
+        {
+            SimulatedPart part = pool.Borrow();
+            part.Init(p, simCurve);
             return part;
         }
 
-        protected virtual void Set(Part p, ReentrySimulation.SimCurves _simCurves)
+        protected void Init(Part p, ReentrySimulation.SimCurves _simCurves)
         {
             Rigidbody rigidbody = p.rb;
 
@@ -147,7 +175,7 @@ namespace MuMech
             // direction of the lift in a vessel centric reference
             Vector3d liftV = partToVessel * (liftForce * bodyLiftMultiplier * liftFactor);
 
-            Vector3d liftVector = MathExtensions.ProjectOnPlane(liftV, -vesselVelocity);
+            Vector3d liftVector = liftV.ProjectOnPlane(-vesselVelocity);
 
             // cubes.LiftForce OK
 
