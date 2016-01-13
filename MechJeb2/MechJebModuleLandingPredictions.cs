@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
@@ -447,7 +448,9 @@ namespace MuMech
                     if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
                     {
                         double interval = (drawnResult.endUT - drawnResult.input_UT) / 100;
-                        GLUtils.DrawPath(drawnResult.body, drawnResult.WorldTrajectory(interval, worldTrajectory), Color.red);
+                        List<Vector3d> list = drawnResult.WorldTrajectory(interval, worldTrajectory);
+                        GLUtils.DrawPath(drawnResult.body, list, Color.red);
+                        ListPool<Vector3d>.Instance.Release(list);
                     }
                 }
             }

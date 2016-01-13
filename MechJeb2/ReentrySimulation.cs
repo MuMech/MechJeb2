@@ -846,11 +846,13 @@ namespace MuMech
                 return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
             }
 
-            public List<Vector3d> WorldTrajectory(double timeStep, bool world=true) 
-            {
-                if (!trajectory.Any()) return new List<Vector3d>();
 
-                List<Vector3d> ret = new List<Vector3d>(trajectory.Count);
+            public List<Vector3d> WorldTrajectory(double timeStep, bool world=true)
+            {
+                List<Vector3d> ret = ListPool<Vector3d>.Instance.Borrow();
+
+                if (trajectory.Count == 0) return ret;
+
                 if (world)
                     ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
                 else
