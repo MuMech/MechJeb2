@@ -122,13 +122,13 @@ namespace MuMech
 				left.w);
 		}
 
-        public static Vector3d Project(Vector3d vector, Vector3d onNormal)
+        public static Vector3d Project(this Vector3d vector, Vector3d onNormal)
         {
             Vector3d normal = onNormal.normalized;
             return normal * Vector3d.Dot(vector, normal);
         }
 
-        public static Vector3d ProjectOnPlane(Vector3d vector, Vector3d planeNormal)
+        public static Vector3d ProjectOnPlane(this Vector3d vector, Vector3d planeNormal)
         {
             return vector - Vector3d.Project(vector, planeNormal);
         }
