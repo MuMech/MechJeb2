@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Dispose;
 using Smooth.Pools;
 using UnityEngine;
 
@@ -847,16 +848,16 @@ namespace MuMech
             }
 
 
-            public List<Vector3d> WorldTrajectory(double timeStep, bool world=true)
+            public Disposable<List<Vector3d>> WorldTrajectory(double timeStep, bool world=true)
             {
-                List<Vector3d> ret = ListPool<Vector3d>.Instance.Borrow();
+                Disposable<List<Vector3d>> ret = ListPool<Vector3d>.Instance.BorrowDisposable();
 
                 if (trajectory.Count == 0) return ret;
 
                 if (world)
-                    ret.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
+                    ret.value.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
                 else
-                    ret.Add(referenceFrame.BodyPositionAtCurrentTime(trajectory[0]));
+                    ret.value.Add(referenceFrame.BodyPositionAtCurrentTime(trajectory[0]));
                 double lastTime = trajectory[0].UT;
                 for (int i = 0; i < trajectory.Count; i++)
                 {
@@ -864,9 +865,9 @@ namespace MuMech
                     if (absolute.UT > lastTime + timeStep)
                     {
                         if (world)
-                            ret.Add(referenceFrame.WorldPositionAtCurrentTime(absolute));
+                            ret.value.Add(referenceFrame.WorldPositionAtCurrentTime(absolute));
                         else
-                            ret.Add(referenceFrame.BodyPositionAtCurrentTime(absolute));
+                            ret.value.Add(referenceFrame.BodyPositionAtCurrentTime(absolute));
                         lastTime = absolute.UT;
                     }
                 }

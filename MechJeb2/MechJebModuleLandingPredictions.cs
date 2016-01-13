@@ -448,9 +448,10 @@ namespace MuMech
                     if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
                     {
                         double interval = (drawnResult.endUT - drawnResult.input_UT) / 100;
-                        List<Vector3d> list = drawnResult.WorldTrajectory(interval, worldTrajectory);
-                        GLUtils.DrawPath(drawnResult.body, list, Color.red);
-                        ListPool<Vector3d>.Instance.Release(list);
+                        using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
+                        {
+                            GLUtils.DrawPath(drawnResult.body, list.value, Color.red);
+                        }
                     }
                 }
             }
