@@ -1211,7 +1211,7 @@ namespace MuMech
             }
         }
 
-        [GeneralInfoItem("Separator", InfoItem.Category.Misc)]
+        [GeneralInfoItem("Separator", InfoItem.Category.Misc, showInEditor = true)]     
         public void HorizontalSeparator()
         {
             GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
