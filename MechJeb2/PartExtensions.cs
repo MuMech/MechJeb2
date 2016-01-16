@@ -29,6 +29,22 @@ namespace MuMech
             return null;
         }
 
+        // An allocation free version of GetModuleMass
+        public static float GetModuleMassNoAlloc(this Part p, float defaultMass)
+        {
+            float mass = 0f;
+
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                IPartMassModifier m = p.Modules[i] as IPartMassModifier;
+                if (m != null)
+                {
+                    mass += m.GetModuleMass(defaultMass);
+                }
+            }
+            return mass;
+        }
+
         public static bool EngineHasFuel(this Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)
