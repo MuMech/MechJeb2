@@ -145,10 +145,39 @@ namespace MuMech
 
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
 
-                if (windowNode.HasValue("enabled"))
+                bool useOldConfig = true;
+                if (windowNode.HasValue("enabledEditor"))
                 {
                     bool loadedEnabled;
-                    if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled)) window.enabled = loadedEnabled;
+                    if (bool.TryParse(windowNode.GetValue("enabledEditor"), out loadedEnabled))
+                    {
+                        window.enabledEditor = loadedEnabled;
+                        useOldConfig = false;
+                    }
+                }
+
+                if (windowNode.HasValue("enabledFlight"))
+                {
+                    bool loadedEnabled;
+                    if (bool.TryParse(windowNode.GetValue("enabledFlight"), out loadedEnabled))
+                    {
+                        window.enabledFlight = loadedEnabled;
+                        useOldConfig = false;
+                    }
+                }
+
+                if (!useOldConfig)
+                    window.enabled = HighLogic.LoadedSceneIsEditor ? window.enabledEditor : window.enabledFlight;
+
+                if (useOldConfig && windowNode.HasValue("enabled"))
+                {
+                    bool loadedEnabled;
+                    if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
+                    {
+                        window.enabled = loadedEnabled;
+                        window.enabledEditor = window.enabled;
+                        window.enabledFlight = window.enabled;
+                    }
                 }
 
                 window.items = new List<InfoItem>();
@@ -180,7 +209,14 @@ namespace MuMech
             {
                 string name = typeof(MechJebModuleCustomInfoWindow).Name;
                 ConfigNode windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.Global, null);
-                windowNode.AddValue("enabled", window.enabled);
+
+                if (HighLogic.LoadedSceneIsEditor)
+                    window.enabledEditor = window.enabled;
+                else
+                    window.enabledFlight = window.enabled;
+
+                windowNode.AddValue("enabledFlight", window.enabledFlight);
+                windowNode.AddValue("enabledEditor", window.enabledEditor);
                 windowNode.CopyTo(global.AddNode(name));
             }
         }

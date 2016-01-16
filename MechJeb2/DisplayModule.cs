@@ -58,6 +58,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
 
+        internal bool enabledEditor;
+        internal bool enabledFlight;
+
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
         public int ID;
@@ -139,7 +142,15 @@ namespace MuMech
         {
             base.OnSave(local, type, global);
 
-            if (global != null) global.AddValue("enabled", enabled);
+            if (global != null)
+            {
+                if (HighLogic.LoadedSceneIsEditor)
+                    enabledEditor = enabled;
+                else
+                    enabledFlight = enabled;
+                global.AddValue("enabledEditor", enabledEditor);
+                global.AddValue("enabledFlight", enabledFlight);
+            }
 //            if (global != null) global.AddValue("locked", locked);
         }
 
@@ -147,10 +158,39 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-            if (global != null && global.HasValue("enabled"))
+            bool useOldConfig = true;
+            if (global != null && global.HasValue("enabledEditor"))
             {
                 bool loadedEnabled;
-                if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled)) enabled = loadedEnabled;
+                if (bool.TryParse(global.GetValue("enabledEditor"), out loadedEnabled))
+                {
+                    enabledEditor = loadedEnabled;
+                    useOldConfig = false;
+                }
+            }
+
+            if (global != null && global.HasValue("enabledFlight"))
+            {
+                bool loadedEnabled;
+                if (bool.TryParse(global.GetValue("enabledFlight"), out loadedEnabled))
+                {
+                    enabledFlight = loadedEnabled;
+                    useOldConfig = false;
+                }
+            }
+
+            if (!useOldConfig)
+                enabled = HighLogic.LoadedSceneIsEditor ? enabledEditor : enabledFlight;
+
+            if (useOldConfig && global.HasValue("enabled"))
+            {
+                bool loadedEnabled;
+                if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))
+                {
+                    enabled = loadedEnabled;
+                    enabledEditor = enabled;
+                    enabledFlight = enabled;
+                }
             }
 
 //            if (global != null && global.HasValue("locked"))
