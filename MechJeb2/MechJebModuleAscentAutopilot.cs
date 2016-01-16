@@ -174,6 +174,8 @@ namespace MuMech
         {
             if (autoThrottle) core.thrust.targetThrottle = 0.0f;
 
+            core.attitude.AxisControl(false, false, false);
+
             if (timedLaunch && tMinus > 10.0)
             {
                 status = "Awaiting liftoff";
@@ -191,6 +193,7 @@ namespace MuMech
             if (timedLaunch)
             {
                 status = "Awaiting liftoff";
+                core.attitude.AxisControl(false, false, false); 
                 return;
             }
 
@@ -203,10 +206,13 @@ namespace MuMech
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
                 core.attitude.attitudeTo(desiredHeading, 90, verticalRoll, this);
             }
-            else
+            else 
             {
                 core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
+
+            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed);
+
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             if (!vessel.LiftedOff()) status = "Awaiting liftoff";
