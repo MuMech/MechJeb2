@@ -169,16 +169,21 @@ namespace MuMech
                             enabled = loadedEnabled;
                     }
                 }
-                
-                if (useOldConfig && windowNode.HasValue("enabled"))
+
+                if (useOldConfig)
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
+                    if (windowNode.HasValue("enabled"))
                     {
-                        window.enabled = loadedEnabled;
-                        window.enabledEditor = window.enabled;
-                        window.enabledFlight = window.enabled;
+                        bool loadedEnabled;
+                        if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
+                        {
+                            window.enabled = loadedEnabled;
+                            window.enabledEditor = window.enabled;
+                            window.enabledFlight = window.enabled;
+                        }
                     }
+                    enabledEditor = enabled;
+                    enabledFlight = enabled;
                 }
 
                 window.items = new List<InfoItem>();

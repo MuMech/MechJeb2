@@ -184,15 +184,18 @@ namespace MuMech
                 }
             }
 
-            if (global != null && useOldConfig && global.HasValue("enabled"))
+            if (useOldConfig)
             {
-                bool loadedEnabled;
-                if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))
+                if (global != null && global.HasValue("enabled"))
                 {
-                    enabled = loadedEnabled;
-                    enabledEditor = enabled;
-                    enabledFlight = enabled;
+                    bool loadedEnabled;
+                    if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))
+                    {
+                        enabled = loadedEnabled;
+                    }
                 }
+                enabledEditor = enabled;
+                enabledFlight = enabled;
             }
 
 //            if (global != null && global.HasValue("locked"))
