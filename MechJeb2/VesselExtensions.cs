@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
@@ -189,7 +190,7 @@ namespace MuMech
 
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
-            var nodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.patch == patch && n != ignoreNode));
+            var nodes = vessel.patchedConicSolver.maneuverNodes.Slinq().Where((n,p) => n.patch == p && n != ignoreNode, patch);
             if (nodes.Any()) return nodes.First().nextPatch;
 
             //return the next patch, or null if there isn't one:

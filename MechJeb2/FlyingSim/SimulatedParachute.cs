@@ -43,6 +43,10 @@ namespace MuMech
 
         public override void Release()
         {
+            foreach (DragCube cube in cubes.Cubes)
+            {
+                DragCubePool.Instance.Release(cube);
+            }
             pool.Release(this);
         }
 
@@ -152,7 +156,6 @@ namespace MuMech
         {
             if (!willDeploy)
                 return false;
-
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
@@ -197,7 +200,6 @@ namespace MuMech
 
             // Now that we have potentially changed states calculate the current drag or the parachute in whatever state (or transition to a state) that it is in.
             float normalizedTime;
-
             // Depending on the state that we are in consider if we are part way through a deployment.
             if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
             {
@@ -221,7 +223,6 @@ namespace MuMech
             {
                 this.deploying = false;
             }
-
             // If we are deploying or semi deploying then use Lerp to replicate the way the game increases the drag as we deploy.
             if (deploying && (state == ModuleParachute.deploymentStates.SEMIDEPLOYED || state == ModuleParachute.deploymentStates.DEPLOYED))
             {
@@ -231,7 +232,6 @@ namespace MuMech
             {
                 this.deployLevel = 1;
             }
-
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
@@ -254,7 +254,6 @@ namespace MuMech
                     SetCubeWeight("DEPLOYED", deployLevel);
                     break;
             }
-
             return deploying;
 
         }

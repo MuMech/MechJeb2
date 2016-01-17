@@ -66,7 +66,7 @@ namespace MuMech
                 for (int j = 0; j < oParts[i].Modules.Count; j++)
                 {
                     ModuleParachute mp = oParts[i].Modules[j] as ModuleParachute;
-                    if (mp != null)
+                    if (mp != null && v.mainBody.atmosphere)
                     {
                         special = true;
                         simulatedPart = SimulatedParachute.Borrow(mp, simCurves, startTime, limitChutesStage);

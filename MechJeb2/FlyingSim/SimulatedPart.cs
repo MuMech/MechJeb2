@@ -9,7 +9,7 @@ namespace MuMech
 {
     public class SimulatedPart
     {
-        protected DragCubeList cubes;
+        protected DragCubeList cubes = new DragCubeList();
 
         public double totalMass = 0;
         public bool shieldedFromAirstream;
@@ -49,6 +49,10 @@ namespace MuMech
 
         public virtual void Release()
         {
+            foreach (DragCube cube in cubes.Cubes)
+            {
+                DragCubePool.Instance.Release(cube);
+            }
             pool.Release(this);
         }
 
@@ -84,7 +88,7 @@ namespace MuMech
 
             simCurves = _simCurves;
 
-            cubes = new DragCubeList();
+            //cubes = new DragCubeList();
             CopyDragCubesList(p.DragCubes, cubes);
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
@@ -214,6 +218,17 @@ namespace MuMech
         }
 
 
+
+        public static class DragCubePool
+        {
+            private static readonly Pool<DragCube> _Instance = new Pool<DragCube>(
+                () => new DragCube(), cube => { });
+
+            
+            public static Pool<DragCube> Instance { get { return _Instance; } }
+        }
+
+
         //TODO : rewrite the cube calls to only store and update the minimum needed data ( AreaOccluded + WeightedDrag ?)
 
         protected static void CopyDragCubesList(DragCubeList source, DragCubeList dest)
@@ -227,7 +242,7 @@ namespace MuMech
 
             for (int i = 0; i < source.Cubes.Count; i++)
             {
-                DragCube c = new DragCube();
+                DragCube c = DragCubePool.Instance.Borrow();
                 CopyDragCube(source.Cubes[i], c);
                 dest.Cubes.Add(c);
             }
@@ -306,11 +321,11 @@ namespace MuMech
         }
 
 
+        float[] WeightedDragOrig = new float[6];
+
         // Need to check and then simplify this, some operations are just redundant.
         protected void SetCubeWeight(string name, float newWeight)
         {
-            float[] WeightedDragOrig = new float[6];
-
             int count = cubes.Cubes.Count;
             if (count == 0)
             {

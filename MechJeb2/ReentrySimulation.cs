@@ -23,7 +23,7 @@ namespace MuMech
          double input_dt;
 
         //parameters of the problem:
-        Orbit initialOrbit;
+        Orbit initialOrbit = new Orbit();
         bool bodyHasAtmosphere;
         //double seaLevelAtmospheres;
         //double scaleHeight;
@@ -45,7 +45,7 @@ namespace MuMech
 
         bool orbitReenters;
 
-        ReferenceFrame referenceFrame;
+        ReferenceFrame referenceFrame = new ReferenceFrame();
         
         double dt;
         double max_dt;
@@ -121,7 +121,6 @@ namespace MuMech
             input_probableLandingSiteASL = _probableLandingSiteASL;
             input_multiplierHasError = _multiplierHasError;
             input_dt = _dt;
-
             // the vessel attitude relative to the surface vel. Fixed for now
             attitude = Quaternion.Euler(180,0,0);
 
@@ -130,7 +129,7 @@ namespace MuMech
             dt = max_dt;
 
             // Get a copy of the original orbit, to be more thread safe
-            initialOrbit = new Orbit();
+            //initialOrbit = new Orbit();
             initialOrbit.UpdateFromOrbitAtUT(_initialOrbit, _UT, _initialOrbit.referenceBody);
 
             CelestialBody body = _initialOrbit.referenceBody;
@@ -149,13 +148,14 @@ namespace MuMech
             this.maxThrustAccel = _maxThrustAccel;
             this.probableLandingSiteASL = _probableLandingSiteASL;
             this.probableLandingSiteRadius = _probableLandingSiteASL + bodyRadius;
-
-            referenceFrame = ReferenceFrame.CreateAtCurrentTime(_initialOrbit.referenceBody);
-
+            referenceFrame.UpdateAtCurrentTime(_initialOrbit.referenceBody);
             orbitReenters = OrbitReenters(_initialOrbit);
-
             if (orbitReenters)
+            {
                 startUT = _UT;
+                //t = startUT;
+                //AdvanceToFreefallEnd(initialOrbit);
+            }
 
             maxDragGees = 0;
             deltaVExpended = 0;
@@ -164,10 +164,10 @@ namespace MuMech
             simCurves = _simcurves;
 
             once = true;
-
         }
 
         private Result result;
+        private static ulong resultId = 0;
 
         public Result RunSimulation()
         {
@@ -197,7 +197,6 @@ namespace MuMech
                     result.outcome = Outcome.NO_REENTRY;
                     return result;
                 }
-
                 result.startPosition = referenceFrame.ToAbsolute(x, t);
 
                 double maxT = t + maxSimulatedTime;
@@ -218,15 +217,13 @@ namespace MuMech
                         result.outcome = Outcome.TIMED_OUT;
                         break;
                     }
-
                     RK4Step();
                     LimitSpeed();
                     RecordTrajectory();
                 }
 
                 //MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
-
-                result.id = Guid.NewGuid();
+                result.id = resultId++;
                 result.body = mainBody;
                 result.referenceFrame = referenceFrame;
                 result.endUT = t;
@@ -375,8 +372,8 @@ namespace MuMech
                     double altASL = xForChuteSim.magnitude - bodyRadius;
                     double altAGL = altASL - probableLandingSiteASL;
                     double pressure = Pressure(xForChuteSim);
-                    bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
-
+                    
+                    bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
                     maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
 
                     // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
@@ -387,7 +384,7 @@ namespace MuMech
                     }
                     else
                     {
-                        parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, this.parachuteSemiDeployMultiplier);
+                        parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
                     }
                 }
             }
@@ -435,7 +432,6 @@ namespace MuMech
         Vector3d TotalAccel(Vector3d pos, Vector3d vel, bool record=false)
         {
             Vector3d airVel = SurfaceVelocity(pos, vel);
-
             double airDensity = AirDensity(pos);
             double speedOfSound = mainBody.GetSpeedOfSound(Pressure(pos), airDensity);
             float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
@@ -450,14 +446,11 @@ namespace MuMech
                 result.prediction.speedOfSound = speedOfSound;
                 result.prediction.dynamicPressurekPa = dynamicPressurekPa;
             }
-            
             Vector3d dragAccel = (1d / vessel.totalMass) * DragAccel(pos, vel, dynamicPressurekPa, mach);
 
             if (record)
                 lastRecordedDrag = dragAccel;
-
             Vector3d totalAccel = GravAccel(pos) + dragAccel + LiftAccel(pos, vel, dynamicPressurekPa, mach);
-
             if (once)
                 once = false;
 
@@ -553,7 +546,6 @@ namespace MuMech
             return FlightGlobals.getAtmDensity(pressure, temp, mainBody);
         }
 
-
         double StaticPressure(double altitude)
         {
             if (!mainBody.atmosphere)
@@ -582,7 +574,7 @@ namespace MuMech
             double temperature;
             if (altitude >= mainBody.atmosphereDepth)
             {
-                return PhysicsGlobals.SpaceTemperature;
+                return simCurves.SpaceTemperature;
             }
             if (!mainBody.atmosphereUseTemperatureCurve)
             {
@@ -592,7 +584,7 @@ namespace MuMech
             {
                 temperature = !mainBody.atmosphereTemperatureCurveIsNormalized ?
                     simCurves.AtmosphereTemperatureCurve.Evaluate((float)altitude) :
-                    UtilMath.Lerp(PhysicsGlobals.SpaceTemperature, mainBody.atmosphereTemperatureSeaLevel, simCurves.AtmosphereTemperatureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
+                    UtilMath.Lerp(simCurves.SpaceTemperature, mainBody.atmosphereTemperatureSeaLevel, simCurves.AtmosphereTemperatureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
             }
             double latitude = referenceFrame.Latitude(pos);
             temperature += simCurves.AtmosphereTemperatureSunMultCurve.Evaluate((float)altitude)
@@ -639,22 +631,33 @@ namespace MuMech
         // FloatCurve (Unity Animation curve) are not thread safe so we need a local copy of the curves for the thread
         public class SimCurves
         {
-            public SimCurves(CelestialBody mainBody)
+            public void Setup(CelestialBody newBody)
             {
-                dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
-                dragCurveSurface = new FloatCurve(PhysicsGlobals.DragCurveSurface.Curve.keys);
-                dragCurveTail = new FloatCurve(PhysicsGlobals.DragCurveTail.Curve.keys);
-                dragCurveTip = new FloatCurve(PhysicsGlobals.DragCurveTip.Curve.keys);
-                liftCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftCurve.Curve.keys);
-                liftMachCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftMachCurve.Curve.keys);
-                atmospherePressureCurve = new FloatCurve(mainBody.atmospherePressureCurve.Curve.keys);
+                // No point in copying those again if we already have them loaded
+                if (dragCurveMultiplier != null)
+                {
+                    dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
+                    dragCurveSurface = new FloatCurve(PhysicsGlobals.DragCurveSurface.Curve.keys);
+                    dragCurveTail = new FloatCurve(PhysicsGlobals.DragCurveTail.Curve.keys);
+                    dragCurveTip = new FloatCurve(PhysicsGlobals.DragCurveTip.Curve.keys);
+                    liftCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftCurve.Curve.keys);
+                    liftMachCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftMachCurve.Curve.keys);
+                    spaceTemperature = PhysicsGlobals.SpaceTemperature;
+                }
 
-                atmosphereTemperatureSunMultCurve = new FloatCurve(mainBody.atmosphereTemperatureSunMultCurve.Curve.keys);
-                latitudeTemperatureBiasCurve = new FloatCurve(mainBody.latitudeTemperatureBiasCurve.Curve.keys);
-                latitudeTemperatureSunMultCurve = new FloatCurve(mainBody.latitudeTemperatureSunMultCurve.Curve.keys);
-                atmosphereTemperatureCurve = new FloatCurve(mainBody.atmosphereTemperatureCurve.Curve.keys);
-                axialTemperatureSunMultCurve = new FloatCurve(mainBody.axialTemperatureSunMultCurve.Curve.keys);
+                if (newBody != body)
+                {
+                    body = newBody;
+                    atmospherePressureCurve = new FloatCurve(newBody.atmospherePressureCurve.Curve.keys);
+                    atmosphereTemperatureSunMultCurve = new FloatCurve(newBody.atmosphereTemperatureSunMultCurve.Curve.keys);
+                    latitudeTemperatureBiasCurve = new FloatCurve(newBody.latitudeTemperatureBiasCurve.Curve.keys);
+                    latitudeTemperatureSunMultCurve = new FloatCurve(newBody.latitudeTemperatureSunMultCurve.Curve.keys);
+                    atmosphereTemperatureCurve = new FloatCurve(newBody.atmosphereTemperatureCurve.Curve.keys);
+                    axialTemperatureSunMultCurve = new FloatCurve(newBody.axialTemperatureSunMultCurve.Curve.keys);
+                }
             }
+
+            private CelestialBody body;
 
             private FloatCurve liftCurve;
 
@@ -679,6 +682,8 @@ namespace MuMech
             private FloatCurve axialTemperatureSunMultCurve;
 
             private FloatCurve atmosphereTemperatureCurve;
+
+            private double spaceTemperature;
 
             public FloatCurve LiftCurve
             {
@@ -739,6 +744,12 @@ namespace MuMech
             {
                 get { return atmosphereTemperatureCurve; }
             }
+
+            public double SpaceTemperature
+            {
+                get { return spaceTemperature; }
+            }
+
         }
 
 
@@ -760,7 +771,7 @@ namespace MuMech
 
             public double timeToComplete;
 
-            public Guid id; // give each set of results a new GUID so we can check to see if the result has changed.
+            public ulong id; // give each set of results a new id so we can check to see if the result has changed.
             public Outcome outcome;
 
             public CelestialBody body;
@@ -1001,17 +1012,13 @@ namespace MuMech
         private Vector3d lat90AtStart;
         private CelestialBody referenceBody;
 
-        private ReferenceFrame() { }
-
-        public static ReferenceFrame CreateAtCurrentTime(CelestialBody referenceBody)
+        public void UpdateAtCurrentTime(CelestialBody body)
         {
-            ReferenceFrame ret = new ReferenceFrame();
-            ret.lat0lon0AtStart = referenceBody.GetSurfaceNVector(0, 0);
-            ret.lat0lon90AtStart = referenceBody.GetSurfaceNVector(0, 90);
-            ret.lat90AtStart = referenceBody.GetSurfaceNVector(90, 0);
-            ret.epoch = Planetarium.GetUniversalTime();
-            ret.referenceBody = referenceBody;
-            return ret;
+            lat0lon0AtStart = body.GetSurfaceNVector(0, 0);
+            lat0lon90AtStart = body.GetSurfaceNVector(0, 90);
+            lat90AtStart = body.GetSurfaceNVector(90, 0);
+            epoch = Planetarium.GetUniversalTime();
+            referenceBody = body;
         }
 
         //Vector3d must be either a position RELATIVE to referenceBody, or a velocity
