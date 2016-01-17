@@ -148,7 +148,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            StartSimulation(false);
+            TryStartSimulation(false);
         }
 
         public override void OnModuleDisabled()
@@ -162,9 +162,14 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            TryStartSimulation(true);
+        }
+
+        private void TryStartSimulation(bool doErrorSim)
+        {
             try
             {
-                if (vessel.isActiveVessel)
+                if (vessel.isActiveVessel && !vessel.LandedOrSplashed)
                 {
                     // We should be running simulations periodically. If one is not running right now,
                     // check if enough time has passed since the last one to start a new one:
