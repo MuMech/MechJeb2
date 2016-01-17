@@ -146,10 +146,11 @@ namespace MuMech
             {
                 if (HighLogic.LoadedSceneIsEditor)
                     enabledEditor = enabled;
-                else
+                if (HighLogic.LoadedSceneIsFlight)
                     enabledFlight = enabled;
-                global.AddValue("enabledEditor", enabledEditor);
-                global.AddValue("enabledFlight", enabledFlight);
+
+                    global.AddValue("enabledEditor", enabledEditor);
+                    global.AddValue("enabledFlight", enabledFlight);
             }
 //            if (global != null) global.AddValue("locked", locked);
         }
@@ -166,6 +167,8 @@ namespace MuMech
                 {
                     enabledEditor = loadedEnabled;
                     useOldConfig = false;
+                    if (HighLogic.LoadedSceneIsEditor)
+                        enabled = loadedEnabled;
                 }
             }
 
@@ -176,13 +179,12 @@ namespace MuMech
                 {
                     enabledFlight = loadedEnabled;
                     useOldConfig = false;
+                    if (HighLogic.LoadedSceneIsFlight)
+                        enabled = loadedEnabled;
                 }
             }
 
-            if (!useOldConfig)
-                enabled = HighLogic.LoadedSceneIsEditor ? enabledEditor : enabledFlight;
-
-            if (useOldConfig && global.HasValue("enabled"))
+            if (global != null && useOldConfig && global.HasValue("enabled"))
             {
                 bool loadedEnabled;
                 if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))

@@ -153,6 +153,8 @@ namespace MuMech
                     {
                         window.enabledEditor = loadedEnabled;
                         useOldConfig = false;
+                        if (HighLogic.LoadedSceneIsEditor)
+                            enabled = loadedEnabled;
                     }
                 }
 
@@ -163,12 +165,11 @@ namespace MuMech
                     {
                         window.enabledFlight = loadedEnabled;
                         useOldConfig = false;
+                        if (HighLogic.LoadedSceneIsFlight)
+                            enabled = loadedEnabled;
                     }
                 }
-
-                if (!useOldConfig)
-                    window.enabled = HighLogic.LoadedSceneIsEditor ? window.enabledEditor : window.enabledFlight;
-
+                
                 if (useOldConfig && windowNode.HasValue("enabled"))
                 {
                     bool loadedEnabled;
@@ -212,7 +213,7 @@ namespace MuMech
 
                 if (HighLogic.LoadedSceneIsEditor)
                     window.enabledEditor = window.enabled;
-                else
+                if (HighLogic.LoadedSceneIsFlight)
                     window.enabledFlight = window.enabled;
 
                 windowNode.AddValue("enabledFlight", window.enabledFlight);
