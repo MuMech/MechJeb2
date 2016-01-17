@@ -85,10 +85,11 @@ namespace MuMech
                 else
                 {
                     GUILayout.BeginHorizontal();
-                    if (!core.target.PositionTargetExists) GUI.enabled = false;
+                    if (!core.target.PositionTargetExists || vessel.LandedOrSplashed) GUI.enabled = false;
                     if (GUILayout.Button("Land at target")) core.landing.LandAtPositionTarget(this);
-                    GUI.enabled = true;
+                    GUI.enabled = !vessel.LandedOrSplashed;
                     if (GUILayout.Button("Land somewhere")) core.landing.LandUntargeted(this);
+                    GUI.enabled = true;
                     GUILayout.EndHorizontal();
                 }
 
@@ -171,7 +172,7 @@ namespace MuMech
                         GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
                                        +"\nMax drag: " + result.maxDragGees.ToString("F1") +"g"
                                        +"\nDelta-v needed: " + result.deltaVExpended.ToString("F1") + "m/s"
-                                       +"\nTime to land: " + GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1));                        
+                                       +"\nTime to land: " + GuiUtils.TimeToDHMS(Math.Max(0, result.endUT - Planetarium.GetUniversalTime()), 1));
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
@@ -185,7 +186,7 @@ namespace MuMech
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
                         GUILayout.Label("Orbit does not reenter:\n"
-                                      + MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + "m atmosphere height");
+                                      + MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + (mainBody.atmosphere ? "m atmosphere height" : "m ground"));
                         break;
 
                     case ReentrySimulation.Outcome.TIMED_OUT:
