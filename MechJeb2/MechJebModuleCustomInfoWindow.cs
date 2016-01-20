@@ -154,7 +154,7 @@ namespace MuMech
                         window.enabledEditor = loadedEnabled;
                         useOldConfig = false;
                         if (HighLogic.LoadedSceneIsEditor)
-                            enabled = loadedEnabled;
+                            window.enabled = loadedEnabled;
                     }
                 }
 
@@ -166,7 +166,7 @@ namespace MuMech
                         window.enabledFlight = loadedEnabled;
                         useOldConfig = false;
                         if (HighLogic.LoadedSceneIsFlight)
-                            enabled = loadedEnabled;
+                            window.enabled = loadedEnabled;
                     }
                 }
 
@@ -182,8 +182,8 @@ namespace MuMech
                             window.enabledFlight = window.enabled;
                         }
                     }
-                    enabledEditor = enabled;
-                    enabledFlight = enabled;
+                    window.enabledEditor = window.enabled;
+                    window.enabledFlight = window.enabled;
                 }
 
                 window.items = new List<InfoItem>();
