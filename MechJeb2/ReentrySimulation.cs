@@ -222,7 +222,7 @@ namespace MuMech
                     RecordTrajectory();
                 }
 
-                //MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
+                MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
                 result.id = resultId++;
                 result.body = mainBody;
                 result.referenceFrame = referenceFrame;
@@ -239,7 +239,8 @@ namespace MuMech
             }
             catch (Exception ex)
             {
-                Debug.LogError("Exception thrown during Rentry Simulation" + ex.StackTrace + ex.Message);
+                //Debug.LogError("Exception thrown during Rentry Simulation : " + ex.GetType() + ":" + ex.Message + "\n"+ ex.StackTrace);
+                result.exception = ex;
                 result.outcome = Outcome.ERROR;
             }
             finally
@@ -634,7 +635,7 @@ namespace MuMech
             public void Setup(CelestialBody newBody)
             {
                 // No point in copying those again if we already have them loaded
-                if (dragCurveMultiplier != null)
+                if (!loaded)
                 {
                     dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
                     dragCurveSurface = new FloatCurve(PhysicsGlobals.DragCurveSurface.Curve.keys);
@@ -643,6 +644,7 @@ namespace MuMech
                     liftCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftCurve.Curve.keys);
                     liftMachCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftMachCurve.Curve.keys);
                     spaceTemperature = PhysicsGlobals.SpaceTemperature;
+                    loaded = true;
                 }
 
                 if (newBody != body)
@@ -656,6 +658,8 @@ namespace MuMech
                     axialTemperatureSunMultCurve = new FloatCurve(newBody.axialTemperatureSunMultCurve.Curve.keys);
                 }
             }
+
+            private bool loaded = false;
 
             private CelestialBody body;
 
@@ -773,6 +777,7 @@ namespace MuMech
 
             public ulong id; // give each set of results a new id so we can check to see if the result has changed.
             public Outcome outcome;
+            public Exception exception;
 
             public CelestialBody body;
             public ReferenceFrame referenceFrame;
@@ -822,6 +827,7 @@ namespace MuMech
             {
                 if (trajectory !=null)
                     ListPool<AbsoluteVector>.Instance.Release(trajectory);
+                exception = null;
                 pool.Release(this);
             }
 
@@ -931,9 +937,7 @@ namespace MuMech
                 resultText += "\n input_multiplierHasError: " + input_multiplierHasError;
                 resultText += "\n input_dt: " + input_dt;
                 resultText += "\n}";
-
-                if (null != id) { resultText += "\nid: " + id; }
-                
+                resultText += "\nid: " + id;
                 resultText += "\noutcome: " + outcome; 
                 resultText += "\nmaxdt: " + maxdt;
                 resultText += "\ntimeToComplete: " + timeToComplete;
