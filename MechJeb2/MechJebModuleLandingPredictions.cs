@@ -64,6 +64,7 @@ namespace MuMech
                 return result;
             }
         }
+        
         public ReentrySimulation.Result GetErrorResult() 
         {
             if (null != errorResult)
@@ -120,9 +121,17 @@ namespace MuMech
         protected bool errorSimulationRunning = false; // the predictor can run two types of simulation - 1) simulations of the current situation. 2) simulations of the current situation with deliberate error introduced into the parachute multiplier to aid the statistical analysis of these results.
         protected System.Diagnostics.Stopwatch errorStopwatch = new System.Diagnostics.Stopwatch();
         protected long millisecondsBetweenErrorSimulations;
-  
-        protected bool simulationRunning = false;
+
+        private bool simulationRunning = false;
+        public bool SimulationRunning
+        {
+            get { return simulationRunning; }
+        }
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        public double SimulationRunningTime
+        {
+            get { return simulationRunning ? stopwatch.ElapsedMilliseconds / 1000d : 0; }
+        }
         protected long millisecondsBetweenSimulations;
 
         protected ReentrySimulation.Result result = null;
@@ -133,7 +142,7 @@ namespace MuMech
         // The curves used for the sim are not thread safe so we need a copy used only by the thread
         ReentrySimulation.SimCurves simCurves = new ReentrySimulation.SimCurves();
 
-        protected const int interactionsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
+        protected const int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
         protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run.
         // TODO - decide if variable for fixed dt results in a more stable result
         protected bool variabledt = true; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
@@ -142,6 +151,9 @@ namespace MuMech
         // TODO : Convert to use Disposer
         private static readonly Stack<ReentrySimulation.Result> resultsToRelease = new Stack<ReentrySimulation.Result>();
         private Random random;
+
+        // Store the exceptions we get while in a thread since we can't print from there
+        private Queue<Exception> exceptions = new Queue<Exception>();
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -168,6 +180,15 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            lock (exceptions)
+            {
+                while (exceptions.Count > 0)
+                {
+                    Exception ex = exceptions.Dequeue();
+                    print("Exception in the last simulation\n" + ex.Message + "\n" + ex.StackTrace);
+                }
+            }
+
             TryStartSimulation(true);
         }
 
@@ -179,7 +200,7 @@ namespace MuMech
                 {
                     // We should be running simulations periodically. If one is not running right now,
                     // check if enough time has passed since the last one to start a new one:
-                    if (!simulationRunning && stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                    if (!simulationRunning && (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations || !stopwatch.IsRunning))
                     {
                         stopwatch.Stop();
                         stopwatch.Reset();
@@ -188,7 +209,7 @@ namespace MuMech
                     }
 
                     // We also periodically run simulations containing deliberate errors if we have been asked to do so by the landing autopilot.
-                    if (doErrorSim && this.runErrorSimulations && !errorSimulationRunning && errorStopwatch.ElapsedMilliseconds >= millisecondsBetweenErrorSimulations)
+                    if (doErrorSim && this.runErrorSimulations && !errorSimulationRunning && (errorStopwatch.ElapsedMilliseconds >= millisecondsBetweenErrorSimulations || !errorStopwatch.IsRunning))
                     {
                         errorStopwatch.Stop();
                         errorStopwatch.Reset();
@@ -254,6 +275,7 @@ namespace MuMech
             //RunSimulation(sim);
         }
 
+        // TODO : review the result switching. Move the switch to FixedUpdate ? Fix simulationRunning getting stuck
         protected void RunSimulation(object o)
         {
             ReentrySimulation sim = (ReentrySimulation)o;
@@ -261,6 +283,12 @@ namespace MuMech
             {
 
                 ReentrySimulation.Result newResult = sim.RunSimulation();
+
+                if (newResult.exception !=null)
+                    lock (exceptions)
+                    {
+                        exceptions.Enqueue(result.exception);
+                    }
 
                 if (newResult.multiplierHasError)
                 {
@@ -306,14 +334,14 @@ namespace MuMech
                     millisecondsBetweenSimulations = Math.Min(Math.Max(2*millisecondsToCompletion, 200), 5);
                         // Do not wait for too long before running another simulation, but also give the processor a rest. 
 
-                    // How long should we set the max_dt to be in the future? Calculate for interactionsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
+                    // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
                     if (newResult.outcome == ReentrySimulation.Outcome.AEROBRAKED ||
                         newResult.outcome == ReentrySimulation.Outcome.LANDED)
                     {
                         if (this.variabledt)
                         {
                             dt = (newResult.maxdt*((double) millisecondsToCompletion/(double) 1000))/
-                                 ((double) 1/((double) 3*(double) interactionsPerSecond));
+                                 ((double) 1/((double) 3*(double) interationsPerSecond));
                             // There is no point in having a dt that is smaller than the physics frame rate as we would be trying to be more precise than the game.
                             dt = Math.Max(dt, sim.min_dt);
                             // Set a sensible upper limit to dt as well. - in this case 10 seconds
@@ -331,8 +359,12 @@ namespace MuMech
             }
             catch (Exception ex)
             {
-                Debug.Log(string.Format("Exception in MechJebModuleLandingPredictions.RunSimulation\n{0}", ex.StackTrace));
-                Debug.LogException(ex);
+                //Debug.Log(string.Format("Exception in MechJebModuleLandingPredictions.RunSimulation\n{0}", ex.StackTrace));
+                //Debug.LogException(ex);
+                lock (exceptions)
+                {
+                    exceptions.Enqueue(ex);
+                }
             }
             finally
             {
