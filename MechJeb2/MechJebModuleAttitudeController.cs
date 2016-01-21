@@ -53,7 +53,7 @@ namespace MuMech
 		public double deadband = 0.0001;
 
 		[Persistent(pass = (int)Pass.Global)]
-		public double kWlimit = 0.05;
+		public double kWlimit = 0.15;
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
