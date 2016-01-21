@@ -115,19 +115,19 @@ namespace MuMech
         public double timeSinceMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("ΔV expended", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
+        [ValueInfoItem("ΔV expended", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
         public double deltaVExpended = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Drag losses", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
+        [ValueInfoItem("Drag losses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
         public double dragLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Gravity losses", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
+        [ValueInfoItem("Gravity losses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
         public double gravityLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Steering losses", InfoItem.Category.Recorder, format = "F0", units = "m/s")]
+        [ValueInfoItem("Steering losses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
         public double steeringLosses = 0;
 
         [ValueInfoItem("Phase angle from mark", InfoItem.Category.Recorder, format = "F2", units = "º")]
@@ -226,6 +226,8 @@ namespace MuMech
             gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.surfaceVelocity.normalized, vesselState.gravityForce);
             gravityLosses -= vesselState.deltaT * Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
             dragLosses += vesselState.deltaT * vesselState.drag;
+            deltaVExpended += vesselState.deltaT * vesselState.currentThrustAccel;
+            steeringLosses += vesselState.deltaT * vesselState.currentThrustAccel * (1 - Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.forward));
 
             maxDragGees = Math.Max(maxDragGees, vesselState.drag / 9.81);
 
@@ -284,13 +286,7 @@ namespace MuMech
                 maximums[t] = Math.Max(maximums[t], current);
             }
         }
-
-        public override void Drive(FlightCtrlState s)
-        {
-            deltaVExpended += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle);
-            steeringLosses += vesselState.deltaT * vesselState.ThrustAccel(s.mainThrottle) * (1 - Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.forward));
-        }
-
+        
         // TODO : not do the full scale update as often
         private void UpdateMinMax()
         {
