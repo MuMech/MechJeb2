@@ -203,6 +203,8 @@ namespace MuMech
                 // Simulate a maximum of maxOrbits periods of a circular orbit at the entry altitude
                 maxSimulatedTime = maxOrbits * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(x.magnitude), 3.0) / gravParameter);
 
+                RecordTrajectory();
+
                 double maxT = t + maxSimulatedTime;
                 while (true)
                 {

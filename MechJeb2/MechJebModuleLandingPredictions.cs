@@ -78,10 +78,6 @@ namespace MuMech
             return errorResult;
         }
 
-
-
-        //Debug
-
         [ValueInfoItem("Sim Drag Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
         public double simDragScalar;
 
@@ -101,12 +97,14 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool makeAerobrakeNodes = false;
 
-
         [Persistent(pass = (int)Pass.Global)]
         public bool showTrajectory = false;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool worldTrajectory = true;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool camTrajectory = false;
 
         public bool deployChutes = false;        
         public int limitChutesStage = 0;
@@ -466,17 +464,18 @@ namespace MuMech
 
         void DoMapView()
         {
-            if (MapView.MapIsEnabled && vessel.isActiveVessel && this.enabled)
+            if ((MapView.MapIsEnabled || camTrajectory) && vessel.isActiveVessel && this.enabled)
             {
                 ReentrySimulation.Result drawnResult = Result;
                 if (drawnResult != null)
                 {
                     if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
-                        GLUtils.DrawMapViewGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, 60);
+                        GLUtils.DrawMapViewGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, MapView.MapIsEnabled ? 60 : 1);
 
                     if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
                     {
                         double interval = Math.Min((drawnResult.endUT - drawnResult.input_UT) / 100, 10);
+                        //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
                         using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
                         {
                             GLUtils.DrawPath(drawnResult.body, list.value, Color.red);

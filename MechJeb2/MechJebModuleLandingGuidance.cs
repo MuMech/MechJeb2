@@ -152,6 +152,7 @@ namespace MuMech
                 predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
                 predictor.showTrajectory = GUILayout.Toggle(predictor.showTrajectory, "Show trajectory");
                 predictor.worldTrajectory = GUILayout.Toggle(predictor.worldTrajectory, "World trajectory");
+                predictor.camTrajectory = GUILayout.Toggle(predictor.camTrajectory, "Camera trajectory (WIP)");
                 DrawGUIPrediction();
             }
 
