@@ -78,6 +78,8 @@ namespace MuMech
             {
                 GUILayout.Label("Autopilot:");
 
+                predictor.maxOrbits = core.landing.enabled ? 0.5 : 4; 
+
                 if (core.landing.enabled)
                 {
                     if (GUILayout.Button("Abort autoland")) core.landing.StopLanding();

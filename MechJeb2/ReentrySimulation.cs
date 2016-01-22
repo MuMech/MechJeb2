@@ -51,7 +51,9 @@ namespace MuMech
         double max_dt;
         //private const double min_dt = 0.01; //in seconds
         public double min_dt; //in seconds
-        double maxSimulatedTime = 2000; //in seconds
+        double maxSimulatedTime; //in seconds
+        // Maximum numbers of orbits we want to predict
+        private double maxOrbits;
 
         double parachuteSemiDeployMultiplier;
         bool multiplierHasError;
@@ -96,19 +98,15 @@ namespace MuMech
         {
         }
 
-        public static ReentrySimulation Borrow(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel,
-            SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL,
-            double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL,
-            bool _multiplierHasError, double _dt, double _min_dt)
+        public static ReentrySimulation Borrow(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits)
         {
             ReentrySimulation sim = pool.Borrow();
-            sim.Init(_initialOrbit, _UT, _vessel, _simcurves, _descentSpeedPolicy, _decelEndAltitudeASL, _maxThrustAccel, _parachuteSemiDeployMultiplier, _probableLandingSiteASL, _multiplierHasError, _dt, _min_dt);
+            sim.Init(_initialOrbit, _UT, _vessel, _simcurves, _descentSpeedPolicy, _decelEndAltitudeASL, _maxThrustAccel, _parachuteSemiDeployMultiplier, _probableLandingSiteASL, _multiplierHasError, _dt, _min_dt, _maxOrbits);
             return sim;
         }
 
 
-        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, 
-            double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt)
+        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits)
         {
             // Store all the input values as they were given
             input_initialOrbit = _initialOrbit;
@@ -129,6 +127,8 @@ namespace MuMech
             max_dt = _dt;
             dt = max_dt;
 
+            maxOrbits = _maxOrbits;
+
             // Get a copy of the original orbit, to be more thread safe
             //initialOrbit = new Orbit();
             initialOrbit.UpdateFromOrbitAtUT(_initialOrbit, _UT, _initialOrbit.referenceBody);
@@ -137,10 +137,6 @@ namespace MuMech
             bodyHasAtmosphere = body.atmosphere;
             bodyRadius = body.Radius;
             gravParameter = body.gravParameter;
-
-            // Simulate a maximum of 4 circular orbit at the current altitude
-            maxSimulatedTime = 4.0 * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(_initialOrbit.radius), 3.0) / gravParameter);
-            //Debug.Log("maxSimulatedTime=" + maxSimulatedTime.ToString("F0"));
 
             this.parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
             this.multiplierHasError = _multiplierHasError;
@@ -203,6 +199,9 @@ namespace MuMech
                     return result;
                 }
                 result.startPosition = referenceFrame.ToAbsolute(x, t);
+
+                // Simulate a maximum of maxOrbits periods of a circular orbit at the entry altitude
+                maxSimulatedTime = maxOrbits * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(x.magnitude), 3.0) / gravParameter);
 
                 double maxT = t + maxSimulatedTime;
                 while (true)

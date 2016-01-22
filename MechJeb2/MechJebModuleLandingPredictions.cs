@@ -148,6 +148,7 @@ namespace MuMech
         private readonly Queue<ReentrySimulation.Result> readyResults = new Queue<ReentrySimulation.Result>();
 
         private Random random;
+        public double maxOrbits = 1;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -252,7 +253,7 @@ namespace MuMech
             ReentrySimulation.SimCurves simCurves = ReentrySimulation.SimCurves.Borrow(patch.referenceBody);
 
             SimulatedVessel simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, deployChutes ? limitChutesStage : -1);
-            ReentrySimulation sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime);
+            ReentrySimulation sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime, maxOrbits);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             //Run the simulation in a separate thread
