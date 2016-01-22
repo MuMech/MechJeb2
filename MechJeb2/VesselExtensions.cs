@@ -191,7 +191,9 @@ namespace MuMech
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
             var nodes = vessel.patchedConicSolver.maneuverNodes.Slinq().Where((n,p) => n.patch == p && n != ignoreNode, patch);
-            if (nodes.Any()) return nodes.First().nextPatch;
+            // Slinq is nice but you can only enumerate it once
+            var first = nodes.FirstOrDefault();
+            if (first != null) return first.nextPatch;
 
             //return the next patch, or null if there isn't one:
             if (!finalPatch) return patch.nextPatch;
