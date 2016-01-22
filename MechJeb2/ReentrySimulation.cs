@@ -51,7 +51,7 @@ namespace MuMech
         double max_dt;
         //private const double min_dt = 0.01; //in seconds
         public double min_dt; //in seconds
-        const double maxSimulatedTime = 2000; //in seconds
+        double maxSimulatedTime = 2000; //in seconds
 
         double parachuteSemiDeployMultiplier;
         bool multiplierHasError;
@@ -107,7 +107,8 @@ namespace MuMech
         }
 
 
-        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt)
+        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, 
+            double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt)
         {
             // Store all the input values as they were given
             input_initialOrbit = _initialOrbit;
@@ -136,6 +137,10 @@ namespace MuMech
             bodyHasAtmosphere = body.atmosphere;
             bodyRadius = body.Radius;
             gravParameter = body.gravParameter;
+
+            // Simulate a maximum of 4 circular orbit at the current altitude
+            maxSimulatedTime = 4.0 * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(_initialOrbit.radius), 3.0) / gravParameter);
+            //Debug.Log("maxSimulatedTime=" + maxSimulatedTime.ToString("F0"));
 
             this.parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
             this.multiplierHasError = _multiplierHasError;
@@ -207,14 +212,17 @@ namespace MuMech
                         result.outcome = Outcome.LANDED;
                         break;
                     }
-                    if (Aerobraked())
+                    if (!result.aeroBrake && Aerobraked())
                     {
-                        result.outcome = Outcome.AEROBRAKED;
-                        break;
+                        result.aeroBrake = true;
+                        result.aeroBrakeUT = t;
+                        result.aeroBrakePosition = referenceFrame.ToAbsolute(x, t);
+                        result.aeroBrakeVelocity = referenceFrame.ToAbsolute(v, t);
+                        //break;
                     }
-                    if (t > maxT)
+                    if (t > maxT || Escaping())
                     {
-                        result.outcome = Outcome.TIMED_OUT;
+                        result.outcome = result.aeroBrake ? Outcome.AEROBRAKED : Outcome.TIMED_OUT;
                         break;
                     }
                     RK4Step();
@@ -222,7 +230,7 @@ namespace MuMech
                     RecordTrajectory();
                 }
 
-                MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
+                //MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
                 result.id = resultId++;
                 result.body = mainBody;
                 result.referenceFrame = referenceFrame;
@@ -246,6 +254,7 @@ namespace MuMech
             finally
             {
                 vessel.Release();
+                simCurves.Release();
             }
             return result;
         }
@@ -264,6 +273,13 @@ namespace MuMech
         {
             return bodyHasAtmosphere && (x.magnitude > aerobrakedRadius) && (Vector3d.Dot(x, v) > 0);
         }
+
+        bool Escaping()
+        {
+            double escapeVel = Math.Sqrt(2 * gravParameter / x.magnitude);
+            return bodyHasAtmosphere && (v.magnitude > escapeVel) && (Vector3d.Dot(x, v) > 0);
+        }
+
 
         void AdvanceToFreefallEnd(Orbit initialOrbit)
         {
@@ -321,7 +337,7 @@ namespace MuMech
 
             if (pos.magnitude < aerobrakedRadius) return true;
             if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;
-            if (pos.magnitude < decelRadius) return true; // TODO should this be landed, not decelerated?
+            if (pos.magnitude < decelRadius) return true;
             if (descentSpeedPolicy != null && surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
             return false;
         }
@@ -632,7 +648,39 @@ namespace MuMech
         // FloatCurve (Unity Animation curve) are not thread safe so we need a local copy of the curves for the thread
         public class SimCurves
         {
-            public void Setup(CelestialBody newBody)
+            private static readonly Pool<SimCurves> pool = new Pool<SimCurves>(Create, Reset);
+
+            private SimCurves()
+            {
+            }
+
+            public static int PoolSize
+            {
+                get { return pool.Size; }
+            }
+
+            private static SimCurves Create()
+            {
+                return new SimCurves();
+            }
+
+            public virtual void Release()
+            {
+                pool.Release(this);
+            }
+
+            private static void Reset(SimCurves obj)
+            {
+            }
+
+            public static SimCurves Borrow(CelestialBody newBody)
+            {
+                SimCurves curve = pool.Borrow();
+                curve.Setup(newBody);
+                return curve;
+            }
+
+            private void Setup(CelestialBody newBody)
             {
                 // No point in copying those again if we already have them loaded
                 if (!loaded)
@@ -786,6 +834,12 @@ namespace MuMech
             public AbsoluteVector startPosition;
             public AbsoluteVector endPosition;
             public AbsoluteVector endVelocity;
+
+            public bool aeroBrake;
+            public double aeroBrakeUT;
+            public AbsoluteVector aeroBrakePosition;
+            public AbsoluteVector aeroBrakeVelocity;
+
             public double endASL;
             public List<AbsoluteVector> trajectory;
 
@@ -833,6 +887,7 @@ namespace MuMech
 
             private static void Reset(Result obj)
             {
+                obj.aeroBrake = false;
             }
 
             public static Result Borrow()
@@ -864,6 +919,20 @@ namespace MuMech
                 return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
             }
 
+            public Vector3d WorldAeroBrakePosition()
+            {
+                return referenceFrame.WorldPositionAtCurrentTime(aeroBrakePosition);
+            }
+
+            public Vector3d WorldAeroBrakeVelocity()
+            {
+                return referenceFrame.WorldVelocityAtCurrentTime(aeroBrakeVelocity);
+            }
+
+            public Orbit AeroBrakeOrbit()
+            {
+                return MuUtils.OrbitFromStateVectors(WorldAeroBrakePosition(), WorldAeroBrakeVelocity(), body, endUT);
+            }
 
             public Disposable<List<Vector3d>> WorldTrajectory(double timeStep, bool world=true)
             {

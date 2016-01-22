@@ -177,11 +177,11 @@ namespace MuMech
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
                         GUILayout.Label("Predicted orbit after aerobraking:");
-                        Orbit o = result.EndOrbit();
+                        Orbit o = result.AeroBrakeOrbit();
                         if (o.eccentricity > 1) GUILayout.Label("Hyperbolic, eccentricity = " + o.eccentricity.ToString("F2"));
                         else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + "m x " + MuUtils.ToSI(o.ApA, 3) + "m");
                         GUILayout.Label("Max drag: " + result.maxDragGees.ToString("F1") + "g"
-                                       +"\nExit atmosphere in: " + GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1));                        
+                                       +"\nExit atmosphere in: " + GuiUtils.TimeToDHMS(result.aeroBrakeUT - Planetarium.GetUniversalTime(), 1));                        
                         break;
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
