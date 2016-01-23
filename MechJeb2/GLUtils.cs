@@ -18,64 +18,96 @@ namespace MuMech
             }
         }
 
-        public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0, double radius = 0)
+        public static void DrawGroundMarker(CelestialBody body, double latitude, double longitude, Color c, bool map, double rotation = 0, double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
             var height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
             if (height < body.Radius) { height = body.Radius; }
             Vector3d center = body.position + height * up;
 
-            if (IsOccluded(center, body)) return;
+            if (IsOccluded(center, body, map)) return;
 
             Vector3d north = Vector3d.Exclude(up, body.transform.up).normalized;
 
-            if (radius <= 0) { radius = body.Radius / 15; }
+            if (radius <= 0) { radius = map ? body.Radius / 15 : 5; }
 
-            GLTriangleMap(new Vector3d[]{
+            if (!map)
+            {
+                Vector3 centerPoint = FlightCamera.fetch.mainCamera.WorldToViewportPoint(center);
+                if (centerPoint.z < 0)
+                    return;
+            }
+
+            GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 10, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation + 10, up) * north)
-            }, c);
+            , c, map);
 
-            GLTriangleMap(new Vector3d[]{
+            GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation + 110, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation + 130, up) * north)
-            }, c);
+            , c, map);
 
-            GLTriangleMap(new Vector3d[]{
+            GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 110, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation - 130, up) * north)
-            }, c);
+            , c, map);
         }
 
-        public static void GLTriangleMap(Vector3d[] worldVertices, Color c)
+        public static void GLTriangle(Vector3d worldVertices1, Vector3d worldVertices2, Vector3d worldVertices3, Color c, bool map)
         {
             GL.PushMatrix();
             material.SetPass(0);
             GL.LoadOrtho();
             GL.Begin(GL.TRIANGLES);
             GL.Color(c);
-            GLVertexMap(worldVertices[0]);
-            GLVertexMap(worldVertices[1]);
-            GLVertexMap(worldVertices[2]);
+            GLVertex(worldVertices1, map);
+            GLVertex(worldVertices2, map);
+            GLVertex(worldVertices3, map);
             GL.End();
             GL.PopMatrix();
         }
-
-        public static void GLVertexMap(Vector3d worldPosition)
+        
+        public static void GLVertex(Vector3d worldPosition, bool map = false)
         {
-            Vector3 screenPoint = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition));
-            GL.Vertex3(screenPoint.x / Camera.main.pixelWidth, screenPoint.y / Camera.main.pixelHeight, 0);
+            Vector3 screenPoint = map ? PlanetariumCamera.Camera.WorldToViewportPoint(ScaledSpace.LocalToScaledSpace(worldPosition)) : FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosition);
+            GL.Vertex3(screenPoint.x, screenPoint.y, 0);
         }
 
-        //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
-        public static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody)
+        public static void GLPixelLine(Vector3d worldPosition1, Vector3d worldPosition2, bool map)
         {
+            Vector3 screenPoint1, screenPoint2;
+            if (map)
+            {
+                screenPoint1 = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition1));
+                screenPoint2 = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition2));
+            }
+            else
+            {
+                screenPoint1 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition1);
+                screenPoint2 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition2);
+            }
+
+            if (Camera.main.pixelRect.Contains(screenPoint1) && Camera.main.pixelRect.Contains(screenPoint2) && screenPoint1.z > 0 && screenPoint2.z > 0)
+            {
+                GL.Vertex3(screenPoint1.x, screenPoint1.y, 0);
+                GL.Vertex3(screenPoint2.x, screenPoint2.y, 0);
+            }
+        }
+
+
+        //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
+        public static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody, bool map)
+        {
+            if (!map)
+                return false;
+
             if (Vector3d.Distance(worldPosition, byBody.position) < byBody.Radius - 100) return true;
 
-            Vector3d camPos = ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position);
+            Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d) FlightCamera.fetch.mainCamera.transform.position;
 
             if (Vector3d.Angle(camPos - worldPosition, byBody.position - worldPosition) > 90) return false;
 
@@ -87,28 +119,26 @@ namespace MuMech
 
         //If dashed = false, draws 0-1-2-3-4-5...
         //If dashed = true, draws 0-1 2-3 4-5...
-        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool dashed = false)
+        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false)
         {
             GL.PushMatrix();
             material.SetPass(0);
-            GL.LoadOrtho();
+            GL.LoadPixelMatrix();
             GL.Begin(GL.LINES);
             GL.Color(c);
 
             int step = (dashed ? 2 : 1);
             for (int i = 0; i < points.Count() - 1; i += step)
             {
-                if (!IsOccluded(points[i], mainBody) && !IsOccluded(points[i + 1], mainBody))
+                if (!IsOccluded(points[i], mainBody, map) && !IsOccluded(points[i + 1], mainBody, map))
                 {
-                    GLVertexMap(points[i]);
-                    GLVertexMap(points[i + 1]);
+                    GLPixelLine(points[i], points[i + 1], map);
                 }
             }
-
             GL.End();
             GL.PopMatrix();
         }
-
+        
         public static void DrawBoundingBox(CelestialBody mainBody, Vessel vessel, MechJebModuleDockingAutopilot.Box3d box, Color c )
         {
             //Vector3d origin = vessel.GetWorldPos3D() - vessel.GetTransform().rotation * box.center ;
@@ -131,41 +161,41 @@ namespace MuMech
             GL.Begin(GL.LINES);
             GL.Color(c);
 
-            GLVertexMap(A1);
-            GLVertexMap(A2);
+            GLVertex(A1);
+            GLVertex(A2);
             
-            GLVertexMap(A2);
-            GLVertexMap(A3);
+            GLVertex(A2);
+            GLVertex(A3);
 
-            GLVertexMap(A3);
-            GLVertexMap(A4);
+            GLVertex(A3);
+            GLVertex(A4);
 
-            GLVertexMap(A4);
-            GLVertexMap(A1);
+            GLVertex(A4);
+            GLVertex(A1);
 
-            GLVertexMap(B1);
-            GLVertexMap(B2);
+            GLVertex(B1);
+            GLVertex(B2);
             
-            GLVertexMap(B2);
-            GLVertexMap(B3);
+            GLVertex(B2);
+            GLVertex(B3);
 
-            GLVertexMap(B3);
-            GLVertexMap(B4);
+            GLVertex(B3);
+            GLVertex(B4);
 
-            GLVertexMap(B4);
-            GLVertexMap(B1);
+            GLVertex(B4);
+            GLVertex(B1);
 
-            GLVertexMap(A1);
-            GLVertexMap(B1);
+            GLVertex(A1);
+            GLVertex(B1);
 
-            GLVertexMap(A2);
-            GLVertexMap(B2);
+            GLVertex(A2);
+            GLVertex(B2);
 
-            GLVertexMap(A3);
-            GLVertexMap(B3);
+            GLVertex(A3);
+            GLVertex(B3);
 
-            GLVertexMap(A4);
-            GLVertexMap(B4);
+            GLVertex(A4);
+            GLVertex(B4);
 
             GL.End();
             GL.PopMatrix();
@@ -192,7 +222,7 @@ namespace MuMech
                 }
             }
 
-            DrawPath(o.referenceBody, points, c, false);
+            DrawPath(o.referenceBody, points, c, true, false);
         }
     }
 }

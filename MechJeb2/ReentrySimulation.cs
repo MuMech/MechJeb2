@@ -55,6 +55,8 @@ namespace MuMech
         // Maximum numbers of orbits we want to predict
         private double maxOrbits;
 
+        private bool noSKiptoFreefall;
+
         double parachuteSemiDeployMultiplier;
         bool multiplierHasError;
 
@@ -98,15 +100,15 @@ namespace MuMech
         {
         }
 
-        public static ReentrySimulation Borrow(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits)
+        public static ReentrySimulation Borrow(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits, bool _noSKiptoFreefall)
         {
             ReentrySimulation sim = pool.Borrow();
-            sim.Init(_initialOrbit, _UT, _vessel, _simcurves, _descentSpeedPolicy, _decelEndAltitudeASL, _maxThrustAccel, _parachuteSemiDeployMultiplier, _probableLandingSiteASL, _multiplierHasError, _dt, _min_dt, _maxOrbits);
+            sim.Init(_initialOrbit, _UT, _vessel, _simcurves, _descentSpeedPolicy, _decelEndAltitudeASL, _maxThrustAccel, _parachuteSemiDeployMultiplier, _probableLandingSiteASL, _multiplierHasError, _dt, _min_dt, _maxOrbits, _noSKiptoFreefall);
             return sim;
         }
 
 
-        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits)
+        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits, bool _noSKiptoFreefall)
         {
             // Store all the input values as they were given
             input_initialOrbit = _initialOrbit;
@@ -128,6 +130,8 @@ namespace MuMech
             dt = max_dt;
 
             maxOrbits = _maxOrbits;
+
+            noSKiptoFreefall = _noSKiptoFreefall;
 
             // Get a copy of the original orbit, to be more thread safe
             //initialOrbit = new Orbit();
@@ -308,7 +312,7 @@ namespace MuMech
         //in the interval (lowerUT, upperUT) for which condition(UT, relative position, orbital velocity) is true
         double FindFreefallEndTime(Orbit initialOrbit)
         {
-            if (FreefallEnded(initialOrbit, t))
+            if (noSKiptoFreefall || FreefallEnded(initialOrbit, t))
             {
                 return t;
             }

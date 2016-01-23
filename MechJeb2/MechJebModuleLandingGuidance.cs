@@ -78,7 +78,8 @@ namespace MuMech
             {
                 GUILayout.Label("Autopilot:");
 
-                predictor.maxOrbits = core.landing.enabled ? 0.5 : 4; 
+                predictor.maxOrbits = core.landing.enabled ? 0.5 : 4;
+                predictor.noSkipToFreefall = !core.landing.enabled;
 
                 if (core.landing.enabled)
                 {
