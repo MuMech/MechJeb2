@@ -139,9 +139,10 @@ namespace MuMech
         public ManeuverNode aerobrakeNode = null;
         
         protected const int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
-        protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run.
+        protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run if variabledt is active
+
         // TODO - decide if variable for fixed dt results in a more stable result
-        protected bool variabledt = true; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
+        protected bool variabledt = false; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
         public bool noSkipToFreefall = false;
         
@@ -190,6 +191,12 @@ namespace MuMech
                     // check if enough time has passed since the last one to start a new one:
                     if (!simulationRunning && (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations || !stopwatch.IsRunning))
                     {
+                        // variabledt generate too much instability of the landing site with atmo.
+                        // variabledt = !(mainBody.atmosphere && core.landing.enabled);
+                        variabledt = !mainBody.atmosphere;
+                        if (!variabledt)
+                            dt = 0.5;
+
                         stopwatch.Stop();
                         stopwatch.Reset();
 
