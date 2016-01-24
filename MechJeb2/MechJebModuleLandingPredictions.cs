@@ -470,23 +470,24 @@ namespace MuMech
             {
                 ReentrySimulation.Result drawnResult = Result;
                 if (drawnResult != null)
-                    if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
-                            GLUtils.DrawGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, MapView.MapIsEnabled, 60);
-
-                if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
                 {
-                    double interval = Math.Max(Math.Min((drawnResult.endUT - drawnResult.input_UT) / 1000, 10), 0.1);
-                    //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
-                    using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
+                    if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
+                        GLUtils.DrawGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, MapView.MapIsEnabled, 60);
+
+                    if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
                     {
-                        if (!MapView.MapIsEnabled)
-                            list.value[0] = vesselState.CoM;
-                        GLUtils.DrawPath(drawnResult.body, list.value, Color.red, MapView.MapIsEnabled);
+                        double interval = Math.Max(Math.Min((drawnResult.endUT - drawnResult.input_UT) / 1000, 10), 0.1);
+                        //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
+                        using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
+                        {
+                            if (!MapView.MapIsEnabled)
+                                list.value[0] = vesselState.CoM;
+                            GLUtils.DrawPath(drawnResult.body, list.value, Color.red, MapView.MapIsEnabled);
+                        }
                     }
                 }
             }
         }
-
 
         public MechJebModuleLandingPredictions(MechJebCore core) : base(core) { }
     }
