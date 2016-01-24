@@ -479,6 +479,8 @@ namespace MuMech
                     //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
                     using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
                     {
+                        if (!MapView.MapIsEnabled)
+                            list.value[0] = vesselState.CoM;
                         GLUtils.DrawPath(drawnResult.body, list.value, Color.red, MapView.MapIsEnabled);
                     }
                 }

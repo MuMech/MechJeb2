@@ -25,7 +25,9 @@ namespace MuMech
             if (height < body.Radius) { height = body.Radius; }
             Vector3d center = body.position + height * up;
 
-            if (IsOccluded(center, body, map)) return;
+            Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
+
+            if (IsOccluded(center, body, camPos)) return;
 
             Vector3d north = Vector3d.Exclude(up, body.transform.up).normalized;
 
@@ -91,7 +93,7 @@ namespace MuMech
                 screenPoint2 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition2);
             }
 
-            if (Camera.main.pixelRect.Contains(screenPoint1) && Camera.main.pixelRect.Contains(screenPoint2) && screenPoint1.z > 0 && screenPoint2.z > 0)
+            if (screenPoint1.z > 0 && screenPoint2.z > 0)
             {
                 GL.Vertex3(screenPoint1.x, screenPoint1.y, 0);
                 GL.Vertex3(screenPoint2.x, screenPoint2.y, 0);
@@ -100,21 +102,18 @@ namespace MuMech
 
 
         //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
-        public static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody, bool map)
+        // https://cesiumjs.org/2013/04/25/Horizon-culling/
+        public static bool IsOccluded(Vector3d worldPosition,  CelestialBody byBody, Vector3d camPos)
         {
-            if (!map)
-                return false;
+            Vector3d VC = (byBody.position - camPos) / (byBody.Radius - 100);
+            Vector3d VT = (worldPosition - camPos) / (byBody.Radius - 100);
 
-            if (Vector3d.Distance(worldPosition, byBody.position) < byBody.Radius - 100) return true;
+            double VT_VC = Vector3d.Dot(VT, VC);
 
-            Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d) FlightCamera.fetch.mainCamera.transform.position;
+            // In front of the horizon plane
+            if (VT_VC < VC.sqrMagnitude -1) return false;
 
-            if (Vector3d.Angle(camPos - worldPosition, byBody.position - worldPosition) > 90) return false;
-
-            double bodyDistance = Vector3d.Distance(camPos, byBody.position);
-            double separationAngle = Vector3d.Angle(worldPosition - camPos, byBody.position - camPos);
-            double altitude = bodyDistance * Math.Sin(Math.PI / 180 * separationAngle);
-            return (altitude < byBody.Radius);
+            return VT_VC * VT_VC / VT.sqrMagnitude > VC.sqrMagnitude - 1;
         }
 
         //If dashed = false, draws 0-1-2-3-4-5...
@@ -127,10 +126,12 @@ namespace MuMech
             GL.Begin(GL.LINES);
             GL.Color(c);
 
+            Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
+
             int step = (dashed ? 2 : 1);
             for (int i = 0; i < points.Count() - 1; i += step)
             {
-                if (!IsOccluded(points[i], mainBody, map) && !IsOccluded(points[i + 1], mainBody, map))
+                if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
                 {
                     GLPixelLine(points[i], points[i + 1], map);
                 }
