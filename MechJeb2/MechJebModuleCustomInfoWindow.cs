@@ -285,7 +285,7 @@ namespace MuMech
 
             if (editedWindow != null)
             {
-                List<MechJebModuleCustomInfoWindow> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>().ToList();
+                List<ComputerModule> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Title:", GUILayout.ExpandWidth(false));
@@ -294,7 +294,7 @@ namespace MuMech
                     {
                         editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
                     });
-                editedWindow = allWindows[editedWindowIndex];
+                editedWindow = (MechJebModuleCustomInfoWindow)allWindows[editedWindowIndex];
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
