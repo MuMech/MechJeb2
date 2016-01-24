@@ -473,7 +473,7 @@ namespace MuMech
 
         void DoMapView()
         {
-            if ((MapView.MapIsEnabled || camTrajectory) && vessel.isActiveVessel && this.enabled)
+            if ((MapView.MapIsEnabled || camTrajectory) && vessel.isActiveVessel && !vessel.LandedOrSplashed && this.enabled)
             {
                 ReentrySimulation.Result drawnResult = Result;
                 if (drawnResult != null)
@@ -487,7 +487,7 @@ namespace MuMech
                         //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
                         using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
                         {
-                            if (!MapView.MapIsEnabled)
+                            if (!MapView.MapIsEnabled && (noSkipToFreefall || vessel.staticPressurekPa > 0))
                                 list.value[0] = vesselState.CoM;
                             GLUtils.DrawPath(drawnResult.body, list.value, Color.red, MapView.MapIsEnabled);
                         }
