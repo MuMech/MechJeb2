@@ -485,7 +485,18 @@ namespace MuMech
             set { e[i, j] = value; }
         }
 
-		public Matrix3x3f transpose()
+        public void reset()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    e[i, j] = 0;
+                }
+            }
+        }
+
+        public Matrix3x3f transpose()
 		{
 			Matrix3x3f ret = new Matrix3x3f();
 			for (int i = 0; i < 3; i++)
