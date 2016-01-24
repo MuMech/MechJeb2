@@ -532,7 +532,7 @@ namespace MuMech
             // the max throttles.
             foreach (var resource in vesselState.resources.Values)
             {
-                if (resource.intakes.Length == 0)
+                if (resource.intakes.Count == 0)
                 {
                     // No intakes provide this resource; not our problem.
                     continue;

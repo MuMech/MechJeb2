@@ -564,6 +564,10 @@ namespace MuMech
                         Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;
                         fwdThrustRatio = Vector3.Dot(fwd, thrust);
                     }
+                    else
+                    {
+                        fwdThrustRatio = 1;
+                    }
 
                     thrustPercentage = engine.thrustPercentage;
 
