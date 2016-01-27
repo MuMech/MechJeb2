@@ -35,6 +35,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autodeploySolarPanels = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool skipCircularization = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage = true;
         public bool autostage
         {
@@ -428,7 +430,7 @@ namespace MuMech
 
         void DriveCircularizationBurn(FlightCtrlState s)
         {
-            if (!vessel.patchedConicsUnlocked())
+            if (!vessel.patchedConicsUnlocked() || skipCircularization)
             {
                 this.users.Clear();
                 return;
