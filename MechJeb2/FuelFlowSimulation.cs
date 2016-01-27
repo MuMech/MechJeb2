@@ -60,6 +60,7 @@ namespace MuMech
             {
                 Part p = parts[i];
                 nodeLookup[p].SetupRegularSources(p, nodeLookup);
+                nodeLookup[p].SetupSurfaceMountSources(p, nodeLookup);
             }
 
 
@@ -415,6 +416,7 @@ namespace MuMech
 
         readonly List<FuelNode> fuelLineSources = new List<FuelNode>();
         readonly List<FuelNode> stackNodeSources = new List<FuelNode>();
+        readonly List<FuelNode> surfaceMountSources = new List<FuelNode>();
         FuelNode surfaceMountParent = null;
 
         float maxFuelFlow = 0;     //max fuel flow of this part
@@ -476,6 +478,7 @@ namespace MuMech
 
             fuelLineSources.Clear();
             stackNodeSources.Clear();
+            surfaceMountSources.Clear();
 
             surfaceMountParent = null;
             isEngine = false;
@@ -686,8 +689,7 @@ namespace MuMech
                         // For stack nodes, we can draw fuel unless this node is specifically
                         // labeled as having crossfeed disabled (Kashua rule #4)
                         FuelNode fuelnode;
-                        if (attachNode.id != "Strut"
-                            && attachNode.ResourceXFeed
+                        if (attachNode.ResourceXFeed
                             && !(part.NoCrossFeedNodeKey.Length > 0
                                  && attachNode.id.Contains(part.NoCrossFeedNodeKey))
                             && nodeLookup.TryGetValue(attachNode.attachedPart, out fuelnode))
@@ -705,14 +707,31 @@ namespace MuMech
             }
         }
 
+        public void SetupSurfaceMountSources(Part part, Dictionary<Part, FuelNode> nodeLookup)
+        {
+            // When Stack_PriUsesSurf is enabled or the flow mode is STAGE_STACK_FLOW_xxx we can draw fuel through surface mounted children
+            if (part.fuelCrossFeed)
+            {
+                for (int i = 0; i < part.children.Count; i++)
+                {
+                    Part children = part.children[i];
+                    FuelNode fuelnode;
+                    if (children.srfAttachNode.attachedPart == part && children.fuelCrossFeed && nodeLookup.TryGetValue(children, out fuelnode))
+                    {
+                        surfaceMountSources.Add(fuelnode);
+                    }
+                }
+            }
+        }
+        
         //call this when a node no longer exists, so that this node knows that it's no longer a valid source
         public void RemoveSourceNode(FuelNode n)
         {
             if (fuelLineSources.Contains(n)) fuelLineSources.Remove(n);
             if (stackNodeSources.Contains(n)) stackNodeSources.Remove(n);
+            if (surfaceMountSources.Contains(n)) surfaceMountSources.Remove(n);
             if (surfaceMountParent == n) surfaceMountParent = null;
         }
-
 
         //return the mass of the simulated FuelNode. This is not the same as the mass of the Part,
         //because the simulated node may have lost resources, and thus mass, during the simulation.
@@ -778,22 +797,28 @@ namespace MuMech
         {
             foreach (int type in resourceConsumptions.KeysList)
             {
-                switch (PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode)
+                var resourceFlowMode = PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode;
+                switch (resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
                         //check if we contain the needed resource:
                         if (resources[type] < DRAINED) return false;
                         break;
 
-                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                    
                     case ResourceFlowMode.ALL_VESSEL:
+                    case ResourceFlowMode.ALL_VESSEL_BALANCE:
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                         //check if any part contains the needed resource:
                         if (!vessel.Slinq().Any((n, t) => n.resources[t] > DRAINED, type)) return false;
                         break;
 
+                    case ResourceFlowMode.STAGE_STACK_FLOW:
+                    case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
                         // check if we can get any of the needed resources
-                        using (var disposable = FindFuelSourcesStackPriority(type))
+                        using (var disposable = FindFuelSourcesStackPriority(type, resourceFlowMode != ResourceFlowMode.STACK_PRIORITY_SEARCH || PhysicsGlobals.Stack_PriUsesSurf))
                             if (!disposable.value.Any()) return false;
                         break;
 
@@ -822,23 +847,30 @@ namespace MuMech
 
                 float amount = resourceConsumptions[type];
 
-                switch (PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode)
+                var resourceFlowMode = PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode;
+                switch (resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
                         resourceDrains[type] += amount;
                         break;
 
-                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                        // The _BALANCE mode works a bit differently but it does not really matter for our sim
                     case ResourceFlowMode.ALL_VESSEL:
+                    case ResourceFlowMode.ALL_VESSEL_BALANCE:
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
+                    case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
+                    case ResourceFlowMode.STAGE_STACK_FLOW:
                         AssignFuelDrainRateStagePriorityFlow(type, amount, vessel);
                         break;
 
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        AssignFuelDrainRateStackPriority(type, amount);
+                        AssignFuelDrainRateStackPriority(type, resourceFlowMode, amount);
                         break;
 
                     default:
                         //do nothing. there's an EVEN_FLOW scheme but nothing seems to use it
+                        print("aa");
                         break;
                 }
             }
@@ -875,9 +907,9 @@ namespace MuMech
             }
         }
 
-        void AssignFuelDrainRateStackPriority(int type, float amount)
+        void AssignFuelDrainRateStackPriority(int type, ResourceFlowMode flowMode, float amount)
         {
-            Disposable<HashSet<FuelNode>> sources = FindFuelSourcesStackPriority(type);
+            Disposable<HashSet<FuelNode>> sources = FindFuelSourcesStackPriority(type, flowMode != ResourceFlowMode.STACK_PRIORITY_SEARCH || PhysicsGlobals.Stack_PriUsesSurf);
             float amountPerSource = amount / sources.value.Count();
             foreach (FuelNode source in sources.value)
                 if (!freeResources[type])
@@ -888,15 +920,15 @@ namespace MuMech
         static int nextFuelLookupID = 0;
         int lastSeenFuelLookupID = -1;
 
-        Disposable<HashSet<FuelNode>> FindFuelSourcesStackPriority(int type)
+        Disposable<HashSet<FuelNode>> FindFuelSourcesStackPriority(int type, bool checkSurface)
         {
             int fuelLookupID = nextFuelLookupID++;
             var sources = HashSetPool<FuelNode>.Instance.BorrowDisposable();
-            bool success = FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, 0);
+            bool success = FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, 0, checkSurface);
             return sources;
         }
 
-        bool FindFuelSourcesStackPriorityRecursive(int type, Disposable<HashSet<FuelNode>> sources, int fuelLookupID, int level)
+        bool FindFuelSourcesStackPriorityRecursive(int type, Disposable<HashSet<FuelNode>> sources, int fuelLookupID, int level, bool checkSurface)
         {
             // The fuel flow rules for STACK_PRIORITY_SEARCH are nicely explained in detail by Kashua at
             // http://forum.kerbalspaceprogram.com/threads/64362-Fuel-Flow-Rules-%280-23-5%29
@@ -912,18 +944,27 @@ namespace MuMech
             bool success = false;
             for (int i = 0; i < fuelLineSources.Count; i++)
             {
-                success |= fuelLineSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1);
+                success |= fuelLineSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1, checkSurface);
+            }
+            if (success)
+            {
+                return true;
+            }
+            
+            // Then try to draw fuel through stack nodes (Kashua rule #4 (there is no rule #3))
+            for (int i = 0; i < stackNodeSources.Count; i++)
+            {
+                success |= stackNodeSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1, checkSurface);
             }
             if (success)
             {
                 return true;
             }
 
-            // Then try to draw fuel through stack nodes (Kashua rule #4 (there is no rule #3))
-            // TODO: only do this search if crossfeed capable!!!
-            for (int i = 0; i < stackNodeSources.Count; i++)
+            // Then try to draw fuel through stack mounted children nodes (That one did not exist in Kashua time so it is the rule #3 that goes after #4)
+            for (int i = 0; i < surfaceMountSources.Count; i++)
             {
-                success |= stackNodeSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1);
+                success |= surfaceMountSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1, checkSurface);
             }
             if (success)
             {
@@ -940,17 +981,17 @@ namespace MuMech
                     sources.value.Add(this);
                     return true;
                 }
-                //else
-                //{
-                //    return false;
-                //}
+                else
+                {
+                    return false;
+                }
             }
 
             // If we are fuel crossfeed capable and surface-mounted to our parent,
             // try to draw fuel from our parent (Kashua rule #7)
             if (surfaceMountParent != null)
             {
-                return surfaceMountParent.FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1);
+                return surfaceMountParent.FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1, checkSurface);
             }
 
             // If all that fails, give up (Kashua rule #8)
