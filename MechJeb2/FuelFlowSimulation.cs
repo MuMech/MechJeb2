@@ -412,6 +412,7 @@ namespace MuMech
         FloatCurve velCurve;
 
         KeyableDictionary<int, float> propellantRatios = new KeyableDictionary<int, float>(); //ratios of propellants used by this engine
+        KeyableDictionary<int, ResourceFlowMode> propellantFlows = new KeyableDictionary<int, ResourceFlowMode>();  //flow modes of propellants since the engine can override them
         float propellantSumRatioTimesDensity;    //a number used in computing propellant consumption rates
 
         readonly List<FuelNode> fuelLineSources = new List<FuelNode>();
@@ -475,6 +476,7 @@ namespace MuMech
             freeResources.Clear();
 
             propellantRatios.Clear();
+            propellantFlows.Clear();
 
             fuelLineSources.Clear();
             stackNodeSources.Clear();
@@ -587,11 +589,16 @@ namespace MuMech
                         velCurve = new FloatCurve(engine.velCurve.Curve.keys);
 
                     propellantSumRatioTimesDensity = engine.propellants.Slinq().Where(prop => !prop.ignoreForIsp).Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
-                    //propellantRatios = engine.propellants.Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp ).ToDictionary(prop => prop.id, prop => prop.ratio);
                     propellantRatios.Clear();
+                    propellantFlows.Clear();
+                    var dics = new Tuple<KeyableDictionary<int, float>, KeyableDictionary<int, ResourceFlowMode>>(propellantRatios, propellantFlows);
                     engine.propellants.Slinq()
                         .Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp)
-                        .ForEach((p, dic) => dic.Add(p.id, p.ratio), propellantRatios);
+                        .ForEach((p, dic) =>
+                        {
+                            dic._1.Add(p.id, p.ratio);
+                            dic._2.Add(p.id, p.GetFlowMode());
+                        }, dics);
                 }
             }
         }
@@ -797,7 +804,7 @@ namespace MuMech
         {
             foreach (int type in resourceConsumptions.KeysList)
             {
-                var resourceFlowMode = PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode;
+                var resourceFlowMode = propellantFlows[type];
                 switch (resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
@@ -847,7 +854,7 @@ namespace MuMech
 
                 float amount = resourceConsumptions[type];
 
-                var resourceFlowMode = PartResourceLibrary.Instance.GetDefinition(type).resourceFlowMode;
+                var resourceFlowMode = propellantFlows[type];
                 switch (resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
