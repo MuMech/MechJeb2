@@ -969,13 +969,16 @@ namespace MuMech
             }
 
             // Then try to draw fuel through stack mounted children nodes (That one did not exist in Kashua time so it is the rule #3 that goes after #4)
-            for (int i = 0; i < surfaceMountSources.Count; i++)
+            if (checkSurface)
             {
-                success |= surfaceMountSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1, checkSurface);
-            }
-            if (success)
-            {
-                return true;
+                for (int i = 0; i < surfaceMountSources.Count; i++)
+                {
+                    success |= surfaceMountSources[i].FindFuelSourcesStackPriorityRecursive(type, sources, fuelLookupID, level + 1, checkSurface);
+                }
+                if (success)
+                {
+                    return true;
+                }
             }
 
             // If we are a container for this resource (and it hasn't been disabled by the right-click menu)...
