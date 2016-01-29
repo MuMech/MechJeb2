@@ -350,7 +350,8 @@ namespace MuMech
                     // If running the simulation resulted in an error then just ignore it.
                     if (newResult.outcome != ReentrySimulation.Outcome.ERROR)
                     {
-                        newResult.endASL = newResult.body.TerrainAltitude(newResult.endPosition.latitude, newResult.endPosition.longitude);
+                        if (newResult.body != null)
+                            newResult.endASL = newResult.body.TerrainAltitude(newResult.endPosition.latitude, newResult.endPosition.longitude);
                         
                         if (newResult.multiplierHasError)
                         {
