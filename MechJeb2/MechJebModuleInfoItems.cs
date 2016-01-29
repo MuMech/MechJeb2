@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Algebraics;
+using Smooth.Dispose;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
