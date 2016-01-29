@@ -12,56 +12,55 @@ namespace MuMech
 {
     public class MechJebModuleLandingPredictions : ComputerModule
     {
-        //publicly available output:
-        //Call this function and use the returned object in case this.result changes while you
-        //are doing your calculations:
-        // TODO does calculating the ASL at this point work? We are doing this here to avoid making a call in the CelestialBody object from the reentrysimulation thread
+
+        // TODO Move the endASL code to the CheckResult method
+        // For Compatibility with RPM
+        public ReentrySimulation.Result GetResult()
+        {
+            return Result;
+        }
+
         public ReentrySimulation.Result Result
         {
             get
             {
-                if (result != null)
-                {
-                    if (result.body != null)
-                    {
-                        result.endASL = result.body.TerrainAltitude(result.endPosition.latitude, result.endPosition.longitude);
-                    
-                    
-                        simDragScalar = result.prediction.firstDrag;
-                        simLiftScalar = result.prediction.firstLift;
-                        simDynamicPressurePa = result.prediction.dynamicPressurekPa * 1000;
-                        simMach = result.prediction.mach;
-                        simSpeedOfSound = result.prediction.speedOfSound;
-
-                        //if (result.debugLog != "")
-                        //{
-                        //
-                        //    MechJebCore.print("Now".PadLeft(8)
-                        //               + " Alt:" + vesselState.altitudeASL.ToString("F0").PadLeft(6)
-                        //               + " Vel:" + vesselState.speedOrbital.ToString("F2").PadLeft(8)
-                        //               + " AirVel:" + vesselState.speedSurface.ToString("F2").PadLeft(8)
-                        //               + " SoS:" +  vesselState.speedOfSound.ToString("F2").PadLeft(6)
-                        //               + " mach:" + vesselState.mach.ToString("F2").PadLeft(6)
-                        //               + " dynP:" + (vesselState.dynamicPressure / 1000).ToString("F5").PadLeft(9)
-                        //               + " Temp:" + vessel.atmosphericTemperature.ToString("F2").PadLeft(8)
-                        //               + " Lat:" + vesselState.latitude.ToString("F2").PadLeft(6));
-                        //
-                        //
-                        //    MechJebCore.print(result.debugLog);
-                        //    result.debugLog = "";
-                        //
-                        //    Vector3 scaledPos = ScaledSpace.LocalToScaledSpace(vessel.transform.position);
-                        //    Vector3 sunVector = (FlightGlobals.Bodies[0].scaledBody.transform.position - scaledPos).normalized;
-                        //
-                        //    float sunDot = Vector3.Dot(sunVector, vessel.upAxis);
-                        //    float sunAxialDot = Vector3.Dot(sunVector, vessel.mainBody.bodyTransform.up);
-                        //    MechJebCore.print("sunDot " + sunDot.ToString("F3") + " sunAxialDot " + sunAxialDot.ToString("F3") + " " + PhysicsGlobals.DragUsesAcceleration);
-                        //
-                        //}
-
-
-                    }
-                }
+                //if (result != null)
+                //{
+                //    if (result.body != null)
+                //    {
+                //        simDragScalar = result.prediction.firstDrag;
+                //        simLiftScalar = result.prediction.firstLift;
+                //        simDynamicPressurePa = result.prediction.dynamicPressurekPa * 1000;
+                //        simMach = result.prediction.mach;
+                //        simSpeedOfSound = result.prediction.speedOfSound;
+                //
+                //        if (result.debugLog != "")
+                //        {
+                //        
+                //            MechJebCore.print("Now".PadLeft(8)
+                //                       + " Alt:" + vesselState.altitudeASL.ToString("F0").PadLeft(6)
+                //                       + " Vel:" + vesselState.speedOrbital.ToString("F2").PadLeft(8)
+                //                       + " AirVel:" + vesselState.speedSurface.ToString("F2").PadLeft(8)
+                //                       + " SoS:" +  vesselState.speedOfSound.ToString("F2").PadLeft(6)
+                //                       + " mach:" + vesselState.mach.ToString("F2").PadLeft(6)
+                //                       + " dynP:" + (vesselState.dynamicPressure / 1000).ToString("F5").PadLeft(9)
+                //                       + " Temp:" + vessel.atmosphericTemperature.ToString("F2").PadLeft(8)
+                //                       + " Lat:" + vesselState.latitude.ToString("F2").PadLeft(6));
+                //        
+                //        
+                //            MechJebCore.print(result.debugLog);
+                //            result.debugLog = "";
+                //        
+                //            Vector3 scaledPos = ScaledSpace.LocalToScaledSpace(vessel.transform.position);
+                //            Vector3 sunVector = (FlightGlobals.Bodies[0].scaledBody.transform.position - scaledPos).normalized;
+                //        
+                //            float sunDot = Vector3.Dot(sunVector, vessel.upAxis);
+                //            float sunAxialDot = Vector3.Dot(sunVector, vessel.mainBody.bodyTransform.up);
+                //            MechJebCore.print("sunDot " + sunDot.ToString("F3") + " sunAxialDot " + sunAxialDot.ToString("F3") + " " + PhysicsGlobals.DragUsesAcceleration);
+                //        
+                //        }
+                //    }
+                //}
                 return result;
             }
         }
@@ -247,7 +246,7 @@ namespace MuMech
             {
                 if (result.outcome == ReentrySimulation.Outcome.LANDED && result.body != null)
                 {
-                    altitudeOfPreviousPrediction = this.Result.endASL; // Note that we are caling GetResult here to force the it to calculate the endASL, if it has not already done this. It is not allowed to do this previously as we are only allowed to do it from this thread, not the reentry simulation thread.
+                    altitudeOfPreviousPrediction = result.endASL; // Note that we are caling GetResult here to force the it to calculate the endASL, if it has not already done this. It is not allowed to do this previously as we are only allowed to do it from this thread, not the reentry simulation thread.
                 }
             }
             // Is this a simulation run with errors added? If so then add some error to the parachute multiple
@@ -351,6 +350,8 @@ namespace MuMech
                     // If running the simulation resulted in an error then just ignore it.
                     if (newResult.outcome != ReentrySimulation.Outcome.ERROR)
                     {
+                        newResult.endASL = newResult.body.TerrainAltitude(newResult.endPosition.latitude, newResult.endPosition.longitude);
+                        
                         if (newResult.multiplierHasError)
                         {
                             if (errorResult != null)
