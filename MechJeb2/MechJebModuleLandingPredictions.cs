@@ -150,6 +150,14 @@ namespace MuMech
         private Random random;
         public double maxOrbits = 1;
 
+
+        [ValueInfoItem("LandingSim ", InfoItem.Category.Misc, showInEditor = false)]
+        public string LandingSimTime()
+        {
+            return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + " | "
+                + (errorStopwatch.ElapsedMilliseconds / 1000d).ToString("F1");
+        }
+
         public override void OnStart(PartModule.StartState state)
         {
             random = new Random();
