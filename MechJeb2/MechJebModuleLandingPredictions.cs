@@ -200,7 +200,8 @@ namespace MuMech
                     {
                         // variabledt generate too much instability of the landing site with atmo.
                         // variabledt = !(mainBody.atmosphere && core.landing.enabled);
-                        variabledt = !mainBody.atmosphere;
+                        // the altitude may induce some instability but allow for greater precision of the display in manual flight
+                        variabledt = !mainBody.atmosphere || vessel.terrainAltitude < 1000 ;
                         if (!variabledt)
                             dt = 0.5;
 
