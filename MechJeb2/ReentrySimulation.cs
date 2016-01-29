@@ -258,6 +258,8 @@ namespace MuMech
             }
             finally
             {
+                if (trajectory != result.trajectory)
+                    ListPool<AbsoluteVector>.Instance.Release(trajectory);
                 vessel.Release();
                 simCurves.Release();
             }
@@ -884,7 +886,7 @@ namespace MuMech
 
             public void Release()
             {
-                if (trajectory !=null)
+                if (trajectory != null)
                     ListPool<AbsoluteVector>.Instance.Release(trajectory);
                 exception = null;
                 pool.Release(this);
