@@ -1189,7 +1189,30 @@ namespace MuMech
                 te.Copy();
             }
         }
-
+        
+        [GeneralInfoItem("Pools Status", InfoItem.Category.Misc, showInEditor = true)]
+        public void DebugString()
+        {
+            GUILayout.BeginVertical();
+            foreach (var pair in PoolsStatus.poolsInfo)
+            {
+                Type type = pair.Key;
+                //string name = type.ToString();
+                if (typeof(IDisposable).IsAssignableFrom(type))
+                    type = type.GetGenericArguments()[0];
+                string name = type.Name;
+                var generics = type.GetGenericArguments();
+                for (int i = 0; i < generics.Length; i++)
+                {
+                    if (i == 0) name += "<";
+                    if (i > 0) name += ",";
+                    name += type.GetGenericArguments()[i].Name;
+                    if (i == generics.Length - 1) name += ">";
+                }
+                GuiUtils.SimpleLabel(name, pair.Value.allocated + "/" + pair.Value.maxSize);
+            }
+            GUILayout.EndHorizontal();
+        }
 
         static GUIStyle _separatorStyle;
         static GUIStyle separatorStyle
