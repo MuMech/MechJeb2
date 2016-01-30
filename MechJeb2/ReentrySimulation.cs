@@ -72,6 +72,11 @@ namespace MuMech
         double deltaVExpended;
         List<AbsoluteVector> trajectory;
 
+        private int steps;
+
+        public static int activeStep;
+        public static double activeDt;
+
         // FloatCurve (Unity Animation curve) are not thread safe so we need a local copy of the curves for the thread
         private SimCurves simCurves;
 
@@ -128,6 +133,7 @@ namespace MuMech
             min_dt = _min_dt;
             max_dt = _dt;
             dt = max_dt;
+            steps = 0;
 
             maxOrbits = _maxOrbits;
 
@@ -230,7 +236,8 @@ namespace MuMech
                         result.outcome = result.aeroBrake ? Outcome.AEROBRAKED : Outcome.TIMED_OUT;
                         break;
                     }
-                    RK4Step();
+                    //RK4Step();
+                    BSStep();
                     LimitSpeed();
                     RecordTrajectory();
                 }
@@ -249,6 +256,7 @@ namespace MuMech
                 result.parachuteMultiplier = this.parachuteSemiDeployMultiplier;
                 result.multiplierHasError = this.multiplierHasError;
                 result.maxdt = this.max_dt;
+                result.steps = steps;
             }
             catch (Exception ex)
             {
@@ -362,6 +370,9 @@ namespace MuMech
 
             do
             {
+                steps++;
+                activeStep = steps;
+                activeDt = dt;
                 repeatWithSmallerStep = false;
 
                 // Perform the RK4 calculation
@@ -430,6 +441,98 @@ namespace MuMech
             {
                 dt = Math.Min(dt * 2, max_dt);
             }
+        }
+
+        // Bogacki–Shampine method
+        void BSStep()
+        {
+            bool repeatWithSmallerStep = false;
+            bool parachutesDeploying = false;
+
+            Vector3d dx;
+            Vector3d dv;
+
+            //Log(x, v);
+            const double tol = 0.01;
+            const double d9 = 1d / 9d;
+            const double d24 = 1d / 24d;
+
+            do
+            {
+                steps++;
+                activeStep = steps;
+                activeDt = dt;
+                repeatWithSmallerStep = false;
+                Vector3d errorv;
+                // Perform the calculation
+                {
+                    Vector3d dv1 = dt * TotalAccel(x, v, true);
+                    Vector3d dx1 = dt * v;
+
+                    Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
+                    Vector3d dx2 = dt * (v + 0.5 * dv1);
+
+                    Vector3d dv3 = dt * TotalAccel(x + 0.75 * dx2, v + 0.75 * dv2);
+                    Vector3d dx3 = dt * (v + 0.75 * dv2);
+
+                    Vector3d dv4 = dt * TotalAccel(x + 2 * d9 * dx1 + 3 * d9 * dx2 + 4 * d9 * dx3, v + 2 * d9 * dv1 + 3 * d9 * dv2 + 4 * d9 * dv3);
+                    //Vector3d dx4 = dt * (v + 2d / 9 * dv1 + 1d / 3 * dv2 + 4d / 9 * dv3);
+
+                    dx = (2 * dx1 + 3 * dx2 + 4 * dx3 ) * d9;
+                    dv = (2 * dv1 + 3 * dv2 + 4 * dv3 ) * d9;
+
+                    //Vector3d zx = (7 * dx1 + 6 * dx2 + 8 * dx3 + 3 * dx4) * d24;
+                    Vector3d zv = (7 * dv1 + 6 * dv2 + 8 * dv3 + 3 * dv4) * d24;
+                    errorv = zv - dv;
+                }
+
+
+                // Consider opening the parachutes. If we do open them, and the dt is not as small as it could be, make it smaller and repeat,
+                Vector3 xForChuteSim = x + dx;
+                double altASL = xForChuteSim.magnitude - bodyRadius;
+                double altAGL = altASL - probableLandingSiteASL;
+                double pressure = Pressure(xForChuteSim);
+
+                bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
+
+                double next_dt;
+
+                if (!willChutesOpen)
+                {
+                    next_dt = dt * 0.9 * Math.Pow(tol / errorv.magnitude, 1 / 3d);
+                }
+                else
+                {
+                    next_dt = min_dt * 0.5;
+                }
+
+                next_dt = Math.Max(next_dt, min_dt);
+                next_dt = Math.Min(next_dt, 1);
+
+                if ((errorv.magnitude > tol || willChutesOpen) && dt > min_dt)
+                {
+                    dt = next_dt;
+                    repeatWithSmallerStep = true;
+                }
+                else
+                {
+                    maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
+                    parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
+                    x += dx;
+                    v += dv;
+                    t += dt;
+                    if (parachutesDeploying)
+                    {
+                        dt = min_dt;
+                    }
+                    else
+                    {
+                        // If a parachute is opening we need to lower dt to make sure we capture the opening sequence properly
+                        dt = next_dt; 
+                    }
+                }
+            }
+            while (repeatWithSmallerStep);
         }
 
         //enforce the descent speed policy
@@ -827,6 +930,7 @@ namespace MuMech
         public class Result
         {
             public double maxdt;
+            public int steps;
 
             public double timeToComplete;
 
@@ -869,7 +973,7 @@ namespace MuMech
             public double input_probableLandingSiteASL;
             public bool input_multiplierHasError;
             public double input_dt;
-
+            
             public string debugLog;
 
             private static readonly Pool<Result> pool = new Pool<Result>(Create, Reset);

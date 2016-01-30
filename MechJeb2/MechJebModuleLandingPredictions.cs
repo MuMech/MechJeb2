@@ -150,12 +150,19 @@ namespace MuMech
         private Random random;
         public double maxOrbits = 1;
 
+        private double lastSimTime;
+        private double lastSimSteps;
+        private double lastErrorSimTime;
+        private double lastErrorSimSteps;
+
 
         [ValueInfoItem("LandingSim ", InfoItem.Category.Misc, showInEditor = false)]
         public string LandingSimTime()
         {
-            return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + " | "
-                + (errorStopwatch.ElapsedMilliseconds / 1000d).ToString("F1");
+            return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastSimTime.ToString("F2") + " (" + lastSimSteps + ")\n"
+                + (errorStopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastErrorSimTime.ToString("F2") + " (" + lastErrorSimSteps + ")\n"
+                + ReentrySimulation.activeDt.ToString("F2") + " " + ReentrySimulation.activeStep + "\n"
+                + dt.ToString("F2") + " " + Time.fixedDeltaTime.ToString("F2");
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -201,9 +208,10 @@ namespace MuMech
                         // variabledt generate too much instability of the landing site with atmo.
                         // variabledt = !(mainBody.atmosphere && core.landing.enabled);
                         // the altitude may induce some instability but allow for greater precision of the display in manual flight
-                        variabledt = !mainBody.atmosphere || vessel.terrainAltitude < 1000 ;
-                        if (!variabledt)
-                            dt = 0.5;
+                        
+                        //variabledt = !mainBody.atmosphere || vessel.terrainAltitude < 1000 ;
+                        //if (!variabledt)
+                        //    dt = 0.5;
 
                         stopwatch.Stop();
                         stopwatch.Reset();
@@ -267,7 +275,7 @@ namespace MuMech
             // The curves used for the sim are not thread safe so we need a copy used only by the thread
             ReentrySimulation.SimCurves simCurves = ReentrySimulation.SimCurves.Borrow(patch.referenceBody);
 
-            SimulatedVessel simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, deployChutes ? limitChutesStage : -1);
+            SimulatedVessel simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.landing.enabled && deployChutes ? limitChutesStage : -1);
             ReentrySimulation sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
@@ -293,6 +301,8 @@ namespace MuMech
                     //see how long the simulation took
                     errorStopwatch.Stop();
                     long millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
+                    lastErrorSimTime = millisecondsToCompletion * 0.001;
+                    lastErrorSimSteps = newResult.steps;
 
                     errorStopwatch.Reset();
 
@@ -313,6 +323,8 @@ namespace MuMech
 
                     //set the delay before the next simulation
                     millisecondsBetweenSimulations = Math.Min(Math.Max(2 * millisecondsToCompletion, 200), 5);
+                    lastSimTime = millisecondsToCompletion * 0.001;
+                    lastSimSteps = newResult.steps;
                     // Do not wait for too long before running another simulation, but also give the processor a rest. 
 
                     // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
