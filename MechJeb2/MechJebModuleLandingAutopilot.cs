@@ -867,16 +867,14 @@ namespace MuMech
                 // TODO is there benefit in running an initial simulation to calculate the height at which the ratio between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
 
                 // At what ASL height does the reference body have this pressure?
-                //maxSemiDeployHeight = (this.body.atmosphereScaleHeight *1000) * -1 * Math.Log(minSemiDeployPressure / this.body.atmosphereMultiplier);
-#warning FIX THAT BEFORE 1.0 !!
-                maxSemiDeployHeight = (1 * 1000) * -1 * Math.Log(minSemiDeployPressure / 1);
+                maxSemiDeployHeight = body.AltitudeForPressure(minSemiDeployPressure);
 
                 // We have to have semi deployed by the time we fully deploy.
                 minSemiDeployHeight = maxFullDeployHeight;
 
                 maxMultiplier = maxSemiDeployHeight / minSemiDeployHeight;
 
-                // Set the inital mutiplier to be the mid point.
+                // Set the inital multiplier to be the mid point.
                 currentMultiplier = maxMultiplier / 2;
             }
         }
