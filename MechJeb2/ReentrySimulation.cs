@@ -504,7 +504,8 @@ namespace MuMech
                 double mach = Math.Min(velocity / speedOfSound, 50f);
                 double shockTemp = ShockTemperature(velocity, mach);
 
-                bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier);
+                // check if the parachute will open in the next frame or if that frame will be underground
+                bool willChutesOpen = altASL < probableLandingSiteASL || vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier);
 
                 double next_dt;
                 var errorMagnitude = Math.Max(errorv.magnitude, 10e-6);
@@ -514,8 +515,9 @@ namespace MuMech
                 }
                 else
                 {
-                    // The chute will open at the next dt so we want to make it shorter so they don't.
-                    // Untill we have dt = min_dt and we can safely open them
+                    // The chute will open at the next dt so we want to make it shorter so they don't
+                    // until we have dt = min_dt and we can safely open them
+                    // The same system avoids going underground too fast.
                     next_dt = min_dt * 0.5;
                 }
 
