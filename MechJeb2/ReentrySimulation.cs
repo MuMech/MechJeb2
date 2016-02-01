@@ -199,6 +199,8 @@ namespace MuMech
 
                 //MechJebCore.print("Sim Start");
 
+                startX = initialOrbit.SwappedRelativePositionAtUT(startUT);
+
                 if (orbitReenters)
                 {
                     t = startUT;
@@ -210,7 +212,6 @@ namespace MuMech
                     return result;
                 }
                 result.startPosition = referenceFrame.ToAbsolute(x, t);
-                startX = x;
 
                 // Simulate a maximum of maxOrbits periods of a circular orbit at the entry altitude
                 maxSimulatedTime = maxOrbits * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(x.magnitude), 3.0) / gravParameter);
@@ -506,20 +507,31 @@ namespace MuMech
                 bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier);
 
                 double next_dt;
-
+                var errorMagnitude = Math.Max(errorv.magnitude, 10e-6);
                 if (!willChutesOpen)
                 {
-                    next_dt = dt * 0.9 * Math.Pow(tol / errorv.magnitude, 1 / 3d);
+                    next_dt = dt * 0.9 * Math.Pow(tol / errorMagnitude, 1 / 3d);
                 }
                 else
                 {
+                    // The chute will open at the next dt so we want to make it shorter so they don't.
+                    // Untill we have dt = min_dt and we can safely open them
                     next_dt = min_dt * 0.5;
                 }
 
                 next_dt = Math.Max(next_dt, min_dt);
-                next_dt = Math.Min(next_dt, 1);
+                next_dt = Math.Min(next_dt, 10);
 
-                if ((errorv.magnitude > tol || willChutesOpen) && dt > min_dt)
+                var sqrStartDist = (x - startX).sqrMagnitude;
+                // The first 1km is always high precision
+                if (sqrStartDist < 1000 * 1000)
+                    next_dt = Math.Min(next_dt, 0.04);
+                else if (sqrStartDist < 5000 * 5000)
+                    next_dt = Math.Min(next_dt, 0.1);
+                else if (sqrStartDist < 10000 * 10000)
+                    next_dt = Math.Min(next_dt, 1);
+
+                if ((errorMagnitude > tol || willChutesOpen) && dt > min_dt)
                 {
                     dt = next_dt;
                     repeatWithSmallerStep = true;
