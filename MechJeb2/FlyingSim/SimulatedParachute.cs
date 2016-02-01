@@ -121,7 +121,7 @@ namespace MuMech
 
 
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
-        public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             if (!willDeploy)
                 return false;
@@ -130,7 +130,7 @@ namespace MuMech
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
-                    if (altATGL < semiDeployMultiplier * para.deployAltitude)
+                    if (altATGL < semiDeployMultiplier * para.deployAltitude && shockTemp * para.machHeatMult < para.chuteMaxTemp * para.safeMult)
                     {
                         stateChanged = true;
                     }
@@ -152,14 +152,14 @@ namespace MuMech
         }
 
         // Consider activating, semi deploying or deploying a parachute. returns true if the state has changed
-        public override bool Simulate(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public override bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             if (!willDeploy)
                 return false;
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
-                    if (altATGL < semiDeployMultiplier * para.deployAltitude)
+                    if (altATGL < semiDeployMultiplier * para.deployAltitude && shockTemp * para.machHeatMult < para.chuteMaxTemp * para.safeMult)
                     {
                         state = ModuleParachute.deploymentStates.ACTIVE;
                         //activatedAGL = altATGL;

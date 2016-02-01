@@ -62,6 +62,7 @@ namespace MuMech
 
         //Dynamical variables 
         Vector3d x; //coordinate system used is centered on main body
+        Vector3d startX; //start position
         Vector3d v;
         double t;
 
@@ -209,6 +210,7 @@ namespace MuMech
                     return result;
                 }
                 result.startPosition = referenceFrame.ToAbsolute(x, t);
+                startX = x;
 
                 // Simulate a maximum of maxOrbits periods of a circular orbit at the entry altitude
                 maxSimulatedTime = maxOrbits * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(x.magnitude), 3.0) / gravParameter);
@@ -237,7 +239,7 @@ namespace MuMech
                         break;
                     }
                     //RK4Step();
-                    BSStep();
+                    BS34Step();
                     LimitSpeed();
                     RecordTrajectory();
                 }
@@ -404,11 +406,12 @@ namespace MuMech
                 {
                     // Consider opening the parachutes. If we do open them, and the dt is not as small as it could me, make it smaller and repeat,
                     Vector3 xForChuteSim = x + dx;
+                    double vForChuteSim = (v + dv).magnitude;
                     double altASL = xForChuteSim.magnitude - bodyRadius;
                     double altAGL = altASL - probableLandingSiteASL;
                     double pressure = Pressure(xForChuteSim);
                     
-                    bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
+                    bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, vForChuteSim, t, parachuteSemiDeployMultiplier);
                     maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
 
                     // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
@@ -419,7 +422,7 @@ namespace MuMech
                     }
                     else
                     {
-                        parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
+                        parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, vForChuteSim, t, parachuteSemiDeployMultiplier);
                     }
                 }
             }
@@ -444,7 +447,7 @@ namespace MuMech
         }
 
         // Bogacki–Shampine method
-        void BSStep()
+        void BS34Step()
         {
             bool repeatWithSmallerStep = false;
             bool parachutesDeploying = false;
@@ -493,7 +496,14 @@ namespace MuMech
                 double altAGL = altASL - probableLandingSiteASL;
                 double pressure = Pressure(xForChuteSim);
 
-                bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
+                Vector3d airVel = SurfaceVelocity(xForChuteSim, v + dv);
+                double airDensity = AirDensity(xForChuteSim);
+                double speedOfSound = mainBody.GetSpeedOfSound(Pressure(xForChuteSim), airDensity);
+                double velocity = airVel.magnitude;
+                double mach = Math.Min(velocity / speedOfSound, 50f);
+                double shockTemp = ShockTemperature(velocity, mach);
+
+                bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier);
 
                 double next_dt;
 
@@ -517,7 +527,7 @@ namespace MuMech
                 else
                 {
                     maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
-                    parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier);
+                    parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier);
                     x += dx;
                     v += dv;
                     t += dt;
@@ -720,6 +730,18 @@ namespace MuMech
                                 + simCurves.AxialTemperatureSunMultCurve.Evaluate(0)); 
 
             return temperature;
+        }
+
+        private double ShockTemperature(double velocity, double mach)
+        {
+            double newtonianTemperatureFactor = velocity * PhysicsGlobals.NewtonianTemperatureFactor;
+            double convectiveMachLerp = Math.Pow(UtilMath.Clamp01((mach - PhysicsGlobals.NewtonianMachTempLerpStartMach) / (PhysicsGlobals.NewtonianMachTempLerpEndMach - PhysicsGlobals.NewtonianMachTempLerpStartMach)), PhysicsGlobals.NewtonianMachTempLerpExponent);
+            if (convectiveMachLerp > 0)
+            {
+                double machTemperatureScalar = PhysicsGlobals.MachTemperatureScalar * Math.Pow(velocity, PhysicsGlobals.MachTemperatureVelocityExponent);
+                newtonianTemperatureFactor = UtilMath.LerpUnclamped(newtonianTemperatureFactor, machTemperatureScalar, convectiveMachLerp);
+            }
+            return newtonianTemperatureFactor * HighLogic.CurrentGame.Parameters.Difficulty.ReentryHeatScale * mainBody.shockTemperatureMultiplier;
         }
 
         private double nextLog = 0;

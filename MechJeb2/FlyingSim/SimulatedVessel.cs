@@ -110,11 +110,11 @@ namespace MuMech
         }
 
 
-        public bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double t, double parachuteSemiDeployMultiplier)
+        public bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double shockTemp, double t, double parachuteSemiDeployMultiplier)
         {
             for (int i = 0; i < count; i++)
             {
-                if (parts[i].SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, t, parachuteSemiDeployMultiplier))
+                if (parts[i].SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier))
                 {
                     return true;
                 }
@@ -122,12 +122,12 @@ namespace MuMech
             return false;
         }
 
-        public bool Simulate(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             bool deploying = false;
             for (int i = 0; i < count; i++)
             {
-                deploying |= parts[i].Simulate(altATGL, altASL, endASL, pressure, time, semiDeployMultiplier);
+                deploying |= parts[i].Simulate(altATGL, altASL, endASL, pressure, shockTemp, time, semiDeployMultiplier);
             }
             return deploying;
         }

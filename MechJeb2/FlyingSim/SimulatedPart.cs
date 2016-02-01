@@ -207,17 +207,15 @@ namespace MuMech
             return liftVector;
         }
 
-        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             return false;
         }
 
-        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             return false;
         }
-
-
 
         public static class DragCubePool
         {

@@ -360,13 +360,13 @@ namespace MuMech
             }
 
             // Is there an error prediction available? If so add that into the mix
-            if (ErrorPredictionReady)
+            if (ErrorPredictionReady && !double.IsNaN(errorPrediction.parachuteMultiplier))
             {
                 parachutePlan.AddResult(errorPrediction);
             }
 
             // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
-            if (PredictionReady)
+            if (PredictionReady && !double.IsNaN(prediction.parachuteMultiplier))
             {
                 parachutePlan.AddResult(prediction);
             }
@@ -386,10 +386,10 @@ namespace MuMech
                     double ASLDeployAltitude = ParachuteDeployAboveGroundAtLandingSite + LandingSiteASL;
 
                     if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED &&
-                        ASLDeployAltitude > vesselState.altitudeASL)
+                        ASLDeployAltitude > vesselState.altitudeASL && p.deploymentSafeState == ModuleParachute.deploymentSafeStates.SAFE)
                     {
                         p.Deploy();
-                        // Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
+                        //Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
                     }
                 }
             }
@@ -581,22 +581,20 @@ namespace MuMech
                 vesselState.surfaceVelocity + dt * vesselState.gravityForce);
         }
 
-        public string ParachuteControlInfo
+        [ValueInfoItem("ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)]
+        public string ParachuteControlInfo()
         {
-            get
+            if (this.ParachutesDeployable())
             {
-                if (this.ParachutesDeployable())
-                {
-                    string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
-                    retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") + "%";
-                    retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
+                string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
+                retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") + "%";
+                retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
 
-                    return (retVal);
-                }
-                else
-                {
-                    return null;
-                }
+                return retVal;
+            }
+            else
+            {
+                return "N/A";
             }
         }
     }

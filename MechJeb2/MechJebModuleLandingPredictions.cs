@@ -162,7 +162,7 @@ namespace MuMech
             return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastSimTime.ToString("F2") + " (" + lastSimSteps + ")\n"
                 + (errorStopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastErrorSimTime.ToString("F2") + " (" + lastErrorSimSteps + ")\n"
                 + ReentrySimulation.activeDt.ToString("F2") + " " + ReentrySimulation.activeStep + "\n"
-                + dt.ToString("F2") + " " + Time.fixedDeltaTime.ToString("F2");
+                + dt.ToString("F2") + " " + Time.fixedDeltaTime.ToString("F2") + " " + parachuteSemiDeployMultiplier.ToString("F3");
         }
 
         public override void OnStart(PartModule.StartState state)
