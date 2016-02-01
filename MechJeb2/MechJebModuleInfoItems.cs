@@ -1175,7 +1175,7 @@ namespace MuMech
                         return "Space just above " + mainBody.theName + biome;
                     else
                         // ExperimentSituations.InSpaceHigh
-                        return "Space high over " + mainBody.theName;
+                        return "Space high over " + mainBody.theName + biome;
             }
         }
 
