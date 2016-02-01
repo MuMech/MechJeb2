@@ -758,11 +758,11 @@ namespace MuMech
                 }
                 lastResult = newResult;
             }
-
+            
             // What was the overshoot for this new result?
             double overshoot = newResult.GetOvershoot(this.autoPilot.core.target.targetLatitude, this.autoPilot.core.target.targetLongitude);
 
-            // Debug.Log("overshoot: " + overshoot + " multiplier: " + newResult.parachuteMultiplier + " hasError:" + newResult.multiplierHasError);
+            //Debug.Log("overshoot: " + overshoot.ToString("F2") + " multiplier: " + newResult.parachuteMultiplier.ToString("F4") + " hasError:" + newResult.multiplierHasError);
 
             // Add the new result to the linear regression
             regression.Add(overshoot, newResult.parachuteMultiplier);
@@ -809,7 +809,7 @@ namespace MuMech
                 }
 
                 // Impose sensible limits on the multiplier
-                if (this.currentMultiplier < 1) { this.currentMultiplier = 1; }
+                if (this.currentMultiplier < 1 || double.IsNaN(currentMultiplier)) { this.currentMultiplier = 1; }
                 if (this.currentMultiplier > this.maxMultiplier) { this.currentMultiplier = this.maxMultiplier; }
             }
 
