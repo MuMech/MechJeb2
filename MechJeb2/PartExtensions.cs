@@ -75,6 +75,12 @@ namespace MuMech
                     if (!mAnchoredDecoupler.isDecoupled && p.stagingOn) return true;
                     break;
                 }
+
+                if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler")
+                {
+                    if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn) return true;
+                    break;
+                }
             }
             return false;
         }
