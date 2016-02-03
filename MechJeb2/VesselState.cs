@@ -499,7 +499,16 @@ namespace MuMech
             orbitTimeToAp.value = vessel.orbit.timeToAp;
             if (vessel.orbit.eccentricity < 1) orbitTimeToPe.value = vessel.orbit.timeToPe;
             else orbitTimeToPe.value = -vessel.orbit.meanAnomaly / (2 * Math.PI / vessel.orbit.period);
-            orbitLAN.value = vessel.orbit.LAN;
+
+            if (!vessel.LandedOrSplashed)
+            {
+                orbitLAN.value = vessel.orbit.LAN;
+            }
+            else
+            {
+                orbitLAN.value = -(vessel.transform.position - vessel.mainBody.transform.position).AngleInPlane(Planetarium.Zup.Z, Planetarium.Zup.X);
+            }
+
             orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
             orbitInclination.value = vessel.orbit.inclination;
             orbitEccentricity.value = vessel.orbit.eccentricity;

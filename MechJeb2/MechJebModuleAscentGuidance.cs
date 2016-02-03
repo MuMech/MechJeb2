@@ -95,12 +95,7 @@ namespace MuMech
                 if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
                     si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
                 GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
-
-                double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, autopilot.launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, autopilot.desiredOrbitAltitude + mainBody.Radius));
-                double oldHeading = OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, autopilot.launchLatitude);
-
-                GUILayout.Label("Heading " + desiredHeading.ToString("F3") + "°" + " Old: " + oldHeading.ToString("F3") + "°");
-
+                
                 core.thrust.LimitToPreventOverheatsInfoItem();
                 //core.thrust.LimitToTerminalVelocityInfoItem();
                 core.thrust.LimitToMaxDynamicPressureInfoItem();
