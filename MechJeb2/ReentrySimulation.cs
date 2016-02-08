@@ -234,7 +234,7 @@ namespace MuMech
                         result.aeroBrakeVelocity = referenceFrame.ToAbsolute(v, t);
                         //break;
                     }
-                    if (t > maxT || Escaping())
+                    if (t > maxT || Escaping() || steps > 50000)
                     {
                         result.outcome = result.aeroBrake ? Outcome.AEROBRAKED : Outcome.TIMED_OUT;
                         break;
@@ -517,9 +517,13 @@ namespace MuMech
                 {
                     // The chute will open at the next dt so we want to make it shorter so they don't
                     // until we have dt = min_dt and we can safely open them
-                    // The same system avoids going underground too fast.
-                    next_dt = min_dt * 0.5;
+                    // The same system avoids skiping the ground with a large dt
+                    next_dt = dt * 0.5;
                 }
+
+                // I don't see how it could append but it has shown up...
+                if (double.IsNaN(next_dt))
+                    next_dt = min_dt;
 
                 next_dt = Math.Max(next_dt, min_dt);
                 next_dt = Math.Min(next_dt, 10);
