@@ -175,7 +175,7 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
-        [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "pa")]
+        [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
         public double dynamicPressure;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
