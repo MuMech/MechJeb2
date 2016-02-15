@@ -65,7 +65,7 @@ namespace MuMech
             {
                 MechJebCore mj = vessel.GetMasterMechJeb();
                 if (mj != null)
-                    vessel.GetMasterMechJeb().deactivateControl = value;
+                    mj.deactivateControl = value;
             }
         }
 
@@ -77,6 +77,8 @@ namespace MuMech
 
         [KSPField(isPersistant = false)]
         public bool eduMode = false;
+        
+        public bool rssMode { get { return settings.rssMode; } }
 
         [KSPAction("Orbit Prograde")]
         public void OnOrbitProgradeAction(KSPActionParam param)
