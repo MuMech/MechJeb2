@@ -125,10 +125,10 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public bool limiterMinThrottle = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
 
         [GeneralInfoItem("Lower throttle limit", InfoItem.Category.Thrust)]
