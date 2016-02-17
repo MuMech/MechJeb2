@@ -110,7 +110,8 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.attitudeDeactivate();
-            core.thrust.ThrustOff();
+            if (!core.rssMode)
+                core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
             core.staging.users.Remove(this);
 
