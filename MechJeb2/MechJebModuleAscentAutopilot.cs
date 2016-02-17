@@ -304,7 +304,7 @@ namespace MuMech
             Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
                                                + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
-            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
+            double desiredHeading = MathExtensions.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
@@ -405,12 +405,12 @@ namespace MuMech
             // - Starwaster
             core.thrust.targetThrottle = 0;
 
-            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
+            double desiredHeading = MathExtensions.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
-            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
-                + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
+            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * MathExtensions.Deg2Rad) * desiredHeadingVector
+                + Math.Sin(desiredFlightPathAngle * MathExtensions.Deg2Rad) * vesselState.up;
 
 
             core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
