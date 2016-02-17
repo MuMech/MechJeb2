@@ -214,7 +214,7 @@ namespace MuMech
                 core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
 
-            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed);
+            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && forceRoll);
 
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
