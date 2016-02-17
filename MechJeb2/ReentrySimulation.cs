@@ -531,9 +531,9 @@ namespace MuMech
                 var sqrStartDist = (x - startX).sqrMagnitude;
                 // The first 1km is always high precision
                 if (sqrStartDist < 1000 * 1000)
-                    next_dt = Math.Min(next_dt, 0.04);
+                    next_dt = Math.Min(next_dt, 0.02);
                 else if (sqrStartDist < 5000 * 5000)
-                    next_dt = Math.Min(next_dt, 0.1);
+                    next_dt = Math.Min(next_dt, 0.5);
                 else if (sqrStartDist < 10000 * 10000)
                     next_dt = Math.Min(next_dt, 1);
 
