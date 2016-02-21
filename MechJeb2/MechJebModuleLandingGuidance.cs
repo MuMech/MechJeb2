@@ -35,20 +35,50 @@ namespace MuMech
             return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(150) };
         }
 
+        private void moveByMeter(ref EditableAngle angle, double distance, double Alt)
+        {
+            double angularDelta = distance * 180d / (Math.PI * (Alt + mainBody.Radius));
+            angle += angularDelta;
+        }
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
             if (core.target.PositionTargetExists)
             {
+                var ASL = core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude);
                 GUILayout.Label("Target coordinates:");
 
+                GUILayout.BeginHorizontal();
                 core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
+                if (GUILayout.Button("▲"))
+                {
+                    moveByMeter(ref core.target.targetLatitude, 10, ASL);
+                }
+                GUILayout.Label("10m");
+                if (GUILayout.Button("▼"))
+                {
+                    moveByMeter(ref core.target.targetLatitude, -10, ASL);
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
                 core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
+                if (GUILayout.Button("◄"))
+                {
+                    moveByMeter(ref core.target.targetLongitude, -10, ASL);
+                }
+                GUILayout.Label("10m");
+                if (GUILayout.Button("►"))
+                {
+                    moveByMeter(ref core.target.targetLongitude, 10, ASL);
+                }
+                GUILayout.EndHorizontal();
 
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("ASL: " + MuUtils.ToSI(ASL, -1, 4) + "m");
                 GUILayout.Label(ScienceUtil.GetExperimentBiome(core.target.targetBody, core.target.targetLatitude, core.target.targetLongitude));
-                // Display the ASL of the taget location
-                GUILayout.Label("Target ASL: " + MuUtils.ToSI(core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude), -1, 4) + "m");
+                GUILayout.EndHorizontal();
             }
             else
             {
