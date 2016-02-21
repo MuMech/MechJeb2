@@ -507,6 +507,7 @@ namespace MuMech
             else
             {
                 orbitLAN.value = -(vessel.transform.position - vessel.mainBody.transform.position).AngleInPlane(Planetarium.Zup.Z, Planetarium.Zup.X);
+                orbitTimeToAp.value = 0;
             }
 
             orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
