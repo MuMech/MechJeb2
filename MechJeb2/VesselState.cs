@@ -588,30 +588,37 @@ namespace MuMech
                     ModuleRCS rcs = (ModuleRCS)mod;
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
+                        Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
+                        Vector3 translationControl = new Vector3(rcs.enableX ? 1 : 0f, rcs.enableZ ? 1 : 0, rcs.enableY ? 1 : 0);
                         // rcsTorqueAvailable:
                         for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                         {
                             Transform t = rcs.thrusterTransforms[j];
                             Vector3d thrusterPosition = t.position - movingCoM;
+                            Vector3d thrustDirection = rcs.useZaxis ? t.forward : t.up;
+
+                            Vector3d askedTorque = Vector3.Cross(attitudeControl, thrusterPosition.normalized);
+                            float attitudeContrib = Mathf.Max(Vector3.Dot(thrustDirection, askedTorque), 0f);
+                            float translationContrib = Mathf.Max(Vector3.Dot(thrustDirection, translationControl), 0f);
 
                             float power = rcs.thrusterPower;
 
                             if (FlightInputHandler.fetch.precisionMode)
                             {
-                                float lever = rcs.GetLeverDistance(-t.up, thrusterPosition);
+                                float lever = rcs.GetLeverDistance(-thrustDirection, movingCoM);
                                 if (lever > 1)
                                 {
                                     power = power / lever;
                                 }
                             }
 
-                            Vector3d thrusterThrust = -t.up * power;
+                            Vector3d thrusterThrust = -thrustDirection * power;
                             // This is a cheap hack to get rcsTorque with the RCS balancer active.
                             if (!rcsbal.enabled)
                             {
-                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterThrust));
+                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(translationContrib * thrusterThrust));
                             }
-                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
+                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, attitudeContrib * thrusterThrust);
                             // Convert in vessel local coordinate
                             rcsTorqueAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterTorque));
                         }
@@ -784,9 +791,9 @@ namespace MuMech
 
             if (torqueAvailable.sqrMagnitude > 0)
                 torqueReactionSpeed.Scale(torqueAvailable.Invert());
-
-
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
+            
+            // Max since most of the code only use positive control input and the min would be 0
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
 
             torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
 
