@@ -250,7 +250,7 @@ namespace MuMech
 
                     if (mouseCoords != null)
                     {
-                        GLUtils.DrawGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true);
+                        GLUtils.DrawGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
                         GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal() + "\n" + ScienceUtil.GetExperimentBiome(mainBody, mouseCoords.latitude, mouseCoords.longitude));
 
                         if (Input.GetMouseButtonDown(0))
