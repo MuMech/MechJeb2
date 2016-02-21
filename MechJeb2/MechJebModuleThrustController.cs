@@ -726,11 +726,12 @@ namespace MuMech
                 {
                     if (disableThrusters)
                     {
-                        pm.Disable();
+                        pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
                     }
                     else
                     {
-                        pm.Enable();
+                        // TODO : Check the protopart for the original values (slow) ? Or use a dict to save them (hard with save) ?
+                        pm.enablePitch = pm.enableRoll = pm.enableYaw = true;
                     }
                 }
             }
