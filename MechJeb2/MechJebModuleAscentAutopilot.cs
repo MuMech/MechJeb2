@@ -204,7 +204,7 @@ namespace MuMech
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
             //during the vertical ascent we just thrust straight up at max throttle
-            if (forceRoll && vesselState.altitudeTrue > 50)
+            if (forceRoll)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
                 core.attitude.attitudeTo(desiredHeading, 90, verticalRoll, this);
@@ -214,7 +214,7 @@ namespace MuMech
                 core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
 
-            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && forceRoll);
+            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
 
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
