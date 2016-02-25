@@ -214,7 +214,7 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
             GUILayout.Label(message);
-            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         // Callbacks for external module
