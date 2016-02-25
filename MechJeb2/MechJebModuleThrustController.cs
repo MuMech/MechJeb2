@@ -18,16 +18,20 @@ namespace MuMech
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
 
-        [Persistent(pass = (int)Pass.Global)]
-        public bool limitToTerminalVelocity = false;
-        [GeneralInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
-        public void LimitToTerminalVelocityInfoItem()
-        {
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.TerminalVelocity) s.onHover.textColor = s.onNormal.textColor = Color.green;
-            limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
-        }
 
+        // The Terminal Velocity limiter is removed to not have to deal with users who
+        // think that seeing the aerodynamic FX means they reached it. 
+        // And it s really high since 1.0.x anyway so the Dynamic Pressure limiter is better now
+        //[Persistent(pass = (int)Pass.Global)]
+        public bool limitToTerminalVelocity = false;
+
+        //[GeneralInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
+        //public void LimitToTerminalVelocityInfoItem()
+        //{
+        //    GUIStyle s = new GUIStyle(GUI.skin.toggle);
+        //    if (limiter == LimitMode.TerminalVelocity) s.onHover.textColor = s.onNormal.textColor = Color.green;
+        //    limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
+        //}
 
         [Persistent(pass = (int)Pass.Global)]
         public bool limitDynamicPressure = false;
@@ -121,10 +125,10 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public bool limiterMinThrottle = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
 
         [GeneralInfoItem("Lower throttle limit", InfoItem.Category.Thrust)]
@@ -528,7 +532,7 @@ namespace MuMech
             // the max throttles.
             foreach (var resource in vesselState.resources.Values)
             {
-                if (resource.intakes.Length == 0)
+                if (resource.intakes.Count == 0)
                 {
                     // No intakes provide this resource; not our problem.
                     continue;
@@ -722,11 +726,12 @@ namespace MuMech
                 {
                     if (disableThrusters)
                     {
-                        pm.Disable();
+                        pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
                     }
                     else
                     {
-                        pm.Enable();
+                        // TODO : Check the protopart for the original values (slow) ? Or use a dict to save them (hard with save) ?
+                        pm.enablePitch = pm.enableRoll = pm.enableYaw = true;
                     }
                 }
             }

@@ -1,10 +1,11 @@
 /*************************************************************************
+ALGLIB 3.10.0 (source code generated 2015-08-19)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the
+the Free Software Foundation (www.fsf.org); either version 2 of the 
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -27,7 +28,7 @@ public partial class alglib
     /*************************************************************************
 
     *************************************************************************/
-    public class odesolverstate
+    public class odesolverstate : alglibobject
     {
         //
         // Public declarations
@@ -40,6 +41,11 @@ public partial class alglib
         public odesolverstate()
         {
             _innerobj = new odesolver.odesolverstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new odesolverstate((odesolver.odesolverstate)_innerobj.make_copy());
         }
 
         //
@@ -58,7 +64,7 @@ public partial class alglib
     /*************************************************************************
 
     *************************************************************************/
-    public class odesolverreport
+    public class odesolverreport : alglibobject
     {
         //
         // Public declarations
@@ -69,6 +75,11 @@ public partial class alglib
         public odesolverreport()
         {
             _innerobj = new odesolver.odesolverreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new odesolverreport((odesolver.odesolverreport)_innerobj.make_copy());
         }
 
         //
@@ -96,7 +107,7 @@ public partial class alglib
         X       -   points at which Y should be tabulated, array[0..M-1]
                     integrations starts at X[0], ends at X[M-1],  intermediate
                     values at X[i] are returned too.
-                    SHOULD BE ORDERED BY ASCENDING OR BY DESCENDING!!!!
+                    SHOULD BE ORDERED BY ASCENDING OR BY DESCENDING!
         M       -   number of intermediate points + first point + last point:
                     * M>2 means that you need both Y(X[M-1]) and M-2 values at
                       intermediate points
@@ -348,7 +359,7 @@ public partial class alglib
             X       -   points at which Y should be tabulated, array[0..M-1]
                         integrations starts at X[0], ends at X[M-1],  intermediate
                         values at X[i] are returned too.
-                        SHOULD BE ORDERED BY ASCENDING OR BY DESCENDING!!!!
+                        SHOULD BE ORDERED BY ASCENDING OR BY DESCENDING!
             M       -   number of intermediate points + first point + last point:
                         * M>2 means that you need both Y(X[M-1]) and M-2 values at
                           intermediate points

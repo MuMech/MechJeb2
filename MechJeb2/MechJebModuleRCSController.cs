@@ -36,6 +36,18 @@ namespace MuMech
         [EditableInfoItem("RCS Tf", InfoItem.Category.Thrust)]
         public EditableDouble Tf = 1;
 
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public EditableDouble Kp = 0.125;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public EditableDouble Ki = 0.07;
+
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        public EditableDouble Kd = 0.53;
+
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool rcsManualPID = false;
+
         [Persistent(pass = (int)(Pass.Global))]
         [ToggleInfoItem("RCS throttle when 0kn thrust", InfoItem.Category.Thrust)]
         public bool rcsThrottle = true;
@@ -48,7 +60,7 @@ namespace MuMech
             : base(core)
         {
             priority = 600;
-            pid = new PIDControllerV2(0, 0, 0, 1, -1);
+            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
         }
 
         public override void OnModuleEnabled()
@@ -70,12 +82,64 @@ namespace MuMech
 
         public void setPIDParameters()
         {
-            if (Tf < 2 * TimeWarp.fixedDeltaTime)
-                Tf = 2 * TimeWarp.fixedDeltaTime;
+            if (rcsManualPID)
+            {
+                pid.Kd = Kd;
+                pid.Kp = Kp;
+                pid.Ki = Ki;
+            }
+            else
+            {
+                Tf = Math.Max(Tf, 0.02);
 
-            pid.Kd = 0.53 / Tf;
-            pid.Kp = pid.Kd / (3 * Math.Sqrt(2) * Tf);
-            pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
+                pid.Kd = 0.53 / Tf;
+                pid.Kp = pid.Kd / (3 * Math.Sqrt(2) * Tf);
+                pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
+
+                Kd.val = pid.Kd;
+                Kp.val = pid.Kp;
+                Ki.val = pid.Ki;
+            }
+        }
+
+        [GeneralInfoItem("RCS Pid", InfoItem.Category.Thrust)]
+        public void PIDGUI()
+        {
+            GUILayout.BeginVertical();
+            rcsManualPID = GUILayout.Toggle(rcsManualPID, "RCS Manual Pid");
+            if (rcsManualPID)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("P", GUILayout.ExpandWidth(false));
+                Kp.text = GUILayout.TextField(Kp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+
+                GUILayout.Label("I", GUILayout.ExpandWidth(false));
+                Kd.text = GUILayout.TextField(Kd.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+
+                GUILayout.Label("D", GUILayout.ExpandWidth(false));
+                Ki.text = GUILayout.TextField(Ki.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Tf", GUILayout.ExpandWidth(false));
+                Tf.text = GUILayout.TextField(Tf.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("P", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Kp.val.ToString("F4"), GUILayout.ExpandWidth(true));
+
+                GUILayout.Label("I", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Ki.val.ToString("F4"), GUILayout.ExpandWidth(true));
+
+                GUILayout.Label("D", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Kd.val.ToString("F4"), GUILayout.ExpandWidth(true));
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+            setPIDParameters();
         }
 
 

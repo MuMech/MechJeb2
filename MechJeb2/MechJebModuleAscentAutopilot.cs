@@ -35,6 +35,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autodeploySolarPanels = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool skipCircularization = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage = true;
         public bool autostage
         {
@@ -75,6 +77,9 @@ namespace MuMech
 
         public double currentMaxAoA = 0;
 
+        public double launchLatitude = 0 ;
+   
+
         public double tMinus
         {
             get { return launchTime - vesselState.time; }
@@ -95,6 +100,8 @@ namespace MuMech
 
             placedCircularizeNode = false;
 
+            launchLatitude = vesselState.latitude;
+
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             if (autostage) core.staging.users.Add(this);
@@ -103,7 +110,8 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.attitudeDeactivate();
-            core.thrust.ThrustOff();
+            if (!core.rssMode)
+                core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
             core.staging.users.Remove(this);
 
@@ -169,6 +177,8 @@ namespace MuMech
         {
             if (autoThrottle) core.thrust.targetThrottle = 0.0f;
 
+            core.attitude.AxisControl(false, false, false);
+
             if (timedLaunch && tMinus > 10.0)
             {
                 status = "Awaiting liftoff";
@@ -186,6 +196,7 @@ namespace MuMech
             if (timedLaunch)
             {
                 status = "Awaiting liftoff";
+                core.attitude.AxisControl(false, false, false); 
                 return;
             }
 
@@ -193,14 +204,18 @@ namespace MuMech
             if (autoThrottle && orbit.ApA > desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
 
             //during the vertical ascent we just thrust straight up at max throttle
-            if (forceRoll && vesselState.altitudeTrue > 50)
+            if (forceRoll)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
-                core.attitude.attitudeTo(90 - desiredInclination, 90, verticalRoll, this);
+                double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
+                core.attitude.attitudeTo(desiredHeading, 90, verticalRoll, this);
             }
-            else
+            else 
             {
                 core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
+
+            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
+
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             if (!vessel.LiftedOff()) status = "Awaiting liftoff";
@@ -289,7 +304,7 @@ namespace MuMech
             Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
                                                + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
-            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+            double desiredHeading = MathExtensions.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
@@ -390,12 +405,12 @@ namespace MuMech
             // - Starwaster
             core.thrust.targetThrottle = 0;
 
-            double desiredHeading = Math.PI / 180 * OrbitalManeuverCalculator.HeadingForInclination(desiredInclination, vesselState.latitude);
+            double desiredHeading = MathExtensions.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel.mainBody, desiredInclination, launchLatitude, OrbitalManeuverCalculator.CircularOrbitSpeed(vessel.mainBody, desiredOrbitAltitude + mainBody.Radius));
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
-            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
-                + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
+            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * MathExtensions.Deg2Rad) * desiredHeadingVector
+                + Math.Sin(desiredFlightPathAngle * MathExtensions.Deg2Rad) * vesselState.up;
 
 
             core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
@@ -416,7 +431,7 @@ namespace MuMech
 
         void DriveCircularizationBurn(FlightCtrlState s)
         {
-            if (!vessel.patchedConicsUnlocked())
+            if (!vessel.patchedConicsUnlocked() || skipCircularization)
             {
                 this.users.Clear();
                 return;

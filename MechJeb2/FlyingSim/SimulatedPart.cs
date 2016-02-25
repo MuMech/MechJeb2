@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
 {
     public class SimulatedPart
     {
-
-        protected DragCubeList cubes;
+        protected DragCubeList cubes = new DragCubeList();
 
         public double totalMass = 0;
         public bool shieldedFromAirstream;
         public bool noDrag;
         public bool hasLiftModule;
-        private float bodyLiftMultiplier;
+        private double bodyLiftMultiplier;
 
-        private float areaDrag;
-        private Vector3 liftForce;
+        private double areaDrag;
+        private Vector3d liftForce;
 
         //private float DragCubeMultiplier;
         //private float DragMultiplier;
@@ -32,17 +32,50 @@ namespace MuMech
         // Remove after test
         //public Part oPart;
 
+        private QuaternionD vesselToPart;
+        private QuaternionD partToVessel;
 
-        private Quaternion vesselToPart;
+        private static readonly Pool<SimulatedPart> pool = new Pool<SimulatedPart>(Create, Reset);
 
-        static public SimulatedPart New(Part p, ReentrySimulation.SimCurves simCurve)
+        public static int PoolSize
         {
-            SimulatedPart part = new SimulatedPart();
-            part.Set(p, simCurve);
+            get { return pool.Size; }
+        }
+
+        private static SimulatedPart Create()
+        {
+            return new SimulatedPart();
+        }
+
+        public virtual void Release()
+        {
+            foreach (DragCube cube in cubes.Cubes)
+            {
+                DragCubePool.Instance.Release(cube);
+            }
+            pool.Release(this);
+        }
+
+        public static void Release(List<SimulatedPart> objList)
+        {
+            for (int i = 0; i < objList.Count; ++i)
+            {
+                objList[i].Release();
+            }
+        }
+
+        private static void Reset(SimulatedPart obj)
+        {
+        }
+
+        public static SimulatedPart Borrow(Part p, ReentrySimulation.SimCurves simCurve)
+        {
+            SimulatedPart part = pool.Borrow();
+            part.Init(p, simCurve);
             return part;
         }
 
-        protected virtual void Set(Part p, ReentrySimulation.SimCurves _simCurves)
+        protected void Init(Part p, ReentrySimulation.SimCurves _simCurves)
         {
             Rigidbody rigidbody = p.rb;
 
@@ -55,11 +88,13 @@ namespace MuMech
 
             simCurves = _simCurves;
 
-            cubes = new DragCubeList();
+            //cubes = new DragCubeList();
             CopyDragCubesList(p.DragCubes, cubes);
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
-            vesselToPart = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up)).Inverse();
+            // QuaternionD.LookRotation is not working...
+            partToVessel = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up));
+            vesselToPart = Quaternion.Inverse(partToVessel);
 
             //DragCubeMultiplier = PhysicsGlobals.DragCubeMultiplier;
             //DragMultiplier = PhysicsGlobals.DragMultiplier;
@@ -72,18 +107,17 @@ namespace MuMech
 
         }
 
-        public virtual Vector3 Drag(Vector3 vesselVelocity, float dynamicPressurekPa,  float mach)
+        public virtual Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
         {
             if (shieldedFromAirstream || noDrag)
-                return Vector3.zero;
+                return Vector3d.zero;
 
-            Vector3 dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
+            Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
 
             // Use our thread safe version of SetDrag
             SetDrag(-dragVectorDirLocal, mach);
 
-#warning do some of this math once per frame
-            Vector3 drag = -vesselVelocity.normalized * areaDrag * dynamicPressurekPa * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+            Vector3d drag = -vesselVelocity.normalized * areaDrag * dragFactor;
 
 
             //bool delta = false;
@@ -137,21 +171,15 @@ namespace MuMech
             return drag;
         }
 
-        public virtual Vector3 Lift(Vector3 vesselVelocity, float dynamicPressurekPa, float mach)
+        public virtual Vector3d Lift(Vector3d vesselVelocity, double liftFactor)
         {
             if (shieldedFromAirstream || hasLiftModule)
-                return Vector3.zero;
-
-#warning obviously move out of here and evaluate once per mach value
-
-
-            float bodyLiftScalar = bodyLiftMultiplier * dynamicPressurekPa * simCurves.LiftMachCurve.Evaluate(mach);
-
+                return Vector3d.zero;
+            
             // direction of the lift in a vessel centric reference
-            Vector3 liftV = vesselToPart.Inverse() * liftForce * bodyLiftScalar;
+            Vector3d liftV = partToVessel * (liftForce * bodyLiftMultiplier * liftFactor);
 
-            Vector3 liftVector = Vector3.ProjectOnPlane(liftV, -vesselVelocity);
-
+            Vector3d liftVector = liftV.ProjectOnPlane(-vesselVelocity);
 
             // cubes.LiftForce OK
 
@@ -179,14 +207,23 @@ namespace MuMech
             return liftVector;
         }
 
-        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             return false;
         }
 
-        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double time, double semiDeployMultiplier)
+        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             return false;
+        }
+
+        public static class DragCubePool
+        {
+            private static readonly Pool<DragCube> _Instance = new Pool<DragCube>(
+                () => new DragCube(), cube => { });
+
+            
+            public static Pool<DragCube> Instance { get { return _Instance; } }
         }
 
 
@@ -203,7 +240,7 @@ namespace MuMech
 
             for (int i = 0; i < source.Cubes.Count; i++)
             {
-                DragCube c = new DragCube();
+                DragCube c = DragCubePool.Instance.Borrow();
                 CopyDragCube(source.Cubes[i], c);
                 dest.Cubes.Add(c);
             }
@@ -242,18 +279,18 @@ namespace MuMech
 
         // Unfortunately the DragCubeList SetDrag method is not thread safe
         // so here is a thread safe version
-        protected void SetDrag(Vector3 dragVector, float machNumber)
+        protected void SetDrag(Vector3d dragVector, float machNumber)
         {
-            areaDrag = 0f;
-            liftForce = Vector3.zero;
+            areaDrag = 0;
+            liftForce = Vector3d.zero;
             if (cubes.None)
             {
                 return;
             }
             for (int i = 0; i < 6; i++)
             {
-                Vector3 faceDirection = DragCubeList.GetFaceDirection((DragCube.DragFace)i);
-                float dragDot = Vector3.Dot(dragVector, faceDirection);
+                Vector3d faceDirection = DragCubeList.GetFaceDirection((DragCube.DragFace)i);
+                float dragDot = (float) Vector3d.Dot(dragVector, faceDirection);
                 float dragValue = DragCurveValue((dragDot + 1f) * 0.5f, machNumber);
                 float faceAreaDrag = cubes.AreaOccluded[i] * dragValue;
                 areaDrag = areaDrag + faceAreaDrag * cubes.WeightedDrag[i];
@@ -282,11 +319,11 @@ namespace MuMech
         }
 
 
+        float[] WeightedDragOrig = new float[6];
+
         // Need to check and then simplify this, some operations are just redundant.
         protected void SetCubeWeight(string name, float newWeight)
         {
-            float[] WeightedDragOrig = new float[6];
-
             int count = cubes.Cubes.Count;
             if (count == 0)
             {

@@ -91,11 +91,13 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
                 autopilot.desiredInclination = desiredInclination;
 
-
+                GUIStyle si = new GUIStyle(GUI.skin.label);
+                if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
+                    si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
                 GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º");
-
+                
                 core.thrust.LimitToPreventOverheatsInfoItem();
-                core.thrust.LimitToTerminalVelocityInfoItem();
+                //core.thrust.LimitToTerminalVelocityInfoItem();
                 core.thrust.LimitToMaxDynamicPressureInfoItem();
                 core.thrust.LimitAccelerationInfoItem();
                 core.thrust.LimitThrottleInfoItem();
@@ -136,7 +138,10 @@ namespace MuMech
                 autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels,
                     "Auto-deploy solar panels");
 
+                GUILayout.BeginHorizontal();
                 core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+                autopilot.skipCircularization = GUILayout.Toggle(autopilot.skipCircularization, "Skip Circularization");
+                GUILayout.EndHorizontal();
 
                 if (vessel.LandedOrSplashed)
                 {
