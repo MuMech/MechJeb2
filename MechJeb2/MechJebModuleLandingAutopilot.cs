@@ -165,7 +165,8 @@ namespace MuMech
             this.users.Clear();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.rcs.enabled = false;
+            if (core.landing.rcsAdjustment)
+                core.rcs.enabled = false;
             setStep(null);
         }
 
@@ -177,7 +178,7 @@ namespace MuMech
             // If the latest prediction is a landing, aerobrake or no-reentry prediciton then keep it.
             // However if it is any other sort or result it is not much use to us, so do not bother!
             {
-                ReentrySimulation.Result result = predictor.GetResult();
+                ReentrySimulation.Result result = predictor.Result;
                 if (null != result)
                 {
                     if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
@@ -233,7 +234,8 @@ namespace MuMech
             predictor.descentSpeedPolicy = null;
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.rcs.enabled = false;
+            if (core.landing.rcsAdjustment)
+                core.rcs.enabled = false;
             setStep(null);
         }
 
@@ -246,6 +248,11 @@ namespace MuMech
 
             // orbitLandingPosition is the point where our current orbit intersects the planet
             double endRadius = mainBody.Radius + DecelerationEndAltitude() - 100;
+
+            // Seems we are already landed ?
+            if (endRadius > orbit.ApR || vessel.LandedOrSplashed)
+                StopLanding();
+
             Vector3d orbitLandingPosition;
             if (orbit.PeR < endRadius)
                 orbitLandingPosition = orbit.SwappedRelativePositionAtUT(orbit.NextTimeOfRadius(vesselState.time, endRadius));
@@ -353,13 +360,13 @@ namespace MuMech
             }
 
             // Is there an error prediction available? If so add that into the mix
-            if (ErrorPredictionReady)
+            if (ErrorPredictionReady && !double.IsNaN(errorPrediction.parachuteMultiplier))
             {
                 parachutePlan.AddResult(errorPrediction);
             }
 
             // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
-            if (PredictionReady)
+            if (PredictionReady && !double.IsNaN(prediction.parachuteMultiplier))
             {
                 parachutePlan.AddResult(prediction);
             }
@@ -379,10 +386,10 @@ namespace MuMech
                     double ASLDeployAltitude = ParachuteDeployAboveGroundAtLandingSite + LandingSiteASL;
 
                     if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED &&
-                        ASLDeployAltitude > vesselState.altitudeASL)
+                        ASLDeployAltitude > vesselState.altitudeASL && p.deploymentSafeState == ModuleParachute.deploymentSafeStates.SAFE)
                     {
                         p.Deploy();
-                        // Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
+                        //Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
                     }
                 }
             }
@@ -574,22 +581,20 @@ namespace MuMech
                 vesselState.surfaceVelocity + dt * vesselState.gravityForce);
         }
 
-        public string ParachuteControlInfo
+        [ValueInfoItem("ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)]
+        public string ParachuteControlInfo()
         {
-            get
+            if (this.ParachutesDeployable())
             {
-                if (this.ParachutesDeployable())
-                {
-                    string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
-                    retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") + "%";
-                    retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
+                string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
+                retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") + "%";
+                retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
 
-                    return (retVal);
-                }
-                else
-                {
-                    return null;
-                }
+                return retVal;
+            }
+            else
+            {
+                return "N/A";
             }
         }
     }
@@ -753,11 +758,11 @@ namespace MuMech
                 }
                 lastResult = newResult;
             }
-
+            
             // What was the overshoot for this new result?
             double overshoot = newResult.GetOvershoot(this.autoPilot.core.target.targetLatitude, this.autoPilot.core.target.targetLongitude);
 
-            // Debug.Log("overshoot: " + overshoot + " multiplier: " + newResult.parachuteMultiplier + " hasError:" + newResult.multiplierHasError);
+            //Debug.Log("overshoot: " + overshoot.ToString("F2") + " multiplier: " + newResult.parachuteMultiplier.ToString("F4") + " hasError:" + newResult.multiplierHasError);
 
             // Add the new result to the linear regression
             regression.Add(overshoot, newResult.parachuteMultiplier);
@@ -804,7 +809,7 @@ namespace MuMech
                 }
 
                 // Impose sensible limits on the multiplier
-                if (this.currentMultiplier < 1) { this.currentMultiplier = 1; }
+                if (this.currentMultiplier < 1 || double.IsNaN(currentMultiplier)) { this.currentMultiplier = 1; }
                 if (this.currentMultiplier > this.maxMultiplier) { this.currentMultiplier = this.maxMultiplier; }
             }
 
@@ -860,16 +865,14 @@ namespace MuMech
                 // TODO is there benefit in running an initial simulation to calculate the height at which the ratio between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
 
                 // At what ASL height does the reference body have this pressure?
-                //maxSemiDeployHeight = (this.body.atmosphereScaleHeight *1000) * -1 * Math.Log(minSemiDeployPressure / this.body.atmosphereMultiplier);
-#warning FIX THAT BEFORE 1.0 !!
-                maxSemiDeployHeight = (1 * 1000) * -1 * Math.Log(minSemiDeployPressure / 1);
+                maxSemiDeployHeight = body.AltitudeForPressure(minSemiDeployPressure);
 
                 // We have to have semi deployed by the time we fully deploy.
                 minSemiDeployHeight = maxFullDeployHeight;
 
                 maxMultiplier = maxSemiDeployHeight / minSemiDeployHeight;
 
-                // Set the inital mutiplier to be the mid point.
+                // Set the inital multiplier to be the mid point.
                 currentMultiplier = maxMultiplier / 2;
             }
         }

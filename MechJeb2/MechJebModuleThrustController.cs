@@ -18,16 +18,20 @@ namespace MuMech
         public float trans_prev_thrust = 0;
         public bool trans_kill_h = false;
 
-        [Persistent(pass = (int)Pass.Global)]
-        public bool limitToTerminalVelocity = false;
-        [GeneralInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
-        public void LimitToTerminalVelocityInfoItem()
-        {
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.TerminalVelocity) s.onHover.textColor = s.onNormal.textColor = Color.green;
-            limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
-        }
 
+        // The Terminal Velocity limiter is removed to not have to deal with users who
+        // think that seeing the aerodynamic FX means they reached it. 
+        // And it s really high since 1.0.x anyway so the Dynamic Pressure limiter is better now
+        //[Persistent(pass = (int)Pass.Global)]
+        public bool limitToTerminalVelocity = false;
+
+        //[GeneralInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
+        //public void LimitToTerminalVelocityInfoItem()
+        //{
+        //    GUIStyle s = new GUIStyle(GUI.skin.toggle);
+        //    if (limiter == LimitMode.TerminalVelocity) s.onHover.textColor = s.onNormal.textColor = Color.green;
+        //    limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
+        //}
 
         [Persistent(pass = (int)Pass.Global)]
         public bool limitDynamicPressure = false;
@@ -121,10 +125,10 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public bool limiterMinThrottle = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
 
         [GeneralInfoItem("Lower throttle limit", InfoItem.Category.Thrust)]
@@ -161,13 +165,43 @@ namespace MuMech
         // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
         public bool differentialThrottleSuccess = false;
 
-        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle }
+        [Persistent(pass = (int)Pass.Local)]
+        public bool electricThrottle = false;
+
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDoubleMult electricThrottleLo = new EditableDoubleMult(0.05, 0.01);
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDoubleMult electricThrottleHi = new EditableDoubleMult(0.15, 0.01);
+
+        [GeneralInfoItem("Electric limit", InfoItem.Category.Thrust)]
+        public void LimitElectricInfoItem()
+        {
+            GUILayout.BeginHorizontal();
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.Electric)
+            {
+                if (vesselState.throttleLimit <0.001)
+                    s.onHover.textColor = s.onNormal.textColor = Color.red;
+                else
+                    s.onHover.textColor = s.onNormal.textColor = Color.yellow;
+            }
+            else if (ElectricEngineRunning()) s.onHover.textColor = s.onNormal.textColor = Color.green;
+
+            electricThrottle = GUILayout.Toggle(electricThrottle, "Electric limit Lo", s, GUILayout.Width(110));
+            electricThrottleLo.text = GUILayout.TextField(electricThrottleLo.text, GUILayout.Width(30));
+            GUILayout.Label("% Hi", GUILayout.ExpandWidth(false));
+            electricThrottleHi.text = GUILayout.TextField(electricThrottleHi.text, GUILayout.Width(30));
+            GUILayout.Label("%", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle, Electric }
         public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
 
         protected bool tmode_changed = false;
-        
+
 
         public PIDController pid;
 
@@ -215,10 +249,13 @@ namespace MuMech
 
         public void ThrustOff()
         {
+            if (vessel == null || vessel.ctrlState == null)
+                return;
+
             targetThrottle = 0;
             vessel.ctrlState.mainThrottle = 0;
             tmode = TMode.OFF;
-            if (vessel == FlightGlobals.ActiveVessel)
+            if (FlightGlobals.ActiveVessel != null && vessel == FlightGlobals.ActiveVessel)
             {
                 FlightInputHandler.state.mainThrottle = 0; //so that the on-screen throttle gauge reflects the autopilot throttle
             }
@@ -362,7 +399,7 @@ namespace MuMech
                 if (limit < throttleLimit) limiter = LimitMode.DynamicPressure;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
-            
+
             if (limitToPreventOverheats)
             {
                 float limit = (float)TemperatureSafetyThrottle();
@@ -374,6 +411,13 @@ namespace MuMech
             {
                 float limit = AccelerationLimitedThrottle();
                 if(limit < throttleLimit) limiter = LimitMode.Acceleration;
+                throttleLimit = Mathf.Min(throttleLimit, limit);
+            }
+
+            if (electricThrottle && ElectricEngineRunning())
+            {
+                float limit = ElectricThrottle();
+                if (limit < throttleLimit) limiter = LimitMode.Electric;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
             }
 
@@ -488,7 +532,7 @@ namespace MuMech
             // the max throttles.
             foreach (var resource in vesselState.resources.Values)
             {
-                if (resource.intakes.Length == 0)
+                if (resource.intakes.Count == 0)
                 {
                     // No intakes provide this resource; not our problem.
                     continue;
@@ -624,6 +668,30 @@ namespace MuMech
             }
         }
 
+        bool ElectricEngineRunning() {
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
+            var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
+
+            return engineModules.SelectMany(eng => eng.propellants).Any(p => p.name == "ElectricCharge");
+        }
+
+        float ElectricThrottle()
+        {
+            double totalElectric = vessel.MaxResourceAmount("ElectricCharge");
+            double lowJuice = totalElectric * electricThrottleLo;
+            double highJuice = totalElectric * electricThrottleHi;
+            double curElectric = vessel.TotalResourceAmount("ElectricCharge");
+
+            if (curElectric <= lowJuice)
+                return 0;
+            if (curElectric >= highJuice)
+                return 1;
+            // Avoid divide by zero
+            if (Math.Abs(highJuice - lowJuice) < 0.01)
+                return 1;
+            return Mathf.Clamp((float) ((curElectric - lowJuice) / (highJuice - lowJuice)), 0, 1);
+        }
+
         //The throttle setting that will give an acceleration of maxAcceleration
         float AccelerationLimitedThrottle()
         {
@@ -658,11 +726,12 @@ namespace MuMech
                 {
                     if (disableThrusters)
                     {
-                        pm.Disable();
+                        pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
                     }
                     else
                     {
-                        pm.Enable();
+                        // TODO : Check the protopart for the original values (slow) ? Or use a dict to save them (hard with save) ?
+                        pm.enablePitch = pm.enableRoll = pm.enableYaw = true;
                     }
                 }
             }

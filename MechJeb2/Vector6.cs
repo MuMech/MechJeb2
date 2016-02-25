@@ -77,6 +77,12 @@ namespace MuMech
             this.negative = negative;
         }
 
+        public void Reset()
+        {
+            positive = Vector3d.zero;
+            negative = Vector3d.zero;
+        }
+
         public void Add(Vector3d vector)
         {
             for (int i = 0; i < Values.Length; i++)

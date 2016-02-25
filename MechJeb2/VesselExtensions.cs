@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
@@ -98,6 +99,34 @@ namespace MuMech
             return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
+        public static double MaxResourceAmount(this Vessel vessel, PartResourceDefinition definition)
+        {
+            if (definition == null) return 0;
+            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+
+            double amount = 0;
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Part p = parts[i];
+                for (int j = 0; j < p.Resources.Count; j++)
+                {
+                    PartResource r = p.Resources[j];
+
+                    if (r.info.id == definition.id)
+                    {
+                        amount += r.maxAmount;
+                    }
+                }
+            }
+
+            return amount;
+        }
+
+        public static double MaxResourceAmount(this Vessel vessel, string resourceName)
+        {
+            return vessel.MaxResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
+        }
+
         public static bool HasElectricCharge(this Vessel vessel)
         {
             if (vessel == null)
@@ -161,8 +190,10 @@ namespace MuMech
 
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
-            var nodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.patch == patch && n != ignoreNode));
-            if (nodes.Any()) return nodes.First().nextPatch;
+            var nodes = vessel.patchedConicSolver.maneuverNodes.Slinq().Where((n,p) => n.patch == p && n != ignoreNode, patch);
+            // Slinq is nice but you can only enumerate it once
+            var first = nodes.FirstOrDefault();
+            if (first != null) return first.nextPatch;
 
             //return the next patch, or null if there isn't one:
             if (!finalPatch) return patch.nextPatch;

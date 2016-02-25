@@ -29,6 +29,22 @@ namespace MuMech
             return null;
         }
 
+        // An allocation free version of GetModuleMass
+        public static float GetModuleMassNoAlloc(this Part p, float defaultMass)
+        {
+            float mass = 0f;
+
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                IPartMassModifier m = p.Modules[i] as IPartMassModifier;
+                if (m != null)
+                {
+                    mass += m.GetModuleMass(defaultMass);
+                }
+            }
+            return mass;
+        }
+
         public static bool EngineHasFuel(this Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)
@@ -49,20 +65,21 @@ namespace MuMech
                 ModuleDecouple mDecouple = m as ModuleDecouple;
                 if (mDecouple != null)
                 {
-                    if (!mDecouple.isDecoupled) return true;
+                    if (!mDecouple.isDecoupled && p.stagingOn) return true;
                     break;
                 }
 
                 ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
                 if (mAnchoredDecoupler != null)
                 {
-                    if (!mAnchoredDecoupler.isDecoupled) return true;
+                    if (!mAnchoredDecoupler.isDecoupled && p.stagingOn) return true;
                     break;
                 }
 
-                if (m.ClassName == "ProceduralFairingDecoupler")
+                if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler")
                 {
-                    return true;
+                    if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn) return true;
+                    break;
                 }
             }
             return false;

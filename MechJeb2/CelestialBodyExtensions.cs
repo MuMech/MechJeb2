@@ -47,5 +47,29 @@ namespace MuMech
         {
             return !body.atmosphere ? 0 : body.atmosphereDepth;
         }
+
+
+        public static double AltitudeForPressure(this CelestialBody body, double pressure)
+        {
+            if (!body.atmosphere)
+                return 0;
+            double upperAlt = body.atmosphereDepth;
+            double lowerAlt = 0;
+            while (upperAlt - lowerAlt > 10)
+            {
+                double testAlt = (upperAlt + lowerAlt) * 0.5;
+                double testPressure = FlightGlobals.getStaticPressure(testAlt, body);
+                if (testPressure < pressure)
+                {
+                    upperAlt = testAlt;
+                }
+                else
+                {
+                    lowerAlt = testAlt;
+                }
+            }
+            return (upperAlt + lowerAlt) * 0.5;
+        }
+
     }
 }

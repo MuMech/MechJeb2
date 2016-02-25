@@ -30,7 +30,27 @@ MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
 	$(wildcard MechJeb2/KerbalEngineer/Extensions/*.cs) \
 	$(wildcard MechJeb2/KerbalEngineer/Helpers/*.cs) \
 	$(wildcard MechJeb2/KerbalEngineer/VesselSimulator/*.cs) \
-	$(wildcard MechJeb2/FlyingSim/*.cs)
+	$(wildcard MechJeb2/FlyingSim/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Algebraics/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Collections/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Compare/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Compare/Comparers/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Compare/Examples/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Compare/Utilities/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Comparisons/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Delegates/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Dispose/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Events/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Platform/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Pools/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Slinq/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Slinq/Collections/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/ChainedOrPooled/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/Mutation/*.cs) \
+	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/Simple/*.cs) \
+	$(wildcard MechJeb2/UnityToolbag/Future/*.cs) \
+	$(wildcard MechJeb2/UnityToolbag/Dispatcher/*.cs)
 
 RESGEN2 := resgen2
 GMCS    ?= gmcs
@@ -66,6 +86,7 @@ build/%.dll: ${MECHJEBFILES}
 package: build ${MECHJEBFILES}
 	mkdir -p package/MechJeb2/Plugins
 	cp -r Parts package/MechJeb2/
+	cp -r Icons package/MechJeb2/
 	cp build/MechJeb2.dll package/MechJeb2/Plugins/
 	cp LICENSE.md README.md package/MechJeb2/
 
@@ -87,11 +108,13 @@ clean:
 install: build
 	mkdir -p "${KSPDIR}"/GameData/MechJeb2/Plugins
 	cp -r Parts "${KSPDIR}"/GameData/MechJeb2/
+	cp -r Icons "${KSPDIR}"/GameData/MechJeb2/
 	cp build/MechJeb2.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
 
 uninstall: info
 	rm -rf "${KSPDIR}"/GameData/MechJeb2/Plugins
 	rm -rf "${KSPDIR}"/GameData/MechJeb2/Parts
+	rm -rf "${KSPDIR}"/GameData/MechJeb2/Icons
 
 
 .PHONY : all info build package tar.gz zip clean install uninstall

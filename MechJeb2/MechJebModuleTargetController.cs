@@ -250,7 +250,7 @@ namespace MuMech
 
                     if (mouseCoords != null)
                     {
-                        GLUtils.DrawMapViewGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f));
+                        GLUtils.DrawGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
                         GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal() + "\n" + ScienceUtil.GetExperimentBiome(mainBody, mouseCoords.latitude, mouseCoords.longitude));
 
                         if (Input.GetMouseButtonDown(0))
@@ -274,7 +274,7 @@ namespace MuMech
             if ((target is Vessel) && (!((Vessel)target).LandedOrSplashed || (((Vessel)target).mainBody != vessel.mainBody))) return;
             if (target is DirectionTarget) return;
 
-            GLUtils.DrawMapViewGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red);
+            GLUtils.DrawGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red, true);
         }
     }
 

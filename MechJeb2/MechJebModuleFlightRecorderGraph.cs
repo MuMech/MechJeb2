@@ -6,11 +6,6 @@ using recordType = MuMech.MechJebModuleFlightRecorder.recordType;
 
 namespace MuMech
 {
-    //A class to record flight data, currently deltaV and time
-    //TODO: add launch phase angle measurement
-    //TODO: decide whether to keep separate "total" and "since mark" records
-    //TODO: record RCS dV expended?
-    //TODO: make records persistent
     public class MechJebModuleFlightRecorderGraph : DisplayModule
     {
 
@@ -78,6 +73,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (HighLogic.LoadedSceneIsEditor)
+                return;
+
             width = 128 * hSize;
             height = 128 * vSize;
             recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();

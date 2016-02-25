@@ -1,11 +1,11 @@
-/*************************************************************************
-AP library
-Copyright (c) 2003-2009 Sergey Bochkanov (ALGLIB project).
+/**************************************************************************
+ALGLIB 3.10.0 (source code generated 2015-08-19)
+Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the
+the Free Software Foundation (www.fsf.org); either version 2 of the 
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
-*************************************************************************/
+**************************************************************************/
 using System;
 public partial class alglib
 {
@@ -189,17 +189,92 @@ public partial class alglib
         {
             msg = s;
         }
-        
     }
     
     /********************************************************************
-    ALGLIB object, parent class for all AlgoPascal objects managed by ALGLIB.
-    Any AlgoPascal object inherits from this class.
+    Critical failure, resilts in immediate termination of entire program.
+    ********************************************************************/
+    public static void AE_CRITICAL_ASSERT(bool x)
+    {
+        if( !x )
+            System.Environment.FailFast("ALGLIB: critical error");
+    }
+    
+    /********************************************************************
+    ALGLIB object, parent  class  for  all  internal  AlgoPascal  objects
+    managed by ALGLIB.
+    
+    Any internal AlgoPascal object inherits from this class.
+    
+    User-visible objects inherit from alglibobject (see below).
     ********************************************************************/
     public abstract class apobject
     {
         public abstract void init();
         public abstract apobject make_copy();
+    }
+    
+    /********************************************************************
+    ALGLIB object, parent class for all user-visible objects  managed  by
+    ALGLIB.
+    
+    Methods:
+        _deallocate()       deallocation:
+                            * in managed ALGLIB it does nothing
+                            * in native ALGLIB it clears  dynamic  memory
+                              being  hold  by  object  and  sets internal
+                              reference to null.
+        make_copy()         creates deep copy of the object.
+                            Works in both managed and native versions  of
+                            ALGLIB.
+    ********************************************************************/
+    public abstract class alglibobject
+    {
+        public virtual void _deallocate() {}
+        public abstract alglibobject make_copy();
+    }
+    
+    /********************************************************************
+    Deallocation of ALGLIB object:
+    * in managed ALGLIB this method just sets refence to null
+    * in native ALGLIB call of this method:
+      1) clears dynamic memory being hold by  object  and  sets  internal
+         reference to null.
+      2) sets to null variable being passed to this method
+    
+    IMPORTANT (1): in  native  edition  of  ALGLIB,  obj becomes unusable
+                   after this call!!!  It  is  possible  to  save  a copy
+                   of reference in another variable (original variable is
+                   set to null), but any attempt to work with this object
+                   will crash your program.
+    
+    IMPORTANT (2): memory ownen by object will be recycled by GC  in  any
+                   case. This method just enforced IMMEDIATE deallocation.
+    ********************************************************************/
+    public static void deallocateimmediately<T>(ref T obj) where T : alglib.alglibobject
+    {
+        obj._deallocate();
+        obj = null;
+    }
+
+    /********************************************************************
+    Allocation counter:
+    * in managed ALGLIB it always returns 0 (dummy code)
+    * in native ALGLIB it returns current value of the allocation counter
+      (if it was activated)
+    ********************************************************************/
+    public static long alloc_counter()
+    {
+        return 0;
+    }
+    
+    /********************************************************************
+    Activization of the allocation counter:
+    * in managed ALGLIB it does nothing (dummy code)
+    * in native ALGLIB it turns on allocation counting.
+    ********************************************************************/
+    public static void alloc_counter_activate()
+    {
     }
     
     /********************************************************************
@@ -625,6 +700,184 @@ public partial class alglib
             return new complex(z.x*z.x-z.y*z.y, 2*z.x*z.y); 
         }
 
+    }
+
+    /*
+     * CSV functionality
+     */
+     
+    public static int CSV_DEFAULT      = 0x0;
+    public static int CSV_SKIP_HEADERS = 0x1;
+    
+    /*
+     * CSV operations: reading CSV file to real matrix.
+     * 
+     * This function reads CSV  file  and  stores  its  contents  to  double
+     * precision 2D array. Format of the data file must conform to RFC  4180
+     * specification, with additional notes:
+     * - file size should be less than 2GB
+     * - ASCI encoding, UTF-8 without BOM (in header names) are supported
+     * - any character (comma/tab/space) may be used as field separator,  as
+     *   long as it is distinct from one used for decimal point
+     * - multiple subsequent field separators (say, two  spaces) are treated
+     *   as MULTIPLE separators, not one big separator
+     * - both comma and full stop may be used as decimal point. Parser  will
+     *   automatically determine specific character being used.  Both  fixed
+     *   and exponential number formats are  allowed.   Thousand  separators
+     *   are NOT allowed.
+     * - line may end with \n (Unix style) or \r\n (Windows  style),  parser
+     *   will automatically adapt to chosen convention
+     * - escaped fields (ones in double quotes) are not supported
+     * 
+     * INPUT PARAMETERS:
+     *     filename        relative/absolute path
+     *     separator       character used to separate fields.  May  be  ' ',
+     *                     ',', '\t'. Other separators are possible too.
+     *     flags           several values combined with bitwise OR:
+     *                     * alglib::CSV_SKIP_HEADERS -  if present, first row
+     *                       contains headers  and  will  be  skipped.   Its
+     *                       contents is used to determine fields count, and
+     *                       that's all.
+     *                     If no flags are specified, default value 0x0  (or
+     *                     alglib::CSV_DEFAULT, which is same) should be used.
+     *                     
+     * OUTPUT PARAMETERS:
+     *     out             2D matrix, CSV file parsed with atof()
+     *     
+     * HANDLING OF SPECIAL CASES:
+     * - file does not exist - alglib::ap_error exception is thrown
+     * - empty file - empty array is returned (no exception)
+     * - skip_first_row=true, only one row in file - empty array is returned
+     * - field contents is not recognized by atof() - field value is replaced
+     *   by 0.0
+     */
+    public static void read_csv(string filename, char separator, int flags, out double[,] matrix)
+    {
+        //
+        // Parameters
+        //
+        bool skip_first_row = (flags&CSV_SKIP_HEADERS)!=0;
+        
+        //
+        // Prepare empty output array
+        //
+        matrix = new double[0,0];
+        
+        //
+        // Read file, normalize file contents:
+        // * replace 0x0 by spaces
+        // * remove trailing spaces and newlines
+        // * append trailing '\n' and '\0' characters
+        // Return if file contains only spaces/newlines.
+        //
+        byte b_space = System.Convert.ToByte(' ');
+        byte b_tab   = System.Convert.ToByte('\t');
+        byte b_lf    = System.Convert.ToByte('\n');
+        byte b_cr    = System.Convert.ToByte('\r');
+        byte b_comma = System.Convert.ToByte(',');
+        byte b_fullstop= System.Convert.ToByte('.');
+        byte[] v0 = System.IO.File.ReadAllBytes(filename);
+        if( v0.Length==0 )
+            return;
+        byte[] v1 = new byte[v0.Length+2];
+        int filesize = v0.Length;
+        for(int i=0; i<filesize; i++)
+            v1[i] = v0[i]==0 ? b_space : v0[i];
+        for(; filesize>0; )
+        {
+            byte c = v1[filesize-1];
+            if( c==b_space || c==b_tab || c==b_cr || c==b_lf )
+            {
+                filesize--;
+                continue;
+            }
+            break;
+        }
+        if( filesize==0 )
+            return;
+        v1[filesize+0] = b_lf;
+        v1[filesize+1] = 0x0;
+        filesize+=2;
+        
+        
+        //
+        // Scan dataset.
+        //
+        int rows_count, cols_count, max_length = 0;
+        cols_count = 1;
+        for(int idx=0; idx<filesize; idx++)
+        {
+            if( v1[idx]==separator )
+                cols_count++;
+            if( v1[idx]==b_lf )
+                break;
+        }
+        rows_count = 0;
+        for(int idx=0; idx<filesize; idx++)
+            if( v1[idx]==b_lf )
+                rows_count++;
+        if( rows_count==1 && skip_first_row ) // empty output, return
+            return;
+        int[] offsets = new int[rows_count*cols_count];
+        int[] lengths = new int[rows_count*cols_count];
+        int cur_row_idx = 0;
+        for(int row_start=0; v1[row_start]!=0x0; )
+        {
+            // determine row length
+            int row_length;
+            for(row_length=0; v1[row_start+row_length]!=b_lf; row_length++);
+            
+            // determine cols count, perform integrity check
+            int cur_cols_cnt=1;
+            for(int idx=0; idx<row_length; idx++)
+                if( v1[row_start+idx]==separator )
+                    cur_cols_cnt++;
+            if( cols_count!=cur_cols_cnt )
+                throw new alglib.alglibexception("read_csv: non-rectangular contents, rows have different sizes");
+            
+            // store offsets and lengths of the fields
+            int cur_offs = 0;
+            int cur_col_idx = 0;
+            for(int idx=0; idx<row_length+1; idx++)
+                if( v1[row_start+idx]==separator || v1[row_start+idx]==b_lf )
+                {
+                    offsets[cur_row_idx*cols_count+cur_col_idx] = row_start+cur_offs;
+                    lengths[cur_row_idx*cols_count+cur_col_idx] = idx-cur_offs;
+                    max_length = idx-cur_offs>max_length ? idx-cur_offs : max_length;
+                    cur_offs = idx+1;
+                    cur_col_idx++;
+                }
+            
+            // advance row start
+            cur_row_idx++;
+            row_start = row_start+row_length+1;
+        }
+        
+        //
+        // Convert
+        //
+        int row0 = skip_first_row ? 1 : 0;
+        int row1 = rows_count;
+        System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.CreateSpecificCulture(""); // invariant culture
+        matrix = new double[row1-row0, cols_count];
+        alglib.AE_CRITICAL_ASSERT(culture.NumberFormat.NumberDecimalSeparator==".");
+        for(int ridx=row0; ridx<row1; ridx++)
+            for(int cidx=0; cidx<cols_count; cidx++)
+            {
+                int field_len  = lengths[ridx*cols_count+cidx];
+                int field_offs = offsets[ridx*cols_count+cidx];
+                
+                // replace , by full stop
+                for(int idx=0; idx<field_len; idx++)
+                    if( v1[field_offs+idx]==b_comma )
+                        v1[field_offs+idx] = b_fullstop;
+                
+                // convert
+                string s_val = System.Text.Encoding.ASCII.GetString(v1, field_offs, field_len);
+                double d_val;
+                Double.TryParse(s_val, System.Globalization.NumberStyles.Float, culture, out d_val);
+                matrix[ridx-row0,cidx] = d_val;
+            }
     }
     
     
@@ -1247,7 +1500,7 @@ public partial class alglib
             return System.BitConverter.ToDouble(_bytes,0);
         }
     }
-
+    
     /*
      * Parts of alglib.smp class which are shared with GPL version of ALGLIB
      */
@@ -1255,6 +1508,7 @@ public partial class alglib
     {
         #pragma warning disable 420
         public const int AE_LOCK_CYCLES = 512;
+        public const int AE_LOCK_TESTS_BEFORE_YIELD = 16;
         
         /*
          * This variable is used to perform spin-wait loops in a platform-independent manner
@@ -1376,15 +1630,30 @@ public partial class alglib
         ************************************************************************/
         public static void ae_spin_wait(int cnt)
         {
-            /*int i, v;
-            v = 0;
+            /*
+             * these strange operations with ae_never_change_it are necessary to
+             * prevent compiler optimization of the loop.
+             */
+            int i;
+            
+            /* very unlikely because no one will wait for such amount of cycles */
+            if( cnt>0x12345678 )
+                never_change_it = cnt%10;
+            
+            /* spin wait, test condition which will never be true */
             for(i=0; i<cnt; i++)
-                System.Threading.Interlocked.Exchange(ref v, i);*/
-            for(int i=0; i<cnt && never_change_it==0; i++)
-                if( never_change_it!=0 )
-                    never_change_it = i;
-            if( never_change_it!=0 )
-                never_change_it = 0;
+                if( never_change_it>0 )
+                    never_change_it--;
+        }
+
+
+        /************************************************************************
+        This function causes the calling thread to relinquish the CPU. The thread
+        is moved to the end of the queue and some other thread gets to run.
+        ************************************************************************/
+        public static void ae_yield()
+        {
+            System.Threading.Thread.Sleep(0);
         }
 
         /************************************************************************
@@ -1403,11 +1672,15 @@ public partial class alglib
         ************************************************************************/
         public static void ae_acquire_lock(ae_lock obj)
         {
+            int cnt = 0;
             for(;;)
             {
                 if( System.Threading.Interlocked.CompareExchange(ref obj.is_locked, 1, 0)==0 )
                     return;
                 ae_spin_wait(AE_LOCK_CYCLES);
+                cnt++;
+                if( cnt%AE_LOCK_TESTS_BEFORE_YIELD==0 )
+                    ae_yield();
             }
         }
 
@@ -1430,6 +1703,21 @@ public partial class alglib
         }
         
         
+        /************************************************************************
+        This function returns True, if internal seed object was set.  It  returns
+        False for un-seeded pool.
+
+        dst                 destination pool (initialized by constructor function)
+
+        NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
+              you should NOT call it when lock can be used by another thread.
+        ************************************************************************/
+        public static bool ae_shared_pool_is_initialized(shared_pool dst)
+        {
+            return dst.seed_object!=null;
+        }
+
+
         /************************************************************************
         This function sets internal seed object. All objects owned by the pool
         (current seed object, recycled objects) are automatically freed.
@@ -1678,6 +1966,7 @@ public partial class alglib
     public partial class smp
     {
         public static int cores_count = 1;
+        public static volatile int cores_to_use = 0;
     }
     public class smpselftests
     {
@@ -1685,5 +1974,9 @@ public partial class alglib
         {
             return true;
         }
+    }
+    public static void setnworkers(int nworkers)
+    {
+        alglib.smp.cores_to_use = nworkers;
     }
 }

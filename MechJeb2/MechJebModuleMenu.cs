@@ -245,7 +245,7 @@ namespace MuMech
 
         private void ClearButtons()
         {
-            if (mjButton != null)
+            if (mjButton != null && mjButton.gameObject != null) 
             {
                 ApplicationLauncher.Instance.RemoveModApplication(mjButton);
                 mjButton = null;

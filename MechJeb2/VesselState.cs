@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Smooth.Pools;
 using UnityEngine;
 
 namespace MuMech
@@ -9,8 +10,12 @@ namespace MuMech
     public class VesselState
     {
         private static bool isLoadedRCSFXExt = false;
+        public static bool isLoadedProceduralFairing = false;
 
         private Vessel vesselRef = null;
+
+        private EngineInfo einfo = new EngineInfo();
+        private IntakeInfo iinfo = new IntakeInfo();
 
         [ValueInfoItem("Universal Time", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         public double time;            //planetarium time
@@ -100,6 +105,8 @@ namespace MuMech
         public MovingAverage AoA = new MovingAverage();
         [ValueInfoItem("Angle of Sideslip", InfoItem.Category.Misc, format = "F2", units = "º")]
         public MovingAverage AoS = new MovingAverage();
+        
+        public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
 
         public double radius;  //distance from planet center
 
@@ -168,7 +175,7 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
-        [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "pa")]
+        [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
         public double dynamicPressure;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
         public double intakeAir;
@@ -191,7 +198,7 @@ namespace MuMech
         public Vector3d torqueReactionSpeed;
 
         // List of parachutes
-        public List<ModuleParachute> parachutes;
+        public List<ModuleParachute> parachutes = new List<ModuleParachute>();
 
         public bool parachuteDeployed;
 
@@ -199,6 +206,16 @@ namespace MuMech
         public Dictionary<int, ResourceInfo> resources = new Dictionary<int, ResourceInfo>();
 
         public CelestialBody mainBody;
+
+        // A convenient debug message to display in the UI
+        public static string message;
+        [GeneralInfoItem("Debug String", InfoItem.Category.Misc, showInEditor = true)]
+        public void DebugString()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label(message);
+            GUILayout.EndVertical();
+        }
 
         // Callbacks for external module
         public delegate void VesselStatePartExtension(Part p);
@@ -215,7 +232,7 @@ namespace MuMech
             public GimbalExtTorqueVector torqueVector;
         }
 
-        private static Dictionary<System.Type, GimbalExt> gimbalExtDict;
+        private static Dictionary<Type, GimbalExt> gimbalExtDict;
 
         public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
@@ -223,12 +240,13 @@ namespace MuMech
 
         static VesselState()
         {
-            gimbalExtDict = new Dictionary<System.Type, GimbalExt>();
+            gimbalExtDict = new Dictionary<Type, GimbalExt>();
             GimbalExt nullGimbal = new GimbalExt() { isValid = nullGimbalIsValid, initialRot = nullGimbalInitialRot, torqueVector = nullGimbalTorqueVector };
             GimbalExt stockGimbal = new GimbalExt() { isValid = stockGimbalIsValid, initialRot = stockGimbalInitialRot, torqueVector = stockGimbalTorqueVector };
             gimbalExtDict.Add(typeof(object), nullGimbal);
             gimbalExtDict.Add(typeof(ModuleGimbal), stockGimbal);
             isLoadedRCSFXExt = (AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.assembly.GetName().Name == "MechJebRCSFXExt") != null);
+            isLoadedProceduralFairing = (AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.assembly.GetName().Name == "ProceduralFairings") != null);
         }
 
         public VesselState()
@@ -258,8 +276,8 @@ namespace MuMech
 
             UpdateRCSThrustAndTorque(vessel);
 
-            EngineInfo einfo = new EngineInfo(CoM);
-            IntakeInfo iinfo = new IntakeInfo();
+            einfo.Update(CoM, vessel);
+            iinfo.Update();
             AnalyzeParts(vessel, einfo, iinfo);
 
             UpdateResourceRequirements(einfo, iinfo);
@@ -268,10 +286,7 @@ namespace MuMech
 
             UpdateMoIAndAngularMom(vessel);
         }
-
-
-        public DragCubeList cube = new DragCubeList();
-
+        
         private void TestStuff(Vessel vessel)
         {
             //int partCount = vessel.parts.Count;
@@ -349,6 +364,18 @@ namespace MuMech
             //}
             //MechJebCore.print(exposedArea.ToString("F2") + " " + skinExposedArea.ToString("F2") + " " + radiativeArea.ToString("F2"));
 
+            //message = "\nPools :\n" +
+            //          SimulatedVessel.PoolSize + " SimulatedVessel\n" +
+            //          SimulatedPart.PoolSize +                  " SimulatedPart\n" +
+            //          SimulatedParachute.PoolSize +             " SimulatedParachute\n" +
+            //          ListPool<AbsoluteVector>.Instance.Size +  " AbsoluteVector\n" +
+            //          ReentrySimulation.PoolSize +              " ReentrySimulation\n" +
+            //          ReentrySimulation.Result.PoolSize + " Result\n" +
+            //          SimulatedPart.DragCubePool.Instance.Size + " DragCubePool\n" +
+            //          FuelNode.PoolSize + " FuelNode\n";
+
+            //ListPool<AbsoluteVector>.Instance.
+            
         }
 
 
@@ -472,7 +499,17 @@ namespace MuMech
             orbitTimeToAp.value = vessel.orbit.timeToAp;
             if (vessel.orbit.eccentricity < 1) orbitTimeToPe.value = vessel.orbit.timeToPe;
             else orbitTimeToPe.value = -vessel.orbit.meanAnomaly / (2 * Math.PI / vessel.orbit.period);
-            orbitLAN.value = vessel.orbit.LAN;
+
+            if (!vessel.LandedOrSplashed)
+            {
+                orbitLAN.value = vessel.orbit.LAN;
+            }
+            else
+            {
+                orbitLAN.value = -(vessel.transform.position - vessel.mainBody.transform.position).AngleInPlane(Planetarium.Zup.Z, Planetarium.Zup.X);
+                orbitTimeToAp.value = 0;
+            }
+
             orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
             orbitInclination.value = vessel.orbit.inclination;
             orbitEccentricity.value = vessel.orbit.eccentricity;
@@ -551,42 +588,78 @@ namespace MuMech
                     ModuleRCS rcs = (ModuleRCS)mod;
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
+                        Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
+                        Vector3 translationControl = new Vector3(rcs.enableX ? 1 : 0f, rcs.enableZ ? 1 : 0, rcs.enableY ? 1 : 0);
                         // rcsTorqueAvailable:
                         for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                         {
                             Transform t = rcs.thrusterTransforms[j];
                             Vector3d thrusterPosition = t.position - movingCoM;
-
+                            Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
+                            
                             float power = rcs.thrusterPower;
 
                             if (FlightInputHandler.fetch.precisionMode)
                             {
-                                float lever = rcs.GetLeverDistance(-t.up, thrusterPosition);
+                                float lever = rcs.GetLeverDistance(thrustDirection, movingCoM);
                                 if (lever > 1)
                                 {
                                     power = power / lever;
                                 }
                             }
 
-                            Vector3d thrusterThrust = -t.up * power;
+                            Vector3d thrusterThrust = thrustDirection * power;
                             // This is a cheap hack to get rcsTorque with the RCS balancer active.
                             if (!rcsbal.enabled)
                             {
-                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterThrust));
+                                rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
                             }
                             Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
                             // Convert in vessel local coordinate
-                            rcsTorqueAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterTorque));
+                            rcsTorqueAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
                         }
                     }
                 }
             }
         }
 
+
+        [GeneralInfoItem("RCS Translation", InfoItem.Category.Vessel, showInEditor = true)]
+        public void RCSTranslation()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("RCS Translation");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("RCS Torque", InfoItem.Category.Vessel, showInEditor = true)]
+        public void RCSTorque()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("RCS Torque");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+
         // Loop over all the parts in the vessel and calculate some things.
         void AnalyzeParts(Vessel vessel, EngineInfo einfo, IntakeInfo iinfo)
         {
-            parachutes = new List<ModuleParachute>();
+            parachutes.Clear();
             parachuteDeployed = false;
 
             torqueAvailable = Vector3d.zero;
@@ -694,7 +767,7 @@ namespace MuMech
                         Vector3 liftVector;
                         float liftDot;
                         float absDot;
-                        cs.SetupCoefficients(velocity, p.atmDensity, out nVel, out liftVector, out liftDot, out absDot);
+                        cs.SetupCoefficients(velocity, out nVel, out liftVector, out liftDot, out absDot);
 
                         Quaternion maxRotation = Quaternion.AngleAxis(cs.ctrlSurfaceRange, cs.transform.rotation * Vector3.right);
 
@@ -747,9 +820,9 @@ namespace MuMech
 
             if (torqueAvailable.sqrMagnitude > 0)
                 torqueReactionSpeed.Scale(torqueAvailable.Invert());
-
-
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative); // Should we use Max or Min ?
+            
+            // Max since most of the code only use positive control input and the min would be 0
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
 
             torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
 
@@ -794,16 +867,18 @@ namespace MuMech
         {
             // Convert the resource information from the einfo and iinfo format
             // to the more useful ResourceInfo format.
+            ResourceInfo.Release(resources.Values);
             resources.Clear();
             foreach (var info in einfo.resourceRequired)
             {
                 int id = info.Key;
                 var req = info.Value;
-                resources[id] = new ResourceInfo(
+                resources[id] = ResourceInfo.Borrow(
                         PartResourceLibrary.Instance.GetDefinition(id),
                         req.requiredLastFrame,
                         req.requiredAtMaxThrottle,
-                        iinfo.getIntakes(id));
+                        iinfo.getIntakes(id),
+                        vesselRef);
             }
 
             int intakeAirId = PartResourceLibrary.Instance.GetDefinition("IntakeAir").id;
@@ -834,18 +909,18 @@ namespace MuMech
             }
         }
 
+        private static readonly Vector3[] unitVectors = { new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1) };
+
         // KSP's calculation of the vessel's moment of inertia is broken.
         // This function is somewhat expensive :(
         // Maybe it can be optimized more.
         void UpdateMoIAndAngularMom(Vessel vessel)
         {
-            inertiaTensor = new Matrix3x3f();
+            inertiaTensor.reset();
 
             Transform vesselTransform = vessel.GetTransform();
             Quaternion inverseVesselRotation = Quaternion.Inverse(vesselTransform.rotation);
-
-            Vector3[] unitVectors = { new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1) };
-
+            
             for (int index = 0; index < vessel.parts.Count; index++)
             {
                 Part p = vessel.parts[index];
@@ -886,6 +961,7 @@ namespace MuMech
 
             MoI = new Vector3d(inertiaTensor[0, 0], inertiaTensor[1, 1], inertiaTensor[2, 2]);
             angularMomentum = inertiaTensor * angularVelocity;
+            angularVelocityAvg.value = angularVelocity;
         }
 
         [ValueInfoItem("Terminal velocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
@@ -972,7 +1048,7 @@ namespace MuMech
             return gimbalExtDict[typeof(object)];
         }
 
-        // The delgates implentation for the null gimbal ( no gimbal present)
+        // The delegates implementation for the null gimbal ( no gimbal present)
         private static bool nullGimbalIsValid(PartModule p)
         {
             return true;
@@ -1054,22 +1130,35 @@ namespace MuMech
             public Vector6 torqueEngineVariable = new Vector6();
             public Vector6 torqueDiffThrottle = new Vector6();
 
-            public class FuelRequirement
+            public struct FuelRequirement
             {
-                public double requiredLastFrame = 0;
-                public double requiredAtMaxThrottle = 0;
+                public double requiredLastFrame;
+                public double requiredAtMaxThrottle;
             }
             public Dictionary<int, FuelRequirement> resourceRequired = new Dictionary<int, FuelRequirement>();
 
-            Vector3d CoM;
-            float atmP0; // pressure now
-            float atmP1; // pressure after one timestep
+            private Vector3d CoM;
+            private float atmP0; // pressure now
+            private float atmP1; // pressure after one timestep
 
-            public EngineInfo(Vector3d c)
+            public void Update(Vector3d c, Vessel vessel)
             {
+                thrustCurrent = Vector3d.zero;
+                thrustMax = Vector3d.zero;
+                thrustMin = Vector3d.zero;
+                maxResponseTime = 0;
+
+                torqueEngineAvailable.Reset();
+                torqueEngineVariable.Reset();
+                torqueDiffThrottle.Reset();
+
+                resourceRequired.Clear();
+
+
                 CoM = c;
-                atmP0 = (float)(FlightGlobals.getStaticPressure() * PhysicsGlobals.KpaToAtmospheres);  // TODO : more FlightGlobals call to remove
-                float alt1 = (float)(FlightGlobals.ship_altitude + TimeWarp.fixedDeltaTime * FlightGlobals.ship_verticalSpeed);
+                
+                atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
+                float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
                 atmP1 = (float)(FlightGlobals.getStaticPressure(alt1) * PhysicsGlobals.KpaToAtmospheres);
             }
 
@@ -1183,6 +1272,15 @@ namespace MuMech
         {
             public Dictionary<int, List<ModuleResourceIntake>> allIntakes = new Dictionary<int, List<ModuleResourceIntake>>();
 
+            public void Update()
+            {
+                foreach (List<ModuleResourceIntake> intakes in allIntakes.Values)
+                {
+                    ListPool<ModuleResourceIntake>.Instance.Release(intakes);
+                }
+                allIntakes.Clear();
+            }
+
             public void addIntake(ModuleResourceIntake intake)
             {
                 // TODO: figure out how much airflow we have, how much we could have,
@@ -1195,13 +1293,13 @@ namespace MuMech
                 }
                 else
                 {
-                    thelist = new List<ModuleResourceIntake>();
+                    thelist = ListPool<ModuleResourceIntake>.Instance.Borrow();
                     allIntakes[id] = thelist;
                 }
                 thelist.Add(intake);
             }
 
-            static List<ModuleResourceIntake> empty = new List<ModuleResourceIntake>();
+            private static readonly List<ModuleResourceIntake> empty = new List<ModuleResourceIntake>();
             public List<ModuleResourceIntake> getIntakes(int id)
             {
                 if (allIntakes.ContainsKey(id))
@@ -1231,7 +1329,7 @@ namespace MuMech
                 get
                 {
                     double sum = 0;
-                    for (int i = 0; i < intakes.Length; i++)
+                    for (int i = 0; i < intakes.Count; i++)
                     {
                         var intakeData = intakes[i];
                         if (intakeData.intake.intakeEnabled)
@@ -1242,87 +1340,107 @@ namespace MuMech
                     return sum;
                 }
             }
-            public IntakeData[] intakes = new IntakeData[0];
+            public List<IntakeData> intakes = new List<IntakeData>();
 
             public struct IntakeData
             {
+                public IntakeData(ModuleResourceIntake intake, double predictedMassFlow)
+                {
+                    this.intake = intake;
+                    this.predictedMassFlow = predictedMassFlow;
+                }
                 public ModuleResourceIntake intake;
                 public double predictedMassFlow; // min kg/s this timestep or next
             }
 
-            // Return the number of kg of resource provided per second under certain conditions.
-            // We use kg since the numbers are typically small.
-            private double massProvided(double vesselSpeed, Vector3d vesselFwd, double atmDensity,
-                    ModuleResourceIntake intake, Vector3d intakeFwd)
+            private static readonly Pool<ResourceInfo> pool = new Pool<ResourceInfo>(Create, Reset);
+
+            public static int PoolSize
             {
-                if (intake.checkForOxygen && !FlightGlobals.currentMainBody.atmosphereContainsOxygen)
-                {
-                    return 0;
-                }
-
-                // This is adapted from code shared by Amram at:
-                // http://forum.kerbalspaceprogram.com/showthread.php?34288-Maching-Bird-Challeng?p=440505
-                // Seems to be accurate for 0.18.2 anyway.
-                double intakeSpeed = intake.maxIntakeSpeed; // airspeed when the intake isn't moving
-
-                double aoa = Vector3d.Dot(vesselFwd, intakeFwd);
-                if (aoa < 0) { aoa = 0; }
-                else if (aoa > 1) { aoa = 1; }
-
-                double finalSpeed;
-                if (aoa <= intake.aoaThreshold)
-                {
-                    finalSpeed = intakeSpeed;
-                }
-                else
-                {
-                    // This is labeled as a bug for double-counting intakeSpeed.
-                    // It also double-counts unitScalar...
-                    double airSpeedGUI = vesselSpeed + intakeSpeed;
-                    double airSpeed = airSpeedGUI * intake.unitScalar;
-                    finalSpeed = aoa * (airSpeed + intakeSpeed);
-                }
-                double airVolume = finalSpeed * intake.area * intake.unitScalar;
-                double airmass = atmDensity * airVolume; // tonnes per second
-
-                // TODO: limit by the amount the intake can store
-                return airmass * 1000;
+                get { return pool.Size; }
             }
 
-            public ResourceInfo(PartResourceDefinition r, double req /* u per deltaT */, double atMax /* u per s */, List<ModuleResourceIntake> modules)
+            private static ResourceInfo Create()
+            {
+                return new ResourceInfo();
+            }
+
+            public virtual void Release()
+            {
+                pool.Release(this);
+            }
+
+            public static void Release(Dictionary<int, ResourceInfo>.ValueCollection objList)
+            {
+                foreach (ResourceInfo resourceInfo in objList)
+                {
+                    resourceInfo.Release();
+                }
+            }
+
+            private static void Reset(ResourceInfo obj)
+            {
+                obj.required = 0;
+                obj.requiredAtMaxThrottle = 0;
+                obj.intakeAvailable = 0;
+                obj.intakes.Clear();
+            }
+
+            private ResourceInfo()
+            {
+            }
+
+            public static ResourceInfo Borrow(PartResourceDefinition r, double req /* u per deltaT */, double atMax /* u per s */, List<ModuleResourceIntake> modules, Vessel vessel)
+            {
+                ResourceInfo resourceInfo = pool.Borrow();
+                resourceInfo.Init(r, req /* u per deltaT */, atMax /* u per s */, modules, vessel);
+                return resourceInfo;
+            }
+
+            private void Init(PartResourceDefinition r, double req /* u per deltaT */, double atMax /* u per s */, List<ModuleResourceIntake> modules, Vessel vessel)
             {
                 definition = r;
                 double density = definition.density * 1000; // kg per unit (density is in T per unit)
-                double dT = TimeWarp.fixedDeltaTime;
+                float dT = TimeWarp.fixedDeltaTime;
                 required = req * density / dT;
                 requiredAtMaxThrottle = atMax * density;
 
                 // For each intake, we want to know the min of what will (or can) be provided either now or at the end of the timestep.
                 // 0 means now, 1 means next timestep
-                Vector3d v0 = FlightGlobals.ship_srfVelocity;
-                Vector3d v1 = v0 + dT * FlightGlobals.ship_acceleration;
+                Vector3d v0 = vessel.srf_velocity;
+                Vector3d v1 = v0 + dT * vessel.acceleration;
                 Vector3d v0norm = v0.normalized;
                 Vector3d v1norm = v1.normalized;
                 double v0mag = v0.magnitude;
                 double v1mag = v1.magnitude;
 
-                // As with thrust, here too we should get the static pressure at the intake, not at the center of mass.
-                double atmDensity0 = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(), FlightGlobals.getExternalTemperature());
-                float alt1 = (float)(FlightGlobals.ship_altitude + dT * FlightGlobals.ship_verticalSpeed);
-                double atmDensity1 = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt1), FlightGlobals.getExternalTemperature(alt1));
+                float alt1 = (float)(vessel.altitude + dT * vessel.verticalSpeed);
 
-                intakes = new IntakeData[modules.Count];
+                double staticPressure1 = vessel.staticPressurekPa;
+                double staticPressure2 = FlightGlobals.getStaticPressure(alt1);
+                
+                // As with thrust, here too we should get the static pressure at the intake, not at the center of mass.
+                double atmDensity0 = FlightGlobals.getAtmDensity(staticPressure1, vessel.externalTemperature);
+                double atmDensity1 = FlightGlobals.getAtmDensity(staticPressure2, FlightGlobals.getExternalTemperature(alt1));
+
+                double v0speedOfSound = vessel.mainBody.GetSpeedOfSound(staticPressure1, atmDensity0);
+                double v1speedOfSound = vessel.mainBody.GetSpeedOfSound(staticPressure2, atmDensity1);
+
+                float v0mach = v0speedOfSound > 0 ? (float)(v0.magnitude / v0speedOfSound) : 0;
+                float v1mach = v1speedOfSound > 0 ? (float)(v1.magnitude / v1speedOfSound) : 0;
+
+                intakes.Clear();
                 int idx = 0;
                 for (int index = 0; index < modules.Count; index++)
                 {
                     var intake = modules[index];
-                    Vector3d intakeFwd0 = intake.part.FindModelTransform(intake.intakeTransformName).forward;
+                    Vector3d intakeFwd0 = intake.part.FindModelTransform(intake.intakeTransformName).forward; // TODO : replace with the new public field
                     Vector3d intakeFwd1;
                     {
                         // Rotate the intake by the angular velocity for one timestep, in case the ship is spinning.
                         // Going through the Unity vector classes is about as many lines as hammering it out by hand.
-                        Vector3d rot = dT * FlightGlobals.ship_angularVelocity;
-                        intakeFwd1 = Quaternion.AngleAxis((float)(Math.PI / 180 * rot.magnitude), rot) * intakeFwd0;
+                        Vector3 rot = dT * vessel.angularVelocity;
+                        intakeFwd1 = Quaternion.AngleAxis((float)(MathExtensions.Rad2Deg * rot.magnitude), rot) * intakeFwd0;
                         /*Vector3d cos;
                         Vector3d sin;
                         for(int i = 0; i < 3; ++i) {
@@ -1345,8 +1463,8 @@ namespace MuMech
                             + intakeFwd0[2] * cos[0] * cos[1];*/
                     }
 
-                    double mass0 = massProvided(v0mag, v0norm, atmDensity0, intake, intakeFwd0);
-                    double mass1 = massProvided(v1mag, v1norm, atmDensity1, intake, intakeFwd1);
+                    double mass0 = massProvided(v0mag, v0norm, atmDensity0, staticPressure1, v0mach, intake, intakeFwd0);
+                    double mass1 = massProvided(v1mag, v1norm, atmDensity1, staticPressure2, v1mach, intake, intakeFwd1);
                     double mass = Math.Min(mass0, mass1);
 
                     // Also, we can't have more airflow than what fits in the resource tank of the intake part.
@@ -1361,12 +1479,39 @@ namespace MuMech
                     }
                     capacity = capacity * density / dT; // convert to kg/s
                     mass = Math.Min(mass, capacity);
-
-                    intakes[idx].intake = intake;
-                    intakes[idx].predictedMassFlow = mass;
-                    intakeAvailable += mass;
+                    
+                    intakes.Add(new IntakeData(intake, mass));
+                    
                     idx++;
                 }
+            }
+
+            // Return the number of kg of resource provided per second under certain conditions.
+            // We use kg since the numbers are typically small.
+            private double massProvided(double vesselSpeed, Vector3d normVesselSpeed, double atmDensity, double staticPressure, float mach,
+                    ModuleResourceIntake intake, Vector3d intakeFwd)
+            {
+                if ((intake.checkForOxygen && !FlightGlobals.currentMainBody.atmosphereContainsOxygen) || staticPressure < intake.kPaThreshold) // TODO : add the new test (the bool and maybe the attach node ?)
+                {
+                    return 0;
+                }
+
+                // This is adapted from code shared by Amram at:
+                // http://forum.kerbalspaceprogram.com/showthread.php?34288-Maching-Bird-Challeng?p=440505
+                // Seems to be accurate for 0.18.2 anyway.
+                double intakeSpeed = intake.intakeSpeed; // airspeed when the intake isn't moving
+
+                double aoa = Vector3d.Dot(normVesselSpeed, intakeFwd);
+                if (aoa < 0) { aoa = 0; }
+                else if (aoa > 1) { aoa = 1; }
+
+                double finalSpeed = intakeSpeed + aoa * vesselSpeed;
+
+                double airVolume = finalSpeed * intake.area * intake.unitScalar * intake.machCurve.Evaluate(mach);
+                double airmass = atmDensity * airVolume; // tonnes per second
+
+                // TODO: limit by the amount the intake can store
+                return airmass * 1000;
             }
         }
     }

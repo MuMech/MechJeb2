@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 using System.Reflection;
 using UnityEngine;
 using KSP.IO;
@@ -18,8 +16,8 @@ namespace MuMech
         private List<ComputerModule> unorderedComputerModules = new List<ComputerModule>();
         private List<ComputerModule> modulesToLoad = new List<ComputerModule>();
 
-        private Dictionary<object, IEnumerable<ComputerModule>> sortedModules = new Dictionary<object, IEnumerable<ComputerModule>>();
-        private Dictionary<object, IEnumerable<DisplayModule>> sortedDisplayModules = new Dictionary<object, IEnumerable<DisplayModule>>();
+        private Dictionary<Type, List<ComputerModule>> sortedModules = new Dictionary<Type, List<ComputerModule>>();
+        private Dictionary<object, List<DisplayModule>> sortedDisplayModules = new Dictionary<object, List<DisplayModule>>();
 
         // Reference to the parts base config. See Onload for explanation
         private static Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
@@ -67,7 +65,7 @@ namespace MuMech
             {
                 MechJebCore mj = vessel.GetMasterMechJeb();
                 if (mj != null)
-                    vessel.GetMasterMechJeb().deactivateControl = value;
+                    mj.deactivateControl = value;
             }
         }
 
@@ -79,6 +77,8 @@ namespace MuMech
 
         [KSPField(isPersistant = false)]
         public bool eduMode = false;
+        
+        public bool rssMode { get { return settings.rssMode; } }
 
         [KSPAction("Orbit Prograde")]
         public void OnOrbitProgradeAction(KSPActionParam param)
@@ -318,34 +318,52 @@ namespace MuMech
 
         public T GetComputerModule<T>() where T : ComputerModule
         {
-            return unorderedComputerModules.OfType<T>().FirstOrDefault();//returns null if no matches
+            for (int i = 0; i < unorderedComputerModules.Count; i++)
+            {
+                ComputerModule pm = unorderedComputerModules[i];
+                T module = pm as T;
+                if (module != null)
+                    return module;
+            }
+            return null;
         }
 
-        public IEnumerable<T> GetComputerModules<T>() where T : ComputerModule
+        // The pure generic version was creating too much garbage
+        public List<ComputerModule> GetComputerModules<T>() where T : ComputerModule
         {
             Type key = typeof(T);
-            IEnumerable<ComputerModule> value;
+            List<ComputerModule> value;
             if (sortedModules.TryGetValue(key, out value))
-                return value.Cast<T>();
+                return value;
             sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
-            return value.Cast<T>();
+            return value;
         }
+
+        //public IEnumerable<T> GetComputerModules<T>() where T : ComputerModule
+        //{
+        //    Type key = typeof(T);
+        //    IEnumerable<ComputerModule> value;
+        //    if (sortedModules.TryGetValue(key, out value))
+        //        return value.Cast<T>();
+        //    sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
+        //    return value.Cast<T>();
+        //}
 
         // Return the list of modules of type T in the order specified by comparer function
         // Be sure to always use the same instance of comparer in order to avoid memory leaks
-        public IEnumerable<T> GetComputerModules<T>(IComparer<T> comparer) where T : ComputerModule
-        {
-            IEnumerable<ComputerModule> value;
-            if (sortedModules.TryGetValue(comparer, out value))
-                return value.Cast<T>();
-            sortedModules[comparer] = value = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>().ToList();
-            return value.Cast<T>();
-        }
+        //public IEnumerable<T> GetComputerModules<T>(IComparer<T> comparer) where T : ComputerModule
+        //{
+        //    IEnumerable<ComputerModule> value;
+        //    if (sortedModules.TryGetValue(comparer, out value))
+        //        return value.Cast<T>();
+        //    sortedModules[comparer] = value = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>().ToList();
+        //    return value.Cast<T>();
+        //}
 
         // Added because the generic version eats memory like candy when casting from ComputerModule to DisplayModule (.Cast<T>())
-        public IEnumerable<DisplayModule> GetDisplayModules(IComparer<DisplayModule> comparer)
+        public List<DisplayModule> GetDisplayModules(IComparer<DisplayModule> comparer)
         {
-            IEnumerable<DisplayModule> value;
+            List<DisplayModule> value;
             if (sortedDisplayModules.TryGetValue(comparer, out value))
                 return value;
             sortedDisplayModules[comparer] = value = unorderedComputerModules.OfType<DisplayModule>().OrderBy(m => m, comparer).ToList();
@@ -633,15 +651,17 @@ namespace MuMech
             // So we use an other field to store the dev build number ...
             Attribute[] attributes = Attribute.GetCustomAttributes(assembly, typeof(AssemblyInformationalVersionAttribute));
             string dev_version = "";
-            if (attributes != null && attributes.Length != 0)
+            if (attributes.Length > 0)
             {
-                dev_version = ((AssemblyInformationalVersionAttribute)(attributes[0])).InformationalVersion;
+                dev_version = ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
             }
 
             if (dev_version == "")
-                version = fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
+                version = string.Format("{0}.{1}.{2}", fileVersionInfo.FileMajorPart, fileVersionInfo.FileMinorPart, fileVersionInfo.FileBuildPart);
             else
                 version = dev_version;
+
+            print("Loading Mechjeb " + version);
 
             try
             {
@@ -651,7 +671,9 @@ namespace MuMech
                         && (t != typeof(AutopilotModule))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
-                        AddComputerModule((ComputerModule)(t.GetConstructor(new Type[] { typeof(MechJebCore) }).Invoke(new object[] { this })));
+                        ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
+                        if (constructorInfo != null)
+                            AddComputerModule((ComputerModule)(constructorInfo.Invoke(new object[] { this })));
                     }
                 }
             }
@@ -723,7 +745,7 @@ namespace MuMech
                 }
 
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                String vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
+                string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
                 if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_type_" + vesselName + ".cfg"))
                 {
                     try
@@ -940,7 +962,7 @@ namespace MuMech
 
         //Setting FlightCtrlState fields to bad values can really mess up the game.
         //Here we do some error checking.
-        public void CheckFlightCtrlState(FlightCtrlState s)
+        private static void CheckFlightCtrlState(FlightCtrlState s)
         {
             if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
             if (float.IsNaN(s.yaw)) s.yaw = 0;

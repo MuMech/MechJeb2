@@ -201,7 +201,7 @@ namespace MuMech
 		
 		public WaypointMode Mode = WaypointMode.Rover;
 		public MechJebModuleRoverController ap;
-		public static List<MechJebWaypointRoute> Routes;
+		public static List<MechJebWaypointRoute> Routes = new List<MechJebWaypointRoute>();
 		[EditableInfoItem("Moho Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble MohoMapdist = 5000;
 		[EditableInfoItem("Eve Mapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
@@ -271,7 +271,7 @@ namespace MuMech
 				renderer = MechJebRouteRenderer.AttachToMapView(core);
 				renderer.enabled = enabled;
 			}
-			if (Routes == null) { Routes = new List<MechJebWaypointRoute>(); }
+
 //			GameObject obj = new GameObject("LineRenderer");
 //			redLine = obj.AddComponent<LineRenderer>();
 //			redLine.useWorldSpace = true;
@@ -558,7 +558,7 @@ namespace MuMech
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed : 0);
 					if (MapView.MapIsEnabled && i == selIndex)
 					{
-						MuMech.GLUtils.DrawMapViewGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 100);
+						MuMech.GLUtils.DrawGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, true, (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 100);
 					}
 					if (i >= ap.WaypointIndex)
 					{
