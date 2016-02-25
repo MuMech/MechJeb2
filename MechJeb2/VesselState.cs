@@ -595,36 +595,65 @@ namespace MuMech
                         {
                             Transform t = rcs.thrusterTransforms[j];
                             Vector3d thrusterPosition = t.position - movingCoM;
-                            Vector3d thrustDirection = rcs.useZaxis ? t.forward : t.up;
-
-                            Vector3d askedTorque = Vector3.Cross(attitudeControl, thrusterPosition.normalized);
-                            float attitudeContrib = Mathf.Max(Vector3.Dot(thrustDirection, askedTorque), 0f);
-                            float translationContrib = Mathf.Max(Vector3.Dot(thrustDirection, translationControl), 0f);
-
+                            Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
+                            
                             float power = rcs.thrusterPower;
 
                             if (FlightInputHandler.fetch.precisionMode)
                             {
-                                float lever = rcs.GetLeverDistance(-thrustDirection, movingCoM);
+                                float lever = rcs.GetLeverDistance(thrustDirection, movingCoM);
                                 if (lever > 1)
                                 {
                                     power = power / lever;
                                 }
                             }
 
-                            Vector3d thrusterThrust = -thrustDirection * power;
+                            Vector3d thrusterThrust = thrustDirection * power;
                             // This is a cheap hack to get rcsTorque with the RCS balancer active.
                             if (!rcsbal.enabled)
                             {
-                                rcsThrustAvailable.Add(vessel.GetTransform().InverseTransformDirection(translationContrib * thrusterThrust));
+                                rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
                             }
-                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, attitudeContrib * thrusterThrust);
+                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
                             // Convert in vessel local coordinate
-                            rcsTorqueAvailable.Add(vessel.GetTransform().InverseTransformDirection(thrusterTorque));
+                            rcsTorqueAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
                         }
                     }
                 }
             }
+        }
+
+
+        [GeneralInfoItem("RCS Translation", InfoItem.Category.Vessel, showInEditor = true)]
+        public void RCSTranslation()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("RCS Translation");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+
+        [GeneralInfoItem("RCS Torque", InfoItem.Category.Vessel, showInEditor = true)]
+        public void RCSTorque()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("RCS Torque");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         // Loop over all the parts in the vessel and calculate some things.
