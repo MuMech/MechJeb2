@@ -56,6 +56,8 @@ namespace MuMech
             }
         }
 
+        public string profilerName;
+
         //The UserPool is an alternative way to handle enabling/disabling of a ComputerModule. 
         //Users can add and remove themselves from the user pool and the ComputerModule will be
         //enabled if and only if there is at least one user. For consistency, it's probably
@@ -68,6 +70,7 @@ namespace MuMech
             this.core = core;
             part = core.part;
             vesselState = core.vesselState;
+            profilerName = this.GetType().Name;
 
             users = new UserPool(this);
         }

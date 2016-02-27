@@ -103,6 +103,13 @@ namespace MuMech
                 GUI.DragWindow();
         }
 
+        protected void ProfiledWindowGUI(int windowID)
+        {
+            Profiler.BeginSample(GetType().Name);
+            WindowGUI(windowID);
+            Profiler.EndSample();
+        }
+
         protected virtual void WindowGUI(int windowID)
         {
             WindowGUI(windowID, true);
@@ -112,7 +119,7 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(ID, windowPos, WindowGUI, GetName(), WindowOptions());
+                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, GetName(), WindowOptions());
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                
