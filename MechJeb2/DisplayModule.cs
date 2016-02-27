@@ -155,9 +155,9 @@ namespace MuMech
                     enabledEditor = enabled;
                 if (HighLogic.LoadedSceneIsFlight)
                     enabledFlight = enabled;
-
-                    global.AddValue("enabledEditor", enabledEditor);
-                    global.AddValue("enabledFlight", enabledFlight);
+                
+                global.AddValue("enabledEditor", enabledEditor);
+                global.AddValue("enabledFlight", enabledFlight);
             }
 //            if (global != null) global.AddValue("locked", locked);
         }
@@ -204,12 +204,12 @@ namespace MuMech
                 enabledEditor = enabled;
                 enabledFlight = enabled;
             }
-
-//            if (global != null && global.HasValue("locked"))
-//            {
-//                bool loadedLocked;
-//                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
-//            }
+            
+            //            if (global != null && global.HasValue("locked"))
+            //            {
+            //                bool loadedLocked;
+            //                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
+            //            }
         }
 
         public virtual bool isActive()
