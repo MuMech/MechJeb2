@@ -17,22 +17,13 @@ namespace MuMech
                 if (!core.landing.PredictionReady)
                     return this;
 
-                Vector3d deltaV;
-                try
-                {
-                    deltaV = core.landing.ComputeCourseCorrection(true);
-                }
-                catch(ArgumentException e)
-                {
-                    status = e.Message;
-                    return new DecelerationBurn(core);
-                }
+                Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
 
                 if (core.landing.rcsAdjustment)
                 {
                     if (deltaV.magnitude > 3)
                         core.rcs.enabled = true;
-                    else if (deltaV.magnitude < 0.01)
+                    else if (deltaV.magnitude < 0.1)
                         core.rcs.enabled = false;
 
                     if (core.rcs.enabled)
@@ -71,18 +62,20 @@ namespace MuMech
                 if (core.landing.landAtTarget)
                 {
                     double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
-                    Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
-                    status += "\nCourse correction DV: " + deltaV.magnitude.ToString("F3") + " m/s";
-
-                    if (currentError > core.landing.CorrectionBeforeDeceleration * 1.3)
+                    if (currentError > 1000)
                     {
-                        if (!vesselState.parachuteDeployed || vesselState.drag <= 0.1 || deltaV.magnitude > 0.3) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
+                        if (!vesselState.parachuteDeployed || vesselState.drag <= 0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
                             core.warp.MinimumWarp();
                             if (core.landing.rcsAdjustment)
                                 core.rcs.enabled = false;
                             return new CourseCorrection(core);
                         }
+                    }
+                    else
+                    {
+                        Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
+                        status += "\nCourse correction DV: " + deltaV.magnitude.ToString("F3") + " m/s";
                     }
                 }
 

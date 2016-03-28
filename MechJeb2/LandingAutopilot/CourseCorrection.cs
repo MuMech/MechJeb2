@@ -29,7 +29,7 @@ namespace MuMech
 
                 double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
 
-                if (currentError < core.landing.CorrectionBeforeDeceleration)
+                if (currentError < 150)
                 {
                     core.thrust.targetThrottle = 0;
                     if (core.landing.rcsAdjustment)
@@ -38,13 +38,8 @@ namespace MuMech
                 }
 
                 // If we're off course, but already too low, skip the course correction
-                double decelerationStartTime = (core.landing.prediction.trajectory.Count > 0 ? core.landing.prediction.trajectory[0].UT : 
-                    vesselState.time - vesselState.altitudeASL/vesselState.speedVertical - vesselState.surfaceVelocity.magnitude/(core.thrust.maxAcceleration* core.landing.safityThrustLimit - orbit.referenceBody.GeeASL));
-
-                if (decelerationStartTime - vesselState.time < 10)
-                //if (vesselState.altitudeASL < landing.DecelerationEndAltitude() + 5)
-                {//still buggy (previous version just wrong)
-                    Debug.Log("Criticall time point " + vesselState.time + " -> Deceleration Burn required NOW " + decelerationStartTime + " " + vesselState.altitudeASL / vesselState.speedVertical  + " - " + vesselState.surfaceVelocity.magnitude / (core.thrust.maxAcceleration * core.landing.safityThrustLimit - orbit.referenceBody.GeeASL));
+                if (vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5)
+                {
                     return new DecelerationBurn(core);
                 }
 
@@ -73,14 +68,6 @@ namespace MuMech
                 else if (core.attitude.attitudeAngleFromTarget() > 30)
                     courseCorrectionBurning = false;
 
-                if (deltaV.magnitude < 0.5 && core.landing.rcsAdjustment)
-                {
-                    core.rcs.SetWorldVelocityError(deltaV);
-                    courseCorrectionBurning = false;
-                    if (deltaV.magnitude < 0.01)
-                        return new CoastToDeceleration(core);
-                }
-                core.landing.CorrectionDv = deltaV;
                 if (courseCorrectionBurning)
                 {
                     const double timeConstant = 2.0;
