@@ -23,7 +23,6 @@ namespace MuMech
             }
         }
 
-
         [ValueInfoItem("Node burn time", InfoItem.Category.Misc)]
         public string NextManeuverNodeBurnTime()
         {
@@ -567,37 +566,37 @@ namespace MuMech
             }
         }
 
-		[ValueInfoItem("Periapsis in target SoI", InfoItem.Category.Misc)]
-		public string PeriapsisInTargetSOI()
-		{
-			if (!core.target.NormalTargetExists) return "N/A";
+        [ValueInfoItem("Periapsis in target SoI", InfoItem.Category.Misc)]
+        public string PeriapsisInTargetSOI()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
 
-			Orbit o = vessel.orbit;
-			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
-				o = o.nextPatch;
+            Orbit o = vessel.orbit;
+            while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
+                o = o.nextPatch;
 
-			if (o == null) return "N/A";
+            if (o == null) return "N/A";
 
-			return MuUtils.ToSI(o.PeA, -1) + "m";
-		}
+            return MuUtils.ToSI(o.PeA, -1) + "m";
+        }
 
-		[ValueInfoItem("ΔV for capture by target", InfoItem.Category.Misc)]
-		public string TargetCaptureDV()
-		{
-			if (!core.target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
+        [ValueInfoItem("ΔV for capture by target", InfoItem.Category.Misc)]
+        public string TargetCaptureDV()
+        {
+            if (!core.target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
 
-			Orbit o = vessel.orbit;
-			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
-				o = o.nextPatch;
+            Orbit o = vessel.orbit;
+            while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
+                o = o.nextPatch;
 
-			if (o == null) return "N/A";
+            if (o == null) return "N/A";
 
-			double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
-			double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
-			double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
+            double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
+            double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
+            double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
 
-			return MuUtils.ToSI(velAtPeriapsis - velCapture, -1) + "m/s";
-		}
+            return MuUtils.ToSI(velAtPeriapsis - velCapture, -1) + "m/s";
+        }
 
 
         [ValueInfoItem("Target apoapsis", InfoItem.Category.Target)]
