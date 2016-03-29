@@ -64,7 +64,7 @@ namespace MuMech
         {
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
-                RenderingManager.AddToPostDrawQueue(1, DrawBoundingBox);
+                core.AddToPostDrawQueue(DrawBoundingBox);
 
                 // Turn off docking AP on successful docking (in case other checks for successful docking fail)
                 GameEvents.onPartCouple.Add((GameEvents.FromToAction<Part, Part> ev) =>

@@ -167,7 +167,7 @@ namespace MuMech
             random = new Random();
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
-                RenderingManager.AddToPostDrawQueue(1, DoMapView);
+                core.AddToPostDrawQueue(DoMapView);
             }
         }
 

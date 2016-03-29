@@ -180,7 +180,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            RenderingManager.AddToPostDrawQueue(1, DoMapView);
+            core.AddToPostDrawQueue(DoMapView);
 
             users.Add(this); //TargetController should always be running
         }

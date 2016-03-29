@@ -22,6 +22,8 @@ namespace MuMech
         // Reference to the parts base config. See Onload for explanation
         private static Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
 
+        private List<Callback> postDrawQueue = new List<Callback>();
+
         private static List<Type> moduleRegistry;
 
         public MechJebModuleAttitudeController attitude;
@@ -1051,8 +1053,18 @@ namespace MuMech
                 if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
                 if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium) PreventInFlightClickthrough();
                 GUI.matrix = previousGuiMatrix;
+
+                for (int i = 0; i < postDrawQueue.Count; i++)
+                {
+                    postDrawQueue[i]();
+                }
             }
             Profiler.EndSample();
+        }
+
+        internal void AddToPostDrawQueue(Callback c)
+        {
+            postDrawQueue.Add(c);
         }
 
         // VAB/SPH description
