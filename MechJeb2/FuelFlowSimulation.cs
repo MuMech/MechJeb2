@@ -495,7 +495,7 @@ namespace MuMech
                 //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + part.GetModuleMass(part.partInfo.partPrefab.mass).ToString("F4"));
                 dryMass = part.mass; // Intentionally ignore the physic flag.
 
-                moduleMass = part.GetModuleMass(part.partInfo.partPrefab != null ? part.partInfo.partPrefab.mass : dryMass);
+                moduleMass = part.GetModuleMassNoAlloc(part.partInfo.partPrefab != null ? part.partInfo.partPrefab.mass : dryMass);
                 if (part.HasModule<ModuleProceduralFairing>())
                 {
                     fairingMass = moduleMass;

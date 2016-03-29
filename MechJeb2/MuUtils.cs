@@ -12,6 +12,8 @@ namespace MuMech
             return PartResourceLibrary.Instance.GetDefinition(type).density;
         }
 
+        private static readonly string[] units = { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+
         //Puts numbers into SI format, e.g. 1234 -> "1.234 k", 0.0045678 -> "4.568 m"
         //maxPrecision is the exponent of the smallest place value that will be shown; for example
         //if maxPrecision = -1 and digitsAfterDecimal = 3 then 12.345 will be formatted as "12.3"
@@ -21,8 +23,7 @@ namespace MuMech
             if (d == 0 || double.IsInfinity(d) || double.IsNaN(d)) return d.ToString() + " ";
 
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
-
-            string[] units = new string[] { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+            
             const int unitIndexOffset = 8; //index of "" in the units array
             int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
             if (unitIndex < 0) unitIndex = 0;

@@ -180,7 +180,7 @@ namespace MuMech
 
             if (timedLaunch && tMinus > 10.0)
             {
-                status = "Awaiting liftoff";
+                status = "Pre Launch";
                 return;
             }
 
@@ -217,7 +217,7 @@ namespace MuMech
 
             if (autoThrottle) core.thrust.targetThrottle = 1.0F;
 
-            if (!vessel.LiftedOff()) status = "Awaiting liftoff";
+            if (!vessel.LiftedOff() || vessel.Landed) status = "Awaiting liftoff";
             else status = "Vertical ascent";
         }
 
@@ -502,6 +502,7 @@ namespace MuMech
         {
             get
             {
+                // TODO remove the ActiveVessel reference
                 var vessel = FlightGlobals.ActiveVessel;
                 return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() * autoTurnPerc : vessel.terrainAltitude + 25);
             }
@@ -511,6 +512,7 @@ namespace MuMech
         {
             get
             {
+                // TODO remove the ActiveVessel reference
                 var vessel = FlightGlobals.ActiveVessel;
                 return vessel.mainBody.atmosphere ? autoTurnSpdFactor * autoTurnSpdFactor * autoTurnSpdFactor * 0.015625f : double.PositiveInfinity;
             }
@@ -520,6 +522,7 @@ namespace MuMech
         {
             get
             {
+                // TODO remove the ActiveVessel reference
                 var vessel = FlightGlobals.ActiveVessel;
                 var targetAlt = vessel.GetMasterMechJeb().GetComputerModule<MechJebModuleAscentAutopilot>().desiredOrbitAltitude;
                 if (vessel.mainBody.atmosphere)

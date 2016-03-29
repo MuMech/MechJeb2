@@ -115,7 +115,7 @@ namespace MuMech
             double VT_VC = Vector3d.Dot(VT, VC);
 
             // In front of the horizon plane
-            if (VT_VC < VC.sqrMagnitude -1) return false;
+            if (VT_VC < VC.sqrMagnitude - 1) return false;
 
             return VT_VC * VT_VC / VT.sqrMagnitude > VC.sqrMagnitude - 1;
         }
