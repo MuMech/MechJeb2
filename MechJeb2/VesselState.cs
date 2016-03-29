@@ -265,7 +265,7 @@ namespace MuMech
 
         public void Update(Vessel vessel)
         {
-            if (vessel.rigidbody == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
+            if (vessel.rootPart.rb == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
             TestStuff(vessel);
 
@@ -422,7 +422,7 @@ namespace MuMech
             //CoM = vessel.findWorldCenterOfMass();
             up = (CoM - vessel.mainBody.position).normalized;
 
-            Rigidbody rigidBody = vessel.rootPart.rigidbody;
+            Rigidbody rigidBody = vessel.rootPart.rb;
             if (rigidBody != null) rootPartPos = rigidBody.position;
 
             north = Vector3d.Exclude(up, (vessel.mainBody.position + vessel.mainBody.transform.up * (float)vessel.mainBody.Radius) - CoM).normalized;
@@ -438,7 +438,7 @@ namespace MuMech
             horizontalOrbit = Vector3d.Exclude(up, orbitalVelocity).normalized;
             horizontalSurface = Vector3d.Exclude(up, surfaceVelocity).normalized;
 
-            angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rigidbody.angularVelocity;
+            angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rootPart.rb.angularVelocity;
 
             radialPlusSurface = Vector3d.Exclude(surfaceVelocity, up).normalized;
             radialPlus = Vector3d.Exclude(orbitalVelocity, up).normalized;
@@ -1007,7 +1007,7 @@ namespace MuMech
 
         double ComputeVesselBottomAltitude(Vessel vessel)
         {
-            if (vessel == null || vessel.rigidbody == null) return 0;
+            if (vessel == null || vessel.rootPart.rb == null) return 0;
             double ret = altitudeTrue;
             for (int i = 0; i < vessel.parts.Count; i++)
             {

@@ -479,7 +479,7 @@ namespace MuMech
             }
 
             // See if the CoM has moved too much.
-            Rigidbody rootPartBody = vessel.rootPart.rigidbody;
+            Rigidbody rootPartBody = vessel.rootPart.rb;
             if (rootPartBody != null)
             {
                 // But how much is "too much"? Well, it probably has something to do
