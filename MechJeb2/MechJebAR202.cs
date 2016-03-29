@@ -47,9 +47,9 @@ namespace MuMech
                 if (t.name.Equals("light_red")) redLightTransform = t;
             }
 
-            if ((greenLightTransform != null) && (greenLightTransform.light == null))
+            if ((greenLightTransform != null) && (greenLightTransform.GetComponent<Light>() == null))
             {
-                originalLensShader = greenLightTransform.renderer.material.shader;
+                originalLensShader = greenLightTransform.GetComponent<Renderer>().material.shader;
                 greenLight = greenLightTransform.gameObject.AddComponent<Light>();
                 greenLight.transform.parent = greenLightTransform;
                 greenLight.type = LightType.Point;
@@ -61,11 +61,11 @@ namespace MuMech
             }
             else
             {
-                greenLight = greenLightTransform.light;
+                greenLight = greenLightTransform.GetComponent<Light>();
             }
-            if ((redLightTransform != null) && (redLightTransform.light == null))
+            if ((redLightTransform != null) && (redLightTransform.GetComponent<Light>() == null))
             {
-                originalLensShader = redLightTransform.renderer.material.shader;
+                originalLensShader = redLightTransform.GetComponent<Renderer>().material.shader;
                 redLight = redLightTransform.gameObject.AddComponent<Light>();
                 redLight.transform.parent = redLightTransform;
                 redLight.type = LightType.Point;
@@ -77,7 +77,7 @@ namespace MuMech
             }
             else
             {
-                redLight = redLightTransform.light;
+                redLight = redLightTransform.GetComponent<Light>();
             }
         }
 
@@ -134,8 +134,8 @@ namespace MuMech
                 case LightColor.GREEN:
                     if (greenLightTransform != null)
                     {
-                        greenLightTransform.renderer.material.shader = lightShader;                        
-                        greenLightTransform.renderer.material.color = Color.green;
+                        greenLightTransform.GetComponent<Renderer>().material.shader = lightShader;                        
+                        greenLightTransform.GetComponent<Renderer>().material.color = Color.green;
                         greenLight.enabled = true;
                     }
                     break;
@@ -143,8 +143,8 @@ namespace MuMech
                 case LightColor.RED:
                     if (redLightTransform != null)
                     {
-                        redLightTransform.renderer.material.shader = lightShader;                        
-                        redLightTransform.renderer.material.color = Color.red;
+                        redLightTransform.GetComponent<Renderer>().material.shader = lightShader;                        
+                        redLightTransform.GetComponent<Renderer>().material.color = Color.red;
                         redLight.enabled = true;
                     }
                     break;
@@ -158,8 +158,8 @@ namespace MuMech
                 case LightColor.GREEN:
                     if (greenLightTransform != null)
                     {
-                        greenLightTransform.renderer.material.shader = originalLensShader;
-                        greenLightTransform.renderer.material.color = originalLensColor;
+                        greenLightTransform.GetComponent<Renderer>().material.shader = originalLensShader;
+                        greenLightTransform.GetComponent<Renderer>().material.color = originalLensColor;
                         greenLight.enabled = false;
                     }
                     break;
@@ -167,8 +167,8 @@ namespace MuMech
                 case LightColor.RED:
                     if (redLightTransform != null)
                     {
-                        redLightTransform.renderer.material.shader = originalLensShader;
-                        redLightTransform.renderer.material.color = originalLensColor;
+                        redLightTransform.GetComponent<Renderer>().material.shader = originalLensShader;
+                        redLightTransform.GetComponent<Renderer>().material.color = originalLensColor;
                         redLight.enabled = false;
                     }
                     break;
