@@ -1,4 +1,5 @@
 using System;
+using ModuleWheels;
 using UnityEngine;
 
 namespace MuMech
@@ -426,13 +427,14 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                if (p.HasModule<ModuleLandingLeg>())
+                if (p.HasModule<ModuleWheelDeployment>())
                 {
                     if (p.inverseStage >= limitGearsStage)
                     {
-                        foreach (ModuleLandingLeg l in p.FindModulesImplementing<ModuleLandingLeg>())
+                        foreach (ModuleWheelDeployment wd in p.FindModulesImplementing<ModuleWheelDeployment>())
                         {
-                            l.LowerLeg();
+                            if (wd.fsm.CurrentState == wd.st_retracted || wd.fsm.CurrentState == wd.st_retracting)
+                                wd.EventToggle();
                         }
                     }
                 }
