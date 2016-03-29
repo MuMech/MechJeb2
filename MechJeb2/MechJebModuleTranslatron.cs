@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.UI.Screens;
 
 namespace MuMech
 {
@@ -168,7 +169,7 @@ namespace MuMech
 
         public void recursiveDecouple()
         {
-            int minStage = Staging.lastStage;
+            int minStage = StageManager.LastStage;
             for (int i = 0; i < part.vessel.parts.Count; i++)
             {
                 Part child = part.vessel.parts[i];
@@ -197,7 +198,7 @@ namespace MuMech
             }
             if (part.vessel == FlightGlobals.ActiveVessel)
             {
-                Staging.ActivateStage(minStage);
+                StageManager.ActivateStage(minStage);
             }
         }
 

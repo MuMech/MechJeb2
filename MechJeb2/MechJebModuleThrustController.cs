@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using KSP.UI.Screens;
 using UnityEngine;
 
 namespace MuMech
@@ -668,7 +669,7 @@ namespace MuMech
         }
 
         bool ElectricEngineRunning() {
-            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron());
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron());
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
 
             return engineModules.SelectMany(eng => eng.propellants).Any(p => p.name == "ElectricCharge");

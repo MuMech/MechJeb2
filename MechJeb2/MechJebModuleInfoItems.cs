@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using KSP.UI.Screens;
 using Smooth.Pools;
 using UnityEngine;
 
@@ -364,7 +365,7 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 var engines = (from part in EditorLogic.fetch.ship.parts
-                               where part.inverseStage == Staging.lastStage
+                               where part.inverseStage == StageManager.LastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
                 return 1000 * engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
@@ -381,7 +382,7 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 var engines = (from part in EditorLogic.fetch.ship.parts
-                               where part.inverseStage == Staging.lastStage
+                               where part.inverseStage == StageManager.LastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
                 return 1000 * engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));

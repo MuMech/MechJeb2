@@ -1,4 +1,5 @@
 ﻿using System;
+using KSP.UI.Screens;
 
 namespace MuMech
 {
@@ -272,7 +273,7 @@ namespace MuMech
             }
             else
             {
-                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : Staging.CurrentStage;
+                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : StageManager.CurrentStage;
                 history[idx].AoA = idx > 0 ? history[idx - 1].AoA : 0;
             }
             for (int t = 0; t < typeCount; t++)

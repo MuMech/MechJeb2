@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CompoundParts;
+using KSP.UI.Screens;
 using Smooth.Algebraics;
 using Smooth.Dispose;
 using Smooth.Pools;
@@ -64,13 +65,13 @@ namespace MuMech
             }
 
 
-            simStage = Staging.lastStage + 1;
-
+            simStage = StageManager.LastStage + 1;
+            
             // Add a fake stage if we are beyond the first one
             // Mostly usefull for the Node Executor who use the last stage info
             // and fail to get proper info when the ship was never staged and
             // some engine were activated manually
-            if (Staging.CurrentStage > Staging.lastStage)
+            if (StageManager.CurrentStage > StageManager.LastStage)
                 simStage++;
         }
 
@@ -547,11 +548,11 @@ namespace MuMech
             if (engine != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < StageManager.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
-                        inverseStage = Staging.CurrentStage;
+                    if (engine.getIgnitionState && inverseStage < StageManager.CurrentStage)
+                        inverseStage = StageManager.CurrentStage;
 
                     isEngine = true;
 
