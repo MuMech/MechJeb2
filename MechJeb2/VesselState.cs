@@ -1190,8 +1190,8 @@ namespace MuMech
 
                     float thrustLimiter = e.thrustPercentage / 100f;
 
-                    float maxThrust = e.maxFuelFlow * e.flowMultiplier * Isp * e.g / e.thrustTransforms.Count;
-                    float minThrust = e.minFuelFlow * e.flowMultiplier * Isp * e.g / e.thrustTransforms.Count;
+                    float maxThrust = e.maxFuelFlow * e.flowMultiplier * Isp * e.g;
+                    float minThrust = e.minFuelFlow * e.flowMultiplier * Isp * e.g;
 
                     // RealFuels engines reports as operational even when they are shutdown
                     if (e.finalThrust == 0f && minThrust > 0f)
@@ -1223,9 +1223,9 @@ namespace MuMech
 
                         double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
 
-                        thrustCurrent += eCurrentThrust * cosineLosses * thrustDirectionVector;
-                        thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector;
-                        thrustMin += eMinThrust * cosineLosses * thrustDirectionVector;
+                        thrustCurrent += eCurrentThrust * cosineLosses * thrustDirectionVector * e.thrustTransformMultipliers[i];
+                        thrustMax += eMaxThrust * cosineLosses * thrustDirectionVector * e.thrustTransformMultipliers[i];
+                        thrustMin += eMinThrust * cosineLosses * thrustDirectionVector * e.thrustTransformMultipliers[i];
 
                         //MechJebCore.print(cosineLosses.ToString("F2") + " " + MuUtils.PrettyPrint(thrustDirectionVector));
 
@@ -1236,7 +1236,7 @@ namespace MuMech
                         if (!e.throttleLocked)
                         {
                             // TODO : use eCurrentThrust instead of maxThrust and change the relevant code in MechJebModuleThrustController for the Differential throttle
-                            torqueDiffThrottle.Add(e.vessel.transform.rotation.Inverse() * Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust));
+                            torqueDiffThrottle.Add(e.vessel.transform.rotation.Inverse() * Vector3d.Cross(partPosition, thrustDirectionVector) * (maxThrust - minThrust) * e.thrustTransformMultipliers[i]);
                         }
                     }
 

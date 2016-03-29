@@ -564,7 +564,7 @@ namespace MuMech
                         Vector3 thrust = Vector3d.zero;
                         for (int i = 0; i < engine.thrustTransforms.Count; i++)
                         {
-                            thrust -= engine.thrustTransforms[i].forward / engine.thrustTransforms.Count;
+                            thrust -= engine.thrustTransforms[i].forward * engine.thrustTransformMultipliers[i];
                         }
 
                         Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;
