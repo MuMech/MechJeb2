@@ -222,8 +222,8 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (pickingPositionTarget && !GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null) Screen.showCursor = false;
-            else Screen.showCursor = true;
+            if (pickingPositionTarget && !GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null) Cursor.visible = false;
+            else Cursor.visible = true;
         }
 
         void DoMapView()
