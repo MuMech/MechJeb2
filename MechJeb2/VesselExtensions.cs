@@ -255,7 +255,7 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                Vector3Pair partBox = p.GetBoundingBox();
+                PartExtensions.Vector3Pair partBox = p.GetBoundingBox();
 
                 if (debug)
                 {
