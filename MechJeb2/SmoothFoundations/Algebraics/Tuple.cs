@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Smooth.Collections;
 
 namespace Smooth.Algebraics {
 	/// <summary>

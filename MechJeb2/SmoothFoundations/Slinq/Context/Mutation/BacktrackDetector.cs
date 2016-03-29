@@ -1,6 +1,5 @@
 //#define DETECT_BACKTRACK
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 

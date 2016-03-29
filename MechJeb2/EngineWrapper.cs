@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace MuMech
+﻿namespace MuMech
 {
 #warning not really needed anymore. REMOVE
 

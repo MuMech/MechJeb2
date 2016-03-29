@@ -1,5 +1,3 @@
-using System;
-
 namespace Smooth.Slinq.Collections {
 	/// <summary>
 	/// Represents a list of values associated with a key.

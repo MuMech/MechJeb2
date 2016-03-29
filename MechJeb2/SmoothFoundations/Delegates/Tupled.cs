@@ -1,4 +1,3 @@
-using System;
 using Smooth.Algebraics;
 
 namespace Smooth.Delegates {

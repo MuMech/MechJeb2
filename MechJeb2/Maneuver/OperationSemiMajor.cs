@@ -1,7 +1,4 @@
-﻿using System;
-using UnityEngine;
-
-namespace MuMech
+﻿namespace MuMech
 {
     public class OperationSemiMajor : Operation
     {

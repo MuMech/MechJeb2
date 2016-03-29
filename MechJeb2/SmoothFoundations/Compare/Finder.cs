@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Smooth.Collections;
 using Smooth.Comparisons;
 using Smooth.Compare.Comparers;
 using Smooth.Events;

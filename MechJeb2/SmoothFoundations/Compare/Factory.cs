@@ -1,12 +1,9 @@
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Smooth.Algebraics;
-using Smooth.Collections;
 using Smooth.Comparisons;
 using Smooth.Compare.Comparers;
 

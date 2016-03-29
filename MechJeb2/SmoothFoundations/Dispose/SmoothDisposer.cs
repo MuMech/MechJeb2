@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 using Smooth.Dispose;
 
 public class SmoothDisposer : MonoBehaviour {

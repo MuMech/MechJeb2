@@ -1,10 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
-using System.Runtime;
 using Smooth.Algebraics;
-using Smooth.Collections;
-using Smooth.Compare.Comparers;
 using Smooth.Platform;
 
 namespace Smooth.Compare {

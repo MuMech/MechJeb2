@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Smooth.Compare {
+﻿namespace Smooth.Compare {
 	public enum ComparerType {
 		None = 0,
 		Comparer,

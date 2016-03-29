@@ -1,4 +1,3 @@
-using System;
 using Smooth.Algebraics;
 using Smooth.Delegates;
 using Smooth.Slinq.Collections;

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Smooth.Algebraics;
 using Smooth.Delegates;
-using Smooth.Slinq;
 
 #if !UNITY_3_5
 namespace Smooth.Slinq.Test {
