@@ -432,7 +432,7 @@ namespace MuMech
                 {
                     if (aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
                     {
-                        vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
+                        aerobrakeNode.RemoveSelf();
                         aerobrakeNode = null;
                     }
                 }
@@ -477,7 +477,7 @@ namespace MuMech
                     //no aerobraking, remove the node:
                     if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                     {
-                        vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
+                        aerobrakeNode.RemoveSelf();
                     }
                 }
             }
@@ -486,7 +486,7 @@ namespace MuMech
                 //Remove aerobrake node when it is turned off:
                 if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
-                    vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
+                    aerobrakeNode.RemoveSelf();
                 }
             }
         }

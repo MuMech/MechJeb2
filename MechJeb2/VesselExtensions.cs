@@ -237,7 +237,7 @@ namespace MuMech
 
             while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
-                vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
+                vessel.patchedConicSolver.maneuverNodes.Last().RemoveSelf();
             }
         }
 

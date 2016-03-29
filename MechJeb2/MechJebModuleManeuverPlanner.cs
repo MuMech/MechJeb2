@@ -98,7 +98,7 @@ namespace MuMech
                 if (computedNode != null)
                 {
                     if (!createNode)
-                        vessel.patchedConicSolver.RemoveManeuverNode(maneuverNodes.Last());
+                        maneuverNodes.Last().RemoveSelf();
                     vessel.PlaceManeuverNode(o, computedNode.dV, computedNode.UT);
                 }
 
