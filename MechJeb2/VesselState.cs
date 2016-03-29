@@ -600,7 +600,7 @@ namespace MuMech
 
                             if (FlightInputHandler.fetch.precisionMode)
                             {
-                                float lever = rcs.GetLeverDistance(thrustDirection, movingCoM);
+                                float lever = rcs.GetLeverDistance(t, thrustDirection, movingCoM);
                                 if (lever > 1)
                                 {
                                     power = power / lever;
