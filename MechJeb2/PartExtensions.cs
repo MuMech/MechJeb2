@@ -73,6 +73,13 @@ namespace MuMech
                     break;
                 }
 
+                ModuleDockingNode mDockingNode = m as ModuleDockingNode;
+                if (mDockingNode != null)
+                {
+                    if (mDockingNode.staged && mDockingNode.stagingEnabled  && p.stagingOn) return true;
+                    break;
+                }
+
                 if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler")
                 {
                     if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn) return true;
