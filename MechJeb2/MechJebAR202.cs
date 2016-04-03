@@ -1,23 +1,19 @@
 ﻿using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
 {
     public class MechJebAR202 : PartModule
     {
-        MechJebCore core = null;
-
-        //light stuff
-        enum LightColor { NEITHER, GREEN, RED };
-        LightColor litLight = 0;
-        Shader originalLensShader;
-        Shader lightShader;
-        Color originalLensColor = new Color(0, 0, 0, 0);
-        Light greenLight;
-        Light redLight;
-        Transform greenLightTransform;
-        Transform redLightTransform;
+        private MechJebCore core;
+        private Light greenLight;
+        private Renderer greenLightRenderer;
+        private Transform greenLightTransform;
+        private LightColor litLight = 0;
+        private Light redLight;
+        private Renderer redLightRenderer;
+        private Transform redLightTransform;
+        private int emissionId;
 
         public override void OnStart(StartState state)
         {
@@ -34,56 +30,64 @@ namespace MuMech
             if (!HighLogic.LoadedSceneIsEditor) HandleLights();
         }
 
-        void InitializeLights()
+        private void InitializeLights()
         {
             greenLightTransform = null;
             redLightTransform = null;
-
-            lightShader = new Material(Encoding.ASCII.GetString(Properties.Resources.shader)).shader;
-
+            
             foreach (Transform t in GetComponentsInChildren<Transform>())
             {
                 if (t.name.Equals("light_green")) greenLightTransform = t;
                 if (t.name.Equals("light_red")) redLightTransform = t;
             }
 
-            if ((greenLightTransform != null) && (greenLightTransform.GetComponent<Light>() == null))
+            emissionId = Shader.PropertyToID("_EmissiveColor");
+
+            if (greenLightTransform != null)
             {
-                originalLensShader = greenLightTransform.GetComponent<Renderer>().material.shader;
-                greenLight = greenLightTransform.gameObject.AddComponent<Light>();
-                greenLight.transform.parent = greenLightTransform;
-                greenLight.type = LightType.Point;
-                greenLight.renderMode = LightRenderMode.ForcePixel;
-                greenLight.shadows = LightShadows.None;
-                greenLight.enabled = false;
-                greenLight.color = Color.green;
-                greenLight.range = 1.5F;
+                if (greenLightTransform.GetComponent<Light>() == null)
+                {
+                    greenLightRenderer = greenLightTransform.GetComponent<Renderer>();
+                    greenLight = greenLightTransform.gameObject.AddComponent<Light>();
+                    greenLight.transform.parent = greenLightTransform;
+                    greenLight.type = LightType.Point;
+                    greenLight.renderMode = LightRenderMode.ForcePixel;
+                    greenLight.shadows = LightShadows.None;
+                    greenLight.enabled = false;
+                    greenLight.color = Color.green;
+                    greenLight.range = 1.5F;
+                }
+                else
+                {
+                    greenLight = greenLightTransform.GetComponent<Light>();
+                }
             }
-            else
+
+            if (redLightTransform != null)
             {
-                greenLight = greenLightTransform.GetComponent<Light>();
-            }
-            if ((redLightTransform != null) && (redLightTransform.GetComponent<Light>() == null))
-            {
-                originalLensShader = redLightTransform.GetComponent<Renderer>().material.shader;
-                redLight = redLightTransform.gameObject.AddComponent<Light>();
-                redLight.transform.parent = redLightTransform;
-                redLight.type = LightType.Point;
-                redLight.renderMode = LightRenderMode.ForcePixel;
-                redLight.shadows = LightShadows.None;
-                redLight.enabled = false;
-                redLight.color = Color.red;
-                redLight.range = 1.5F;
-            }
-            else
-            {
-                redLight = redLightTransform.GetComponent<Light>();
+                if (redLightTransform.GetComponent<Light>() == null)
+                {
+                    redLightRenderer = redLightTransform.GetComponent<Renderer>();
+                    redLight = redLightTransform.gameObject.AddComponent<Light>();
+                    redLight.transform.parent = redLightTransform;
+                    redLight.type = LightType.Point;
+                    redLight.renderMode = LightRenderMode.ForcePixel;
+                    redLight.shadows = LightShadows.None;
+                    redLight.enabled = false;
+                    redLight.color = Color.red;
+                    redLight.range = 1.5F;
+                }
+                else
+                {
+                    redLight = redLightTransform.GetComponent<Light>();
+                }
             }
         }
 
-        void HandleLights()
+        private void HandleLights()
         {
             if (greenLight == null || redLight == null) InitializeLights();
+            if (greenLight == null || redLight == null) return;
 
             if (core == null || MapView.MapIsEnabled)
             {
@@ -94,7 +98,7 @@ namespace MuMech
                 bool somethingEnabled = false;
                 if (vessel.GetMasterMechJeb() == core)
                 {
-                    foreach (DisplayModule display in core.GetComputerModules<DisplayModule>())
+                    foreach (DisplayModule display in core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance))
                     {
                         if (display is MechJebModuleMenu) continue;
                         if (display.enabled && display.showInCurrentScene)
@@ -104,7 +108,7 @@ namespace MuMech
                     }
                 }
 
-                litLight = (somethingEnabled ? LightColor.GREEN : LightColor.RED);
+                litLight = somethingEnabled ? LightColor.GREEN : LightColor.RED;
             }
 
             switch (litLight)
@@ -124,18 +128,16 @@ namespace MuMech
                     if (redLight.enabled) TurnOffLight(LightColor.RED);
                     break;
             }
-
         }
 
-        void TurnOnLight(LightColor which)
+        private void TurnOnLight(LightColor which)
         {
             switch (which)
             {
                 case LightColor.GREEN:
                     if (greenLightTransform != null)
                     {
-                        greenLightTransform.GetComponent<Renderer>().material.shader = lightShader;                        
-                        greenLightTransform.GetComponent<Renderer>().material.color = Color.green;
+                        greenLightRenderer.material.SetColor(emissionId, Color.green);
                         greenLight.enabled = true;
                     }
                     break;
@@ -143,23 +145,21 @@ namespace MuMech
                 case LightColor.RED:
                     if (redLightTransform != null)
                     {
-                        redLightTransform.GetComponent<Renderer>().material.shader = lightShader;                        
-                        redLightTransform.GetComponent<Renderer>().material.color = Color.red;
+                        redLightRenderer.material.SetColor(emissionId, Color.red);
                         redLight.enabled = true;
                     }
                     break;
             }
         }
 
-        void TurnOffLight(LightColor which)
+        private void TurnOffLight(LightColor which)
         {
             switch (which)
             {
                 case LightColor.GREEN:
                     if (greenLightTransform != null)
                     {
-                        greenLightTransform.GetComponent<Renderer>().material.shader = originalLensShader;
-                        greenLightTransform.GetComponent<Renderer>().material.color = originalLensColor;
+                        greenLightRenderer.material.SetColor(emissionId, Color.black);
                         greenLight.enabled = false;
                     }
                     break;
@@ -167,12 +167,19 @@ namespace MuMech
                 case LightColor.RED:
                     if (redLightTransform != null)
                     {
-                        redLightTransform.GetComponent<Renderer>().material.shader = originalLensShader;
-                        redLightTransform.GetComponent<Renderer>().material.color = originalLensColor;
+                        redLightRenderer.material.SetColor(emissionId, Color.black);
                         redLight.enabled = false;
                     }
                     break;
             }
+        }
+
+        //light stuff
+        private enum LightColor
+        {
+            NEITHER,
+            GREEN,
+            RED
         }
     }
 }
