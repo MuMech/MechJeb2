@@ -365,7 +365,7 @@ namespace MuMech
             }
         }
 
-        class DisplayOrder : IComparer<DisplayModule>
+        public class DisplayOrder : IComparer<DisplayModule>
         {
             private DisplayOrder() { }
             public static DisplayOrder instance = new DisplayOrder();
