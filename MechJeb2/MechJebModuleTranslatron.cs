@@ -204,8 +204,8 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            // Fix the Translatron behavuous with kill HS.
-            // TODO : proper fix that register the attitude controler oustide of Drive
+            // Fix the Translatron behavior which kill HS.
+            // TODO : proper fix that register the attitude controler outside of Drive
             if (!core.attitude.users.Contains(this) && ( core.thrust.trans_kill_h && core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)) { core.attitude.users.Add(this); }
             if ( core.attitude.users.Contains(this) && (!core.thrust.trans_kill_h || core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)) { core.attitude.users.Remove(this); }
 

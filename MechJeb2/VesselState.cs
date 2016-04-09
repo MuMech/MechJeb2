@@ -907,39 +907,6 @@ namespace MuMech
         [GeneralInfoItem("Torque Compare", InfoItem.Category.Vessel, showInEditor = true)]
         public void TorqueCompare()
         {
-            //GUILayout.BeginVertical();
-            //
-            //GUILayout.Label("RCS Torque");
-            //
-            //GUILayout.BeginHorizontal();
-            //var rcsTorque = Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
-            //GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GUILayout.ExpandWidth(false));
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcsStock), GUILayout.ExpandWidth(false));
-            //GUILayout.Label((100 * rcsTorque.magnitude / torqueRcsStock.magnitude).ToString("F2"), GUILayout.ExpandWidth(false));
-            //GUILayout.EndHorizontal();
-            //
-            //GUILayout.Label("Surface Torque");
-            //GUILayout.BeginHorizontal();
-            //var surfTorque = new Vector3(
-            //    (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
-            //    (Mathf.Abs(ctrlTorqueAvailablePos.y) + Mathf.Abs(ctrlTorqueAvailableNeg.y)) / 2f,
-            //    (Mathf.Abs(ctrlTorqueAvailablePos.z) + Mathf.Abs(ctrlTorqueAvailableNeg.z)) / 2f);
-            //GUILayout.Label(MuUtils.PrettyPrint(surfTorque), GUILayout.ExpandWidth(false));
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueSurfStock), GUILayout.ExpandWidth(false));
-            //GUILayout.Label((100 * surfTorque.magnitude / torqueSurfStock.magnitude).ToString("F2"), GUILayout.ExpandWidth(false));
-            //GUILayout.EndHorizontal();
-            //
-            //
-            //GUILayout.Label("Engine Torque");
-            //GUILayout.BeginHorizontal();
-            //var engineTorque = Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative) + Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
-            //GUILayout.Label(MuUtils.PrettyPrint(engineTorque), GUILayout.ExpandWidth(false));
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueGimbalStock), GUILayout.ExpandWidth(false));
-            //GUILayout.Label((100 * engineTorque.magnitude / torqueGimbalStock.magnitude).ToString("F2"), GUILayout.ExpandWidth(false));
-            //GUILayout.EndHorizontal();
-            //
-            //GUILayout.EndVertical();
-
             var rcsTorque = Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
             var surfTorque = new Vector3(
                 (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
