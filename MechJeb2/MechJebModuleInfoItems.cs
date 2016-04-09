@@ -887,13 +887,30 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+        static GUIStyle _columnStyle;
+        public static GUIStyle ColumnStyle
+        {
+            get
+            {
+                if (_columnStyle == null)
+                {
+                    _columnStyle = new GUIStyle(GuiUtils.yellowOnHover)
+                    {
+                        alignment = TextAnchor.MiddleRight,
+                        wordWrap = false,
+                        padding = new RectOffset(2, 2, 0, 0)
+                    };
+                }
+                return _columnStyle;
+            }
+        }
+
         bool DrawStageStatsColumn(string header, IEnumerable<string> data)
         {
             GUILayout.BeginVertical();
-            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { alignment = TextAnchor.MiddleRight, wordWrap = false, padding = new RectOffset(2, 2, 0, 0) };
-            bool ret = GUILayout.Button(header + "   ", s);
+            bool ret = GUILayout.Button(header + "   ", ColumnStyle);
 
-            foreach (string datum in data) GUILayout.Label(datum + "   ", s);
+            foreach (string datum in data) GUILayout.Label(datum + "   ", ColumnStyle);
 
             GUILayout.EndVertical();
 
