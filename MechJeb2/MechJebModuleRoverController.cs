@@ -130,9 +130,13 @@ namespace MuMech
 		
 		public void OnVesselModified(Vessel v)
 		{
-			try {
+
+            //TODO : need to look into the new ModuleWheelSteering ModuleWheelMotor ModuleWheelBrakes ModuleWheelBase ModuleWheelSuspension and see what they could bring
+
+            try
+            {
 				wheels.Clear();
-				wheels.AddRange(vessel.Parts.FindAll(p => !p.HasModule<ModuleLandingLeg>() && p.FindModelComponent<WheelCollider>() != null));
+				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() && p.FindModelComponent<WheelCollider>() != null && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
 				colliders.Clear();
 				wheels.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
 			}
@@ -394,8 +398,8 @@ namespace MuMech
 //
 //					quat = n;
 //				}
-								
-				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+                if (vesselState.torqueAvailable.sqrMagnitude > 0)
+				    core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
 //				}
 			}
 			
