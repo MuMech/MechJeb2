@@ -241,6 +241,22 @@ namespace MuMech
             }
         }
 
+        static GUIStyle _labelNoWrap;
+        public static GUIStyle LabelNoWrap
+        {
+            get
+            {
+                if (_labelNoWrap == null)
+                {
+                    _labelNoWrap = new GUIStyle(GUI.skin.label)
+                    {
+                        wordWrap = false,
+                    };
+                }
+                return _labelNoWrap;
+            }
+        }
+
         public enum SkinType { Default, MechJeb1, Compact }
         public static GUISkin skin;
         public static float scale = 1;

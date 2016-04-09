@@ -196,6 +196,12 @@ namespace MuMech
 
         public Vector3d torqueReactionSpeed;
 
+        // torque reported by ITorqueProvider - Not used for now since some values are wrong
+        public Vector3 torqueStock;
+        public Vector3 torqueRcsStock;
+        public Vector3 torqueSurfStock;
+        public Vector3 torqueGimbalStock;
+
         // List of parachutes
         public List<ModuleParachute> parachutes = new List<ModuleParachute>();
 
@@ -538,6 +544,7 @@ namespace MuMech
         {
             rcsThrustAvailable = new Vector6();
             rcsTorqueAvailable = new Vector6();
+            torqueRcsStock = Vector3.zero;
 
             if (!vessel.ActionGroups[KSPActionGroup.RCS]) return;
 
@@ -585,6 +592,9 @@ namespace MuMech
                         continue;
 
                     ModuleRCS rcs = (ModuleRCS)mod;
+
+                    torqueRcsStock += rcs.GetPotentialTorque().Abs().XZY();
+
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
                         Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
@@ -669,6 +679,12 @@ namespace MuMech
 
             torqueReactionSpeed = new Vector3();
 
+            torqueStock = new Vector3();
+
+            //torqueRcsStock = new Vector3();
+            torqueSurfStock = new Vector3();
+            torqueGimbalStock = new Vector3();
+
             pureDragV = Vector3d.zero;
             pureLiftV = Vector3d.zero;
 
@@ -709,18 +725,28 @@ namespace MuMech
                     {
                         continue;
                     }
-
-                    if (pm is ModuleReactionWheel)
+                    
+                    ModuleLiftingSurface ls = pm as ModuleLiftingSurface;
+                    if (ls != null)
                     {
-                        ModuleReactionWheel rw = (ModuleReactionWheel)pm;
-                        if (rw.wheelState == ModuleReactionWheel.WheelState.Active && rw.operational)
-                        {
-                            torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
-                        }
+                        pureLiftV += ls.liftForce;
+                        pureDragV += ls.dragForce;
+                    }
+
+                    ModuleReactionWheel rw = pm as ModuleReactionWheel;
+                    if (rw != null)
+                    {
+                        //if (rw.wheelState == ModuleReactionWheel.WheelState.Active && rw.operational)
+                        //{
+                        //    torqueAvailable += new Vector3d(rw.PitchTorque, rw.RollTorque, rw.YawTorque);
+                        //}
+                        torqueAvailable += rw.GetPotentialTorque().Abs().XZY();
                     }
                     else if (pm is ModuleEngines)
                     {
-                        einfo.AddNewEngine(pm as ModuleEngines, p.transform.position - CoM);
+                        var moduleEngines = pm as ModuleEngines;
+                        einfo.AddNewEngine(moduleEngines, p.transform.position - CoM);
+
                     }
                     else if (pm is ModuleResourceIntake)
                     {
@@ -744,13 +770,15 @@ namespace MuMech
                     else if (pm is ModuleControlSurface)
                     {
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
-
+                        
                         if (p.ShieldedFromAirstream || cs.deploy)
                             continue;
 
-                        pureLiftV += cs.liftForce;
-                        pureDragV += cs.dragForce;
+                        var crtlTorque = cs.GetPotentialTorque().Abs().XZY();
+                        torqueSurfStock += crtlTorque;
 
+                        torqueReactionSpeed += (Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed) * crtlTorque;
+                        
                         Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
 
                         // Build a vector that show if the surface is left/right forward/back up/down of the CoM.
@@ -796,12 +824,25 @@ namespace MuMech
                             (Mathf.Abs(ctrlTorquePos.z) + Mathf.Abs(ctrlTorqueNeg.z)) / 2f);
 
                     }
-                    else if (pm is ModuleLiftingSurface)
+                    else if (pm is ModuleGimbal)
                     {
-                        ModuleLiftingSurface liftingSurface = (ModuleLiftingSurface)pm;
-                        pureLiftV += liftingSurface.liftForce;
-                        pureDragV += liftingSurface.dragForce;
+                        ModuleGimbal g = (pm as ModuleGimbal);
+
+                        var crtlTorque = g.GetPotentialTorque();
+
+                        torqueGimbalStock += crtlTorque.Abs().XZY();
+
+                        if (g.useGimbalResponseSpeed)
+                            torqueReactionSpeed += (Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * crtlTorque;
                     }
+                    //else if (pm is ITorqueProvider)
+                    //{
+                    //    ITorqueProvider tp = pm as ITorqueProvider;
+                    //
+                    //    var crtlTorque = tp.GetPotentialTorque();
+                    //
+                    //    torqueStock += crtlTorque;
+                    //}
 
                     for (int index = 0; index < vesselStatePartModuleExtensions.Count; index++)
                     {
@@ -811,14 +852,11 @@ namespace MuMech
                 }
             }
 
-
             torqueAvailable += new Vector3(
                 (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
                 (Mathf.Abs(ctrlTorqueAvailablePos.y) + Mathf.Abs(ctrlTorqueAvailableNeg.y)) / 2f,
                 (Mathf.Abs(ctrlTorqueAvailablePos.z) + Mathf.Abs(ctrlTorqueAvailableNeg.z)) / 2f);
 
-            if (torqueAvailable.sqrMagnitude > 0)
-                torqueReactionSpeed.Scale(torqueAvailable.Invert());
             
             // Max since most of the code only use positive control input and the min would be 0
             torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
@@ -830,6 +868,8 @@ namespace MuMech
 
             torqueFromEngine += Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
 
+            if (torqueAvailable.sqrMagnitude > 0)
+                torqueReactionSpeed.Scale(torqueAvailable.Invert());
 
 
 
@@ -861,6 +901,88 @@ namespace MuMech
 
             maxEngineResponseTime = einfo.maxResponseTime;
         }
+
+
+
+        [GeneralInfoItem("Torque Compare", InfoItem.Category.Vessel, showInEditor = true)]
+        public void TorqueCompare()
+        {
+            //GUILayout.BeginVertical();
+            //
+            //GUILayout.Label("RCS Torque");
+            //
+            //GUILayout.BeginHorizontal();
+            //var rcsTorque = Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            //GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GUILayout.ExpandWidth(false));
+            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcsStock), GUILayout.ExpandWidth(false));
+            //GUILayout.Label((100 * rcsTorque.magnitude / torqueRcsStock.magnitude).ToString("F2"), GUILayout.ExpandWidth(false));
+            //GUILayout.EndHorizontal();
+            //
+            //GUILayout.Label("Surface Torque");
+            //GUILayout.BeginHorizontal();
+            //var surfTorque = new Vector3(
+            //    (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
+            //    (Mathf.Abs(ctrlTorqueAvailablePos.y) + Mathf.Abs(ctrlTorqueAvailableNeg.y)) / 2f,
+            //    (Mathf.Abs(ctrlTorqueAvailablePos.z) + Mathf.Abs(ctrlTorqueAvailableNeg.z)) / 2f);
+            //GUILayout.Label(MuUtils.PrettyPrint(surfTorque), GUILayout.ExpandWidth(false));
+            //GUILayout.Label(MuUtils.PrettyPrint(torqueSurfStock), GUILayout.ExpandWidth(false));
+            //GUILayout.Label((100 * surfTorque.magnitude / torqueSurfStock.magnitude).ToString("F2"), GUILayout.ExpandWidth(false));
+            //GUILayout.EndHorizontal();
+            //
+            //
+            //GUILayout.Label("Engine Torque");
+            //GUILayout.BeginHorizontal();
+            //var engineTorque = Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative) + Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
+            //GUILayout.Label(MuUtils.PrettyPrint(engineTorque), GUILayout.ExpandWidth(false));
+            //GUILayout.Label(MuUtils.PrettyPrint(torqueGimbalStock), GUILayout.ExpandWidth(false));
+            //GUILayout.Label((100 * engineTorque.magnitude / torqueGimbalStock.magnitude).ToString("F2"), GUILayout.ExpandWidth(false));
+            //GUILayout.EndHorizontal();
+            //
+            //GUILayout.EndVertical();
+
+            var rcsTorque = Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            var surfTorque = new Vector3(
+                (Mathf.Abs(ctrlTorqueAvailablePos.x) + Mathf.Abs(ctrlTorqueAvailableNeg.x)) / 2f,
+                (Mathf.Abs(ctrlTorqueAvailablePos.y) + Mathf.Abs(ctrlTorqueAvailableNeg.y)) / 2f,
+                (Mathf.Abs(ctrlTorqueAvailablePos.z) + Mathf.Abs(ctrlTorqueAvailableNeg.z)) / 2f);
+
+            var engineTorque = Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative) + Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
+
+            GUILayout.BeginHorizontal();
+            // col 1 MJs
+            GUILayout.BeginVertical();
+            GUILayout.Label("RCS", GuiUtils.LabelNoWrap);
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label("Surface", GuiUtils.LabelNoWrap);
+            GUILayout.Label(MuUtils.PrettyPrint(surfTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label("Gimbal", GuiUtils.LabelNoWrap);
+            GUILayout.Label(MuUtils.PrettyPrint(engineTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.EndVertical();
+
+            // col 2 Stocks
+            GUILayout.BeginVertical();
+            GUILayout.Label("");
+            GUILayout.Label(MuUtils.PrettyPrint(torqueRcsStock), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label("");
+            GUILayout.Label(MuUtils.PrettyPrint(torqueSurfStock), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label("");
+            GUILayout.Label(MuUtils.PrettyPrint(torqueGimbalStock), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.EndVertical();
+
+            // col 3 %
+            GUILayout.BeginVertical();
+            GUILayout.Label("");
+            GUILayout.Label(MuUtils.PadPositive(100 - 100 * rcsTorque.magnitude / torqueRcsStock.magnitude, "F2").PadLeft(10)+"%", GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label("");
+            GUILayout.Label(MuUtils.PadPositive(100 - 100 * surfTorque.magnitude / torqueSurfStock.magnitude, "F2").PadLeft(10) + "%", GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label("");
+            GUILayout.Label(MuUtils.PadPositive(100 - 100 * engineTorque.magnitude / torqueGimbalStock.magnitude, "F2").PadLeft(10) + "%", GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.EndVertical();
+
+
+            GUILayout.EndHorizontal();
+        }
+
 
         void UpdateResourceRequirements(EngineInfo einfo, IntakeInfo iinfo)
         {
