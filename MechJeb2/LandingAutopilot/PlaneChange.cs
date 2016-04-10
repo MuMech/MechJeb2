@@ -23,7 +23,7 @@ namespace MuMech
                 Vector3d currentRadialVector = core.vesselState.CoM - core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 //this calculation seems like it might be be working right:
-                double timeToTarget = orbit.TimeOfTrueAnomaly(core.vessel.orbit.trueAnomaly + angleToTarget, vesselState.time) - vesselState.time;
+                double timeToTarget = orbit.TimeOfTrueAnomaly(core.vessel.orbit.trueAnomaly * MathExtensions.Rad2Deg + angleToTarget, vesselState.time) - vesselState.time;
                 double planetRotationAngle = 360 * timeToTarget / mainBody.rotationPeriod;
                 Quaternion planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, mainBody.angularVelocity);
                 Vector3d targetRadialVectorOnFlyover = planetRotation * targetRadialVector;
