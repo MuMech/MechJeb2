@@ -26,7 +26,7 @@ namespace MuMech
                 }
 
                 double decelerationStartTime = (core.landing.prediction.trajectory.Any() ? core.landing.prediction.trajectory.First().UT : vesselState.time);
-                if (decelerationStartTime - vesselState.time > 5)
+                if (!(core.landing.minThrust > 0 && core.thrust.targetThrottle > 0) && decelerationStartTime - vesselState.time > 5)
                 {
                     core.thrust.targetThrottle = 0;
 
@@ -56,8 +56,8 @@ namespace MuMech
                 if (Vector3d.Dot(vesselState.surfaceVelocity, vesselState.up) > 0
                     || Vector3d.Dot(vesselState.forward, desiredThrustVector) < 0.75)
                 {
-                    core.thrust.targetThrottle = 0;
-                    status = "Braking";
+                    core.thrust.targetThrottle = (float)core.landing.minThrust;
+                    status = "Braking (wrongdir)";
                 }
                 else
                 {
@@ -69,8 +69,8 @@ namespace MuMech
                     const double speedCorrectionTimeConstant = 0.3;
                     double speedError = desiredSpeed - controlledSpeed;
                     double desiredAccel = speedError / speedCorrectionTimeConstant + (desiredSpeedAfterDt - desiredSpeed) / vesselState.deltaT;
-                    if (maxAccel - minAccel > 0) core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
-                    else core.thrust.targetThrottle = 0;
+                    if (maxAccel - minAccel > 0) core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), (float)core.landing.minThrust, 1.0F);
+                    else core.thrust.targetThrottle = (float)core.landing.minThrust;
                     status = "Braking: target speed = " + Math.Abs(desiredSpeed).ToString("F1") + " m/s";
                 }
 

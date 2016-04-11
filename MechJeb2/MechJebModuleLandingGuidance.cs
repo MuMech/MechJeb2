@@ -126,6 +126,10 @@ namespace MuMech
                 }
 
                 GuiUtils.SimpleTextBox("Touchdown speed:", core.landing.touchdownSpeed, "m/s", 35);
+                    GuiUtils.SimpleTextBox("minThrust:", core.landing.minThrust, "frac", 35);
+                    GuiUtils.SimpleTextBox("decelerationEndAltitude:", core.landing.decelerationEndAltitude, "m", 35);
+                    GuiUtils.SimpleTextBox("safityThrustLimit(prediction):", core.landing.safityThrustLimit, "frac", 35);
+                    GuiUtils.SimpleTextBox("CorrectionBeforeDeceleration:", core.landing.CorrectionBeforeDeceleration, "m", 35);
 
                 if (core.landing != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
 
@@ -137,27 +141,36 @@ namespace MuMech
                 predictor.limitChutesStage = core.landing.limitChutesStage;
                 core.landing.rcsAdjustment = GUILayout.Toggle(core.landing.rcsAdjustment, "Use RCS for small adjustment");
 
-                if (core.landing.enabled)
-                {
-                    GUILayout.Label("Status: " + core.landing.status);
-                    GUILayout.Label("Step: " + (core.landing.CurrentStep != null ? core.landing.CurrentStep.GetType().Name : "N/A"));
-                    GUILayout.Label("Mode " + (core.landing.descentSpeedPolicy != null ? core.landing.descentSpeedPolicy.GetType().Name : "N/A") + " (" + core.landing.UseAtmosphereToBrake().ToString() + ")");
-                    //GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
-                    //var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
-                    //GUILayout.Label("Drag Length: " + ( dragLength < double.MaxValue ? dragLength.ToString("F2") : "infinite"));
-                    //
-                    //string parachuteInfo = core.landing.ParachuteControlInfo;
-                    //if (null != parachuteInfo)
-                    //{
-                    //    GUILayout.Label(parachuteInfo);
-                    //}
+
+                    if (core.landing.enabled)
+                    {
+                        GUILayout.Label("Status: " + core.landing.status);
+                        GUILayout.Label("Mode " + core.landing.descentSpeedPolicy.GetType().Name + "(" + core.landing.UseAtmosphereToBrake().ToString() + ")");
+                        GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
+                        var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
+                        GUILayout.Label("Drag Leng: " + (dragLength != Double.MaxValue ? dragLength.ToString("F2") : "infinite"));
+
+                        string parachuteInfo = core.landing.ParachuteControlInfo();
+                        if (null != parachuteInfo)
+                        {
+                            GUILayout.Label(parachuteInfo);
+                        }
+                    }
+                    else if (core.landing.CorrectionDv.sqrMagnitude > 1)
+                        if (GUILayout.Button("Place Correction"))
+                        {
+                            Vector3d nodeDV = orbit.DeltaVToManeuverNodeCoordinates(vesselState.time + 30, core.landing.CorrectionDv);
+                            ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(vesselState.time + 30);
+                            mn.OnGizmoUpdated(nodeDV, vesselState.time + 30);
+                        }
                 }
-            }
 
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
         }
+        bool predictorUsesDescPolicy = false;
+
 
         [GeneralInfoItem("Landing predictions", InfoItem.Category.Misc)]
         void DrawGUITogglePredictions()
@@ -174,15 +187,23 @@ namespace MuMech
                 else
                 {
                     predictor.users.Remove(this);
+                    if (!core.landing.active)
+                        predictor.descentSpeedPolicy = null;
                 }
             }
+
+            predictorUsesDescPolicy = GUILayout.Toggle(predictorUsesDescPolicy, "Show predictions with DescentPolicy");
 
             if (predictor.enabled)
             {
                 predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, "Show aerobrake nodes");
                 predictor.showTrajectory = GUILayout.Toggle(predictor.showTrajectory, "Show trajectory");
                 predictor.worldTrajectory = GUILayout.Toggle(predictor.worldTrajectory, "World trajectory");
-                predictor.camTrajectory = GUILayout.Toggle(predictor.camTrajectory, "Camera trajectory (WIP)");
+                if (predictorUsesDescPolicy && core.landing != null)
+                {
+                    core.landing.PatchPredictorPolicy();
+                    //predictor.users.Add
+                }
                 DrawGUIPrediction();
             }
 
@@ -205,16 +226,16 @@ namespace MuMech
                         GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
                                        +"\nMax drag: " + result.maxDragGees.ToString("F1") +"g"
                                        +"\nDelta-v needed: " + result.deltaVExpended.ToString("F1") + "m/s"
-                                       +"\nTime to land: " + GuiUtils.TimeToDHMS(Math.Max(0, result.endUT - Planetarium.GetUniversalTime()), 1));
+                                       +"\nTime to land: " + GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1));                        
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
                         GUILayout.Label("Predicted orbit after aerobraking:");
-                        Orbit o = result.AeroBrakeOrbit();
+                        Orbit o = result.EndOrbit();
                         if (o.eccentricity > 1) GUILayout.Label("Hyperbolic, eccentricity = " + o.eccentricity.ToString("F2"));
                         else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + "m x " + MuUtils.ToSI(o.ApA, 3) + "m");
                         GUILayout.Label("Max drag: " + result.maxDragGees.ToString("F1") + "g"
-                                       +"\nExit atmosphere in: " + GuiUtils.TimeToDHMS(result.aeroBrakeUT - Planetarium.GetUniversalTime(), 1));                        
+                                       +"\nExit atmosphere in: " + GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1));                        
                         break;
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
