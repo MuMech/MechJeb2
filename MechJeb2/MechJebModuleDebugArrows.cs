@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -18,7 +21,16 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool comSphereActive;
         public static DebugIcoSphere comSphere;
+
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool colSphereActive;
+        public static DebugIcoSphere colSphere;
         
+        [Persistent(pass = (int)Pass.Global)]
+        public bool cotSphereActive;
+        public static DebugIcoSphere cotSphere;
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble comSphereRadius = new EditableDouble(0.09);
 
@@ -38,7 +50,14 @@ namespace MuMech
         public bool comObtVelocityArrowActive;
         public static DebugArrow comObtVelocityArrow;
 
-        
+        [Persistent(pass = (int)Pass.Global)]
+        public bool dotArrowActive;
+        public static DebugArrow dotArrow;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool dotInstantArrowActive;
+        public static DebugArrow dotInstantArrow;
+
         [Persistent(pass = (int)Pass.Global)]
         public bool forwardArrowActive;
         public static DebugArrow forwardArrow;
@@ -81,6 +100,11 @@ namespace MuMech
             comSphere.Destroy();
             comSphere = null;
 
+            colSphere.Destroy();
+            colSphere = null;
+            cotSphere.Destroy();
+            cotSphere = null;
+
             podSrfVelocityArrow.Destroy();
             podSrfVelocityArrow = null;
             comSrfVelocityArrow.Destroy();
@@ -91,6 +115,11 @@ namespace MuMech
             comObtVelocityArrow.Destroy();
             comObtVelocityArrow = null;
 
+            dotArrow.Destroy();
+            dotArrow = null;
+            dotInstantArrow.Destroy();
+            dotInstantArrow = null;
+            
             forwardArrow.Destroy();
             forwardArrow = null;
             avgForwardArrow.Destroy();
@@ -116,11 +145,17 @@ namespace MuMech
             {
                 comSphere = new DebugIcoSphere(XKCDColors.BloodRed, true);
 
+                colSphere = new DebugIcoSphere(XKCDColors.Teal, true);
+                cotSphere = new DebugIcoSphere(XKCDColors.PurplePink, true);
+
                 podSrfVelocityArrow = new DebugArrow(Color.yellow);
                 comSrfVelocityArrow = new DebugArrow(Color.green);
 
                 podObtVelocityArrow = new DebugArrow(Color.red);
                 comObtVelocityArrow = new DebugArrow(XKCDColors.Orange);
+
+                dotArrow        = new DebugArrow(XKCDColors.PurplePink);
+                dotInstantArrow = new DebugArrow(XKCDColors.Pink);
 
                 forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
                 avgForwardArrow = new DebugArrow(Color.blue);
@@ -132,7 +167,8 @@ namespace MuMech
             }
 
 
-            Vector3d instantCoM = vessel.CoM + (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
+            var frameVel = (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
+            Vector3d instantCoM = vesselState.CoM + frameVel;
 
             Vector3 arrowPos = displayAtCoM
                 ? instantCoM
@@ -143,6 +179,20 @@ namespace MuMech
             {
                 comSphere.Set(instantCoM);
                 comSphere.SetRadius((float)comSphereRadius.val);
+            }
+
+            colSphere.State(colSphereActive && vesselState.CoLScalar > 0);
+            if (colSphereActive)
+            {
+                colSphere.Set(vesselState.CoL + frameVel);
+                colSphere.SetRadius((float)comSphereRadius.val);
+            }
+
+            cotSphere.State(cotSphereActive && vesselState.CoTScalar > 0);
+            if (cotSphereActive)
+            {
+                cotSphere.Set(vesselState.CoT + frameVel);
+                cotSphere.SetRadius((float)comSphereRadius.val);
             }
 
             podSrfVelocityArrow.State(podSrfVelocityArrowActive);
@@ -176,7 +226,23 @@ namespace MuMech
                 comObtVelocityArrow.SetLength((float)arrowsLength.val);
                 comObtVelocityArrow.SeeThrough(seeThrough);
             }
+            
+            dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0);
+            if (dotArrowActive)
+            {
+                dotArrow.Set(vesselState.CoT + frameVel, vesselState.DoT);
+                dotArrow.SetLength((float)Math.Log10(vesselState.thrustCurrent + 1));
+                dotArrow.SeeThrough(seeThrough);
+            }
 
+            dotInstantArrow.State(dotInstantArrowActive && vesselState.thrustCurrent > 0);
+            if (dotInstantArrowActive)
+            {
+                dotInstantArrow.Set(vesselState.CoT+ frameVel, vesselState.DoTInstant);
+                dotInstantArrow.SetLength((float) Math.Log10(vesselState.thrustCurrent + 1));
+                dotInstantArrow.SeeThrough(seeThrough);
+            }
+            
             forwardArrow.State(forwardArrowActive);
             if (forwardArrowActive)
             {
@@ -204,38 +270,46 @@ namespace MuMech
             debugArrow.State(debugArrowActive);
             if (debugArrowActive)
             {
-                debugArrow.Set((Vector3d)vessel.ReferenceTransform.position, debugVector);
+                debugArrow.Set(vessel.ReferenceTransform.position, debugVector);
                 debugArrow.SetLength((float)debugVector.magnitude);
                 debugArrow.SeeThrough(seeThrough);
             }
 
-
             debugArrow2.State(debugArrow2Active);
             if (debugArrow2Active)
             {
-                debugArrow2.Set((Vector3d)vessel.ReferenceTransform.position, debugVector2);
 
-                debugArrow2.SetLength((float)debugVector2.magnitude);
+                //debugArrow2.Set(vessel.ReferenceTransform.position, debugVector2);
+                //
+                //debugArrow2.SetLength((float)debugVector2.magnitude);
+                //debugArrow2.SeeThrough(seeThrough);
+
+                var vector3d =  vesselState.CoL - instantCoM + frameVel;
+                debugArrow2.Set(instantCoM, vector3d);
+
+                debugArrow2.SetLength((float)vector3d.magnitude);
                 debugArrow2.SeeThrough(seeThrough);
-            }
 
+
+
+            }
         }
     }
 
     class DebugArrow
     {
-        private GameObject gameObject;
-        private GameObject haft;
+        private readonly GameObject gameObject;
+        private readonly GameObject haft;
         private GameObject cone;
 
-        private static Shader diffuseAmbient;
-        private static Shader diffuseAmbientIgnoreZ;
+        private static readonly Shader diffuseAmbient;
+        private static readonly Shader diffuseAmbientIgnoreZ;
 
         private const float coneLength = 0.5f;
         private float length;
         private bool seeThrough = false;
-        private MeshRenderer _haftMeshRenderer;
-        private MeshRenderer _coneMeshRenderer;
+        private readonly MeshRenderer _haftMeshRenderer;
+        private readonly MeshRenderer _coneMeshRenderer;
 
         static  DebugArrow()
         {
@@ -264,11 +338,11 @@ namespace MuMech
             _coneMeshRenderer = cone.AddComponent<MeshRenderer>();
 
             _haftMeshRenderer.material.color = color;
-            _haftMeshRenderer.castShadows = false;
+            _haftMeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _haftMeshRenderer.receiveShadows = false;
 
             _coneMeshRenderer.material.color =  color;
-            _coneMeshRenderer.castShadows = false;
+            _coneMeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _coneMeshRenderer.receiveShadows = false;
 
             SeeThrough(seeThrough);
@@ -301,6 +375,14 @@ namespace MuMech
                 this.length = length;
                 haft.transform.localScale = new Vector3(1f, conePos, 1f);
                 cone.transform.localPosition = new Vector3(0f, 0f, conePos);
+                cone.transform.localScale = new Vector3(1f, 1f, 1f);
+            }
+            else
+            {
+                this.length = length;
+                haft.transform.localScale = new Vector3(1f, 0, 1f);
+                cone.transform.localPosition = new Vector3(0f, 0f, 0);
+                cone.transform.localScale = new Vector3(length / coneLength, length / coneLength, length / coneLength);
             }
         }
 
@@ -527,12 +609,12 @@ namespace MuMech
 
     class DebugIcoSphere
     {
-        private GameObject gameObject;
+        private readonly GameObject gameObject;
 
-        private MeshRenderer _meshRenderer;
+        private readonly MeshRenderer _meshRenderer;
 
-        private static Shader diffuseAmbient;
-        private static Shader diffuseAmbientIgnoreZ;
+        private static readonly Shader diffuseAmbient;
+        private static readonly Shader diffuseAmbientIgnoreZ;
 
         private float radius;
         private bool seeThrough = false;
@@ -545,7 +627,7 @@ namespace MuMech
             _meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
             _meshRenderer.material.color = color;
-            _meshRenderer.castShadows = false;
+            _meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _meshRenderer.receiveShadows = false;
 
             SetRadius(0.09f);
