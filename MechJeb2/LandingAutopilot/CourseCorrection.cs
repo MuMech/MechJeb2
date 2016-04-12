@@ -41,7 +41,7 @@ namespace MuMech
                 if (decelerationStartTime - vesselState.time < 10)
                 //if (vesselState.altitudeASL < landing.DecelerationEndAltitude() + 5)
                 {//still buggy (previous version just wrong)
-                    Debug.Log("Criticall time point " + vesselState.time + " -> Deceleration Burn required NOW " + decelerationStartTime + " " + vesselState.altitudeASL / vesselState.speedVertical  + " - " + vesselState.surfaceVelocity.magnitude / (core.thrust.maxAcceleration * core.landing.safityThrustLimit - orbit.referenceBody.GeeASL));
+                    MechJebCore.print("Criticall time point " + vesselState.time + " -> Deceleration Burn required NOW " + decelerationStartTime + " " + vesselState.altitudeASL / vesselState.speedVertical  + " - " + vesselState.surfaceVelocity.magnitude / (core.thrust.maxAcceleration * core.landing.safityThrustLimit - orbit.referenceBody.GeeASL));
                     return new DecelerationBurn(core);
                 }
 
