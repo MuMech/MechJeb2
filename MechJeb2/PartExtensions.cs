@@ -36,7 +36,7 @@ namespace MuMech
                 IPartMassModifier m = p.Modules[i] as IPartMassModifier;
                 if (m != null)
                 {
-                    mass += m.GetModuleMass(defaultMass);
+                    mass += m.GetModuleMass(defaultMass, ModifierStagingSituation.CURRENT);
                 }
             }
             return mass;
