@@ -795,6 +795,7 @@ namespace MuMech
 
         private FuelFlowSimulation.Stats[] vacStats;
         private FuelFlowSimulation.Stats[] atmoStats;
+        private string[] bodies;
 
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
@@ -820,8 +821,11 @@ namespace MuMech
             double geeASL;
             if (HighLogic.LoadedSceneIsEditor)
             {
+                if (bodies == null)
+                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
+
                 // We're in the VAB/SPH
-                TWRBody = GuiUtils.ComboBox.Box(TWRBody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
+                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this);
                 stats.editorBody = FlightGlobals.Bodies[TWRBody];
                 geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
             }
