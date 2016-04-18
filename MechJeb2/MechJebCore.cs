@@ -26,6 +26,8 @@ namespace MuMech
 
         private static List<Type> moduleRegistry;
 
+        private bool ready = false;
+
         public MechJebModuleAttitudeController attitude;
         public MechJebModuleStagingController staging;
         public MechJebModuleThrustController thrust;
@@ -521,6 +523,9 @@ namespace MuMech
 
         public void FixedUpdate()
         {
+            if (!FlightGlobals.ready)
+                return;
+
             LoadDelayedModules();
 
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
@@ -560,7 +565,7 @@ namespace MuMech
             }
 
             Profiler.BeginSample("vesselState");
-            vesselState.Update(vessel);
+            ready = vesselState.Update(vessel);
             Profiler.EndSample();
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
@@ -584,7 +589,7 @@ namespace MuMech
 
         public void Update()
         {
-            if (this != vessel.GetMasterMechJeb())
+            if (this != vessel.GetMasterMechJeb() || !FlightGlobals.ready || !ready)
             {
                 return;
             }
@@ -1021,7 +1026,7 @@ namespace MuMech
 
         private void OnGUI()
         {
-            if (!showGui || this != vessel.GetMasterMechJeb()) return;
+            if (!showGui || this != vessel.GetMasterMechJeb() || !FlightGlobals.ready || !ready) return;
 
             Profiler.BeginSample("MechJebCore.OnGUI");
 

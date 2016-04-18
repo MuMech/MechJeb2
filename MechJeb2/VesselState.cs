@@ -276,9 +276,9 @@ namespace MuMech
             gimbalExtDict[typeof(T)] = gimbalExtension;
         }
 
-        public void Update(Vessel vessel)
+        public bool Update(Vessel vessel)
         {
-            if (vessel.rootPart.rb == null) return; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
+            if (vessel.rootPart.rb == null) return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
             TestStuff(vessel);
 
@@ -297,6 +297,7 @@ namespace MuMech
             ToggleRCSThrust(vessel);
 
             UpdateMoIAndAngularMom(vessel);
+            return true;
         }
         
         private void TestStuff(Vessel vessel)
