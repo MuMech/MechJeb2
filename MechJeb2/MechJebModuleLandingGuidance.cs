@@ -142,28 +142,28 @@ namespace MuMech
                 core.landing.rcsAdjustment = GUILayout.Toggle(core.landing.rcsAdjustment, "Use RCS for small adjustment");
 
 
-                    if (core.landing.enabled)
-                    {
-                        GUILayout.Label("Status: " + core.landing.status);
-                        GUILayout.Label("Mode " + core.landing.descentSpeedPolicy.GetType().Name + "(" + core.landing.UseAtmosphereToBrake().ToString() + ")");
-                        GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
-                        var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
-                        GUILayout.Label("Drag Leng: " + (dragLength != Double.MaxValue ? dragLength.ToString("F2") : "infinite"));
+                if (core.landing.enabled && core.landing.descentSpeedPolicy != null)
+                {
+                    GUILayout.Label("Status: " + core.landing.status);
+                    GUILayout.Label("Mode " + core.landing.descentSpeedPolicy.GetType().Name + "(" + core.landing.UseAtmosphereToBrake().ToString() + ")");
+                    GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
+                    var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
+                    GUILayout.Label("Drag Leng: " + (dragLength != Double.MaxValue ? dragLength.ToString("F2") : "infinite"));
 
-                        string parachuteInfo = core.landing.ParachuteControlInfo();
-                        if (null != parachuteInfo)
-                        {
-                            GUILayout.Label(parachuteInfo);
-                        }
+                    string parachuteInfo = core.landing.ParachuteControlInfo();
+                    if (null != parachuteInfo)
+                    {
+                        GUILayout.Label(parachuteInfo);
                     }
-                    else if (core.landing.CorrectionDv.sqrMagnitude > 1)
-                        if (GUILayout.Button("Place Correction"))
-                        {
-                            Vector3d nodeDV = orbit.DeltaVToManeuverNodeCoordinates(vesselState.time + 30, core.landing.CorrectionDv);
-                            ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(vesselState.time + 30);
-                            mn.OnGizmoUpdated(nodeDV, vesselState.time + 30);
-                        }
                 }
+                else if (core.landing.CorrectionDv.sqrMagnitude > 1)
+                    if (GUILayout.Button("Place Correction"))
+                    {
+                        Vector3d nodeDV = orbit.DeltaVToManeuverNodeCoordinates(vesselState.time + 30, core.landing.CorrectionDv);
+                        ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(vesselState.time + 30);
+                        mn.OnGizmoUpdated(nodeDV, vesselState.time + 30);
+                    }
+            }
 
             GUILayout.EndVertical();
 
