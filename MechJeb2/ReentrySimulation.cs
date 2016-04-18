@@ -160,11 +160,14 @@ namespace MuMech
             this.probableLandingSiteRadius = _probableLandingSiteASL + bodyRadius;
             referenceFrame.UpdateAtCurrentTime(_initialOrbit.referenceBody);
             orbitReenters = OrbitReenters(_initialOrbit);
+
+            startX = initialOrbit.SwappedRelativePositionAtUT(startUT);
+            // This calls some Unity function so it should be done outside the thread
             if (orbitReenters)
             {
                 startUT = _UT;
-                //t = startUT;
-                //AdvanceToFreefallEnd(initialOrbit);
+                t = startUT;
+                AdvanceToFreefallEnd(initialOrbit);
             }
 
             maxDragGees = 0;
@@ -196,19 +199,13 @@ namespace MuMech
                 result.input_dt = this.input_dt;
 
                 //MechJebCore.print("Sim Start");
-
-                startX = initialOrbit.SwappedRelativePositionAtUT(startUT);
-
-                if (orbitReenters)
-                {
-                    t = startUT;
-                    AdvanceToFreefallEnd(initialOrbit);
-                }
-                else
+                
+                if (!orbitReenters)
                 {
                     result.outcome = Outcome.NO_REENTRY;
                     return result;
                 }
+
                 result.startPosition = referenceFrame.ToAbsolute(x, t);
 
                 // Simulate a maximum of maxOrbits periods of a circular orbit at the entry altitude

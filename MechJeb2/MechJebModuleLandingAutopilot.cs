@@ -14,7 +14,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableDouble touchdownSpeed = 0.5;
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public EditableDouble minThrust = 0.0001;
+        public EditableDouble minThrust = 0;
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableDouble decelerationEndAltitude = 500;
 
