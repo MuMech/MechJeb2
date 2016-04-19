@@ -434,6 +434,8 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (HighLogic.LoadedSceneIsEditor)
+                ready = true;
             if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
 
             //OnLoad doesn't get called for parts created in editor, so do that manually so 
@@ -589,7 +591,7 @@ namespace MuMech
 
         public void Update()
         {
-            if (this != vessel.GetMasterMechJeb() || !FlightGlobals.ready || !ready)
+            if (this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !ready)
             {
                 return;
             }
@@ -1026,7 +1028,7 @@ namespace MuMech
 
         private void OnGUI()
         {
-            if (!showGui || this != vessel.GetMasterMechJeb() || !FlightGlobals.ready || !ready) return;
+            if (!showGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight)  || !ready) return;
 
             Profiler.BeginSample("MechJebCore.OnGUI");
 
