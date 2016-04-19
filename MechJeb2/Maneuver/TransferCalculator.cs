@@ -287,16 +287,38 @@ namespace MuMech
 			return Math.Atan2(Vector3d.Dot(axis, Vector3d.Cross(v1, v2)), Vector3d.Dot(v1, v2));
 		}
 
-		static ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0)
+		public static ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0)
 		{
 			double GM = initial_orbit.referenceBody.gravParameter;
 			double C3 = exit_velocity.sqrMagnitude;
+            double Mh = initial_orbit.referenceBody.sphereOfInfluence;
+            double Rpe = initial_orbit.semiMajorAxis;
+
+            double isma = 2 / Mh - C3 / GM; //inverted Semi-major Axis, will work for parabolic orbit
+            double ecc = 1.0 - Rpe * isma;
+
+            //double vstart = Math.Sqrt(GM * (2 / Rpe - isma)); //{ total start boost}
+            //double slat = Rpe * Rpe * vstart * vstart / GM;
+
+            //the problem here should be R for circular orbit instead of Rpe
+            double slat = 2 * Rpe - isma * Rpe * Rpe; //but we don't know start point (yet) in elliptic orbit
+
+            double theta = Math.Acos((slat / Mh - 1) / ecc);
+
+
+            /*
+            //old way infinity hyperbolic:
+            //problems: it's not necessary hyperbolic (in case of low speed exit_velocity), 
+            //and exit_velocity appears not infinite far from celestial body, but only sphereOfInfluence far
+            //i.e. Mh in previous statements(theta, isma) is not infinity!
+
 			double sma = -GM / C3;
-			double Rpe = initial_orbit.semiMajorAxis;
+			
 			double ecc = 1 - Rpe / sma;
 			double theta = Math.Acos(-1 / ecc);
 
-			Vector3d intersect_1;
+            */
+            Vector3d intersect_1;
 			Vector3d intersect_2;
 
 			// intersect_1 is the optimal position on the orbit assuming the orbit is circular and the sphere of influence is infinite

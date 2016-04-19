@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
-using System.Text.RegularExpressions;
+using KSP.UI.Screens;
 
 namespace MuMech
 {
@@ -171,7 +169,7 @@ namespace MuMech
 
         public void recursiveDecouple()
         {
-            int minStage = Staging.lastStage;
+            int minStage = StageManager.LastStage;
             for (int i = 0; i < part.vessel.parts.Count; i++)
             {
                 Part child = part.vessel.parts[i];
@@ -200,14 +198,14 @@ namespace MuMech
             }
             if (part.vessel == FlightGlobals.ActiveVessel)
             {
-                Staging.ActivateStage(minStage);
+                StageManager.ActivateStage(minStage);
             }
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            // Fix the Translatron behavuous with kill HS.
-            // TODO : proper fix that register the attitude controler oustide of Drive
+            // Fix the Translatron behavior which kill HS.
+            // TODO : proper fix that register the attitude controler outside of Drive
             if (!core.attitude.users.Contains(this) && ( core.thrust.trans_kill_h && core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)) { core.attitude.users.Add(this); }
             if ( core.attitude.users.Contains(this) && (!core.thrust.trans_kill_h || core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)) { core.attitude.users.Remove(this); }
 

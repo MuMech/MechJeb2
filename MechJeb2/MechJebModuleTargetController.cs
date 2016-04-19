@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -183,7 +180,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            RenderingManager.AddToPostDrawQueue(1, DoMapView);
+            core.AddToPostDrawQueue(DoMapView);
 
             users.Add(this); //TargetController should always be running
         }
@@ -225,8 +222,8 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (pickingPositionTarget && !GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null) Screen.showCursor = false;
-            else Screen.showCursor = true;
+            if (pickingPositionTarget && !GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null) Cursor.visible = false;
+            else Cursor.visible = true;
         }
 
         void DoMapView()

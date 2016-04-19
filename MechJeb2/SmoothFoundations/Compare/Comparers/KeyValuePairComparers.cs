@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Smooth.Collections;
+﻿using System.Collections.Generic;
 
 namespace Smooth.Compare.Comparers {
 	/// <summary>

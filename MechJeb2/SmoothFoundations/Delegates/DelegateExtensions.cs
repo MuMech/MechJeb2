@@ -1,5 +1,3 @@
-using System;
-
 namespace Smooth.Delegates {
 	/// <summary>
 	/// Provides extension methods related to delegate usage.

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using UniLinq;
 using Smooth.Slinq;
 using UnityEngine;
 
@@ -34,35 +33,44 @@ namespace MuMech
             else parts = vessel.Parts;
 
             List<T> list = new List<T>();
-            foreach (Part part in parts)
+            for (int p = 0; p < parts.Count; p++)
             {
-                foreach (T module in part.Modules.OfType<T>())
+                Part part = parts[p];
+
+                int count = part.Modules.Count;
+
+                for (int m = 0; m < count; m++)
                 {
-                    list.Add(module);
+                    T mod = part.Modules[m] as T;
+                    
+                    if (mod != null)
+                        list.Add(mod);
                 }
             }
             return list;
         }
 
         private static float lastFixedTime = 0;
-        private static Dictionary<Guid, MechJebCore> masterMechjebs = new Dictionary<Guid, MechJebCore>();
+        private static readonly Dictionary<Guid, MechJebCore> masterMechJeb = new Dictionary<Guid, MechJebCore>();
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
             if (lastFixedTime != Time.fixedTime)
             {
-                masterMechjebs.Clear();
+                masterMechJeb.Clear();
                 lastFixedTime = Time.fixedTime;
             }
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
-            if (!masterMechjebs.ContainsKey(vesselKey))
+            
+            MechJebCore mj;
+            if (!masterMechJeb.TryGetValue(vesselKey, out mj))
             {
-                MechJebCore mj = vessel.GetModules<MechJebCore>().FirstOrDefault(p => p.running);
+                mj = vessel.GetModules<MechJebCore>().Slinq().FirstOrDefault(p => p.running);
                 if (mj != null)
-                    masterMechjebs.Add(vesselKey, mj);
+                    masterMechJeb.Add(vesselKey, mj);
                 return mj;
             }
-            return masterMechjebs[vesselKey];
+            return mj;
         }
 
         public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
@@ -238,7 +246,7 @@ namespace MuMech
 
             while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
-                vessel.patchedConicSolver.RemoveManeuverNode(vessel.patchedConicSolver.maneuverNodes.Last());
+                vessel.patchedConicSolver.maneuverNodes.Last().RemoveSelf();
             }
         }
 
@@ -256,7 +264,7 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                Vector3Pair partBox = p.GetBoundingBox();
+                PartExtensions.Vector3Pair partBox = p.GetBoundingBox();
 
                 if (debug)
                 {

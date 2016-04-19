@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace MuMech
+﻿namespace MuMech
 {
 #warning not really needed anymore. REMOVE
 
@@ -39,10 +35,8 @@ namespace MuMech
             VesselState.GimbalExt gimbalExt = VesselState.getGimbalExt(engine.part, out gimbal);
             Vessel v = engine.vessel;
 
-            float currentMaxThrust, currentMinThrust;
-
-            currentMaxThrust = engine.maxFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
-            currentMinThrust = engine.minFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g / engine.thrustTransforms.Count;
+            float currentMaxThrust = engine.maxFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g;
+            float currentMinThrust = engine.minFuelFlow * engine.flowMultiplier * engine.realIsp * engine.g;
 
             if (engine.throttleLocked)
             {
@@ -55,10 +49,10 @@ namespace MuMech
                 Vector3d thrust_dir = v.ReferenceTransform.rotation.Inverse() * gimbalExt.initialRot(gimbal, engine.thrustTransforms[i], i) * Vector3d.back;
                 Vector3d pos = v.ReferenceTransform.rotation.Inverse() * (engine.part.transform.position - com);
 
-                _maxVariableForce += (currentMaxThrust - currentMinThrust) * thrust_dir;
-                _constantForce += currentMinThrust * thrust_dir;
-                _maxVariableTorque += (currentMaxThrust - currentMinThrust) * Vector3d.Cross(pos, thrust_dir);
-                _constantTorque += currentMinThrust * Vector3d.Cross(pos, thrust_dir);
+                _maxVariableForce += (currentMaxThrust - currentMinThrust) * thrust_dir * engine.thrustTransformMultipliers[i];
+                _constantForce += currentMinThrust * thrust_dir * engine.thrustTransformMultipliers[i];
+                _maxVariableTorque += (currentMaxThrust - currentMinThrust) * engine.thrustTransformMultipliers[i] * Vector3d.Cross(pos, thrust_dir);
+                _constantTorque += currentMinThrust * engine.thrustTransformMultipliers[i] * Vector3d.Cross(pos, thrust_dir);
             }
         }
 

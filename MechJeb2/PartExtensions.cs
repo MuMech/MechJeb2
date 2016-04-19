@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
@@ -39,7 +36,7 @@ namespace MuMech
                 IPartMassModifier m = p.Modules[i] as IPartMassModifier;
                 if (m != null)
                 {
-                    mass += m.GetModuleMass(defaultMass);
+                    mass += m.GetModuleMass(defaultMass, ModifierStagingSituation.CURRENT);
                 }
             }
             return mass;
@@ -73,6 +70,13 @@ namespace MuMech
                 if (mAnchoredDecoupler != null)
                 {
                     if (!mAnchoredDecoupler.isDecoupled && p.stagingOn) return true;
+                    break;
+                }
+
+                ModuleDockingNode mDockingNode = m as ModuleDockingNode;
+                if (mDockingNode != null)
+                {
+                    if (mDockingNode.staged && mDockingNode.stagingEnabled  && p.stagingOn) return true;
                     break;
                 }
 
@@ -116,6 +120,7 @@ namespace MuMech
             return false;
         }
 
+        // TODO add some kind of cache ? This is called a lot but reply false 99.9999% oif the time
         public static bool IsLaunchClamp(this Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)
@@ -150,6 +155,19 @@ namespace MuMech
                 }
             }
             return physicallySignificant;
+        }
+
+        public struct Vector3Pair
+        {
+            public Vector3 p1;
+
+            public Vector3 p2;
+
+            public Vector3Pair(Vector3 point1, Vector3 point2)
+            {
+                this.p1 = point1;
+                this.p2 = point2;
+            }
         }
 
         public static Vector3Pair GetBoundingBox(this Part part)

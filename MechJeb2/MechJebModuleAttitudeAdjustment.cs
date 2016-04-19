@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -210,9 +207,13 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
 
             arrows.seeThrough = GUILayout.Toggle(arrows.seeThrough, "Visible through object");
-            GUILayout.BeginHorizontal();
+            
 
-            arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, "Display the CoM. Radius of ", GUILayout.ExpandWidth(false));
+            arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, "Display the CoM", GUILayout.ExpandWidth(false));
+            arrows.colSphereActive = GUILayout.Toggle(arrows.colSphereActive, "Display the CoL", GUILayout.ExpandWidth(false));
+            arrows.cotSphereActive = GUILayout.Toggle(arrows.cotSphereActive, "Display the CoT", GUILayout.ExpandWidth(false));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Radius of Sphere", GUILayout.ExpandWidth(true));
             arrows.comSphereRadius.text = GUILayout.TextField(arrows.comSphereRadius.text, GUILayout.Width(40));
             GUILayout.EndHorizontal();
             arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Arrows origins at the CoM");
@@ -220,6 +221,8 @@ namespace MuMech
             arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
             arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
             arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
+            arrows.dotArrowActive = GUILayout.Toggle(arrows.dotArrowActive, "Direction of Trust (purple pink)");
+            arrows.dotInstantArrowActive = GUILayout.Toggle(arrows.dotInstantArrowActive, "Direction of Trust instant (pink)");
             arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (electric blue)");
             //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
 
@@ -227,7 +230,7 @@ namespace MuMech
 
             arrows.debugArrowActive = GUILayout.Toggle(arrows.debugArrowActive, "Debug (magenta)");
 
-            arrows.debugArrow2Active = GUILayout.Toggle(arrows.debugArrow2Active, "Debug (light blue)");
+            arrows.debugArrow2Active = GUILayout.Toggle(arrows.debugArrow2Active, "Debug2 (light blue)");
 
 
             GUILayout.EndVertical();

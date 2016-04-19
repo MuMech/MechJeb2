@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CompoundParts;
+using KSP.UI.Screens;
 using Smooth.Algebraics;
 using Smooth.Dispose;
 using Smooth.Pools;
@@ -64,13 +65,13 @@ namespace MuMech
             }
 
 
-            simStage = Staging.lastStage + 1;
-
+            simStage = StageManager.LastStage + 1;
+            
             // Add a fake stage if we are beyond the first one
             // Mostly usefull for the Node Executor who use the last stage info
             // and fail to get proper info when the ship was never staged and
             // some engine were activated manually
-            if (Staging.CurrentStage > Staging.lastStage)
+            if (StageManager.CurrentStage > StageManager.LastStage)
                 simStage++;
         }
 
@@ -494,7 +495,7 @@ namespace MuMech
                 //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + part.GetModuleMass(part.partInfo.partPrefab.mass).ToString("F4"));
                 dryMass = part.mass; // Intentionally ignore the physic flag.
 
-                moduleMass = part.GetModuleMass(part.partInfo.partPrefab != null ? part.partInfo.partPrefab.mass : dryMass);
+                moduleMass = part.GetModuleMassNoAlloc(part.partInfo.partPrefab != null ? part.partInfo.partPrefab.mass : dryMass);
                 if (part.HasModule<ModuleProceduralFairing>())
                 {
                     fairingMass = moduleMass;
@@ -547,11 +548,11 @@ namespace MuMech
             if (engine != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < StageManager.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
-                        inverseStage = Staging.CurrentStage;
+                    if (engine.getIgnitionState && inverseStage < StageManager.CurrentStage)
+                        inverseStage = StageManager.CurrentStage;
 
                     isEngine = true;
 
@@ -563,7 +564,7 @@ namespace MuMech
                         Vector3 thrust = Vector3d.zero;
                         for (int i = 0; i < engine.thrustTransforms.Count; i++)
                         {
-                            thrust -= engine.thrustTransforms[i].forward / engine.thrustTransforms.Count;
+                            thrust -= engine.thrustTransforms[i].forward * engine.thrustTransformMultipliers[i];
                         }
 
                         Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;

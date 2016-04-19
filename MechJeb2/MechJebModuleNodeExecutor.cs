@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using UnityEngine;
 
 namespace MuMech
 {
@@ -96,7 +93,7 @@ namespace MuMech
             {
                 burnTriggered = false;
 
-                vessel.patchedConicSolver.RemoveManeuverNode(node);
+                node.RemoveSelf();
 
                 if (mode == Mode.ONE_NODE)
                 {

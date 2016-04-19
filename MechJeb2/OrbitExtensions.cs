@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -319,6 +316,8 @@ namespace MuMech
             return ret;
         }
 
+        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
+
         //Converts a direction, specified by a Vector3d, into a true anomaly.
         //The vector is projected into the orbital plane and then the true anomaly is
         //computed as the angle this vector makes with the vector pointing to the periapsis.
@@ -344,6 +343,9 @@ namespace MuMech
                 return 360 - angleFromPe;
             }
         }
+
+        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
+
 
         //Originally by Zool, revised by The_Duck
         //Converts a true anomaly into an eccentric anomaly.
@@ -394,6 +396,8 @@ namespace MuMech
             }
         }
 
+        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
+
         //Converts a true anomaly into a mean anomaly (via the intermediate step of the eccentric anomaly)
         //For elliptical orbits, the output is between 0 and 2pi
         //For hyperbolic orbits, the output can be any number
@@ -403,6 +407,8 @@ namespace MuMech
         {
             return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
         }
+
+        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
 
         //NOTE: this function can throw an ArgumentException, if o is a hyperbolic orbit with an eccentricity
         //large enough that it never attains the given true anomaly

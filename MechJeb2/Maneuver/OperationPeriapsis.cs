@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MuMech
+﻿namespace MuMech
 {
     public class OperationPeriapsis : Operation
     {

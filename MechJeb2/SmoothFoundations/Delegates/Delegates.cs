@@ -1,5 +1,3 @@
-using System;
-
 namespace Smooth.Delegates {
 	public delegate void DelegateAction();
 	public delegate void DelegateAction<in T1>(T1 _1);

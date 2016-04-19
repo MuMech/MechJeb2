@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using Smooth.Algebraics;
 using Smooth.Delegates;
-using Smooth.Comparisons;
-using Smooth.Pools;
 using Smooth.Slinq.Context;
 
 namespace Smooth.Slinq {

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Smooth.Algebraics;
-using Smooth.Dispose;
+using KSP.UI.Screens;
 using Smooth.Pools;
 using UnityEngine;
 
@@ -24,7 +22,6 @@ namespace MuMech
                     ((vessel == null) ? new List<Part>() : vessel.Parts);
             }
         }
-
 
         [ValueInfoItem("Node burn time", InfoItem.Category.Misc)]
         public string NextManeuverNodeBurnTime()
@@ -327,7 +324,7 @@ namespace MuMech
         public string MaximumVesselMass()
         {
             SpaceCenterFacility rolloutFacility = (EditorDriver.editorFacility == EditorFacility.VAB) ? SpaceCenterFacility.LaunchPad : SpaceCenterFacility.Runway;
-            float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility));
+            float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility), EditorDriver.editorFacility == EditorFacility.VAB);
 
             if(maximumVesselMass < float.MaxValue)
                 return string.Format("{0} t", maximumVesselMass.ToString("F3"));
@@ -367,7 +364,7 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 var engines = (from part in EditorLogic.fetch.ship.parts
-                               where part.inverseStage == Staging.lastStage
+                               where part.inverseStage == StageManager.LastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
                 return 1000 * engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
@@ -384,7 +381,7 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 var engines = (from part in EditorLogic.fetch.ship.parts
-                               where part.inverseStage == Staging.lastStage
+                               where part.inverseStage == StageManager.LastStage
                                from engine in part.Modules.OfType<ModuleEngines>()
                                select engine);
                 return 1000 * engines.Sum(e => (e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust));
@@ -456,7 +453,7 @@ namespace MuMech
         public string MaxPartCount()
         {
             float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorDriver.editorFacility.ToFacility());
-            int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel);
+            int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel, EditorDriver.editorFacility == EditorFacility.VAB);
             if(maxPartCount < int.MaxValue)
                 return maxPartCount.ToString();
             else
@@ -569,37 +566,37 @@ namespace MuMech
             }
         }
 
-		[ValueInfoItem("Periapsis in target SoI", InfoItem.Category.Misc)]
-		public string PeriapsisInTargetSOI()
-		{
-			if (!core.target.NormalTargetExists) return "N/A";
+        [ValueInfoItem("Periapsis in target SoI", InfoItem.Category.Misc)]
+        public string PeriapsisInTargetSOI()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
 
-			Orbit o = vessel.orbit;
-			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
-				o = o.nextPatch;
+            Orbit o = vessel.orbit;
+            while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
+                o = o.nextPatch;
 
-			if (o == null) return "N/A";
+            if (o == null) return "N/A";
 
-			return MuUtils.ToSI(o.PeA, -1) + "m";
-		}
+            return MuUtils.ToSI(o.PeA, -1) + "m";
+        }
 
-		[ValueInfoItem("ΔV for capture by target", InfoItem.Category.Misc)]
-		public string TargetCaptureDV()
-		{
-			if (!core.target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
+        [ValueInfoItem("ΔV for capture by target", InfoItem.Category.Misc)]
+        public string TargetCaptureDV()
+        {
+            if (!core.target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
 
-			Orbit o = vessel.orbit;
-			while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
-				o = o.nextPatch;
+            Orbit o = vessel.orbit;
+            while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
+                o = o.nextPatch;
 
-			if (o == null) return "N/A";
+            if (o == null) return "N/A";
 
-			double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
-			double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
-			double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
+            double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
+            double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
+            double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
 
-			return MuUtils.ToSI(velAtPeriapsis - velCapture, -1) + "m/s";
-		}
+            return MuUtils.ToSI(velAtPeriapsis - velCapture, -1) + "m/s";
+        }
 
 
         [ValueInfoItem("Target apoapsis", InfoItem.Category.Target)]
@@ -798,6 +795,7 @@ namespace MuMech
 
         private FuelFlowSimulation.Stats[] vacStats;
         private FuelFlowSimulation.Stats[] atmoStats;
+        private string[] bodies;
 
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
@@ -823,8 +821,11 @@ namespace MuMech
             double geeASL;
             if (HighLogic.LoadedSceneIsEditor)
             {
+                if (bodies == null)
+                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
+
                 // We're in the VAB/SPH
-                TWRBody = GuiUtils.ComboBox.Box(TWRBody, FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray(), this);
+                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this);
                 stats.editorBody = FlightGlobals.Bodies[TWRBody];
                 geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
             }
@@ -890,13 +891,30 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+        static GUIStyle _columnStyle;
+        public static GUIStyle ColumnStyle
+        {
+            get
+            {
+                if (_columnStyle == null)
+                {
+                    _columnStyle = new GUIStyle(GuiUtils.yellowOnHover)
+                    {
+                        alignment = TextAnchor.MiddleRight,
+                        wordWrap = false,
+                        padding = new RectOffset(2, 2, 0, 0)
+                    };
+                }
+                return _columnStyle;
+            }
+        }
+
         bool DrawStageStatsColumn(string header, IEnumerable<string> data)
         {
             GUILayout.BeginVertical();
-            GUIStyle s = new GUIStyle(GuiUtils.yellowOnHover) { alignment = TextAnchor.MiddleRight, wordWrap = false, padding = new RectOffset(2, 2, 0, 0) };
-            bool ret = GUILayout.Button(header + "   ", s);
+            bool ret = GUILayout.Button(header + "   ", ColumnStyle);
 
-            foreach (string datum in data) GUILayout.Label(datum + "   ", s);
+            foreach (string datum in data) GUILayout.Label(datum + "   ", ColumnStyle);
 
             GUILayout.EndVertical();
 

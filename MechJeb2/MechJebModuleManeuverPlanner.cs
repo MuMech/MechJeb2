@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -99,7 +98,7 @@ namespace MuMech
                 if (computedNode != null)
                 {
                     if (!createNode)
-                        vessel.patchedConicSolver.RemoveManeuverNode(maneuverNodes.Last());
+                        maneuverNodes.Last().RemoveSelf();
                     vessel.PlaceManeuverNode(o, computedNode.dV, computedNode.UT);
                 }
 

@@ -22,7 +22,11 @@ namespace MuMech
         // Reference to the parts base config. See Onload for explanation
         private static Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
 
+        private List<Callback> postDrawQueue = new List<Callback>();
+
         private static List<Type> moduleRegistry;
+
+        private bool ready = false;
 
         public MechJebModuleAttitudeController attitude;
         public MechJebModuleStagingController staging;
@@ -430,6 +434,8 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (HighLogic.LoadedSceneIsEditor)
+                ready = true;
             if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
 
             //OnLoad doesn't get called for parts created in editor, so do that manually so 
@@ -519,6 +525,9 @@ namespace MuMech
 
         public void FixedUpdate()
         {
+            if (!FlightGlobals.ready)
+                return;
+
             LoadDelayedModules();
 
             CheckControlledVessel(); //make sure our onFlyByWire callback is registered with the right vessel
@@ -532,6 +541,7 @@ namespace MuMech
             {
                 return;
             }
+            Profiler.BeginSample("MechJebCore.FixedUpdate");
 
             if (!wasMasterAndFocus && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
             {
@@ -550,29 +560,42 @@ namespace MuMech
                 lastFocus = vessel;
             }
 
-            if (vessel == null) return; //don't run ComputerModules' OnFixedUpdate in editor
+            if (vessel == null)
+            {
+                Profiler.EndSample();
+                return; //don't run ComputerModules' OnFixedUpdate in editor
+            }
 
-            vesselState.Update(vessel);
+            Profiler.BeginSample("vesselState");
+            ready = vesselState.Update(vessel);
+            Profiler.EndSample();
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
+                Profiler.BeginSample(module.profilerName);
                 try
                 {
-                    if (module.enabled) module.OnFixedUpdate();
+                    if (module.enabled)
+                    {
+                        module.OnFixedUpdate();
+                    }
                 }
                 catch (Exception e)
                 {
                     Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnFixedUpdate: " + e);
                 }
+                Profiler.EndSample();
             }
+            Profiler.EndSample();
         }
 
         public void Update()
         {
-            if (this != vessel.GetMasterMechJeb())
+            if (this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !ready)
             {
                 return;
             }
+            Profiler.BeginSample("MechJebCore.Update");
 
             if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
@@ -606,12 +629,19 @@ namespace MuMech
                 }
             }
 
+            Profiler.BeginSample("OnMenuUpdate");
             GetComputerModule<MechJebModuleMenu>().OnMenuUpdate(); // Allow the menu movement, even while in Editor
-
-            if (vessel == null) return; //don't run ComputerModules' OnUpdate in editor
+            Profiler.EndSample();
+            
+            if (vessel == null)
+            {
+                Profiler.EndSample();
+                return; //don't run ComputerModules' OnUpdate in editor
+            }
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
+                Profiler.BeginSample(module.profilerName);
                 try
                 {
                     if (module.enabled) module.OnUpdate();
@@ -620,7 +650,9 @@ namespace MuMech
                 {
                     Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnUpdate: " + e);
                 }
+                Profiler.EndSample();
             }
+            Profiler.EndSample();
         }
 
         void LoadComputerModules()
@@ -880,7 +912,7 @@ namespace MuMech
                 // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
                 if (vessel != null)
                 {
-                    string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.Text : vessel.vesselName);
+                    string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                     vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
                     type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
                 }
@@ -944,10 +976,12 @@ namespace MuMech
 
         private void Drive(FlightCtrlState s)
         {
+            Profiler.BeginSample("MechJebCore.Drive");
             if (this == vessel.GetMasterMechJeb())
             {
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
+                    Profiler.BeginSample(module.profilerName);
                     try
                     {
                         if (module.enabled) module.Drive(s);
@@ -956,8 +990,10 @@ namespace MuMech
                     {
                         Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in Drive: " + e);
                     }
+                    Profiler.EndSample();
                 }
             }
+            Profiler.EndSample();
         }
 
         //Setting FlightCtrlState fields to bad values can really mess up the game.
@@ -992,7 +1028,9 @@ namespace MuMech
 
         private void OnGUI()
         {
-            if (!showGui || this != vessel.GetMasterMechJeb()) return;
+            if (!showGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight)  || !ready) return;
+
+            Profiler.BeginSample("MechJebCore.OnGUI");
 
             if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && (vessel == FlightGlobals.ActiveVessel) && (part.State != PartStates.DEAD)))
             {
@@ -1007,6 +1045,7 @@ namespace MuMech
 
                 foreach (DisplayModule module in GetComputerModules<DisplayModule>())
                 {
+                    Profiler.BeginSample(module.profilerName);
                     try
                     {
                         if (module.enabled) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
@@ -1015,12 +1054,24 @@ namespace MuMech
                     {
                         Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in DrawGUI: " + e);
                     }
+                    Profiler.EndSample();
                 }
 
                 if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
                 if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium) PreventInFlightClickthrough();
                 GUI.matrix = previousGuiMatrix;
+
+                for (int i = 0; i < postDrawQueue.Count; i++)
+                {
+                    postDrawQueue[i]();
+                }
             }
+            Profiler.EndSample();
+        }
+
+        internal void AddToPostDrawQueue(Callback c)
+        {
+            postDrawQueue.Add(c);
         }
 
         // VAB/SPH description

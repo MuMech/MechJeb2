@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -282,7 +279,7 @@ namespace MuMech
         private static Vector3d DeltaVAndApsisPhaseAngleOfHohmannTransfer(Orbit o, Orbit target, double UT, out double apsisPhaseAngle)
         {
             Vector3d apsisDirection = -o.SwappedRelativePositionAtUT(UT);
-            double desiredApsis = target.RadiusAtTrueAnomaly(target.TrueAnomalyFromVector(apsisDirection));
+            double desiredApsis = target.RadiusAtTrueAnomaly(MathExtensions.Deg2Rad * target.TrueAnomalyFromVector(apsisDirection));
 
             Vector3d dV;
             if (desiredApsis > o.ApR)

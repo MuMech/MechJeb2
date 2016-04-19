@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -103,6 +100,13 @@ namespace MuMech
                 GUI.DragWindow();
         }
 
+        protected void ProfiledWindowGUI(int windowID)
+        {
+            Profiler.BeginSample(GetType().Name);
+            WindowGUI(windowID);
+            Profiler.EndSample();
+        }
+
         protected virtual void WindowGUI(int windowID)
         {
             WindowGUI(windowID, true);
@@ -112,7 +116,7 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(ID, windowPos, WindowGUI, GetName(), WindowOptions());
+                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, GetName(), WindowOptions());
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                
@@ -148,9 +152,9 @@ namespace MuMech
                     enabledEditor = enabled;
                 if (HighLogic.LoadedSceneIsFlight)
                     enabledFlight = enabled;
-
-                    global.AddValue("enabledEditor", enabledEditor);
-                    global.AddValue("enabledFlight", enabledFlight);
+                
+                global.AddValue("enabledEditor", enabledEditor);
+                global.AddValue("enabledFlight", enabledFlight);
             }
 //            if (global != null) global.AddValue("locked", locked);
         }
@@ -197,12 +201,12 @@ namespace MuMech
                 enabledEditor = enabled;
                 enabledFlight = enabled;
             }
-
-//            if (global != null && global.HasValue("locked"))
-//            {
-//                bool loadedLocked;
-//                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
-//            }
+            
+            //            if (global != null && global.HasValue("locked"))
+            //            {
+            //                bool loadedLocked;
+            //                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
+            //            }
         }
 
         public virtual bool isActive()

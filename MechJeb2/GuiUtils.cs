@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -241,6 +238,22 @@ namespace MuMech
                     _yellowOnHover.hover.background = t;
                 }
                 return _yellowOnHover;
+            }
+        }
+
+        static GUIStyle _labelNoWrap;
+        public static GUIStyle LabelNoWrap
+        {
+            get
+            {
+                if (_labelNoWrap == null)
+                {
+                    _labelNoWrap = new GUIStyle(GUI.skin.label)
+                    {
+                        wordWrap = false,
+                    };
+                }
+                return _labelNoWrap;
             }
         }
 

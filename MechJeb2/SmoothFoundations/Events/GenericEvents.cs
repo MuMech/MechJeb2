@@ -1,4 +1,3 @@
-using System;
 using Smooth.Delegates;
 
 namespace Smooth.Events {
