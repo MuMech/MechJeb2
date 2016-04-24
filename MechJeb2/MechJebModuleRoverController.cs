@@ -136,7 +136,7 @@ namespace MuMech
             try
             {
 				wheels.Clear();
-				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() && p.FindModelComponent<WheelCollider>() != null && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
+				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() /*&& p.FindModelComponent<WheelCollider>() != null*/ && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
 				colliders.Clear();
 				wheels.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
 			}
@@ -197,7 +197,16 @@ namespace MuMech
 		        }
 		    }
 
-		    traction /= wheels.Count;
+//		    for (int i = 0; i < colliders.Count; i++)
+//		    {
+//		        var c = colliders[i];
+//		        if (c.isGrounded)
+//		        {
+//		            traction += 100;
+//		        }
+//		    }
+
+			traction /= wheels.Count;
 		}
 		
 		public override void OnModuleDisabled()
@@ -348,14 +357,20 @@ namespace MuMech
 //						(lastThrottle + Mathf.Clamp(act, -0.01f, 0.01f)));
 //					Debug.Log(s.wheelThrottle + Mathf.Clamp(act, -0.01f, 0.01f));
 					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
-//					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
-					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
-//						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-						brake = true;
-					}
-//					else if (!stabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
-//						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
+					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
+//					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
+////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+//						brake = true;
+//						foreach (Part p in wheels) {
+//							if (p.GetModule<ModuleWheels.ModuleWheelDamage>().stressPercent >= 0.01) { // #TODO needs adaptive braking
+//								brake = false;
+//								break;
+//							}
+//						}
 //					}
+////					else if (!StabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
+////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
+////					}
 					lastThrottle = Mathf.Clamp(s.wheelThrottle, -1, 1);
 				}
 			}
