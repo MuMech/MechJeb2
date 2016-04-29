@@ -126,7 +126,6 @@ namespace MuMech
                 double mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
 
                 //Run the simulation
-                FuelFlowSimulation[] sims = (FuelFlowSimulation[])o;
                 FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
                 FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0, 0.0 , mach);
                 atmoStats = newAtmoStats;
