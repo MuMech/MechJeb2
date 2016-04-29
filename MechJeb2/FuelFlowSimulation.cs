@@ -674,7 +674,7 @@ namespace MuMech
             if (fuelLine != null && fuelLine.target != null)
             {
                 FuelNode targetNode;
-                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode))
+                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode) && !targetNode.fuelLineSources.Contains(this))
                     targetNode.fuelLineSources.Add(this);
             }
         }
