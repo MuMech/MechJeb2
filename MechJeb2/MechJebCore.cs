@@ -1101,7 +1101,7 @@ namespace MuMech
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
-                InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS | ControlTypes.MAP, "MechJeb_noclick");
+                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, "MechJeb_noclick");
                 weLockedInputs = true;
             }
             if (weLockedInputs && !mouseOverWindow)
