@@ -992,10 +992,6 @@ namespace MuMech
                     sources.value.Add(this);
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
 
             // If we are fuel crossfeed capable and surface-mounted to our parent,
