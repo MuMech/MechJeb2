@@ -9,21 +9,8 @@ namespace MuMech
         bool deployedGears;
         public bool landAtTarget;
 
-        public Vector3d CorrectionDv;
-
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableDouble touchdownSpeed = 0.5;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public EditableDouble minThrust = 0;
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public EditableDouble decelerationEndAltitude = 500;
-
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public EditableDouble CorrectionBeforeDeceleration = 1000;
-
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
-        public EditableDouble safityThrustLimit = 0.9;
-
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public bool deployGears = true;
@@ -174,27 +161,13 @@ namespace MuMech
         public void StopLanding()
         {
             this.users.Clear();
-            if (minThrust > 0 && core.thrust.targetThrottle > 0)
-                core.thrust.targetThrottle = (float)minThrust;
-            else
             core.thrust.ThrustOff();
-            core.thrust.users.Remove(this); //this still disables thrusters :(
+            core.thrust.users.Remove(this);
             if (core.landing.rcsAdjustment)
                 core.rcs.enabled = false;
             setStep(null);
         }
-        public void PatchPredictorPolicy()
-        {
-            if (parachutePlan == null)
-            {
-                this.parachutePlan = new ParachutePlan(this);
-                this.parachutePlan.StartPlanning();
-            }
 
-            predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
-            predictor.decelEndAltitudeASL = DecelerationEndAltitude();
-            predictor.parachuteSemiDeployMultiplier = this.parachutePlan.Multiplier;
-        }
         public override void Drive(FlightCtrlState s)
         {
             if (!active)
@@ -225,7 +198,9 @@ namespace MuMech
 
             descentSpeedPolicy = PickDescentSpeedPolicy();
 
-            PatchPredictorPolicy();
+            predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
+            predictor.decelEndAltitudeASL = DecelerationEndAltitude();
+            predictor.parachuteSemiDeployMultiplier = this.parachutePlan.Multiplier;
 
             // Consider lowering the langing gear
             {
@@ -481,10 +456,10 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                return new PoweredCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel * safityThrustLimit);
+                return new PoweredCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
             }
 
-            return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel * safityThrustLimit);
+            return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
         }
 
         public double DecelerationEndAltitude()
@@ -504,7 +479,7 @@ namespace MuMech
                 //if the atmosphere is thin, the deceleration burn should end
                 //500 meters above the landing site to allow for a controlled final descent
                 //MechJebCore.print("DecelerationEndAltitude Vacum " + (500 + LandingAltitude).ToString("F2"));
-                return Math.Max(decelerationEndAltitude + LandingAltitude, core.vesselState.surfaceAltitudeASL + 50);
+                return 500 + LandingAltitude;
             }
         }
 
