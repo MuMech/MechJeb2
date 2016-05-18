@@ -143,23 +143,25 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        [Persistent(pass = (int)Pass.Type)]
-        public bool differentialThrottle = false;
 
-        [GeneralInfoItem("Differential throttle", InfoItem.Category.Thrust)]
-        public void  DifferentialThrottle()
-        {
-            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (differentialThrottle && vessel.LiftedOff())
-            {
-                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess ? Color.green : Color.yellow;
-            }
-            differentialThrottle = GUILayout.Toggle(differentialThrottle, "Differential throttle", s);
-            // TODO : bring DifferentialThrottle back
-            //if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
-            //    core.thrust.DisableDifferentialThrottle();
-        }
+        // TODO : bring DifferentialThrottle back
+        //[Persistent(pass = (int)Pass.Type)]
+        //public bool differentialThrottle = false;
+        //
+        //[GeneralInfoItem("Differential throttle", InfoItem.Category.Thrust)]
+        //public void  DifferentialThrottle()
+        //{
+        //    bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+        //    GUIStyle s = new GUIStyle(GUI.skin.toggle);
+        //    if (differentialThrottle && vessel.LiftedOff())
+        //    {
+        //        s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess ? Color.green : Color.yellow;
+        //    }
+        //    differentialThrottle = GUILayout.Toggle(differentialThrottle, "Differential throttle", s);
+        //    
+        //    if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
+        //        core.thrust.DisableDifferentialThrottle();
+        //}
 
         // TODO : bring DifferentialThrottle back
         //public Vector3d differentialThrottleDemandedTorque = new Vector3d();
@@ -356,15 +358,14 @@ namespace MuMech
                 }
                 else
                 {
-                    bool useGimbal = (vesselState.torqueGimbalStock.x / vessel.ctrlState.mainThrottle > vesselState.torqueAvailable.x * 10) ||
-                                     (vesselState.torqueGimbalStock.z / vessel.ctrlState.mainThrottle > vesselState.torqueAvailable.z * 10);
+                    bool useGimbal = (vesselState.torqueGimbalStock.x > vesselState.torqueAvailable.x * 10) ||
+                                     (vesselState.torqueGimbalStock.z > vesselState.torqueAvailable.z * 10);
 
                     // TODO : bring DifferentialThrottle back
                     //bool useDiffThrottle = (vesselState.torqueFromDiffThrottle.x > vesselState.torqueAvailable.x * 10) ||
                     //                       (vesselState.torqueFromDiffThrottle.z > vesselState.torqueAvailable.z * 10);
-                    bool useDiffThrottle = false;
-
-                    if ((core.attitude.attitudeError >= 2) && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
+                    //if ((core.attitude.attitudeError >= 2) && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
+                    if ((core.attitude.attitudeError >= 2) && useGimbal)
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
                     }
