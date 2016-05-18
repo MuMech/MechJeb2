@@ -18,14 +18,21 @@ namespace MuMech
         public FuelFlowSimulation.Stats[] atmoStats = { };
         public FuelFlowSimulation.Stats[] vacStats = { };
 
-        public void RequestUpdate(object controller)
+        public void RequestUpdate(object controller, bool wait = false)
         {
             users.Add(controller);
             updateRequested = true;
 
             if (HighLogic.LoadedSceneIsEditor && editorBody != null)
             {
-                TryStartSimulation();
+                if (TryStartSimulation() && wait)
+                {
+                    while (simulationRunning)
+                    {
+                        // wait for a sim to be ready. Risked ?
+                        Thread.Sleep(1);
+                    }
+                }
             }
         }
 
@@ -58,7 +65,7 @@ namespace MuMech
             TryStartSimulation();
         }
 
-        public void TryStartSimulation()
+        public bool TryStartSimulation()
         {
             if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && !simulationRunning)
             {
@@ -74,6 +81,7 @@ namespace MuMech
                         stopwatch.Reset();
 
                         StartSimulation();
+                        return true;
                     }
                     else
                     {
@@ -81,6 +89,7 @@ namespace MuMech
                     }
                 }
             }
+            return false;
         }
 
         protected void StartSimulation()

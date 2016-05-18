@@ -122,7 +122,7 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
 
-            if (timeToNode < halfBurnTime)
+            if (halfBurnTime > 0 && timeToNode < halfBurnTime)
             {
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -180,7 +180,7 @@ namespace MuMech
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
 
             var stats = core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate(this, true);
 
             double lastStageBurnTime = 0;
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
