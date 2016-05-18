@@ -209,7 +209,7 @@ namespace MuMech
 
         public void setPIDParameters()
         {
-            Vector3d invTf = TfV.Invert();
+            Vector3d invTf = TfV.InvertNoNaN();
             pid.Kd = kdFactor * invTf;
 
             pid.Kp = (1 / (kpFactor * Math.Sqrt(2))) * pid.Kd;
@@ -385,7 +385,7 @@ namespace MuMech
                 vesselState.angularMomentum.Sign(),
                 Vector3d.Scale(
                     Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                    Vector3d.Scale(torque, vesselState.MoI).Invert()
+                    Vector3d.Scale(torque, vesselState.MoI).InvertNoNaN()
                     )
                 );
         }
@@ -439,7 +439,7 @@ namespace MuMech
                 Vector3d deltaEuler = delta.DeltaEuler();
                 
                 // ( MoI / available torque ) factor:
-                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
+                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.InvertNoNaN()).Reorder(132);
 
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox

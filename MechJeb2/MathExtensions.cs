@@ -54,6 +54,11 @@ namespace MuMech
             return new Vector3d(1 / vector.x, 1 / vector.y, 1 / vector.z);
         }
 
+        public static Vector3d InvertNoNaN(this Vector3d vector)
+        {
+            return new Vector3d(vector.x != 0 ? 1 / vector.x : 0, vector.y != 0 ? 1 / vector.y: 0, vector.z != 0 ? 1 / vector.z: 0);
+        }
+
         public static Vector3 ProjectIntoPlane(this Vector3 vector, Vector3 planeNormal)
         {
             return vector - Vector3.Project(vector, planeNormal);

@@ -170,7 +170,7 @@ namespace MuMech
                     GUILayout.Label("|" + core.attitude.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.inertia), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
                     
-                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.Invert());
+                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.InvertNoNaN());
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("MOI / torque", GUILayout.ExpandWidth(true));

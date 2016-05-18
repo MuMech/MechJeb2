@@ -846,7 +846,7 @@ namespace MuMech
             //torqueFromEngine += Vector3d.Max(einfo.torqueEngineVariable.positive, einfo.torqueEngineVariable.negative);
 
             if (torqueAvailable.sqrMagnitude > 0)
-                torqueReactionSpeed.Scale(torqueAvailable.Invert());
+                torqueReactionSpeed.Scale(torqueAvailable.InvertNoNaN());
             
             //MechJebCore.print(" thrustMax "  +einfo.thrustMax);
             //MechJebCore.print(" CoLScalar " + CoLScalar.ToString("F3"));
