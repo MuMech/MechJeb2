@@ -376,9 +376,10 @@ namespace MuMech
             if (useSAS)
                 return;
 
-            torque = vesselState.torqueAvailable + vesselState.torqueFromEngine ;
-            if (core.thrust.differentialThrottleSuccess)
-                torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+            torque = vesselState.torqueAvailable;
+            // TODO : bring DifferentialThrottle back
+            //if (core.thrust.differentialThrottleSuccess)
+            //    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             inertia = Vector3d.Scale(
                 vesselState.angularMomentum.Sign(),
@@ -425,7 +426,8 @@ namespace MuMech
                     part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude, true);
                 }
 
-                core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
+                // TODO : bring DifferentialThrottle back
+                //core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
             }
             else
             {
@@ -505,8 +507,9 @@ namespace MuMech
                 act = new Vector3d(s.pitch, s.yaw, s.roll);
 
                 // Feed the control torque to the differential throttle
-                if (core.thrust.differentialThrottleSuccess)
-                    core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle);
+                // TODO : bring DifferentialThrottle back
+                //if (core.thrust.differentialThrottleSuccess)
+                //    core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }
 
