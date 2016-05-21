@@ -221,8 +221,8 @@ namespace MuMech
             arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
             arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
             arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
-            arrows.dotArrowActive = GUILayout.Toggle(arrows.dotArrowActive, "Direction of Trust (purple pink)");
-            arrows.dotInstantArrowActive = GUILayout.Toggle(arrows.dotInstantArrowActive, "Direction of Trust instant (pink)");
+            arrows.dotArrowActive = GUILayout.Toggle(arrows.dotArrowActive, "Direction of Thrust (purple pink)");
+            arrows.dotInstantArrowActive = GUILayout.Toggle(arrows.dotInstantArrowActive, "Direction of Thrust instant (pink)");
             arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (electric blue)");
             //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
 
