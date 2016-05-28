@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -265,6 +266,7 @@ namespace MuMech
         public static bool dontUseDropDownMenu = false;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
+        public static GUISkin transparentSkin;
 
         public static void SetGUIScale(double s)
         {
@@ -276,13 +278,13 @@ namespace MuMech
         public static void CopyDefaultSkin()
         {
             GUI.skin = null;
-            defaultSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+            defaultSkin = Object.Instantiate(GUI.skin);
         }
 
         public static void CopyCompactSkin()
         {
             GUI.skin = null;
-            compactSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+            compactSkin = Object.Instantiate(GUI.skin);
 
             GuiUtils.skin.name = "KSP Compact";
 
@@ -305,13 +307,30 @@ namespace MuMech
             compactSkin.window.padding = new RectOffset(5, 5, 20, 5);
         }
 
+        public static void CopyTransparentSkin()
+        {
+            GUI.skin = null;
+            transparentSkin = Object.Instantiate(GUI.skin);
+
+            Texture2D t = new Texture2D(1, 1);
+            t.SetPixel(0, 0, new Color(0, 0, 0, 0));
+            t.Apply();
+
+            transparentSkin.window.normal.background = t;
+            transparentSkin.window.onNormal.background = t;
+            transparentSkin.window.padding = new RectOffset(5, 5, 5, 5);
+        }
+
 
         public static void LoadSkin(SkinType skinType)
         {
+            if (defaultSkin == null) CopyDefaultSkin();
+            if (compactSkin == null) CopyCompactSkin();
+            if (transparentSkin == null) CopyTransparentSkin();
+
             switch (skinType)
             {
                 case SkinType.Default:
-                    if (defaultSkin == null) CopyDefaultSkin();
                     skin = defaultSkin;
                     break;
 
@@ -320,7 +339,6 @@ namespace MuMech
                     break;
 
                 case SkinType.Compact:
-                    if (compactSkin == null) CopyCompactSkin();
                     skin = compactSkin;
                     break;
             }
@@ -463,7 +481,7 @@ namespace MuMech
             //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.enabled && m.showInCurrentScene
+                if (m.enabled && m.showInCurrentScene && !m.isOverlay
                     && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / GuiUtils.scale))
                 {
                     return true;

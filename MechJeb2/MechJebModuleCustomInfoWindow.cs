@@ -13,6 +13,8 @@ namespace MuMech
         public string title = "Custom Info Window";
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
         public List<InfoItem> items = new List<InfoItem>();
+        [Persistent(pass = (int)Pass.Global)]
+        public bool isCompact = false;
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -21,6 +23,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
+            GUI.skin = isCompact ? GuiUtils.compactSkin : GuiUtils.skin;
             GUILayout.BeginVertical();
             for (int i = 0; i < items.Count; i++)
             {
@@ -37,7 +40,7 @@ namespace MuMech
             if (items.Count == 0) GUILayout.Label("Add items to this window with the custom window editor.");
             GUILayout.EndVertical();
 
-            if (GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
+            if (!isOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
             {
                 MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                 if (editor != null)
@@ -47,7 +50,7 @@ namespace MuMech
                 }
             }
 
-            if (GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
+            if (!isOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
             {
                 MuUtils.SystemClipboard = ToSharingString();
                 ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
@@ -63,11 +66,11 @@ namespace MuMech
 
         public override void DrawGUI(bool inEditor)
         {
+            if (isOverlay)
+                GUI.skin = GuiUtils.transparentSkin;
             base.DrawGUI(inEditor);
-
-            if (showInCurrentScene)
-            {
-            }
+            if (isOverlay)
+                GUI.skin = GuiUtils.skin;
         }
 
         public string ToSharingString()
@@ -300,6 +303,13 @@ namespace MuMech
                 GUILayout.Label("Show in:");
                 editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight", GUILayout.Width(60));
                 editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
+                GUILayout.EndHorizontal();
+
+
+                GUILayout.BeginHorizontal();
+                editedWindow.isOverlay = GUILayout.Toggle(editedWindow.isOverlay, "Overlay", GUILayout.Width(60));
+                editedWindow.locked = GUILayout.Toggle(editedWindow.locked, "Locked");
+                editedWindow.isCompact = GUILayout.Toggle(editedWindow.isCompact, "Compact");
                 GUILayout.EndHorizontal();
 
                 GUILayout.Label("Window contents (click to edit):");
