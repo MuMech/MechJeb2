@@ -5,7 +5,8 @@ namespace MuMech
     public enum TimeReference
     {
         COMPUTED, X_FROM_NOW, APOAPSIS, PERIAPSIS, ALTITUDE, EQ_ASCENDING, EQ_DESCENDING,
-        REL_ASCENDING, REL_DESCENDING, CLOSEST_APPROACH
+        REL_ASCENDING, REL_DESCENDING, CLOSEST_APPROACH,
+        EQ_HIGHEST_AD, EQ_NEAREST_AD, REL_HIGHEST_AD, REL_NEAREST_AD
     };
 
     public class TimeSelector
@@ -45,6 +46,11 @@ namespace MuMech
                 case TimeReference.X_FROM_NOW: timeRefNames[i] = "after a fixed time"; break;
 
                 case TimeReference.ALTITUDE: timeRefNames[i] = "at an altitude"; break;
+
+                case TimeReference.EQ_NEAREST_AD: timeRefNames[i] = "at the nearest equatorial AN/DN"; break;
+                case TimeReference.EQ_HIGHEST_AD: timeRefNames[i] = "at the highest equatorial AN/DN"; break;
+                case TimeReference.REL_NEAREST_AD: timeRefNames[i] = "at the nearest AN/DN with the target"; break;
+                case TimeReference.REL_HIGHEST_AD: timeRefNames[i] = "at the highest AN/DN with the target"; break;
               }
             }
         }
@@ -64,6 +70,10 @@ namespace MuMech
               case TimeReference.PERIAPSIS:
               case TimeReference.REL_ASCENDING:
               case TimeReference.REL_DESCENDING:
+              case TimeReference.EQ_NEAREST_AD:
+              case TimeReference.EQ_HIGHEST_AD:
+              case TimeReference.REL_NEAREST_AD:
+              case TimeReference.REL_HIGHEST_AD:
                 break;
 
               case TimeReference.X_FROM_NOW:
@@ -143,7 +153,49 @@ namespace MuMech
                     throw new OperationException("Warning: equatorial descending node doesn't exist.");
                 }
                 break;
+            
+            case TimeReference.EQ_NEAREST_AD:
+                if(o.AscendingNodeEquatorialExists())
+                {
+                    UT = o.DescendingNodeEquatorialExists()
+                        ? System.Math.Min(o.TimeOfAscendingNodeEquatorial(UT), o.TimeOfDescendingNodeEquatorial(UT))
+                        : o.TimeOfAscendingNodeEquatorial(UT);
+                }
+                else if(o.DescendingNodeEquatorialExists())
+                {
+                    UT = o.TimeOfDescendingNodeEquatorial(UT);
+                }
+                else
+                {
+                    throw new OperationException("Warning: neither ascending nor descending node exists.");
+                }
+                break;
 
+            case TimeReference.EQ_HIGHEST_AD:
+                if(o.AscendingNodeEquatorialExists())
+                {
+                    if(o.DescendingNodeEquatorialExists())
+                    {
+                        var anTime = o.TimeOfAscendingNodeEquatorial(UT);
+                        var dnTime = o.TimeOfDescendingNodeEquatorial(UT);
+                        UT = o.getOrbitalVelocityAtUT(anTime).magnitude <= o.getOrbitalVelocityAtUT(dnTime).magnitude
+                            ? anTime
+                            : dnTime;
+                    }
+                    else
+                    {
+                        UT = o.TimeOfAscendingNodeEquatorial(UT);
+                    }
+                }
+                else if(o.DescendingNodeEquatorialExists())
+                {
+                    UT = o.TimeOfDescendingNodeEquatorial(UT);
+                }
+                else
+                {
+                    throw new OperationException("Warning: neither ascending nor descending node exists.");
+                }
+                break;
             }
 
             universalTime = UT;
