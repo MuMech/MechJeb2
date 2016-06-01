@@ -820,7 +820,7 @@ namespace MuMech
                     
                         var crtlTorque = tp.GetPotentialTorque().Abs();
                     
-                        torqueStock += crtlTorque;
+                        torqueAvailable += crtlTorque;
                     }
 
                     for (int index = 0; index < vesselStatePartModuleExtensions.Count; index++)
