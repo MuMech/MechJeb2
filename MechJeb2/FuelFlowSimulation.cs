@@ -759,6 +759,18 @@ namespace MuMech
                     }
                     break;
                 }
+
+                if (m.moduleName == "ProceduralFairingDecoupler")
+                {
+                    if (!m.Fields["decoupled"].GetValue<bool>(m) && m.stagingEnabled && p.stagingOn)
+                    {
+                        isDecoupler = true;
+                        // We are decoupling our parent
+                        // The part and its children are not part of the ship when we decouple
+                        decoupledInStage = p.inverseStage;
+                        break;
+                    }
+                }
             }
 
             if (p.IsLaunchClamp())
