@@ -436,11 +436,10 @@ namespace MuMech
         public bool isEngine = false;   //whether this part is an engine
 
         float dryMass = 0; //the mass of this part, not counting resource mass
-        float fairingMass = 0; //the mass of the fairing of this part
+        float modulesUnstagedMass;   // the mass of the modules of this part before staging
+        float modulesStagedMass = 0; // the mass of the modules of this part after staging
 
         public string partName; //for debugging
-
-        public float moduleMass; // for debugging
 
         private static readonly Pool<FuelNode> pool = new Pool<FuelNode>(Create, Reset);
 
@@ -488,21 +487,28 @@ namespace MuMech
             isEngine = false;
 
             dryMass = 0;
-            fairingMass = 0;
+            modulesStagedMass = 0;
 
             decoupledInStage = int.MinValue;
 
-            moduleMass = 0;
+            modulesUnstagedMass = 0;
             if (!part.IsLaunchClamp())
             {
-                //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + part.GetModuleMass(part.partInfo.partPrefab.mass).ToString("F4"));
-                dryMass = part.mass; // Intentionally ignore the physic flag.
+                dryMass = part.prefabMass; // Intentionally ignore the physic flag.
 
-                moduleMass = part.GetModuleMassNoAlloc(part.partInfo.partPrefab != null ? part.partInfo.partPrefab.mass : dryMass);
-                if (part.HasModule<ModuleProceduralFairing>())
+                modulesUnstagedMass = part.GetModuleMassNoAlloc(dryMass, ModifierStagingSituation.UNSTAGED);
+
+                modulesStagedMass = part.GetModuleMassNoAlloc(dryMass, ModifierStagingSituation.STAGED);
+
+                float currentModulesMass = part.GetModuleMassNoAlloc(dryMass, ModifierStagingSituation.CURRENT);
+                
+                // if it was manually staged
+                if (currentModulesMass == modulesStagedMass)
                 {
-                    fairingMass = moduleMass;
+                    modulesUnstagedMass = modulesStagedMass;
                 }
+
+                //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + modulesUnstagedMass.ToString("F4") + " " + modulesStagedMass.ToString("F4"));
             }
 
             inverseStage = part.inverseStage;
@@ -923,7 +929,7 @@ namespace MuMech
             //return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id)) +
             float resMass = resources.KeysList.Slinq().Select((r, rs) => rs[r] * MuUtils.ResourceDensity(r), resources).Sum();
             return dryMass + resMass +
-                   (inverseStage < simStage ? fairingMass : 0f);
+                   (inverseStage < simStage ? modulesUnstagedMass : modulesStagedMass);
         }
 
         public float EngineThrust(float throttle, double atmospheres, double atmDensity, double machNumber)

@@ -27,7 +27,7 @@ namespace MuMech
         }
 
         // An allocation free version of GetModuleMass
-        public static float GetModuleMassNoAlloc(this Part p, float defaultMass)
+        public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
         {
             float mass = 0f;
 
@@ -36,7 +36,7 @@ namespace MuMech
                 IPartMassModifier m = p.Modules[i] as IPartMassModifier;
                 if (m != null)
                 {
-                    mass += m.GetModuleMass(defaultMass, ModifierStagingSituation.CURRENT);
+                    mass += m.GetModuleMass(defaultMass, sit);
                 }
             }
             return mass;
