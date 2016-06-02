@@ -119,7 +119,7 @@ namespace MuMech
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
         {
             Orbit ret = new Orbit();
-            ret.UpdateFromStateVectorsMJ(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
+            ret.UpdateFromStateVectors(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
             if (double.IsNaN(ret.argumentOfPeriapsis))
             {
                 Vector3d vectorToAN = Quaternion.AngleAxis(-(float)ret.LAN, Planetarium.up) * Planetarium.right;
