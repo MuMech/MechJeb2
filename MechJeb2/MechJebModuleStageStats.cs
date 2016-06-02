@@ -67,7 +67,7 @@ namespace MuMech
 
         public bool TryStartSimulation()
         {
-            if ((HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel) && !simulationRunning)
+            if ((HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel)) && !simulationRunning)
             {
                 //We should be running simulations periodically, but one is not running right now.
                 //Check if enough time has passed since the last one to start a new one:

@@ -604,7 +604,7 @@ namespace MuMech
             }
 
             //periodically save settings in case we quit unexpectedly
-            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+            if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
             {
                 if (Time.time > lastSettingsSaveTime + 5)
                 {
