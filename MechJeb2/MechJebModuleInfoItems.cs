@@ -68,7 +68,7 @@ namespace MuMech
             return vesselState.thrustCurrent / (vesselState.mass * vesselState.gravityForce.magnitude);
         }
 
-        [ValueInfoItem("Atmospheric pressure (Pa)", InfoItem.Category.Misc, format = "F3", units = "Pa")]
+        [ValueInfoItem("Atmospheric pressure (Pa)", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
         public double AtmosphericPressurekPA()
         {
             return FlightGlobals.getStaticPressure(vesselState.CoM) * 1000;
