@@ -226,6 +226,30 @@ namespace MuMech
                 }
             }
         }
+
+        public static Color HSVtoRGB(float hue, float saturation, float value, float alpha)
+        {
+            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+            float f = hue / 60 - Mathf.Floor(hue / 60);
+
+            float v = value;
+            float p = value * (1 - saturation);
+            float q = value * (1 - f * saturation);
+            float t = value * (1 - (1 - f) * saturation);
+
+            if (hi == 0)
+                return new Color(v, t, p, alpha);
+            if (hi == 1)           
+                return new Color(q, v, p, alpha);
+            if (hi == 2)           
+                return new Color(p, v, t, alpha);
+            if (hi == 3)           
+                return new Color(p, q, v, alpha);
+            if (hi == 4)           
+                return new Color(t, p, v, alpha);
+                                    
+            return new Color(v, p, q, alpha);
+        }
     }
 
     public class MovingAverage

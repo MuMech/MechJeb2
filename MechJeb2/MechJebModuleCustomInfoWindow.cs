@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -16,6 +17,20 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool isCompact = false;
 
+        [Persistent(pass = (int) Pass.Global)]
+        public Color backgroundColor = new Color(0,0,0,1);
+
+        [Persistent(pass = (int)Pass.Global)]
+        public Color text = new Color(1, 1, 1, 1);
+
+        public Texture2D background;
+
+        ~MechJebModuleCustomInfoWindow()
+        {
+            if (background)
+                Object.Destroy(background);
+        }
+        
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
@@ -24,6 +39,8 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             GUI.skin = isCompact ? GuiUtils.compactSkin : GuiUtils.skin;
+            GUI.contentColor = text;
+
             GUILayout.BeginVertical();
             for (int i = 0; i < items.Count; i++)
             {
@@ -66,11 +83,27 @@ namespace MuMech
 
         public override void DrawGUI(bool inEditor)
         {
+            Init();
             if (isOverlay)
+            {
                 GUI.skin = GuiUtils.transparentSkin;
+                GUI.skin.window.normal.background = background;
+                GUI.skin.window.onNormal.background = background;
+            }
+
             base.DrawGUI(inEditor);
             if (isOverlay)
                 GUI.skin = GuiUtils.skin;
+        }
+
+        public void Init()
+        {
+            if (!background)
+            {
+                background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+                background.SetPixel(0, 0, backgroundColor);
+                background.Apply();
+            }
         }
 
         public string ToSharingString()
@@ -123,6 +156,9 @@ namespace MuMech
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;
         static string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         int presetIndex = 0;
+
+        private bool editingBackground = false;
+        private bool editingText = false;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -266,6 +302,31 @@ namespace MuMech
             editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
 
+
+        public override void DrawGUI(bool inEditor)
+        {
+            base.DrawGUI(inEditor);
+
+            if (editingBackground)
+            {
+                if (editedWindow != null)
+                {
+                    editedWindow.Init();
+                    editedWindow.backgroundColor = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.backgroundColor);
+                    editedWindow.background.SetPixel(0, 0, editedWindow.backgroundColor);
+                    editedWindow.background.Apply();
+                }
+            }
+
+            if (editingText)
+            {
+                if (editedWindow != null)
+                {
+                    editedWindow.text = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.text);
+                }
+            }
+        }
+
         Vector2 scrollPos, scrollPos2;
         protected override void WindowGUI(int windowID)
         {
@@ -307,9 +368,26 @@ namespace MuMech
 
 
                 GUILayout.BeginHorizontal();
-                editedWindow.isOverlay = GUILayout.Toggle(editedWindow.isOverlay, "Overlay", GUILayout.Width(60));
+                editedWindow.isOverlay = GUILayout.Toggle(editedWindow.isOverlay, "Overlay");
                 editedWindow.locked = GUILayout.Toggle(editedWindow.locked, "Locked");
                 editedWindow.isCompact = GUILayout.Toggle(editedWindow.isCompact, "Compact");
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Color:");
+                bool previous = editingText;
+
+                editingText = GUILayout.Toggle(editingText, "Text");
+
+                if (editingText && editingText != previous)
+                    editingBackground = false;
+
+                previous = editingBackground;
+                editingBackground = GUILayout.Toggle(editingBackground, "Background");
+
+                if (editingBackground && editingBackground != previous)
+                    editingText = false;
+
                 GUILayout.EndHorizontal();
 
                 GUILayout.Label("Window contents (click to edit):");
