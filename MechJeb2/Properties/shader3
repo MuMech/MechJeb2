@@ -1,4 +1,4 @@
-// Compiled shader for PC, Mac & Linux Standalone, uncompressed size: 362.7KB
+// Compiled shader for PC, Mac & Linux Standalone, uncompressed size: 362.6KB
 
 // Skipping shader variants that would not be included into build of current scene.
 
@@ -10,7 +10,7 @@ Properties {
 }
 SubShader { 
  LOD 200
- Tags { "QUEUE"="Transparent" "RenderType"="Opaque" }
+ Tags { "QUEUE"="Overlay" "RenderType"="Opaque" }
 
 
  // Stats for Vertex shader:
@@ -24,7 +24,7 @@ SubShader {
  //        d3d9 : 9 avg math (9..10), 1 avg texture (1..2)
  Pass {
   Name "FORWARD"
-  Tags { "LIGHTMODE"="ForwardBase" "QUEUE"="Transparent" "SHADOWSUPPORT"="true" "RenderType"="Opaque" }
+  Tags { "LIGHTMODE"="ForwardBase" "QUEUE"="Overlay" "SHADOWSUPPORT"="true" "RenderType"="Opaque" }
   ZTest Always
   GpuProgramID 34795
 Program "vp" {
@@ -3147,7 +3147,7 @@ fdfgfpfegbhcghgfheaaklkl"
  //        d3d9 : 15 avg math (7..23), 2 avg texture (1..3)
  Pass {
   Name "FORWARD"
-  Tags { "LIGHTMODE"="ForwardAdd" "QUEUE"="Transparent" "RenderType"="Opaque" }
+  Tags { "LIGHTMODE"="ForwardAdd" "QUEUE"="Overlay" "RenderType"="Opaque" }
   ZTest Always
   ZWrite Off
   Blend One One
@@ -6370,7 +6370,7 @@ Keywords { "DIRECTIONAL_COOKIE" }
  //        d3d9 : 3 math
  Pass {
   Name "PREPASS"
-  Tags { "LIGHTMODE"="PrePassBase" "QUEUE"="Transparent" "RenderType"="Opaque" }
+  Tags { "LIGHTMODE"="PrePassBase" "QUEUE"="Overlay" "RenderType"="Opaque" }
   ZTest Always
   GpuProgramID 161315
 Program "vp" {
@@ -6776,7 +6776,7 @@ SubProgram "glcore " {
  //        d3d9 : 7 avg math (6..9), 2 texture
  Pass {
   Name "PREPASS"
-  Tags { "LIGHTMODE"="PrePassFinal" "QUEUE"="Transparent" "RenderType"="Opaque" }
+  Tags { "LIGHTMODE"="PrePassFinal" "QUEUE"="Overlay" "RenderType"="Opaque" }
   ZTest Always
   ZWrite Off
   GpuProgramID 199532
@@ -8309,7 +8309,7 @@ Keywords { "LIGHTMAP_OFF" "DIRLIGHTMAP_OFF" "DYNAMICLIGHTMAP_OFF" "UNITY_HDR_ON"
  //        d3d9 : 13 avg math (12..15), 1 texture
  Pass {
   Name "DEFERRED"
-  Tags { "LIGHTMODE"="Deferred" "QUEUE"="Transparent" "RenderType"="Opaque" }
+  Tags { "LIGHTMODE"="Deferred" "QUEUE"="Overlay" "RenderType"="Opaque" }
   ZTest Always
   GpuProgramID 299525
 Program "vp" {

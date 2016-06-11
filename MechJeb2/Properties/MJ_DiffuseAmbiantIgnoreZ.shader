@@ -7,7 +7,7 @@ Properties {
 }
 SubShader {
 	Tags { 
-	    "Queue"="Transparent"
+	    "Queue"="Overlay"
 	    "RenderType"="Opaque" 
 	}
 	ZTest Always      
