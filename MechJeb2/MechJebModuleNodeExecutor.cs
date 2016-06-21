@@ -8,7 +8,10 @@ namespace MuMech
         //public interface:
         [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
-        public const double leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
+
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 

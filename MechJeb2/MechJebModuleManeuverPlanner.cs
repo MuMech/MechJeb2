@@ -145,6 +145,9 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp", GUILayout.ExpandWidth(true));
+
+                GUILayout.BeginVertical();
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Tolerance:", GUILayout.ExpandWidth(false));
                 core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
@@ -160,6 +163,27 @@ namespace MuMech
                     core.node.tolerance.val = 0.1;
                 }
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Lead time:", GUILayout.ExpandWidth(false));
+                core.node.leadTime.text = GUILayout.TextField(core.node.leadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                {
+                    core.node.tolerance.val += 0.1;
+                }
+                if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                {
+                    core.node.tolerance.val -= core.node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                }
+                if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
+                {
+                    core.node.tolerance.val = 3;
+                }
+                GUILayout.Label("s", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
             }
 
