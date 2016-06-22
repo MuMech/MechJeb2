@@ -358,7 +358,7 @@ namespace MuMech
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+            if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
             {
                 SetupAppLauncher();
                 SetupToolBarButtons();

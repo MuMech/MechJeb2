@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using UniLinq;
 using KSP.UI.Screens;
 using Smooth.Pools;
+using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
@@ -68,7 +69,7 @@ namespace MuMech
             return vesselState.thrustCurrent / (vesselState.mass * vesselState.gravityForce.magnitude);
         }
 
-        [ValueInfoItem("Atmospheric pressure (Pa)", InfoItem.Category.Misc, format = "F3", units = "Pa")]
+        [ValueInfoItem("Atmospheric pressure (Pa)", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
         public double AtmosphericPressurekPA()
         {
             return FlightGlobals.getStaticPressure(vesselState.CoM) * 1000;
@@ -800,6 +801,7 @@ namespace MuMech
         [GeneralInfoItem("Stage stats (all)", InfoItem.Category.Vessel, showInEditor = true)]
         public void AllStageStats()
         {
+            Profiler.BeginSample("AllStageStats.init");
             // Unity throws an exception if we change our layout between the Layout event and
             // the Repaint event, so only get new data right before the Layout event.
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
@@ -810,9 +812,13 @@ namespace MuMech
                 stats.RequestUpdate(this);
             }
 
-            int numStages = atmoStats.Length;
-            var stages = Enumerable.Range(0, numStages);
+            Profiler.EndSample();
 
+            Profiler.BeginSample("AllStageStats.UI1");
+
+            int numStages = atmoStats.Length;
+            var stages = Enumerable.Range(0, numStages).ToArray();
+            
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
@@ -867,10 +873,24 @@ namespace MuMech
                     break;
             }
 
+            Profiler.EndSample();
+
+            Profiler.BeginSample("AllStageStats.UI2");
+
             GUILayout.BeginHorizontal();
             DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
+
+            Profiler.EndSample();
+
+            Profiler.BeginSample("AllStageStats.UI3");
+
             bool noChange = true;
             if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn("Start Mass", stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));
+
+            Profiler.EndSample();
+
+            Profiler.BeginSample("AllStageStats.UI4");
+
             if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));
             if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));
             if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));
@@ -889,6 +909,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
+            Profiler.EndSample();
         }
 
         static GUIStyle _columnStyle;
@@ -1156,8 +1177,7 @@ namespace MuMech
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
-            string biome = ScienceUtil.GetExperimentBiome(mainBody, vessel.latitude, vessel.longitude);
-            return "" + biome;
+            return ScienceUtil.GetExperimentBiome(mainBody, vessel.latitude, vessel.longitude);
         }
 
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]

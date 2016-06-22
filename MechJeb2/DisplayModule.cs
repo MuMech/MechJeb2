@@ -55,6 +55,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool isOverlay = false;
+
         internal bool enabledEditor;
         internal bool enabledFlight;
 
@@ -77,7 +80,7 @@ namespace MuMech
 
         protected void WindowGUI(int windowID, bool draggable)
         {
-            if (GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
+            if (!isOverlay && GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
             {
                 enabled = false;
             }
@@ -87,8 +90,8 @@ namespace MuMech
 //                locked = !locked;
 //            }
             
-            bool allowDrag = true;
-            if (core.settings.useTitlebarDragging)
+            bool allowDrag = !locked;
+            if (locked && !isOverlay && core.settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
@@ -116,7 +119,7 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, GetName(), WindowOptions());
+                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), WindowOptions());
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                

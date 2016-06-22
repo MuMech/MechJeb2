@@ -21,36 +21,7 @@ else
 	endif
 endif
 
-MECHJEBFILES := $(wildcard MechJeb2/*.cs) \
-	$(wildcard MechJeb2/Maneuver/*.cs) \
-	$(wildcard MechJeb2/Properties/*.cs) \
-	$(wildcard MechJeb2/alglib/*.cs) \
-	$(wildcard MechJeb2/LandingAutopilot/*.cs) \
-	$(wildcard MechJeb2/KerbalEngineer/*.cs) \
-	$(wildcard MechJeb2/KerbalEngineer/Extensions/*.cs) \
-	$(wildcard MechJeb2/KerbalEngineer/Helpers/*.cs) \
-	$(wildcard MechJeb2/KerbalEngineer/VesselSimulator/*.cs) \
-	$(wildcard MechJeb2/FlyingSim/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Algebraics/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Collections/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Compare/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Compare/Comparers/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Compare/Examples/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Compare/Utilities/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Comparisons/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Delegates/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Dispose/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Events/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Platform/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Pools/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Slinq/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Slinq/Collections/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/ChainedOrPooled/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/Mutation/*.cs) \
-	$(wildcard MechJeb2/SmoothFoundations/Slinq/Context/Simple/*.cs) \
-	$(wildcard MechJeb2/UnityToolbag/Future/*.cs) \
-	$(wildcard MechJeb2/UnityToolbag/Dispatcher/*.cs)
+MECHJEBFILES := $(shell find MechJeb2 -name "*.cs")
 
 RESGEN2 := resgen2
 GMCS    ?= gmcs
@@ -78,7 +49,7 @@ build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
 	${GMCS} -t:library -lib:"${MANAGED}" \
-		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine \
+		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI,KSPUtil \
 		-out:$@ \
 		${MECHJEBFILES} \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources

@@ -209,7 +209,7 @@ namespace MuMech
 
         public void setPIDParameters()
         {
-            Vector3d invTf = TfV.Invert();
+            Vector3d invTf = TfV.InvertNoNaN();
             pid.Kd = kdFactor * invTf;
 
             pid.Kp = (1 / (kpFactor * Math.Sqrt(2))) * pid.Kd;
@@ -376,15 +376,16 @@ namespace MuMech
             if (useSAS)
                 return;
 
-            torque = vesselState.torqueAvailable + vesselState.torqueFromEngine ;
-            if (core.thrust.differentialThrottleSuccess)
-                torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+            torque = vesselState.torqueAvailable;
+            // TODO : bring DifferentialThrottle back
+            //if (core.thrust.differentialThrottleSuccess)
+            //    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             inertia = Vector3d.Scale(
                 vesselState.angularMomentum.Sign(),
                 Vector3d.Scale(
                     Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                    Vector3d.Scale(torque, vesselState.MoI).Invert()
+                    Vector3d.Scale(torque, vesselState.MoI).InvertNoNaN()
                     )
                 );
         }
@@ -425,7 +426,8 @@ namespace MuMech
                     part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude, true);
                 }
 
-                core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
+                // TODO : bring DifferentialThrottle back
+                //core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
             }
             else
             {
@@ -437,7 +439,7 @@ namespace MuMech
                 Vector3d deltaEuler = delta.DeltaEuler();
                 
                 // ( MoI / available torque ) factor:
-                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.Invert()).Reorder(132);
+                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.InvertNoNaN()).Reorder(132);
 
                 // Find out the real shorter way to turn were we wan to.
                 // Thanks to HoneyFox
@@ -505,8 +507,9 @@ namespace MuMech
                 act = new Vector3d(s.pitch, s.yaw, s.roll);
 
                 // Feed the control torque to the differential throttle
-                if (core.thrust.differentialThrottleSuccess)
-                    core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle);
+                // TODO : bring DifferentialThrottle back
+                //if (core.thrust.differentialThrottleSuccess)
+                //    core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }
 

@@ -536,7 +536,6 @@ namespace MuMech
             return result;
         }
 
-
         public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
         {
             if (vesselState.mainBody == null) return 0;

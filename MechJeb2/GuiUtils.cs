@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -265,6 +266,7 @@ namespace MuMech
         public static bool dontUseDropDownMenu = false;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
+        public static GUISkin transparentSkin;
 
         public static void SetGUIScale(double s)
         {
@@ -276,13 +278,13 @@ namespace MuMech
         public static void CopyDefaultSkin()
         {
             GUI.skin = null;
-            defaultSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+            defaultSkin = Object.Instantiate(GUI.skin);
         }
 
         public static void CopyCompactSkin()
         {
             GUI.skin = null;
-            compactSkin = (GUISkin)GameObject.Instantiate(GUI.skin);
+            compactSkin = Object.Instantiate(GUI.skin);
 
             GuiUtils.skin.name = "KSP Compact";
 
@@ -305,13 +307,30 @@ namespace MuMech
             compactSkin.window.padding = new RectOffset(5, 5, 20, 5);
         }
 
+        public static void CopyTransparentSkin()
+        {
+            GUI.skin = null;
+            transparentSkin = Object.Instantiate(GUI.skin);
+
+            Texture2D t = new Texture2D(1, 1);
+            t.SetPixel(0, 0, new Color(0, 0, 0, 0));
+            t.Apply();
+
+            transparentSkin.window.normal.background = t;
+            transparentSkin.window.onNormal.background = t;
+            transparentSkin.window.padding = new RectOffset(5, 5, 5, 5);
+        }
+
 
         public static void LoadSkin(SkinType skinType)
         {
+            if (defaultSkin == null) CopyDefaultSkin();
+            if (compactSkin == null) CopyCompactSkin();
+            if (transparentSkin == null) CopyTransparentSkin();
+
             switch (skinType)
             {
                 case SkinType.Default:
-                    if (defaultSkin == null) CopyDefaultSkin();
                     skin = defaultSkin;
                     break;
 
@@ -320,7 +339,6 @@ namespace MuMech
                     break;
 
                 case SkinType.Compact:
-                    if (compactSkin == null) CopyCompactSkin();
                     skin = compactSkin;
                     break;
             }
@@ -463,7 +481,7 @@ namespace MuMech
             //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.enabled && m.showInCurrentScene
+                if (m.enabled && m.showInCurrentScene && !m.isOverlay
                     && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / GuiUtils.scale))
                 {
                     return true;
@@ -682,4 +700,142 @@ namespace MuMech
             return String.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
         }
     }
+
+    public static class ColorPickerHSV
+    {
+        private static Texture2D displayPicker;
+
+        public static Color setColor;
+        private static Color lastSetColor;
+
+        private static int textureWidth = 240;
+        private static int textureHeight = 240;
+
+        private static float saturationSlider = 0.0F;
+        private static float alphaSlider = 0.0F;
+        private static Texture2D saturationTexture;
+
+        private static void Init()
+        {
+            displayPicker = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false);
+            for (int i = 0; i < textureWidth; i++)
+            {
+                for (int j = 0; j < textureHeight; j++)
+                {
+                    displayPicker.SetPixel(i, j, MuUtils.HSVtoRGB((360f / textureWidth) * i, (1.0f / j) * textureHeight, 1.0f, 1f));
+                }
+            }
+            displayPicker.Apply();
+            
+            float v = 0.0F;
+            float diff = 1.0f / textureHeight;
+            saturationTexture = new Texture2D(20, textureHeight);
+            for (int i = 0; i < saturationTexture.width; i++)
+            {
+                for (int j = 0; j < saturationTexture.height; j++)
+                {
+                    saturationTexture.SetPixel(i, j, new Color(v, v, v));
+                    v += diff;
+                }
+                v = 0.0F;
+            }
+            saturationTexture.Apply();
+        }
+
+        public static void DrawGUI(int positionLeft, int positionTop)
+        {
+            if (!displayPicker)
+                Init();
+            
+            GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 90, textureHeight + 30), "");
+
+            if (GUI.RepeatButton(new Rect(positionLeft, positionTop, textureWidth, textureHeight), displayPicker))
+            {
+                int a = (int)Input.mousePosition.x;
+                int b = Screen.height - (int)Input.mousePosition.y;
+
+                setColor = displayPicker.GetPixel(a - positionLeft, -(b - positionTop));
+                lastSetColor = setColor;
+            }
+
+            saturationSlider = GUI.VerticalSlider(new Rect(positionLeft + textureWidth + 3, positionTop, 10, textureHeight), saturationSlider, 1, 0);
+            setColor = lastSetColor + new Color(saturationSlider, saturationSlider, saturationSlider);
+            GUI.Box(new Rect(positionLeft + textureWidth + 20, positionTop, 20, textureHeight), saturationTexture);
+
+            alphaSlider = GUI.VerticalSlider(new Rect(positionLeft + textureWidth + 3 + 10 + 20 + 10, positionTop, 10, textureHeight), alphaSlider, 1, 0);
+            setColor.a = alphaSlider;
+            GUI.Box(new Rect(positionLeft + textureWidth + 20 + 10 + 20 + 10, positionTop, 20, textureHeight), saturationTexture);
+            
+        }
+
+    }
+    public static class ColorPickerRGB
+    {
+        private static int textureWidth = 240;
+        private static int textureHeight = 10;
+        
+        private static Texture2D rTexture;
+        private static Texture2D gTexture;
+        private static Texture2D bTexture;
+        private static Texture2D aTexture;
+        
+        private static void Init()
+        {
+            rTexture = new Texture2D(textureWidth, 1);
+            gTexture = new Texture2D(textureWidth, 1);
+            bTexture = new Texture2D(textureWidth, 1);
+            aTexture = new Texture2D(textureWidth, 1);
+            for (int i = 0; i < textureWidth; i++)
+            {
+                float v = (float)i / (textureWidth - 1);
+                rTexture.SetPixel(i, 0, new Color(v, 0, 0));
+                gTexture.SetPixel(i, 0, new Color(0, v, 0));
+                bTexture.SetPixel(i, 0, new Color(0, 0, v));
+                aTexture.SetPixel(i, 0, new Color(v, v, v));
+            }
+            rTexture.Apply();
+            gTexture.Apply();
+            bTexture.Apply();
+            aTexture.Apply();
+            
+            rTexture.wrapMode = TextureWrapMode.Repeat;
+            gTexture.wrapMode = TextureWrapMode.Repeat;
+            bTexture.wrapMode = TextureWrapMode.Repeat;
+            aTexture.wrapMode = TextureWrapMode.Repeat;
+        }
+
+        public static Color DrawGUI(int positionLeft, int positionTop, Color c)
+        {
+            if (!rTexture)
+                Init();
+
+            GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 3, textureHeight + 125), "");
+
+            float pos = positionTop + 5;
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), rTexture, new Rect(0, 0, 1, textureHeight));
+            c.r = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.r, 0, 1);
+
+            pos += textureHeight + 20;
+
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), gTexture, new Rect(0, 0, 1, textureHeight));
+            c.g = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.g, 0, 1);
+
+            pos += textureHeight + 20;
+
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), bTexture, new Rect(0, 0, 1, textureHeight));
+            c.b = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.b, 0, 1);
+
+            pos += textureHeight + 20;
+
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), aTexture, new Rect(0, 0, 1, textureHeight));
+            c.a = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.a, 0, 1);
+
+            return c;
+
+        }
+
+    }
+
+
+
 }

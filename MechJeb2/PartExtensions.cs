@@ -27,7 +27,7 @@ namespace MuMech
         }
 
         // An allocation free version of GetModuleMass
-        public static float GetModuleMassNoAlloc(this Part p, float defaultMass)
+        public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
         {
             float mass = 0f;
 
@@ -36,7 +36,7 @@ namespace MuMech
                 IPartMassModifier m = p.Modules[i] as IPartMassModifier;
                 if (m != null)
                 {
-                    mass += m.GetModuleMass(defaultMass, ModifierStagingSituation.CURRENT);
+                    mass += m.GetModuleMass(defaultMass, sit);
                 }
             }
             return mass;
@@ -62,14 +62,14 @@ namespace MuMech
                 ModuleDecouple mDecouple = m as ModuleDecouple;
                 if (mDecouple != null)
                 {
-                    if (!mDecouple.isDecoupled && p.stagingOn) return true;
+                    if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn) return true;
                     break;
                 }
 
                 ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
                 if (mAnchoredDecoupler != null)
                 {
-                    if (!mAnchoredDecoupler.isDecoupled && p.stagingOn) return true;
+                    if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn) return true;
                     break;
                 }
 

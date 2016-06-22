@@ -70,11 +70,11 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            
-            core.thrust.DifferentialThrottle();
-            
-            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
-                GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
+            // TODO : bring DifferentialThrottle back
+            //core.thrust.DifferentialThrottle();
+            //
+            //if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
+            //    GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
 
             core.solarpanel.AutoDeploySolarPanelsInfoItem();
 
