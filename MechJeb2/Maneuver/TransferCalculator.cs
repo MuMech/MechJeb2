@@ -352,7 +352,7 @@ namespace MuMech
 			for (int iteration = 0 ; iteration < 50 ; ++iteration)
 			{
 				Vector3d V_1 = final_vel * (Math.Cos(theta) * x + Math.Sin(theta) * y);
-				sample.UpdateFromStateVectorsMJ(pos, V_1, initial_orbit.referenceBody, UT);
+				sample.UpdateFromStateVectors(pos, V_1, initial_orbit.referenceBody, UT);
 				theta_err = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
 				if (double.IsNaN(theta_err))
 					return null;
@@ -360,11 +360,11 @@ namespace MuMech
 					return new ManeuverParameters((V_1 - V_0).xzy, UT);
 
 				V_1 = final_vel * (Math.Cos(theta + dtheta) * x + Math.Sin(theta + dtheta) * y);
-				sample.UpdateFromStateVectorsMJ(pos, V_1, initial_orbit.referenceBody, UT);
+				sample.UpdateFromStateVectors(pos, V_1, initial_orbit.referenceBody, UT);
 				double theta_err_2 = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
 
 				V_1 = final_vel * (Math.Cos(theta - dtheta) * x + Math.Sin(theta - dtheta) * y);
-				sample.UpdateFromStateVectorsMJ(pos, V_1, initial_orbit.referenceBody, UT);
+				sample.UpdateFromStateVectors(pos, V_1, initial_orbit.referenceBody, UT);
 				double theta_err_3 = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
 
 				double derr = MuUtils.ClampRadiansPi(theta_err_2 - theta_err_3) / (2 * dtheta);
@@ -395,7 +395,7 @@ namespace MuMech
 			Vector3d DV = new Vector3d(x[0], x[1], x[2]);
 
 			Orbit orbit = new Orbit();
-			orbit.UpdateFromStateVectorsMJ(data.initial_orbit.getRelativePositionAtUT(t), data.initial_orbit.getOrbitalVelocityAtUT(t) + DV.xzy, data.initial_orbit.referenceBody, t);
+			orbit.UpdateFromStateVectors(data.initial_orbit.getRelativePositionAtUT(t), data.initial_orbit.getOrbitalVelocityAtUT(t) + DV.xzy, data.initial_orbit.referenceBody, t);
 			orbit.StartUT = t;
 
 			var pars = new PatchedConics.SolverParameters();
