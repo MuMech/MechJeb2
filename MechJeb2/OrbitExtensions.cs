@@ -536,7 +536,6 @@ namespace MuMech
             return result;
         }
 
-
         public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
         {
             if (vesselState.mainBody == null) return 0;
@@ -563,122 +562,6 @@ namespace MuMech
                 return 0;
             }
             return impactTime - decelTime / 2 - vesselState.time;
-        }
-
-        // 1.1.2 UpdateFromStateVectors has some problem so we use a copy of the old code for now
-        public static void UpdateFromStateVectorsMJ(this Orbit o, Vector3d pos, Vector3d vel, CelestialBody refBody, double UT)
-        {
-            o.referenceBody = refBody;
-            o.h = Vector3d.Cross(pos, vel);
-            o.inclination = Math.Acos(o.h.z / o.h.magnitude) * MathExtensions.Rad2Deg;
-            if (o.inclination == 0)
-            {
-                vel = vel + (Vector3d.forward * 1E-10);
-                o.h = Vector3d.Cross(pos, vel);
-                o.inclination = Math.Acos(o.h.z / o.h.magnitude) * MathExtensions.Rad2Deg;
-            }
-            o.eccVec = (Vector3d.Cross(vel, o.h) / refBody.gravParameter) - (pos / pos.magnitude);
-            o.eccentricity = o.eccVec.magnitude;
-            o.orbitalEnergy = vel.sqrMagnitude * 0.5 - refBody.gravParameter / pos.magnitude;
-            if (o.eccentricity >= 1)
-            {
-                o.semiMajorAxis = -o.semiLatusRectum / (o.eccVec.sqrMagnitude - 1);
-            }
-            else
-            {
-                o.semiMajorAxis = -refBody.gravParameter / (2 * o.orbitalEnergy);
-            }
-            o.an = Vector3d.Cross(Vector3d.forward, o.h);
-            if (o.an.y < 0)
-            {
-                o.LAN = 2 * Math.PI - Math.Acos(o.an.x / o.an.magnitude) * MathExtensions.Rad2Deg;
-            }
-            else
-            {
-                o.LAN = Math.Acos(o.an.x / o.an.magnitude) * MathExtensions.Rad2Deg;
-            }
-            o.argumentOfPeriapsis = Math.Acos(Vector3d.Dot(o.an, o.eccVec) / (o.an.magnitude * o.eccentricity));
-            if (o.eccVec.z < 0)
-            {
-                o.argumentOfPeriapsis = 2 * Math.PI - o.argumentOfPeriapsis;
-            }
-            if (o.an == Vector3d.zero)
-            {
-                o.LAN = 0;
-                o.argumentOfPeriapsis = Math.Acos(o.eccVec.x / o.eccentricity);
-            }
-            o.LAN = (o.LAN + Planetarium.InverseRotAngle) % 360;
-            o.argumentOfPeriapsis = o.argumentOfPeriapsis * MathExtensions.Rad2Deg;
-            o.period = 2 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(o.semiMajorAxis), 3) / refBody.gravParameter);
-            o.trueAnomaly = Math.Acos(Vector3d.Dot(o.eccVec, pos) / (o.eccentricity * pos.magnitude));
-            if (Vector3d.Dot(pos, vel) < 0)
-            {
-                o.trueAnomaly = 2 * Math.PI - o.trueAnomaly;
-            }
-            if (double.IsNaN(o.trueAnomaly))
-            {
-                o.trueAnomaly = Math.PI;
-            }
-
-            o.eccentricAnomaly = o.GetEccentricAnomalyMJ(o.trueAnomaly);
-
-            o.meanAnomaly = o.GetMeanAnomaly(o.eccentricAnomaly, o.trueAnomaly);
-            o.meanAnomalyAtEpoch = o.meanAnomaly;
-            if (o.eccentricity >= 1)
-            {
-                o.ObT = Math.Pow(Math.Pow(-o.semiMajorAxis, 3) / refBody.gravParameter, 0.5) * o.meanAnomaly;
-                o.timeToPe = -o.ObT;
-                o.ObTAtEpoch = o.ObT;
-            }
-            else
-            {
-                o.orbitPercent = o.meanAnomaly / (2 * Math.PI);
-                o.ObT = o.orbitPercent * o.period;
-                o.timeToPe = o.period - o.ObT;
-                o.timeToAp = o.timeToPe - o.period * 0.5;
-                if (o.timeToAp < 0)
-                {
-                    o.timeToAp = o.timeToAp + o.period;
-                }
-                o.ObTAtEpoch = o.ObT;
-            }
-            o.radius = pos.magnitude;
-            o.altitude = o.radius - refBody.Radius;
-            o.epoch = UT;
-            o.pos = pos;
-            o.vel = vel;
-            o.debugPos = pos;
-            o.debugVel = vel;
-            o.debugH = o.h;
-            o.debugAN = o.an;
-            o.debugEccVec = o.eccVec;
-        }
-
-
-        private static double GetEccentricAnomalyMJ(this Orbit o, double tA)
-        {
-            double eccentricAnomaly;
-            if (o.eccentricity >= 1)
-            {
-                eccentricAnomaly = UtilMath.ACosh((o.eccentricity + Math.Cos(tA)) / (1 + o.eccentricity * Math.Cos(tA)));
-                if (double.IsNaN(eccentricAnomaly))
-                {
-                    eccentricAnomaly = Math.PI;
-                }
-                if (double.IsInfinity(eccentricAnomaly))
-                {
-                    MechJebCore.print(string.Format("E is Infinity! tA: {0}, e = {1}", tA, o.eccentricity));
-                }
-            }
-            else
-            {
-                eccentricAnomaly = Math.Acos((o.eccentricity + Math.Cos(tA)) / (1 + o.eccentricity * Math.Cos(tA)));
-                if (tA > Math.PI)
-                {
-                    eccentricAnomaly = 2 * Math.PI - eccentricAnomaly;
-                }
-            }
-            return eccentricAnomaly;
         }
     }
 }

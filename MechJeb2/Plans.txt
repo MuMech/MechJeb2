@@ -1,3 +1,61 @@
+
+* Engines new thrust curves
+
+* Replace the Ressource loaded Shader used by the arrows by an AssetBundle
+
+DONE    * Docking port can now double as decouplers
+
+* Module mass modifier to check
+
+* Check the use of Time.FixedDeltaTime vs TimeWarp.FixedDeltaTime/esselState.deltaT
+
+* Stop the throttle limiter from limiting when min thrust = max and other related case for RO
+
+* prevent the node execution flipping
+
+* finish node on RCS
+
+* Redo the config load/save to ignore the deep config Node issue and remove the clumsy hack I added in 1.x
+
+* Convert to VesselModule
+    - Turn MechJebCore into its own PartModule
+    - Need load/save calls. wait for KSP 1.1 ? Or use the old PartModule config (might be necessary to keep backward compat)
+    - Improve the PartModule order problem. MJ would always run after/before all the module (check which)
+
+* Configurable "Forward" vector (VTOL, Shuttle)
+    - Gimbal rest correction to lower torque
+
+* Check if adding the current accel is needed to handle RCS properly.
+    - Require the VesselModule convertion to be finished
+
+* Redo whole UI to use Unity "new" UI
+
+* Split MJ in multiple DLL (core+info / Basic AP / Landing / ...) ?
+
+* Check the Launch at interplanetary window code to make sure the returned value are stable (it was not the last time I looked into it)
+
+* KeyBinds for some call (Smart ASS, ...)
+    - Use Attribute to make a call bindable ?
+
+* Bring Back LUA and/or Python
+    - see https://github.com/gfoot/kopiluainterface
+
+* Landing Guidance 
+    - Option for re entry attitude
+    - Option for re entry orbit shallowness
+DONE        - long sim ( 1+ orbit ) ?
+DONE        - In view landing trajectory ?
+
+* Landing Sim
+DONE        - Object pool to lower memory pressure
+    - FAR support
+    - RealChute Support
+DONE        - Lifting body ? (check how they work now)
+
+* Way to recreate the basic info windows without deletying the whole config
+
+
+
 * Convert to PartModule
 DONE    - Turn MechJebCore into its own PartModule
         - Can we do all necessary cleanup in OnDestroy?
@@ -22,8 +80,8 @@ DONE (mostly) * Split existing modules into ComputerModules and DisplayModules
 * New settings system? The old one works reasonably now, but N3X15 coded some functions to work with setting a bit better, may be worth trying... And we could work something in for Vessel-specific saving too.
     - Does N3X15's PluginConfiguration actually have any benefits over our SettingsManager?
     - for vessel-specifc info the OnSave/OnLoad ConfigNode system is worth trying; it 
-	  should save any vessel-specific info we have directly to the SFS
-	
+      should save any vessel-specific info we have directly to the SFS
+    
 
 * New GUI
     - Protractor-like icon?
@@ -32,11 +90,11 @@ DONE (mostly) * Split existing modules into ComputerModules and DisplayModules
     
 * Customizable info-windows: make lists with all the variables/titles, and allow the user to build his own windows
     - possible implementation: define an InfoItem class with virtual two methods: 
-	    - void DrawItem() to draw the info item within a GUI window
-		- string GetDescription() to get the description to show in the list of possible info items.
-	  Then make a little subclass of InfoItem for each possible item to display.
-	  This seems like it would be pretty flexible, but perhaps a separate class for each item is too bulky.
-	  It would let us use reflection to find all InfoItems, though.
+        - void DrawItem() to draw the info item within a GUI window
+        - string GetDescription() to get the description to show in the list of possible info items.
+      Then make a little subclass of InfoItem for each possible item to display.
+      This seems like it would be pretty flexible, but perhaps a separate class for each item is too bulky.
+      It would let us use reflection to find all InfoItems, though.
 
 DONE * Add a system for DisplayModules to easily have in-VAB GUI windows
 DONE    - Maybe just a drawEditorGUI() in addition to drawGUI()?
@@ -67,18 +125,18 @@ DONE        - Move vessel-related functions into VesselState and VesselExtension
 DONE        - Move part-related functions into PartExtensions
 DONE        - Move random utilities into MuUtils
 
-* Finally figure out multithreading to offload the FuelFlowAnalyzer and landing autopilot simulations to their own threads
-        - Then make separate ComputerModules just to do the simulations. Other classes can
-          turn these ComputerModules on or off. When they're on they periodically rerun the simulations
-          and update their results, which other classes can read off.
-            Check out the old MechJebModuleAscension.cs/optimalAscent.cs for a threaded implementation of a module, it works well enough (the threading, the calculator isn't very good XD)
+DONE    * Finally figure out multithreading to offload the FuelFlowAnalyzer and landing autopilot simulations to their own threads
+DONE            - Then make separate ComputerModules just to do the simulations. Other classes can
+DONE              turn these ComputerModules on or off. When they're on they periodically rerun the simulations
+DONE              and update their results, which other classes can read off.
+DONE                Check out the old MechJebModuleAscension.cs/optimalAscent.cs for a threaded implementation of a module, it works well enough (the threading, the calculator isn't very good XD)
 
 DONE * Add a check that will throttle down to prevent overheats during any sort of autopilot operation
         - Moved ascent AP code into thrust controller
 
-* Allow auto-staging during any sort of autopilot operation
-        - a toggle like in the ascent AP, but in the main menu?
-            We need an options screen, but we may want to add the auto-staging thing in multiple places so the user can disable it as needed? Maybe having some options directly in the menu may be indeed an option.
+DONE    * Allow auto-staging during any sort of autopilot operation
+DONE            - a toggle like in the ascent AP, but in the main menu?
+DONE                We need an options screen, but we may want to add the auto-staging thing in multiple places so the user can disable it as needed? Maybe having some options directly in the menu may be indeed an option.
 
 * Move Core (ThrustController) landing function into landing autopilot, since nothing else uses it?
 
@@ -90,8 +148,8 @@ DONE		- Add a Computer/DisplayModule to provide ascent path guidance on the navb
 
 * Add a guidance version of the docking autopilot that just gives suggested velocities
         - I'm thinking: a Texture2D velocity gauge for each coordinate, with mark for the desired and actual velocities
-		- Maybe also a 2D graphical display of the lateral position & velocity
-		- Implementation: A switch in the docking autopilot that determines whether it actually sends commands to the RCSController?
+        - Maybe also a 2D graphical display of the lateral position & velocity
+        - Implementation: A switch in the docking autopilot that determines whether it actually sends commands to the RCSController?
 
 DONE * Automatic orbital rendezvous and docking
 DONE        - Automatic orbital rendezvous can just auto-execute the steps from the Rendezvous Guidance module
