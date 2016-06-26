@@ -102,6 +102,8 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Toggle:Menu.useAppLauncher").DrawItem();
             if (ToolbarManager.ToolbarAvailable || core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
+            
+            ed.registry.Find(i => i.id == "General:Menu.MenuPosition").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.rssMode").DrawItem();
 
