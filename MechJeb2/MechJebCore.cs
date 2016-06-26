@@ -693,7 +693,8 @@ namespace MuMech
             else
                 version = dev_version;
 
-            print("Loading Mechjeb " + version);
+            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
+                print("Loading Mechjeb " + version);
 
             try
             {
