@@ -31,11 +31,11 @@ namespace MuMech
 
         public Boolean drawBoundingBox = false;
 
-        enum DockingStep
+        public enum DockingStep
         {
             INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
         }
-        DockingStep dockingStep = DockingStep.OFF;
+        public DockingStep dockingStep = DockingStep.OFF;
 
         public struct Box3d
         {

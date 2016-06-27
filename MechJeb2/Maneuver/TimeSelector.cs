@@ -16,6 +16,7 @@ namespace MuMech
         public double universalTime;
 
         private TimeReference[] allowedTimeRef;
+		[Persistent(pass = (int)Pass.Global)]
         private int currentTimeRef;
 
         public TimeReference timeReference { get {return allowedTimeRef[currentTimeRef];}}
