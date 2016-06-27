@@ -59,6 +59,9 @@ namespace MuMech
 					this.operationId = i;
 				}
 			}
+			//Load basic operation config
+			ConfigNode.LoadObjectFromConfig(operation[operationId], node.GetNode("Operation"));
+			//Load Timeselector
 			if (operation[operationId].getName().ToLower().Contains("circularize"))
 			{
 				ConfigNode.LoadObjectFromConfig(((OperationCircularize)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
@@ -75,6 +78,8 @@ namespace MuMech
 
 		override public void postSave(ConfigNode node)
 		{
+			ConfigNode operationBaseNode = ConfigNode.CreateConfigFromObject(operation[operationId], (int)Pass.Global, null);
+			operationBaseNode.CopyTo(node.AddNode("Operation"));
 			if (operation[operationId].getName().ToLower().Contains("circularize"))
 			{
 				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationCircularize)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);

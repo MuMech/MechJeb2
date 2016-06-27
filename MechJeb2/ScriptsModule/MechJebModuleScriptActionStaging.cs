@@ -50,7 +50,6 @@ namespace MuMech
 			nextStage = GUILayout.Toggle(nextStage, "Next stage");
 			if (!nextStage)
 			{
-				GuiUtils.SimpleTextBox ("Stage", stage, "", 20);
 				stage = GuiUtils.ComboBox.Box (stage, stagesList.ToArray(), this);
 			}
 			base.postWindowGUI(windowID);
