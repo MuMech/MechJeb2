@@ -170,15 +170,15 @@ namespace MuMech
                 core.node.leadTime.text = GUILayout.TextField(core.node.leadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val += 0.1;
+                    core.node.leadTime.val += 1;
                 }
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val -= core.node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                    core.node.leadTime.val -= 1;
                 }
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val = 3;
+                    core.node.leadTime.val = 3;
                 }
                 GUILayout.Label("s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
