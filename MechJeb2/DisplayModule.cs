@@ -61,6 +61,8 @@ namespace MuMech
         internal bool enabledEditor;
         internal bool enabledFlight;
 
+        private GUILayoutOption[] windowOptions;
+
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
         public int ID;
@@ -119,7 +121,11 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), WindowOptions());
+                // Cache the array to not create one each frame
+                if (windowOptions == null)
+                    windowOptions = WindowOptions();
+
+                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), windowOptions);
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                
