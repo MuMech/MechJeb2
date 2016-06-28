@@ -10,19 +10,61 @@ namespace MuMech
             : base(core)
         {
             priority = 100;
+            enabled = true;
         }
 
         double warpIncreaseAttemptTime = 0;
 
+        private int lastAskedIndex = -1;
+
+        private bool _warpPaused = false;
+
+        public bool WarpPaused
+        {
+            get { return _warpPaused; }
+        }
+
+        public override void OnUpdate()
+        {
+            if (!_warpPaused && lastAskedIndex != -1 && lastAskedIndex != TimeWarp.CurrentRateIndex)
+            {
+                //print("Warp pause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex);
+                _warpPaused = true;
+
+                if (TimeWarp.CurrentRateIndex == 0)
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+
+                ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
+            }
+        }
+
+        public void resumeWarp()
+        {
+            if (!_warpPaused)
+                return;
+
+            _warpPaused = false;
+            SetTimeWarpRate(lastAskedIndex, false);
+        }
 
         // Turn SAS on during regular warp for compatibility with PersistentRotation 
-        void SetTimeWarpRate(int rateIndex, bool instant)
+        private void SetTimeWarpRate(int rateIndex, bool instant)
         {
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
                 if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                TimeWarp.SetRate(rateIndex, instant);
+
+                lastAskedIndex = rateIndex;
+                if (_warpPaused)
+                {
+                    ScreenMessages.PostScreenMessage("MJ : Warp paused - resume in the Warp Helper menu");
+                }
+                else
+                {
+                    TimeWarp.SetRate(rateIndex, instant);
+                }
+
                 if (rateIndex == 0)
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
             }
@@ -105,7 +147,7 @@ namespace MuMech
             return true;
         }
 
-        public bool IncreaseRegularWarp(bool instant = false)
+        private bool IncreaseRegularWarp(bool instant = false)
         {
             if (!CheckRegularWarp()) return false; //make sure we are in regular warp
 
@@ -125,7 +167,7 @@ namespace MuMech
             return true;
         }
 
-        public bool IncreasePhysicsWarp(bool instant = false)
+        private bool IncreasePhysicsWarp(bool instant = false)
         {
             if (!CheckPhysicsWarp()) return false; //make sure we are in regular warp
 
@@ -139,7 +181,7 @@ namespace MuMech
             return true;
         }
 
-        public bool DecreaseRegularWarp(bool instant = false)
+        private bool DecreaseRegularWarp(bool instant = false)
         {
             if (!CheckRegularWarp()) return false;
 
@@ -149,7 +191,7 @@ namespace MuMech
             return true;
         }
 
-        public bool DecreasePhysicsWarp(bool instant = false)
+        private bool DecreasePhysicsWarp(bool instant = false)
         {
             if (!CheckPhysicsWarp()) return false;
 
