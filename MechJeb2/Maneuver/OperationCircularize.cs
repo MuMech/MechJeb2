@@ -22,7 +22,11 @@
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, UT), UT);
         }
-        
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 
