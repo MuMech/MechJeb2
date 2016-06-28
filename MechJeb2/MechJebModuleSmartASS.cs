@@ -133,7 +133,7 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
             if (target != Target.OFF)
-                Engage();
+                Engage(false);
         }
 
 
