@@ -200,7 +200,7 @@ namespace MuMech
             TfV.Scale(delayFactor);
 
 
-            TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, 1.0);
+            TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, TfMax);
             TfV = TfV.Clamp(TfMin, TfMax);
 
             //Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
