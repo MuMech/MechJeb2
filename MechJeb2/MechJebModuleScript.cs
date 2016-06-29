@@ -81,9 +81,12 @@ namespace MuMech
 			actionsNamesList.Add ("RCS");
 			actionsNamesList.Add ("Activate Vessel");
 			actionsNamesList.Add ("SAS");
-			actionsNamesList.Add ("Execute node");
 			actionsNamesList.Add ("Manoeuver");
+			actionsNamesList.Add ("Execute node");
+			actionsNamesList.Add ("Action Group");
+			actionsNamesList.Add ("Node tolerance");
 			actionsNamesList.Add ("Warp");
+			actionsNamesList.Add ("Wait for");
 			actionsNamesList.Add ("MODULE Ascent Autopilot");
 			actionsNamesList.Add ("MODULE Docking Autopilot");
 			actionsNamesList.Add ("MODULE Landing");
@@ -232,9 +235,21 @@ namespace MuMech
 					{
 						this.addAction(new MechJebModuleScriptActionManoeuver(this, core));
 					}
+					else if (actionNames[selectedActionIndex].CompareTo("Node tolerance") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionTolerance(this, core));
+					}
 					else if (actionNames[selectedActionIndex].CompareTo("Warp") == 0)
 					{
 						this.addAction(new MechJebModuleScriptActionWarp(this, core));
+					}
+					else if (actionNames[selectedActionIndex].CompareTo("Wait for") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionWaitFor(this, core));
+					}
+					else if (actionNames[selectedActionIndex].CompareTo("Action Group") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionActionGroup(this, core));
 					}
 					else if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
 					{
@@ -308,7 +323,11 @@ namespace MuMech
 		{
 			if (actionsList.Count > (index + 1))
 			{
-				actionsList [index+1].activateAction(index+1);
+				actionsList[index + 1].activateAction(index + 1);
+			}
+			else
+			{
+				this.stop();
 			}
 		}
 
@@ -423,6 +442,18 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionWarp.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionWarp(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionTolerance.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionTolerance(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionWaitFor.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionWaitFor(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionActionGroup.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionActionGroup(this, core);
 				}
 				else {
 					Debug.LogError("MechJebModuleScript.LoadConfig : Unknown node " + scriptNode.name);

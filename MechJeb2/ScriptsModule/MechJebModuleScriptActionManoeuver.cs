@@ -110,6 +110,7 @@ namespace MuMech
 				operation[operationId].DoParametersGUI(o, UT, core.target);
 			}
 			catch (Exception) { } // TODO: Would be better to fix the problem but this will do for now
+
 			base.postWindowGUI(windowID);
 			if (operation[operationId].getErrorMessage().Length > 0)
 			{
