@@ -9,41 +9,59 @@ namespace MuMech
         public MechJebModuleWarpController(MechJebCore core)
             : base(core)
         {
+            WarpPaused = false;
             priority = 100;
             enabled = true;
         }
 
         double warpIncreaseAttemptTime = 0;
 
-        private int lastAskedIndex = -1;
+        private int lastAskedIndex = 0;
 
-        private bool _warpPaused = false;
-
-        public bool WarpPaused
+        public bool WarpPaused { get; private set; }
+        
+        [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
+        public void ControlWarpButton()
         {
-            get { return _warpPaused; }
+            if (WarpPaused && GUILayout.Button("Resume MJ Warp"))
+            {
+                ResumeWarp();
+            }
+            if (!WarpPaused && GUILayout.Button("Pause MJ Warp"))
+            {
+                PauseWarp();
+            }
         }
 
         public override void OnUpdate()
         {
-            if (!_warpPaused && lastAskedIndex != -1 && lastAskedIndex != TimeWarp.CurrentRateIndex)
+            if (!WarpPaused && lastAskedIndex > 0 && lastAskedIndex != TimeWarp.CurrentRateIndex)
             {
-                //print("Warp pause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex);
-                _warpPaused = true;
+                // Rate limited by the altitude so we should not care
+                if (!vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody))
+                    return;
 
-                if (TimeWarp.CurrentRateIndex == 0)
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                //print("Warp pause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex);
+                PauseWarp();
 
                 ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
             }
         }
 
-        public void resumeWarp()
+        private void PauseWarp()
         {
-            if (!_warpPaused)
+            WarpPaused = true;
+
+            if (TimeWarp.CurrentRateIndex == 0)
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+        }
+
+        private void ResumeWarp()
+        {
+            if (!WarpPaused)
                 return;
 
-            _warpPaused = false;
+            WarpPaused = false;
             SetTimeWarpRate(lastAskedIndex, false);
         }
 
@@ -56,7 +74,7 @@ namespace MuMech
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
                 lastAskedIndex = rateIndex;
-                if (_warpPaused)
+                if (WarpPaused)
                 {
                     ScreenMessages.PostScreenMessage("MJ : Warp paused - resume in the Warp Helper menu");
                 }
