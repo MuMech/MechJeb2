@@ -142,7 +142,7 @@ namespace MuMech
 
             if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
 
-            core.warp.ResumeWarpButton();
+            core.warp.ControlWarpButton();
 
             GUILayout.EndVertical();
 

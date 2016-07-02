@@ -19,7 +19,10 @@ namespace MuMech
         private int lastAskedIndex = 0;
 
         public bool WarpPaused { get; private set; }
-        
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool activateSASOnWarp = true;
+
         [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
         public void ControlWarpButton()
         {
@@ -52,7 +55,7 @@ namespace MuMech
         {
             WarpPaused = true;
 
-            if (TimeWarp.CurrentRateIndex == 0)
+            if (activateSASOnWarp && TimeWarp.CurrentRateIndex == 0)
                 part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
         }
 
@@ -70,7 +73,7 @@ namespace MuMech
         {
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
-                if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
+                if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
                 lastAskedIndex = rateIndex;
@@ -83,7 +86,7 @@ namespace MuMech
                     TimeWarp.SetRate(rateIndex, instant);
                 }
 
-                if (rateIndex == 0)
+                if (activateSASOnWarp && rateIndex == 0)
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
             }
         }
