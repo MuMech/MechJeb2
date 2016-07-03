@@ -143,10 +143,8 @@ namespace MuMech
                 // BS engine detected. Bail out.
                 if (dt == float.MaxValue || float.IsInfinity(dt))
                 {
-                    stats.deltaTime = 0;
                     break;
                 }
-                
             }
 
             //print("Finished stage " + simStage + " after " + step + " steps");
@@ -393,7 +391,7 @@ namespace MuMech
                     resourceMass = startMass - s.endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
-                    deltaTime = this.deltaTime + s.deltaTime,
+                    deltaTime = this.deltaTime + (s.deltaTime < float.MaxValue && !float.IsInfinity(s.deltaTime) ? s.deltaTime : 0),
                     deltaV = this.deltaV + s.deltaV,
                     isp = this.startMass == s.endMass ? 0 : (this.deltaV + s.deltaV) / (9.80665f * Mathf.Log(this.startMass / s.endMass))
                 };
