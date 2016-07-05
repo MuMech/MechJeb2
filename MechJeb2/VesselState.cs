@@ -22,6 +22,8 @@ namespace MuMech
         public Vector3d CoM;
         Matrix3x3f inertiaTensor = new Matrix3x3f();
         public Vector3d MoI; //Diagonal components of the inertia tensor (almost always the dominant components)
+        public Vector3d calcMoI; //Internal calculation of MOI vs. stock
+        public bool useStockMoI = false;
         public Vector3d up;
         public Vector3d north;
         public Vector3d east;
@@ -1052,8 +1054,14 @@ namespace MuMech
                 }
             }
 
-            MoI = new Vector3d(inertiaTensor[0, 0], inertiaTensor[1, 1], inertiaTensor[2, 2]);
-            angularMomentum = inertiaTensor * angularVelocity;
+            calcMoI = new Vector3d(inertiaTensor[0, 0], inertiaTensor[1, 1], inertiaTensor[2, 2]);
+            if (useStockMoI) {
+              MoI = vessel.MOI;
+              angularMomentum = new Vector3d(MoI[0] * angularVelocity[0], MoI[1] * angularVelocity[1], MoI[2] * angularVelocity[2]);
+            } else {
+              MoI = calcMoI;
+              angularMomentum = inertiaTensor * angularVelocity;
+            }
             angularVelocityAvg.value = angularVelocity;
         }
 

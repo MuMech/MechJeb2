@@ -178,8 +178,8 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
-                    GUILayout.Label("|" + vesselState.MoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.MoI), GUILayout.ExpandWidth(false));
+                    GUILayout.Label("MOI calc", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vesselState.calcMoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.calcMoI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -200,6 +200,7 @@ namespace MuMech
             }
 
             MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
+            vesselState.useStockMoI = GUILayout.Toggle(vesselState.useStockMoI, "Use stock MoI");
 
             MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
 
