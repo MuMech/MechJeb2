@@ -101,7 +101,7 @@ namespace MuMech
             set
             {
                 _text = value;
-                _text = Regex.Replace(_text, @"[^\d+-.dhms ,]", ""); //throw away junk characters
+                _text = Regex.Replace(_text, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
 
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
