@@ -98,6 +98,12 @@ namespace MuMech
             return OrbitSummary(o) + ", inc. " + o.inclination.ToString("F1") + "º";
         }
 
+        [ValueInfoItem("Mean Anomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
+        public double MeanAnomaly()
+        {
+            return orbit.meanAnomaly * MathExtensions.Rad2Deg;
+        }
+
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
         public string CurrentOrbitSummary()
         {
