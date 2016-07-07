@@ -44,10 +44,11 @@ namespace MuMech
                 if (!vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody))
                     return;
 
-                //print("Warp pause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex);
-                PauseWarp();
+                print("Warppause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex + " WarpMode=" + TimeWarp.WarpMode + " MaxCurrentRate=" + TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody));
+                WarpPaused = false;
+                //PauseWarp();
 
-                ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
+                //ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
             }
         }
 
