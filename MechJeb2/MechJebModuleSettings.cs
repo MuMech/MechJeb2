@@ -107,6 +107,8 @@ namespace MuMech
 
             ed.registry.Find(i => i.id == "Toggle:Settings.rssMode").DrawItem();
 
+            core.warp.activateSASOnWarp = GUILayout.Toggle(core.warp.activateSASOnWarp, "Activate SAS on Warp");
+
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
