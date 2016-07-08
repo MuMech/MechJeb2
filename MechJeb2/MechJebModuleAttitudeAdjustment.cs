@@ -112,47 +112,47 @@ namespace MuMech
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Kp", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kp), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kp.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Ki", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Ki), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Ki.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Kd", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kd), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.Kd.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Error", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.error * Mathf.Rad2Deg), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.error.xzy * Mathf.Rad2Deg), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("prop. action.", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.propAct), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.propAct.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("deriv. action", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.derivativeAct), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.derivativeAct.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("integral action.", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.intAccum), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pid.intAccum.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("PID Action", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pidAction), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.pidAction.xzy), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Axis Control ", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisState, "F0"), GUILayout.ExpandWidth(false));
+                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisState.xzy, "F0"), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
