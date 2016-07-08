@@ -816,6 +816,10 @@ namespace MuMech
                         if (g.useGimbalResponseSpeed)
                             torqueReactionSpeed += (Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * crtlTorque;
                     }
+                    else if (pm is ModuleRCS)
+                    {
+                        // Already handled earlier. Prevent the generic ITorqueProvider to catch it
+                    }
                     else if (pm is ITorqueProvider) // All mod that supports it. Including FAR
                     {
                         ITorqueProvider tp = pm as ITorqueProvider;
@@ -925,6 +929,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             // col 1 MJs
             GUILayout.BeginVertical();
+            GUILayout.Label("MJ", GuiUtils.LabelNoWrap);
             GUILayout.Label("RCS", GuiUtils.LabelNoWrap);
             GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
             GUILayout.Label("Surface", GuiUtils.LabelNoWrap);
@@ -935,6 +940,7 @@ namespace MuMech
 
             // col 2 Stocks
             GUILayout.BeginVertical();
+            GUILayout.Label("Stock", GuiUtils.LabelNoWrap);
             GUILayout.Label("");
             GUILayout.Label(MuUtils.PrettyPrint(torqueRcsStock), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
             GUILayout.Label("");
@@ -945,6 +951,7 @@ namespace MuMech
 
             // col 3 %
             GUILayout.BeginVertical();
+            GUILayout.Label("");
             GUILayout.Label("");
             GUILayout.Label(MuUtils.PadPositive(100 - 100 * rcsTorque.magnitude / torqueRcsStock.magnitude, "F2").PadLeft(10)+"%", GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
             GUILayout.Label("");
