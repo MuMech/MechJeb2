@@ -48,40 +48,45 @@ namespace MuMech
 
             if (!core.attitude.useSAS)
             {
-                core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
-
-                if (!core.attitude.Tf_autoTune)
+                core.attitude.lowPassFilter = GUILayout.Toggle(core.attitude.lowPassFilter, " Low Pass Filter");
+                
+                if (core.attitude.lowPassFilter)
                 {
-                    GUILayout.Label("Larger ship do better with a larger Tf");
+                    core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Tf (s)", GUILayout.ExpandWidth(true));
-                    GUILayout.Label("P", GUILayout.ExpandWidth(false));
-                    TfX.text = GUILayout.TextField(TfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.Label("Y", GUILayout.ExpandWidth(false));
-                    TfY.text = GUILayout.TextField(TfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.Label("R", GUILayout.ExpandWidth(false));
-                    TfZ.text = GUILayout.TextField(TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.EndHorizontal();
+                    if (!core.attitude.Tf_autoTune)
+                    {
+                        GUILayout.Label("Larger ship do better with a larger Tf");
 
-                    TfX = Math.Max(0.01, TfX);
-                    TfY = Math.Max(0.01, TfY);
-                    TfZ = Math.Max(0.01, TfZ);
-                }
-                else
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.TfV), GUILayout.ExpandWidth(false));
-                    GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Tf (s)", GUILayout.ExpandWidth(true));
+                        GUILayout.Label("P", GUILayout.ExpandWidth(false));
+                        TfX.text = GUILayout.TextField(TfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                        GUILayout.Label("Y", GUILayout.ExpandWidth(false));
+                        TfY.text = GUILayout.TextField(TfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                        GUILayout.Label("R", GUILayout.ExpandWidth(false));
+                        TfZ.text = GUILayout.TextField(TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                        GUILayout.EndHorizontal();
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Tf range");
-                    GuiUtils.SimpleTextBox("min", TfMin, "", 50);
-                    TfMin = Math.Max(TfMin, 0.01);
-                    GuiUtils.SimpleTextBox("max", TfMax, "", 50);
-                    TfMax = Math.Max(TfMax, 0.01);
-                    GUILayout.EndHorizontal();
+                        TfX = Math.Max(0.01, TfX);
+                        TfY = Math.Max(0.01, TfY);
+                        TfZ = Math.Max(0.01, TfZ);
+                    }
+                    else
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
+                        GUILayout.Label(MuUtils.PrettyPrint(core.attitude.TfV), GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Tf range");
+                        GuiUtils.SimpleTextBox("min", TfMin, "", 50);
+                        TfMin = Math.Max(TfMin, 0.01);
+                        GuiUtils.SimpleTextBox("max", TfMax, "", 50);
+                        TfMax = Math.Max(TfMax, 0.01);
+                        GUILayout.EndHorizontal();
+                    }
                 }
 
                 GUILayout.Label("PID factors");

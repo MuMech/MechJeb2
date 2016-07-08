@@ -43,6 +43,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public double TfMax = 0.5;
         [Persistent(pass = (int)Pass.Global)]
+        public bool lowPassFilter = true;
+
+        [Persistent(pass = (int)Pass.Global)]
         public double kpFactor = 3;
         [Persistent(pass = (int)Pass.Global)]
         public double kiFactor = 6;
@@ -497,9 +500,16 @@ namespace MuMech
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
-                act.x += (pidAction.x - lastAct.x) * (1.0 / ((TfV.x / TimeWarp.fixedDeltaTime) + 1.0));
-                act.y += (pidAction.y - lastAct.y) * (1.0 / ((TfV.y / TimeWarp.fixedDeltaTime) + 1.0));
-                act.z += (pidAction.z - lastAct.z) * (1.0 / ((TfV.z / TimeWarp.fixedDeltaTime) + 1.0));
+                if (lowPassFilter)
+                {
+                    act.x += (pidAction.x - lastAct.x) * (1.0 / ((TfV.x / TimeWarp.fixedDeltaTime) + 1.0));
+                    act.y += (pidAction.y - lastAct.y) * (1.0 / ((TfV.y / TimeWarp.fixedDeltaTime) + 1.0));
+                    act.z += (pidAction.z - lastAct.z) * (1.0 / ((TfV.z / TimeWarp.fixedDeltaTime) + 1.0));
+                }
+                else
+                {
+                    act = pidAction;
+                }
                 lastAct = act;
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);
