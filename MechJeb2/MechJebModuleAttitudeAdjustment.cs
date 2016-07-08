@@ -178,18 +178,23 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI calc", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("MOI MJ", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + vesselState.calcMoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.calcMoI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI stock", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("MOI Stock", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + vessel.MOI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.MOI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
-
+                    
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Angular Velocity", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + vessel.angularVelocity.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.angularVelocity), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Angular M", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vesselState.angularMomentum.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.angularMomentum), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -200,7 +205,7 @@ namespace MuMech
             }
 
             MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
-            vesselState.useStockMoI = GUILayout.Toggle(vesselState.useStockMoI, "Use stock MoI");
+            vesselState.useStockRCSTorque = GUILayout.Toggle(vesselState.useStockRCSTorque, "Use stock RCS Torque");
 
             MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
 

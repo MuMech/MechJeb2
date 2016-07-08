@@ -23,7 +23,8 @@ namespace MuMech
         Matrix3x3f inertiaTensor = new Matrix3x3f();
         public Vector3d MoI; //Diagonal components of the inertia tensor (almost always the dominant components)
         public Vector3d calcMoI; //Internal calculation of MOI vs. stock
-        public bool useStockMoI = false;
+        
+        public bool useStockRCSTorque = false;
         public Vector3d up;
         public Vector3d north;
         public Vector3d east;
@@ -860,8 +861,15 @@ namespace MuMech
             torqueAvailable += torqueSurfStock;
 
             // Max since most of the code only use positive control input and the min would be 0
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
-            
+            if (useStockRCSTorque)
+            {
+                torqueAvailable += torqueRcsStock;
+            }
+            else
+            {
+                torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            }
+
             //torqueAvailable += Vector3d.Max(einfo.torqueEngineAvailable.positive, einfo.torqueEngineAvailable.negative);
             torqueAvailable += torqueGimbalStock;
 
@@ -1018,57 +1026,44 @@ namespace MuMech
         // Maybe it can be optimized more.
         void UpdateMoIAndAngularMom(Vessel vessel)
         {
-            inertiaTensor.reset();
+            // stock code + fix
+            Matrix4x4 tensor = Matrix4x4.zero;
+            Matrix4x4 partTensor = Matrix4x4.identity;
+            Matrix4x4 inertiaMatrix = Matrix4x4.identity;
+            Matrix4x4 productMatrix = Matrix4x4.identity;
 
-            Transform vesselTransform = vessel.GetTransform();
-            Quaternion inverseVesselRotation = Quaternion.Inverse(vesselTransform.rotation);
-            
-            for (int index = 0; index < vessel.parts.Count; index++)
+            //invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation * Quaternion.Euler(-90, 0, 0)); // stock
+            QuaternionD invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation); // fix the stock bug
+            for (int i = 0; i < vessel.parts.Count; ++i)
             {
-                Part p = vessel.parts[index];
-                Rigidbody rigidbody = p.Rigidbody;
-                if (rigidbody == null)
+                Part part = vessel.parts[i];
+                if (part.rb != null)
                 {
-                    continue;
-                }
+                    KSPUtil.ToDiagonalMatrix2(part.rb.inertiaTensor, ref partTensor);
 
-                //Compute the contributions to the vessel inertia tensor due to the part inertia tensor
-                Vector3 principalMoments = rigidbody.inertiaTensor;
-                Quaternion princAxesRot = inverseVesselRotation * p.transform.rotation * rigidbody.inertiaTensorRotation;
-                Quaternion invPrincAxesRot = Quaternion.Inverse(princAxesRot);
+                    Quaternion rot = (Quaternion)invQuat * part.transform.rotation * part.rb.inertiaTensorRotation;
+                    Quaternion inv = Quaternion.Inverse(rot);
 
-                for (int j = 0; j < 3; j++)
-                {
-                    Vector3 partInertiaTensorTimesjHat = princAxesRot * Vector3.Scale(principalMoments, invPrincAxesRot * unitVectors[j]);
-                    for (int i = 0; i < 3; i++)
-                    {
-                        inertiaTensor[i, j] += Vector3.Dot(unitVectors[i], partInertiaTensorTimesjHat);
-                    }
-                }
+                    Matrix4x4 rotMatrix = Matrix4x4.TRS(Vector3.zero, rot, Vector3.one);
+                    Matrix4x4 invMatrix = Matrix4x4.TRS(Vector3.zero, inv, Vector3.one);
+                    
+                    KSPUtil.Add(ref tensor, rotMatrix * partTensor * invMatrix);
+                    Vector3 position = vessel.vesselTransform.InverseTransformDirection(part.rb.position - vessel.CoMD);
 
-                //Compute the contributions to the vessel inertia tensor due to the part mass and position
-                float partMass = rigidbody.mass;
-                Vector3 partPosition = vesselTransform.InverseTransformDirection(rigidbody.worldCenterOfMass - CoM);
+                    KSPUtil.ToDiagonalMatrix2(part.rb.mass * position.sqrMagnitude, ref inertiaMatrix);
+                    KSPUtil.Add(ref tensor, inertiaMatrix);
 
-                for (int i = 0; i < 3; i++)
-                {
-                    inertiaTensor[i, i] += partMass * partPosition.sqrMagnitude;
-
-                    for (int j = 0; j < 3; j++)
-                    {
-                        inertiaTensor[i, j] += -partMass * partPosition[i] * partPosition[j];
-                    }
+                    KSPUtil.OuterProduct2(position, -part.rb.mass * position, ref productMatrix);
+                    KSPUtil.Add(ref tensor, productMatrix);
                 }
             }
+            //MoI = vessel.MOI = KSPUtil.Diag(tensor);
+            MoI = KSPUtil.Diag(tensor);
+            angularMomentum = Vector3d.zero;
+            angularMomentum.x = (float)(MoI.x * vessel.angularVelocity.x);
+            angularMomentum.y = (float)(MoI.y * vessel.angularVelocity.y);
+            angularMomentum.z = (float)(MoI.z * vessel.angularVelocity.z);
 
-            calcMoI = new Vector3d(inertiaTensor[0, 0], inertiaTensor[1, 1], inertiaTensor[2, 2]);
-            if (useStockMoI) {
-              MoI = vessel.MOI;
-              angularMomentum = new Vector3d(MoI[0] * angularVelocity[0], MoI[1] * angularVelocity[1], MoI[2] * angularVelocity[2]);
-            } else {
-              MoI = calcMoI;
-              angularMomentum = inertiaTensor * angularVelocity;
-            }
             angularVelocityAvg.value = angularVelocity;
         }
 
