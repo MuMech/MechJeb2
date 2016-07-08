@@ -595,6 +595,16 @@ namespace MuMech
                     minFuelFlow = engine.minFuelFlow;
                     maxFuelFlow = engine.maxFuelFlow;
 
+                    // Some brilliant engine mod seems to consider that FuelFlow is not something they should properly initialize
+                    if (minFuelFlow == 0 && engine.minThrust > 0)
+                    {
+                        maxFuelFlow = engine.minThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                    }
+                    if (maxFuelFlow == 0 && engine.maxThrust > 0)
+                    {
+                        maxFuelFlow = engine.maxThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                    }
+
                     atmosphereCurve = new FloatCurve(engine.atmosphereCurve.Curve.keys);
                     atmChangeFlow = engine.atmChangeFlow;
                     useAtmCurve = engine.useAtmCurve;
