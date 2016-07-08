@@ -320,6 +320,12 @@ namespace MuMech
             return Math.Sqrt(2 * mainBody.gravParameter / vesselState.radius);
         }
 
+        [ValueInfoItem("Vessel name", InfoItem.Category.Vessel, showInEditor = false)]
+        public string VesselName()
+        {
+            return vessel.vesselName;
+        }
+
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
