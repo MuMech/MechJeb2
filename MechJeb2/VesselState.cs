@@ -198,8 +198,8 @@ namespace MuMech
         [ValueInfoItem("Angle to prograde", InfoItem.Category.Orbit, format = "F2", units = "º")]
         public double angleToPrograde;
 
-        public Vector6 rcsThrustAvailable; // thrust available from RCS thrusters
-        public Vector6 rcsTorqueAvailable; // torque available from RCS thrusters
+        public Vector6 rcsThrustAvailable = new Vector6(); // thrust available from RCS thrusters
+        public Vector6 rcsTorqueAvailable = new Vector6(); // torque available from RCS thrusters
 
         // torque available from control surfaces
         //public Vector3 ctrlTorqueAvailablePos;
@@ -571,8 +571,8 @@ namespace MuMech
 
         void UpdateRCSThrustAndTorque(Vessel vessel)
         {
-            rcsThrustAvailable = new Vector6();
-            rcsTorqueAvailable = new Vector6();
+            rcsThrustAvailable.Reset();
+            rcsTorqueAvailable.Reset();
             torqueRcsStock = Vector3.zero;
 
             if (!vessel.ActionGroups[KSPActionGroup.RCS]) return;
