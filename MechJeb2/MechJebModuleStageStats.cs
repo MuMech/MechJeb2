@@ -142,7 +142,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e.StackTrace);
+                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e);
             }
 
             //see how long the simulation took
