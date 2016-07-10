@@ -828,11 +828,11 @@ namespace MuMech
                         VesselStatePartModuleExtension vspme = vesselStatePartModuleExtensions[index];
                         vspme(pm);
                     }
+                }
 
-                    foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
-                    {
-                        einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, p.transform.position - CoM, ref CoT, ref DoT, ref DoTInstant, ref CoTScalar);
-                    }
+                foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
+                {
+                    einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref DoTInstant, ref CoTScalar);
                 }
 
                 pureDragV += partPureDrag;
@@ -1143,7 +1143,7 @@ namespace MuMech
                 atmP1 = (float)(FlightGlobals.getStaticPressure(alt1) * PhysicsGlobals.KpaToAtmospheres);
             }
 
-            public void AddNewEngine(ModuleEngines e, ModuleGimbal gimbal, List<EngineWrapper> enginesWrappers , Vector3d partPosition, ref Vector3d CoT, ref Vector3d DoT, ref Vector3d DoTInstant, ref double CoTScalar)
+            public void AddNewEngine(ModuleEngines e, ModuleGimbal gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d CoT, ref Vector3d DoT, ref Vector3d DoTInstant, ref double CoTScalar)
             {
                 if ((!e.EngineIgnited) || (!e.isEnabled))
                 {
