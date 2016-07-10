@@ -137,7 +137,6 @@ namespace MuMech
         
         public Vector3d CoT;
         public Vector3d DoT;
-        public Vector3d DoTInstant;
         public double CoTScalar;        
 
 
@@ -832,7 +831,7 @@ namespace MuMech
 
                 foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
                 {
-                    einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref DoTInstant, ref CoTScalar);
+                    einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref CoTScalar);
                 }
 
                 pureDragV += partPureDrag;
@@ -876,8 +875,7 @@ namespace MuMech
             if (CoTScalar > 0)
                 CoT = CoT / CoTScalar;
             DoT = DoT.normalized;
-            DoTInstant = DoTInstant.normalized;
-
+            
             if (CoLScalar > 0)
                 CoL = CoL / CoLScalar;
 
@@ -1143,7 +1141,7 @@ namespace MuMech
                 atmP1 = (float)(FlightGlobals.getStaticPressure(alt1) * PhysicsGlobals.KpaToAtmospheres);
             }
 
-            public void AddNewEngine(ModuleEngines e, ModuleGimbal gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d CoT, ref Vector3d DoT, ref Vector3d DoTInstant, ref double CoTScalar)
+            public void AddNewEngine(ModuleEngines e, ModuleGimbal gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d CoT, ref Vector3d DoT, ref double CoTScalar)
             {
                 if ((!e.EngineIgnited) || (!e.isEnabled))
                 {
@@ -1187,11 +1185,11 @@ namespace MuMech
 
                     rotSave.Clear();
                     
+                    // Used for Diff Throttle
                     Vector3d constantForce = Vector3d.zero;
                     Vector3d maxVariableForce = Vector3d.zero;
                     Vector3d constantTorque = Vector3d.zero;
                     Vector3d maxVariableTorque = Vector3d.zero;
-
                     double currentMaxThrust = maxThrust;
                     double currentMinThrust = minThrust;
 
@@ -1230,7 +1228,6 @@ namespace MuMech
                         
                         CoT += tCurrentThrust * (Vector3d)transform.position;
                         DoT -= tCurrentThrust * thrustDirectionVector;
-                        DoTInstant += tCurrentThrust * (Vector3d)transform.forward;
                         CoTScalar += tCurrentThrust;
                         
                         Quaternion inverseVesselRot = e.part.vessel.ReferenceTransform.rotation.Inverse();
