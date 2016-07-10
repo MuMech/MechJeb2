@@ -818,7 +818,7 @@ namespace MuMech
 
         public static void print(object message)
         {
-            MonoBehaviour.print("[MechJeb2] " + message);
+            Dispatcher.InvokeAsync(() => MonoBehaviour.print("[MechJeb2] " + message));
         }
 
         public void SetConsumptionRates(float throttle, double atmDensity, double machNumber)
