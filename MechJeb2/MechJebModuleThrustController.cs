@@ -438,6 +438,12 @@ namespace MuMech
                 throttleLimit = (float) minThrottle;
             }
 
+            // RealFuels ullage integration.  Stock always has stableUllage.
+            if (!vesselState.stableUllage)
+            {
+                throttleLimit = 0.0F;
+            }
+
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
             throttleLimit = Mathf.Clamp01(throttleLimit);
 
