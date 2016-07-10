@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Smooth.Pools;
 using UnityEngine;
+using System.Reflection;
 
 namespace MuMech
 {
     public class VesselState
     {
         public static bool isLoadedProceduralFairing = false;
+        public static bool isLoadedRealFuels = false;
+        // RealFuels.ModuleEngineRF propellantStatus field to call via reflection
+        private static FieldInfo RFPropStatusField;
+        // stableUllage is always true without RealFuels installed
+        public bool stableUllage { get { return this.einfo.stableUllage; } }
 
         private Vessel vesselRef = null;
 
@@ -240,6 +246,16 @@ namespace MuMech
         static VesselState()
         {
             isLoadedProceduralFairing = isAssemblyLoaded("ProceduralFairings");
+            isLoadedRealFuels = isAssemblyLoaded("RealFuels");
+            if (isLoadedRealFuels)
+            {
+                RFPropStatusField = getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "propellantStatus");
+                if (RFPropStatusField == null)
+                {
+                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no propellantStatus field, disabling RF");
+                    isLoadedRealFuels = false;
+                }
+            }
         }
 
         static bool isAssemblyLoaded(string assemblyName)
@@ -258,6 +274,32 @@ namespace MuMech
                 }
             }
             return false;
+        }
+
+        static FieldInfo getFieldByReflection(String assemblyString, String className, String fieldName) {
+                string assemblyName = "";
+
+                foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+                {
+                    if (loaded.assembly.GetName().Name == assemblyString)
+                    {
+                        assemblyName = loaded.assembly.FullName;
+                    }
+                }
+
+                if (assemblyName == "")
+                {
+                    return null;
+                }
+
+                Type type = Type.GetType("RealFuels.ModuleEnginesRF, " + assemblyName);
+
+                if (type == null)
+                {
+                    return null;
+                }
+
+                return type.GetField("propellantStatus");
         }
 
 
@@ -832,6 +874,10 @@ namespace MuMech
                 foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
                 {
                     einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref CoTScalar);
+                    if (isLoadedRealFuels)
+                    {
+                        einfo.CheckUllageStatus(engine.Key);
+                    }
                 }
 
                 pureDragV += partPureDrag;
@@ -1099,7 +1145,7 @@ namespace MuMech
             }
             return ret;
         }
-        
+
         // Used during the vesselState constructor; distilled to other
         // variables later.
         public class EngineInfo
@@ -1109,6 +1155,8 @@ namespace MuMech
             public Vector3d thrustMin = new Vector3d(); // thrust at zero throttle
             public double maxResponseTime = 0;
             public Vector6 torqueDiffThrottle = new Vector6();
+            // stableUllage is always true without RealFuels installed
+            public bool stableUllage = true;
 
             public struct FuelRequirement
             {
@@ -1133,12 +1181,34 @@ namespace MuMech
 
                 resourceRequired.Clear();
 
+                stableUllage = true;
 
                 CoM = c;
-                
+
                 atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
                 float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
                 atmP1 = (float)(FlightGlobals.getStaticPressure(alt1) * PhysicsGlobals.KpaToAtmospheres);
+            }
+
+            public void CheckUllageStatus(ModuleEngines e)
+            {
+                if ((!e.EngineIgnited) || (!e.isEnabled))
+                {
+                    return;
+                }
+
+                String propellantStatus = RFPropStatusField.GetValue(e) as String;
+
+                if (propellantStatus == null)
+                {
+                    Debug.Log("BUG: getting propellantStatus from RealFuels casted to null, ullage status likely broken");
+                    return;
+                }
+
+                if ((propellantStatus != "Nominal") && (propellantStatus != "Very Stable"))
+                {
+                    stableUllage = false;
+                }
             }
 
             public void AddNewEngine(ModuleEngines e, ModuleGimbal gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d CoT, ref Vector3d DoT, ref double CoTScalar)
