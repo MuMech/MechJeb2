@@ -360,10 +360,11 @@ namespace MuMech
 
                     bool useDiffThrottle = (vesselState.torqueDiffThrottle.x > vesselState.torqueAvailable.x * 10) ||
                                            (vesselState.torqueDiffThrottle.z > vesselState.torqueAvailable.z * 10);
+
                     if ((core.attitude.attitudeError >= 2) && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
-                    if ((core.attitude.attitudeError >= 2) && useGimbal)
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
+                        print(" targetThrottle = 0.1F");
                     }
                     else
                     {
