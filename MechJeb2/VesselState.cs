@@ -1192,7 +1192,9 @@ namespace MuMech
 
             public void CheckUllageStatus(ModuleEngines e)
             {
-                if ((!e.EngineIgnited) || (!e.isEnabled))
+                // we report stable ullage for an unstable engine which is throttled up, so we let RF kill it
+                // instead of having MJ throttle it down.
+                if ((!e.EngineIgnited) || (!e.isEnabled) || (e.requestedThrottle > 0.0F))
                 {
                     return;
                 }
