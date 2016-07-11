@@ -80,6 +80,16 @@ namespace MuMech
             limitToPreventFlameout = GUILayout.Toggle(limitToPreventFlameout, "Prevent jet flameout", s);
         }
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool limitToPreventUnstableIgnition = true;
+
+        [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
+        public void LimitToPreventUnstableIgnitionInfoItem()
+        {
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.UnstableIgnition) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            limitToPreventUnstableIgnition = GUILayout.Toggle(limitToPreventUnstableIgnition, "Prevent unstable ignition", s);
+        }
 
         // 5% safety margin on flameouts
         [Persistent(pass = (int)Pass.Global)]
@@ -196,7 +206,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle, Electric }
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle, Electric, UnstableIgnition }
         public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
@@ -439,10 +449,11 @@ namespace MuMech
             }
 
             // RealFuels ullage integration.  Stock always has stableUllage.
-            if (!vesselState.stableUllage)
+            if (limitToPreventUnstableIgnition && !vesselState.stableUllage)
             {
-                if ( targetThrottle > 0.0F && throttleLimit > 0.0F ) {
+                if (( targetThrottle > 0.0F || s.mainThrottle > 0.0F ) && throttleLimit > 0.0F ) {
                     // We want to fire the throttle, and nothing else is limiting us, but we have unstable ullage
+                    limiter = LimitMode.UnstableIgnition;
                     if (vessel.ActionGroups[KSPActionGroup.RCS] && s.Z == 0) {
                         // RCS is on, so use it to ullage
                         s.Z = -1.0F;
