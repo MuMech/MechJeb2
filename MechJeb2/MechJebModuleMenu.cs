@@ -417,6 +417,10 @@ namespace MuMech
             {
                 windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(colWidth), GUILayout.Height(20));
             }
+            else
+            {
+                windowPos = new Rect(GuiUtils.scaledScreenWidth, GuiUtils.scaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
+            }
 
             GUI.depth = -98;
 
