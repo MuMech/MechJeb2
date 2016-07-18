@@ -79,13 +79,13 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Prograde:", prograde, "m/s", 60);
-            if (GUILayout.RepeatButton("-", GUILayout.ExpandWidth(false)))
+            if (LimitedRepeatButtoon("-"))
             {
                 prograde -= progradeDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));            
-            if (GUILayout.RepeatButton("+", GUILayout.ExpandWidth(false)))
+            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));
+            if (LimitedRepeatButtoon("+"))
             {
                 prograde += progradeDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
@@ -95,13 +95,13 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Radial+:", radialPlus, "m/s", 60);
-            if (GUILayout.RepeatButton("-", GUILayout.ExpandWidth(false)))
+            if (LimitedRepeatButtoon("-"))
             {
                 radialPlus -= radialPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
-            if (GUILayout.RepeatButton("+", GUILayout.ExpandWidth(false)))
+            if (LimitedRepeatButtoon("+"))
             {
                 radialPlus += radialPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
@@ -111,13 +111,13 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox("Normal+:", normalPlus, "m/s", 60);
-            if (GUILayout.RepeatButton("-", GUILayout.ExpandWidth(false)))
+            if (LimitedRepeatButtoon("-"))
             {
                 normalPlus -= normalPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
-            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));            
-            if (GUILayout.RepeatButton("+", GUILayout.ExpandWidth(false)))
+            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));
+            if (LimitedRepeatButtoon("+"))
             {
                 normalPlus += normalPlusDelta;
                 node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
@@ -245,6 +245,18 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        private static float nextClick = 0;
+
+        private static bool LimitedRepeatButtoon(string text)
+        {
+            if (GUILayout.RepeatButton(text, GUILayout.ExpandWidth(false)) && nextClick < Time.time)
+            {
+                nextClick = Time.time + 0.2f;
+                return true;
+            }
+            return false;
         }
 
         static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
