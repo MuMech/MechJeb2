@@ -1199,7 +1199,18 @@ namespace MuMech
                     return;
                 }
 
-                String propellantStatus = RFPropStatusField.GetValue(e) as String;
+                String propellantStatus;
+
+                try
+                {
+                    propellantStatus = RFPropStatusField.GetValue(e) as String;
+                }
+                catch (ArgumentException)
+                {
+                    // This exception happens when users are using RealFuels, but ullage is disabled.
+                    isLoadedRealFuels = false;
+                    return;
+                }
 
                 if (propellantStatus == null)
                 {
