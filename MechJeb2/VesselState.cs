@@ -874,7 +874,7 @@ namespace MuMech
                 foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
                 {
                     einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref CoTScalar);
-                    if (isLoadedRealFuels)
+                    if (isLoadedRealFuels && RFPropStatusField != null)
                     {
                         einfo.CheckUllageStatus(engine.Key);
                     }
@@ -1208,7 +1208,8 @@ namespace MuMech
                 catch (ArgumentException)
                 {
                     // This exception happens when users are using RealFuels, but ullage is disabled.
-                    isLoadedRealFuels = false;
+                    Debug.Log("ArgumentError thrown while getting propellantStatus from RealFuels, ullage integration disabled");
+                    RFPropStatusField = null;
                     return;
                 }
 
