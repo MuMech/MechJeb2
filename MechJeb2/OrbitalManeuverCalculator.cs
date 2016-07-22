@@ -198,11 +198,11 @@ namespace MuMech
         //Returned heading is in degrees and in the range 0 to 360.
         //If the given latitude is too large, so that an orbit with a given inclination never attains the 
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        public static double HeadingForLaunchInclination(Vessel vessel, VesselState vesselState, double inclinationDegrees, double orbAlt)
+        public static double HeadingForLaunchInclination(Vessel vessel, VesselState vesselState, double inclinationDegrees)
         {
             CelestialBody body = vessel.mainBody;
             double latitudeDegrees = vesselState.latitude;
-            double orbVel = OrbitalManeuverCalculator.CircularOrbitSpeed(body, orbAlt + body.Radius);
+            double orbVel = OrbitalManeuverCalculator.CircularOrbitSpeed(body, vesselState.altitudeASL + body.Radius);
             double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * Math.PI / 180;
             double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * Math.PI / 180;
             double now = Planetarium.GetUniversalTime();
