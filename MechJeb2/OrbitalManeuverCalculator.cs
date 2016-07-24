@@ -245,29 +245,30 @@ namespace MuMech
             // fall back to tracking desiredHorizontalVelocity
             if ( Vector3d.Dot(desiredHorizontalVelocity.normalized, deltaHorizontalVelocity.normalized) < 0.90 )
             {
+                // it is important that we do NOT do the fracReserveDV math here, we want to ignore the deltaHV entirely at ths point
                 return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(desiredHorizontalVelocity, east), Vector3d.Dot(desiredHorizontalVelocity, north)));
-            } else {
-              // when doing two-burn ascents we should really integrate the first burn up to the target altitude, and then
-              // we should target hitting the desired inclination angle at that point and work backwards.  Instead we have
-              // this somewhat janky algorithm that I dreamed up.  We lop off a good chunk of the desired horizontal velocity
-              // so that the angular change caused by the deltaHV correction makes the angle larger.  The 8400 magic number
-              // here shuts down this correction for launches from Earth (and from Eve?).  The 0.85 number clamps the fraction
-              // to 85% (over that should get real weird, fairly quickly).  The 1.2's just give me a straight line with
-              // roughly 0.85 when launching from Kerbin and 0 when launching from Earth.  One (useful?) feature of this
-              // algorithm is that it is very aggressive at the launch site (which should reduce the dV from steering
-              // corrections for polar orbits?)
-              double fracReserveDV = Math.Max(Math.Min(-1.2 / 8400.0 * desiredHorizontalVelocity.magnitude + 1.2, 0.85), 0.0);
-
-              // Deliberately use the *delta* horizontal velocity magnitude times the fracReserve so that we fade-out as we launch.
-              // (deltaHV trends towards zero so the fracReserve of that dV trends towards zero -- and as the deltaHV whips around
-              // then we hit the other side of the conditional above and no longer hit this code).
-              desiredHorizontalVelocity = ( desiredHorizontalVelocity.magnitude - fracReserveDV * deltaHorizontalVelocity.magnitude ) * desiredHorizontalVelocity.normalized;
-
-              // recompute the new delta
-              deltaHorizontalVelocity = desiredHorizontalVelocity - actualHorizontalVelocity;
-
-              return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
             }
+
+            // when doing two-burn ascents we should really integrate the first burn up to the target altitude, and then
+            // we should target hitting the desired inclination angle at that point and work backwards.  Instead we have
+            // this somewhat janky algorithm that I dreamed up.  We lop off a good chunk of the desired horizontal velocity
+            // so that the angular change caused by the deltaHV correction makes the angle larger.  The 8400 magic number
+            // here shuts down this correction for launches from Earth (and from Eve?).  The 0.85 number clamps the fraction
+            // to 85% (over that should get real weird, fairly quickly).  The 1.2's just give me a straight line with
+            // roughly 0.85 when launching from Kerbin and 0 when launching from Earth.  One (useful?) feature of this
+            // algorithm is that it is very aggressive at the launch site (which should reduce the dV from steering
+            // corrections for polar orbits?)
+            double fracReserveDV = Math.Max(Math.Min(-1.2 / 8400.0 * desiredHorizontalVelocity.magnitude + 1.2, 0.85), 0.0);
+
+            // Deliberately use the *delta* horizontal velocity magnitude times the fracReserve so that we fade-out as we launch.
+            // (deltaHV trends towards zero so the fracReserve of that dV trends towards zero -- and as the deltaHV whips around
+            // then we hit the other side of the conditional above and no longer hit this code).
+            desiredHorizontalVelocity = ( desiredHorizontalVelocity.magnitude - fracReserveDV * deltaHorizontalVelocity.magnitude ) * desiredHorizontalVelocity.normalized;
+
+            // recompute the new delta
+            deltaHorizontalVelocity = desiredHorizontalVelocity - actualHorizontalVelocity;
+
+            return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
         }
 
         //Computes the delta-V of the burn required to change an orbit's inclination to a given value
