@@ -198,29 +198,56 @@ namespace MuMech
         //Returned heading is in degrees and in the range 0 to 360.
         //If the given latitude is too large, so that an orbit with a given inclination never attains the 
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        public static double HeadingForLaunchInclination(CelestialBody body, double inclinationDegrees, double latitudeDegrees, double orbVel)
+        public static double HeadingForLaunchInclination(Vessel vessel, VesselState vesselState, double inclinationDegrees)
         {
-            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * MathExtensions.Deg2Rad) / Math.Cos(latitudeDegrees * MathExtensions.Deg2Rad);
-            if (Math.Abs(cosDesiredSurfaceAngle) > 1.0)
-            {
-                //If inclination < latitude, we get this case: the desired inclination is impossible
-                if (Math.Abs(MuUtils.ClampDegrees180(inclinationDegrees)) < 90) return 90;
-                else return 270;
+            CelestialBody body = vessel.mainBody;
+            double latitudeDegrees = vesselState.latitude;
+            double orbVel = OrbitalManeuverCalculator.CircularOrbitSpeed(body, vesselState.altitudeASL + body.Radius);
+            double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * Math.PI / 180;
+            double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * Math.PI / 180;
+            double now = Planetarium.GetUniversalTime();
+            Orbit o = vessel.orbit;
+
+            Vector3d north = vesselState.north;
+            Vector3d east = vesselState.east;
+
+            Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(now), o.SwappedOrbitalVelocityAtUT(now));
+            Vector3d desiredHorizontalVelocityOne = orbVel * ( Math.Sin(headingOne) * east + Math.Cos(headingOne) * north );
+            Vector3d desiredHorizontalVelocityTwo = orbVel * ( Math.Sin(headingTwo) * east + Math.Cos(headingTwo) * north );
+
+            Vector3d deltaHorizontalVelocityOne = desiredHorizontalVelocityOne - actualHorizontalVelocity;
+            Vector3d deltaHorizontalVelocityTwo = desiredHorizontalVelocityTwo - actualHorizontalVelocity;
+
+            Vector3d desiredHorizontalVelocity;
+            Vector3d deltaHorizontalVelocity;
+
+            if ( vesselState.speedSurfaceHorizontal < 200 ) {
+              // at initial launch we have to head the direction the user specifies (90 north instead of -90 south).
+              // 200 m/s of surface velocity also defines a 'grace period' where someone can catch a rocket that they meant
+              // to launch at -90 and typed 90 into the inclination box fast after it started to initiate the turn.
+              // if the rocket gets outside of the 200 m/s surface velocity envelope, then there is no way to tell MJ to
+              // take a south travelling rocket and turn north or vice versa.
+              desiredHorizontalVelocity = desiredHorizontalVelocityOne;
+              deltaHorizontalVelocity = deltaHorizontalVelocityOne;
+            } else {
+              // now in order to get great circle tracks correct we pick the side which gives the lowest delta-V, which will get
+              // ground tracks that cross the maximum (or minimum) latitude of a great circle correct.
+              if ( deltaHorizontalVelocityOne.magnitude < deltaHorizontalVelocityTwo.magnitude ) {
+                desiredHorizontalVelocity = desiredHorizontalVelocityOne;
+                deltaHorizontalVelocity = deltaHorizontalVelocityOne;
+              }  else {
+                desiredHorizontalVelocity = desiredHorizontalVelocityTwo;
+                deltaHorizontalVelocity = deltaHorizontalVelocityTwo;
+              }
             }
-            else
+
+            // if you circularize in one burn, towards the end deltaHorizontalVelocity will whip around, but we want to
+            // fall back to tracking desiredHorizontalVelocity
+            if ( Vector3d.Dot(desiredHorizontalVelocity.normalized, deltaHorizontalVelocity.normalized) > 0.90 )
             {
-                double betaFixed = Math.Asin(cosDesiredSurfaceAngle);
-
-                double velLaunchSite = body.Radius * body.angularVelocity.magnitude * Math.Cos(latitudeDegrees * MathExtensions.Deg2Rad);
-
-                double vx = orbVel * Math.Sin(betaFixed) - velLaunchSite;
-                double vy = orbVel * Math.Cos(betaFixed);
-
-                double angle = MathExtensions.Rad2Deg * Math.Atan(vx / vy);
-
-                if (inclinationDegrees < 0) angle = 180 - angle;
-
-                return MuUtils.ClampDegrees360(angle);
+                return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
+            } else {
+                return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(desiredHorizontalVelocity, east), Vector3d.Dot(desiredHorizontalVelocity, north)));
             }
         }
 
