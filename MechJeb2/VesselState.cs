@@ -720,7 +720,7 @@ namespace MuMech
             //ctrlTorqueAvailablePos = new Vector3();
             //ctrlTorqueAvailableNeg = new Vector3();
 
-            torqueReactionSpeed = new Vector3();
+            Vector6 torqueReactionSpeed6 = new Vector6();
 
             torqueReactionWheel.Reset();
             torqueControlSurface.Reset();
@@ -823,10 +823,52 @@ namespace MuMech
                         if (p.ShieldedFromAirstream || cs.deploy)
                             continue;
 
-                        var crtlTorque = cs.GetPotentialTorque().Abs();
-                        torqueControlSurface.Add(crtlTorque);
+                        //var crtlTorque = cs.GetPotentialTorque();
+                    
+                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
+                        
+                        // Build a vector that show if the surface is left/right forward/back up/down of the CoM.
+                        Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
+                        float inverted = relpos.y > 0.01 ? -1 : 1;
+                        relpos.x = cs.ignorePitch ? 0 : inverted * (relpos.x < 0.01 ? -1 : 1);
+                        relpos.y = cs.ignoreRoll ? 0 : inverted;
+                        relpos.z = cs.ignoreYaw ? 0 : inverted * (relpos.z < 0.01 ? -1 : 1);
+                        
+                        Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
+                        
+                        Vector3 nVel;
+                        Vector3 liftVector;
+                        float liftDot;
+                        float absDot;
+                        cs.SetupCoefficients(velocity, out nVel, out liftVector, out liftDot, out absDot);
+                        
+                        Quaternion maxRotation = Quaternion.AngleAxis(cs.ctrlSurfaceRange, cs.transform.rotation * Vector3.right);
+                        
+                        double dynPressurePa = p.dynamicPressurekPa * 1000;
+                        
+                        float mach = (float)p.machNumber;
+                        
+                        Vector3 posDeflection = maxRotation * liftVector;
+                        float liftDotPos = Vector3.Dot(nVel, posDeflection);
+                        absDot = Mathf.Abs(liftDotPos);
+                        
+                        Vector3 liftForcePos = cs.GetLiftVector(posDeflection, liftDotPos, absDot, dynPressurePa, mach) * cs.ctrlSurfaceArea;
+                        Vector3 ctrlTorquePos = Vector3.Scale(vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForcePos)), relpos);
+                        
+                        Vector3 negsDeflection = Quaternion.Inverse(maxRotation) * liftVector;
+                        float liftDotNeg = Vector3.Dot(nVel, negsDeflection);
+                        absDot = Mathf.Abs(liftDotPos);
+                        Vector3 liftForceNeg = cs.GetLiftVector(negsDeflection, liftDotNeg, absDot, dynPressurePa, mach) * cs.ctrlSurfaceArea;
+                        Vector3 ctrlTorqueNeg = Vector3.Scale(vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForceNeg)), relpos);
 
-                        torqueReactionSpeed += (Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed) * crtlTorque;
+                        torqueControlSurface.Add(ctrlTorquePos);
+                        torqueControlSurface.Add(ctrlTorqueNeg);
+
+                        torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * Vector3d.Max(ctrlTorquePos, ctrlTorqueNeg));
+                        
+
+                        //torqueControlSurface.Add(crtlTorque);
+                        //torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * crtlTorque);
                     }
                     else if (pm is ModuleGimbal)
                     {
@@ -844,12 +886,12 @@ namespace MuMech
                             }
                         }
 
-                        var crtlTorque = g.GetPotentialTorque().Abs(); ;
+                        var crtlTorque = g.GetPotentialTorque();
 
                         torqueGimbal.Add(crtlTorque);
                         
                         if (g.useGimbalResponseSpeed)
-                            torqueReactionSpeed += (Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * crtlTorque;
+                            torqueReactionSpeed6.Add((Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * crtlTorque.Abs());
                     }
                     else if (pm is ModuleRCS)
                     {
@@ -859,7 +901,7 @@ namespace MuMech
                     {
                         ITorqueProvider tp = pm as ITorqueProvider;
                     
-                        var crtlTorque = tp.GetPotentialTorque().Abs();
+                        var crtlTorque = tp.GetPotentialTorque();
 
                         torqueOthers.Add(crtlTorque);
                     }
@@ -912,8 +954,15 @@ namespace MuMech
             torqueDiffThrottle.y = 0;
 
             if (torqueAvailable.sqrMagnitude > 0)
+            {
+                torqueReactionSpeed = Vector3d.Max(torqueReactionSpeed6.positive, torqueReactionSpeed6.negative);
                 torqueReactionSpeed.Scale(torqueAvailable.InvertNoNaN());
-          
+            }
+            else
+            {
+                torqueReactionSpeed = Vector3d.zero;
+            }
+
             thrustVectorMaxThrottle = einfo.thrustMax;
             thrustVectorMinThrottle = einfo.thrustMin;
             thrustVectorLastFrame = einfo.thrustCurrent;
