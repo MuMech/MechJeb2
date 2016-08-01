@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -135,7 +133,7 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
             if (target != Target.OFF)
-                Engage();
+                Engage(false);
         }
 
 

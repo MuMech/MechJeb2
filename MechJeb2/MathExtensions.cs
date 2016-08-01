@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -15,6 +12,21 @@ namespace MuMech
         public static Vector3d Sign(this Vector3d vector)
         {
             return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
+        }
+
+        public static Vector3d Abs(this Vector3d vector)
+        {
+            return new Vector3d(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
+        }
+
+        public static Vector3 Abs(this Vector3 vector)
+        {
+            return new Vector3(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
+        }
+
+        public static Vector3 XZY(this Vector3 vector)
+        {
+            return new Vector3d(vector.x, vector.z, vector.y);
         }
 
         public static Vector3d Reorder(this Vector3d vector, int order)
@@ -40,6 +52,11 @@ namespace MuMech
         public static Vector3d Invert(this Vector3d vector)
         {
             return new Vector3d(1 / vector.x, 1 / vector.y, 1 / vector.z);
+        }
+
+        public static Vector3d InvertNoNaN(this Vector3d vector)
+        {
+            return new Vector3d(vector.x != 0 ? 1 / vector.x : 0, vector.y != 0 ? 1 / vector.y: 0, vector.z != 0 ? 1 / vector.z: 0);
         }
 
         public static Vector3 ProjectIntoPlane(this Vector3 vector, Vector3 planeNormal)

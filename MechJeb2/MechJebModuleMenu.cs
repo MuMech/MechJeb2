@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
+using KSP.UI.Screens;
 using UnityEngine;
 
 namespace MuMech
@@ -32,15 +32,26 @@ namespace MuMech
             CLOSING
         }
 
+        public enum WindowSide
+        {
+            LEFT,
+            RIGHT,
+            TOP,
+            BOTTOM
+        }
+
         private struct Button
         {
             public IButton button;
-            public String texturePath;
-            public String texturePathActive;
+            public string texturePath;
+            public string texturePathActive;
         }
 
         [Persistent(pass = (int)Pass.Global)]
         public WindowStat windowStat = WindowStat.HIDDEN;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public WindowSide windowSide = WindowSide.TOP;
 
         [Persistent(pass = (int)Pass.Global)]
         public float windowProgr = 0;
@@ -48,23 +59,108 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public float windowVPos = -185;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public float windowHPos = 250;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int columns = 2;
+
+        const int colWidth = 200;
+        
+        public Rect displayedPos
+        {
+            get
+            {
+                switch (windowSide)
+                {
+                    case WindowSide.LEFT:
+                        return new Rect((windowProgr - 1) * windowPos.width, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
+                    case WindowSide.RIGHT:
+                        return new Rect(GuiUtils.scaledScreenWidth - windowProgr * windowPos.width, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
+                    case WindowSide.TOP:
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - windowPos.width * 0.5f - windowHPos, 0, GuiUtils.scaledScreenWidth - windowPos.width), (windowProgr - 1) * windowPos.height, windowPos.width, windowPos.height);
+                    case WindowSide.BOTTOM:
+                    default:
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - windowPos.width * 0.5f - windowHPos, 0, GuiUtils.scaledScreenWidth - windowPos.width), GuiUtils.scaledScreenHeight - windowProgr * windowPos.height, windowPos.width, windowPos.height);
+                }
+            }
+        }
+        
+        public Rect buttonPos
+        {
+            get
+            {
+                switch (windowSide)
+                {
+                    case WindowSide.LEFT:
+                        return new Rect(Mathf.Clamp(windowVPos, - GuiUtils.scaledScreenHeight, -100), windowPos.width * windowProgr, 100, 25);
+                    case WindowSide.RIGHT:
+                        return new Rect(Mathf.Clamp(windowVPos, - GuiUtils.scaledScreenHeight, -100), GuiUtils.scaledScreenWidth - 25 - windowPos.width * windowProgr, 100, 25);
+                    case WindowSide.TOP:
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50), windowProgr * windowPos.height, 100, 25);
+                    case WindowSide.BOTTOM:
+                    default:
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50), GuiUtils.scaledScreenHeight - windowProgr * windowPos.height - 25, 100, 25);
+                }
+            }
+        }
+
         public bool firstDraw = true;
 
         bool movingButton = false;
 
-        [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
-        public bool hideButton = false;
+        [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int) Pass.Global)] public bool hideButton = false;
 
-        [ToggleInfoItem("Use AppLauncher", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
-        public bool useAppLauncher = true;
+        [ToggleInfoItem("Use AppLauncher", InfoItem.Category.Misc), Persistent(pass = (int) Pass.Global)] public bool useAppLauncher = true;
+
+        [GeneralInfoItem("Menu Position", InfoItem.Category.Misc)]
+        void MenuPosition()
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(windowSide.ToString()))
+            {
+                switch (windowSide)
+                {
+                    case WindowSide.LEFT:
+                        windowSide = WindowSide.RIGHT;
+                        break;
+                    case WindowSide.RIGHT:
+                        windowSide = WindowSide.TOP;
+                        break;
+                    case WindowSide.TOP:
+                        windowSide = WindowSide.BOTTOM;
+                        break;
+                    case WindowSide.BOTTOM:
+                        windowSide = WindowSide.LEFT;
+                        break;
+                    default:
+                        windowSide = WindowSide.RIGHT;
+                        break;
+                }
+            }
+
+            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            {
+                columns--;
+            }
+
+            GUILayout.Label(columns.ToString(), GUILayout.ExpandWidth(false));
+
+            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+            {
+                columns++;
+            }
+
+            GUILayout.EndHorizontal();
+
+            if (columns < 1)
+                columns = 1;
+        }
 
         // If the Toolbar is loaded and we don't want to display the big menu button
         public bool HideMenuButton
         {
-            get
-            {
-                return (ToolbarManager.ToolbarAvailable || useAppLauncher) && hideButton;
-            }
+            get { return (ToolbarManager.ToolbarAvailable || useAppLauncher) && hideButton; }
         }
 
         private static Dictionary<DisplayModule, Button> toolbarButtons;
@@ -87,19 +183,27 @@ namespace MuMech
             GUIStyle toggleActive = new GUIStyle(toggleInactive);
             toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
 
+            List<DisplayModule> displayModules = core.GetDisplayModules(DisplayOrder.instance);
+            int i = 0;
+            int step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.hidden && d.showInCurrentScene) + 1 ) / columns);
+            
+            GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
 
-            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance))
+            foreach (DisplayModule module in displayModules)
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
+                    if (i == step)
+                    {
+                        GUILayout.EndVertical();
+                        GUILayout.BeginVertical();
+                        i = 0;
+                    }
                     module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
+                    i++;
                 }
             }
-
-            if (core.someModuleAreLocked)
-                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
-
 
             if (GUILayout.Button("Online Manual"))
             {
@@ -107,6 +211,10 @@ namespace MuMech
             }
 
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
+            if (core.someModuleAreLocked)
+                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
         }
 
         public void SetupAppLauncher()
@@ -118,12 +226,7 @@ namespace MuMech
             {
                 Texture2D mjButtonTexture = GameDatabase.Instance.GetTexture("MechJeb2/Icons/MJ2", false);
 
-                mjButton = ApplicationLauncher.Instance.AddModApplication(
-                    ShowHideMasterWindow, ShowHideMasterWindow,
-                    null, null,
-                    null, null,
-                    ApplicationLauncher.AppScenes.ALWAYS,
-                    mjButtonTexture);
+                mjButton = ApplicationLauncher.Instance.AddModApplication(ShowHideMasterWindow, ShowHideMasterWindow, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, mjButtonTexture);
             }
 
             if (!useAppLauncher && mjButton != null)
@@ -151,7 +254,6 @@ namespace MuMech
                 Button button;
                 if (!toolbarButtons.ContainsKey(module))
                 {
-
                     Debug.Log("Create button for module " + module.GetName());
 
                     String name = GetCleanName(module.GetName());
@@ -245,7 +347,7 @@ namespace MuMech
 
         private void ClearButtons()
         {
-            if (mjButton != null && mjButton.gameObject != null) 
+            if (mjButton != null && mjButton.gameObject != null)
             {
                 ApplicationLauncher.Instance.RemoveModApplication(mjButton);
                 mjButton = null;
@@ -293,8 +395,10 @@ namespace MuMech
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
             Matrix4x4 previousGuiMatrix = GUI.matrix;
-            GUI.matrix = GUI.matrix * Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            if (!HideMenuButton && GUI.RepeatButton(new Rect(windowVPos, GuiUtils.scaledScreenWidth - 25 - (200 * windowProgr), 100, 25), (windowStat == WindowStat.HIDDEN) ? "/\\ MechJeb /\\" : "\\/ MechJeb \\/"))
+            if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
+                GUI.matrix = GUI.matrix*Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
+            
+            if (!HideMenuButton && GUI.RepeatButton(buttonPos, (windowStat == WindowStat.HIDDEN) ^ (windowSide == WindowSide.TOP || windowSide == WindowSide.LEFT) ? "▲ MechJeb ▲" : "▼ MechJeb ▼"))
             {
                 if (Event.current.button == 0)
                 {
@@ -311,8 +415,7 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                Rect pos = new Rect(GuiUtils.scaledScreenWidth - windowProgr * 200, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
-                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), pos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(200), GUILayout.Height(20));
+                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + core.version, GUILayout.Width(colWidth), GUILayout.Height(20));
             }
             else
             {
@@ -343,14 +446,21 @@ namespace MuMech
             }
         }
 
-
         public void OnMenuUpdate()
         {
             if (movingButton)
             {
                 if (Input.GetMouseButton(1))
                 {
-                    windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.height, -100) / GuiUtils.scale;
+                    if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
+                    {
+                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.width, 0)/GuiUtils.scale;
+                        
+                    }
+                    else
+                    {
+                        windowHPos = Mathf.Clamp(Screen.width - Input.mousePosition.x - 50, 0 , Screen.width) / GuiUtils.scale;
+                    }
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {
@@ -358,16 +468,19 @@ namespace MuMech
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+            if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
             {
                 SetupAppLauncher();
                 SetupToolBarButtons();
             }
         }
 
-        class DisplayOrder : IComparer<DisplayModule>
+        public class DisplayOrder : IComparer<DisplayModule>
         {
-            private DisplayOrder() { }
+            private DisplayOrder()
+            {
+            }
+
             public static DisplayOrder instance = new DisplayOrder();
 
             int IComparer<DisplayModule>.Compare(DisplayModule a, DisplayModule b)
@@ -376,7 +489,7 @@ namespace MuMech
                 bool customB = b is MechJebModuleCustomInfoWindow;
                 if (!customA && customB) return -1;
                 if (customA && !customB) return 1;
-                return String.Compare(a.GetName(), b.GetName(), StringComparison.Ordinal);
+                return string.Compare(a.GetName(), b.GetName(), StringComparison.Ordinal);
             }
         }
     }

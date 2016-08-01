@@ -2,10 +2,6 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using Smooth.Collections;
-using Smooth.Compare;
-
-using EventType=Smooth.Compare.EventType;
 
 #if !UNITY_3_5
 namespace Smooth.Compare.Utilities {

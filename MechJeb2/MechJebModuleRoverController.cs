@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -86,16 +85,16 @@ namespace MuMech
 		public EditableDouble brakeSpeedLimit = 0.7;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDp = 0.5;
+		public EditableDouble hPIDp = 0.01;
 		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDi = 0.0005;
+		public EditableDouble hPIDi = 0.001;
 		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDd = 0.0025;
+		public EditableDouble hPIDd = 0.001;
 		
 		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDp = 2.0;
 		[EditableInfoItem("Speed PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble sPIDi = 1.0;
+		public EditableDouble sPIDi = 0.1;
 		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDd = 0.001;
 		
@@ -131,9 +130,13 @@ namespace MuMech
 		
 		public void OnVesselModified(Vessel v)
 		{
-			try {
+
+            //TODO : need to look into the new ModuleWheelSteering ModuleWheelMotor ModuleWheelBrakes ModuleWheelBase ModuleWheelSuspension and see what they could bring
+
+            try
+            {
 				wheels.Clear();
-				wheels.AddRange(vessel.Parts.FindAll(p => !p.HasModule<ModuleLandingLeg>() && p.FindModelComponent<WheelCollider>() != null));
+				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() /*&& p.FindModelComponent<WheelCollider>() != null*/ && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
 				colliders.Clear();
 				wheels.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
 			}
@@ -194,7 +197,16 @@ namespace MuMech
 		        }
 		    }
 
-		    traction /= wheels.Count;
+//		    for (int i = 0; i < colliders.Count; i++)
+//		    {
+//		        var c = colliders[i];
+//		        if (c.isGrounded)
+//		        {
+//		            traction += 100;
+//		        }
+//		    }
+
+			traction /= wheels.Count;
 		}
 		
 		public override void OnModuleDisabled()
@@ -345,14 +357,20 @@ namespace MuMech
 //						(lastThrottle + Mathf.Clamp(act, -0.01f, 0.01f)));
 //					Debug.Log(s.wheelThrottle + Mathf.Clamp(act, -0.01f, 0.01f));
 					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
-//					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
-					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
-//						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-						brake = true;
-					}
-//					else if (!stabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
-//						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
+					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
+//					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
+////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+//						brake = true;
+//						foreach (Part p in wheels) {
+//							if (p.GetModule<ModuleWheels.ModuleWheelDamage>().stressPercent >= 0.01) { // #TODO needs adaptive braking
+//								brake = false;
+//								break;
+//							}
+//						}
 //					}
+////					else if (!StabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
+////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
+////					}
 					lastThrottle = Mathf.Clamp(s.wheelThrottle, -1, 1);
 				}
 			}
@@ -395,8 +413,8 @@ namespace MuMech
 //
 //					quat = n;
 //				}
-								
-				core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+                if (vesselState.torqueAvailable.sqrMagnitude > 0)
+				    core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
 //				}
 			}
 			

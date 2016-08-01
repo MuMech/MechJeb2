@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -58,8 +55,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool isOverlay = false;
+
         internal bool enabledEditor;
         internal bool enabledFlight;
+
+        private GUILayoutOption[] windowOptions;
 
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
@@ -80,7 +82,7 @@ namespace MuMech
 
         protected void WindowGUI(int windowID, bool draggable)
         {
-            if (GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
+            if (!isOverlay && GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
             {
                 enabled = false;
             }
@@ -90,8 +92,8 @@ namespace MuMech
 //                locked = !locked;
 //            }
             
-            bool allowDrag = true;
-            if (core.settings.useTitlebarDragging)
+            bool allowDrag = !locked;
+            if (locked && !isOverlay && core.settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
@@ -103,6 +105,13 @@ namespace MuMech
                 GUI.DragWindow();
         }
 
+        protected void ProfiledWindowGUI(int windowID)
+        {
+            Profiler.BeginSample(GetType().Name);
+            WindowGUI(windowID);
+            Profiler.EndSample();
+        }
+
         protected virtual void WindowGUI(int windowID)
         {
             WindowGUI(windowID, true);
@@ -112,7 +121,11 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(ID, windowPos, WindowGUI, GetName(), WindowOptions());
+                // Cache the array to not create one each frame
+                if (windowOptions == null)
+                    windowOptions = WindowOptions();
+
+                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), windowOptions);
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                
@@ -148,9 +161,9 @@ namespace MuMech
                     enabledEditor = enabled;
                 if (HighLogic.LoadedSceneIsFlight)
                     enabledFlight = enabled;
-
-                    global.AddValue("enabledEditor", enabledEditor);
-                    global.AddValue("enabledFlight", enabledFlight);
+                
+                global.AddValue("enabledEditor", enabledEditor);
+                global.AddValue("enabledFlight", enabledFlight);
             }
 //            if (global != null) global.AddValue("locked", locked);
         }
@@ -197,12 +210,12 @@ namespace MuMech
                 enabledEditor = enabled;
                 enabledFlight = enabled;
             }
-
-//            if (global != null && global.HasValue("locked"))
-//            {
-//                bool loadedLocked;
-//                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
-//            }
+            
+            //            if (global != null && global.HasValue("locked"))
+            //            {
+            //                bool loadedLocked;
+            //                if (bool.TryParse(global.GetValue("locked"), out loadedLocked)) locked = loadedLocked;
+            //            }
         }
 
         public virtual bool isActive()

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -206,7 +205,7 @@ namespace MuMech
                         GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
                                        +"\nMax drag: " + result.maxDragGees.ToString("F1") +"g"
                                        +"\nDelta-v needed: " + result.deltaVExpended.ToString("F1") + "m/s"
-                                       +"\nTime to land: " + GuiUtils.TimeToDHMS(Math.Max(0, result.endUT - Planetarium.GetUniversalTime()), 1));
+                                       +"\nTime to land: " + (vessel.Landed ? "0.0s" : GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1)));
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:

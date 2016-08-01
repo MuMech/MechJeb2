@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Reflection;
-using Smooth.Algebraics;
-using Smooth.Slinq;
-using Smooth.Slinq.Context;
 using UnityEngine;
 
 namespace MuMech
@@ -17,6 +12,8 @@ namespace MuMech
             return PartResourceLibrary.Instance.GetDefinition(type).density;
         }
 
+        private static readonly string[] units = { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+
         //Puts numbers into SI format, e.g. 1234 -> "1.234 k", 0.0045678 -> "4.568 m"
         //maxPrecision is the exponent of the smallest place value that will be shown; for example
         //if maxPrecision = -1 and digitsAfterDecimal = 3 then 12.345 will be formatted as "12.3"
@@ -26,8 +23,7 @@ namespace MuMech
             if (d == 0 || double.IsInfinity(d) || double.IsNaN(d)) return d.ToString() + " ";
 
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
-
-            string[] units = new string[] { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+            
             const int unitIndexOffset = 8; //index of "" in the units array
             int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
             if (unitIndex < 0) unitIndex = 0;
@@ -229,6 +225,30 @@ namespace MuMech
                     tex.SetPixel(x1, y1, col);
                 }
             }
+        }
+
+        public static Color HSVtoRGB(float hue, float saturation, float value, float alpha)
+        {
+            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+            float f = hue / 60 - Mathf.Floor(hue / 60);
+
+            float v = value;
+            float p = value * (1 - saturation);
+            float q = value * (1 - f * saturation);
+            float t = value * (1 - (1 - f) * saturation);
+
+            if (hi == 0)
+                return new Color(v, t, p, alpha);
+            if (hi == 1)           
+                return new Color(q, v, p, alpha);
+            if (hi == 2)           
+                return new Color(p, v, t, alpha);
+            if (hi == 3)           
+                return new Color(p, q, v, alpha);
+            if (hi == 4)           
+                return new Color(t, p, v, alpha);
+                                    
+            return new Color(v, p, q, alpha);
         }
     }
 

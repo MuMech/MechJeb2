@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -51,40 +48,45 @@ namespace MuMech
 
             if (!core.attitude.useSAS)
             {
-                core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
-
-                if (!core.attitude.Tf_autoTune)
+                core.attitude.lowPassFilter = GUILayout.Toggle(core.attitude.lowPassFilter, " Low Pass Filter");
+                
+                if (core.attitude.lowPassFilter)
                 {
-                    GUILayout.Label("Larger ship do better with a larger Tf");
+                    core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Tf (s)", GUILayout.ExpandWidth(true));
-                    GUILayout.Label("P", GUILayout.ExpandWidth(false));
-                    TfX.text = GUILayout.TextField(TfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.Label("Y", GUILayout.ExpandWidth(false));
-                    TfY.text = GUILayout.TextField(TfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.Label("R", GUILayout.ExpandWidth(false));
-                    TfZ.text = GUILayout.TextField(TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                    GUILayout.EndHorizontal();
+                    if (!core.attitude.Tf_autoTune)
+                    {
+                        GUILayout.Label("Larger ship do better with a larger Tf");
 
-                    TfX = Math.Max(0.01, TfX);
-                    TfY = Math.Max(0.01, TfY);
-                    TfZ = Math.Max(0.01, TfZ);
-                }
-                else
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
-                    GUILayout.Label(MuUtils.PrettyPrint(core.attitude.TfV), GUILayout.ExpandWidth(false));
-                    GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Tf (s)", GUILayout.ExpandWidth(true));
+                        GUILayout.Label("P", GUILayout.ExpandWidth(false));
+                        TfX.text = GUILayout.TextField(TfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                        GUILayout.Label("Y", GUILayout.ExpandWidth(false));
+                        TfY.text = GUILayout.TextField(TfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                        GUILayout.Label("R", GUILayout.ExpandWidth(false));
+                        TfZ.text = GUILayout.TextField(TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                        GUILayout.EndHorizontal();
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Tf range");
-                    GuiUtils.SimpleTextBox("min", TfMin, "", 50);
-                    TfMin = Math.Max(TfMin, 0.01);
-                    GuiUtils.SimpleTextBox("max", TfMax, "", 50);
-                    TfMax = Math.Max(TfMax, 0.01);
-                    GUILayout.EndHorizontal();
+                        TfX = Math.Max(0.01, TfX);
+                        TfY = Math.Max(0.01, TfY);
+                        TfZ = Math.Max(0.01, TfZ);
+                    }
+                    else
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
+                        GUILayout.Label(MuUtils.PrettyPrint(core.attitude.TfV), GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Tf range");
+                        GuiUtils.SimpleTextBox("min", TfMin, "", 50);
+                        TfMin = Math.Max(TfMin, 0.01);
+                        GuiUtils.SimpleTextBox("max", TfMax, "", 50);
+                        TfMax = Math.Max(TfMax, 0.01);
+                        GUILayout.EndHorizontal();
+                    }
                 }
 
                 GUILayout.Label("PID factors");
@@ -173,7 +175,7 @@ namespace MuMech
                     GUILayout.Label("|" + core.attitude.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.inertia), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
                     
-                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.Invert());
+                    Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.InvertNoNaN());
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("MOI / torque", GUILayout.ExpandWidth(true));
@@ -181,18 +183,23 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
-                    GUILayout.Label("|" + vesselState.MoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.MoI), GUILayout.ExpandWidth(false));
+                    GUILayout.Label("MOI MJ", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vesselState.calcMoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.calcMoI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI stock", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("MOI Stock", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + vessel.MOI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.MOI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
-
+                    
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Angular Velocity", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + vessel.angularVelocity.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.angularVelocity), GUILayout.ExpandWidth(false));
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Angular M", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("|" + vesselState.angularMomentum.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.angularMomentum), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -203,6 +210,7 @@ namespace MuMech
             }
 
             MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
+            vesselState.useStockRCSTorque = GUILayout.Toggle(vesselState.useStockRCSTorque, "Use stock RCS Torque");
 
             MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
 
@@ -210,9 +218,13 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
 
             arrows.seeThrough = GUILayout.Toggle(arrows.seeThrough, "Visible through object");
-            GUILayout.BeginHorizontal();
+            
 
-            arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, "Display the CoM. Radius of ", GUILayout.ExpandWidth(false));
+            arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, "Display the CoM", GUILayout.ExpandWidth(false));
+            arrows.colSphereActive = GUILayout.Toggle(arrows.colSphereActive, "Display the CoL", GUILayout.ExpandWidth(false));
+            arrows.cotSphereActive = GUILayout.Toggle(arrows.cotSphereActive, "Display the CoT", GUILayout.ExpandWidth(false));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Radius of Sphere", GUILayout.ExpandWidth(true));
             arrows.comSphereRadius.text = GUILayout.TextField(arrows.comSphereRadius.text, GUILayout.Width(40));
             GUILayout.EndHorizontal();
             arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Arrows origins at the CoM");
@@ -220,6 +232,7 @@ namespace MuMech
             arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
             arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
             arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
+            arrows.dotArrowActive = GUILayout.Toggle(arrows.dotArrowActive, "Direction of Thrust (purple pink)");
             arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (electric blue)");
             //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");
 
@@ -227,7 +240,7 @@ namespace MuMech
 
             arrows.debugArrowActive = GUILayout.Toggle(arrows.debugArrowActive, "Debug (magenta)");
 
-            arrows.debugArrow2Active = GUILayout.Toggle(arrows.debugArrow2Active, "Debug (light blue)");
+            arrows.debugArrow2Active = GUILayout.Toggle(arrows.debugArrow2Active, "Debug2 (light blue)");
 
 
             GUILayout.EndVertical();

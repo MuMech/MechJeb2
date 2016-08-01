@@ -94,7 +94,7 @@ namespace MuMech
 
 		private void DoPorkchopGui(Orbit o, double universalTime, MechJebModuleTargetController target)
 		{
-			if (worker == null)
+			if (worker == null || (plot == null && Event.current.type == EventType.Repaint))
 				return;
 			string dv = " - ";
 			string departure = " - ";

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MuMech
+﻿namespace MuMech
 {
     public class OperationInclination : Operation
     {
@@ -12,7 +10,12 @@ namespace MuMech
 
         public OperationInclination ()
         {
-            timeSelector = new TimeSelector(new TimeReference[] { TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING, TimeReference.X_FROM_NOW });
+            timeSelector = new TimeSelector(new TimeReference[]
+            {
+                TimeReference.EQ_HIGHEST_AD, TimeReference.EQ_NEAREST_AD,
+                TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING,
+                TimeReference.X_FROM_NOW
+            });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)

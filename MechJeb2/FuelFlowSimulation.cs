@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using CompoundParts;
+using KSP.UI.Screens;
 using Smooth.Algebraics;
 using Smooth.Dispose;
 using Smooth.Pools;
 using Smooth.Slinq;
 using UnityEngine;
+using UnityToolbag;
 
 namespace MuMech
 {
@@ -17,7 +19,7 @@ namespace MuMech
         readonly Dictionary<Part, FuelNode> nodeLookup = new Dictionary<Part, FuelNode>();
 
         private double KpaToAtmospheres;
-
+        
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
         public void Init(List<Part> parts, bool dVLinearThrust)
         {
@@ -52,6 +54,7 @@ namespace MuMech
                 for (int i = 0; i < parts.Count; i++)
                 {
                     Part p = parts[i];
+                    // TODO : check if both are actually still necessary
                     nodeLookup[p].SetupFuelLineSourcesFlight(p, nodeLookup);
                     nodeLookup[p].SetupFuelLineSourcesEditor(p, nodeLookup);
                 }
@@ -64,13 +67,13 @@ namespace MuMech
             }
 
 
-            simStage = Staging.lastStage + 1;
-
+            simStage = StageManager.LastStage + 1;
+            
             // Add a fake stage if we are beyond the first one
             // Mostly usefull for the Node Executor who use the last stage info
             // and fail to get proper info when the ship was never staged and
             // some engine were activated manually
-            if (Staging.CurrentStage > Staging.lastStage)
+            if (StageManager.CurrentStage > StageManager.LastStage)
                 simStage++;
         }
 
@@ -84,12 +87,12 @@ namespace MuMech
 
             double staticPressure = staticPressureKpa * KpaToAtmospheres;
 
-            //print("SimulateAllStages starting from stage " + simStage + "; ticks from start = " + (Environment.TickCount - startTick));
+            //print("SimulateAllStages starting from stage " + simStage);
             SimulateStageActivation();
 
             while (simStage >= 0)
             {
-                //print("Simulating stage " + simStage + "(vessel mass = " + VesselMass() + ")");
+                //print("Simulating stage " + simStage + "(vessel mass = " + VesselMass(simStage) + ")");
                 stages[simStage] = SimulateStage(throttle, staticPressure, atmDensity, machNumber);
                 if (simStage != maxStages)
                     stages[simStage].stagedMass = stages[simStage + 1].endMass - stages[simStage].startMass;
@@ -137,6 +140,12 @@ namespace MuMech
                 if (AllowedToStage()) break;
                 float dt;
                 stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
+
+                // BS engine detected. Bail out.
+                if (dt == float.MaxValue || float.IsInfinity(dt))
+                {
+                    break;
+                }
             }
 
             //print("Finished stage " + simStage + " after " + step + " steps");
@@ -383,7 +392,7 @@ namespace MuMech
                     resourceMass = startMass - s.endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
-                    deltaTime = this.deltaTime + s.deltaTime,
+                    deltaTime = this.deltaTime + (s.deltaTime < float.MaxValue && !float.IsInfinity(s.deltaTime) ? s.deltaTime : 0),
                     deltaV = this.deltaV + s.deltaV,
                     isp = this.startMass == s.endMass ? 0 : (this.deltaV + s.deltaV) / (9.80665f * Mathf.Log(this.startMass / s.endMass))
                 };
@@ -434,11 +443,10 @@ namespace MuMech
         public bool isEngine = false;   //whether this part is an engine
 
         float dryMass = 0; //the mass of this part, not counting resource mass
-        float fairingMass = 0; //the mass of the fairing of this part
+        float modulesUnstagedMass;   // the mass of the modules of this part before staging
+        float modulesStagedMass = 0; // the mass of the modules of this part after staging
 
         public string partName; //for debugging
-
-        public float moduleMass; // for debugging
 
         private static readonly Pool<FuelNode> pool = new Pool<FuelNode>(Create, Reset);
 
@@ -486,19 +494,28 @@ namespace MuMech
             isEngine = false;
 
             dryMass = 0;
-            fairingMass = 0;
+            modulesStagedMass = 0;
 
-            moduleMass = 0;
+            decoupledInStage = int.MinValue;
+
+            modulesUnstagedMass = 0;
             if (!part.IsLaunchClamp())
             {
-                //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + part.GetModuleMass(part.partInfo.partPrefab.mass).ToString("F4"));
-                dryMass = part.mass; // Intentionally ignore the physic flag.
+                dryMass = part.prefabMass; // Intentionally ignore the physic flag.
 
-                moduleMass = part.GetModuleMass(part.partInfo.partPrefab != null ? part.partInfo.partPrefab.mass : dryMass);
-                if (part.HasModule<ModuleProceduralFairing>())
+                modulesUnstagedMass = part.GetModuleMassNoAlloc(dryMass, ModifierStagingSituation.UNSTAGED);
+
+                modulesStagedMass = part.GetModuleMassNoAlloc(dryMass, ModifierStagingSituation.STAGED);
+
+                float currentModulesMass = part.GetModuleMassNoAlloc(dryMass, ModifierStagingSituation.CURRENT);
+                
+                // if it was manually staged
+                if (currentModulesMass == modulesStagedMass)
                 {
-                    fairingMass = moduleMass;
+                    modulesUnstagedMass = modulesStagedMass;
                 }
+
+                //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + modulesUnstagedMass.ToString("F4") + " " + modulesStagedMass.ToString("F4"));
             }
 
             inverseStage = part.inverseStage;
@@ -547,11 +564,11 @@ namespace MuMech
             if (engine != null)
             {
                 //Only count engines that either are ignited or will ignite in the future:
-                if ((HighLogic.LoadedSceneIsEditor || inverseStage < Staging.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < StageManager.CurrentStage || engine.getIgnitionState) && (engine.thrustPercentage > 0 || engine.minThrust > 0))
                 {
                     //if an engine has been activated early, pretend it is in the current stage:
-                    if (engine.getIgnitionState && inverseStage < Staging.CurrentStage)
-                        inverseStage = Staging.CurrentStage;
+                    if (engine.getIgnitionState && inverseStage < StageManager.CurrentStage)
+                        inverseStage = StageManager.CurrentStage;
 
                     isEngine = true;
 
@@ -563,7 +580,7 @@ namespace MuMech
                         Vector3 thrust = Vector3d.zero;
                         for (int i = 0; i < engine.thrustTransforms.Count; i++)
                         {
-                            thrust -= engine.thrustTransforms[i].forward / engine.thrustTransforms.Count;
+                            thrust -= engine.thrustTransforms[i].forward * engine.thrustTransformMultipliers[i];
                         }
 
                         Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engine.part.vessel.GetTransform().up;
@@ -578,6 +595,16 @@ namespace MuMech
 
                     minFuelFlow = engine.minFuelFlow;
                     maxFuelFlow = engine.maxFuelFlow;
+
+                    // Some brilliant engine mod seems to consider that FuelFlow is not something they should properly initialize
+                    if (minFuelFlow == 0 && engine.minThrust > 0)
+                    {
+                        maxFuelFlow = engine.minThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                    }
+                    if (maxFuelFlow == 0 && engine.maxThrust > 0)
+                    {
+                        maxFuelFlow = engine.maxThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                    }
 
                     atmosphereCurve = new FloatCurve(engine.atmosphereCurve.Curve.keys);
                     atmChangeFlow = engine.atmChangeFlow;
@@ -607,15 +634,180 @@ namespace MuMech
         // Then recurse to all of this part's children.
         public void AssignDecoupledInStage(Part p, Dictionary<Part, FuelNode> nodeLookup, int parentDecoupledInStage)
         {
-            if (p.IsUnfiredDecoupler() || p.IsLaunchClamp())
+            // Already processed
+            if (decoupledInStage != int.MinValue)
+                return;
+
+            bool isDecoupler = false;
+            decoupledInStage = parentDecoupledInStage;
+
+            for (int i = 0; i < p.Modules.Count; i++)
             {
-                decoupledInStage = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
-            }
-            else
-            {
-                decoupledInStage = parentDecoupledInStage;
+                PartModule m = p.Modules[i];
+                
+                ModuleDecouple mDecouple = m as ModuleDecouple;
+                if (mDecouple != null)
+                {
+                    if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn)
+                    {
+                        if (mDecouple.isOmniDecoupler)
+                        {
+                            isDecoupler = true;
+                            // We are decoupling our parent
+                            // The part and its children are not part of the ship when we decouple
+                            decoupledInStage = p.inverseStage;
+
+                            // The parent should already have its info assigned at this point
+                            //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+
+                            // The part children are decoupled when we decouple
+                            foreach (Part child in p.children)
+                            {
+                                nodeLookup[child].AssignDecoupledInStage(child, nodeLookup, p.inverseStage);
+                            }
+                        }
+                        else
+                        {
+                            AttachNode attach;
+                            if (mDecouple.explosiveNodeID != "srf")
+                            {
+                                attach = p.findAttachNode(mDecouple.explosiveNodeID);
+                            }
+                            else
+                            {
+                                attach = p.srfAttachNode;
+                            }
+
+                            if (attach != null && attach.attachedPart != null)
+                            {
+                                if (attach.attachedPart == p.parent)
+                                {
+                                    isDecoupler = true;
+                                    // We are decoupling our parent
+                                    // The part and its children are not part of the ship when we decouple
+                                    decoupledInStage = p.inverseStage;
+                                    //print("AssignDecoupledInStage ModuleDecouple          " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). parent " + decoupledInStage);
+
+                                    // The parent should already have its info assigned at this point
+                                    //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+                                }
+                                else
+                                {
+                                    isDecoupler = true;
+                                    // We are still attached to our parent
+                                    // The part and it's children are dropped when the parent is
+                                    decoupledInStage = parentDecoupledInStage;
+
+                                    //print("AssignDecoupledInStage ModuleDecouple          " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). not the parent " + decoupledInStage);
+                                    // The part we decouple is dropped when we decouple
+                                    nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, nodeLookup, p.inverseStage);
+                                    
+                                }
+                            }
+                        }
+                        break; // Hopefully no one made part with multiple decoupler modules ?
+                    }
+                }
+                
+                ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
+                if (mAnchoredDecoupler != null)
+                {
+                    if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
+                    {
+                        AttachNode attach;
+                        if (mAnchoredDecoupler.explosiveNodeID != "srf")
+                        {
+                            attach = p.findAttachNode(mAnchoredDecoupler.explosiveNodeID);
+                        }
+                        else
+                        {
+                            attach = p.srfAttachNode;
+                        }
+                        
+                        if (attach != null && attach.attachedPart != null)
+                        {
+                            if (attach.attachedPart == p.parent)
+                            {
+                                isDecoupler = true;
+                                // We are decoupling our parent
+                                // The part and its children are not part of the ship when we decouple
+                                decoupledInStage = p.inverseStage;
+                                //print("AssignDecoupledInStage ModuleAnchoredDecoupler " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). parent " + decoupledInStage);
+
+                                // The parent should already have its info assigned at this point
+                                //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+                            }
+                            else
+                            {
+                                isDecoupler = true;
+                                // We are still attached to our parent
+                                // The part and it's children are dropped when the parent is
+                                decoupledInStage = parentDecoupledInStage;
+
+                                //print("AssignDecoupledInStage ModuleAnchoredDecoupler " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). not the parent " + decoupledInStage);
+                                // The part we decouple is dropped when we decouple
+                                nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, nodeLookup, p.inverseStage);
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                ModuleDockingNode mDockingNode = m as ModuleDockingNode;
+                if (mDockingNode != null)
+                {
+                    if (mDockingNode.staged && mDockingNode.stagingEnabled && p.stagingOn)
+                    {
+                        Part attachedPart = mDockingNode.referenceNode.attachedPart;
+                        if (attachedPart != null)
+                        {
+                            if (attachedPart == p.parent)
+                            {
+                                isDecoupler = true;
+                                // We are decoupling our parent
+                                // The part and its children are not part of the ship when we decouple
+                                decoupledInStage = p.inverseStage;
+
+                                // The parent should already have its info assigned at this point
+                                //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+                            }
+                            else
+                            {
+                                isDecoupler = true;
+                                decoupledInStage = parentDecoupledInStage;
+                                //childDecoupledInStage = parentDecoupledInStage;
+                                nodeLookup[attachedPart].AssignDecoupledInStage(attachedPart, nodeLookup, p.inverseStage);
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                if (m.moduleName == "ProceduralFairingDecoupler")
+                {
+                    if (!m.Fields["decoupled"].GetValue<bool>(m) && m.stagingEnabled && p.stagingOn)
+                    {
+                        isDecoupler = true;
+                        // We are decoupling our parent
+                        // The part and its children are not part of the ship when we decouple
+                        decoupledInStage = p.inverseStage;
+                        break;
+                    }
+                }
             }
 
+            if (p.IsLaunchClamp())
+            {
+                decoupledInStage = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
+                //print("AssignDecoupledInStage D " + p.partInfo.name + " " + parentDecoupledInStage);
+
+            }
+            else if (!isDecoupler)
+            {
+                decoupledInStage = parentDecoupledInStage;
+                //print("AssignDecoupledInStage                         " + p.partInfo.name + "(" + p.inverseStage + ")" + decoupledInStage);
+            }
+            
             isSepratron = isEngine && (inverseStage == decoupledInStage);
 
             for (int i = 0; i < p.children.Count; i++)
@@ -627,7 +819,7 @@ namespace MuMech
 
         public static void print(object message)
         {
-            MonoBehaviour.print("[MechJeb2] " + message);
+            Dispatcher.InvokeAsync(() => MonoBehaviour.print("[MechJeb2] " + message));
         }
 
         public void SetConsumptionRates(float throttle, double atmDensity, double machNumber)
@@ -673,7 +865,7 @@ namespace MuMech
             if (fuelLine != null && fuelLine.target != null)
             {
                 FuelNode targetNode;
-                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode))
+                if (nodeLookup.TryGetValue(fuelLine.target, out targetNode) && !targetNode.fuelLineSources.Contains(this))
                     targetNode.fuelLineSources.Add(this);
             }
         }
@@ -754,7 +946,7 @@ namespace MuMech
             //return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id)) +
             float resMass = resources.KeysList.Slinq().Select((r, rs) => rs[r] * MuUtils.ResourceDensity(r), resources).Sum();
             return dryMass + resMass +
-                   (inverseStage < simStage ? fairingMass : 0f);
+                   (inverseStage < simStage ? modulesUnstagedMass : modulesStagedMass);
         }
 
         public float EngineThrust(float throttle, double atmospheres, double atmDensity, double machNumber)
@@ -990,10 +1182,6 @@ namespace MuMech
                 {
                     sources.value.Add(this);
                     return true;
-                }
-                else
-                {
-                    return false;
                 }
             }
 

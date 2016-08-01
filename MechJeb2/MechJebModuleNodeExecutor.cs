@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using UnityEngine;
 
 namespace MuMech
 {
@@ -11,7 +8,10 @@ namespace MuMech
         //public interface:
         [Persistent(pass = (int)Pass.Global)]
         public bool autowarp = true;      //whether to auto-warp to nodes
-        public const double leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
+
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
@@ -96,7 +96,7 @@ namespace MuMech
             {
                 burnTriggered = false;
 
-                vessel.patchedConicSolver.RemoveManeuverNode(node);
+                node.RemoveSelf();
 
                 if (mode == Mode.ONE_NODE)
                 {
@@ -125,7 +125,7 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
 
-            if (timeToNode < halfBurnTime)
+            if (halfBurnTime > 0 && timeToNode < halfBurnTime)
             {
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -183,7 +183,7 @@ namespace MuMech
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
 
             var stats = core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate(this, true);
 
             double lastStageBurnTime = 0;
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)

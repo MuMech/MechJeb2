@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MuMech
+﻿namespace MuMech
 {
     public class OperationApoapsis : Operation
     {
@@ -32,6 +30,11 @@ namespace MuMech
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT);
         }
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 

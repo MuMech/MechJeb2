@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
@@ -60,6 +56,11 @@ namespace MuMech
             core.thrust.LimiterMinThrottleInfoItem();
             core.thrust.LimitElectricInfoItem();
             core.thrust.LimitToPreventFlameoutInfoItem();
+            if (VesselState.isLoadedRealFuels)
+            {
+                // does nothing in stock, so we suppress displaying it if RF is not loaded
+                core.thrust.LimitToPreventUnstableIgnitionInfoItem();
+            }
             core.thrust.smoothThrottle = GUILayout.Toggle(core.thrust.smoothThrottle, "Smooth throttle");
             core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
@@ -74,7 +75,6 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            
             core.thrust.DifferentialThrottle();
             
             if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())

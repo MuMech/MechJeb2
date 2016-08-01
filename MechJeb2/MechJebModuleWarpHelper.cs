@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -143,6 +141,8 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
+
+            core.warp.ControlWarpButton();
 
             GUILayout.EndVertical();
 

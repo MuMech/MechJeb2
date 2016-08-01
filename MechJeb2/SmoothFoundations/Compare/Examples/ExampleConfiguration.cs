@@ -1,12 +1,4 @@
-﻿using UnityEngine;
-using System;
-using System.Collections.Generic;
-using Smooth.Collections;
-using Smooth.Compare;
-using Smooth.Compare.Comparers;
-
-
-//
+﻿//
 //
 // Example CustomConfiguration for Smooth.Compare.
 //

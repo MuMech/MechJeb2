@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace MuMech
+﻿namespace MuMech
 {
 
     // This file is to show how to use the callback in VesselState (and the other module who will have them soon)

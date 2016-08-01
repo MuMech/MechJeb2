@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using KSP.UI.Screens;
 using UnityEngine;
 
 namespace MuMech
@@ -82,27 +81,27 @@ namespace MuMech
 
             //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (!vessel.LiftedOff() || Staging.CurrentStage <= 0 || Staging.CurrentStage <= autostageLimit
+            if (!vessel.LiftedOff() || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
             //don't decouple active or idle engines or tanks
             List<int> burnedResources = FindBurnedResources();
-            if (InverseStageDecouplesActiveOrIdleEngineOrTank(Staging.CurrentStage - 1, vessel, burnedResources))
+            if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources))
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
-            if (HasStayingChutes(Staging.CurrentStage - 1, vessel))
+            if (HasStayingChutes(StageManager.CurrentStage - 1, vessel))
                 return;
 
             //only fire decouplers to drop deactivated engines or tanks
-            bool firesDecoupler = InverseStageFiresDecoupler(Staging.CurrentStage - 1, vessel);
-            if (firesDecoupler && !InverseStageDecouplesDeactivatedEngineOrTank(Staging.CurrentStage - 1, vessel))
+            bool firesDecoupler = InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel);
+            if (firesDecoupler && !InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
                 return;
 
             //only decouple fairings if the dynamic pressure and altitude conditions are respected
             if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude) &&
-                HasFairing(Staging.CurrentStage - 1, vessel))
+                HasFairing(StageManager.CurrentStage - 1, vessel))
                 return;
 
             //When we find that we're allowed to stage, start a countdown (with a
@@ -117,7 +116,7 @@ namespace MuMech
                         lastStageTime = vesselState.time;
                     }
 
-                    Staging.ActivateNextStage();
+                    StageManager.ActivateNextStage();
                     countingDown = false;
 
                     if (autostagingOnce)
@@ -148,8 +147,8 @@ namespace MuMech
     // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
         public List<int> FindBurnedResources()
         {
-            var activeEngines = vessel.parts.Where(p => p.inverseStage >= Staging.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
-                !p.IsDecoupledInStage(Staging.CurrentStage - 1));
+            var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
+                !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
             var burnedPropellants = engineModules.SelectMany(eng => eng.propellants);
             List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();

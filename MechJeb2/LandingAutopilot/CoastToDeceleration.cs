@@ -23,7 +23,7 @@ namespace MuMech
                 {
                     if (deltaV.magnitude > 3)
                         core.rcs.enabled = true;
-                    else if (deltaV.magnitude < 0.1)
+                    else if (deltaV.magnitude < 0.01)
                         core.rcs.enabled = false;
 
                     if (core.rcs.enabled)
@@ -64,7 +64,7 @@ namespace MuMech
                     double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!vesselState.parachuteDeployed || vesselState.drag <= 0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
+                        if (!vesselState.parachuteDeployed && vesselState.drag <= 0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
                             core.warp.MinimumWarp();
                             if (core.landing.rcsAdjustment)

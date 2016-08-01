@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using Smooth.Pools;
 using UnityEngine;
 using UnityToolbag;
 using Random = System.Random;
@@ -170,7 +167,7 @@ namespace MuMech
             random = new Random();
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
-                RenderingManager.AddToPostDrawQueue(1, DoMapView);
+                core.AddToPostDrawQueue(DoMapView);
             }
         }
 
@@ -435,7 +432,7 @@ namespace MuMech
                 {
                     if (aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
                     {
-                        vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
+                        aerobrakeNode.RemoveSelf();
                         aerobrakeNode = null;
                     }
                 }
@@ -480,7 +477,7 @@ namespace MuMech
                     //no aerobraking, remove the node:
                     if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                     {
-                        vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
+                        aerobrakeNode.RemoveSelf();
                     }
                 }
             }
@@ -489,7 +486,7 @@ namespace MuMech
                 //Remove aerobrake node when it is turned off:
                 if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
-                    vessel.patchedConicSolver.RemoveManeuverNode(aerobrakeNode);
+                    aerobrakeNode.RemoveSelf();
                 }
             }
         }

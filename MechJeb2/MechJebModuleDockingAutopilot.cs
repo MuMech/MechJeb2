@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -34,11 +31,11 @@ namespace MuMech
 
         public Boolean drawBoundingBox = false;
 
-        enum DockingStep
+        public enum DockingStep
         {
             INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
         }
-        DockingStep dockingStep = DockingStep.OFF;
+        public DockingStep dockingStep = DockingStep.OFF;
 
         public struct Box3d
         {
@@ -67,7 +64,7 @@ namespace MuMech
         {
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
-                RenderingManager.AddToPostDrawQueue(1, DrawBoundingBox);
+                core.AddToPostDrawQueue(DrawBoundingBox);
 
                 // Turn off docking AP on successful docking (in case other checks for successful docking fail)
                 GameEvents.onPartCouple.Add((GameEvents.FromToAction<Part, Part> ev) =>
