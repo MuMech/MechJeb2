@@ -316,9 +316,14 @@ namespace MuMech
                 print(e);
             }
 
-            if (zSep < 0)  //we're behind the target
-                dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
-            else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
+			if (zSep < 0)  //we're behind the target
+			{
+				if (Math.Abs (zSep) > safeDistance * 0.5f)
+					dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
+				else
+					dockingStep = DockingStep.BACKING_UP; // but not THAT far behind! Just back straight up.
+			}
+			else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
                 if (zSep < targetSize) 
                     dockingStep = DockingStep.BACKING_UP;
                 else
