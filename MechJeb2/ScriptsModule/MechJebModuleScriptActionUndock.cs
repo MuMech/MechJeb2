@@ -21,31 +21,59 @@ namespace MuMech
 			foreach (ModuleDockingNode node in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleDockingNode>())
 			{
 				dockingPartsList.Add(node.part);
-				this.dockingPartsNames.Add (node.part.partInfo.title);
+				dockingPartsNames.Add (node.part.partInfo.title);
 			}
 		}
 
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			dockingPartsList.Clear();
+			//Create again the parts list to manage the changes in the vessel structure
+			/*dockingPartsList.Clear();
 			dockingPartsNames.Clear();
 			foreach (ModuleDockingNode node in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleDockingNode>())
 			{
+				if (!dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().isEnabled)
+				{
+					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().enabled = true;
+				}
 				dockingPartsList.Add(node.part);
-				this.dockingPartsNames.Add(node.part.partInfo.title);
+				dockingPartsNames.Add(node.part.partInfo.title);
 			}
-			if (selectedPartIndex >= dockingPartsList.Count)
+			if (dockingPartsList.Count > 0)
 			{
-				selectedPartIndex = dockingPartsList.Count - 1;
-			}
-			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
-			{
-				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().isEnabled)
+				if (selectedPartIndex >= dockingPartsList.Count)
+				{
+					selectedPartIndex = dockingPartsList.Count - 1;
+				}
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Decouple();
 				}
+			}*/
+			//dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().enabled = true;
+			/*if (!dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Events["Undock"].active)
+			{
+				//Undock action of the selected module not available
+				//Check if the attached port is a docking port
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart.GetModule<ModuleDockingNode>() != null)
+				{
+					//...and if the attached port can undock
+					if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart.GetModule<ModuleDockingNode>().Events["Undock"].active)
+					{
+						dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart.GetModule<ModuleDockingNode>().referenceNode.attachedPart = dockingPartsList[selectedPartIndex].parent;
+						dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart.GetModule<ModuleDockingNode>().Decouple();
+					}
+				}
 			}
+			else
+			{
+				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart = dockingPartsList[selectedPartIndex].parent;
+				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Decouple();
+			}*/
+
+			dockingPartsList[selectedPartIndex].enabled = true;
+			dockingPartsList[selectedPartIndex].decouple();
 			this.endAction ();
 		}
 

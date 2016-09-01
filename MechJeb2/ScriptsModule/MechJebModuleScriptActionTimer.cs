@@ -9,6 +9,7 @@ namespace MuMech
 
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt time = 10;
+		private int spendTime = 0;
 		private int initTime = 10;
 		private float startTime;
 
@@ -28,6 +29,18 @@ namespace MuMech
 			base.endAction();
 		}
 
+		override public void afterOnFixedUpdate()
+		{
+			if (!this.isExecuted() && this.isStarted())
+			{
+				spendTime = initTime - (int)(Math.Round(Time.time - startTime));
+				if (spendTime <= 0)
+				{
+					this.endAction();
+				}
+			}
+		}
+
 		override public void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
@@ -38,12 +51,7 @@ namespace MuMech
 			}
 			if (!this.isExecuted() && this.isStarted())
 			{
-				time = initTime - (int)(Math.Round (Time.time - startTime));
-				if (time.val <= 0)
-				{
-					this.endAction ();
-				}
-				GUILayout.Label ("T:-" + time.val+"s");
+				GUILayout.Label ("T:-" + spendTime + "s");
 			}
 			base.postWindowGUI(windowID);
 		}
