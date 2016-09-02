@@ -21,7 +21,6 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableAngle targetLongitude;
 
-
 		public MechJebModuleScriptActionLanding (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			module = core.GetComputerModule<MechJebModuleLandingGuidance>();
@@ -47,7 +46,6 @@ namespace MuMech
 		{
 			base.endAction();
 			core.landing.users.Remove(module);
-
 		}
 
 		override public void readModuleConfiguration()

@@ -153,7 +153,6 @@ namespace MuMech
 			{
 				GUILayout.Label(" waiting " + this.spendTime + "s");
 			}
-
 			base.postWindowGUI(windowID);
 		}
 
@@ -208,4 +207,3 @@ namespace MuMech
 		}
 	}
 }
-

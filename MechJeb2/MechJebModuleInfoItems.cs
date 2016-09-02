@@ -98,6 +98,12 @@ namespace MuMech
             return OrbitSummary(o) + ", inc. " + o.inclination.ToString("F1") + "º";
         }
 
+        [ValueInfoItem("Mean Anomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
+        public double MeanAnomaly()
+        {
+            return orbit.meanAnomaly * MathExtensions.Rad2Deg;
+        }
+
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
         public string CurrentOrbitSummary()
         {
@@ -312,6 +318,12 @@ namespace MuMech
         public double EscapeVelocity()
         {
             return Math.Sqrt(2 * mainBody.gravParameter / vesselState.radius);
+        }
+
+        [ValueInfoItem("Vessel name", InfoItem.Category.Vessel, showInEditor = false)]
+        public string VesselName()
+        {
+            return vessel.vesselName;
         }
 
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
@@ -788,6 +800,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool liveSLT = true;
         [Persistent(pass = (int)Pass.Global)]
+        public float altSLTScale = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public float machScale = 0;
+        [Persistent(pass = (int)Pass.Global)]
         public int TWRBody = 1;
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
@@ -824,24 +840,6 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
 
-            double geeASL;
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                if (bodies == null)
-                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
-
-                // We're in the VAB/SPH
-                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this);
-                stats.editorBody = FlightGlobals.Bodies[TWRBody];
-                geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
-            }
-            else
-            {
-                // We're in flight
-                stats.editorBody = mainBody;
-                geeASL = mainBody.GeeASL;
-            }
-
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
@@ -855,8 +853,44 @@ namespace MuMech
                 }
                 stats.liveSLT = liveSLT;
             }
-
             GUILayout.EndHorizontal();
+
+            double geeASL;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GUILayout.BeginHorizontal();
+                if (bodies == null)
+                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
+
+                // We're in the VAB/SPH
+                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this, false);
+                stats.editorBody = FlightGlobals.Bodies[TWRBody];
+                geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
+
+                GUILayout.BeginVertical();
+
+                GUILayout.BeginHorizontal();
+                altSLTScale = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GUILayout.ExpandWidth(true));
+                stats.altSLT = Math.Pow(altSLTScale, 2) * stats.editorBody.atmosphereDepth;
+                GUILayout.Label(MuUtils.ToSI(stats.altSLT, 2) + "m", GUILayout.Width(80));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                machScale = GUILayout.HorizontalSlider(machScale, 0, 1, GUILayout.ExpandWidth(true));
+                stats.mach = Math.Pow(machScale * 2, 3);
+                GUILayout.Label(stats.mach.ToString("F1") + " M", GUILayout.Width(80));
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndVertical();
+
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                // We're in flight
+                stats.editorBody = mainBody;
+                geeASL = mainBody.GeeASL;
+            }
 
             switch (StageDisplayState)
             {

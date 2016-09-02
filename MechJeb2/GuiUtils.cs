@@ -101,7 +101,7 @@ namespace MuMech
             set
             {
                 _text = value;
-                _text = Regex.Replace(_text, @"[^\d+-.dhms ,]", ""); //throw away junk characters
+                _text = Regex.Replace(_text, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
 
                 double parsedValue;
                 parsed = double.TryParse(_text, out parsedValue);
@@ -383,9 +383,9 @@ namespace MuMech
             return index;
         }
 
-        public static int ArrowSelector(int index, int modulo, string label)
+        public static int ArrowSelector(int index, int modulo, string label, bool expandWidth = true)
         {
-            Action drawLabel = () => GUILayout.Label(label, new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = true });
+            Action drawLabel = () => GUILayout.Label(label, new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = expandWidth });
             return ArrowSelector(index, modulo, drawLabel);
         }
 
@@ -603,10 +603,10 @@ namespace MuMech
                     popupOwner = null;
             }
 
-            public static int Box(int selectedItem, string[] entries, object caller)
+            public static int Box(int selectedItem, string[] entries, object caller, bool expandWidth = true)
             {
                 if (dontUseDropDownMenu)
-                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem]);
+                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem], expandWidth);
 
                 // Trivial cases (0-1 items)
                 if (entries.Length == 0)
@@ -626,7 +626,7 @@ namespace MuMech
                 }
 
                 bool guiChanged = GUI.changed;
-                if (GUILayout.Button("↓ " + entries[selectedItem] + " ↓"))
+                if (GUILayout.Button("↓ " + entries[selectedItem] + " ↓", GUILayout.ExpandWidth(expandWidth)))
                 {
                     // We will set the changed status when we return from the menu instead
                     GUI.changed = guiChanged;

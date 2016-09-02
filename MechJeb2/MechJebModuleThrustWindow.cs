@@ -56,6 +56,11 @@ namespace MuMech
             core.thrust.LimiterMinThrottleInfoItem();
             core.thrust.LimitElectricInfoItem();
             core.thrust.LimitToPreventFlameoutInfoItem();
+            if (VesselState.isLoadedRealFuels)
+            {
+                // does nothing in stock, so we suppress displaying it if RF is not loaded
+                core.thrust.LimitToPreventUnstableIgnitionInfoItem();
+            }
             core.thrust.smoothThrottle = GUILayout.Toggle(core.thrust.smoothThrottle, "Smooth throttle");
             core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
@@ -70,11 +75,10 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            // TODO : bring DifferentialThrottle back
-            //core.thrust.DifferentialThrottle();
-            //
-            //if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
-            //    GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
+            core.thrust.DifferentialThrottle();
+            
+            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
+                GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
 
             core.solarpanel.AutoDeploySolarPanelsInfoItem();
 

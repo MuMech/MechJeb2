@@ -55,10 +55,6 @@ namespace MuMech
         public static DebugArrow dotArrow;
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool dotInstantArrowActive;
-        public static DebugArrow dotInstantArrow;
-
-        [Persistent(pass = (int)Pass.Global)]
         public bool forwardArrowActive;
         public static DebugArrow forwardArrow;
 
@@ -117,8 +113,6 @@ namespace MuMech
 
             dotArrow.Destroy();
             dotArrow = null;
-            dotInstantArrow.Destroy();
-            dotInstantArrow = null;
             
             forwardArrow.Destroy();
             forwardArrow = null;
@@ -155,7 +149,6 @@ namespace MuMech
                 comObtVelocityArrow = new DebugArrow(XKCDColors.Orange);
 
                 dotArrow        = new DebugArrow(XKCDColors.PurplePink);
-                dotInstantArrow = new DebugArrow(XKCDColors.Pink);
 
                 forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
                 avgForwardArrow = new DebugArrow(Color.blue);
@@ -233,14 +226,6 @@ namespace MuMech
                 dotArrow.Set(vesselState.CoT + frameVel, vesselState.DoT);
                 dotArrow.SetLength((float)Math.Log10(vesselState.thrustCurrent + 1));
                 dotArrow.SeeThrough(seeThrough);
-            }
-
-            dotInstantArrow.State(dotInstantArrowActive && vesselState.thrustCurrent > 0);
-            if (dotInstantArrowActive)
-            {
-                dotInstantArrow.Set(vesselState.CoT+ frameVel, vesselState.DoTInstant);
-                dotInstantArrow.SetLength((float) Math.Log10(vesselState.thrustCurrent + 1));
-                dotInstantArrow.SeeThrough(seeThrough);
             }
             
             forwardArrow.State(forwardArrowActive);

@@ -615,7 +615,6 @@ namespace MuMech
 			}
 
 			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
-
 			//TODO : Find a way to notify the user. The popup appears below the main window...
 			//PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved on the current vessel", "OK", true, HighLogic.UISkin);
 		}
@@ -673,4 +672,3 @@ namespace MuMech
 		}
 	}
 }
-

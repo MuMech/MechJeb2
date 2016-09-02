@@ -8,6 +8,7 @@ using Smooth.Dispose;
 using Smooth.Pools;
 using Smooth.Slinq;
 using UnityEngine;
+using UnityToolbag;
 
 namespace MuMech
 {
@@ -139,6 +140,12 @@ namespace MuMech
                 if (AllowedToStage()) break;
                 float dt;
                 stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
+
+                // BS engine detected. Bail out.
+                if (dt == float.MaxValue || float.IsInfinity(dt))
+                {
+                    break;
+                }
             }
 
             //print("Finished stage " + simStage + " after " + step + " steps");
@@ -385,7 +392,7 @@ namespace MuMech
                     resourceMass = startMass - s.endMass,
                     startThrust = this.startThrust,
                     maxAccel = Mathf.Max(this.maxAccel, s.maxAccel),
-                    deltaTime = this.deltaTime + s.deltaTime,
+                    deltaTime = this.deltaTime + (s.deltaTime < float.MaxValue && !float.IsInfinity(s.deltaTime) ? s.deltaTime : 0),
                     deltaV = this.deltaV + s.deltaV,
                     isp = this.startMass == s.endMass ? 0 : (this.deltaV + s.deltaV) / (9.80665f * Mathf.Log(this.startMass / s.endMass))
                 };
@@ -588,6 +595,16 @@ namespace MuMech
 
                     minFuelFlow = engine.minFuelFlow;
                     maxFuelFlow = engine.maxFuelFlow;
+
+                    // Some brilliant engine mod seems to consider that FuelFlow is not something they should properly initialize
+                    if (minFuelFlow == 0 && engine.minThrust > 0)
+                    {
+                        maxFuelFlow = engine.minThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                    }
+                    if (maxFuelFlow == 0 && engine.maxThrust > 0)
+                    {
+                        maxFuelFlow = engine.maxThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                    }
 
                     atmosphereCurve = new FloatCurve(engine.atmosphereCurve.Curve.keys);
                     atmChangeFlow = engine.atmChangeFlow;
@@ -802,7 +819,7 @@ namespace MuMech
 
         public static void print(object message)
         {
-            MonoBehaviour.print("[MechJeb2] " + message);
+            Dispatcher.InvokeAsync(() => MonoBehaviour.print("[MechJeb2] " + message));
         }
 
         public void SetConsumptionRates(float throttle, double atmDensity, double machNumber)

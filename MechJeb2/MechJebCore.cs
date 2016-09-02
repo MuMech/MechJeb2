@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using KSP.IO;
 using System.Diagnostics;
+using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
 
@@ -510,6 +511,8 @@ namespace MuMech
 
         public override void OnAwake()
         {
+            Dispatcher.CreateDispatcher();
+
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
                 try
@@ -693,7 +696,8 @@ namespace MuMech
             else
                 version = dev_version;
 
-            print("Loading Mechjeb " + version);
+            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
+                print("Loading Mechjeb " + version);
 
             try
             {
