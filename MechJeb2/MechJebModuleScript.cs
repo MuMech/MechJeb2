@@ -197,7 +197,7 @@ namespace MuMech
 						this.stop();
 					}
 				}
-				if (this.actionsList.Count > 2)
+				if (this.actionsList.Count > 0)
 				{
 					if (minifiedGUI)
 					{

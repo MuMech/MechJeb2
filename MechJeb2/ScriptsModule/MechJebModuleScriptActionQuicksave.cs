@@ -9,6 +9,7 @@ namespace MuMech
 		private int spendTime = 0;
 		private int initTime = 5; //Add a 5s timer after the save action
 		private float startTime = 0f;
+		private bool saved = false;
 
 		public MechJebModuleScriptActionQuicksave (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
@@ -17,11 +18,6 @@ namespace MuMech
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			this.scriptModule.setActiveSavepoint(this.actionIndex);
-			if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
-			{
-				QuickSaveLoad.QuickSave();
-			}
 		}
 
 		override public  void endAction()
@@ -40,7 +36,21 @@ namespace MuMech
 				spendTime = initTime - (int)(Math.Round(Time.time - startTime));
 				if (spendTime <= 0)
 				{
-					this.endAction();
+					if (!this.saved)
+					{
+						//Wait 5s before save so FlightsGlobals are clear to save
+						this.scriptModule.setActiveSavepoint(this.actionIndex);
+						if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
+						{
+							QuickSaveLoad.QuickSave();
+						}
+						this.saved = true;
+						startTime = Time.time;
+					}
+					else {
+						//Then wait 5s after save to let the time to save
+						this.endAction();
+					}
 				}
 			}
 		}

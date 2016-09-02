@@ -71,9 +71,11 @@ namespace MuMech
 				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart = dockingPartsList[selectedPartIndex].parent;
 				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Decouple();
 			}*/
-
-			dockingPartsList[selectedPartIndex].enabled = true;
-			dockingPartsList[selectedPartIndex].decouple();
+			if (dockingPartsList[selectedPartIndex] != null)
+			{
+				dockingPartsList[selectedPartIndex].enabled = true;
+				dockingPartsList[selectedPartIndex].decouple();
+			}
 			this.endAction ();
 		}
 
