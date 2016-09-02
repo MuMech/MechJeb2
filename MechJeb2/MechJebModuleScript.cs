@@ -11,7 +11,6 @@ namespace MuMech
 		private String[] actionNames;
 		private bool started = false;
 		private int selectedActionIndex = 0;
-		private int currentActionIndex = 0;
 		public Texture2D imageRed = new Texture2D(20, 20);
 		public Texture2D imageGreen = new Texture2D(20, 20);
 		public Texture2D imageGray = new Texture2D(20, 20);
@@ -22,7 +21,6 @@ namespace MuMech
 		private int selectedSlot = 0;
 		private List<MechJebCore> mechJebCores = new List<MechJebCore>();
 		private List<String> mechJebCoresName = new List<String>();
-		private EditableInt selectedMechJebCore = new EditableInt(0);
 		[Persistent(pass = (int)(Pass.Local))]
 		public String vesselSaveName;
 		[Persistent(pass = (int)(Pass.Local))]
@@ -87,7 +85,6 @@ namespace MuMech
 
 		public override void OnStart(PartModule.StartState state)
 		{
-			Debug.Log("------ Start core -----");
 			List<String> actionsNamesList = new List<String> ();
 			actionsNamesList.Add ("Timer");
 			actionsNamesList.Add ("Decouple");
@@ -106,6 +103,7 @@ namespace MuMech
 			actionsNamesList.Add ("Node tolerance");
 			actionsNamesList.Add ("Warp");
 			actionsNamesList.Add ("Wait for");
+			actionsNamesList.Add ("Load Script");
 			actionsNamesList.Add ("MODULE Ascent Autopilot");
 			actionsNamesList.Add ("MODULE Docking Autopilot");
 			actionsNamesList.Add ("MODULE Landing");
@@ -126,10 +124,6 @@ namespace MuMech
 				//Try to have only one vessel name, whatever the new vessel name. We use the vessel name of the first time the system was instanciated
 				//Can cause problem with load/save...
 				vesselSaveName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : null; // Strip illegal char from the filename
-			}
-			else
-			{
-				Debug.Log("VESSEL SAVE NAME ALREADY SET :" + vesselSaveName);
 			}
 
 			//MechJebCore instances
@@ -334,6 +328,10 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionActionGroup(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("Load Script") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionLoadScript(this, core));
+						}
 						else if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionAscent(this, core));
@@ -408,7 +406,6 @@ namespace MuMech
 			if (actionsList.Count > (index + 1) && this.started)
 			{
 				actionsList[index + 1].activateAction(index + 1);
-				this.currentActionIndex = index + 1;
 			}
 			else
 			{
@@ -588,6 +585,10 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionActionGroup(this, core);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionLoadScript.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionLoadScript(this, core);
+				}
 				else {
 					Debug.LogError("MechJebModuleScript.LoadConfig : Unknown node " + scriptNode.name);
 				}
@@ -639,7 +640,6 @@ namespace MuMech
 		//Start after the action defined at a specified index (for load restore or vessel switch)
 		public void startAfterIndex(int index)
 		{
-			Debug.Log("Start after index " + index);
 			if (index < actionsList.Count)
 			{
 				for (int i = 0; i <= index; i++)
@@ -654,11 +654,12 @@ namespace MuMech
 		//Before switching vessel, we save the script, then in the OnLoad method of the script module, we check if any other mechjebcore has an active pending breakpoint
 		public void setActiveBreakpoint(int index, Vessel new_vessel)
 		{
-			this.SaveConfig(9); //Slot 9 is used for "temp";
+			this.SaveConfig(9); //Slot 9 is used for "temp"
 			this.stop();
 			List<MechJebCore> mechjebCoresList = new_vessel.FindPartModulesImplementing<MechJebCore>();
 			foreach (MechJebCore mjCore in mechjebCoresList)
 			{
+				mjCore.GetComputerModule<MechJebModuleScript>().minifiedGUI = this.minifiedGUI; //Replicate the UI setting on the other mechjeb
 				mjCore.GetComputerModule<MechJebModuleScript>().pendingloadBreakpoint = index;
 				return;
 			}
@@ -666,7 +667,7 @@ namespace MuMech
 
 		public void loadFromBreakpoint(int index)
 		{
-			this.LoadConfig(9); //Slot 9 is used for "temp";
+			this.LoadConfig(9); //Slot 9 is used for "temp"
 			this.DeleteConfig(9); //Delete the temp config
 			this.startAfterIndex(index);
 		}
