@@ -8,22 +8,26 @@ namespace MuMech
 		public static String NAME = "Landing";
 
 		MechJebModuleLandingGuidance module;
+		MechJebModuleLandingAutopilot module_autopilot;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool deployGear = true;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool deployChutes = true;
 		[Persistent(pass = (int)Pass.Type)]
+		public EditableInt limitChutesStage = 0;
+		[Persistent(pass = (int)Pass.Type)]
 		private EditableDouble touchdownSpeed;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool landTarget = false;
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableAngle targetLattitude;
+		private EditableAngle targetLattitude = new EditableAngle(0);
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableAngle targetLongitude;
+		private EditableAngle targetLongitude = new EditableAngle(0);
 
 		public MechJebModuleScriptActionLanding (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			module = core.GetComputerModule<MechJebModuleLandingGuidance>();
+			module_autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
 			this.readModuleConfiguration();
 		}
 
@@ -32,27 +36,28 @@ namespace MuMech
 			base.activateAction(actionIndex);
 			if (this.landTarget)
 			{
-				core.landing.LandAtPositionTarget(this);
+				module_autopilot.LandAtPositionTarget(this);
 			}
 			else
 			{
-				core.landing.LandUntargeted(this);
+				module_autopilot.LandUntargeted(this);
 			}
 			this.writeModuleConfiguration();
-			core.landing.users.Add(module);
+			module_autopilot.users.Add(module);
 		}
 
-		override public  void endAction()
+		override public void endAction()
 		{
 			base.endAction();
-			core.landing.users.Remove(module);
+			module_autopilot.users.Remove(module);
 		}
 
 		override public void readModuleConfiguration()
 		{
-			deployGear = core.landing.deployGears;
-			deployChutes = core.landing.deployChutes;
-			touchdownSpeed = core.landing.touchdownSpeed;
+			deployGear = module_autopilot.deployGears;
+			deployChutes = module_autopilot.deployChutes;
+			limitChutesStage = module_autopilot.limitChutesStage;
+			touchdownSpeed = module_autopilot.touchdownSpeed;
 			if (core.target.PositionTargetExists)
 			{
 				landTarget = true;
@@ -63,13 +68,13 @@ namespace MuMech
 
 		override public void writeModuleConfiguration()
 		{
-			core.landing.deployGears = deployGear;
-			core.landing.deployChutes = deployChutes;
-			core.landing.touchdownSpeed = touchdownSpeed;
+			module_autopilot.deployGears = deployGear;
+			module_autopilot.deployChutes = deployChutes;
+			module_autopilot.touchdownSpeed = touchdownSpeed;
+			module_autopilot.limitChutesStage = limitChutesStage;
 			if (landTarget)
 			{
-				core.target.targetLatitude = targetLattitude;
-				core.target.targetLongitude = targetLongitude;
+				core.target.SetPositionTarget(core.vessel.mainBody, targetLattitude, targetLongitude);
 			}
 		}
 
@@ -94,7 +99,7 @@ namespace MuMech
 
 		override public void afterOnFixedUpdate()
 		{
-			if (this.isStarted() && !this.isExecuted() && core.landing.CurrentStep == null)
+			if (this.isStarted() && !this.isExecuted() && module_autopilot.CurrentStep == null)
 			{
 				this.endAction();
 			}

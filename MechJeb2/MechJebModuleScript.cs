@@ -224,11 +224,6 @@ namespace MuMech
 						this.clearAll();
 					}
 					selectedSlot = GuiUtils.ComboBox.Box(selectedSlot, scriptsList.ToArray(), scriptsList);
-					//Allow to select core when there are multiple cores
-					/*if (mechJebCoresName.Count > 1)
-					{
-						selectedMechJebCore = GuiUtils.ComboBox.Box(selectedMechJebCore, mechJebCoresName.ToArray(), mechJebCoresName);
-					}*/
 					if (GUILayout.Button("Save", style2))
 					{
 						this.SaveConfig(this.selectedSlot);
@@ -481,8 +476,8 @@ namespace MuMech
 		public void LoadConfig(int slot)
 		{
 			this.clearAll();
+			this.selectedSlot = slot; //Select the slot for the UI
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
-			//string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
 			if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
 			{
 				try
