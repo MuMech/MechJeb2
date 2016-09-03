@@ -20,6 +20,9 @@ namespace MuMech
 		EditableTime timeOffset = 0;
 		double targetUT = 0;
 		private bool warping;
+		private int spendTime = 0;
+		private int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
+		private float startTime = 0f;
 
 		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
@@ -146,11 +149,29 @@ namespace MuMech
 
 			if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
 
+			if (this.isStarted() && !this.isExecuted() && this.startTime > 0)
+			{
+				GUILayout.Label(" waiting " + this.spendTime + "s");
+			}
 			base.postWindowGUI(windowID);
 		}
 
 		override public void afterOnFixedUpdate()
 		{
+			//Check the end of the action
+			if (this.isStarted() && !this.isExecuted() && !warping && startTime == 0f)
+			{
+				startTime = Time.time;
+			}
+			if (this.isStarted() && !this.isExecuted() && startTime > 0)
+			{
+				this.spendTime = initTime - (int)(Math.Round(Time.time - startTime)); //Add the end action timer
+				if (this.spendTime <= 0)
+				{
+					this.endAction();
+				}
+			}
+
 			if (!warping) return;
 
 			if (warpTarget == WarpTarget.SuicideBurn)
@@ -176,12 +197,6 @@ namespace MuMech
 			{
 				core.warp.WarpToUT(target);
 			}
-
-			//Check the end of the action
-			if (this.isStarted() && !this.isExecuted() && !warping)
-			{
-				this.endAction();
-			}
 		}
 
 		override public void onAbord()
@@ -192,4 +207,3 @@ namespace MuMech
 		}
 	}
 }
-

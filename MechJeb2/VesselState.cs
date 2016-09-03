@@ -474,7 +474,7 @@ namespace MuMech
             time = Planetarium.GetUniversalTime();
             deltaT = TimeWarp.fixedDeltaTime;
 
-            //CoM = vessel.findWorldCenterOfMass();
+            //CoM = °;
             up = (CoM - vessel.mainBody.position).normalized;
 
             Rigidbody rigidBody = vessel.rootPart.rb;
