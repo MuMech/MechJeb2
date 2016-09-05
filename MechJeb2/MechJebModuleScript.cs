@@ -19,8 +19,6 @@ namespace MuMech
 		private List<String> scriptsList = new List<String>();
 		[Persistent(pass = (int)(Pass.Local))]
 		private int selectedSlot = 0;
-		private List<MechJebCore> mechJebCores = new List<MechJebCore>();
-		private List<String> mechJebCoresName = new List<String>();
 		[Persistent(pass = (int)(Pass.Local))]
 		public String vesselSaveName;
 		[Persistent(pass = (int)(Pass.Local))]
@@ -119,26 +117,28 @@ namespace MuMech
 				}
 			}
 
-			if (vesselSaveName == null)
+			if (vessel != null)
 			{
-				//Try to have only one vessel name, whatever the new vessel name. We use the vessel name of the first time the system was instanciated
-				//Can cause problem with load/save...
-				vesselSaveName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : null; // Strip illegal char from the filename
-			}
-
-			//MechJebCore instances
-			List<MechJebCore> mechjebCoresList = vessel.FindPartModulesImplementing<MechJebCore>();
-			if (mechjebCoresList.Count > 1)
-			{
-				int position = 0;
-				foreach (MechJebCore mjCore in mechjebCoresList)
+				if (vesselSaveName == null)
 				{
-					mechJebCores.Add(mjCore);
-					mechJebCoresName.Add("Core " + position); //TODO: Find a more relevant name...
-					position++;
-					if (mjCore.GetComputerModule<MechJebModuleScript>().vesselSaveName == null)
+					//Try to have only one vessel name, whatever the new vessel name. We use the vessel name of the first time the system was instanciated
+					//Can cause problem with load/save...
+					vesselSaveName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : null; // Strip illegal char from the filename
+				}
+
+				//MechJebCore instances
+				List<MechJebCore> mechjebCoresList = vessel.FindPartModulesImplementing<MechJebCore>();
+				if (mechjebCoresList.Count > 1)
+				{
+					foreach (MechJebCore mjCore in mechjebCoresList)
 					{
-						mjCore.GetComputerModule<MechJebModuleScript>().vesselSaveName = vesselSaveName; //Set the unique vessel name
+						if (mjCore.GetComputerModule<MechJebModuleScript>() != null)
+						{
+							if (mjCore.GetComputerModule<MechJebModuleScript>().vesselSaveName == null)
+							{
+								mjCore.GetComputerModule<MechJebModuleScript>().vesselSaveName = vesselSaveName; //Set the unique vessel name
+							}
+						}
 					}
 				}
 			}
