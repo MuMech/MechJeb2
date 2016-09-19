@@ -105,6 +105,8 @@ namespace MuMech
 			actionsNamesList.Add ("MODULE Ascent Autopilot");
 			actionsNamesList.Add ("MODULE Docking Autopilot");
 			actionsNamesList.Add ("MODULE Landing");
+			actionsNamesList.Add ("MODULE Rendezvous");
+			actionsNamesList.Add ("MODULE Rendezvous Autopilot");
 
 			actionNames = actionsNamesList.ToArray ();
 
@@ -338,6 +340,14 @@ namespace MuMech
 						else if (actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionLanding(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("MODULE Rendezvous") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionRendezvous(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("MODULE Rendezvous Autopilot") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionRendezvousAP(this, core));
 						}
 					}
 					GUILayout.EndHorizontal();
@@ -584,6 +594,14 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionLoadScript(this, core);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionRendezvous.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionRendezvous(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionRendezvousAP.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionRendezvousAP(this, core);
+				}
 				else {
 					Debug.LogError("MechJebModuleScript.LoadConfig : Unknown node " + scriptNode.name);
 				}
@@ -596,7 +614,7 @@ namespace MuMech
 			}
 		}
 
-		public void SaveConfig(int slot)
+		public void SaveConfig(int slot, bool notify)
 		{
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
 			//string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
@@ -612,6 +630,7 @@ namespace MuMech
 			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
 			//TODO : Find a way to notify the user. The popup appears below the main window...
 			//PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved on the current vessel", "OK", true, HighLogic.UISkin);
+			PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved in slot "+(slot+1)+" on current vessel", "OK", true, HighLogic.UISkin);
 		}
 
 		public void DeleteConfig(int slot)
