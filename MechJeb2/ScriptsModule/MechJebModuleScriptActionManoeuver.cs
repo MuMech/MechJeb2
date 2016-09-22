@@ -22,7 +22,7 @@ namespace MuMech
 			//Only add the "tested" and "supported" operations
 			for (int i = 0; i < op_list.Length; i++)
 			{
-				if (op_list[i].getName().ToLower().Contains("hohmann") || op_list[i].getName().ToLower().Contains("circularize") || op_list[i].getName().ToLower().Contains("apoapsis") || op_list[i].getName().ToLower().Contains("periapsis"))
+				if (op_list[i].getName().ToLower().Contains("hohmann") || op_list[i].getName().ToLower().Contains("circularize") || op_list[i].getName().ToLower().Contains("apoapsis") || op_list[i].getName().ToLower().Contains("periapsis") || op_list[i].getName().ToLower().Contains("fine tune") || op_list[i].getName().ToLower().Contains("Pe and Ap") || op_list[i].getName().ToLower().Contains("inclination") || op_list[i].getName().ToLower().Contains("match velocities") || op_list[i].getName().ToLower().Contains("intercept target") || op_list[i].getName().ToLower().Contains("change longitude") || op_list[i].getName().ToLower().Contains("change surface longitude") || op_list[i].getName().ToLower().Contains("return from a moon") || op_list[i].getName().ToLower().Contains("match planes") || op_list[i].getName().ToLower().Contains("resonant orbit") || op_list[i].getName().ToLower().Contains("semi-major"))
 				{
 					operation.Add(op_list[i]);
 					operationNames.Add(op_list[i].getName());
@@ -74,6 +74,42 @@ namespace MuMech
 			{
 				ConfigNode.LoadObjectFromConfig(((OperationPeriapsis)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
 			}
+			else if (operation[operationId].getName().ToLower().Contains("Pe and Ap"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationEllipticize)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("inclination"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationInclination)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("match velocities"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationKillRelVel)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("intercept target"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationLambert)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("change longitude"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationLan)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("change surface longitude"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationLongitude)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("match planes"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationPlane)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("resonant orbit"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationResonantOrbit)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("semi-major"))
+			{
+				ConfigNode.LoadObjectFromConfig(((OperationSemiMajor)operation[operationId]).getTimeSelector(), node.GetNode("OperationConfig"));
+			}
 		}
 
 		override public void postSave(ConfigNode node)
@@ -93,6 +129,51 @@ namespace MuMech
 			else if (operation[operationId].getName().ToLower().Contains("periapsis"))
 			{
 				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationPeriapsis)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("Pe and Ap"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationEllipticize)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("inclination"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationInclination)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("match velocities"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationKillRelVel)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("intercept target"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationLambert)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("change longitude"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationLan)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("change surface longitude"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationLongitude)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("match planes"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationPlane)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("resonant orbit"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationResonantOrbit)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
+				operationNode.CopyTo(node.AddNode("OperationConfig"));
+			}
+			else if (operation[operationId].getName().ToLower().Contains("semi-major"))
+			{
+				ConfigNode operationNode = ConfigNode.CreateConfigFromObject(((OperationSemiMajor)operation[operationId]).getTimeSelector(), (int)Pass.Global, null);
 				operationNode.CopyTo(node.AddNode("OperationConfig"));
 			}
 		}

@@ -31,6 +31,11 @@
             var dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, target.TargetOrbit, UT + interceptInterval);
             return new ManeuverParameters(dV, UT);
         }
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 

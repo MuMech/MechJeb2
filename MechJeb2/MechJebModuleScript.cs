@@ -17,6 +17,8 @@ namespace MuMech
 		[Persistent(pass = (int)(Pass.Local))]
 		private bool minifiedGUI = false;
 		private List<String> scriptsList = new List<String>();
+		[Persistent(pass = (int)(Pass.Type))]
+		private String[] scriptNames = {"","","","","","","",""};
 		[Persistent(pass = (int)(Pass.Local))]
 		private int selectedSlot = 0;
 		[Persistent(pass = (int)(Pass.Local))]
@@ -31,6 +33,7 @@ namespace MuMech
 		private int spendTime = 0;
 		private int initTime = 5; //Add a 5s warmup time
 		private float startTime = 0f;
+		private bool deployScriptNameField = false;
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -55,10 +58,15 @@ namespace MuMech
 			imageRed.Apply();
 			imageGreen.Apply();
 			imageGray.Apply();
-			scriptsList.Add("Slot 1");
-			scriptsList.Add("Slot 2");
-			scriptsList.Add("Slot 3");
-			scriptsList.Add("Slot 4");
+		}
+
+		public void updateScriptsNames()
+		{
+			scriptsList.Clear();
+			for (int i = 0; i < 8; i++)
+			{
+				scriptsList.Add("Slot " + (i+1) + " - " + scriptNames[i]);
+			}
 		}
 
 		public void addAction(MechJebModuleScriptAction action)
@@ -144,6 +152,7 @@ namespace MuMech
 					}
 				}
 			}
+			this.LoadScriptModuleConfig();
 			this.moduleStarted = true;
 		}
 
@@ -166,11 +175,39 @@ namespace MuMech
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
 			base.OnSave(local, type, global);
+			this.SaveScriptModuleConfig();
 		}
 
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
 			base.OnLoad(local, type, global);
+			this.LoadScriptModuleConfig();
+		}
+
+		public void SaveScriptModuleConfig()
+		{
+			ConfigNode node = ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null);
+			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"));
+		}
+
+		public void LoadScriptModuleConfig()
+		{
+			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"))
+			{
+				ConfigNode node = null;
+				try
+				{
+					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"));
+				}
+				catch (Exception e)
+				{
+					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + vesselSaveName + "_conf.cfg: " + e);
+				}
+				if (node == null) return;
+
+				ConfigNode.LoadObjectFromConfig(this, node);
+			}
+			this.updateScriptsNames();
 		}
 
 		protected override void WindowGUI(int windowID) {
@@ -226,9 +263,31 @@ namespace MuMech
 						this.clearAll();
 					}
 					selectedSlot = GuiUtils.ComboBox.Box(selectedSlot, scriptsList.ToArray(), scriptsList);
+					if (deployScriptNameField)
+					{
+						scriptNames[selectedSlot] = GUILayout.TextField(scriptNames[selectedSlot], GUILayout.Width(120), GUILayout.ExpandWidth(false));
+						if (scriptNames[selectedSlot].Length > 20)//Limit the script name to 20 chars
+						{
+							scriptNames[selectedSlot] = scriptNames[selectedSlot].Substring(0, 20);
+						}
+						if (GUILayout.Button("<<"))
+						{
+							this.deployScriptNameField = false;
+							this.updateScriptsNames();
+							this.SaveScriptModuleConfig();
+						}
+					}
+					else
+					{
+						if (GUILayout.Button(">>"))
+						{
+							this.deployScriptNameField = true;
+						}
+					}
+
 					if (GUILayout.Button("Save", style2))
 					{
-						this.SaveConfig(this.selectedSlot);
+						this.SaveConfig(this.selectedSlot, true);
 					}
 					if (GUILayout.Button("Load", style2))
 					{
@@ -617,7 +676,6 @@ namespace MuMech
 		public void SaveConfig(int slot, bool notify)
 		{
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
-			//string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
 
 			foreach (MechJebModuleScriptAction script in this.actionsList)
 			{
@@ -629,8 +687,7 @@ namespace MuMech
 
 			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
 			//TODO : Find a way to notify the user. The popup appears below the main window...
-			//PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved on the current vessel", "OK", true, HighLogic.UISkin);
-			PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved in slot "+(slot+1)+" on current vessel", "OK", true, HighLogic.UISkin);
+			//PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved in slot "+(slot+1)+" on current vessel", "OK", true, HighLogic.UISkin, true);
 		}
 
 		public void DeleteConfig(int slot)
@@ -667,7 +724,7 @@ namespace MuMech
 		//Before switching vessel, we save the script, then in the OnLoad method of the script module, we check if any other mechjebcore has an active pending breakpoint
 		public void setActiveBreakpoint(int index, Vessel new_vessel)
 		{
-			this.SaveConfig(9); //Slot 9 is used for "temp"
+			this.SaveConfig(9, false); //Slot 9 is used for "temp"
 			this.stop();
 			List<MechJebCore> mechjebCoresList = new_vessel.FindPartModulesImplementing<MechJebCore>();
 			foreach (MechJebCore mjCore in mechjebCoresList)

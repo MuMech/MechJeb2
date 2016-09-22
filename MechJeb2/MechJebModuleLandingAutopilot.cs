@@ -438,16 +438,6 @@ namespace MuMech
                         }
                     }
                 }
-
-                if (p is LandingLeg)
-                {
-                    LandingLeg l = (LandingLeg)p;
-                    if (l.legState == LandingLeg.LegStates.RETRACTED)
-                    {
-                        l.DeployOnActivate = true;
-                        l.force_activate();
-                    }
-                }
             }
             deployedGears = true;
         }
