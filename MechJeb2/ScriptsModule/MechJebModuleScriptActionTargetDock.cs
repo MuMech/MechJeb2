@@ -35,6 +35,22 @@ namespace MuMech
 			base.activateAction(actionIndex);
 			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null && dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 			{
+				//Check if the target dock is a shielded dock: Open the shield
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
+				{
+					if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+					{
+						dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+					}
+				}
+				//Check if the "Control" dock is a shielded dock: Open the shield
+				if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
+				{
+					if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+					{
+						dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+					}
+				}
 				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().SetAsTarget(); //Set target
 				this.core.target.Set(dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>());
 				dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().MakeReferenceTransform(); //set "control from here"

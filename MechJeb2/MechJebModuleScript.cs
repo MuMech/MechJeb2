@@ -94,6 +94,7 @@ namespace MuMech
 			List<String> actionsNamesList = new List<String> ();
 			actionsNamesList.Add ("Timer");
 			actionsNamesList.Add ("Decouple");
+			actionsNamesList.Add ("Dock Shield");
 			actionsNamesList.Add ("Staging");
 			actionsNamesList.Add ("Target Dock");
 			actionsNamesList.Add ("Target Body");
@@ -103,7 +104,7 @@ namespace MuMech
 			actionsNamesList.Add ("RCS");
 			actionsNamesList.Add ("Activate Vessel");
 			actionsNamesList.Add ("SAS");
-			actionsNamesList.Add ("Manoeuver");
+			actionsNamesList.Add ("Maneuver");
 			actionsNamesList.Add ("Execute node");
 			actionsNamesList.Add ("Action Group");
 			actionsNamesList.Add ("Node tolerance");
@@ -324,6 +325,10 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionUndock(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("Dock Shield") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionDockingShield(this, core));
+						}
 						else if (actionNames[selectedActionIndex].CompareTo("Staging") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionStaging(this, core));
@@ -364,7 +369,7 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionExecuteNode(this, core));
 						}
-						else if (actionNames[selectedActionIndex].CompareTo("Manoeuver") == 0)
+						else if (actionNames[selectedActionIndex].CompareTo("Maneuver") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionManoeuver(this, core));
 						}
@@ -600,6 +605,10 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionUndock.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionUndock(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionDockingShield.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionDockingShield(this, core);
 				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionQuicksave.NAME) == 0)
 				{

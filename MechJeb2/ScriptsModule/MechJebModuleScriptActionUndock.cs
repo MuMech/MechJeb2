@@ -71,12 +71,27 @@ namespace MuMech
 				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().referenceNode.attachedPart = dockingPartsList[selectedPartIndex].parent;
 				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Decouple();
 			}*/
-			if (dockingPartsList[selectedPartIndex] != null)
+			/*if (dockingPartsList[selectedPartIndex] != null)
 			{
 				dockingPartsList[selectedPartIndex].enabled = true;
 				dockingPartsList[selectedPartIndex].decouple();
+			}*/
+			if (dockingPartsList[selectedPartIndex] != null)
+			{
+				dockingPartsList[selectedPartIndex].enabled = true;
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
+				{
+					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Decouple();
+				}
+				/*if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
+				{
+					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Undock();
+				}
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
+				{
+					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().UndockSameVessel();
+				}*/
 			}
-			this.endAction ();
 		}
 
 		override public  void endAction()
