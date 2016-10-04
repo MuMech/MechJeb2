@@ -22,7 +22,7 @@ namespace MuMech
 			//Only add the "tested" and "supported" operations
 			for (int i = 0; i < op_list.Length; i++)
 			{
-				if (op_list[i].getName().ToLower().Contains("hohmann") || op_list[i].getName().ToLower().Contains("circularize") || op_list[i].getName().ToLower().Contains("apoapsis") || op_list[i].getName().ToLower().Contains("periapsis") || op_list[i].getName().ToLower().Contains("fine tune") || op_list[i].getName().ToLower().Contains("Pe and Ap") || op_list[i].getName().ToLower().Contains("inclination") || op_list[i].getName().ToLower().Contains("match velocities") || op_list[i].getName().ToLower().Contains("intercept target") || op_list[i].getName().ToLower().Contains("change longitude") || op_list[i].getName().ToLower().Contains("change surface longitude") || op_list[i].getName().ToLower().Contains("return from a moon") || op_list[i].getName().ToLower().Contains("match planes") || op_list[i].getName().ToLower().Contains("resonant orbit") || op_list[i].getName().ToLower().Contains("semi-major"))
+				if (!op_list[i].getName().ToLower().Contains("advanced transfer") && !op_list[i].getName().ToLower().Contains("transfer to another planet"))
 				{
 					operation.Add(op_list[i]);
 					operationNames.Add(op_list[i].getName());

@@ -38,6 +38,7 @@ namespace MuMech
 		private String flashMessage = "";
 		private int flashMessageType = 0; //0=yellow, 1=red (error)
 		private float flashMessageStartTime = 0f;
+		private bool waitingDeletionConfirmation = false;
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -287,6 +288,21 @@ namespace MuMech
 						if (GUILayout.Button(">>"))
 						{
 							this.deployScriptNameField = true;
+						}
+					}
+					if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/delete", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+					{
+						if (!this.waitingDeletionConfirmation)
+						{
+							this.waitingDeletionConfirmation = true;
+							this.setFlashMessage("Warning: To confirm deletion of slot " + (selectedSlot+1) + " - " + scriptNames[selectedSlot] + ", press again the delete button", 0);
+						}
+						else
+						{
+							this.DeleteConfig(this.selectedSlot, true);
+							scriptNames[selectedSlot] = "";
+							this.updateScriptsNames();
+							this.SaveScriptModuleConfig();
 						}
 					}
 
@@ -573,6 +589,7 @@ namespace MuMech
 				{
 					this.flashMessage = "";
 					this.flashMessageStartTime = 0f;
+					this.waitingDeletionConfirmation = false;
 				}
 			}
 		}
@@ -744,7 +761,7 @@ namespace MuMech
 			File.Delete<MechJebCore>(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
 			if (notify)
 			{
-				this.setFlashMessage("Script deleted on slot " + slot, 0);
+				this.setFlashMessage("Script deleted on slot " + (slot+1), 0);
 			}
 		}
 
