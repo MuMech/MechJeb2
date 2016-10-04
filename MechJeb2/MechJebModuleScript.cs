@@ -34,6 +34,10 @@ namespace MuMech
 		private int initTime = 5; //Add a 5s warmup time
 		private float startTime = 0f;
 		private bool deployScriptNameField = false;
+		//Flash message to notify user
+		private String flashMessage = "";
+		private int flashMessageType = 0; //0=yellow, 1=red (error)
+		private float flashMessageStartTime = 0f;
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -292,9 +296,24 @@ namespace MuMech
 					}
 					if (GUILayout.Button("Load", style2))
 					{
-						this.LoadConfig(this.selectedSlot);
+						this.LoadConfig(this.selectedSlot, true);
 					}
 					GUILayout.EndHorizontal();
+					if (this.flashMessage.Length > 0)
+					{
+						GUILayout.BeginHorizontal();
+						GUIStyle sflash = new GUIStyle(GUI.skin.label);
+						if (this.flashMessageType == 1)
+						{
+							sflash.normal.textColor = Color.red;
+						}
+						else
+						{
+							sflash.normal.textColor = Color.yellow;
+						}
+						GUILayout.Label(this.flashMessage, sflash);
+						GUILayout.EndHorizontal();
+					}
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("Add action");
 					selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames, this);
@@ -503,7 +522,7 @@ namespace MuMech
 						{
 							this.warmingUp = false;
 							this.startTime = 0;
-							this.LoadConfig(this.selectedSlot);
+							this.LoadConfig(this.selectedSlot, false);
 							int asp = this.activeSavepoint;
 							this.activeSavepoint = -1;
 							this.startAfterIndex(asp);
@@ -545,14 +564,28 @@ namespace MuMech
 					actionsList[i].afterOnFixedUpdate();
 				}
 			}
+
+			//Check if we need to close the flashMessage
+			if (this.flashMessageStartTime > 0f)
+			{
+				float flashSpendTime = (int)(Math.Round(Time.time - this.flashMessageStartTime));
+				if (flashSpendTime > 5f)
+				{
+					this.flashMessage = "";
+					this.flashMessageStartTime = 0f;
+				}
+			}
 		}
 
-		public void LoadConfig(int slot)
+		public void LoadConfig(int slot, bool notify)
 		{
-			this.clearAll();
+			if (vessel == null)
+			{
+				return;
+			}
 			this.selectedSlot = slot; //Select the slot for the UI
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
-			if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
+			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
 			{
 				try
 				{
@@ -563,8 +596,13 @@ namespace MuMech
 					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg: " + e);
 				}
 			}
+			else if (notify)
+			{
+				this.setFlashMessage("ERROR: File not found: mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg", 1);
+			}
 			if (node == null) return;
 
+			this.clearAll();
 			//Load custom info scripts, which are stored in our ConfigNode:
 			ConfigNode[] scriptNodes = node.GetNodes();
 			foreach (ConfigNode scriptNode in scriptNodes)
@@ -695,13 +733,19 @@ namespace MuMech
 			}
 
 			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
-			//TODO : Find a way to notify the user. The popup appears below the main window...
-			//PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved in slot "+(slot+1)+" on current vessel", "OK", true, HighLogic.UISkin, true);
+			if (notify)
+			{
+				this.setFlashMessage("Script saved in slot " + (slot + 1) + " on current vessel", 0);
+			}
 		}
 
-		public void DeleteConfig(int slot)
+		public void DeleteConfig(int slot, bool notify)
 		{
 			File.Delete<MechJebCore>(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
+			if (notify)
+			{
+				this.setFlashMessage("Script deleted on slot " + slot, 0);
+			}
 		}
 
 		public bool isStarted()
@@ -746,9 +790,16 @@ namespace MuMech
 
 		public void loadFromBreakpoint(int index)
 		{
-			this.LoadConfig(9); //Slot 9 is used for "temp"
-			this.DeleteConfig(9); //Delete the temp config
+			this.LoadConfig(9, false); //Slot 9 is used for "temp"
+			this.DeleteConfig(9, false); //Delete the temp config
 			this.startAfterIndex(index);
+		}
+
+		public void setFlashMessage(String message, int type)
+		{
+			this.flashMessage = message;
+			this.flashMessageType = type;
+			this.flashMessageStartTime = Time.time;
 		}
 	}
 }

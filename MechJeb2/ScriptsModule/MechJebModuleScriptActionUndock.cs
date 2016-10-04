@@ -78,7 +78,7 @@ namespace MuMech
 			}*/
 			if (dockingPartsList[selectedPartIndex] != null)
 			{
-				dockingPartsList[selectedPartIndex].enabled = true;
+				//dockingPartsList[selectedPartIndex].enabled = true;
 				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Decouple();
@@ -86,8 +86,8 @@ namespace MuMech
 				/*if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Undock();
-				}
-				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
+				}*/
+				/*if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().UndockSameVessel();
 				}*/
