@@ -33,22 +33,28 @@ namespace MuMech
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null && dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
+			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null && dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>() != null)
 			{
 				//Check if the target dock is a shielded dock: Open the shield
-				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator != null)
 				{
-					if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+					if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
 					{
-						dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+						if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+						{
+							dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+						}
 					}
 				}
 				//Check if the "Control" dock is a shielded dock: Open the shield
-				if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
+				if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator != null)
 				{
-					if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+					if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
 					{
-						dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+						if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+						{
+							dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+						}
 					}
 				}
 				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().SetAsTarget(); //Set target

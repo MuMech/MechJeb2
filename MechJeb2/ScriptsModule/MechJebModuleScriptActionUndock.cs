@@ -86,12 +86,22 @@ namespace MuMech
 				/*if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().Undock();
-				}*/
-				/*if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
+				}
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().UndockSameVessel();
 				}*/
+				//When undocking, this can separate the vessel into 2 new vessels. We take the risk the new one is not the one with the focus. If it's the case, we must transfer the script.
+				if (core.MasterMechJeb != core)
+				{
+					MechJebModuleScript newScript = core.MasterMechJeb.GetComputerModule<MechJebModuleScript>();
+					if (newScript != null)
+					{
+						this.scriptModule.setActiveBreakpoint(actionIndex, core.vessel);
+					}
+				}
 			}
+			this.endAction();
 		}
 
 		override public  void endAction()
