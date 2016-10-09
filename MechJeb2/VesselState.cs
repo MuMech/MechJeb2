@@ -443,9 +443,8 @@ namespace MuMech
         void UpdateVelocityAndCoM(Vessel vessel)
         {
             mass = vessel.totalMass;
-
             CoM = vessel.CoMD;
-            orbitalVelocity = vessel.velocityD;
+            orbitalVelocity = vessel.velocityD + vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy;
         }
 
         // Calculate a bunch of simple quantities each frame.
