@@ -100,9 +100,9 @@ namespace MuMech
                 {
                     ModuleDeployableSolarPanel sa = solar[j];
                     if (isDeployable(sa) && 
-                        ((sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED) ||
-                         (sa.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDING) ||
-                         (sa.panelState == ModuleDeployableSolarPanel.panelStates.RETRACTING)))
+                        ((sa.deployState == ModuleDeployablePart.DeployState.EXTENDED) ||
+                         (sa.deployState == ModuleDeployablePart.DeployState.EXTENDING) ||
+                         (sa.deployState == ModuleDeployablePart.DeployState.RETRACTING)))
                     {
                         return false;
                     }

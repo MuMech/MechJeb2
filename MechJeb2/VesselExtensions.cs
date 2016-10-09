@@ -235,7 +235,8 @@ namespace MuMech
             //which uses (x, y, z) = (radial+, normal-, prograde)
             Vector3d nodeDV = patch.DeltaVToManeuverNodeCoordinates(UT, dV);
             ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(UT);
-            mn.OnGizmoUpdated(nodeDV, UT);
+            mn.DeltaV = nodeDV;
+            vessel.patchedConicSolver.UpdateFlightPlan();
             return mn;
         }
 

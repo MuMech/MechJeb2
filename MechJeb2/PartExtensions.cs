@@ -97,9 +97,8 @@ namespace MuMech
             return p.ActivatesEvenIfDisconnected
                 && p.IsEngine()
                 && p.IsDecoupledInStage(p.inverseStage)
-                && !p.isControlSource;
+                && p.isControlSource == Vessel.ControlLevel.NONE;
         }
-
 
         public static bool IsEngine(this Part p)
         {

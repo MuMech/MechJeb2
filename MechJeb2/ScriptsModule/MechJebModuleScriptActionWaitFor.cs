@@ -50,7 +50,7 @@ namespace MuMech
 			{
 				if (actionType == 0)
 				{
-					double current_altitude = FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.findWorldCenterOfMass());
+					double current_altitude = FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM);
 					if (current_altitude >= targetAltitude)
 					{
 						this.endAction();

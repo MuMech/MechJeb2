@@ -198,13 +198,19 @@ namespace MuMech
 
             TfV = 0.05 * ratio;
 
+            //print("TfV O " + MuUtils.PrettyPrint(TfV));
+
             Vector3d delayFactor = Vector3d.one + 2 * vesselState.torqueReactionSpeed;
+
+            //print("del F " + MuUtils.PrettyPrint(delayFactor));
 
             TfV.Scale(delayFactor);
 
 
             TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, TfMax);
             TfV = TfV.Clamp(TfMin, TfMax);
+
+            //print("TfV F " + MuUtils.PrettyPrint(TfV));
 
             //Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
             //Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
@@ -411,21 +417,23 @@ namespace MuMech
         {
             if (useSAS)
             {
+                // TODO : This most likely require some love to use all the new SAS magic
+
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Quaternion.Euler(90, 0, 0);
                 if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude);
+                    part.vessel.Autopilot.SAS.SetTargetOrientation(_requestedAttitude * Vector3.up, false);
                     lastSAS = _requestedAttitude;
                 }
                 else if (Quaternion.Angle(lastSAS, _requestedAttitude) > 10)
                 {
-                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude);
+                    part.vessel.Autopilot.SAS.SetTargetOrientation(_requestedAttitude * Vector3.up, false);
                     lastSAS = _requestedAttitude;
                 }
                 else
                 {
-                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude, true);
+                    part.vessel.Autopilot.SAS.SetTargetOrientation(_requestedAttitude * Vector3.up, true);
                 }
 
                 core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;

@@ -439,33 +439,13 @@ namespace MuMech
         // This should have changed in 1.1
         // This most likely has some impact on the code.
 
-        // Calculate velocity at the CoM, and the CoM
-        // This should no be slower than calling vessel.findWorldCenterOfMass() since
-        // the KSP call does the same thing.
+        
         void UpdateVelocityAndCoM(Vessel vessel)
         {
-            CoM = Vector3d.zero;
-            orbitalVelocity = Vector3d.zero;
+            mass = vessel.totalMass;
 
-            mass = 0;
-            
-            for (int i = 0; i < vessel.parts.Count; i++)
-            {
-                Part p = vessel.parts[i];
-                if (p.rb != null)
-                {
-                    mass += p.rb.mass;
-
-                    CoM = CoM + (p.rb.worldCenterOfMass * p.rb.mass);
-                    
-                    orbitalVelocity = orbitalVelocity + p.rb.velocity * p.rb.mass;
-                }
-            }
-            CoM = CoM / mass;
-            orbitalVelocity = orbitalVelocity / mass + Krakensbane.GetFrameVelocity() + vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy;
-
-            if (!MechJebModuleAttitudeController.useCoMVelocity || vessel.packed)
-                orbitalVelocity = vessel.obt_velocity;
+            CoM = vessel.CoMD;
+            orbitalVelocity = vessel.velocityD;
         }
 
         // Calculate a bunch of simple quantities each frame.
@@ -480,8 +460,8 @@ namespace MuMech
             Rigidbody rigidBody = vessel.rootPart.rb;
             if (rigidBody != null) rootPartPos = rigidBody.position;
 
-            north = Vector3d.Exclude(up, (vessel.mainBody.position + vessel.mainBody.transform.up * (float)vessel.mainBody.Radius) - CoM).normalized;
-            east = vessel.mainBody.getRFrmVel(CoM).normalized;
+            north = vessel.north;
+            east = vessel.east;
             forward = vessel.GetTransform().up;
             rotationSurface = Quaternion.LookRotation(north, up);
             rotationVesselSurface = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vessel.GetTransform().rotation) * rotationSurface);
@@ -502,7 +482,7 @@ namespace MuMech
 
             mach = vessel.mach;
 
-            gravityForce = FlightGlobals.getGeeForceAtPosition(CoM);
+            gravityForce = FlightGlobals.getGeeForceAtPosition(CoM); // TODO vessel.gravityForPos or vessel.gravityTrue
             localg = gravityForce.magnitude;
 
             speedOrbital.value = orbitalVelocity.magnitude;
@@ -624,7 +604,7 @@ namespace MuMech
                 }
             }
 
-            Vector3d movingCoM = CoM + (vessel.rb_velocity * Time.fixedDeltaTime);
+            Vector3d movingCoM = vessel.CurrentCoM;
 
             for (int i = 0; i < vessel.parts.Count; i++)
             {
@@ -635,8 +615,14 @@ namespace MuMech
 
                     if (rcs == null)
                         continue;
+                    
+                    Vector3 pos;
+                    Vector3 neg;
+                    rcs.GetPotentialTorque(out pos, out neg);
 
-                    torqueRcs.Add(rcs.GetPotentialTorque());
+                    torqueRcs.Add(pos);
+                    torqueRcs.Add(neg);
+
 
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
@@ -650,13 +636,20 @@ namespace MuMech
                             Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
                             
                             float power = rcs.thrusterPower;
-
+                            
                             if (FlightInputHandler.fetch.precisionMode)
                             {
-                                float lever = rcs.GetLeverDistance(t, thrustDirection, movingCoM);
-                                if (lever > 1)
+                                if (rcs.useLever)
                                 {
-                                    power = power / lever;
+                                    float lever = rcs.GetLeverDistance(t, thrustDirection, movingCoM);
+                                    if (lever > 1)
+                                    {
+                                        power = power / lever;
+                                    }
+                                }
+                                else
+                                {
+                                    power *= rcs.precisionFactor;
                                 }
                             }
 
@@ -700,11 +693,11 @@ namespace MuMech
             GUILayout.Label("RCS Torque");
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.positive), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.negative), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
@@ -788,7 +781,12 @@ namespace MuMech
                     ModuleReactionWheel rw = pm as ModuleReactionWheel;
                     if (rw != null)
                     {
-                        torqueReactionWheel.Add(rw.GetPotentialTorque());
+                        Vector3 pos;
+                        Vector3 neg;
+                        rw.GetPotentialTorque(out pos, out neg);
+
+                        torqueReactionWheel.Add(pos);
+                        torqueReactionWheel.Add(neg);
                     }
                     else if (pm is ModuleEngines)
                     {
@@ -812,63 +810,22 @@ namespace MuMech
                             parachuteDeployed = true;
                         }
                     }
-                    else if (pm is ModuleAeroSurface)
-                    {
-                        // TODO ...
-                    }
-                    else if (pm is ModuleControlSurface)
+                    else if (pm is ModuleControlSurface) // also does ModuleAeroSurface
                     {
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
-                        
-                        if (p.ShieldedFromAirstream || cs.deploy)
-                            continue;
 
-                        //var crtlTorque = cs.GetPotentialTorque();
-                    
-                        Vector3d partPosition = p.Rigidbody.worldCenterOfMass - CoM;
-                        
-                        // Build a vector that show if the surface is left/right forward/back up/down of the CoM.
-                        Vector3 relpos = vessel.transform.InverseTransformDirection(partPosition);
-                        float inverted = relpos.y > 0.01 ? -1 : 1;
-                        relpos.x = cs.ignorePitch ? 0 : inverted * (relpos.x < 0.01 ? -1 : 1);
-                        relpos.y = cs.ignoreRoll ? 0 : inverted;
-                        relpos.z = cs.ignoreYaw ? 0 : inverted * (relpos.z < 0.01 ? -1 : 1);
-                        
-                        Vector3 velocity = p.Rigidbody.GetPointVelocity(cs.transform.position) + Krakensbane.GetFrameVelocityV3f();
-                        
-                        Vector3 nVel;
-                        Vector3 liftVector;
-                        float liftDot;
-                        float absDot;
-                        cs.SetupCoefficients(velocity, out nVel, out liftVector, out liftDot, out absDot);
-                        
-                        Quaternion maxRotation = Quaternion.AngleAxis(cs.ctrlSurfaceRange, cs.transform.rotation * Vector3.right);
-                        
-                        double dynPressurePa = p.dynamicPressurekPa * 1000;
-                        
-                        float mach = (float)p.machNumber;
-                        
-                        Vector3 posDeflection = maxRotation * liftVector;
-                        float liftDotPos = Vector3.Dot(nVel, posDeflection);
-                        absDot = Mathf.Abs(liftDotPos);
-                        
-                        Vector3 liftForcePos = cs.GetLiftVector(posDeflection, liftDotPos, absDot, dynPressurePa, mach) * cs.ctrlSurfaceArea;
-                        Vector3 ctrlTorquePos = Vector3.Scale(vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForcePos)), relpos);
-                        
-                        Vector3 negsDeflection = Quaternion.Inverse(maxRotation) * liftVector;
-                        float liftDotNeg = Vector3.Dot(nVel, negsDeflection);
-                        absDot = Mathf.Abs(liftDotPos);
-                        Vector3 liftForceNeg = cs.GetLiftVector(negsDeflection, liftDotNeg, absDot, dynPressurePa, mach) * cs.ctrlSurfaceArea;
-                        Vector3 ctrlTorqueNeg = Vector3.Scale(vessel.GetTransform().InverseTransformDirection(Vector3.Cross(partPosition, liftForceNeg)), relpos);
+                        //if (p.ShieldedFromAirstream || cs.deploy)
+                        //    continue;
+
+                        Vector3 ctrlTorquePos;
+                        Vector3 ctrlTorqueNeg;
+
+                        cs.GetPotentialTorque(out ctrlTorquePos, out ctrlTorqueNeg);
 
                         torqueControlSurface.Add(ctrlTorquePos);
                         torqueControlSurface.Add(ctrlTorqueNeg);
 
-                        torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * Vector3d.Max(ctrlTorquePos, ctrlTorqueNeg));
-                        
-
-                        //torqueControlSurface.Add(crtlTorque);
-                        //torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * crtlTorque);
+                        torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * Vector3d.Max(ctrlTorquePos.Abs(), ctrlTorqueNeg.Abs()));
                     }
                     else if (pm is ModuleGimbal)
                     {
@@ -886,12 +843,15 @@ namespace MuMech
                             }
                         }
 
-                        var crtlTorque = g.GetPotentialTorque();
+                        Vector3 pos;
+                        Vector3 neg;
+                        g.GetPotentialTorque(out pos, out neg);
 
-                        torqueGimbal.Add(crtlTorque);
+                        torqueGimbal.Add(pos);
+                        torqueGimbal.Add(neg);
                         
                         if (g.useGimbalResponseSpeed)
-                            torqueReactionSpeed6.Add((Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * crtlTorque.Abs());
+                            torqueReactionSpeed6.Add((Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * Vector3d.Max(pos.Abs(), neg.Abs()));
                     }
                     else if (pm is ModuleRCS)
                     {
@@ -901,9 +861,12 @@ namespace MuMech
                     {
                         ITorqueProvider tp = pm as ITorqueProvider;
                     
-                        var crtlTorque = tp.GetPotentialTorque();
+                        Vector3 pos;
+                        Vector3 neg;
+                        tp.GetPotentialTorque(out pos, out neg);
 
-                        torqueOthers.Add(crtlTorque);
+                        torqueOthers.Add(pos);
+                        torqueOthers.Add(neg);
                     }
 
                     for (int index = 0; index < vesselStatePartModuleExtensions.Count; index++)
@@ -941,8 +904,8 @@ namespace MuMech
             
             torqueAvailable += Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
             
-            //torqueAvailable += Vector3d.Max(torqueRcs.positive, torqueRcs.negative); // The stock RCS value is wrong in 1.1.3 (x2)
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            torqueAvailable += Vector3d.Max(torqueRcs.positive, torqueRcs.negative); // The stock RCS value is wrong in 1.1.3 (x2)
+            //torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
 
             torqueAvailable += Vector3d.Max(torqueControlSurface.positive, torqueControlSurface.negative);
             

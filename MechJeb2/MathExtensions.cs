@@ -23,12 +23,7 @@ namespace MuMech
         {
             return new Vector3(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
         }
-
-        public static Vector3 XZY(this Vector3 vector)
-        {
-            return new Vector3d(vector.x, vector.z, vector.y);
-        }
-
+        
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)
