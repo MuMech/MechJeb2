@@ -13,22 +13,9 @@ namespace MuMech
         public bool noDrag;
         public bool hasLiftModule;
         private double bodyLiftMultiplier;
-
-        private double areaDrag;
-        private Vector3d liftForce;
-
-        //private float DragCubeMultiplier;
-        //private float DragMultiplier;
-
-        //private PhysicsGlobals.LiftingSurfaceCurve liftCurves;
-        //private FloatCurve liftCurve;
-        //private FloatCurve liftMachCurve;
-
+        
         private ReentrySimulation.SimCurves simCurves;
-
-        // Remove after test
-        //public Part oPart;
-
+        
         private QuaternionD vesselToPart;
         private QuaternionD partToVessel;
 
@@ -41,7 +28,10 @@ namespace MuMech
 
         private static SimulatedPart Create()
         {
-            return new SimulatedPart();
+            SimulatedPart part = new SimulatedPart();
+            part.cubes.BodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve();
+            part.cubes.SurfaceCurves = new PhysicsGlobals.SurfaceCurvesList();
+            return part;
         }
 
         public virtual void Release()
@@ -110,13 +100,11 @@ namespace MuMech
                 return Vector3d.zero;
 
             Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
-
-            // Use our thread safe version of SetDrag
-            SetDrag(-dragVectorDirLocal, mach);
-
-            Vector3d drag = -vesselVelocity.normalized * areaDrag * dragFactor;
-
-
+            
+            cubes.SetDrag(-dragVectorDirLocal, mach);
+            
+            Vector3d drag = -vesselVelocity.normalized * cubes.AreaDrag * dragFactor;
+            
             //bool delta = false;
             //string msg = oPart.name;
             //if (vesselVelocity.sqrMagnitude > 1 && dynamicPressurekPa - oPart.dynamicPressurekPa > oPart.dynamicPressurekPa * 0.1)
@@ -174,12 +162,9 @@ namespace MuMech
                 return Vector3d.zero;
             
             // direction of the lift in a vessel centric reference
-            Vector3d liftV = partToVessel * (liftForce * bodyLiftMultiplier * liftFactor);
+            Vector3d liftV = partToVessel * ((Vector3d)cubes.LiftForce * bodyLiftMultiplier * liftFactor);
 
             Vector3d liftVector = liftV.ProjectOnPlane(-vesselVelocity);
-
-            // cubes.LiftForce OK
-
 
             //if (vesselVelocity.sqrMagnitude > 1 && oPart.DragCubes.LiftForce.sqrMagnitude > 0.001)
             //{
@@ -223,10 +208,7 @@ namespace MuMech
             public static Pool<DragCube> Instance { get { return _Instance; } }
         }
 
-
-        //TODO : rewrite the cube calls to only store and update the minimum needed data ( AreaOccluded + WeightedDrag ?)
-
-        protected static void CopyDragCubesList(DragCubeList source, DragCubeList dest)
+        protected void CopyDragCubesList(DragCubeList source, DragCubeList dest)
         {
             dest.ClearCubes();
 
@@ -254,7 +236,19 @@ namespace MuMech
 
             dest.SetDragWeights();
 
-            // We are missing PostOcclusionArea but it seems to be used in Thermal only
+            dest.DragCurveCd = simCurves.DragCurveCd;
+            dest.DragCurveCdPower = simCurves.DragCurveCdPower;
+            dest.DragCurveMultiplier = simCurves.DragCurveMultiplier;
+
+            dest.BodyLiftCurve.liftCurve = simCurves.LiftCurve;
+            dest.BodyLiftCurve.dragCurve = simCurves.DragCurve;
+            dest.BodyLiftCurve.dragMachCurve = simCurves.DragMachCurve;
+            dest.BodyLiftCurve.liftMachCurve = simCurves.LiftMachCurve;
+            
+            dest.SurfaceCurves.dragCurveMultiplier = simCurves.DragCurveMultiplier;
+            dest.SurfaceCurves.dragCurveSurface = simCurves.DragCurveSurface;
+            dest.SurfaceCurves.dragCurveTail = simCurves.DragCurveTail;
+            dest.SurfaceCurves.dragCurveTip = simCurves.DragCurveTip;
         }
 
         protected static void CopyDragCube(DragCube source, DragCube dest)
@@ -271,54 +265,7 @@ namespace MuMech
                 dest.DragModifiers[i] = source.DragModifiers[i];
             }
         }
-
-
-
-        // Unfortunately the DragCubeList SetDrag method is not thread safe
-        // so here is a thread safe version
-        protected void SetDrag(Vector3d dragVector, float machNumber)
-        {
-            areaDrag = 0;
-            liftForce = Vector3d.zero;
-            if (cubes.None)
-            {
-                return;
-            }
-            for (int i = 0; i < 6; i++)
-            {
-                Vector3d faceDirection = DragCubeList.GetFaceDirection((DragCube.DragFace)i);
-                float dragDot = (float) Vector3d.Dot(dragVector, faceDirection);
-                float dragValue = DragCurveValue((dragDot + 1f) * 0.5f, machNumber);
-                float faceAreaDrag = cubes.AreaOccluded[i] * dragValue;
-                areaDrag = areaDrag + faceAreaDrag * cubes.WeightedDrag[i];
-                if (dragDot > 0f)
-                {
-                    float lift = simCurves.LiftCurve.Evaluate(dragDot);
-                    if (!double.IsNaN(lift))
-                    {
-                        liftForce = liftForce - faceDirection * (dragDot * cubes.AreaOccluded[i] * cubes.WeightedDrag[i] * lift);
-                    }
-                }
-            }
-        }
-
-        protected float DragCurveValue(float dotNormalized, float mach)
-        {
-            float surfaceDrag = simCurves.DragCurveSurface.Evaluate(mach);
-            float multiplier = simCurves.DragCurveMultiplier.Evaluate(mach);
-            if (dotNormalized <= 0.5f)
-            {
-                float tailDrag = simCurves.DragCurveTail.Evaluate(mach);
-                return Mathf.Lerp(tailDrag, surfaceDrag, dotNormalized * 2f) * multiplier;
-            }
-            float tipDrag = simCurves.DragCurveTip.Evaluate(mach);
-            return Mathf.Lerp(surfaceDrag, tipDrag, (dotNormalized - 0.5f) * 2f) * multiplier;
-        }
-
-
-        float[] WeightedDragOrig = new float[6];
-
-        // Need to check and then simplify this, some operations are just redundant.
+        
         protected void SetCubeWeight(string name, float newWeight)
         {
             int count = cubes.Cubes.Count;
@@ -340,74 +287,7 @@ namespace MuMech
             if (noChange)
                 return;
 
-            ResetCubeArray(cubes.WeightedArea);
-            ResetCubeArray(cubes.WeightedDrag);
-            ResetCubeArray(WeightedDragOrig);
-
-            float weight = 0f;
-            for (int i = count - 1; i >= 0; i--)
-            {
-                DragCube dc = cubes.Cubes[i];
-                if (dc.Weight != 0f)
-                {
-                    weight = weight + dc.Weight;
-                    AddCubeArray(cubes.WeightedArea, dc.Area, dc.Weight);
-                    AddCubeArray(cubes.WeightedDrag, dc.Drag, dc.Weight);
-                    AddCubeArray(WeightedDragOrig, dc.Drag, dc.Weight);
-                }
-            }
-            if (weight != 0f)
-            {
-                float invWeight = 1f / weight;
-                MultiplyCubeArray(cubes.WeightedArea, invWeight);
-                MultiplyCubeArray(cubes.WeightedDrag, invWeight);
-                MultiplyCubeArray(WeightedDragOrig, invWeight);
-            }
-            else
-            {
-                ResetCubeArray(cubes.WeightedArea);
-                ResetCubeArray(cubes.WeightedDrag);
-                ResetCubeArray(WeightedDragOrig);
-            }
-
-            SetCubeArray(cubes.AreaOccluded, cubes.WeightedArea);
-            SetCubeArray(cubes.WeightedDrag, WeightedDragOrig);
-
-
+            cubes.SetDragWeights();
         }
-
-        private static void ResetCubeArray(float[] arr)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                arr[i] = 0f;
-            }
-        }
-
-        private static void AddCubeArray(float[] outputArray, float[] inputArray, float multiply = 1f)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                outputArray[i] = outputArray[i] + inputArray[i] * multiply;
-            }
-        }
-
-        private static void MultiplyCubeArray(float[] arr, float multiply)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                arr[i] = arr[i] * multiply;
-            }
-        }
-
-        private static void SetCubeArray(float[] outputArray, float[] inputArray, float multiply = 1f)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                outputArray[i] = inputArray[i] * multiply;
-            }
-        }
-
-
     }
 }
