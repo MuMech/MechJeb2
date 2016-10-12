@@ -6,8 +6,8 @@ namespace MuMech
 	public abstract class MechJebModuleScriptAction
 	{
 		private String name = "DEFAULT";
-		private bool started = false;
-		private bool executed = false;
+		protected bool started = false;
+		protected bool executed = false;
 		protected MechJebModuleScript scriptModule;
 		protected MechJebCore core;
 		protected int actionIndex;
@@ -25,10 +25,15 @@ namespace MuMech
 			this.actionIndex = actionIndex;
 		}
 
-		public virtual void endAction()
+		public void markActionDone() //Used when we reload a previously saved script to mark past actions as resolved
 		{
 			this.started = false;
 			this.executed = true;
+		}
+
+		public virtual void endAction()
+		{
+			this.markActionDone();
 			this.scriptModule.notifyEndAction(actionIndex);
 		}
 

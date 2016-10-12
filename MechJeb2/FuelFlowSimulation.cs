@@ -336,7 +336,7 @@ namespace MuMech
 
             using (var activeEngines = FindActiveEngines())
             {
-                return activeEngines.value.Slinq().Select((eng, t) => eng.EngineThrust(t._1, t._2, t._3, t._4), param).Sum();
+                return activeEngines.value.Slinq().Select((eng, t) => eng.EngineThrust(t.Item1, t.Item2, t.Item3, t.Item4), param).Sum();
             }
             //return FindActiveEngines().Sum(eng => eng.EngineThrust(throttle, staticPressure, atmDensity, machNumber));
         }
@@ -347,7 +347,7 @@ namespace MuMech
             var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
             //print("Finding active engines: excluding resource considerations, there are " + nodes.Count(n => n.isEngine && n.inverseStage >= simStage));
-            nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p._1 && n.CanDrawNeededResources(p._2), param).AddTo(activeEngines.value);
+            nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.CanDrawNeededResources(p.Item2), param).AddTo(activeEngines.value);
             return activeEngines;
             //return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
@@ -623,8 +623,8 @@ namespace MuMech
                         .Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp)
                         .ForEach((p, dic) =>
                         {
-                            dic._1.Add(p.id, p.ratio);
-                            dic._2.Add(p.id, p.GetFlowMode());
+                            dic.Item1.Add(p.id, p.ratio);
+                            dic.Item2.Add(p.id, p.GetFlowMode());
                         }, dics);
                 }
             }
@@ -671,7 +671,7 @@ namespace MuMech
                             AttachNode attach;
                             if (mDecouple.explosiveNodeID != "srf")
                             {
-                                attach = p.findAttachNode(mDecouple.explosiveNodeID);
+                                attach = p.FindAttachNode(mDecouple.explosiveNodeID);
                             }
                             else
                             {
@@ -717,7 +717,7 @@ namespace MuMech
                         AttachNode attach;
                         if (mAnchoredDecoupler.explosiveNodeID != "srf")
                         {
-                            attach = p.findAttachNode(mAnchoredDecoupler.explosiveNodeID);
+                            attach = p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID);
                         }
                         else
                         {
@@ -975,8 +975,8 @@ namespace MuMech
         public float MaxTimeStep()
         {
             var param = new Tuple<DefaultableDictionary<int, float>, float, DefaultableDictionary<int, float>>(resources, DRAINED, resourceDrains);
-            if (!resourceDrains.KeysList.Slinq().Any((id, p) => p._1[id] > p._2, param)) return float.MaxValue;
-            return resourceDrains.KeysList.Slinq().Where((id, p) => p._1[id] > p._2, param).Select((id, p) => p._1[id] / p._3[id], param).Min();
+            if (!resourceDrains.KeysList.Slinq().Any((id, p) => p.Item1[id] > p.Item2, param)) return float.MaxValue;
+            return resourceDrains.KeysList.Slinq().Where((id, p) => p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
         }
 
         //Returns an enumeration of the resources this part burns
@@ -1017,7 +1017,7 @@ namespace MuMech
                     case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
                         // check if we can get any of the needed resources
-                        using (var disposable = FindFuelSourcesStackPriority(type, resourceFlowMode != ResourceFlowMode.STACK_PRIORITY_SEARCH || PhysicsGlobals.Stack_PriUsesSurf))
+                        using (var disposable = FindFuelSourcesStackPriority(type, resourceFlowMode != ResourceFlowMode.STACK_PRIORITY_SEARCH))
                             if (!disposable.value.Any()) return false;
                         break;
 
@@ -1108,7 +1108,7 @@ namespace MuMech
 
         void AssignFuelDrainRateStackPriority(int type, ResourceFlowMode flowMode, float amount)
         {
-            Disposable<HashSet<FuelNode>> sources = FindFuelSourcesStackPriority(type, flowMode != ResourceFlowMode.STACK_PRIORITY_SEARCH || PhysicsGlobals.Stack_PriUsesSurf);
+            Disposable<HashSet<FuelNode>> sources = FindFuelSourcesStackPriority(type, flowMode != ResourceFlowMode.STACK_PRIORITY_SEARCH);
             float amountPerSource = amount / sources.value.Count();
             foreach (FuelNode source in sources.value)
                 if (!freeResources[type])

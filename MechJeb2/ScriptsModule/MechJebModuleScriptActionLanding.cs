@@ -8,61 +8,101 @@ namespace MuMech
 		public static String NAME = "Landing";
 
 		MechJebModuleLandingGuidance module;
+		MechJebModuleLandingAutopilot module_autopilot;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool deployGear = true;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool deployChutes = true;
 		[Persistent(pass = (int)Pass.Type)]
+		public EditableInt limitChutesStage = 0;
+		[Persistent(pass = (int)Pass.Type)]
 		private EditableDouble touchdownSpeed;
+		[Persistent(pass = (int)Pass.Type)]
+		private bool landTarget = false;
+		[Persistent(pass = (int)Pass.Type)]
+		private EditableAngle targetLattitude = new EditableAngle(0);
+		[Persistent(pass = (int)Pass.Type)]
+		private EditableAngle targetLongitude = new EditableAngle(0);
 
 		public MechJebModuleScriptActionLanding (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			module = core.GetComputerModule<MechJebModuleLandingGuidance>();
+			module_autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
 			this.readModuleConfiguration();
 		}
 
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			core.landing.LandUntargeted(this);
+			if (this.landTarget)
+			{
+				module_autopilot.LandAtPositionTarget(this);
+			}
+			else
+			{
+				module_autopilot.LandUntargeted(this);
+			}
 			this.writeModuleConfiguration();
-			core.landing.users.Add(module);
+			module_autopilot.users.Add(module);
 		}
 
-		override public  void endAction()
+		override public void endAction()
 		{
 			base.endAction();
-			core.landing.users.Remove(module);
+			module_autopilot.users.Remove(module);
 		}
 
 		override public void readModuleConfiguration()
 		{
-			deployGear = core.landing.deployGears;
-			deployChutes = core.landing.deployChutes;
-			touchdownSpeed = core.landing.touchdownSpeed;
+			deployGear = module_autopilot.deployGears;
+			deployChutes = module_autopilot.deployChutes;
+			limitChutesStage = module_autopilot.limitChutesStage;
+			touchdownSpeed = module_autopilot.touchdownSpeed;
+			if (core.target.PositionTargetExists)
+			{
+				landTarget = true;
+				targetLattitude = core.target.targetLatitude;
+				targetLongitude = core.target.targetLongitude;
+			}
 		}
 
 		override public void writeModuleConfiguration()
 		{
-			core.landing.deployGears = deployGear;
-			core.landing.deployChutes = deployChutes;
-			core.landing.touchdownSpeed = touchdownSpeed;
+			module_autopilot.deployGears = deployGear;
+			module_autopilot.deployChutes = deployChutes;
+			module_autopilot.touchdownSpeed = touchdownSpeed;
+			module_autopilot.limitChutesStage = limitChutesStage;
+			if (landTarget)
+			{
+				core.target.SetPositionTarget(core.vessel.mainBody, targetLattitude, targetLongitude);
+			}
 		}
 
 		override public void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label ("Land Somewhere");
+			if (landTarget)
+			{
+				GUILayout.Label("Land At Target");
+			}
+			else
+			{
+				GUILayout.Label("Land Somewhere");
+			}
 			if (this.isStarted())
 			{
 				GUILayout.Label(core.landing.CurrentStep.ToString());
 			}
-			if (this.isStarted() && !this.isExecuted() && core.landing.CurrentStep == null)
+			base.postWindowGUI(windowID);
+		}
+
+		override public void afterOnFixedUpdate()
+		{
+			if (this.isStarted() && !this.isExecuted() && module_autopilot.CurrentStep == null)
 			{
 				this.endAction();
 			}
-			base.postWindowGUI(windowID);
 		}
 	}
 }
