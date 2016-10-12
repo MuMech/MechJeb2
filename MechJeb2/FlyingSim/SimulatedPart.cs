@@ -212,6 +212,8 @@ namespace MuMech
         {
             dest.ClearCubes();
 
+            dest.SetPart(source.Part);
+
             dest.None = source.None;
 
             // Procedural need access to part so things gets bad quick.
