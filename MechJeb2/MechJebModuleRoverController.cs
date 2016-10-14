@@ -423,13 +423,13 @@ namespace MuMech
 				var batteries = vessel.Parts.FindAll(p => p.Resources.Contains("ElectricCharge") && p.Resources["ElectricCharge"].flowState);
 				var energyLeft = batteries.Sum(p => p.Resources["ElectricCharge"].amount) / batteries.Sum(p => p.Resources["ElectricCharge"].maxAmount); 
 				var openSolars = vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
-					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable && p.panelState != ModuleDeployableSolarPanel.panelStates.BROKEN &&
-					                                                                         p.panelState != ModuleDeployableSolarPanel.panelStates.RETRACTED).Count > 0;
+					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable && p.deployState != ModuleDeployablePart.DeployState.BROKEN &&
+					                                                                         p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
 				
 				if (openSolars && energyLeft > 0.99)
 				{
 					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
-					                                                                         p.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED).ForEach(p => p.Retract());
+					                                                                         p.deployState == ModuleDeployablePart.DeployState.EXTENDED).ForEach(p => p.Retract());
 				}
 				
 				if (energyLeft < 0.05 && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) { s.wheelThrottle = 0; } // save remaining energy by not using it for acceleration
@@ -441,7 +441,7 @@ namespace MuMech
 				}
 
 				if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight &&
-				    vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED).Count > 0)
+				    vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count > 0)
 				{
 					waitingForDaylight = true;
 				}
@@ -507,7 +507,7 @@ namespace MuMech
 				
 				if (waitingForDaylight)
 				{
-					if (vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.panelState == ModuleDeployableSolarPanel.panelStates.EXTENDED).Count == 0)
+					if (vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count == 0)
 					{
 						waitingForDaylight = false;
 					}

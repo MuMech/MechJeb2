@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UniLinq;
 using KSP.UI.Screens;
 using Smooth.Pools;
-using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
@@ -478,11 +477,17 @@ namespace MuMech
         {
             return string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
         }
-
+        
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
         public int StrutCount()
         {
-            return parts.Count(p => p is StrutConnector);
+            return parts.Count(p => p is CompoundPart && p.Modules.GetModule<CompoundParts.CModuleStrut>());
+        }
+
+        [ValueInfoItem("Fuel Lines count", InfoItem.Category.Vessel, showInEditor = true)]
+        public int FuelLinesCount()
+        {
+            return parts.Count(p => p is CompoundPart && p.Modules.GetModule<CompoundParts.CModuleFuelLine>());
         }
 
         [ValueInfoItem("Vessel cost", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "$")]

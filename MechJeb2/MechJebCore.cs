@@ -127,7 +127,7 @@ namespace MuMech
             EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
         }
 
-        [KSPAction("Deactivate SmartASS")]
+        [KSPAction("Deactivate SmartACS")]
         public void OnDeactivateSmartASSAction(KSPActionParam param)
         {
             EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
