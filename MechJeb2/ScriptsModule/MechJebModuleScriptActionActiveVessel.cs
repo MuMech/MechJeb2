@@ -37,8 +37,8 @@ namespace MuMech
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			this.scriptModule.setActiveBreakpoint(actionIndex, crewableParts[selectedPartIndex].vessel);
 			FlightGlobals.SetActiveVessel(crewableParts[selectedPartIndex].vessel);
+			this.scriptModule.setActiveBreakpoint(actionIndex, crewableParts[selectedPartIndex].vessel);
 			//crewableParts[selectedPartIndex].vessel.MakeActive();
 		}
 

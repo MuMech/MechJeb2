@@ -107,7 +107,8 @@ namespace MuMech
 			actionsNamesList.Add ("Crew Transfer");
 			actionsNamesList.Add ("Quicksave");
 			actionsNamesList.Add ("RCS");
-			actionsNamesList.Add ("Activate Vessel");
+			actionsNamesList.Add ("Switch Vessel");
+			actionsNamesList.Add ("Activate Engine");
 			actionsNamesList.Add ("SAS");
 			actionsNamesList.Add ("Maneuver");
 			actionsNamesList.Add ("Execute node");
@@ -392,9 +393,13 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionRCS(this, core));
 						}
-						else if (actionNames[selectedActionIndex].CompareTo("Activate Vessel") == 0)
+						else if (actionNames[selectedActionIndex].CompareTo("Switch Vessel") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionActiveVessel(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("Activate Engine") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionActivateEngine(this, core));
 						}
 						else if (actionNames[selectedActionIndex].CompareTo("SAS") == 0)
 						{
@@ -677,6 +682,10 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionActiveVessel(this, core);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionActivateEngine.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionActivateEngine(this, core);
+				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionSAS.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionSAS(this, core);
@@ -791,17 +800,17 @@ namespace MuMech
 		}
 
 		//Set a breakpoint to be able to recover when we switch vessel
-		//Before switching vessel, we save the script, then in the OnLoad method of the script module, we check if any other mechjebcore has an active pending breakpoint
 		public void setActiveBreakpoint(int index, Vessel new_vessel)
 		{
 			this.SaveConfig(9, false); //Slot 9 is used for "temp"
 			this.stop();
+			this.clearAll();
 			List<MechJebCore> mechjebCoresList = new_vessel.FindPartModulesImplementing<MechJebCore>();
 			foreach (MechJebCore mjCore in mechjebCoresList)
 			{
 				mjCore.GetComputerModule<MechJebModuleScript>().minifiedGUI = this.minifiedGUI; //Replicate the UI setting on the other mechjeb
 				mjCore.GetComputerModule<MechJebModuleScript>().pendingloadBreakpoint = index;
-				return;
+				return; //We only need to update one mechjeb core. Don't know what happens if there are 2 MJ cores on one vessel?
 			}
 		}
 

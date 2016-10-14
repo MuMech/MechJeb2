@@ -23,7 +23,7 @@ namespace MuMech
 		{
 			actionTypes.Add("Enable");
 			actionTypes.Add("Disable");
-			crewableParts = new List<Part>();
+			/*crewableParts = new List<Part>();
 			crewablePartsNames = new List<String>();
 			Vessel vessel = FlightGlobals.ActiveVessel;
 			if (vessel != null)
@@ -34,6 +34,23 @@ namespace MuMech
 					{
 						crewableParts.Add(part);
 						crewablePartsNames.Add(part.partInfo.title);
+					}
+				}
+			}*/
+			foreach (Vessel vessel in FlightGlobals.Vessels)
+			{
+				foreach (Part part in vessel.Parts)
+				{
+					crewableParts = new List<Part>();
+					crewablePartsNames = new List<String>();
+					if (part.CrewCapacity > 0)
+					{
+						crewableParts.Add(part);
+						if (part.tag == null || part.tag.Length == 0)
+						{
+							part.tag = scriptModule.vesselSaveName + " " + part.name;
+						}
+						crewablePartsNames.Add(part.tag);
 					}
 				}
 			}

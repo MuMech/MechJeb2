@@ -92,13 +92,10 @@ namespace MuMech
 					dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().UndockSameVessel();
 				}*/
 				//When undocking, this can separate the vessel into 2 new vessels. We take the risk the new one is not the one with the focus. If it's the case, we must transfer the script.
-				if (core.MasterMechJeb != core)
+				if (!core.vessel.isActiveVessel)
 				{
-					MechJebModuleScript newScript = core.MasterMechJeb.GetComputerModule<MechJebModuleScript>();
-					if (newScript != null)
-					{
-						this.scriptModule.setActiveBreakpoint(actionIndex, core.vessel);
-					}
+					this.scriptModule.setActiveBreakpoint(actionIndex, FlightGlobals.ActiveVessel);
+					return;//Don't end the action as we do not want to move to the next one
 				}
 			}
 			this.endAction();
