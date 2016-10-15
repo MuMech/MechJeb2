@@ -13,20 +13,30 @@ namespace MuMech
 		private List<String> controlPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
+		private int old_selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private int controlFromPartIndex = 0;
+		private int old_controlFromPartIndex = 0;
+		[Persistent(pass = (int)Pass.Type)]
+		private uint selectedPartFlightID = 0;
+		[Persistent(pass = (int)Pass.Type)]
+		private uint controlFromPartFlightID = 0;
 		private bool partHighlighted = false;
 		private bool partHighlightedControl = false;
 
 		public MechJebModuleScriptActionTargetDock (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			//dockingModulesList = currentTargetVessel.FindPartModulesImplementing<ModuleDockingNode>();
-			//List<ITargetable> ITargetableList = currentTargetVessel.FindPartModulesImplementing<ITargetable>();
-			foreach (ModuleDockingNode node in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleDockingNode>())
+			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
-				dockingPartsList.Add(node.part);
-				this.dockingPartsNames.Add (node.part.partInfo.title);
-				this.controlPartsNames.Add (node.part.partInfo.title);
+				if (vessel.state != Vessel.State.DEAD)
+				{
+					foreach (ModuleDockingNode node in vessel.FindPartModulesImplementing<ModuleDockingNode>())
+					{
+						dockingPartsList.Add(node.part);
+						this.dockingPartsNames.Add(node.part.partInfo.title);
+						this.controlPartsNames.Add(node.part.partInfo.title);
+					}
+				}
 			}
 		}
 
@@ -117,6 +127,42 @@ namespace MuMech
 				GUILayout.Label ("-- NO DOCK PART --");
 			}
 			base.postWindowGUI(windowID);
+		}
+
+		override public void afterOnFixedUpdate()
+		{
+			if (selectedPartIndex < dockingPartsList.Count && selectedPartIndex != old_selectedPartIndex)
+			{
+				this.selectedPartFlightID = dockingPartsList[selectedPartIndex].flightID;
+				this.old_selectedPartIndex = this.selectedPartIndex;
+			}
+			if (controlFromPartIndex < dockingPartsList.Count && controlFromPartIndex != old_controlFromPartIndex)
+			{
+				this.controlFromPartFlightID = dockingPartsList[controlFromPartIndex].flightID;
+				this.old_controlFromPartIndex = this.controlFromPartIndex;
+			}
+		}
+
+		override public void postLoad(ConfigNode node)
+		{
+			if (selectedPartFlightID != 0 && controlFromPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
+			{
+				int i = 0;
+				foreach (Part part in dockingPartsList)
+				{
+					if (part.flightID == selectedPartFlightID)
+					{
+						this.selectedPartIndex = i;
+					}
+					if (part.flightID == controlFromPartFlightID)
+					{
+						this.controlFromPartIndex = i;
+					}
+					i++;
+				}
+			}
+			this.old_selectedPartIndex = selectedPartIndex;
+			this.old_controlFromPartIndex = controlFromPartIndex;
 		}
 	}
 }

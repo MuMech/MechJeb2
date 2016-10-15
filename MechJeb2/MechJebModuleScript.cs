@@ -605,7 +605,10 @@ namespace MuMech
 			{
 				return;
 			}
-			this.selectedSlot = slot; //Select the slot for the UI
+			if (slot != 9)
+			{
+				this.selectedSlot = slot; //Select the slot for the UI. Except slot 9 (temp)
+			}
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
 			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
 			{
