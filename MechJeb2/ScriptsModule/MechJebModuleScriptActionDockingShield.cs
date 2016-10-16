@@ -11,7 +11,6 @@ namespace MuMech
 		private List<String> dockingPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
-		private int old_selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
@@ -80,12 +79,6 @@ namespace MuMech
 
 		override public void afterOnFixedUpdate()
 		{
-			if (selectedPartIndex < dockingPartsList.Count && selectedPartIndex != old_selectedPartIndex)
-			{
-				this.selectedPartFlightID = dockingPartsList[selectedPartIndex].flightID;
-				this.old_selectedPartIndex = this.selectedPartIndex;
-			}
-
 			if (this.started && !this.executed)
 			{
 				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
@@ -124,6 +117,11 @@ namespace MuMech
 					}
 				}
 				actionType = GuiUtils.ComboBox.Box(actionType, actionTypes.ToArray(), actionTypes);
+
+				if (selectedPartIndex < dockingPartsList.Count)
+				{
+					this.selectedPartFlightID = dockingPartsList[selectedPartIndex].flightID;
+				}
 			}
 			else
 			{
@@ -146,7 +144,6 @@ namespace MuMech
 					i++;
 				}
 			}
-			this.old_selectedPartIndex = selectedPartIndex;
 		}
 	}
 }

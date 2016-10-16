@@ -11,7 +11,6 @@ namespace MuMech
 		private List<String> crewablePartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
-		private int old_selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		bool partHighlighted = false;
@@ -54,12 +53,6 @@ namespace MuMech
 
 		override public void afterOnFixedUpdate()
 		{
-			if (selectedPartIndex < crewableParts.Count && selectedPartIndex != old_selectedPartIndex)
-			{
-				this.selectedPartFlightID = crewableParts[selectedPartIndex].flightID;
-				this.old_selectedPartIndex = this.selectedPartIndex;
-			}
-
 			if (!this.isExecuted() && this.isStarted() && startTime == 0f)
 			{
 				startTime = Time.time;
@@ -100,6 +93,12 @@ namespace MuMech
 			{
 				GUILayout.Label(" waiting " + this.spendTime + "s");
 			}
+
+			if (selectedPartIndex < crewableParts.Count)
+			{
+				this.selectedPartFlightID = crewableParts[selectedPartIndex].flightID;
+			}
+
 			base.postWindowGUI(windowID);
 		}
 
@@ -117,7 +116,6 @@ namespace MuMech
 					i++;
 				}
 			}
-			this.old_selectedPartIndex = selectedPartIndex;
 		}
 	}
 }

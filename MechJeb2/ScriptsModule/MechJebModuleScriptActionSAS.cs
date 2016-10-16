@@ -16,7 +16,6 @@ namespace MuMech
 		private bool onActiveVessel = true;
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
-		private int old_selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		bool partHighlighted = false;
@@ -103,16 +102,11 @@ namespace MuMech
 					}
 				}
 			}
-			base.postWindowGUI(windowID);
-		}
-
-		override public void afterOnFixedUpdate()
-		{
-			if (selectedPartIndex < crewableParts.Count && selectedPartIndex != old_selectedPartIndex)
+			if (selectedPartIndex < crewableParts.Count)
 			{
 				this.selectedPartFlightID = crewableParts[selectedPartIndex].flightID;
-				this.old_selectedPartIndex = this.selectedPartIndex;
 			}
+			base.postWindowGUI(windowID);
 		}
 
 		override public void postLoad(ConfigNode node)
@@ -129,7 +123,6 @@ namespace MuMech
 					i++;
 				}
 			}
-			this.old_selectedPartIndex = selectedPartIndex;
 		}
 	}
 }

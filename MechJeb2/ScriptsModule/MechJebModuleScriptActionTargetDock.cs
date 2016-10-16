@@ -13,10 +13,8 @@ namespace MuMech
 		private List<String> controlPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
-		private int old_selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private int controlFromPartIndex = 0;
-		private int old_controlFromPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -123,26 +121,21 @@ namespace MuMech
 						dockingPartsList [controlFromPartIndex].SetHighlight (false,true);
 					}
 				}
+
+				if (selectedPartIndex < dockingPartsList.Count)
+				{
+					this.selectedPartFlightID = dockingPartsList[selectedPartIndex].flightID;
+				}
+				if (controlFromPartIndex < dockingPartsList.Count)
+				{
+					this.controlFromPartFlightID = dockingPartsList[controlFromPartIndex].flightID;
+				}
 			}
 			else
 			{
 				GUILayout.Label ("-- NO DOCK PART --");
 			}
 			base.postWindowGUI(windowID);
-		}
-
-		override public void afterOnFixedUpdate()
-		{
-			if (selectedPartIndex < dockingPartsList.Count && selectedPartIndex != old_selectedPartIndex)
-			{
-				this.selectedPartFlightID = dockingPartsList[selectedPartIndex].flightID;
-				this.old_selectedPartIndex = this.selectedPartIndex;
-			}
-			if (controlFromPartIndex < dockingPartsList.Count && controlFromPartIndex != old_controlFromPartIndex)
-			{
-				this.controlFromPartFlightID = dockingPartsList[controlFromPartIndex].flightID;
-				this.old_controlFromPartIndex = this.controlFromPartIndex;
-			}
 		}
 
 		override public void postLoad(ConfigNode node)
@@ -163,8 +156,6 @@ namespace MuMech
 					i++;
 				}
 			}
-			this.old_selectedPartIndex = selectedPartIndex;
-			this.old_controlFromPartIndex = controlFromPartIndex;
 		}
 	}
 }

@@ -11,14 +11,11 @@ namespace MuMech
 		private List<String> crewablePartsNamesS = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexS = 0;
-		private int old_selectedPartIndexS = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexT = 0;
-		private int old_selectedPartIndexT = 0;
 		private List<String> crewablePartsNamesT = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedKerbal = 0;
-		private int old_selectedKerbal = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartSFlightID = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -148,26 +145,21 @@ namespace MuMech
 					crewableParts [selectedPartIndexT].SetHighlight (false, false);
 				}
 			}
-			base.postWindowGUI(windowID);
-		}
 
-		override public void afterOnFixedUpdate()
-		{
-			if (selectedPartIndexS < crewableParts.Count && selectedPartIndexS != old_selectedPartIndexS)
+			if (selectedPartIndexS < crewableParts.Count)
 			{
 				this.selectedPartSFlightID = crewableParts[selectedPartIndexS].flightID;
-				this.old_selectedPartIndexS = selectedPartIndexS;
 			}
-			if (selectedPartIndexT < crewableParts.Count && selectedPartIndexT != old_selectedPartIndexT)
+			if (selectedPartIndexT < crewableParts.Count)
 			{
-				this.selectedPartSFlightID = crewableParts[selectedPartIndexT].flightID;
-				this.old_selectedPartIndexT = selectedPartIndexT;
+				this.selectedPartTFlightID = crewableParts[selectedPartIndexT].flightID;
 			}
-			if (selectedKerbal < kerbalsList.Count && selectedKerbal != old_selectedKerbal)
+			if (selectedKerbal < kerbalsList.Count)
 			{
 				this.selectedKerbalName = kerbalsList[selectedKerbal].name;
-				this.old_selectedKerbal = selectedKerbal;
 			}
+
+			base.postWindowGUI(windowID);
 		}
 
 		override public void postLoad(ConfigNode node)
@@ -197,9 +189,6 @@ namespace MuMech
 					i++;
 				}
 			}
-			this.old_selectedPartIndexS = this.selectedPartIndexS;
-			this.old_selectedPartIndexT = this.selectedPartIndexT;
-			this.old_selectedKerbal = this.selectedKerbal;
 		}
 	}
 }

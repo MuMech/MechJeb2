@@ -11,7 +11,6 @@ namespace MuMech
 		private List<String> enginePartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
-		private int old_selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		private bool partHighlighted = false;
@@ -41,11 +40,7 @@ namespace MuMech
 			base.activateAction(actionIndex);
 			if (enginePartsList[selectedPartIndex] != null)
 			{
-				if (!enginePartsList[selectedPartIndex].isActiveAndEnabled)
-				{
-					//enginePartsList[selectedPartIndex].enabled = true;
-					enginePartsList[selectedPartIndex].force_activate();
-				}
+				enginePartsList[selectedPartIndex].force_activate();
 			}
 			this.endAction();
 		}
@@ -80,21 +75,17 @@ namespace MuMech
 						enginePartsList[selectedPartIndex].SetHighlight(false, true);
 					}
 				}
+
+				if (selectedPartIndex < enginePartsList.Count)
+				{
+					this.selectedPartFlightID = enginePartsList[selectedPartIndex].flightID;
+				}
 			}
 			else
 			{
-				GUILayout.Label("-- NO DOCK PART --");
+				GUILayout.Label("-- NO ENGINE PART --");
 			}
 			base.postWindowGUI(windowID);
-		}
-
-		override public void afterOnFixedUpdate()
-		{
-			if (selectedPartIndex < enginePartsList.Count && selectedPartIndex != old_selectedPartIndex)
-			{
-				this.selectedPartFlightID = enginePartsList[selectedPartIndex].flightID;
-				this.old_selectedPartIndex = this.selectedPartIndex;
-			}
 		}
 
 		override public void postLoad(ConfigNode node)
@@ -111,7 +102,6 @@ namespace MuMech
 					i++;
 				}
 			}
-			this.old_selectedPartIndex = selectedPartIndex;
 		}
 	}
 }
