@@ -7,15 +7,15 @@ namespace MuMech
 	public class MechJebModuleScriptActionCrewTransfer : MechJebModuleScriptAction
 	{
 		public static String NAME = "CrewTransfer";
-		private List<Part> crewableParts;
-		private List<String> crewablePartsNamesS;
+		private List<Part> crewableParts = new List<Part>();
+		private List<String> crewablePartsNamesS = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexS = 0;
 		private int old_selectedPartIndexS = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexT = 0;
 		private int old_selectedPartIndexT = 0;
-		private List<String> crewablePartsNamesT;
+		private List<String> crewablePartsNamesT = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedKerbal = 0;
 		private int old_selectedKerbal = 0;
@@ -25,18 +25,18 @@ namespace MuMech
 		private uint selectedPartTFlightID = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private String selectedKerbalName;
-		private List<ProtoCrewMember> kerbalsList;
-		private List<String> kerbalsNames;
+		private List<ProtoCrewMember> kerbalsList = new List<ProtoCrewMember>();
+		private List<String> kerbalsNames = new List<String>();
 		private bool partHighlightedS = false;
 		private bool partHighlightedT = false;
 
 		public MechJebModuleScriptActionCrewTransfer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			crewableParts = new List<Part> ();
-			crewablePartsNamesS = new List<String> ();
-			crewablePartsNamesT = new List<String> ();
-			kerbalsNames = new List<String>();
-			kerbalsList = new List<ProtoCrewMember>();
+			this.crewableParts.Clear();
+			this.crewablePartsNamesS.Clear();
+			this.crewablePartsNamesT.Clear();
+			this.kerbalsNames.Clear();
+			this.kerbalsList.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)

@@ -18,6 +18,8 @@ namespace MuMech
 
 		public MechJebModuleScriptActionActivateEngine (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
+			this.enginePartsList.Clear();
+			this.enginePartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)

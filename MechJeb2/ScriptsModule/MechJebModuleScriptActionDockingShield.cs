@@ -21,8 +21,11 @@ namespace MuMech
 
 		public MechJebModuleScriptActionDockingShield (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			actionTypes.Add("Open");
-			actionTypes.Add("Close");
+			this.actionTypes.Clear();
+			this.actionTypes.Add("Open");
+			this.actionTypes.Add("Close");
+			this.dockingPartsList.Clear();
+			this.dockingPartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)

@@ -7,8 +7,8 @@ namespace MuMech
 	public class MechJebModuleScriptActionActiveVessel : MechJebModuleScriptAction
 	{
 		public static String NAME = "ActiveVessel";
-		private List<Part> crewableParts;
-		private List<String> crewablePartsNames;
+		private List<Part> crewableParts = new List<Part>();
+		private List<String> crewablePartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
 		private int old_selectedPartIndex = 0;
@@ -21,8 +21,8 @@ namespace MuMech
 
 		public MechJebModuleScriptActionActiveVessel (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			crewableParts = new List<Part>();
-			crewablePartsNames = new List<String>();
+			this.crewableParts.Clear();
+			this.crewablePartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)

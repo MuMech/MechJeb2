@@ -8,8 +8,8 @@ namespace MuMech
 	{
 		public static String NAME = "SAS";
 
-		private List<Part> crewableParts;
-		private List<String> crewablePartsNames;
+		private List<Part> crewableParts = new List<Part>();
+		private List<String> crewablePartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
@@ -24,10 +24,11 @@ namespace MuMech
 
 		public MechJebModuleScriptActionSAS (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			actionTypes.Add("Enable");
-			actionTypes.Add("Disable");
-			crewableParts = new List<Part>();
-			crewablePartsNames = new List<String>();
+			this.actionTypes.Clear();
+			this.actionTypes.Add("Enable");
+			this.actionTypes.Add("Disable");
+			this.crewableParts.Clear();
+			this.crewablePartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)

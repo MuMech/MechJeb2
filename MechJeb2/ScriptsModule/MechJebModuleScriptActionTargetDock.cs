@@ -26,13 +26,15 @@ namespace MuMech
 
 		public MechJebModuleScriptActionTargetDock (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
+			this.dockingPartsList.Clear();
+			this.dockingPartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
 					foreach (ModuleDockingNode node in vessel.FindPartModulesImplementing<ModuleDockingNode>())
 					{
-						dockingPartsList.Add(node.part);
+						this.dockingPartsList.Add(node.part);
 						this.dockingPartsNames.Add(node.part.partInfo.title);
 						this.controlPartsNames.Add(node.part.partInfo.title);
 					}

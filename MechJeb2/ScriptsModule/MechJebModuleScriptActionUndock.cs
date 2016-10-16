@@ -21,6 +21,8 @@ namespace MuMech
 		{
 			//dockingModulesList = currentTargetVessel.FindPartModulesImplementing<ModuleDockingNode>();
 			//List<ITargetable> ITargetableList = currentTargetVessel.FindPartModulesImplementing<ITargetable>();
+			this.dockingPartsList.Clear();
+			this.dockingPartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
