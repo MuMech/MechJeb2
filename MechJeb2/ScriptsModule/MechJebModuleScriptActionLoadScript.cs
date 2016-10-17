@@ -26,7 +26,7 @@ namespace MuMech
 		{
 			base.activateAction(actionIndex);
 			this.scriptModule.stop();
-			this.scriptModule.LoadConfig(scriptSlot);
+			this.scriptModule.LoadConfig(scriptSlot, false);
 			if (this.autoStart)
 			{
 				this.scriptModule.start();

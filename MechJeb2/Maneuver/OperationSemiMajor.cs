@@ -35,6 +35,11 @@
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT);
         }
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 

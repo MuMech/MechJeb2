@@ -17,6 +17,8 @@ namespace MuMech
 		[Persistent(pass = (int)(Pass.Local))]
 		private bool minifiedGUI = false;
 		private List<String> scriptsList = new List<String>();
+		[Persistent(pass = (int)(Pass.Type))]
+		private String[] scriptNames = {"","","","","","","",""};
 		[Persistent(pass = (int)(Pass.Local))]
 		private int selectedSlot = 0;
 		[Persistent(pass = (int)(Pass.Local))]
@@ -31,6 +33,12 @@ namespace MuMech
 		private int spendTime = 0;
 		private int initTime = 5; //Add a 5s warmup time
 		private float startTime = 0f;
+		private bool deployScriptNameField = false;
+		//Flash message to notify user
+		private String flashMessage = "";
+		private int flashMessageType = 0; //0=yellow, 1=red (error)
+		private float flashMessageStartTime = 0f;
+		private bool waitingDeletionConfirmation = false;
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -55,10 +63,15 @@ namespace MuMech
 			imageRed.Apply();
 			imageGreen.Apply();
 			imageGray.Apply();
-			scriptsList.Add("Slot 1");
-			scriptsList.Add("Slot 2");
-			scriptsList.Add("Slot 3");
-			scriptsList.Add("Slot 4");
+		}
+
+		public void updateScriptsNames()
+		{
+			scriptsList.Clear();
+			for (int i = 0; i < 8; i++)
+			{
+				scriptsList.Add("Slot " + (i+1) + " - " + scriptNames[i]);
+			}
 		}
 
 		public void addAction(MechJebModuleScriptAction action)
@@ -86,6 +99,7 @@ namespace MuMech
 			List<String> actionsNamesList = new List<String> ();
 			actionsNamesList.Add ("Timer");
 			actionsNamesList.Add ("Decouple");
+			actionsNamesList.Add ("Dock Shield");
 			actionsNamesList.Add ("Staging");
 			actionsNamesList.Add ("Target Dock");
 			actionsNamesList.Add ("Target Body");
@@ -93,9 +107,10 @@ namespace MuMech
 			actionsNamesList.Add ("Crew Transfer");
 			actionsNamesList.Add ("Quicksave");
 			actionsNamesList.Add ("RCS");
-			actionsNamesList.Add ("Activate Vessel");
+			actionsNamesList.Add ("Switch Vessel");
+			actionsNamesList.Add ("Activate Engine");
 			actionsNamesList.Add ("SAS");
-			actionsNamesList.Add ("Manoeuver");
+			actionsNamesList.Add ("Maneuver");
 			actionsNamesList.Add ("Execute node");
 			actionsNamesList.Add ("Action Group");
 			actionsNamesList.Add ("Node tolerance");
@@ -105,6 +120,8 @@ namespace MuMech
 			actionsNamesList.Add ("MODULE Ascent Autopilot");
 			actionsNamesList.Add ("MODULE Docking Autopilot");
 			actionsNamesList.Add ("MODULE Landing");
+			actionsNamesList.Add ("MODULE Rendezvous");
+			actionsNamesList.Add ("MODULE Rendezvous Autopilot");
 
 			actionNames = actionsNamesList.ToArray ();
 
@@ -142,6 +159,7 @@ namespace MuMech
 					}
 				}
 			}
+			this.LoadScriptModuleConfig();
 			this.moduleStarted = true;
 		}
 
@@ -164,11 +182,39 @@ namespace MuMech
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
 			base.OnSave(local, type, global);
+			this.SaveScriptModuleConfig();
 		}
 
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
 			base.OnLoad(local, type, global);
+			this.LoadScriptModuleConfig();
+		}
+
+		public void SaveScriptModuleConfig()
+		{
+			ConfigNode node = ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null);
+			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"));
+		}
+
+		public void LoadScriptModuleConfig()
+		{
+			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"))
+			{
+				ConfigNode node = null;
+				try
+				{
+					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"));
+				}
+				catch (Exception e)
+				{
+					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + vesselSaveName + "_conf.cfg: " + e);
+				}
+				if (node == null) return;
+
+				ConfigNode.LoadObjectFromConfig(this, node);
+			}
+			this.updateScriptsNames();
 		}
 
 		protected override void WindowGUI(int windowID) {
@@ -224,21 +270,73 @@ namespace MuMech
 						this.clearAll();
 					}
 					selectedSlot = GuiUtils.ComboBox.Box(selectedSlot, scriptsList.ToArray(), scriptsList);
+					if (deployScriptNameField)
+					{
+						scriptNames[selectedSlot] = GUILayout.TextField(scriptNames[selectedSlot], GUILayout.Width(120), GUILayout.ExpandWidth(false));
+						if (scriptNames[selectedSlot].Length > 20)//Limit the script name to 20 chars
+						{
+							scriptNames[selectedSlot] = scriptNames[selectedSlot].Substring(0, 20);
+						}
+						if (GUILayout.Button("<<"))
+						{
+							this.deployScriptNameField = false;
+							this.updateScriptsNames();
+							this.SaveScriptModuleConfig();
+						}
+					}
+					else
+					{
+						if (GUILayout.Button(">>"))
+						{
+							this.deployScriptNameField = true;
+						}
+					}
+					if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/delete", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+					{
+						if (!this.waitingDeletionConfirmation)
+						{
+							this.waitingDeletionConfirmation = true;
+							this.setFlashMessage("Warning: To confirm deletion of slot " + (selectedSlot+1) + " - " + scriptNames[selectedSlot] + ", press again the delete button", 0);
+						}
+						else
+						{
+							this.DeleteConfig(this.selectedSlot, true);
+							scriptNames[selectedSlot] = "";
+							this.updateScriptsNames();
+							this.SaveScriptModuleConfig();
+						}
+					}
+
 					if (GUILayout.Button("Save", style2))
 					{
-						this.SaveConfig(this.selectedSlot);
+						this.SaveConfig(this.selectedSlot, true);
 					}
 					if (GUILayout.Button("Load", style2))
 					{
-						this.LoadConfig(this.selectedSlot);
+						this.LoadConfig(this.selectedSlot, true);
 					}
 					GUILayout.EndHorizontal();
+					if (this.flashMessage.Length > 0)
+					{
+						GUILayout.BeginHorizontal();
+						GUIStyle sflash = new GUIStyle(GUI.skin.label);
+						if (this.flashMessageType == 1)
+						{
+							sflash.normal.textColor = Color.red;
+						}
+						else
+						{
+							sflash.normal.textColor = Color.yellow;
+						}
+						GUILayout.Label(this.flashMessage, sflash);
+						GUILayout.EndHorizontal();
+					}
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("Add action");
 					selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames, this);
 					if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0 || actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
 					{
-						if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true)))
+						if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true),GUILayout.ExpandWidth(false)))
 						{
 							if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
 							{
@@ -262,6 +360,10 @@ namespace MuMech
 						else if (actionNames[selectedActionIndex].CompareTo("Decouple") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionUndock(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("Dock Shield") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionDockingShield(this, core));
 						}
 						else if (actionNames[selectedActionIndex].CompareTo("Staging") == 0)
 						{
@@ -291,9 +393,13 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionRCS(this, core));
 						}
-						else if (actionNames[selectedActionIndex].CompareTo("Activate Vessel") == 0)
+						else if (actionNames[selectedActionIndex].CompareTo("Switch Vessel") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionActiveVessel(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("Activate Engine") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionActivateEngine(this, core));
 						}
 						else if (actionNames[selectedActionIndex].CompareTo("SAS") == 0)
 						{
@@ -303,7 +409,7 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionExecuteNode(this, core));
 						}
-						else if (actionNames[selectedActionIndex].CompareTo("Manoeuver") == 0)
+						else if (actionNames[selectedActionIndex].CompareTo("Maneuver") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionManoeuver(this, core));
 						}
@@ -339,11 +445,20 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionLanding(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("MODULE Rendezvous") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionRendezvous(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("MODULE Rendezvous Autopilot") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionRendezvousAP(this, core));
+						}
 					}
 					GUILayout.EndHorizontal();
 				}
-				foreach (MechJebModuleScriptAction actionItem in actionsList)
+				for (int i = 0; i < actionsList.Count; i++) //Don't use "foreach" here to avoid nullpointer exception
 				{
+					MechJebModuleScriptAction actionItem = actionsList[i];
 					if (!this.minifiedGUI || actionItem.isStarted())
 					{
 						actionItem.WindowGUI(windowID);
@@ -429,7 +544,7 @@ namespace MuMech
 						{
 							this.warmingUp = false;
 							this.startTime = 0;
-							this.LoadConfig(this.selectedSlot);
+							this.LoadConfig(this.selectedSlot, false);
 							int asp = this.activeSavepoint;
 							this.activeSavepoint = -1;
 							this.startAfterIndex(asp);
@@ -471,14 +586,32 @@ namespace MuMech
 					actionsList[i].afterOnFixedUpdate();
 				}
 			}
+
+			//Check if we need to close the flashMessage
+			if (this.flashMessageStartTime > 0f)
+			{
+				float flashSpendTime = (int)(Math.Round(Time.time - this.flashMessageStartTime));
+				if (flashSpendTime > 5f)
+				{
+					this.flashMessage = "";
+					this.flashMessageStartTime = 0f;
+					this.waitingDeletionConfirmation = false;
+				}
+			}
 		}
 
-		public void LoadConfig(int slot)
+		public void LoadConfig(int slot, bool notify)
 		{
-			this.clearAll();
-			this.selectedSlot = slot; //Select the slot for the UI
+			if (vessel == null)
+			{
+				return;
+			}
+			if (slot != 9)
+			{
+				this.selectedSlot = slot; //Select the slot for the UI. Except slot 9 (temp)
+			}
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
-			if ((vessel != null) && File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
+			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
 			{
 				try
 				{
@@ -489,8 +622,13 @@ namespace MuMech
 					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg: " + e);
 				}
 			}
+			else if (notify)
+			{
+				this.setFlashMessage("ERROR: File not found: mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg", 1);
+			}
 			if (node == null) return;
 
+			this.clearAll();
 			//Load custom info scripts, which are stored in our ConfigNode:
 			ConfigNode[] scriptNodes = node.GetNodes();
 			foreach (ConfigNode scriptNode in scriptNodes)
@@ -532,6 +670,10 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionUndock(this, core);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionDockingShield.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionDockingShield(this, core);
+				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionQuicksave.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionQuicksave(this, core);
@@ -543,6 +685,10 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionActiveVessel.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionActiveVessel(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionActivateEngine.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionActivateEngine(this, core);
 				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionSAS.NAME) == 0)
 				{
@@ -584,6 +730,14 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionLoadScript(this, core);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionRendezvous.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionRendezvous(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionRendezvousAP.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionRendezvousAP(this, core);
+				}
 				else {
 					Debug.LogError("MechJebModuleScript.LoadConfig : Unknown node " + scriptNode.name);
 				}
@@ -596,10 +750,9 @@ namespace MuMech
 			}
 		}
 
-		public void SaveConfig(int slot)
+		public void SaveConfig(int slot, bool notify)
 		{
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
-			//string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : ""; // Strip illegal char from the filename
 
 			foreach (MechJebModuleScriptAction script in this.actionsList)
 			{
@@ -610,13 +763,19 @@ namespace MuMech
 			}
 
 			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
-			//TODO : Find a way to notify the user. The popup appears below the main window...
-			//PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "Save", "Script saved on the current vessel", "OK", true, HighLogic.UISkin);
+			if (notify)
+			{
+				this.setFlashMessage("Script saved in slot " + (slot + 1) + " on current vessel", 0);
+			}
 		}
 
-		public void DeleteConfig(int slot)
+		public void DeleteConfig(int slot, bool notify)
 		{
 			File.Delete<MechJebCore>(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
+			if (notify)
+			{
+				this.setFlashMessage("Script deleted on slot " + (slot+1), 0);
+			}
 		}
 
 		public bool isStarted()
@@ -645,25 +804,32 @@ namespace MuMech
 		}
 
 		//Set a breakpoint to be able to recover when we switch vessel
-		//Before switching vessel, we save the script, then in the OnLoad method of the script module, we check if any other mechjebcore has an active pending breakpoint
 		public void setActiveBreakpoint(int index, Vessel new_vessel)
 		{
-			this.SaveConfig(9); //Slot 9 is used for "temp"
+			this.SaveConfig(9, false); //Slot 9 is used for "temp"
 			this.stop();
+			this.clearAll();
 			List<MechJebCore> mechjebCoresList = new_vessel.FindPartModulesImplementing<MechJebCore>();
 			foreach (MechJebCore mjCore in mechjebCoresList)
 			{
 				mjCore.GetComputerModule<MechJebModuleScript>().minifiedGUI = this.minifiedGUI; //Replicate the UI setting on the other mechjeb
 				mjCore.GetComputerModule<MechJebModuleScript>().pendingloadBreakpoint = index;
-				return;
+				return; //We only need to update one mechjeb core. Don't know what happens if there are 2 MJ cores on one vessel?
 			}
 		}
 
 		public void loadFromBreakpoint(int index)
 		{
-			this.LoadConfig(9); //Slot 9 is used for "temp"
-			this.DeleteConfig(9); //Delete the temp config
+			this.LoadConfig(9, false); //Slot 9 is used for "temp"
+			this.DeleteConfig(9, false); //Delete the temp config
 			this.startAfterIndex(index);
+		}
+
+		public void setFlashMessage(String message, int type)
+		{
+			this.flashMessage = message;
+			this.flashMessageType = type;
+			this.flashMessageStartTime = Time.time;
 		}
 	}
 }

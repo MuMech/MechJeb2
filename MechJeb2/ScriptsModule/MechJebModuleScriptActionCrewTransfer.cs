@@ -7,44 +7,52 @@ namespace MuMech
 	public class MechJebModuleScriptActionCrewTransfer : MechJebModuleScriptAction
 	{
 		public static String NAME = "CrewTransfer";
+		private List<Part> crewableParts = new List<Part>();
+		private List<String> crewablePartsNamesS = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexS = 0;
-		private List<Part> crewableParts;
-		private List<String> crewablePartsNamesS;
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexT = 0;
-		private List<String> crewablePartsNamesT;
+		private List<String> crewablePartsNamesT = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedKerbal = 0;
-		private List<ProtoCrewMember> kerbalsList;
-		private List<String> kerbalsNames;
+		[Persistent(pass = (int)Pass.Type)]
+		private uint selectedPartSFlightID = 0;
+		[Persistent(pass = (int)Pass.Type)]
+		private uint selectedPartTFlightID = 0;
+		[Persistent(pass = (int)Pass.Type)]
+		private String selectedKerbalName;
+		private List<ProtoCrewMember> kerbalsList = new List<ProtoCrewMember>();
+		private List<String> kerbalsNames = new List<String>();
 		private bool partHighlightedS = false;
 		private bool partHighlightedT = false;
 
 		public MechJebModuleScriptActionCrewTransfer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			Vessel vessel = FlightGlobals.ActiveVessel;
-			crewableParts = new List<Part> ();
-			crewablePartsNamesS = new List<String> ();
-			crewablePartsNamesT = new List<String> ();
-			if (vessel != null)
+			this.crewableParts.Clear();
+			this.crewablePartsNamesS.Clear();
+			this.crewablePartsNamesT.Clear();
+			this.kerbalsNames.Clear();
+			this.kerbalsList.Clear();
+			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
-				foreach (Part part in vessel.Parts)
+				if (vessel.state != Vessel.State.DEAD)
 				{
-					if (part.CrewCapacity > 0)
+					foreach (Part part in vessel.Parts)
 					{
-						crewableParts.Add (part);
-						crewablePartsNamesS.Add (part.partInfo.title);
-						crewablePartsNamesT.Add (part.partInfo.title);
+						if (part.CrewCapacity > 0)
+						{
+							crewableParts.Add(part);
+							crewablePartsNamesS.Add(part.partInfo.title);
+							crewablePartsNamesT.Add(part.partInfo.title);
+						}
+					}
+					foreach (ProtoCrewMember kerbal in vessel.GetVesselCrew())
+					{
+						kerbalsNames.Add(kerbal.name);
+						kerbalsList.Add(kerbal);
 					}
 				}
-			}
-			kerbalsNames = new List<String> ();
-			kerbalsList = new List<ProtoCrewMember> ();
-			foreach (ProtoCrewMember kerbal in vessel.GetVesselCrew())
-			{
-				kerbalsNames.Add(kerbal.name);
-				kerbalsList.Add (kerbal);
 			}
 		}
 
@@ -105,7 +113,7 @@ namespace MuMech
 			selectedPartIndexS = GuiUtils.ComboBox.Box (selectedPartIndexS, crewablePartsNamesS.ToArray (), crewablePartsNamesS);
 			if (!partHighlightedS)
 			{
-				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true)))
+				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
 				{
 					partHighlightedS = true;
 					crewableParts [selectedPartIndexS].SetHighlight (true, false);
@@ -113,7 +121,7 @@ namespace MuMech
 			}
 			else
 			{
-				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true)))
+				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true), GUILayout.ExpandWidth(false)))
 				{
 					partHighlightedS = false;
 					crewableParts [selectedPartIndexS].SetHighlight (false, false);
@@ -123,7 +131,7 @@ namespace MuMech
 			selectedPartIndexT = GuiUtils.ComboBox.Box (selectedPartIndexT, crewablePartsNamesT.ToArray (), crewablePartsNamesT);
 			if (!partHighlightedT)
 			{
-				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true)))
+				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
 				{
 					partHighlightedT = true;
 					crewableParts [selectedPartIndexT].SetHighlight (true, false);
@@ -131,13 +139,56 @@ namespace MuMech
 			}
 			else
 			{
-				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true)))
+				if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true), GUILayout.ExpandWidth(false)))
 				{
 					partHighlightedT = false;
 					crewableParts [selectedPartIndexT].SetHighlight (false, false);
 				}
 			}
+
+			if (selectedPartIndexS < crewableParts.Count)
+			{
+				this.selectedPartSFlightID = crewableParts[selectedPartIndexS].flightID;
+			}
+			if (selectedPartIndexT < crewableParts.Count)
+			{
+				this.selectedPartTFlightID = crewableParts[selectedPartIndexT].flightID;
+			}
+			if (selectedKerbal < kerbalsList.Count)
+			{
+				this.selectedKerbalName = kerbalsList[selectedKerbal].name;
+			}
+
 			base.postWindowGUI(windowID);
+		}
+
+		override public void postLoad(ConfigNode node)
+		{
+			if (selectedPartSFlightID != 0 && selectedPartTFlightID != 0 && selectedKerbalName != null) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
+			{
+				int i = 0;
+				foreach (Part part in crewableParts)
+				{
+					if (part.flightID == selectedPartSFlightID)
+					{
+						this.selectedPartIndexS = i;
+					}
+					if (part.flightID == selectedPartTFlightID)
+					{
+						this.selectedPartIndexT = i;
+					}
+					i++;
+				}
+				i = 0;
+				foreach (String kerbalName in kerbalsNames)
+				{
+					if (kerbalName.CompareTo(this.selectedKerbalName) == 0)
+					{
+						this.selectedKerbal = i;
+					}
+					i++;
+				}
+			}
 		}
 	}
 }
