@@ -456,8 +456,9 @@ namespace MuMech
 					}
 					GUILayout.EndHorizontal();
 				}
-				foreach (MechJebModuleScriptAction actionItem in actionsList)
+				for (int i = 0; i < actionsList.Count; i++) //Don't use "foreach" here to avoid nullpointer exception
 				{
+					MechJebModuleScriptAction actionItem = actionsList[i];
 					if (!this.minifiedGUI || actionItem.isStarted())
 					{
 						actionItem.WindowGUI(windowID);
