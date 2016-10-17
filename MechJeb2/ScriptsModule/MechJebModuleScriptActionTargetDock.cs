@@ -89,7 +89,7 @@ namespace MuMech
 				selectedPartIndex = GuiUtils.ComboBox.Box (selectedPartIndex, dockingPartsNames.ToArray (), dockingPartsNames);
 				if (!partHighlighted)
 				{
-					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true)))
+					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
 					{
 						partHighlighted = true;
 						dockingPartsList [selectedPartIndex].SetHighlight (true, true);
@@ -97,7 +97,7 @@ namespace MuMech
 				}
 				else
 				{
-					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true)))
+					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true), GUILayout.ExpandWidth(false)))
 					{
 						partHighlighted = false;
 						dockingPartsList [selectedPartIndex].SetHighlight (false,true);
@@ -107,7 +107,7 @@ namespace MuMech
 				controlFromPartIndex = GuiUtils.ComboBox.Box (controlFromPartIndex, controlPartsNames.ToArray (), controlPartsNames);
 				if (!partHighlightedControl)
 				{
-					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true)))
+					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
 					{
 						partHighlightedControl = true;
 						dockingPartsList [controlFromPartIndex].SetHighlight (true, true);
@@ -115,7 +115,7 @@ namespace MuMech
 				}
 				else
 				{
-					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true)))
+					if (GUILayout.Button (GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true), GUILayout.ExpandWidth(false)))
 					{
 						partHighlightedControl = false;
 						dockingPartsList [controlFromPartIndex].SetHighlight (false,true);

@@ -336,7 +336,7 @@ namespace MuMech
 					selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames, this);
 					if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0 || actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
 					{
-						if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true)))
+						if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true),GUILayout.ExpandWidth(false)))
 						{
 							if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
 							{
