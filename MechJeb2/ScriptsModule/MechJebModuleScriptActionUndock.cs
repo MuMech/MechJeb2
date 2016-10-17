@@ -88,6 +88,17 @@ namespace MuMech
 			}*/
 			if (dockingPartsList[selectedPartIndex] != null)
 			{
+				//Check if the target dock is a shielded dock: Open the shield
+				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator != null)
+				{
+					if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
+					{
+						if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+						{
+							dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+						}
+					}
+				}
 				//dockingPartsList[selectedPartIndex].enabled = true;
 				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null)
 				{
