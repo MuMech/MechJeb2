@@ -519,6 +519,7 @@ namespace MuMech
 			}
 			else
 			{
+				this.setActiveSavepoint(0);//Reset save point to prevent a manual quicksave to open the previous savepoint
 				this.stop();
 			}
 		}
