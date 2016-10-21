@@ -110,7 +110,9 @@ namespace MuMech
 			}
 			else
 			{
-				GUILayout.Label ("-- ERROR --");
+				GUIStyle s = new GUIStyle(GUI.skin.label);
+				s.normal.textColor = Color.yellow;
+				GUILayout.Label ("-- ERROR --", s);
 			}
 			base.postWindowGUI(windowID);
 		}
