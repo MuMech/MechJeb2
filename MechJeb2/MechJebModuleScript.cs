@@ -103,6 +103,7 @@ namespace MuMech
 			actionsNamesList.Add ("Staging");
 			actionsNamesList.Add ("Target Dock");
 			actionsNamesList.Add ("Target Body");
+			actionsNamesList.Add ("Control From");
 			actionsNamesList.Add ("Pause");
 			actionsNamesList.Add ("Crew Transfer");
 			actionsNamesList.Add ("Quicksave");
@@ -376,6 +377,10 @@ namespace MuMech
 						else if (actionNames[selectedActionIndex].CompareTo("Target Body") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionTarget(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("Control From") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionControlFrom(this, core));
 						}
 						else if (actionNames[selectedActionIndex].CompareTo("Pause") == 0)
 						{
@@ -666,6 +671,10 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionTarget.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionTarget(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionControlFrom.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionControlFrom(this, core);
 				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionUndock.NAME) == 0)
 				{

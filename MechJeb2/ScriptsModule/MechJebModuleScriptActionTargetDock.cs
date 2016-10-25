@@ -26,6 +26,7 @@ namespace MuMech
 		{
 			this.dockingPartsList.Clear();
 			this.dockingPartsNames.Clear();
+			this.controlPartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
