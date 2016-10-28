@@ -100,8 +100,8 @@ namespace MuMech
             // It's ok if it's a little off?
             if (speedLimit != 0)
             {
-                if (s >  speedLimit) s =  speedLimit * 1.005;
-                if (s < -speedLimit) s = -speedLimit * 1.005;
+                if (s >  speedLimit) s =  speedLimit;
+                if (s < -speedLimit) s = -speedLimit;
             }
             return s;
         }
