@@ -105,6 +105,10 @@ namespace MuMech
 				{
 					this.compatiblePluginsInstalled.Add("IRSequencer");
 				}
+				else if (assembly.FullName.Contains("kOS"))
+				{
+					this.compatiblePluginsInstalled.Add("kOS");
+				}
 			}
 			List<String> actionsNamesList = new List<String> ();
 			actionsNamesList.Add ("Timer");
@@ -136,6 +140,10 @@ namespace MuMech
 			if (checkCompatiblePluginInstalled("IRSequencer"))
 			{
 				actionsNamesList.Add("[IR Sequencer] Sequence");
+			}
+			if (checkCompatiblePluginInstalled("kOS"))
+			{
+				actionsNamesList.Add("[kOS] Command");
 			}
 
 			actionNames = actionsNamesList.ToArray ();
@@ -476,6 +484,11 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionIRSequencer(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("[kOS] Command") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionKos(this, core));
+						}
+
 
 					}
 					GUILayout.EndHorizontal();
@@ -770,6 +783,10 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionIRSequencer.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionIRSequencer(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionKos.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionKos(this, core);
 				}
 				else {
 					Debug.LogError("MechJebModuleScript.LoadConfig : Unknown node " + scriptNode.name);

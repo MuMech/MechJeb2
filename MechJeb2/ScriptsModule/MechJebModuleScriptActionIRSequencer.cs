@@ -192,7 +192,7 @@ namespace MuMech
 			}
 			else
 			{
-				GUILayout.Label("-- NO IR Sequencer on current vessel --");
+				GUILayout.Label("-- NO IR Sequencer on vessel --");
 			}
 			if (selectedPartIndex < irsequencerParts.Count)
 			{
