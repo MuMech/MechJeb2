@@ -19,6 +19,8 @@ namespace MuMech
 		private String command = "";
 		[Persistent(pass = (int)Pass.Type)]
 		private bool openTerminal = true;
+		[Persistent(pass = (int)Pass.Type)]
+		private bool waitFinish = true;
 		private bool partHighlighted = false;
 
 		public MechJebModuleScriptActionKos (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
@@ -62,18 +64,27 @@ namespace MuMech
 					if (interpreter != null)
 					{
 						interpreter.GetType().InvokeMember("ProcessCommand", System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, interpreter, new object[] { command });
+						if (!this.waitFinish)
+						{
+							this.endAction();
+						}
 					}
 					else
 					{
 						Debug.LogError("---- NO Interpreter OBJECT ----");
+						this.endAction();
 					}
 				}
 				else
 				{
 					Debug.LogError("---- NO SHARED OBJECT ----");
+					this.endAction();
 				}
 			}
-			this.endAction();
+			else
+			{
+				this.endAction();
+			}
 		}
 
 		override public  void endAction()
@@ -83,7 +94,14 @@ namespace MuMech
 
 		override public void afterOnFixedUpdate()
 		{
-			
+			//If we are waiting for the sequence to finish, we check the status
+			if (!this.isExecuted() && this.isStarted())
+			{
+				if (isCPUActive(this.kosModules[this.selectedPartIndex]))
+				{
+					this.endAction();
+				}
+			}
 		}
 
 		override public void WindowGUI(int windowID)
@@ -112,6 +130,7 @@ namespace MuMech
 				}
 				command = GUILayout.TextField(command, GUILayout.Width(120), GUILayout.ExpandWidth(true));
 				openTerminal = GUILayout.Toggle(openTerminal, "Open Terminal");
+				waitFinish = GUILayout.Toggle(waitFinish, "Wait Finish");
 			}
 			else
 			{
@@ -139,6 +158,25 @@ namespace MuMech
 					i++;
 				}
 			}
+		}
+
+		public bool isCPUActive(object module)
+		{
+			var sharedObjects = this.kosModules[this.selectedPartIndex].GetType().GetField("shared", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(this.kosModules[this.selectedPartIndex]);
+			if (sharedObjects != null)
+			{
+				var interpreter = sharedObjects.GetType().GetProperty("Interpreter").GetValue(sharedObjects, null);
+				if (interpreter != null)
+				{
+					//We check if the interpreter is waiting to know if our program has been executed
+					bool waiting = (bool)interpreter.GetType().InvokeMember("IsWaitingForCommand", System.Reflection.BindingFlags.InvokeMethod, null, interpreter, null);
+					if (waiting)
+					{
+						this.endAction();
+					}
+				}
+			}
+			return false;
 		}
 	}
 }
