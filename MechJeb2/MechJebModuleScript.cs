@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.IO;
@@ -39,6 +40,7 @@ namespace MuMech
 		private int flashMessageType = 0; //0=yellow, 1=red (error)
 		private float flashMessageStartTime = 0f;
 		private bool waitingDeletionConfirmation = false;
+		private List<String> compatiblePluginsInstalled = new List<String>();
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -96,6 +98,18 @@ namespace MuMech
 
 		public override void OnStart(PartModule.StartState state)
 		{
+			//Connection with IRRobotics sequencer
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+			{
+				if (assembly.FullName.Contains("InfernalRobotics"))
+				{
+					this.compatiblePluginsInstalled.Add("IRSequencer");
+				}
+				else if (assembly.FullName.Contains("kOS"))
+				{
+					this.compatiblePluginsInstalled.Add("kOS");
+				}
+			}
 			List<String> actionsNamesList = new List<String> ();
 			actionsNamesList.Add ("Timer");
 			actionsNamesList.Add ("Decouple");
@@ -103,6 +117,7 @@ namespace MuMech
 			actionsNamesList.Add ("Staging");
 			actionsNamesList.Add ("Target Dock");
 			actionsNamesList.Add ("Target Body");
+			actionsNamesList.Add ("Control From");
 			actionsNamesList.Add ("Pause");
 			actionsNamesList.Add ("Crew Transfer");
 			actionsNamesList.Add ("Quicksave");
@@ -122,6 +137,14 @@ namespace MuMech
 			actionsNamesList.Add ("MODULE Landing");
 			actionsNamesList.Add ("MODULE Rendezvous");
 			actionsNamesList.Add ("MODULE Rendezvous Autopilot");
+			if (checkCompatiblePluginInstalled("IRSequencer"))
+			{
+				actionsNamesList.Add("[IR Sequencer] Sequence");
+			}
+			if (checkCompatiblePluginInstalled("kOS"))
+			{
+				actionsNamesList.Add("[kOS] Command");
+			}
 
 			actionNames = actionsNamesList.ToArray ();
 
@@ -377,6 +400,10 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionTarget(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("Control From") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionControlFrom(this, core));
+						}
 						else if (actionNames[selectedActionIndex].CompareTo("Pause") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionPause(this, core));
@@ -453,6 +480,16 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionRendezvousAP(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("[IR Sequencer] Sequence") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionIRSequencer(this, core));
+						}
+						else if (actionNames[selectedActionIndex].CompareTo("[kOS] Command") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionKos(this, core));
+						}
+
+
 					}
 					GUILayout.EndHorizontal();
 				}
@@ -471,7 +508,7 @@ namespace MuMech
 
 		public override GUILayoutOption[] WindowOptions()
 		{
-			return new GUILayoutOption[] { GUILayout.Width(450), GUILayout.Height(50) };
+			return new GUILayoutOption[] { GUILayout.Width(800), GUILayout.Height(50) };
 		}
 
 		public override string GetName()
@@ -519,6 +556,7 @@ namespace MuMech
 			}
 			else
 			{
+				this.setActiveSavepoint(0);//Reset save point to prevent a manual quicksave to open the previous savepoint
 				this.stop();
 			}
 		}
@@ -666,6 +704,10 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionTarget(this, core);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionControlFrom.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionControlFrom(this, core);
+				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionUndock.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionUndock(this, core);
@@ -737,6 +779,14 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionRendezvousAP.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionRendezvousAP(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionIRSequencer.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionIRSequencer(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionKos.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionKos(this, core);
 				}
 				else {
 					Debug.LogError("MechJebModuleScript.LoadConfig : Unknown node " + scriptNode.name);
@@ -830,6 +880,18 @@ namespace MuMech
 			this.flashMessage = message;
 			this.flashMessageType = type;
 			this.flashMessageStartTime = Time.time;
+		}
+
+		public bool checkCompatiblePluginInstalled(String name)
+		{
+			foreach (String compatiblePlugin in this.compatiblePluginsInstalled)
+			{
+				if (compatiblePlugin.CompareTo(name) == 0)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

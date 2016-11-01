@@ -26,7 +26,7 @@ namespace MuMech
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
-					foreach (ModuleDockingNode node in FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleDockingNode>())
+					foreach (ModuleDockingNode node in vessel.FindPartModulesImplementing<ModuleDockingNode>())
 					{
 						dockingPartsList.Add(node.part);
 						dockingPartsNames.Add(node.part.partInfo.title);
