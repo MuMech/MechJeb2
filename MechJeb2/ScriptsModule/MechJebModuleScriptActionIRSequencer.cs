@@ -36,8 +36,6 @@ namespace MuMech
 			irsequencerParts.Clear();
 			irsequencerPartsNames.Clear();
 			irsequencerModules.Clear();
-			irsequencerSequenceNames.Clear();
-			irsequencerSequences.Clear();
 			this.actionTypes.Clear();
 			this.actionTypes.Add("Start Sequence");
 			this.actionTypes.Add("Pause Sequence");
@@ -57,33 +55,43 @@ namespace MuMech
 									this.irsequencerParts.Add(part);
 									this.irsequencerPartsNames.Add(part.partInfo.title);
 									this.irsequencerModules.Add(module);
-									List<String> sequenceNames = new List<String>();
-									List<object> sequenceObjects = new List<object>();
-									//List all the sequences on the sequencer
-									var sequences = module.GetType().GetField("sequences").GetValue(module);
-									if (sequences != null)
-									{
-										if (sequences is IEnumerable)
-										{
-											foreach (var sequence in sequences as IEnumerable)
-											{
-												Guid sID = getSequenceGuid(sequence);
-												String name = getSequenceName(sequence);
-												if (sID != Guid.Empty && name != null && name.Length > 0)
-												{
-													sequenceNames.Add(name);
-													sequenceObjects.Add(sequence);
-												}
-											}
-										}
-										this.irsequencerSequenceNames.Add(sequenceNames);
-										this.irsequencerSequences.Add(sequenceObjects);
-									}
 								}
 							}
 						}
 					}
 				}
+			}
+			this.updateSequencesList();
+		}
+
+		private void updateSequencesList()
+		{
+			irsequencerSequenceNames.Clear();
+			irsequencerSequences.Clear();
+			foreach (PartModule module in this.irsequencerModules)
+			{
+				List<String> sequenceNames = new List<String>();
+				List<object> sequenceObjects = new List<object>();
+				//List all the sequences on the sequencer
+				var sequences = module.GetType().GetField("sequences").GetValue(module);
+				if (sequences != null)
+				{
+					if (sequences is IEnumerable)
+					{
+						foreach (var sequence in sequences as IEnumerable)
+						{
+							Guid sID = getSequenceGuid(sequence);
+							String name = getSequenceName(sequence);
+							if (sID != Guid.Empty && name != null && name.Length > 0)
+							{
+								sequenceNames.Add(name);
+								sequenceObjects.Add(sequence);
+							}
+						}
+					}
+				}
+				this.irsequencerSequenceNames.Add(sequenceNames);
+				this.irsequencerSequences.Add(sequenceObjects);
 			}
 			this.populateSequencesList();
 		}
@@ -137,11 +145,6 @@ namespace MuMech
 
 		override public void afterOnFixedUpdate()
 		{
-			if (old_selectedPartIndex != selectedPartIndex.val)
-			{
-				//Change in the selected sequencer part. We change the list of sequences
-				this.populateSequencesList();
-			}
 			//If we are waiting for the sequence to finish, we check the status
 			if (!this.isExecuted() && this.isStarted())
 			{
@@ -156,11 +159,16 @@ namespace MuMech
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label ("IR Sequencer");
+			GUILayout.Label ("IR");
 			if (irsequencerPartsNames.Count > 0)
 			{
 				actionType = GuiUtils.ComboBox.Box(actionType, actionTypes.ToArray(), actionTypes);
 				selectedPartIndex = GuiUtils.ComboBox.Box(selectedPartIndex, irsequencerPartsNames.ToArray(), irsequencerPartsNames);
+				if (old_selectedPartIndex != selectedPartIndex)
+				{
+					//Change in the selected sequencer part. We change the list of sequences
+					this.populateSequencesList();
+				}
 				if (!partHighlighted)
 				{
 					if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
@@ -177,17 +185,21 @@ namespace MuMech
 						irsequencerParts[selectedPartIndex].SetHighlight(false, false);
 					}
 				}
-				if (actionType == 0)
-				{
-					waitFinish = GUILayout.Toggle(waitFinish, "Wait finish");
-				}
 				if (currentIrsequencerSequenceNames.Count > 0)
 				{
 					selectedSequenceIndex = GuiUtils.ComboBox.Box(selectedSequenceIndex, currentIrsequencerSequenceNames.ToArray(), currentIrsequencerSequenceNames);
+					if (actionType == 0)
+					{
+						waitFinish = GUILayout.Toggle(waitFinish, "Wait finish");
+					}
 				}
 				else
 				{
 					GUILayout.Label("-- NO Sequence in this sequencer --");
+				}
+				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/refresh", true), GUILayout.ExpandWidth(false)))
+				{
+					this.updateSequencesList();
 				}
 			}
 			else

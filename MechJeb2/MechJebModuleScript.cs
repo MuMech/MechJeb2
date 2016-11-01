@@ -508,7 +508,7 @@ namespace MuMech
 
 		public override GUILayoutOption[] WindowOptions()
 		{
-			return new GUILayoutOption[] { GUILayout.Width(600), GUILayout.Height(50) };
+			return new GUILayoutOption[] { GUILayout.Width(800), GUILayout.Height(50) };
 		}
 
 		public override string GetName()

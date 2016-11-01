@@ -21,6 +21,8 @@ namespace MuMech
 		private bool openTerminal = true;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool waitFinish = true;
+		[Persistent(pass = (int)Pass.Type)]
+		private bool closeTerminal = true;
 		private bool partHighlighted = false;
 
 		public MechJebModuleScriptActionKos (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
@@ -90,6 +92,13 @@ namespace MuMech
 		override public  void endAction()
 		{
 			base.endAction();
+			if (this.selectedPartIndex < this.kosModules.Count)
+			{
+				if (closeTerminal)
+				{
+					this.kosModules[this.selectedPartIndex].GetType().InvokeMember("CloseWindow", System.Reflection.BindingFlags.InvokeMethod, null, this.kosModules[this.selectedPartIndex], null);
+				}
+			}
 		}
 
 		override public void afterOnFixedUpdate()
@@ -131,6 +140,7 @@ namespace MuMech
 				command = GUILayout.TextField(command, GUILayout.Width(120), GUILayout.ExpandWidth(true));
 				openTerminal = GUILayout.Toggle(openTerminal, "Open Terminal");
 				waitFinish = GUILayout.Toggle(waitFinish, "Wait Finish");
+				closeTerminal = GUILayout.Toggle(closeTerminal, "Close Terminal");
 			}
 			else
 			{
