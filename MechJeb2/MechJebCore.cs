@@ -914,7 +914,7 @@ namespace MuMech
 
                 // The EDITOR => FLIGHT transition is annoying to handle. OnDestroy is called when HighLogic.LoadedSceneIsEditor is already false
                 // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
-                if (vessel != null)
+                if (vessel != null || (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null))
                 {
                     string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                     vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
