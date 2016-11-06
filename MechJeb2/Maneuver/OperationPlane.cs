@@ -100,6 +100,11 @@
 
             return new ManeuverParameters(dV, UT);
         }
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 

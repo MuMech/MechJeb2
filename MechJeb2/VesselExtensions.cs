@@ -28,7 +28,7 @@ namespace MuMech
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
+            if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null) parts = EditorLogic.fetch.ship.parts;
             else if (vessel == null) return new List<T>();
             else parts = vessel.Parts;
 
