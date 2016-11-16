@@ -101,9 +101,20 @@ namespace MuMech
             return vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
         }
 
+        public static double TotalResourceAmount(this Vessel vessel, int resourceId)
+        {
+            return vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceId));
+        }
+
         public static double TotalResourceMass(this Vessel vessel, string resourceName)
         {
             PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            return vessel.TotalResourceAmount(definition) * definition.density;
+        }
+
+        public static double TotalResourceMass(this Vessel vessel, int resourceId)
+        {
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceId);
             return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
@@ -128,6 +139,12 @@ namespace MuMech
             }
 
             return amount;
+        }
+
+        public static double MaxResourceAmount(this Vessel vessel, int id)
+        {
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(id);
+            return vessel.MaxResourceAmount(definition);
         }
 
         public static double MaxResourceAmount(this Vessel vessel, string resourceName)
