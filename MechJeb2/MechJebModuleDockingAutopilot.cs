@@ -97,11 +97,10 @@ namespace MuMech
 
         private double FixSpeed(double s)
         {
-            // It's ok if it's a little off?
             if (speedLimit != 0)
             {
-                if (s >  speedLimit) s =  speedLimit * 1.005;
-                if (s < -speedLimit) s = -speedLimit * 1.005;
+                if (s >  speedLimit) s =  speedLimit;
+                if (s < -speedLimit) s = -speedLimit;
             }
             return s;
         }
@@ -318,10 +317,15 @@ namespace MuMech
 
 			if (zSep < 0)  //we're behind the target
 			{
-				if (Math.Abs (zSep) > safeDistance * 0.5f)
+				// If we're more than half our own bounding box size behind the target port then use wrong side behavior
+				// Still needs improvement. The reason for these changes is that to prevent wrong side behavior when our
+				// port slipped behind the target by a fractional amount. The result is that rather than avoiding the 
+				// target ship we end up trying to pass right through it.
+				// What's really needed here is code that compares bounding box positions to determine if we just try to back up or change sides completely.
+				if (Math.Abs (zSep) > vesselBoundingBox.size.magnitude * 0.5f)
 					dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
 				else
-					dockingStep = DockingStep.BACKING_UP; // but not THAT far behind! Just back straight up.
+					dockingStep = DockingStep.BACKING_UP; // Just back straight up.
 			}
 			else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
                 if (zSep < targetSize) 

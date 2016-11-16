@@ -7,8 +7,8 @@ namespace MuMech
 	public class MechJebModuleScriptActionActiveVessel : MechJebModuleScriptAction
 	{
 		public static String NAME = "ActiveVessel";
-		private List<Part> crewableParts = new List<Part>();
-		private List<String> crewablePartsNames = new List<String>();
+		private List<Part> commandParts = new List<Part>();
+		private List<String> commandPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -20,18 +20,18 @@ namespace MuMech
 
 		public MechJebModuleScriptActionActiveVessel (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			this.crewableParts.Clear();
-			this.crewablePartsNames.Clear();
+			this.commandParts.Clear();
+			this.commandPartsNames.Clear();
 			foreach (Vessel vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
 					foreach (Part part in vessel.Parts)
 					{
-						if (part.CrewCapacity > 0)
+						if (part.HasModule<ModuleCommand>() && !part.name.Contains("mumech"))
 						{
-							crewableParts.Add(part);
-							crewablePartsNames.Add(part.partInfo.title);
+							commandParts.Add(part);
+							commandPartsNames.Add(part.partInfo.title);
 						}
 					}
 				}
@@ -41,8 +41,8 @@ namespace MuMech
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			FlightGlobals.SetActiveVessel(crewableParts[selectedPartIndex].vessel);
-			this.scriptModule.setActiveBreakpoint(actionIndex, crewableParts[selectedPartIndex].vessel);
+			FlightGlobals.SetActiveVessel(commandParts[selectedPartIndex].vessel);
+			this.scriptModule.setActiveBreakpoint(actionIndex, commandParts[selectedPartIndex].vessel);
 			//crewableParts[selectedPartIndex].vessel.MakeActive();
 		}
 
@@ -72,13 +72,13 @@ namespace MuMech
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label ("Activate Vessel");
-			selectedPartIndex = GuiUtils.ComboBox.Box(selectedPartIndex, crewablePartsNames.ToArray(), crewablePartsNames);
+			selectedPartIndex = GuiUtils.ComboBox.Box(selectedPartIndex, commandPartsNames.ToArray(), commandPartsNames);
 			if (!partHighlighted)
 			{
 				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
 				{
 					partHighlighted = true;
-					crewableParts[selectedPartIndex].SetHighlight(true, false);
+					commandParts[selectedPartIndex].SetHighlight(true, false);
 				}
 			}
 			else
@@ -86,7 +86,7 @@ namespace MuMech
 				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view_a", true), GUILayout.ExpandWidth(false)))
 				{
 					partHighlighted = false;
-					crewableParts[selectedPartIndex].SetHighlight(false, false);
+					commandParts[selectedPartIndex].SetHighlight(false, false);
 				}
 			}
 			if (this.isStarted() && !this.isExecuted())
@@ -94,9 +94,9 @@ namespace MuMech
 				GUILayout.Label(" waiting " + this.spendTime + "s");
 			}
 
-			if (selectedPartIndex < crewableParts.Count)
+			if (selectedPartIndex < commandParts.Count)
 			{
-				this.selectedPartFlightID = crewableParts[selectedPartIndex].flightID;
+				this.selectedPartFlightID = commandParts[selectedPartIndex].flightID;
 			}
 
 			base.postWindowGUI(windowID);
@@ -107,7 +107,7 @@ namespace MuMech
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{
 				int i = 0;
-				foreach (Part part in crewableParts)
+				foreach (Part part in commandParts)
 				{
 					if (part.flightID == selectedPartFlightID)
 					{
