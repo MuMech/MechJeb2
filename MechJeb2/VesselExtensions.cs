@@ -141,7 +141,7 @@ namespace MuMech
                 return false;
 
             List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
+            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(PartResourceLibrary.ElectricityHashcode);
             if (definition == null) return false;
 
             PartResource r;

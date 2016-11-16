@@ -365,7 +365,7 @@ namespace MuMech
         [ValueInfoItem("Total electric charge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, siMaxPrecision = 1, units = "Ah")]
         public double TotalElectricCharge()
         {
-            return vessel.TotalResourceAmount("ElectricCharge");
+            return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
 
 
