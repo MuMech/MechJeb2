@@ -386,6 +386,12 @@ namespace MuMech
         readonly DefaultableDictionary<int, double> resourceDrains = new DefaultableDictionary<int, double>(0);  //the resources being drained from this part per unit time at the current simulation time
         readonly DefaultableDictionary<int, bool> freeResources = new DefaultableDictionary<int, bool>(false);  //the resources that are "free" and assumed to be infinite like IntakeAir
 
+        // if a resource amount falls below this amount we say that the resource has been drained
+        // set to the smallest amount that the user can see is non-zero in the resource tab or by
+        // right-clicking.
+        const double DRAINED = 1E-4;
+
+
         FloatCurve atmosphereCurve;  //the function that gives Isp as a function of atmospheric pressure for this part, if it's an engine
         bool atmChangeFlow;
         bool useAtmCurve;
@@ -491,7 +497,7 @@ namespace MuMech
             inverseStage = part.inverseStage;
             partName = part.partInfo.name;
 
-            resourceRequestRemainingThreshold = part.resourceRequestRemainingThreshold;
+            resourceRequestRemainingThreshold = Math.Max(part.resourceRequestRemainingThreshold, DRAINED);
             resourcePriority = part.GetResourcePriority();
 
             //note which resources this part has stored
