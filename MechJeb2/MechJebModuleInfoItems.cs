@@ -940,7 +940,7 @@ namespace MuMech
             if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
             if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));
 
             if (!noChange)
                 StageDisplayState = 3;
