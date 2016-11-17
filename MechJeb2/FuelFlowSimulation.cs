@@ -978,7 +978,7 @@ namespace MuMech
 
         void AssignFuelDrainRateStagePriorityFlow(int type, double amount, bool usePrio, List<FuelNode> vessel)
         {
-            int maxPrio = -1;
+            int maxPrio = int.MinValue;
             using (var dispoSources = ListPool<FuelNode>.Instance.BorrowDisposable())
             {
                 var sources = dispoSources.value;
