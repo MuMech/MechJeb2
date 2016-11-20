@@ -325,7 +325,7 @@ namespace MuMech
             var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
             //print("Finding active engines: excluding resource considerations, there are " + nodes.Count(n => n.isEngine && n.inverseStage >= simStage));
-            nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.CanDrawNeededResources(p.Item2), param).AddTo(activeEngines.value);
+            nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.isDrawingResources && n.CanDrawNeededResources(p.Item2), param).AddTo(activeEngines.value);
             return activeEngines;
             //return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
@@ -417,9 +417,10 @@ namespace MuMech
         public int inverseStage;        //stage in which this part is activated
         public bool isSepratron;        //whether this part is a sepratron
         public bool isEngine = false;   //whether this part is an engine
+        public bool isDrawingResources = true; // Is the engine actually using any resources
 
-        public double resourceRequestRemainingThreshold;
-        public int resourcePriority;
+        private double resourceRequestRemainingThreshold;
+        private int resourcePriority;
 
         double dryMass = 0; //the mass of this part, not counting resource mass
         float modulesUnstagedMass;   // the mass of the modules of this part before staging
@@ -808,6 +809,8 @@ namespace MuMech
                 double flowModifier = GetFlowModifier(atmDensity, machNumber);
 
                 double massFlowRate = Mathf.Lerp(minFuelFlow, maxFuelFlow, throttle * 0.01f * thrustPercentage) * flowModifier;
+
+                isDrawingResources = massFlowRate > 0;
 
                 //propellant consumption rate = ratio * massFlowRate / sum(ratio * density)
                 //resourceConsumptions = propellantRatios.Keys.ToDictionary(id => id, id => propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);
