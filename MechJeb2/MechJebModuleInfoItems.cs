@@ -1109,14 +1109,14 @@ namespace MuMech
         [GeneralInfoItem("Docking guidance: Angular velocity", InfoItem.Category.Target)]
         public void DockingGuidanceAngularVelocity()
         {
-            if (!(core.target.Target is Vessel)  || core.target.vessel.rootPart == null || core.target.vessel.rootPart.rb == null)
+            if (!(core.target.Target is Vessel))
             {
                 GUILayout.Label("Target-relative Angular velocity: (N/A)");
                 return;
             }
 
             Vessel target = (Vessel)core.target.Target;
-            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.rootPart.rb.angularVelocity - vessel.rootPart.rb.angularVelocity) * Mathf.Rad2Deg;
+            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) * Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative angular velocity:");
