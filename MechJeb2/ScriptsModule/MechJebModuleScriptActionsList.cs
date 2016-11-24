@@ -92,6 +92,15 @@ namespace MuMech
 		public void actionsAddWindowGui(int windowID)
 		{
 			GUILayout.BeginHorizontal();
+			String spacer = "";
+			for (int i = 0; i < depth; i++)
+			{
+				spacer += "-";
+			}
+			if (spacer.Length > 0)
+			{
+				GUILayout.Label(spacer);
+			}
 			GUILayout.Label("Add action");
 			selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames, this);
 			if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0 || actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
