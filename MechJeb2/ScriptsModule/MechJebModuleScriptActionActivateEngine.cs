@@ -15,7 +15,7 @@ namespace MuMech
 		private uint selectedPartFlightID = 0;
 		private bool partHighlighted = false;
 
-		public MechJebModuleScriptActionActivateEngine (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionActivateEngine (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.enginePartsList.Clear();
 			this.enginePartsNames.Clear();

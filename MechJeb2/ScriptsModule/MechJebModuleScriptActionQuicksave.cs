@@ -11,7 +11,7 @@ namespace MuMech
 		private float startTime = 0f;
 		private bool saved = false;
 
-		public MechJebModuleScriptActionQuicksave (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionQuicksave (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 

@@ -21,7 +21,7 @@ namespace MuMech
 		bool partHighlighted = false;
 		private List<String> actionTypes = new List<String>();
 
-		public MechJebModuleScriptActionSAS (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionSAS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.actionTypes.Clear();
 			this.actionTypes.Add("Enable");

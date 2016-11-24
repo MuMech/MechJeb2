@@ -28,7 +28,7 @@ namespace MuMech
 		object sharedObjects = null;
 		object interpreter = null;
 
-		public MechJebModuleScriptActionKos (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionKos (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			kosParts.Clear();
 			kosPartsNames.Clear();

@@ -30,7 +30,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private bool drawBoundingBox;
 
-		public MechJebModuleScriptActionDockingAutopilot (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionDockingAutopilot (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			
 			this.autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>(); ;

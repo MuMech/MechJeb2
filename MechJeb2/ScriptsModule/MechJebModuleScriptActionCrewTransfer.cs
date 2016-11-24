@@ -27,7 +27,7 @@ namespace MuMech
 		private bool partHighlightedS = false;
 		private bool partHighlightedT = false;
 
-		public MechJebModuleScriptActionCrewTransfer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionCrewTransfer (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.crewableParts.Clear();
 			this.crewablePartsNamesS.Clear();

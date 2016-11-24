@@ -7,7 +7,7 @@ namespace MuMech
 	{
 		public static String NAME = "Pause";
 
-		public MechJebModuleScriptActionPause (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionPause (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 

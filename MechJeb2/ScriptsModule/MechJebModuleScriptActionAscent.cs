@@ -40,7 +40,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		public Orbit targetOrbit;
 
-		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core) : base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
 		{
 			this.autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
 			this.ascentModule = core.GetComputerModule<MechJebModuleAscentGuidance>();

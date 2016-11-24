@@ -31,7 +31,7 @@ namespace MuMech
 		private bool partHighlighted = false;
 		private int old_selectedPartIndex = 0;
 
-		public MechJebModuleScriptActionIRSequencer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionIRSequencer (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			irsequencerParts.Clear();
 			irsequencerPartsNames.Clear();

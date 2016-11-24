@@ -22,7 +22,7 @@ namespace MuMech
 		private bool partHighlighted = false;
 		private bool partHighlightedControl = false;
 
-		public MechJebModuleScriptActionTargetDock (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTargetDock (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.dockingPartsList.Clear();
 			this.dockingPartsNames.Clear();

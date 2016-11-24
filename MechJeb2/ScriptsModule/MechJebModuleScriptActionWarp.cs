@@ -24,7 +24,7 @@ namespace MuMech
 		private int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
 		private float startTime = 0f;
 
-		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 

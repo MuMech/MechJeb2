@@ -12,7 +12,7 @@ namespace MuMech
 		private EditableInt burnIndex = 0;
 		private List<String> burnRates = new List<String>();
 
-		public MechJebModuleScriptActionThrottle (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionThrottle (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			burnRates.Add("0%");
 			burnRates.Add("10%");

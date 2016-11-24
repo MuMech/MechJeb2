@@ -16,7 +16,7 @@ namespace MuMech
 		private List<String> actionObjects = new List<String>();
 		private String errorMessage = "";
 
-		public MechJebModuleScriptActionRCS (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionRCS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionTypes.Add("Enable");
 			actionTypes.Add("Disable");

@@ -11,12 +11,14 @@ namespace MuMech
 		protected MechJebModuleScript scriptModule;
 		protected MechJebCore core;
 		protected int actionIndex;
+		protected MechJebModuleScriptActionsList actionsList;
 
-		public MechJebModuleScriptAction (MechJebModuleScript scriptModule, MechJebCore core, String name)
+		public MechJebModuleScriptAction (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList, String name)
 		{
 			this.scriptModule = scriptModule;
 			this.core = core;
 			this.name = name;
+			this.actionsList = actionsList;
 		}
 
 		public virtual void activateAction(int actionIndex)
@@ -34,7 +36,7 @@ namespace MuMech
 		public virtual void endAction()
 		{
 			this.markActionDone();
-			this.scriptModule.notifyEndAction(actionIndex);
+			this.actionsList.notifyEndAction(actionIndex);
 		}
 
 		public bool isStarted()
@@ -49,7 +51,7 @@ namespace MuMech
 
 		public void deleteAction()
 		{
-			this.scriptModule.removeAction(this);
+			this.actionsList.removeAction(this);
 		}
 
 		public virtual void readModuleConfiguration() { }
@@ -75,6 +77,15 @@ namespace MuMech
 
 		virtual public void WindowGUI(int windowID)
 		{
+			String spacer = "";
+			for (int i = 0; i < actionsList.getDepth(); i++)
+			{
+				spacer += "-";
+			}
+			if (spacer.Length > 0)
+			{
+				GUILayout.Label(spacer);
+			}
 			if (this.isStarted())
 			{
 				GUILayout.Label (scriptModule.imageRed, new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) });
@@ -98,7 +109,7 @@ namespace MuMech
 				}
 				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/up", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 				{
-					this.scriptModule.moveActionUp(this);
+					this.actionsList.moveActionUp(this);
 				}
 			}
 		}

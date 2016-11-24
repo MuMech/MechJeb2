@@ -16,7 +16,7 @@ namespace MuMech
 		private uint selectedPartFlightID = 0;
 		private bool partHighlighted = false;
 
-		public MechJebModuleScriptActionUndock(MechJebModuleScript scriptModule, MechJebCore core) : base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionUndock(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
 		{
 			//dockingModulesList = currentTargetVessel.FindPartModulesImplementing<ModuleDockingNode>();
 			//List<ITargetable> ITargetableList = currentTargetVessel.FindPartModulesImplementing<ITargetable>();

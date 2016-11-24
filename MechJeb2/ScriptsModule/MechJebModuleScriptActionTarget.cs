@@ -19,7 +19,7 @@ namespace MuMech
 		private List<String> bodiesNamesList = new List<String>();
 		private List<String> targetTypes = new List<String>();
 
-		public MechJebModuleScriptActionTarget (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTarget (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			targetTypes.Add ("Celestial Body");
 			//targetTypes.Add ("Celestial Body Long/Lat"); //TODO: Fix the Lat/Long feature

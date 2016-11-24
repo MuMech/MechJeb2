@@ -14,7 +14,7 @@ namespace MuMech
 	{
 		public static String NAME = "Template";
 
-		public MechJebModuleScriptActionTemplate (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTemplate (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 

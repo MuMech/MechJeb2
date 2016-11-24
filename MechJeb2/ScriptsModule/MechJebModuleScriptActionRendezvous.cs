@@ -13,7 +13,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
-		public MechJebModuleScriptActionRendezvous (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionRendezvous (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionTypes.Add("Align Planes");
 			actionTypes.Add("Establish new orbit at");

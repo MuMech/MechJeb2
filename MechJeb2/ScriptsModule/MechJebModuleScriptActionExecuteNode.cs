@@ -14,7 +14,7 @@ namespace MuMech
 		private List<String> actionTypes = new List<String>();
 		private int startNodeCount = 0;
 
-		public MechJebModuleScriptActionExecuteNode (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionExecuteNode (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionTypes.Add("Next node");
 			actionTypes.Add("All nodes");

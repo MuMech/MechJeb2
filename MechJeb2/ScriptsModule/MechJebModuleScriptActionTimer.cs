@@ -13,7 +13,7 @@ namespace MuMech
 		private int initTime = 10;
 		private float startTime;
 
-		public MechJebModuleScriptActionTimer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTimer (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 

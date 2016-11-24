@@ -15,7 +15,7 @@ namespace MuMech
 		private String operationName;
 
 
-		public MechJebModuleScriptActionManoeuver (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME) {
+		public MechJebModuleScriptActionManoeuver (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME) {
 			Operation[] op_list = Operation.getAvailableOperations();
 			operation = new List<Operation>();
 			operationNames = new List<String>();

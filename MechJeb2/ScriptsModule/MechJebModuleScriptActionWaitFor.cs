@@ -14,7 +14,7 @@ namespace MuMech
 		private EditableInt targetAltitude = new EditableInt(1000);
 		private List<String> actionTypes = new List<String>();
 
-		public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionTypes.Add("an altitude");
 		}
