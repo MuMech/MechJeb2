@@ -202,6 +202,11 @@ namespace MuMech
 					{
 						this.start();
 					}
+					style2.normal.textColor = Color.white;
+					if (GUILayout.Button("Reset", style2))
+					{
+						this.actionsList.recursiveResetStatus();
+					}
 				}
 				else if (started)
 				{

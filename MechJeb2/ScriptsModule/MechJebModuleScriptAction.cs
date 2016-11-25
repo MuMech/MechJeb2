@@ -77,15 +77,6 @@ namespace MuMech
 
 		virtual public void WindowGUI(int windowID)
 		{
-			String spacer = "";
-			for (int i = 0; i < actionsList.getDepth(); i++)
-			{
-				spacer += "----";
-			}
-			if (spacer.Length > 0)
-			{
-				GUILayout.Label(spacer, GUILayout.ExpandWidth(false));
-			}
 			if (this.isStarted())
 			{
 				GUILayout.Label (scriptModule.imageRed, new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) });

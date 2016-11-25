@@ -9,14 +9,53 @@ namespace MuMech
 		public static String NAME = "If";
 		private MechJebModuleScriptActionsList actionsThen;
 		private MechJebModuleScriptActionsList actionsElse;
-		MechJebModuleScriptCondition condition;
+		private MechJebModuleScriptCondition condition;
 		private bool conditionVerified = false;
+		private GUIStyle sBorderY;
+		private GUIStyle sBorderG;
+		private GUIStyle sBorderR;
 
 		public MechJebModuleScriptActionIf (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionsThen = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			actionsElse = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
+			sBorderY = new GUIStyle();
+			sBorderY.border = new RectOffset(1, 1, 1, 1);
+			sBorderG = new GUIStyle();
+			sBorderG.border = new RectOffset(1, 1, 1, 1);
+			sBorderR = new GUIStyle();
+			sBorderR.border = new RectOffset(1, 1, 1, 1);
+			Texture2D backgroundY = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			Texture2D backgroundG = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			Texture2D backgroundR = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			for (int x = 0; x < backgroundY.width; x++)
+			{
+				for (int y = 0; y < backgroundY.height; y++)
+				{
+					if (x == 0 || x == 15 || y == 0 || y == 15)
+					{
+						backgroundY.SetPixel(x, y, Color.yellow);
+						backgroundG.SetPixel(x, y, Color.green);
+						backgroundR.SetPixel(x, y, Color.red);
+					}
+					else
+					{
+						backgroundY.SetPixel(x, y, Color.clear);
+						backgroundG.SetPixel(x, y, Color.clear);
+						backgroundR.SetPixel(x, y, Color.clear);
+					}
+				}
+			}
+			backgroundY.Apply();
+			backgroundG.Apply();
+			backgroundR.Apply();
+			sBorderY.normal.background = backgroundY;
+			sBorderY.onNormal.background = backgroundY;
+			sBorderG.normal.background = backgroundG;
+			sBorderG.onNormal.background = backgroundG;
+			sBorderR.normal.background = backgroundR;
+			sBorderR.onNormal.background = backgroundR;
 		}
 
 		override public void activateAction(int actionIndex)
@@ -43,17 +82,48 @@ namespace MuMech
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
+			GUILayout.BeginVertical(sBorderY);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label("If", s);
 			condition.WindowGUI(windowID);
+			if (this.isStarted() || this.executed)
+			{
+				if (this.conditionVerified)
+				{
+					s = new GUIStyle(GUI.skin.label);
+					s.normal.textColor = Color.red;
+					GUILayout.Label("(Verified)", s);
+				}
+				else
+				{
+					s = new GUIStyle(GUI.skin.label);
+					s.normal.textColor = Color.red;
+					GUILayout.Label("(NOT Verified)", s);
+				}
+			}
 			GUILayout.Label("Then", s);
 			base.postWindowGUI(windowID);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(50);
+			GUILayout.BeginVertical(sBorderG);
 			actionsThen.actionsWindowGui(windowID);
-			base.preWindowGUI(windowID);
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(50);
+			GUILayout.BeginVertical();
 			GUILayout.Label("Else", s);
-			base.postWindowGUI(windowID);
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(50);
+			GUILayout.BeginVertical(sBorderR);
 			actionsElse.actionsWindowGui(windowID);
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
+			GUILayout.EndVertical();
 		}
 
 		public int getRecursiveCount()

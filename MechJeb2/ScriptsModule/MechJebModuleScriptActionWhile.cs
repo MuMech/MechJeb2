@@ -8,12 +8,33 @@ namespace MuMech
 	{
 		public static String NAME = "While";
 		private MechJebModuleScriptActionsList actions;
-		MechJebModuleScriptCondition condition;
+		private MechJebModuleScriptCondition condition;
+		private GUIStyle sBorder;
 
 		public MechJebModuleScriptActionWhile (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actions = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
+			sBorder = new GUIStyle();
+			sBorder.border = new RectOffset(1, 1, 1, 1);
+			Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			for (int x = 0; x < background.width; x++)
+			{
+				for (int y = 0; y < background.height; y++)
+				{
+					if (x == 0 || x == 15 || y == 0 || y == 15)
+					{
+						background.SetPixel(x, y, Color.yellow);
+					}
+					else
+					{
+						background.SetPixel(x, y, Color.clear);
+					}
+				}
+			}
+			background.Apply();
+			sBorder.normal.background = background;
+			sBorder.onNormal.background = background;
 		}
 
 		override public void activateAction(int actionIndex)
@@ -31,12 +52,19 @@ namespace MuMech
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
+			GUILayout.BeginVertical(sBorder);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label("While", s);
 			condition.WindowGUI(windowID);
 			base.postWindowGUI(windowID);
-			actionsList.actionsWindowGui(windowID);
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(50);
+			GUILayout.BeginVertical();
+			actions.actionsWindowGui(windowID);
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
+			GUILayout.EndVertical();
 		}
 
 		public int getRecursiveCount()

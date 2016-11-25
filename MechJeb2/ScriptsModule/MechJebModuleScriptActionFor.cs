@@ -11,10 +11,31 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt times = 2;
 		private int executedTimes = 0;
+		private GUIStyle sBorder;
 
 		public MechJebModuleScriptActionFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actions = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
+			sBorder = new GUIStyle();
+			sBorder.border = new RectOffset(1, 1, 1, 1);
+			Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			for (int x = 0; x < background.width; x++)
+			{
+				for (int y = 0; y < background.height; y++)
+				{
+					if (x == 0 || x == 15 || y == 0 || y == 15)
+					{
+						background.SetPixel(x, y, Color.yellow);
+					}
+					else
+					{
+						background.SetPixel(x, y, Color.clear);
+					}
+				}
+			}
+			background.Apply();
+			sBorder.normal.background = background;
+			sBorder.onNormal.background = background;
 		}
 
 		override public void activateAction(int actionIndex)
@@ -33,19 +54,31 @@ namespace MuMech
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
+			GUILayout.BeginVertical(sBorder);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label("Repeat", s);
 			if (this.isStarted() && !this.isExecuted())
 			{
-				GUILayout.Label(times + " times. Executed " + this.executedTimes + "/" + times);
+				s = new GUIStyle(GUI.skin.label);
+				s.normal.textColor = Color.red;
+				GUILayout.Label(times.val + " times. Executed", GUILayout.ExpandWidth(false));
+				GUILayout.Label(this.executedTimes + "", s, GUILayout.ExpandWidth(false));
+				GUILayout.Label("/" + times.val, GUILayout.ExpandWidth(false));
 			}
 			else
 			{
 				GuiUtils.SimpleTextBox("", times, "times", 30);
 			}
 			base.postWindowGUI(windowID);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(50);
+			GUILayout.BeginVertical();
 			actions.actionsWindowGui(windowID);
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
+			GUILayout.EndVertical();
 		}
 
 		public int getRecursiveCount()
