@@ -4,23 +4,21 @@ using System.Collections.Generic;
 
 namespace MuMech
 {
-	public class MechJebModuleScriptActionFor : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
+	public class MechJebModuleScriptActionWhile : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
-		public static String NAME = "For";
+		public static String NAME = "While";
 		private MechJebModuleScriptActionsList actions;
-		[Persistent(pass = (int)Pass.Type)]
-		private EditableInt times = 2;
-		private int executedTimes = 0;
+		MechJebModuleScriptCondition condition;
 
-		public MechJebModuleScriptActionFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionWhile (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actions = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
+			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
 		}
 
 		override public void activateAction(int actionIndex)
 		{
 			base.activateAction(actionIndex);
-			this.executedTimes = 0;
 			this.actions.start();
 		}
 
@@ -35,17 +33,10 @@ namespace MuMech
 			s.normal.textColor = Color.yellow;
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("Repeat", s);
-			if (this.isStarted() && !this.isExecuted())
-			{
-				GUILayout.Label(times + " times. Executed " + this.executedTimes + "/" + times);
-			}
-			else
-			{
-				GuiUtils.SimpleTextBox("", times, "times", 30);
-			}
+			GUILayout.Label("While", s);
+			condition.WindowGUI(windowID);
 			base.postWindowGUI(windowID);
-			actions.actionsWindowGui(windowID);
+			actionsList.actionsWindowGui(windowID);
 		}
 
 		public int getRecursiveCount()
@@ -60,16 +51,9 @@ namespace MuMech
 
 		public void notifyEndActionsList()
 		{
-			executedTimes++;
-			if (executedTimes >= times)
+			if (condition.checkCondition())
 			{
 				this.endAction();
-			}
-			else
-			{
-				//Reset the list status
-				this.actions.recursiveResetStatus();
-				this.actions.start();
 			}
 		}
 
@@ -78,6 +62,7 @@ namespace MuMech
 		}
 
 		override public void postLoad(ConfigNode node) {
+			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
 			ConfigNode nodeList = node.GetNode("ActionsList");
 			if (nodeList != null)
 			{
@@ -86,9 +71,11 @@ namespace MuMech
 		}
 
 		override public void postSave(ConfigNode node) {
-			ConfigNode nodeList = new ConfigNode("ActionsList");
-			actions.SaveConfig(nodeList);
-			node.AddNode(nodeList);
+			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
+			conditionNode.CopyTo(node.AddNode("Condition"));
+			ConfigNode nodeListThen = new ConfigNode("ActionsList");
+			actions.SaveConfig(nodeListThen);
+			node.AddNode(nodeListThen);
 		}
 	}
 }

@@ -52,6 +52,8 @@ namespace MuMech
 			actionsNamesList.Add("Warp");
 			actionsNamesList.Add("Wait for");
 			actionsNamesList.Add("CONTROL - Repeat");
+			actionsNamesList.Add("CONTROL - If");
+			actionsNamesList.Add("CONTROL - While");
 			actionsNamesList.Add("Load Script");
 			actionsNamesList.Add("MODULE Ascent Autopilot");
 			actionsNamesList.Add("MODULE Docking Autopilot");
@@ -95,11 +97,11 @@ namespace MuMech
 			String spacer = "";
 			for (int i = 0; i < depth; i++)
 			{
-				spacer += "-";
+				spacer += "----";
 			}
 			if (spacer.Length > 0)
 			{
-				GUILayout.Label(spacer);
+				GUILayout.Label(spacer, GUILayout.ExpandWidth(false));
 			}
 			GUILayout.Label("Add action");
 			selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames, this);
@@ -202,6 +204,14 @@ namespace MuMech
 				{
 					this.addAction(new MechJebModuleScriptActionFor(scriptModule, core, this));
 				}
+				else if (actionNames[selectedActionIndex].CompareTo("CONTROL - If") == 0)
+				{
+					this.addAction(new MechJebModuleScriptActionIf(scriptModule, core, this));
+				}
+				else if (actionNames[selectedActionIndex].CompareTo("CONTROL - While") == 0)
+				{
+					this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
+				}
 				else if (actionNames[selectedActionIndex].CompareTo("Action Group") == 0)
 				{
 					this.addAction(new MechJebModuleScriptActionActionGroup(scriptModule, core, this));
@@ -252,7 +262,10 @@ namespace MuMech
 					actionItem.WindowGUI(windowID);
 				}
 			}
-			this.actionsAddWindowGui(windowID); //Render Add action
+			if (!this.scriptModule.isStarted())
+			{
+				this.actionsAddWindowGui(windowID); //Render Add action
+			}
 		}
 
 		public void start()
@@ -425,6 +438,14 @@ namespace MuMech
 				{
 					obj = new MechJebModuleScriptActionFor(scriptModule, core, this);
 				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionIf.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionIf(scriptModule, core, this);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionWhile.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionWhile(scriptModule, core, this);
+				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionActionGroup.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionActionGroup(scriptModule, core, this);
@@ -499,6 +520,15 @@ namespace MuMech
 				}
 			}
 			return list;
+		}
+
+		public void recursiveResetStatus()
+		{
+			List<MechJebModuleScriptAction> actions = this.getRecursiveActionsList();
+			foreach (MechJebModuleScriptAction action in actions)
+			{
+				action.resetStatus();
+			}
 		}
 	}
 }

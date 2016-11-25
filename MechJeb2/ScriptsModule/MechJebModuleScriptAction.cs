@@ -80,11 +80,11 @@ namespace MuMech
 			String spacer = "";
 			for (int i = 0; i < actionsList.getDepth(); i++)
 			{
-				spacer += "-";
+				spacer += "----";
 			}
 			if (spacer.Length > 0)
 			{
-				GUILayout.Label(spacer);
+				GUILayout.Label(spacer, GUILayout.ExpandWidth(false));
 			}
 			if (this.isStarted())
 			{
@@ -117,6 +117,12 @@ namespace MuMech
 		public void postWindowGUI(int windowID)
 		{
 			GUILayout.EndHorizontal();
+		}
+
+		public void resetStatus()
+		{
+			this.started = false;
+			this.executed = false;
 		}
 	}
 }
