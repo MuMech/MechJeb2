@@ -131,7 +131,7 @@ namespace MuMech
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label ("Decouple");
+			GUILayout.Label ("Decouple", GUILayout.ExpandWidth(false));
 
 			if (dockingPartsList.Count > 0)
 			{

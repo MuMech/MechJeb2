@@ -39,6 +39,7 @@ namespace MuMech
 		private float flashMessageStartTime = 0f;
 		private bool waitingDeletionConfirmation = false;
 		private List<String> compatiblePluginsInstalled = new List<String>();
+		private bool addActionDisabled = false;
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -91,7 +92,7 @@ namespace MuMech
 				}
 			}
 			//Populate Actions names. Need to run this after the compatibility check with other plugins
-			MechJebModuleScriptActionsList.populateActionNames(this);
+			this.actionsList.refreshActionNamesPlugins();
 
 			//Don't know why sometimes this value can be "empty" but not null, causing an empty vessel name...
 			if (vesselSaveName != null)
@@ -207,6 +208,7 @@ namespace MuMech
 					{
 						this.actionsList.recursiveResetStatus();
 					}
+					this.addActionDisabled = GUILayout.Toggle(this.addActionDisabled, "Hide Add Actions");
 				}
 				else if (started)
 				{
@@ -250,7 +252,7 @@ namespace MuMech
 						{
 							scriptNames[selectedSlot] = scriptNames[selectedSlot].Substring(0, 20);
 						}
-						if (GUILayout.Button("<<"))
+						if (GUILayout.Button("<<", GUILayout.ExpandWidth(false)))
 						{
 							this.deployScriptNameField = false;
 							this.updateScriptsNames();
@@ -259,7 +261,7 @@ namespace MuMech
 					}
 					else
 					{
-						if (GUILayout.Button(">>"))
+						if (GUILayout.Button(">>", GUILayout.ExpandWidth(false)))
 						{
 							this.deployScriptNameField = true;
 						}
@@ -528,9 +530,26 @@ namespace MuMech
 			return false;
 		}
 
+		public bool hasCompatiblePluginInstalled()
+		{
+			if (this.compatiblePluginsInstalled.Count > 0)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		public bool isMinifiedGUI()
 		{
 			return this.minifiedGUI;
+		}
+
+		public bool isAddActionDisabled()
+		{
+			return this.addActionDisabled;
 		}
 	}
 }

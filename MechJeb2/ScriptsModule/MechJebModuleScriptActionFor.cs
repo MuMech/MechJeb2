@@ -36,6 +36,7 @@ namespace MuMech
 			background.Apply();
 			sBorder.normal.background = background;
 			sBorder.onNormal.background = background;
+			sBorder.padding = new RectOffset(1, 1, 1, 1);
 		}
 
 		override public void activateAction(int actionIndex)
@@ -57,7 +58,7 @@ namespace MuMech
 			GUILayout.BeginVertical(sBorder);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("Repeat", s);
+			GUILayout.Label("Repeat", s, GUILayout.ExpandWidth(false));
 			if (this.isStarted() && !this.isExecuted())
 			{
 				s = new GUIStyle(GUI.skin.label);
@@ -104,6 +105,13 @@ namespace MuMech
 				this.actions.recursiveResetStatus();
 				this.actions.start();
 			}
+		}
+
+		public List<MechJebModuleScriptActionsList> getActionsListsObjects()
+		{
+			List<MechJebModuleScriptActionsList> lists = new List<MechJebModuleScriptActionsList>();
+			lists.Add(this.actions);
+			return lists;
 		}
 
 		override public void afterOnFixedUpdate() {

@@ -107,6 +107,7 @@ namespace MuMech
 
 		public void postWindowGUI(int windowID)
 		{
+			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 		}
 

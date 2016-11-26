@@ -7,6 +7,7 @@ namespace MuMech
 	{
 		int getRecursiveCount();
 		List<MechJebModuleScriptAction> getRecursiveActionsList();
+		List<MechJebModuleScriptActionsList> getActionsListsObjects();
 	}
 }
 

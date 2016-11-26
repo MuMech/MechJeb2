@@ -56,6 +56,9 @@ namespace MuMech
 			sBorderG.onNormal.background = backgroundG;
 			sBorderR.normal.background = backgroundR;
 			sBorderR.onNormal.background = backgroundR;
+			sBorderY.padding = new RectOffset(1, 1, 1, 1);
+			sBorderG.padding = new RectOffset(1, 1, 1, 1);
+			sBorderR.padding = new RectOffset(1, 1, 1, 1);
 		}
 
 		override public void activateAction(int actionIndex)
@@ -85,7 +88,7 @@ namespace MuMech
 			GUILayout.BeginVertical(sBorderY);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("If", s);
+			GUILayout.Label("If", s, GUILayout.ExpandWidth(false));
 			condition.WindowGUI(windowID);
 			if (this.isStarted() || this.executed)
 			{
@@ -93,16 +96,16 @@ namespace MuMech
 				{
 					s = new GUIStyle(GUI.skin.label);
 					s.normal.textColor = Color.red;
-					GUILayout.Label("(Verified)", s);
+					GUILayout.Label("(Verified)", s, GUILayout.ExpandWidth(false));
 				}
 				else
 				{
 					s = new GUIStyle(GUI.skin.label);
 					s.normal.textColor = Color.red;
-					GUILayout.Label("(NOT Verified)", s);
+					GUILayout.Label("(NOT Verified)", s, GUILayout.ExpandWidth(false));
 				}
 			}
-			GUILayout.Label("Then", s);
+			GUILayout.Label("Then", s, GUILayout.ExpandWidth(false));
 			base.postWindowGUI(windowID);
 
 			GUILayout.BeginHorizontal();
@@ -114,7 +117,7 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(50);
 			GUILayout.BeginVertical();
-			GUILayout.Label("Else", s);
+			GUILayout.Label("Else", s, GUILayout.ExpandWidth(false));
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
@@ -142,6 +145,14 @@ namespace MuMech
 		public void notifyEndActionsList()
 		{
 			this.endAction();
+		}
+
+		public List<MechJebModuleScriptActionsList> getActionsListsObjects()
+		{
+			List<MechJebModuleScriptActionsList> lists = new List<MechJebModuleScriptActionsList>();
+			lists.Add(this.actionsThen);
+			lists.Add(this.actionsElse);
+			return lists;
 		}
 
 		override public void afterOnFixedUpdate() {

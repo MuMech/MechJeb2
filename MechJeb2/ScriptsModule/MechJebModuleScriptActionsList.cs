@@ -7,8 +7,11 @@ namespace MuMech
 	public class MechJebModuleScriptActionsList
 	{
 		private List<MechJebModuleScriptAction> actionsList = new List<MechJebModuleScriptAction>();
-		private static String[] actionNames;
+		private String[] actionGroups;
+		private String[][] actionNames;
 		private MechJebModuleScript scriptModule;
+		private int selectedGroupIndex = 0;
+		private int old_selectedGroupIndex = 0;
 		private int selectedActionIndex = 0;
 		private bool started = false;
 		private IMechJebModuleScriptActionsListParent parent;
@@ -21,6 +24,7 @@ namespace MuMech
 			this.scriptModule = scriptModule;
 			this.parent = parent;
 			this.depth = depth;
+			this.populateActionNames();
 		}
 
 		public int getDepth()
@@ -28,39 +32,133 @@ namespace MuMech
 			return this.depth;
 		}
 
-		public static void populateActionNames(MechJebModuleScript scriptModule)
+		public void populateActionNames()
 		{
+			List<String> actionsGroupsList = new List<String>();
+			actionsGroupsList.Add("Time");
+			actionsGroupsList.Add("Docking");
+			actionsGroupsList.Add("Target");
+			actionsGroupsList.Add("Control");
+			actionsGroupsList.Add("Crew");
+			actionsGroupsList.Add("Trajectory");
+			actionsGroupsList.Add("Staging/Engines");
+			actionsGroupsList.Add("Settings");
+			actionsGroupsList.Add("Modules");
+			actionsGroupsList.Add("Save/Load/Actions");
+			actionsGroupsList.Add("PROGRAM Logic");
+			actionsGroupsList.Add("Plugins");
+			actionGroups = actionsGroupsList.ToArray();
+
+			actionNames = new String[actionsGroupsList.Count][];
+
+			//Time
 			List<String> actionsNamesList = new List<String>();
 			actionsNamesList.Add("Timer");
+			actionsNamesList.Add("Pause");
+			actionsNamesList.Add("Wait for");
+			actionsNamesList.Add("Warp");
+			actionNames[0] = actionsNamesList.ToArray();
+
+			//Docking
+			actionsNamesList = new List<String>();
 			actionsNamesList.Add("Decouple");
 			actionsNamesList.Add("Dock Shield");
-			actionsNamesList.Add("Staging");
+			actionsNamesList.Add("Target Dock");
+			actionNames[1] = actionsNamesList.ToArray();
+
+			//Target
+			actionsNamesList = new List<String>();
 			actionsNamesList.Add("Target Dock");
 			actionsNamesList.Add("Target Body");
+			actionNames[2] = actionsNamesList.ToArray();
+
+			//Control
+			actionsNamesList = new List<String>();
 			actionsNamesList.Add("Control From");
-			actionsNamesList.Add("Pause");
-			actionsNamesList.Add("Crew Transfer");
-			actionsNamesList.Add("Quicksave");
 			actionsNamesList.Add("RCS");
-			actionsNamesList.Add("Switch Vessel");
-			actionsNamesList.Add("Activate Engine");
 			actionsNamesList.Add("SAS");
+			actionsNamesList.Add("Switch Vessel");
+			actionNames[3] = actionsNamesList.ToArray();
+
+			//Crew
+			actionsNamesList = new List<String>();
+			actionsNamesList.Add("Crew Transfer");
+			actionNames[4] = actionsNamesList.ToArray();
+
+			//Trajectory
+			actionsNamesList = new List<String>();
 			actionsNamesList.Add("Maneuver");
 			actionsNamesList.Add("Execute node");
-			actionsNamesList.Add("Action Group");
+			actionNames[5] = actionsNamesList.ToArray();
+
+			//Staging
+			actionsNamesList = new List<String>();
+			actionsNamesList.Add("Staging");
+			actionsNamesList.Add("Activate Engine");
+			actionNames[6] = actionsNamesList.ToArray();
+
+			//Settings
+			actionsNamesList = new List<String>();
 			actionsNamesList.Add("Node tolerance");
-			actionsNamesList.Add("Warp");
-			actionsNamesList.Add("Wait for");
-			actionsNamesList.Add("CONTROL - Repeat");
-			actionsNamesList.Add("CONTROL - If");
-			actionsNamesList.Add("CONTROL - While");
-			actionsNamesList.Add("Load Script");
+			actionNames[7] = actionsNamesList.ToArray();
+
+			//Modules
+			actionsNamesList = new List<String>();
 			actionsNamesList.Add("MODULE Ascent Autopilot");
 			actionsNamesList.Add("MODULE Docking Autopilot");
 			actionsNamesList.Add("MODULE Landing");
 			actionsNamesList.Add("MODULE Rendezvous");
 			actionsNamesList.Add("MODULE Rendezvous Autopilot");
-			if (scriptModule.checkCompatiblePluginInstalled("IRSequencer"))
+			actionNames[8] = actionsNamesList.ToArray();
+
+			//Save
+			actionsNamesList = new List<String>();
+			actionsNamesList.Add("Quicksave");
+			actionsNamesList.Add("Load Script");
+			actionsNamesList.Add("Action Group");
+			actionNames[9] = actionsNamesList.ToArray();
+
+			//PROGRAM Logic
+			actionsNamesList = new List<String>();
+			actionsNamesList.Add("PROGRAM - Repeat");
+			actionsNamesList.Add("PROGRAM - If");
+			actionsNamesList.Add("PROGRAM - While");
+			actionNames[10] = actionsNamesList.ToArray();
+
+			//Plugins
+			this.refreshActionNamesPlugins();
+
+			//List<String> actionsNamesList = new List<String>();
+			//actionsNamesList.Add("Timer");
+			//actionsNamesList.Add("Decouple");
+			//actionsNamesList.Add("Dock Shield");
+			//actionsNamesList.Add("Staging");
+			//actionsNamesList.Add("Target Dock");
+			//actionsNamesList.Add("Target Body");
+			//actionsNamesList.Add("Control From");
+			//actionsNamesList.Add("Pause");
+			//actionsNamesList.Add("Crew Transfer");
+			//actionsNamesList.Add("Quicksave");
+			//actionsNamesList.Add("RCS");
+			//actionsNamesList.Add("Switch Vessel");
+			//actionsNamesList.Add("Activate Engine");
+			//actionsNamesList.Add("SAS");
+			//actionsNamesList.Add("Maneuver");
+			//actionsNamesList.Add("Execute node");
+			//actionsNamesList.Add("Action Group");
+			//actionsNamesList.Add("Node tolerance");
+			//actionsNamesList.Add("Warp");
+			//actionsNamesList.Add("Wait for");
+			//actionsNamesList.Add("CONTROL - Repeat");
+			//actionsNamesList.Add("CONTROL - If");
+			//actionsNamesList.Add("CONTROL - While");
+			//actionsNamesList.Add("Load Script");
+			//actionsNamesList.Add("MODULE Ascent Autopilot");
+			//actionsNamesList.Add("MODULE Docking Autopilot");
+			//actionsNamesList.Add("MODULE Landing");
+			//actionsNamesList.Add("MODULE Rendezvous");
+			//actionsNamesList.Add("MODULE Rendezvous Autopilot");
+			/*if (scriptModule.checkCompatiblePluginInstalled("IRSequencer"))
 			{
 				actionsNamesList.Add("[IR Sequencer] Sequence");
 			}
@@ -68,7 +166,26 @@ namespace MuMech
 			{
 				actionsNamesList.Add("[kOS] Command");
 			}
-			actionNames = actionsNamesList.ToArray();
+			actionNames = actionsNamesList.ToArray();*/
+		}
+
+		public void refreshActionNamesPlugins()
+		{
+			//Check plugins compatibility
+			List<String> actionsNamesList = new List<String>();
+			if (scriptModule.hasCompatiblePluginInstalled())
+			{
+				actionsNamesList = new List<String>();
+				if (scriptModule.checkCompatiblePluginInstalled("IRSequencer"))
+				{
+					actionsNamesList.Add("[IR Sequencer] Sequence");
+				}
+				if (scriptModule.checkCompatiblePluginInstalled("kOS"))
+				{
+					actionsNamesList.Add("[kOS] Command");
+				}
+				actionNames[11] = actionsNamesList.ToArray();
+			}
 		}
 
 		public void addAction(MechJebModuleScriptAction action)
@@ -96,150 +213,167 @@ namespace MuMech
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.blue;
 			GUILayout.BeginHorizontal();
-			GUILayout.Label("Add action", s);
-			selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames, this);
-			if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0 || actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
+			GUILayout.Space(20);
+			GUILayout.Label("Add action", s, GUILayout.ExpandWidth(false));
+			selectedGroupIndex = GuiUtils.ComboBox.Box(selectedGroupIndex, actionGroups, actionGroups);
+			if (selectedGroupIndex != old_selectedGroupIndex)
 			{
-				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
-				{
-					if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
-					{
-						//Open the ascent module GUI
-						core.GetComputerModule<MechJebModuleAscentGuidance>().enabled = true;
-					}
-					if (actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
-					{
-						//Open the DockingGuidance module GUI
-						core.GetComputerModule<MechJebModuleLandingGuidance>().enabled = true;
-					}
-				}
+				selectedActionIndex = 0;//Reset action index
+				old_selectedGroupIndex = selectedGroupIndex;
 			}
-
-			if (GUILayout.Button("Add"))
+			if (selectedGroupIndex == 10 && depth >= 4) //Block more than 4 depth
 			{
-				if (actionNames[selectedActionIndex].CompareTo("Timer") == 0)
+				GUIStyle s2 = new GUIStyle(GUI.skin.label);
+				s2.normal.textColor = Color.red;
+				GUILayout.Label("Program depth is limited to 4", s2, GUILayout.ExpandWidth(false));
+			}
+			else
+			{
+				selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames[selectedGroupIndex], actionNames);
+				if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0 || actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Landing") == 0)
 				{
-					this.addAction(new MechJebModuleScriptActionTimer(scriptModule, core, this));
+					if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
+					{
+						if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
+						{
+							//Open the ascent module GUI
+							core.GetComputerModule<MechJebModuleAscentGuidance>().enabled = true;
+						}
+						if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Landing") == 0)
+						{
+							//Open the DockingGuidance module GUI
+							core.GetComputerModule<MechJebModuleLandingGuidance>().enabled = true;
+						}
+					}
 				}
-				else if (actionNames[selectedActionIndex].CompareTo("Decouple") == 0)
+
+				if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
 				{
-					this.addAction(new MechJebModuleScriptActionUndock(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Dock Shield") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionDockingShield(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Staging") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionStaging(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Target Dock") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionTargetDock(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Target Body") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionTarget(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Control From") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionControlFrom(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Pause") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionPause(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Crew Transfer") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionCrewTransfer(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Quicksave") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionQuicksave(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("RCS") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionRCS(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Switch Vessel") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionActiveVessel(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Activate Engine") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionActivateEngine(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("SAS") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionSAS(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Execute node") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionExecuteNode(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Maneuver") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionManoeuver(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Node tolerance") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionTolerance(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Warp") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionWarp(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Wait for") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionWaitFor(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("CONTROL - Repeat") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionFor(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("CONTROL - If") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionIf(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("CONTROL - While") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Action Group") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionActionGroup(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("Load Script") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionLoadScript(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionAscent(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("MODULE Docking Autopilot") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionDockingAutopilot(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("MODULE Landing") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionLanding(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("MODULE Rendezvous") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionRendezvous(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("MODULE Rendezvous Autopilot") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionRendezvousAP(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("[IR Sequencer] Sequence") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionIRSequencer(scriptModule, core, this));
-				}
-				else if (actionNames[selectedActionIndex].CompareTo("[kOS] Command") == 0)
-				{
-					this.addAction(new MechJebModuleScriptActionKos(scriptModule, core, this));
+					String actionName = actionNames[selectedGroupIndex][selectedActionIndex];
+					if (actionName.CompareTo("Timer") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionTimer(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Decouple") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionUndock(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Dock Shield") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionDockingShield(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Staging") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionStaging(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Target Dock") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionTargetDock(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Target Body") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionTarget(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Control From") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionControlFrom(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Pause") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionPause(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Crew Transfer") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionCrewTransfer(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Quicksave") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionQuicksave(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("RCS") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionRCS(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Switch Vessel") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionActiveVessel(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Activate Engine") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionActivateEngine(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("SAS") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionSAS(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Execute node") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionExecuteNode(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Maneuver") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionManoeuver(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Node tolerance") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionTolerance(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Warp") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionWarp(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Wait for") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionWaitFor(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("PROGRAM - Repeat") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionFor(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("PROGRAM - If") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionIf(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("PROGRAM - While") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Action Group") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionActionGroup(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("Load Script") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionLoadScript(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("MODULE Ascent Autopilot") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionAscent(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("MODULE Docking Autopilot") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionDockingAutopilot(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("MODULE Landing") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionLanding(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("MODULE Rendezvous") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionRendezvous(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("MODULE Rendezvous Autopilot") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionRendezvousAP(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("[IR Sequencer] Sequence") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionIRSequencer(scriptModule, core, this));
+					}
+					else if (actionName.CompareTo("[kOS] Command") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionKos(scriptModule, core, this));
+					}
 				}
 			}
 			GUILayout.EndHorizontal();
@@ -255,7 +389,7 @@ namespace MuMech
 					actionItem.WindowGUI(windowID);
 				}
 			}
-			if (!this.scriptModule.isStarted())
+			if (!this.scriptModule.isStarted() && !this.scriptModule.isAddActionDisabled())
 			{
 				this.actionsAddWindowGui(windowID); //Render Add action
 			}

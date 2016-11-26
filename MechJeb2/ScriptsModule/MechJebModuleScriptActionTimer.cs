@@ -47,11 +47,11 @@ namespace MuMech
 			base.WindowGUI(windowID);
 			if (!this.isStarted())
 			{
-				GuiUtils.SimpleTextBox ("Wait Time", time, "s", 30);
+				GuiUtils.SimpleTextBox("Wait Time", time, "s", 30);
 			}
 			if (!this.isExecuted() && this.isStarted())
 			{
-				GUILayout.Label ("T:-" + spendTime + "s");
+				GUILayout.Label ("T:-" + spendTime + "s", GUILayout.ExpandWidth(false));
 			}
 			base.postWindowGUI(windowID);
 		}
