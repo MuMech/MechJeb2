@@ -51,7 +51,7 @@ namespace MuMech
 			}
 			if (!this.isExecuted() && this.isStarted())
 			{
-				GUILayout.Label ("T:-" + spendTime + "s", GUILayout.ExpandWidth(false));
+				GUILayout.Label ("Wait T:-" + spendTime + "s", GUILayout.ExpandWidth(false));
 			}
 			base.postWindowGUI(windowID);
 		}

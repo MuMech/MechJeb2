@@ -105,6 +105,7 @@ namespace MuMech
 					GUILayout.Label("(NOT Verified)", s, GUILayout.ExpandWidth(false));
 				}
 			}
+			s.normal.textColor = Color.yellow;
 			GUILayout.Label("Then", s, GUILayout.ExpandWidth(false));
 			base.postWindowGUI(windowID);
 
