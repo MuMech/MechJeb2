@@ -14,6 +14,7 @@ namespace MuMech
 		private int old_selectedGroupIndex = 0;
 		private int selectedActionIndex = 0;
 		private bool started = false;
+		private bool executed = false;
 		private IMechJebModuleScriptActionsListParent parent;
 		private int depth = 0;
 		private MechJebCore core;
@@ -123,6 +124,7 @@ namespace MuMech
 			actionsNamesList.Add("PROGRAM - Repeat");
 			actionsNamesList.Add("PROGRAM - If");
 			actionsNamesList.Add("PROGRAM - While");
+			actionsNamesList.Add("PROGRAM - Parallel");
 			actionsNamesList.Add("Wait for");
 			actionNames[10] = actionsNamesList.ToArray();
 
@@ -339,6 +341,10 @@ namespace MuMech
 					{
 						this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
 					}
+					else if (actionName.CompareTo("PROGRAM - Parallel") == 0)
+					{
+						this.addAction(new MechJebModuleScriptActionParallel(scriptModule, core, this));
+					}
 					else if (actionName.CompareTo("Action Group") == 0)
 					{
 						this.addAction(new MechJebModuleScriptActionActionGroup(scriptModule, core, this));
@@ -428,6 +434,16 @@ namespace MuMech
 			}
 		}
 
+		public bool isStarted()
+		{
+			return this.started;
+		}
+
+		public bool isExecuted()
+		{
+			return this.executed;
+		}
+
 		public void notifyEndAction(int index)
 		{
 			if (actionsList.Count > (index + 1) && this.started)
@@ -436,6 +452,8 @@ namespace MuMech
 			}
 			else
 			{
+				this.started = false;
+				this.executed = true;
 				this.parent.notifyEndActionsList();
 			}
 		}
@@ -573,6 +591,10 @@ namespace MuMech
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionWhile.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionWhile(scriptModule, core, this);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionParallel.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionParallel(scriptModule, core, this);
 				}
 				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionActionGroup.NAME) == 0)
 				{
