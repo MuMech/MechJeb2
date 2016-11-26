@@ -26,6 +26,9 @@ namespace MuMech
 		private MechJebModuleInfoItems moduleInfoItems;
 		private string[] units0list = {"", "k", "M", "G"};
 		private string[] units1list = { "", "k", "M", "G" };
+		private double valueWhenConditionCheck = double.NaN;
+		private string stringWhenConditionCheck = "N/A";
+		private bool conditionVerified = false;
 
 		public MechJebModuleScriptCondition(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptAction action)
 		{
@@ -88,7 +91,20 @@ namespace MuMech
 				{
 					GUILayout.Label(" and " + value1.val);
 				}
-				GUILayout.Label("Current value: "+this.getValueToCompareString());
+			}
+			if (action.isStarted() || action.isExecuted())
+			{
+				GUIStyle s = new GUIStyle(GUI.skin.label);
+				if (this.conditionVerified)
+				{
+					s.normal.textColor = Color.green;
+					GUILayout.Label("(Verified " + this.getStringWhenConditionCheck() + ")", s, GUILayout.ExpandWidth(false));
+				}
+				else
+				{
+					s.normal.textColor = Color.red;
+					GUILayout.Label("(NOT Verified " + this.getStringWhenConditionCheck() + ")", s, GUILayout.ExpandWidth(false));
+				}
 			}
 		}
 
@@ -121,7 +137,10 @@ namespace MuMech
 				value1ref *= 1000000000;
 			}
 
+			this.conditionVerified = false;
 			double valueToCompare = getValueToCompare();
+			this.valueWhenConditionCheck = valueToCompare;
+			this.stringWhenConditionCheck = this.getValueToCompareString();
 			if (valueToCompare == double.NaN)
 			{
 				return false;
@@ -129,22 +148,41 @@ namespace MuMech
 
 			if (valueToCompare < value0ref && selectedModifier == 0)
 			{
+				this.conditionVerified = true;
 				return true;
 			}
 			else if (valueToCompare == value0ref && selectedModifier == 1)
 			{
+				this.conditionVerified = true;
 				return true;
 			}
 			else if (valueToCompare > value0ref && selectedModifier == 2)
 			{
+				this.conditionVerified = true;
 				return true;
 			}
 			else if (valueToCompare > value0ref && valueToCompare < value1ref && selectedModifier == 3)
 			{
+				this.conditionVerified = true;
 				return true;
 			}
 
 			return false;
+		}
+
+		public double getValueWhenConditionCheck()
+		{
+			return this.valueWhenConditionCheck;
+		}
+
+		public String getStringWhenConditionCheck()
+		{
+			return this.stringWhenConditionCheck;
+		}
+
+		public bool getConditionVerified()
+		{
+			return this.conditionVerified;
 		}
 
 		public string getValueToCompareString()

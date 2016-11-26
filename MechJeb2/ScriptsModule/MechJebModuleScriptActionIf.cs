@@ -10,7 +10,6 @@ namespace MuMech
 		private MechJebModuleScriptActionsList actionsThen;
 		private MechJebModuleScriptActionsList actionsElse;
 		private MechJebModuleScriptCondition condition;
-		private bool conditionVerified = false;
 		private GUIStyle sBorderY;
 		private GUIStyle sBorderG;
 		private GUIStyle sBorderR;
@@ -67,12 +66,10 @@ namespace MuMech
 			if (condition.checkCondition())
 			{
 				this.actionsThen.start();
-				this.conditionVerified = true;
 			}
 			else
 			{
 				this.actionsElse.start();
-				this.conditionVerified = false;
 			}
 		}
 
@@ -90,21 +87,6 @@ namespace MuMech
 			base.WindowGUI(windowID);
 			GUILayout.Label("If", s, GUILayout.ExpandWidth(false));
 			condition.WindowGUI(windowID);
-			if (this.isStarted() || this.executed)
-			{
-				if (this.conditionVerified)
-				{
-					s = new GUIStyle(GUI.skin.label);
-					s.normal.textColor = Color.green;
-					GUILayout.Label("(Verified)", s, GUILayout.ExpandWidth(false));
-				}
-				else
-				{
-					s = new GUIStyle(GUI.skin.label);
-					s.normal.textColor = Color.red;
-					GUILayout.Label("(NOT Verified)", s, GUILayout.ExpandWidth(false));
-				}
-			}
 			s.normal.textColor = Color.yellow;
 			GUILayout.Label("Then", s, GUILayout.ExpandWidth(false));
 			base.postWindowGUI(windowID);
@@ -157,7 +139,7 @@ namespace MuMech
 		}
 
 		override public void afterOnFixedUpdate() {
-			if (this.conditionVerified)
+			if (this.condition.getConditionVerified())
 			{
 				actionsThen.OnFixedUpdate();
 			}
