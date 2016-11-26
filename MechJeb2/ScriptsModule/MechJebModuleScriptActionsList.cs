@@ -123,6 +123,7 @@ namespace MuMech
 			actionsNamesList.Add("PROGRAM - Repeat");
 			actionsNamesList.Add("PROGRAM - If");
 			actionsNamesList.Add("PROGRAM - While");
+			actionsNamesList.Add("Wait for");
 			actionNames[10] = actionsNamesList.ToArray();
 
 			//Plugins

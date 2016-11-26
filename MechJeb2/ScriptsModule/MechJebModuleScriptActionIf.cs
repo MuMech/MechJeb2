@@ -95,7 +95,7 @@ namespace MuMech
 				if (this.conditionVerified)
 				{
 					s = new GUIStyle(GUI.skin.label);
-					s.normal.textColor = Color.red;
+					s.normal.textColor = Color.green;
 					GUILayout.Label("(Verified)", s, GUILayout.ExpandWidth(false));
 				}
 				else

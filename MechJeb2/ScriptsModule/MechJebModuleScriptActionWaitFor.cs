@@ -10,13 +10,11 @@ namespace MuMech
 
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType = 0;
-		[Persistent(pass = (int)Pass.Type)]
-		private EditableInt targetAltitude = new EditableInt(1000);
-		private List<String> actionTypes = new List<String>();
+		private MechJebModuleScriptCondition condition;
 
 		public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
-			actionTypes.Add("an altitude");
+			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
 		}
 
 		override public void activateAction(int actionIndex)
@@ -34,13 +32,7 @@ namespace MuMech
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label ("Wait for");
-			actionType = GuiUtils.ComboBox.Box(actionType, actionTypes.ToArray(), actionTypes);
-			if (actionType == 0)
-			{
-				GUILayout.Label("of");
-				targetAltitude.text = GUILayout.TextField(targetAltitude.text, GUILayout.Width(40));
-				GUILayout.Label("m");
-			}
+			condition.WindowGUI(windowID);
 			base.postWindowGUI(windowID);
 		}
 
@@ -48,15 +40,22 @@ namespace MuMech
 		{
 			if (this.isStarted() && !this.isExecuted())
 			{
-				if (actionType == 0)
+				if (condition.checkCondition())
 				{
-					double current_altitude = FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM);
-					if (current_altitude >= targetAltitude)
-					{
-						this.endAction();
-					}
+					this.endAction();
 				}
 			}
+		}
+
+		override public void postLoad(ConfigNode node)
+		{
+			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
+		}
+
+		override public void postSave(ConfigNode node)
+		{
+			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
+			conditionNode.CopyTo(node.AddNode("Condition"));
 		}
 	}
 }
