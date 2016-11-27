@@ -60,9 +60,9 @@ namespace MuMech
 			sBorderR.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (condition.checkCondition())
 			{
 				this.actionsThen.start();

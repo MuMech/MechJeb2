@@ -28,9 +28,9 @@ namespace MuMech
 		{
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			warping = true;
 			Orbit orbit = this.scriptModule.orbit;
 			VesselState vesselState = this.scriptModule.vesselState;

@@ -38,9 +38,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			FlightGlobals.SetActiveVessel(commandParts[selectedPartIndex].vessel);
 			this.scriptModule.setActiveBreakpoint(actionIndex, commandParts[selectedPartIndex].vessel);
 			//crewableParts[selectedPartIndex].vessel.MakeActive();

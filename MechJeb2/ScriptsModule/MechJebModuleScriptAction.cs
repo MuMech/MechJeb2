@@ -21,10 +21,19 @@ namespace MuMech
 			this.actionsList = actionsList;
 		}
 
-		public virtual void activateAction(int actionIndex)
+		public void setActionIndex(int actionIndex)
+		{
+			this.actionIndex = actionIndex;
+		}
+
+		public int getActionIndex()
+		{
+			return this.actionIndex;
+		}
+
+		public virtual void activateAction()
 		{
 			this.started = true;
-			this.actionIndex = actionIndex;
 		}
 
 		public void markActionDone() //Used when we reload a previously saved script to mark past actions as resolved
@@ -36,7 +45,7 @@ namespace MuMech
 		public virtual void endAction()
 		{
 			this.markActionDone();
-			this.actionsList.notifyEndAction(actionIndex);
+			this.actionsList.notifyEndAction();
 		}
 
 		public bool isStarted()
@@ -94,14 +103,22 @@ namespace MuMech
 			}
 			if (!this.scriptModule.isStarted())
 			{
-				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/delete", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+				if (GUILayout.Button("✖", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+				{
+					this.deleteAction();
+				}
+				if (GUILayout.Button("↑", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+				{
+					this.actionsList.moveActionUp(this);
+				}
+				/*if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/delete", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 				{
 					this.deleteAction();
 				}
 				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/up", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 				{
 					this.actionsList.moveActionUp(this);
-				}
+				}*/
 			}
 		}
 

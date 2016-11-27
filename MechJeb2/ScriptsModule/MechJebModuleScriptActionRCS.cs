@@ -26,9 +26,9 @@ namespace MuMech
 			actionObjects.Add("Zero Rvel");
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (actionObject == 0)
 			{
 				if (actionType == 0)

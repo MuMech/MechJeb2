@@ -47,7 +47,7 @@ namespace MuMech
 			this.drawBoundingBox = autopilot.drawBoundingBox;
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
 			autopilot.users.Add(this.moduleGuidance);
 			autopilot.speedLimit = speedLimit;
@@ -63,7 +63,7 @@ namespace MuMech
 			autopilot.enabled = true;
 			autopilot.users.Add(this.moduleGuidance);
 			autopilot.dockingStep = MechJebModuleDockingAutopilot.DockingStep.INIT;
-			base.activateAction(actionIndex);
+			base.activateAction();
 		}
 
 		override public  void endAction()

@@ -18,6 +18,7 @@ namespace MuMech
 		private IMechJebModuleScriptActionsListParent parent;
 		private int depth = 0;
 		private MechJebCore core;
+		private int currentIndex;
 
 		public MechJebModuleScriptActionsList(MechJebCore core, MechJebModuleScript scriptModule, IMechJebModuleScriptActionsListParent parent, int depth)
 		{
@@ -78,7 +79,10 @@ namespace MuMech
 			actionsNamesList.Add("Control From");
 			actionsNamesList.Add("RCS");
 			actionsNamesList.Add("SAS");
-			actionsNamesList.Add("Switch Vessel");
+			if (depth == 0)
+			{
+				actionsNamesList.Add("Switch Vessel"); //Switch Vessel only available at depth 0 because it can change the focus.
+			}
 			actionNames[3] = actionsNamesList.ToArray();
 
 			//Crew
@@ -114,62 +118,31 @@ namespace MuMech
 
 			//Save
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Quicksave");
-			actionsNamesList.Add("Load Script");
+			if (depth == 0) //Actions only available at depth 0 because they can change focus
+			{
+				actionsNamesList.Add("Quicksave");
+				actionsNamesList.Add("Load Script");
+			}
 			actionsNamesList.Add("Action Group");
 			actionNames[9] = actionsNamesList.ToArray();
 
 			//PROGRAM Logic
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("PROGRAM - Repeat");
-			actionsNamesList.Add("PROGRAM - If");
-			actionsNamesList.Add("PROGRAM - While");
-			actionsNamesList.Add("PROGRAM - Parallel");
+			if (depth < 4) //Limit program depth to 4 (just to avoid UI mess)
+			{
+				actionsNamesList.Add("PROGRAM - Repeat");
+				actionsNamesList.Add("PROGRAM - If");
+				actionsNamesList.Add("PROGRAM - While");
+				if (depth < 2) //Limit parallel depth to 2
+				{
+					actionsNamesList.Add("PROGRAM - Parallel");
+				}
+			}
 			actionsNamesList.Add("Wait for");
 			actionNames[10] = actionsNamesList.ToArray();
 
 			//Plugins
 			this.refreshActionNamesPlugins();
-
-			//List<String> actionsNamesList = new List<String>();
-			//actionsNamesList.Add("Timer");
-			//actionsNamesList.Add("Decouple");
-			//actionsNamesList.Add("Dock Shield");
-			//actionsNamesList.Add("Staging");
-			//actionsNamesList.Add("Target Dock");
-			//actionsNamesList.Add("Target Body");
-			//actionsNamesList.Add("Control From");
-			//actionsNamesList.Add("Pause");
-			//actionsNamesList.Add("Crew Transfer");
-			//actionsNamesList.Add("Quicksave");
-			//actionsNamesList.Add("RCS");
-			//actionsNamesList.Add("Switch Vessel");
-			//actionsNamesList.Add("Activate Engine");
-			//actionsNamesList.Add("SAS");
-			//actionsNamesList.Add("Maneuver");
-			//actionsNamesList.Add("Execute node");
-			//actionsNamesList.Add("Action Group");
-			//actionsNamesList.Add("Node tolerance");
-			//actionsNamesList.Add("Warp");
-			//actionsNamesList.Add("Wait for");
-			//actionsNamesList.Add("CONTROL - Repeat");
-			//actionsNamesList.Add("CONTROL - If");
-			//actionsNamesList.Add("CONTROL - While");
-			//actionsNamesList.Add("Load Script");
-			//actionsNamesList.Add("MODULE Ascent Autopilot");
-			//actionsNamesList.Add("MODULE Docking Autopilot");
-			//actionsNamesList.Add("MODULE Landing");
-			//actionsNamesList.Add("MODULE Rendezvous");
-			//actionsNamesList.Add("MODULE Rendezvous Autopilot");
-			/*if (scriptModule.checkCompatiblePluginInstalled("IRSequencer"))
-			{
-				actionsNamesList.Add("[IR Sequencer] Sequence");
-			}
-			if (scriptModule.checkCompatiblePluginInstalled("kOS"))
-			{
-				actionsNamesList.Add("[kOS] Command");
-			}
-			actionNames = actionsNamesList.ToArray();*/
 		}
 
 		public void refreshActionNamesPlugins()
@@ -250,7 +223,7 @@ namespace MuMech
 					}
 				}
 
-				if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
 				{
 					String actionName = actionNames[selectedGroupIndex][selectedActionIndex];
 					if (actionName.CompareTo("Timer") == 0)
@@ -331,19 +304,31 @@ namespace MuMech
 					}
 					else if (actionName.CompareTo("PROGRAM - Repeat") == 0)
 					{
-						this.addAction(new MechJebModuleScriptActionFor(scriptModule, core, this));
+						if (this.checkMaxDepth())
+						{
+							this.addAction(new MechJebModuleScriptActionFor(scriptModule, core, this));
+						}
 					}
 					else if (actionName.CompareTo("PROGRAM - If") == 0)
 					{
-						this.addAction(new MechJebModuleScriptActionIf(scriptModule, core, this));
+						if (this.checkMaxDepth())
+						{
+							this.addAction(new MechJebModuleScriptActionIf(scriptModule, core, this));
+						}
 					}
 					else if (actionName.CompareTo("PROGRAM - While") == 0)
 					{
-						this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
+						if (this.checkMaxDepth())
+						{
+							this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
+						}
 					}
 					else if (actionName.CompareTo("PROGRAM - Parallel") == 0)
 					{
-						this.addAction(new MechJebModuleScriptActionParallel(scriptModule, core, this));
+						if (this.checkMaxDepth())
+						{
+							this.addAction(new MechJebModuleScriptActionParallel(scriptModule, core, this));
+						}
 					}
 					else if (actionName.CompareTo("Action Group") == 0)
 					{
@@ -404,6 +389,7 @@ namespace MuMech
 
 		public void start()
 		{
+			this.currentIndex = 0;
 			if (actionsList.Count > 0)
 			{
 				//Find the first not executed action
@@ -417,8 +403,13 @@ namespace MuMech
 					}
 				}
 				this.started = true;
-				actionsList[start_index].activateAction(start_index);
+				actionsList[start_index].activateAction();
 			}
+			else
+			{
+				this.setExecuted();
+			}
+
 		}
 
 		public void stop()
@@ -444,18 +435,24 @@ namespace MuMech
 			return this.executed;
 		}
 
-		public void notifyEndAction(int index)
+		public void notifyEndAction()
 		{
-			if (actionsList.Count > (index + 1) && this.started)
+			this.currentIndex++;
+			if (this.currentIndex < actionsList.Count && this.started)
 			{
-				actionsList[index + 1].activateAction(index + 1);
+				actionsList[this.currentIndex].activateAction();
 			}
 			else
 			{
-				this.started = false;
-				this.executed = true;
-				this.parent.notifyEndActionsList();
+				this.setExecuted();
 			}
+		}
+
+		public void setExecuted()
+		{
+			this.started = false;
+			this.executed = true;
+			this.parent.notifyEndActionsList();
 		}
 
 		public void clearAll()
@@ -643,6 +640,16 @@ namespace MuMech
 			}
 		}
 
+		public bool checkMaxDepth()
+		{
+			if (this.getDepth() >= 4)
+			{
+				this.scriptModule.setFlashMessage("Program depth is limited to 4", 0);
+				return false;
+			}
+			return true;
+		}
+
 		//Return the list + sub-lists count
 		public int getRecursiveCount()
 		{
@@ -678,6 +685,17 @@ namespace MuMech
 			foreach (MechJebModuleScriptAction action in actions)
 			{
 				action.resetStatus();
+			}
+		}
+
+		public void recursiveUpdateActionsIndex(int startIndex)
+		{
+			List<MechJebModuleScriptAction> actions = this.getRecursiveActionsList();
+			int index = startIndex;
+			foreach (MechJebModuleScriptAction action in actions)
+			{
+				action.setActionIndex(index);
+				index++;
 			}
 		}
 	}

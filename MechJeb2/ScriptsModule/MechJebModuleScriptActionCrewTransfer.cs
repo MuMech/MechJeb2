@@ -88,9 +88,9 @@ namespace MuMech
 			GameEvents.onVesselChange.Fire(FlightGlobals.ActiveVessel);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (crewableParts [selectedPartIndexT].protoModuleCrew.Count < crewableParts [selectedPartIndexT].CrewCapacity)
 			{
 				MoveKerbal(crewableParts [selectedPartIndexS], crewableParts [selectedPartIndexT], kerbalsList[selectedKerbal]);

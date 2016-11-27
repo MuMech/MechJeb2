@@ -44,7 +44,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
 			if (dockingPartsList[selectedPartIndex] != null)
 			{
@@ -69,7 +69,7 @@ namespace MuMech
 					}
 				}
 			}
-			base.activateAction(actionIndex);
+			base.activateAction();
 		}
 
 		override public  void endAction()

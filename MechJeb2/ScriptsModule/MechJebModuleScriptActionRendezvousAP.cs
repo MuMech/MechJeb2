@@ -33,9 +33,9 @@ namespace MuMech
 			core.node.autowarp = autowarp;
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 
 			this.writeModuleConfiguration();
 			autopilot.users.Add(module);

@@ -52,9 +52,9 @@ namespace MuMech
 			sBorderY.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			this.actions1.start();
 			this.actions2.start();
 		}
@@ -74,21 +74,21 @@ namespace MuMech
 			GUILayout.Label("Parallel Execution", s, GUILayout.ExpandWidth(false));
 			if (this.panel1Hidden)
 			{
-				if (GUILayout.Button("Show Panel 1", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button("<<Show Panel 1", GUILayout.ExpandWidth(false)))
 				{
 					this.panel1Hidden = false;
 				}
 			}
 			else if (!this.panel2Hidden)
 			{
-				if (GUILayout.Button("Hide Panel 1", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button(">>Hide Panel 1", GUILayout.ExpandWidth(false)))
 				{
 					this.panel1Hidden = true;
 				}
 			}
 			else
 			{
-				if (GUILayout.Button("Hide Panel 1 and Show Panel 2", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button(">>Hide Panel 1 and <<Show Panel 2", GUILayout.ExpandWidth(false)))
 				{
 					this.panel1Hidden = true;
 					this.panel2Hidden = false;
@@ -96,21 +96,21 @@ namespace MuMech
 			}
 			if (this.panel2Hidden)
 			{
-				if (GUILayout.Button("Show Panel 2", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button("<<Show Panel 2", GUILayout.ExpandWidth(false)))
 				{
 					this.panel2Hidden = false;
 				}
 			}
 			else if (!this.panel1Hidden)
 			{
-				if (GUILayout.Button("Hide Panel 2", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button(">>Hide Panel 2", GUILayout.ExpandWidth(false)))
 				{
 					this.panel2Hidden = true;
 				}
 			}
 			else
 			{
-				if (GUILayout.Button("Hide Panel 2 and Show Panel 1", GUILayout.ExpandWidth(false)))
+				if (GUILayout.Button(">>Hide Panel 2 and <<Show Panel 1", GUILayout.ExpandWidth(false)))
 				{
 					this.panel2Hidden = true;
 					this.panel1Hidden = false;

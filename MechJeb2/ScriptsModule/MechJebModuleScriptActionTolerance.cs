@@ -17,9 +17,9 @@ namespace MuMech
 			leadTime = new EditableDouble(core.node.leadTime.val);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			core.node.tolerance = tolerance;
 			core.node.leadTime = leadTime;
 			this.endAction();

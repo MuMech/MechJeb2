@@ -199,12 +199,12 @@ namespace MuMech
 				if (!started && this.actionsList.getActionsCount() > 0)
 				{
 					style2.normal.textColor = Color.green;
-					if (GUILayout.Button("START", style2))
+					if (GUILayout.Button("▶ START", style2))
 					{
 						this.start();
 					}
 					style2.normal.textColor = Color.white;
-					if (GUILayout.Button("Reset", style2))
+					if (GUILayout.Button("◷ Reset", style2))
 					{
 						this.actionsList.recursiveResetStatus();
 					}
@@ -213,7 +213,7 @@ namespace MuMech
 				else if (started)
 				{
 					style2.normal.textColor = Color.red;
-					if (GUILayout.Button("STOP", style2))
+					if (GUILayout.Button("◾ STOP", style2))
 					{
 						this.stop();
 					}
@@ -222,13 +222,13 @@ namespace MuMech
 				{
 					if (minifiedGUI)
 					{
-						if (GUILayout.Button("Full GUI"))
+						if (GUILayout.Button("▼ Full GUI"))
 						{
 							this.minifiedGUI = false;
 						}
 					}
 					else {
-						if (GUILayout.Button("Compact GUI"))
+						if (GUILayout.Button("△ Compact GUI"))
 						{
 							this.minifiedGUI = true;
 						}
@@ -327,6 +327,7 @@ namespace MuMech
 		{
 			if (actionsList.getActionsCount() > 0)
 			{
+				actionsList.recursiveUpdateActionsIndex(0);
 				actionsList.start();
 				this.started = true;
 			}
@@ -341,7 +342,7 @@ namespace MuMech
 
 		public void notifyEndActionsList()
 		{
-			this.setActiveSavepoint(0);//Reset save point to prevent a manual quicksave to open the previous savepoint
+			this.setActiveSavepoint(-1);//Reset save point to prevent a manual quicksave to open the previous savepoint
 			this.stop();
 		}
 

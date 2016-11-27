@@ -108,9 +108,9 @@ namespace MuMech
 			this.old_selectedPartIndex = this.selectedPartIndex;
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (this.selectedPartIndex < this.irsequencerModules.Count)
 			{
 				if (actionType == 0)

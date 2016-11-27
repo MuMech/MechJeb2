@@ -86,10 +86,10 @@ namespace MuMech
 			}
 			else
 			{
-				GUILayout.Label("" + value0.val);
+				GUILayout.Label("" + value0.val+" "+units0list[value0unit]);
 				if (selectedModifier == 3)
 				{
-					GUILayout.Label(" and " + value1.val);
+					GUILayout.Label(" and " + value1.val+ " " + units1list[value1unit]);
 				}
 			}
 			if (action.isStarted() || action.isExecuted())

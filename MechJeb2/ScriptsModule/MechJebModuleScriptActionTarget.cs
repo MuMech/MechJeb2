@@ -41,9 +41,9 @@ namespace MuMech
 			return null;
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (this.targetType == 0)
 			{
 				CelestialBody body = this.getBodyFromIndex (this.selectedCelestialBodyIndex);

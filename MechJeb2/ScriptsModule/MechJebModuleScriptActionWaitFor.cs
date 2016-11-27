@@ -17,12 +17,12 @@ namespace MuMech
 			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 		}
 
-		override public  void endAction()
+		override public void endAction()
 		{
 			base.endAction();
 		}

@@ -31,9 +31,9 @@ namespace MuMech
 			this.readModuleConfiguration();
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (this.landTarget)
 			{
 				module_autopilot.LandAtPositionTarget(this);

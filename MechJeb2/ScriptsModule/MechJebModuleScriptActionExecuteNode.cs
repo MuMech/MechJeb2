@@ -20,8 +20,8 @@ namespace MuMech
 			actionTypes.Add("All nodes");
 		}
 
-		override public void activateAction(int actionIndex) {
-			base.activateAction(actionIndex);
+		override public void activateAction() {
+			base.activateAction();
 			if (core.node != null)
 			{
 				if (FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count > 0 && !core.node.enabled)

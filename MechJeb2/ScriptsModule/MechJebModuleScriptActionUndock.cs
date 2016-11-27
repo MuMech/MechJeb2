@@ -35,9 +35,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			//Create again the parts list to manage the changes in the vessel structure
 			/*dockingPartsList.Clear();
 			dockingPartsNames.Clear();

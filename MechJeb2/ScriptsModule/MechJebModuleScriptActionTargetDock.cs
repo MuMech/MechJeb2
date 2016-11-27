@@ -41,9 +41,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null && dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>() != null)
 			{
 				//Check if the target dock is a shielded dock: Open the shield

@@ -17,9 +17,9 @@ namespace MuMech
 		{
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			startTime = Time.time;
 			initTime = time;
 		}

@@ -27,9 +27,9 @@ namespace MuMech
 			burnRates.Add("100%");
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 
 			float throttle = (float)burnIndex*0.1f;
 			//core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
