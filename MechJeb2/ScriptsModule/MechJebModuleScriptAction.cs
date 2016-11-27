@@ -107,7 +107,7 @@ namespace MuMech
 				{
 					this.deleteAction();
 				}
-				if (GUILayout.Button("⬆", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+				if (GUILayout.Button("↑", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 				{
 					this.actionsList.moveActionUp(this);
 				}
