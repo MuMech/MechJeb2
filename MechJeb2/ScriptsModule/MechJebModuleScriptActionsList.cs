@@ -403,6 +403,7 @@ namespace MuMech
 					}
 				}
 				this.started = true;
+				this.currentIndex = start_index;
 				actionsList[start_index].activateAction();
 			}
 			else

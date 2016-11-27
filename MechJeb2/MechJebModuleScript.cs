@@ -204,7 +204,7 @@ namespace MuMech
 						this.start();
 					}
 					style2.normal.textColor = Color.white;
-					if (GUILayout.Button("◷ Reset", style2))
+					if (GUILayout.Button("☇ Reset", style2))
 					{
 						this.actionsList.recursiveResetStatus();
 					}
@@ -213,7 +213,7 @@ namespace MuMech
 				else if (started)
 				{
 					style2.normal.textColor = Color.red;
-					if (GUILayout.Button("◾ STOP", style2))
+					if (GUILayout.Button("■ STOP", style2))
 					{
 						this.stop();
 					}
