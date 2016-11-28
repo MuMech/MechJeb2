@@ -69,7 +69,7 @@ namespace MuMech
             SetTimeWarpRate(lastAskedIndex, false);
         }
 
-        // Turn SAS on during regular warp for compatibility with PersistentRotation 
+        // Turn SAS on during regular warp for compatibility with PersistentRotation
         private void SetTimeWarpRate(int rateIndex, bool instant)
         {
             if (rateIndex != TimeWarp.CurrentRateIndex)
@@ -92,8 +92,11 @@ namespace MuMech
             }
         }
 
-        public void WarpToUT(double UT, double maxRate = 100000)
+        public void WarpToUT(double UT, double maxRate = -1)
         {
+            if (maxRate < 0)
+                maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];
+
             double desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
