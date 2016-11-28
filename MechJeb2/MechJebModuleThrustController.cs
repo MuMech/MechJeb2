@@ -698,15 +698,15 @@ namespace MuMech
             var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron());
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
 
-            return engineModules.SelectMany(eng => eng.propellants).Any(p => p.name == "ElectricCharge");
+            return engineModules.SelectMany(eng => eng.propellants).Any(p => p.id == PartResourceLibrary.ElectricityHashcode);
         }
 
         float ElectricThrottle()
         {
-            double totalElectric = vessel.MaxResourceAmount("ElectricCharge");
+            double totalElectric = vessel.MaxResourceAmount(PartResourceLibrary.ElectricityHashcode);
             double lowJuice = totalElectric * electricThrottleLo;
             double highJuice = totalElectric * electricThrottleHi;
-            double curElectric = vessel.TotalResourceAmount("ElectricCharge");
+            double curElectric = vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
 
             if (curElectric <= lowJuice)
                 return 0;

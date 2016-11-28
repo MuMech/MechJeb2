@@ -365,7 +365,7 @@ namespace MuMech
         [ValueInfoItem("Total electric charge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, siMaxPrecision = 1, units = "Ah")]
         public double TotalElectricCharge()
         {
-            return vessel.TotalResourceAmount("ElectricCharge");
+            return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
 
 
@@ -940,7 +940,7 @@ namespace MuMech
             if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
             if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));
 
             if (!noChange)
                 StageDisplayState = 3;
@@ -1109,14 +1109,14 @@ namespace MuMech
         [GeneralInfoItem("Docking guidance: Angular velocity", InfoItem.Category.Target)]
         public void DockingGuidanceAngularVelocity()
         {
-            if (!(core.target.Target is Vessel)  || core.target.vessel.rootPart == null || core.target.vessel.rootPart.rb == null)
+            if (!(core.target.Target is Vessel))
             {
                 GUILayout.Label("Target-relative Angular velocity: (N/A)");
                 return;
             }
 
             Vessel target = (Vessel)core.target.Target;
-            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.rootPart.rb.angularVelocity - vessel.rootPart.rb.angularVelocity) * Mathf.Rad2Deg;
+            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) * Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative angular velocity:");

@@ -15,7 +15,11 @@ namespace MuMech
 		private uint selectedPartFlightID = 0;
 		private bool partHighlighted = false;
 
+<<<<<<< HEAD
 		public MechJebModuleScriptActionControlFrom (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+=======
+		public MechJebModuleScriptActionControlFrom (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+>>>>>>> upstream/dev
 		{
 			this.controlPartsList.Clear();
 			this.controlPartsNames.Clear();
@@ -35,9 +39,15 @@ namespace MuMech
 			}
 		}
 
+<<<<<<< HEAD
 		override public void activateAction()
 		{
 			base.activateAction();
+=======
+		override public void activateAction(int actionIndex)
+		{
+			base.activateAction(actionIndex);
+>>>>>>> upstream/dev
 			if (selectedPartIndex < controlPartsList.Count)
 			{
 				if (controlPartsList[selectedPartIndex].HasModule<ModuleCommand>())
