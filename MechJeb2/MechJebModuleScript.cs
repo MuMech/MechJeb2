@@ -266,7 +266,7 @@ namespace MuMech
 							this.deployScriptNameField = true;
 						}
 					}
-					if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/delete", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+					if (GUILayout.Button("✖", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 					{
 						if (!this.waitingDeletionConfirmation)
 						{
