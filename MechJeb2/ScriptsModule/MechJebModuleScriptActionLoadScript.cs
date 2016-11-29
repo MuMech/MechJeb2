@@ -14,7 +14,7 @@ namespace MuMech
 		private bool autoStart = true;
 		private List<String> scriptsList = new List<String>();
 
-		public MechJebModuleScriptActionLoadScript (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionLoadScript (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			for (int i = 1; i <= 4; i++)
 			{
@@ -22,9 +22,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			this.scriptModule.stop();
 			this.scriptModule.LoadConfig(scriptSlot, false);
 			if (this.autoStart)

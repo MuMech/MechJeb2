@@ -22,7 +22,7 @@ namespace MuMech
 		private bool partHighlighted = false;
 		private bool partHighlightedControl = false;
 
-		public MechJebModuleScriptActionTargetDock (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTargetDock (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.dockingPartsList.Clear();
 			this.dockingPartsNames.Clear();
@@ -41,9 +41,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null && dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>() != null)
 			{
 				//Check if the target dock is a shielded dock: Open the shield

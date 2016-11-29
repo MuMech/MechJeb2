@@ -12,7 +12,7 @@ namespace MuMech
 		private EditableInt burnIndex = 0;
 		private List<String> burnRates = new List<String>();
 
-		public MechJebModuleScriptActionThrottle (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionThrottle (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			burnRates.Add("0%");
 			burnRates.Add("10%");
@@ -27,9 +27,9 @@ namespace MuMech
 			burnRates.Add("100%");
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 
 			float throttle = (float)burnIndex*0.1f;
 			//core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
