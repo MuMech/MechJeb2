@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -281,26 +283,51 @@ namespace MuMech
         }
     }
 
+    class MechJebShaders
+    {
+        public static readonly Shader diffuseAmbient;
+        public static readonly Shader diffuseAmbientIgnoreZ;
+
+        static MechJebShaders()
+        {
+            try
+            {
+                diffuseAmbient = new Shader();
+                diffuseAmbientIgnoreZ = new Shader();
+
+                Type type = typeof(MechJebShaders);
+                Assembly assembly = type.Assembly;
+                string location = assembly.Location;
+
+                string assetBundleFileName = "mechjeb2.assetbundle";
+                string assetBundleDirectory = Path.GetDirectoryName(location);
+                string assetBundleFile = Path.Combine(assetBundleDirectory, assetBundleFileName);
+
+                AssetBundle assetBundle = AssetBundle.LoadFromFile(assetBundleFile);
+                Object[] all = assetBundle.LoadAllAssets();
+                foreach (Object o in all)
+                {
+                    if (o.name.EndsWith("DiffuseAmbient"))
+                        diffuseAmbient = o as Shader;
+                    if (o.name.EndsWith("DiffuseAmbientIgnoreZ"))
+                        diffuseAmbientIgnoreZ = o as Shader;
+                }
+            }
+            catch { }
+        }
+    }
+
     class DebugArrow
     {
         private readonly GameObject gameObject;
         private readonly GameObject haft;
         private GameObject cone;
 
-        private static readonly Shader diffuseAmbient;
-        private static readonly Shader diffuseAmbientIgnoreZ;
-
         private const float coneLength = 0.5f;
         private float length;
         private bool seeThrough = false;
         private readonly MeshRenderer _haftMeshRenderer;
         private readonly MeshRenderer _coneMeshRenderer;
-
-        static  DebugArrow()
-        {
-            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
-            diffuseAmbientIgnoreZ = new Material(Encoding.ASCII.GetString(Properties.Resources.shader3)).shader;
-        }
 
         public DebugArrow(Color color, bool seeThrough = false)
         {
@@ -344,8 +371,8 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _coneMeshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
-                _haftMeshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
+                _coneMeshRenderer.material.shader = state ? MechJebShaders.diffuseAmbientIgnoreZ : MechJebShaders.diffuseAmbient;
+                _haftMeshRenderer.material.shader = state ? MechJebShaders.diffuseAmbientIgnoreZ : MechJebShaders.diffuseAmbient;
             }
         }
 
@@ -598,9 +625,6 @@ namespace MuMech
 
         private readonly MeshRenderer _meshRenderer;
 
-        private static readonly Shader diffuseAmbient;
-        private static readonly Shader diffuseAmbientIgnoreZ;
-
         private float radius;
         private bool seeThrough = false;
 
@@ -619,12 +643,6 @@ namespace MuMech
             SeeThrough(seeThrough);
         }
         
-        static DebugIcoSphere()
-        {
-            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
-            diffuseAmbientIgnoreZ = new Material(Encoding.ASCII.GetString(Properties.Resources.shader3)).shader;
-        }
-
         public void Destroy()
         {
             Object.Destroy(gameObject);
@@ -654,7 +672,7 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _meshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
+                _meshRenderer.material.shader = state ? MechJebShaders.diffuseAmbientIgnoreZ : MechJebShaders.diffuseAmbient;
             }
         }
 
