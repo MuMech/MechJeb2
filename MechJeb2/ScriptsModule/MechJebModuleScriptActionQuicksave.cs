@@ -11,13 +11,13 @@ namespace MuMech
 		private float startTime = 0f;
 		private bool saved = false;
 
-		public MechJebModuleScriptActionQuicksave (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionQuicksave (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 		}
 
 		override public  void endAction()

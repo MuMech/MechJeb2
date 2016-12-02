@@ -287,21 +287,13 @@ namespace MuMech
         private readonly GameObject haft;
         private GameObject cone;
 
-        private static readonly Shader diffuseAmbient;
-        private static readonly Shader diffuseAmbientIgnoreZ;
-
         private const float coneLength = 0.5f;
         private float length;
         private bool seeThrough = false;
         private readonly MeshRenderer _haftMeshRenderer;
         private readonly MeshRenderer _coneMeshRenderer;
 
-        static  DebugArrow()
-        {
-            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
-            diffuseAmbientIgnoreZ = new Material(Encoding.ASCII.GetString(Properties.Resources.shader3)).shader;
-        }
-
+        
         public DebugArrow(Color color, bool seeThrough = false)
         {
             gameObject = new GameObject("DebugArrow");
@@ -344,8 +336,8 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _coneMeshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
-                _haftMeshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
+                _coneMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+                _haftMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
             }
         }
 
@@ -598,9 +590,6 @@ namespace MuMech
 
         private readonly MeshRenderer _meshRenderer;
 
-        private static readonly Shader diffuseAmbient;
-        private static readonly Shader diffuseAmbientIgnoreZ;
-
         private float radius;
         private bool seeThrough = false;
 
@@ -619,12 +608,6 @@ namespace MuMech
             SeeThrough(seeThrough);
         }
         
-        static DebugIcoSphere()
-        {
-            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
-            diffuseAmbientIgnoreZ = new Material(Encoding.ASCII.GetString(Properties.Resources.shader3)).shader;
-        }
-
         public void Destroy()
         {
             Object.Destroy(gameObject);
@@ -654,7 +637,7 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _meshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
+                _meshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
             }
         }
 

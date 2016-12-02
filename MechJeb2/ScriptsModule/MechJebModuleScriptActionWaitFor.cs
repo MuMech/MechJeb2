@@ -10,19 +10,21 @@ namespace MuMech
 
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType = 0;
-		private MechJebModuleScriptCondition condition;
+		[Persistent(pass = (int)Pass.Type)]
+		private EditableInt targetAltitude = new EditableInt(1000);
+		private List<String> actionTypes = new List<String>();
 
-		public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
-			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
+			actionTypes.Add("an altitude");
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 		}
 
-		override public void endAction()
+		override public  void endAction()
 		{
 			base.endAction();
 		}
@@ -32,7 +34,13 @@ namespace MuMech
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label ("Wait for");
-			condition.WindowGUI(windowID);
+			actionType = GuiUtils.ComboBox.Box(actionType, actionTypes.ToArray(), actionTypes);
+			if (actionType == 0)
+			{
+				GUILayout.Label("of");
+				targetAltitude.text = GUILayout.TextField(targetAltitude.text, GUILayout.Width(40));
+				GUILayout.Label("m");
+			}
 			base.postWindowGUI(windowID);
 		}
 
@@ -40,22 +48,15 @@ namespace MuMech
 		{
 			if (this.isStarted() && !this.isExecuted())
 			{
-				if (condition.checkCondition())
+				if (actionType == 0)
 				{
-					this.endAction();
+					double current_altitude = FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM);
+					if (current_altitude >= targetAltitude)
+					{
+						this.endAction();
+					}
 				}
 			}
-		}
-
-		override public void postLoad(ConfigNode node)
-		{
-			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
-		}
-
-		override public void postSave(ConfigNode node)
-		{
-			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
-			conditionNode.CopyTo(node.AddNode("Condition"));
 		}
 	}
 }

@@ -14,13 +14,13 @@ namespace MuMech
 	{
 		public static String NAME = "Template";
 
-		public MechJebModuleScriptActionTemplate (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionTemplate (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 		}
 
 		override public  void endAction()

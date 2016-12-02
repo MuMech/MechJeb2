@@ -16,7 +16,7 @@ namespace MuMech
 		MechJebModuleRendezvousAutopilot autopilot;
 		MechJebModuleRendezvousAutopilotWindow module;
 
-		public MechJebModuleScriptActionRendezvousAP (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionRendezvousAP (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			this.autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 			this.module = core.GetComputerModule<MechJebModuleRendezvousAutopilotWindow>();
@@ -33,9 +33,9 @@ namespace MuMech
 			core.node.autowarp = autowarp;
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 
 			this.writeModuleConfiguration();
 			autopilot.users.Add(module);

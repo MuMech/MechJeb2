@@ -21,7 +21,7 @@ namespace MuMech
 		bool partHighlighted = false;
 		private List<String> actionTypes = new List<String>();
 
-		public MechJebModuleScriptActionSAS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionSAS (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			this.actionTypes.Clear();
 			this.actionTypes.Add("Enable");
@@ -44,9 +44,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			Vessel vessel;
 			if (onActiveVessel)
 			{

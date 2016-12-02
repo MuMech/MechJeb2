@@ -40,7 +40,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		public Orbit targetOrbit;
 
-		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core) : base(scriptModule, core, NAME)
 		{
 			this.autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
 			this.ascentModule = core.GetComputerModule<MechJebModuleAscentGuidance>();
@@ -128,9 +128,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			this.writeModuleConfiguration();
 			if (this.launchingToRendezvous)
 			{

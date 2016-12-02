@@ -24,11 +24,8 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private bool closeTerminal = true;
 		private bool partHighlighted = false;
-		//Reflected objects cache
-		object sharedObjects = null;
-		object interpreter = null;
 
-		public MechJebModuleScriptActionKos (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionKos (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			kosParts.Clear();
 			kosPartsNames.Clear();
@@ -53,19 +50,19 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			if (this.selectedPartIndex < this.kosModules.Count)
 			{
 				if (openTerminal)
 				{
 					this.kosModules[this.selectedPartIndex].GetType().InvokeMember("OpenWindow", System.Reflection.BindingFlags.InvokeMethod, null, this.kosModules[this.selectedPartIndex], null);
 				}
-				sharedObjects = this.kosModules[this.selectedPartIndex].GetType().GetField("shared", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(this.kosModules[this.selectedPartIndex]);
+				var sharedObjects = this.kosModules[this.selectedPartIndex].GetType().GetField("shared", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(this.kosModules[this.selectedPartIndex]);
 				if (sharedObjects != null)
 				{
-					interpreter = sharedObjects.GetType().GetProperty("Interpreter").GetValue(sharedObjects, null);
+					var interpreter = sharedObjects.GetType().GetProperty("Interpreter").GetValue(sharedObjects, null);
 					if (interpreter != null)
 					{
 						interpreter.GetType().InvokeMember("ProcessCommand", System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, interpreter, new object[] { command });
@@ -175,13 +172,18 @@ namespace MuMech
 
 		public bool isCPUActive(object module)
 		{
-			if (sharedObjects != null && interpreter != null)
+			var sharedObjects = this.kosModules[this.selectedPartIndex].GetType().GetField("shared", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(this.kosModules[this.selectedPartIndex]);
+			if (sharedObjects != null)
 			{
-				//We check if the interpreter is waiting to know if our program has been executed
-				bool waiting = (bool)interpreter.GetType().InvokeMember("IsWaitingForCommand", System.Reflection.BindingFlags.InvokeMethod, null, interpreter, null);
-				if (waiting)
+				var interpreter = sharedObjects.GetType().GetProperty("Interpreter").GetValue(sharedObjects, null);
+				if (interpreter != null)
 				{
-					return true;
+					//We check if the interpreter is waiting to know if our program has been executed
+					bool waiting = (bool)interpreter.GetType().InvokeMember("IsWaitingForCommand", System.Reflection.BindingFlags.InvokeMethod, null, interpreter, null);
+					if (waiting)
+					{
+						this.endAction();
+					}
 				}
 			}
 			return false;

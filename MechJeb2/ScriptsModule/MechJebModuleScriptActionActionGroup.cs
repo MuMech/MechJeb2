@@ -12,7 +12,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedActionId;
 
-		public MechJebModuleScriptActionActionGroup (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionActionGroup (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			actionGroups.Add("Abord");
 			actionGroups.Add("Brakes");
@@ -34,9 +34,9 @@ namespace MuMech
 			actionGroups.Add("Stage");
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			KSPActionGroup selectedGroup = KSPActionGroup.Abort;
 			if (selectedActionId == 0)
 			{

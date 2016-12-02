@@ -11,29 +11,18 @@ namespace MuMech
 		protected MechJebModuleScript scriptModule;
 		protected MechJebCore core;
 		protected int actionIndex;
-		protected MechJebModuleScriptActionsList actionsList;
 
-		public MechJebModuleScriptAction (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList, String name)
+		public MechJebModuleScriptAction (MechJebModuleScript scriptModule, MechJebCore core, String name)
 		{
 			this.scriptModule = scriptModule;
 			this.core = core;
 			this.name = name;
-			this.actionsList = actionsList;
 		}
 
-		public void setActionIndex(int actionIndex)
-		{
-			this.actionIndex = actionIndex;
-		}
-
-		public int getActionIndex()
-		{
-			return this.actionIndex;
-		}
-
-		public virtual void activateAction()
+		public virtual void activateAction(int actionIndex)
 		{
 			this.started = true;
+			this.actionIndex = actionIndex;
 		}
 
 		public void markActionDone() //Used when we reload a previously saved script to mark past actions as resolved
@@ -45,7 +34,7 @@ namespace MuMech
 		public virtual void endAction()
 		{
 			this.markActionDone();
-			this.actionsList.notifyEndAction();
+			this.scriptModule.notifyEndAction(actionIndex);
 		}
 
 		public bool isStarted()
@@ -60,7 +49,7 @@ namespace MuMech
 
 		public void deleteAction()
 		{
-			this.actionsList.removeAction(this);
+			this.scriptModule.removeAction(this);
 		}
 
 		public virtual void readModuleConfiguration() { }
@@ -103,27 +92,20 @@ namespace MuMech
 			}
 			if (!this.scriptModule.isStarted())
 			{
-				if (GUILayout.Button("✖", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/delete", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 				{
 					this.deleteAction();
 				}
-				if (GUILayout.Button("↑", new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
+				if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/up", true), new GUILayoutOption[] { GUILayout.Width(20), GUILayout.Height(20) }))
 				{
-					this.actionsList.moveActionUp(this);
+					this.scriptModule.moveActionUp(this);
 				}
 			}
 		}
 
 		public void postWindowGUI(int windowID)
 		{
-			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
-		}
-
-		public void resetStatus()
-		{
-			this.started = false;
-			this.executed = false;
 		}
 	}
 }

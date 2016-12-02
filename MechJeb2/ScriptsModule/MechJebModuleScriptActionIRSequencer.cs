@@ -31,7 +31,7 @@ namespace MuMech
 		private bool partHighlighted = false;
 		private int old_selectedPartIndex = 0;
 
-		public MechJebModuleScriptActionIRSequencer (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionIRSequencer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			irsequencerParts.Clear();
 			irsequencerPartsNames.Clear();
@@ -108,9 +108,9 @@ namespace MuMech
 			this.old_selectedPartIndex = this.selectedPartIndex;
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			if (this.selectedPartIndex < this.irsequencerModules.Count)
 			{
 				if (actionType == 0)

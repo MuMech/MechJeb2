@@ -18,7 +18,7 @@ namespace MuMech
 		private bool partHighlighted = false;
 		private List<String> actionTypes = new List<String>();
 
-		public MechJebModuleScriptActionDockingShield (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionDockingShield (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			this.actionTypes.Clear();
 			this.actionTypes.Add("Open");
@@ -44,7 +44,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
 			if (dockingPartsList[selectedPartIndex] != null)
 			{
@@ -69,7 +69,7 @@ namespace MuMech
 					}
 				}
 			}
-			base.activateAction();
+			base.activateAction(actionIndex);
 		}
 
 		override public  void endAction()

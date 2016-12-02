@@ -15,7 +15,7 @@ namespace MuMech
 		private String operationName;
 
 
-		public MechJebModuleScriptActionManoeuver (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME) {
+		public MechJebModuleScriptActionManoeuver (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME) {
 			Operation[] op_list = Operation.getAvailableOperations();
 			operation = new List<Operation>();
 			operationNames = new List<String>();
@@ -31,8 +31,8 @@ namespace MuMech
 			//operationNames = new List<Operation>(operation).ConvertAll(x => x.getName()).ToArray();
 		}
 
-		override public void activateAction() {
-			base.activateAction();
+		override public void activateAction(int actionIndex) {
+			base.activateAction(actionIndex);
 			Vessel vessel = FlightGlobals.ActiveVessel;
 			double UT = this.scriptModule.vesselState.time;
 			Orbit o = this.scriptModule.orbit;

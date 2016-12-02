@@ -16,7 +16,7 @@ namespace MuMech
 		private uint selectedPartFlightID = 0;
 		private bool partHighlighted = false;
 
-		public MechJebModuleScriptActionUndock(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionUndock(MechJebModuleScript scriptModule, MechJebCore core) : base(scriptModule, core, NAME)
 		{
 			//dockingModulesList = currentTargetVessel.FindPartModulesImplementing<ModuleDockingNode>();
 			//List<ITargetable> ITargetableList = currentTargetVessel.FindPartModulesImplementing<ITargetable>();
@@ -35,9 +35,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			//Create again the parts list to manage the changes in the vessel structure
 			/*dockingPartsList.Clear();
 			dockingPartsNames.Clear();
@@ -131,7 +131,7 @@ namespace MuMech
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label ("Decouple", GUILayout.ExpandWidth(false));
+			GUILayout.Label ("Decouple");
 
 			if (dockingPartsList.Count > 0)
 			{

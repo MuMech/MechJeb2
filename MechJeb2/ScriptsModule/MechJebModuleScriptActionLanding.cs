@@ -24,16 +24,16 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableAngle targetLongitude = new EditableAngle(0);
 
-		public MechJebModuleScriptActionLanding (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionLanding (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			module = core.GetComputerModule<MechJebModuleLandingGuidance>();
 			module_autopilot = core.GetComputerModule<MechJebModuleLandingAutopilot>();
 			this.readModuleConfiguration();
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			if (this.landTarget)
 			{
 				module_autopilot.LandAtPositionTarget(this);

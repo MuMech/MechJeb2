@@ -16,7 +16,7 @@ namespace MuMech
 		private List<String> actionObjects = new List<String>();
 		private String errorMessage = "";
 
-		public MechJebModuleScriptActionRCS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionRCS (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			actionTypes.Add("Enable");
 			actionTypes.Add("Disable");
@@ -26,9 +26,9 @@ namespace MuMech
 			actionObjects.Add("Zero Rvel");
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
-			base.activateAction();
+			base.activateAction(actionIndex);
 			if (actionObject == 0)
 			{
 				if (actionType == 0)

@@ -30,7 +30,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private bool drawBoundingBox;
 
-		public MechJebModuleScriptActionDockingAutopilot (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+		public MechJebModuleScriptActionDockingAutopilot (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
 		{
 			
 			this.autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>(); ;
@@ -47,7 +47,7 @@ namespace MuMech
 			this.drawBoundingBox = autopilot.drawBoundingBox;
 		}
 
-		override public void activateAction()
+		override public void activateAction(int actionIndex)
 		{
 			autopilot.users.Add(this.moduleGuidance);
 			autopilot.speedLimit = speedLimit;
@@ -63,7 +63,7 @@ namespace MuMech
 			autopilot.enabled = true;
 			autopilot.users.Add(this.moduleGuidance);
 			autopilot.dockingStep = MechJebModuleDockingAutopilot.DockingStep.INIT;
-			base.activateAction();
+			base.activateAction(actionIndex);
 		}
 
 		override public  void endAction()
