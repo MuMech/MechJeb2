@@ -44,7 +44,7 @@ namespace MuMech
                 OnStart(PartModule.StartState.None);
             }
 
-            core.GetComputerModule<MechJebModuleCustomWindowEditor>().registry.Find(i => i.id == "Toggle:AttitudeController.useSAS").DrawItem();
+            //core.GetComputerModule<MechJebModuleCustomWindowEditor>().registry.Find(i => i.id == "Toggle:AttitudeController.useSAS").DrawItem();
 
             if (!core.attitude.useSAS)
             {
