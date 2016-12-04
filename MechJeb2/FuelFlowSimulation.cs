@@ -65,7 +65,8 @@ namespace MuMech
 
             double staticPressure = staticPressureKpa * KpaToAtmospheres;
 
-            //print("SimulateAllStages starting from stage " + simStage);
+            //print("**************************************************");
+            //print("SimulateAllStages starting from stage " + simStage + " throttle=" + throttle + " staticPressureKpa=" + staticPressureKpa + " atmDensity=" + atmDensity + " machNumber=" + machNumber);
             SimulateStageActivation();
 
             while (simStage >= 0)
@@ -89,7 +90,7 @@ namespace MuMech
 
         public static void print(object message)
         {
-            MonoBehaviour.print("[MechJeb2] " + message);
+            Dispatcher.InvokeAsync(() => MonoBehaviour.print("[MechJeb2] " + message));
         }
 
         //Simulate (the rest of) the current stage of the simulated rocket,
@@ -115,10 +116,11 @@ namespace MuMech
             int step;
             for (step = 0; step < maxSteps; step++)
             {
+                //print("Stage " + simStage + " step " + step + " endMass " + stats.endMass.ToString("F3"));
                 if (AllowedToStage()) break;
                 double dt;
                 stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
-
+                //print("Stage " + simStage + " step " + step + " dt " + dt);
                 // BS engine detected. Bail out.
                 if (dt == double.MaxValue || double.IsInfinity(dt))
                 {
@@ -169,6 +171,7 @@ namespace MuMech
                     for (int i = 0; i < nodes.Count; i++)
                     {
                         nodes[i].DrainResources(dt);
+                        //nodes[i].DebugResources();
                     }
                 }
                 else
@@ -223,7 +226,7 @@ namespace MuMech
 
             using (var activeEngines = FindActiveEngines())
             {
-                //print("  activeEngines.Count = " + activeEngines.Count);
+                //print("  activeEngines.Count = " + activeEngines.value.Count);
 
                 //if no engines are active, we can always stage
                 if (activeEngines.value.Count == 0)
@@ -245,7 +248,8 @@ namespace MuMech
                         {
                             if (activeEngines.value.Contains(n) || n.ContainsResources(burnedResources.value))
                             {
-                                //print("Not allowed to stage because " + n.partName + " either contains resources or is an active engine");
+                                //print("Not allowed to stage because " + n.partName + " either contains resources (" + n.ContainsResources(burnedResources.value) + ") or is an active engine (" + activeEngines.value.Contains(n) +")");
+                                //n.DebugResources();
                                 return false;
                             }
                         }
@@ -272,7 +276,6 @@ namespace MuMech
                         if (n.decoupledInStage == (simStage - 1))
                         {
                             //print("Part " + n.partName + " is decoupled in the next stage.");
-
                             partDecoupledInNextStage = true;
                         }
                     }
@@ -324,10 +327,10 @@ namespace MuMech
         {
             var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
-            //print("Finding active engines: excluding resource considerations, there are " + nodes.Count(n => n.isEngine && n.inverseStage >= simStage));
+            //print("Finding active engines: excluding resource considerations, there are " + nodes.Slinq().Where(n => n.isEngine && n.inverseStage >= simStage).Count());
             nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.isDrawingResources && n.CanDrawNeededResources(p.Item2), param).AddTo(activeEngines.value);
+            //print("Finding active engines: including resource considerations, there are " + activeEngines.value.Count);
             return activeEngines;
-            //return nodes.Where(n => n.isEngine && n.inverseStage >= simStage && n.CanDrawNeededResources(nodes)).ToList();
         }
 
         //A Stats struct describes the result of the simulation over a certain interval of time (e.g., one stage)
@@ -818,7 +821,9 @@ namespace MuMech
                 for (int i = 0; i < propellantRatios.KeysList.Count; i++)
                 {
                     int id = propellantRatios.KeysList[i];
-                    resourceConsumptions.Add(id, propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity);
+                    double rate = propellantRatios[id] * massFlowRate / propellantSumRatioTimesDensity;
+                    //print(partName + " SetConsumptionRates for " + PartResourceLibrary.Instance.GetDefinition(id).name + " is " + rate + " flowModifier=" + flowModifier + " massFlowRate="+ massFlowRate);
+                    resourceConsumptions.Add(id, rate);
                 }
             }
         }
@@ -880,6 +885,13 @@ namespace MuMech
             foreach (int type in resourceDrains.KeysList)
                 if (!freeResources[type])
                     resources[type] -= dt * resourceDrains[type];
+        }
+
+
+        public void DebugResources()
+        {
+            foreach (KeyValuePair<int, double> type in resources)
+                print(partName + " " + PartResourceLibrary.Instance.GetDefinition(type.Key).name + " is " + type.Value);
         }
 
         public double MaxTimeStep()
@@ -991,6 +1003,7 @@ namespace MuMech
             using (var dispoSources = ListPool<FuelNode>.Instance.BorrowDisposable())
             {
                 var sources = dispoSources.value;
+                //print("AssignFuelDrainRateStagePriorityFlow for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name + " in " + vessel.Count + " parts ");
                 for (int i = 0; i < vessel.Count; i++)
                 {
                     FuelNode n = vessel[i];
@@ -1015,6 +1028,7 @@ namespace MuMech
                         }
                     }
                 }
+                //print(partName + " drains resource from " + sources.Count + " parts ");
                 for (int i = 0; i < sources.Count; i++)
                 {
                     if (!freeResources[type])
