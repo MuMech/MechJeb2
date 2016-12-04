@@ -1,5 +1,7 @@
 using System;
 using UnityEngine;
+using UnityToolbag;
+using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -28,7 +30,9 @@ namespace MuMech
 		TransferCalculator worker;
 		private PlotArea plot;
 
-		bool _draggable = true;
+        private static Texture2D texture;
+
+        bool _draggable = true;
 		public override bool draggable { get { return _draggable;}}
 
 		const int porkchop_Height = 200;
@@ -92,23 +96,51 @@ namespace MuMech
 			maxArrivalTime.val = (synodic_period + hohmann_transfer_time) * 1.5;
 		}
 
+	    private bool layoutSkipped = false;
+
 		private void DoPorkchopGui(Orbit o, double universalTime, MechJebModuleTargetController target)
 		{
-			if (worker == null || (plot == null && Event.current.type == EventType.Repaint))
-				return;
-			string dv = " - ";
+            // That mess is why you should not compute anything inside a GUI call
+            // TODO : rewrite all that...
+			if (worker == null)
+			{
+			    if (Event.current.type == EventType.Layout)
+			        layoutSkipped = true;
+			    return;
+			}
+            if (Event.current.type == EventType.Layout)
+                layoutSkipped = false;
+            if (layoutSkipped)
+                return;
+
+            string dv = " - ";
 			string departure = " - ";
 			string duration = " - ";
 			if (worker.Finished && worker.computed.GetLength(1) == porkchop_Height)
 			{
 				if (plot == null && Event.current.type == EventType.Layout)
 				{
-					plot = new PlotArea(
+
+                    int width = worker.computed.GetLength(0);
+                    int height = worker.computed.GetLength(1);
+
+                    if (texture != null && (texture.width != width || texture.height != height))
+                    {
+                        Object.Destroy(texture);
+                        texture = null;
+                    }
+
+                    if (texture == null)
+                        texture = new Texture2D(width, height, TextureFormat.RGB24, false);
+
+                    Porkchop.RefreshTexture(worker.computed, texture);
+
+                    plot = new PlotArea(
 						worker.minDepartureTime,
 						worker.maxDepartureTime,
 						worker.minTransferTime,
 						worker.maxTransferTime,
-						new Porkchop(worker.computed).texture,
+						texture,
 						(xmin, xmax, ymin, ymax) => {
 							minDepartureTime = Math.Max(xmin, universalTime);
 							maxDepartureTime = xmax;
