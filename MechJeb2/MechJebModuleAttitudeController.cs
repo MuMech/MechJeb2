@@ -518,7 +518,7 @@ namespace MuMech
                 }
                 lastAct = act;
 
-                Vector3d deltaEuler = error * MathExtensions.Rad2Deg;
+                Vector3d deltaEuler = error * UtilMath.Rad2Deg;
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 

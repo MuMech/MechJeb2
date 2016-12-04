@@ -328,7 +328,7 @@ namespace MuMech
 
 			double true_anomaly = AngleAboutAxis(eccvec, intersect_1, initial_orbit.h);
 			// GetMeanAnomalyAtTrueAnomaly expects degrees and returns radians
-			double mean_anomaly = initial_orbit.GetMeanAnomalyAtTrueAnomaly(true_anomaly * 180 / Math.PI);
+			double mean_anomaly = initial_orbit.GetMeanAnomalyAtTrueAnomaly(true_anomaly * UtilMath.Rad2Deg);
 
 			double delta_mean_anomaly = MuUtils.ClampRadiansPi(mean_anomaly - initial_orbit.MeanAnomalyAtUT(UT_0));
 
@@ -356,7 +356,7 @@ namespace MuMech
 				theta_err = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
 				if (double.IsNaN(theta_err))
 					return null;
-				if (Math.Abs(theta_err) <= Math.PI / 1800)
+				if (Math.Abs(theta_err) <= 0.1 * UtilMath.Deg2Rad)
 					return new ManeuverParameters((V_1 - V_0).xzy, UT);
 
 				V_1 = final_vel * (Math.Cos(theta + dtheta) * x + Math.Sin(theta + dtheta) * y);

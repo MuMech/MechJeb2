@@ -100,7 +100,7 @@ namespace MuMech
         [ValueInfoItem("Mean Anomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
         public double MeanAnomaly()
         {
-            return orbit.meanAnomaly * MathExtensions.Rad2Deg;
+            return orbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
@@ -284,7 +284,7 @@ namespace MuMech
         [ValueInfoItem("Angular Velocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * 180 / Math.PI, "F3") + "°/s" ;
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s" ;
         }
         
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
@@ -367,8 +367,6 @@ namespace MuMech
         {
             return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
-
-
 
         [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MaxThrust()
@@ -1226,7 +1224,7 @@ namespace MuMech
                 return vessel.landedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).name;
             if (biome != "")
                 biome = "'s " + biome;
 

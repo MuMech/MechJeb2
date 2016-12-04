@@ -490,14 +490,14 @@ namespace MuMech
             // Originally from ferram4's FAR
             Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
                            + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, surfaceVelocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-            double tmpAoA = 180.0 / Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
+            double tmpAoA = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
             AoA.value = double.IsNaN(tmpAoA) || speedSurface.value < 0.01 ? 0 : tmpAoA;
 
             // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
             // Originally from ferram4's FAR
             tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
                    + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
-            double tempAoS = 180.0 / Math.PI * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
+            double tempAoS = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
             AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
@@ -1058,7 +1058,7 @@ namespace MuMech
 
         public double HeadingFromDirection(Vector3d dir)
         {
-            return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(dir, east), Vector3d.Dot(dir, north)));
+            return MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(dir, east), Vector3d.Dot(dir, north)));
         }
 
         // Altitude of bottom of craft, only calculated when requested because it is a bit expensive
@@ -1495,7 +1495,7 @@ namespace MuMech
                         // Rotate the intake by the angular velocity for one timestep, in case the ship is spinning.
                         // Going through the Unity vector classes is about as many lines as hammering it out by hand.
                         Vector3 rot = dT * vessel.angularVelocity;
-                        intakeFwd1 = Quaternion.AngleAxis((float)(MathExtensions.Rad2Deg * rot.magnitude), rot) * intakeFwd0;
+                        intakeFwd1 = Quaternion.AngleAxis(Mathf.Rad2Deg * rot.magnitude, rot) * intakeFwd0;
                         /*Vector3d cos;
                         Vector3d sin;
                         for(int i = 0; i < 3; ++i) {

@@ -171,7 +171,7 @@ namespace MuMech
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
         public static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees)
         {
-            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * Math.PI / 180) / Math.Cos(latitudeDegrees * Math.PI / 180);
+            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * UtilMath.Deg2Rad) / Math.Cos(latitudeDegrees * UtilMath.Deg2Rad);
             if (Math.Abs(cosDesiredSurfaceAngle) > 1.0)
             {
                 //If inclination < latitude, we get this case: the desired inclination is impossible
@@ -180,7 +180,7 @@ namespace MuMech
             }
             else
             {
-                double angleFromEast = (180 / Math.PI) * Math.Acos(cosDesiredSurfaceAngle); //an angle between 0 and 180
+                double angleFromEast = (UtilMath.Rad2Deg) * Math.Acos(cosDesiredSurfaceAngle); //an angle between 0 and 180
                 if (inclinationDegrees < 0) angleFromEast *= -1;
                 //now angleFromEast is between -180 and 180
 
@@ -203,8 +203,8 @@ namespace MuMech
             CelestialBody body = vessel.mainBody;
             double latitudeDegrees = vesselState.latitude;
             double orbVel = OrbitalManeuverCalculator.CircularOrbitSpeed(body, vesselState.altitudeASL + body.Radius);
-            double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * Math.PI / 180;
-            double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * Math.PI / 180;
+            double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
+            double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
             double now = Planetarium.GetUniversalTime();
             Orbit o = vessel.orbit;
 
@@ -246,7 +246,7 @@ namespace MuMech
             if ( Vector3d.Dot(desiredHorizontalVelocity.normalized, deltaHorizontalVelocity.normalized) < 0.90 )
             {
                 // it is important that we do NOT do the fracReserveDV math here, we want to ignore the deltaHV entirely at ths point
-                return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(desiredHorizontalVelocity, east), Vector3d.Dot(desiredHorizontalVelocity, north)));
+                return MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(desiredHorizontalVelocity, east), Vector3d.Dot(desiredHorizontalVelocity, north)));
             }
 
             // when doing two-burn ascents we should really integrate the first burn up to the target altitude, and then
@@ -268,7 +268,7 @@ namespace MuMech
             // recompute the new delta
             deltaHorizontalVelocity = desiredHorizontalVelocity - actualHorizontalVelocity;
 
-            return MuUtils.ClampDegrees360(180 / Math.PI * Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
+            return MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
         }
 
         //Computes the delta-V of the burn required to change an orbit's inclination to a given value
@@ -284,8 +284,8 @@ namespace MuMech
             double latitude = o.referenceBody.GetLatitude(o.SwappedAbsolutePositionAtUT(UT));
             double desiredHeading = HeadingForInclination(newInclination, latitude);
             Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
-            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(Math.PI / 180 * desiredHeading) * o.East(UT);
-            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(Math.PI / 180 * desiredHeading) * o.North(UT);
+            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(UtilMath.Deg2Rad * desiredHeading) * o.East(UT);
+            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
             if (Vector3d.Dot(actualHorizontalVelocity, northComponent) < 0) northComponent *= -1;
             if (MuUtils.ClampDegrees180(newInclination) < 0) northComponent *= -1;
             Vector3d desiredHorizontalVelocity = eastComponent + northComponent;
@@ -326,7 +326,7 @@ namespace MuMech
         private static Vector3d DeltaVAndApsisPhaseAngleOfHohmannTransfer(Orbit o, Orbit target, double UT, out double apsisPhaseAngle)
         {
             Vector3d apsisDirection = -o.SwappedRelativePositionAtUT(UT);
-            double desiredApsis = target.RadiusAtTrueAnomaly(MathExtensions.Deg2Rad * target.TrueAnomalyFromVector(apsisDirection));
+            double desiredApsis = target.RadiusAtTrueAnomaly(UtilMath.Deg2Rad * target.TrueAnomalyFromVector(apsisDirection));
 
             Vector3d dV;
             if (desiredApsis > o.ApR)
@@ -728,10 +728,10 @@ namespace MuMech
             Debug.Log("turningAngle = " + turningAngle);
 
             //sine of the angle between the vessel orbit and the desired SOI exit velocity
-            double outOfPlaneAngle = (Math.PI / 180) * (90 - Vector3d.Angle(soiExitVelocity, o.SwappedOrbitNormal()));
+            double outOfPlaneAngle = (UtilMath.Deg2Rad) * (90 - Vector3d.Angle(soiExitVelocity, o.SwappedOrbitNormal()));
             Debug.Log("outOfPlaneAngle (rad) = " + outOfPlaneAngle);
 
-            double coneAngle = Math.PI / 2 - (Math.PI / 180) * turningAngle;
+            double coneAngle = Math.PI / 2 - (UtilMath.Deg2Rad) * turningAngle;
             Debug.Log("coneAngle (rad) = " + coneAngle);
 
             Vector3d exitNormal = Vector3d.Cross(-soiExitVelocity, o.SwappedOrbitNormal()).normalized;
@@ -811,11 +811,11 @@ namespace MuMech
         {
             // Using Great-Circle Distance 2nd computational formula from http://en.wikipedia.org/wiki/Great-circle_distance
             // Note the switch from degrees to radians and back
-            double lat_a_rad = Math.PI / 180 * lat_a;
-            double lat_b_rad = Math.PI / 180 * lat_b;
-            double long_diff_rad = Math.PI / 180 * (long_b - long_a);
+            double lat_a_rad = UtilMath.Deg2Rad * lat_a;
+            double lat_b_rad = UtilMath.Deg2Rad * lat_b;
+            double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
-            return 180 / Math.PI * Math.Atan2(Math.Sqrt(Math.Pow(Math.Cos(lat_b_rad) * Math.Sin(long_diff_rad), 2) +
+            return UtilMath.Rad2Deg * Math.Atan2(Math.Sqrt(Math.Pow(Math.Cos(lat_b_rad) * Math.Sin(long_diff_rad), 2) +
                 Math.Pow(Math.Cos(lat_a_rad) * Math.Sin(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad), 2)),
                 Math.Sin(lat_a_rad) * Math.Sin(lat_b_rad) + Math.Cos(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad));
         }
@@ -826,9 +826,9 @@ namespace MuMech
             // Using Great-Circle Navigation formula for initial heading from http://en.wikipedia.org/wiki/Great-circle_navigation
             // Note the switch from degrees to radians and back
             // Original equation returns 0 for due south, increasing clockwise. We add 180 and clamp to 0-360 degrees to map to compass-type headings
-            double lat_a_rad = Math.PI / 180 * lat_a;
-            double lat_b_rad = Math.PI / 180 * lat_b;
-            double long_diff_rad = Math.PI / 180 * (long_b - long_a);
+            double lat_a_rad = UtilMath.Deg2Rad * lat_a;
+            double lat_b_rad = UtilMath.Deg2Rad * lat_b;
+            double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
             return MuUtils.ClampDegrees360(180.0 / Math.PI * Math.Atan2(
                 Math.Sin(long_diff_rad),
@@ -880,8 +880,8 @@ namespace MuMech
             }
             double desiredHeading = MuUtils.ClampDegrees360(Heading(burn_latitude, burn_longitude, target_latitude, target_longitude));
             Vector3d actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
-            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(Math.PI / 180 * desiredHeading) * o.East(UT);
-            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(Math.PI / 180 * desiredHeading) * o.North(UT);
+            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(UtilMath.Deg2Rad * desiredHeading) * o.East(UT);
+            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
             Vector3d desiredHorizontalVelocity = eastComponent + northComponent;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
