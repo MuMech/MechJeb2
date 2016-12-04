@@ -6,7 +6,6 @@ namespace MuMech
     public class DisplayModule : ComputerModule
     {
         public bool hidden = false;
-        public bool locked = false;
 
         public Rect windowPos
         {
@@ -47,8 +46,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-
-
+        
         [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
 
@@ -57,6 +55,9 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool isOverlay = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool locked = false;
 
         internal bool enabledEditor;
         internal bool enabledFlight;
