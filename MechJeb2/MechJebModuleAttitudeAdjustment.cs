@@ -183,12 +183,7 @@ namespace MuMech
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI MJ", GUILayout.ExpandWidth(true));
-                    GUILayout.Label("|" + vesselState.calcMoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.calcMoI), GUILayout.ExpandWidth(false));
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("MOI Stock", GUILayout.ExpandWidth(true));
+                    GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
                     GUILayout.Label("|" + vessel.MOI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.MOI), GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
                     
@@ -208,17 +203,12 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                 }
             }
-
-            MechJebModuleAttitudeController.useCoMVelocity = GUILayout.Toggle(MechJebModuleAttitudeController.useCoMVelocity, "Use CoM velocity instead of stock");
-            vesselState.useStockRCSTorque = GUILayout.Toggle(vesselState.useStockRCSTorque, "Use stock RCS Torque");
-
+            
             MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
-
 
             GuiUtils.SimpleTextBox("Arrows length", arrows.arrowsLength, "", 50);
 
             arrows.seeThrough = GUILayout.Toggle(arrows.seeThrough, "Visible through object");
-            
 
             arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, "Display the CoM", GUILayout.ExpandWidth(false));
             arrows.colSphereActive = GUILayout.Toggle(arrows.colSphereActive, "Display the CoL", GUILayout.ExpandWidth(false));
@@ -228,10 +218,8 @@ namespace MuMech
             arrows.comSphereRadius.text = GUILayout.TextField(arrows.comSphereRadius.text, GUILayout.Width(40));
             GUILayout.EndHorizontal();
             arrows.displayAtCoM = GUILayout.Toggle(arrows.displayAtCoM, "Arrows origins at the CoM");
-            arrows.podSrfVelocityArrowActive = GUILayout.Toggle(arrows.podSrfVelocityArrowActive, "Pod Surface Velocity (yellow)");
-            arrows.comSrfVelocityArrowActive = GUILayout.Toggle(arrows.comSrfVelocityArrowActive, "CoM Surface Velocity (green)");
-            arrows.podObtVelocityArrowActive = GUILayout.Toggle(arrows.podObtVelocityArrowActive, "Pod Orbital Velocity (red)");
-            arrows.comObtVelocityArrowActive = GUILayout.Toggle(arrows.comObtVelocityArrowActive, "CoM Orbital Velocity (orange)");
+            arrows.srfVelocityArrowActive = GUILayout.Toggle(arrows.srfVelocityArrowActive, "Pod Surface Velocity (green)");
+            arrows.obtVelocityArrowActive = GUILayout.Toggle(arrows.obtVelocityArrowActive, "Pod Orbital Velocity (red)");
             arrows.dotArrowActive = GUILayout.Toggle(arrows.dotArrowActive, "Direction of Thrust (purple pink)");
             arrows.forwardArrowActive = GUILayout.Toggle(arrows.forwardArrowActive, "Command Pod Forward (electric blue)");
             //arrows.avgForwardArrowActive = GUILayout.Toggle(arrows.avgForwardArrowActive, "Forward Avg (blue)");

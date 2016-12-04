@@ -35,20 +35,12 @@ namespace MuMech
         public EditableDouble comSphereRadius = new EditableDouble(0.09);
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool podSrfVelocityArrowActive;
-        public static DebugArrow podSrfVelocityArrow;
-
-        [Persistent(pass = (int)Pass.Global)]
-        public bool comSrfVelocityArrowActive;
-        public static DebugArrow comSrfVelocityArrow;
+        public bool srfVelocityArrowActive;
+        public static DebugArrow srfVelocityArrow;
         
         [Persistent(pass = (int)Pass.Global)]
-        public bool podObtVelocityArrowActive;
-        public static DebugArrow podObtVelocityArrow;
-
-        [Persistent(pass = (int)Pass.Global)]
-        public bool comObtVelocityArrowActive;
-        public static DebugArrow comObtVelocityArrow;
+        public bool obtVelocityArrowActive;
+        public static DebugArrow obtVelocityArrow;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool dotArrowActive;
@@ -101,15 +93,11 @@ namespace MuMech
             cotSphere.Destroy();
             cotSphere = null;
 
-            podSrfVelocityArrow.Destroy();
-            podSrfVelocityArrow = null;
-            comSrfVelocityArrow.Destroy();
-            comSrfVelocityArrow = null;
+            srfVelocityArrow.Destroy();
+            srfVelocityArrow = null;
 
-            podObtVelocityArrow.Destroy();
-            podObtVelocityArrow = null;
-            comObtVelocityArrow.Destroy();
-            comObtVelocityArrow = null;
+            obtVelocityArrow.Destroy();
+            obtVelocityArrow = null;
 
             dotArrow.Destroy();
             dotArrow = null;
@@ -142,11 +130,8 @@ namespace MuMech
                 colSphere = new DebugIcoSphere(XKCDColors.Teal, true);
                 cotSphere = new DebugIcoSphere(XKCDColors.PurplePink, true);
 
-                podSrfVelocityArrow = new DebugArrow(Color.yellow);
-                comSrfVelocityArrow = new DebugArrow(Color.green);
-
-                podObtVelocityArrow = new DebugArrow(Color.red);
-                comObtVelocityArrow = new DebugArrow(XKCDColors.Orange);
+                srfVelocityArrow = new DebugArrow(Color.green);
+                obtVelocityArrow = new DebugArrow(Color.red);
 
                 dotArrow        = new DebugArrow(XKCDColors.PurplePink);
 
@@ -188,36 +173,20 @@ namespace MuMech
                 cotSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            podSrfVelocityArrow.State(podSrfVelocityArrowActive);
-            if (podSrfVelocityArrowActive)
+            srfVelocityArrow.State(srfVelocityArrowActive);
+            if (srfVelocityArrowActive)
             {
-                podSrfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
-                podSrfVelocityArrow.SetLength((float)arrowsLength.val);
-                podSrfVelocityArrow.SeeThrough(seeThrough);
+                srfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
+                srfVelocityArrow.SetLength((float)arrowsLength.val);
+                srfVelocityArrow.SeeThrough(seeThrough);
             }
 
-            comSrfVelocityArrow.State(comSrfVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
-            if (comSrfVelocityArrowActive)
+            obtVelocityArrow.State(obtVelocityArrowActive);
+            if (obtVelocityArrowActive)
             {
-                comSrfVelocityArrow.Set(arrowPos, vesselState.surfaceVelocity);
-                comSrfVelocityArrow.SetLength((float)arrowsLength.val);
-                comSrfVelocityArrow.SeeThrough(seeThrough);
-            }
-
-            podObtVelocityArrow.State(podObtVelocityArrowActive);
-            if (podObtVelocityArrowActive)
-            {
-                podObtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
-                podObtVelocityArrow.SetLength((float)arrowsLength.val);
-                podObtVelocityArrow.SeeThrough(seeThrough);
-            }
-
-            comObtVelocityArrow.State(comObtVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
-            if (comObtVelocityArrowActive)
-            {
-                comObtVelocityArrow.Set(arrowPos, vesselState.orbitalVelocity);
-                comObtVelocityArrow.SetLength((float)arrowsLength.val);
-                comObtVelocityArrow.SeeThrough(seeThrough);
+                obtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
+                obtVelocityArrow.SetLength((float)arrowsLength.val);
+                obtVelocityArrow.SeeThrough(seeThrough);
             }
             
             dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0);
