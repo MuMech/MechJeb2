@@ -27,11 +27,8 @@ namespace MuMech
         public double deltaT;          //TimeWarp.fixedDeltaTime
 
         public Vector3d CoM;
-        //Matrix3x3f inertiaTensor = new Matrix3x3f();
         public Vector3d MoI; //Diagonal components of the inertia tensor (almost always the dominant components)
-        public Vector3d calcMoI; //Internal calculation of MOI vs. stock
         
-        public bool useStockRCSTorque = false;
         public Vector3d up;
         public Vector3d north;
         public Vector3d east;
@@ -196,7 +193,6 @@ namespace MuMech
         public double angleToPrograde;
 
         public Vector6 rcsThrustAvailable = new Vector6(); // thrust available from RCS thrusters
-        public Vector6 rcsTorqueAvailable = new Vector6(); // torque available from RCS thrusters 
 
         // Total torque
         public Vector3d torqueAvailable;
@@ -571,10 +567,10 @@ namespace MuMech
         void UpdateRCSThrustAndTorque(Vessel vessel)
         {
             rcsThrustAvailable.Reset();
-            rcsTorqueAvailable.Reset();
             torqueRcs.Reset();
 
-            if (!vessel.ActionGroups[KSPActionGroup.RCS]) return;
+            if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                return;
 
             var rcsbal = vessel.GetMasterMechJeb().rcsbal;
             if (rcsbal.enabled)
@@ -583,7 +579,7 @@ namespace MuMech
                 for (int i = 0; i < Vector6.Values.Length; i++)
                 {
                     Vector6.Direction dir6 = Vector6.Values[i];
-                    Vector3d dir = Vector6.directions[(int)dir6];
+                    Vector3d dir = Vector6.directions[(int) dir6];
                     double[] throttles;
                     List<RCSSolver.Thruster> thrusters;
                     rcsbal.GetThrottles(dir, out throttles, out thrusters);
@@ -614,7 +610,7 @@ namespace MuMech
 
                     if (rcs == null)
                         continue;
-                    
+
                     Vector3 pos;
                     Vector3 neg;
                     rcs.GetPotentialTorque(out pos, out neg);
@@ -622,20 +618,19 @@ namespace MuMech
                     torqueRcs.Add(pos);
                     torqueRcs.Add(neg);
 
+                    if (rcsbal.enabled)
+                        continue;
 
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
-                        Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
                         Vector3 translationControl = new Vector3(rcs.enableX ? 1 : 0f, rcs.enableZ ? 1 : 0, rcs.enableY ? 1 : 0);
-                        // rcsTorqueAvailable:
                         for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                         {
                             Transform t = rcs.thrusterTransforms[j];
-                            Vector3d thrusterPosition = t.position - movingCoM;
                             Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
-                            
+
                             float power = rcs.thrusterPower;
-                            
+
                             if (FlightInputHandler.fetch.precisionMode)
                             {
                                 if (rcs.useLever)
@@ -653,15 +648,7 @@ namespace MuMech
                             }
 
                             Vector3d thrusterThrust = thrustDirection * power;
-                            // This is a cheap hack to get rcsTorque with the RCS balancer active.
-                            if (!rcsbal.enabled)
-                            {
-                                rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
-                            }
-                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
-
-                            // Convert in vessel local coordinate
-                            rcsTorqueAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
+                            rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
                         }
                     }
                 }
@@ -709,9 +696,6 @@ namespace MuMech
 
             torqueAvailable = Vector3d.zero;
 
-            //ctrlTorqueAvailablePos = new Vector3();
-            //ctrlTorqueAvailableNeg = new Vector3();
-
             Vector6 torqueReactionSpeed6 = new Vector6();
 
             torqueReactionWheel.Reset();
@@ -744,7 +728,7 @@ namespace MuMech
                     Vector3 bodyLift = p.transform.rotation * (p.bodyLiftScalar * p.DragCubes.LiftForce);
                     partPureLift = Vector3.ProjectOnPlane(bodyLift, -p.dragVectorDir);
                     
-                    double liftScale = bodyLift.magnitude;
+                    //double liftScale = bodyLift.magnitude;
                 }
 
                 //#warning while this works for real time it does not help for simulations. Need to get a coef even while in vacum
@@ -824,7 +808,7 @@ namespace MuMech
 
                         torqueControlSurface.Add(ctrlTorquePos);
                         torqueControlSurface.Add(ctrlTorqueNeg);
-
+                        
                         torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * Vector3d.Max(ctrlTorquePos.Abs(), ctrlTorqueNeg.Abs()));
                     }
                     else if (pm is ModuleGimbal)
@@ -906,8 +890,7 @@ namespace MuMech
             
             torqueAvailable += Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
             
-            torqueAvailable += Vector3d.Max(torqueRcs.positive, torqueRcs.negative); // The stock RCS value is wrong in 1.1.3 (x2)
-            //torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            torqueAvailable += Vector3d.Max(torqueRcs.positive, torqueRcs.negative); 
 
             torqueAvailable += Vector3d.Max(torqueControlSurface.positive, torqueControlSurface.negative);
             
@@ -965,7 +948,7 @@ namespace MuMech
         public void TorqueCompare()
         {
             var reactionTorque = Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
-            var rcsTorque = Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            var rcsTorque = Vector3d.Max(torqueRcs.positive, torqueRcs.negative);
             var controlTorque = Vector3d.Max(torqueControlSurface.positive, torqueControlSurface.negative);
             var gimbalTorque = Vector3d.Max(torqueGimbal.positive, torqueGimbal.negative);
             var diffTorque = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);
@@ -974,7 +957,7 @@ namespace MuMech
 
             GUILayout.Label("Torque sources", GuiUtils.LabelNoWrap);
             GUILayout.BeginHorizontal();
-            // col 1 MJs
+            
             GUILayout.BeginVertical();
             GUILayout.Label("ReactionWheel", GuiUtils.LabelNoWrap);
             GUILayout.Label("RCS", GuiUtils.LabelNoWrap);
@@ -983,8 +966,7 @@ namespace MuMech
             GUILayout.Label("Diff Throttle", GuiUtils.LabelNoWrap);
             GUILayout.Label("Others (FAR)", GuiUtils.LabelNoWrap);
             GUILayout.EndVertical();
-
-            // col 2 Stocks
+            
             GUILayout.BeginVertical();
             GUILayout.Label(MuUtils.PrettyPrint(reactionTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
             GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
@@ -996,7 +978,6 @@ namespace MuMech
             
             GUILayout.EndHorizontal();
         }
-
 
         void UpdateResourceRequirements(EngineInfo einfo, IntakeInfo iinfo)
         {
@@ -1043,47 +1024,10 @@ namespace MuMech
                 rcsThrust = false;
             }
         }
-
-        private static readonly Vector3[] unitVectors = { new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1) };
-
-        // KSP's calculation of the vessel's moment of inertia is broken.
-        // This function is somewhat expensive :(
-        // Maybe it can be optimized more.
+        
         void UpdateMoIAndAngularMom(Vessel vessel)
         {
-            // stock code + fix
-            Matrix4x4 tensor = Matrix4x4.zero;
-            Matrix4x4 partTensor = Matrix4x4.identity;
-            Matrix4x4 inertiaMatrix = Matrix4x4.identity;
-            Matrix4x4 productMatrix = Matrix4x4.identity;
-
-            //invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation * Quaternion.Euler(-90, 0, 0)); // stock
-            QuaternionD invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation); // fix the stock bug
-            for (int i = 0; i < vessel.parts.Count; ++i)
-            {
-                Part part = vessel.parts[i];
-                if (part.rb != null)
-                {
-                    KSPUtil.ToDiagonalMatrix2(part.rb.inertiaTensor, ref partTensor);
-
-                    Quaternion rot = (Quaternion)invQuat * part.transform.rotation * part.rb.inertiaTensorRotation;
-                    Quaternion inv = Quaternion.Inverse(rot);
-
-                    Matrix4x4 rotMatrix = Matrix4x4.TRS(Vector3.zero, rot, Vector3.one);
-                    Matrix4x4 invMatrix = Matrix4x4.TRS(Vector3.zero, inv, Vector3.one);
-                    
-                    KSPUtil.Add(ref tensor, rotMatrix * partTensor * invMatrix);
-                    Vector3 position = vessel.vesselTransform.InverseTransformDirection(part.rb.position - vessel.CoMD);
-
-                    KSPUtil.ToDiagonalMatrix2(part.rb.mass * position.sqrMagnitude, ref inertiaMatrix);
-                    KSPUtil.Add(ref tensor, inertiaMatrix);
-
-                    KSPUtil.OuterProduct2(position, -part.rb.mass * position, ref productMatrix);
-                    KSPUtil.Add(ref tensor, productMatrix);
-                }
-            }
-            //MoI = vessel.MOI = KSPUtil.Diag(tensor);
-            MoI = KSPUtil.Diag(tensor);
+            MoI = vessel.MOI;
             angularMomentum = Vector3d.zero;
             angularMomentum.x = (float)(MoI.x * vessel.angularVelocity.x);
             angularMomentum.y = (float)(MoI.y * vessel.angularVelocity.y);
@@ -1257,15 +1201,13 @@ namespace MuMech
 
                 for (int i = 0; i < e.propellants.Count; i++)
                 {
-                    var propellant = e.propellants[i];
+                    Propellant propellant = e.propellants[i];
                     double maxreq = e.maxFuelFlow * propellant.ratio;
                     addResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
 
                 if (e.isOperational)
                 {
-                    Part p = e.part;
-
                     float thrustLimiter = e.thrustPercentage / 100f;
 
                     double maxThrust = e.maxFuelFlow * e.flowMultiplier * Isp * e.g;
