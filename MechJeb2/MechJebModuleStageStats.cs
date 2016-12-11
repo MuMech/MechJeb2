@@ -56,15 +56,27 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 GameEvents.onEditorShipModified.Add(onEditorShipModified);
+                GameEvents.onPartCrossfeedStateChange.Add(onPartCrossfeedStateChange);
             }
         }
 
         public override void OnDestroy()
         {
             GameEvents.onEditorShipModified.Remove(onEditorShipModified);
+            GameEvents.onPartCrossfeedStateChange.Remove(onPartCrossfeedStateChange);
+        }
+
+        private void onPartCrossfeedStateChange(Part data)
+        {
+            setDirty();
         }
 
         void onEditorShipModified(ShipConstruct data)
+        {
+            setDirty();
+        }
+
+        void setDirty()
         {
             // The ship is not really ready in the first frame following the event so we wait 2
             dirty = 2;
