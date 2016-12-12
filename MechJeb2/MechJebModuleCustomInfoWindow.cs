@@ -25,12 +25,17 @@ namespace MuMech
 
         public Texture2D background;
 
-        ~MechJebModuleCustomInfoWindow()
+        private GUISkin localSkin;
+
+        public override void OnDestroy()
         {
             if (background)
+            {
                 Object.Destroy(background);
+            }
+            base.OnDestroy();
         }
-        
+
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
@@ -86,9 +91,7 @@ namespace MuMech
             Init();
             if (isOverlay)
             {
-                GUI.skin = GuiUtils.transparentSkin;
-                GUI.skin.window.normal.background = background;
-                GUI.skin.window.onNormal.background = background;
+                GUI.skin = localSkin;
             }
 
             base.DrawGUI(inEditor);
@@ -103,6 +106,13 @@ namespace MuMech
                 background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
                 background.SetPixel(0, 0, backgroundColor);
                 background.Apply();
+            }
+
+            if (isOverlay && !localSkin)
+            {
+                localSkin = Object.Instantiate(GuiUtils.transparentSkin);
+                localSkin.window.normal.background = background;
+                localSkin.window.onNormal.background = background;
             }
         }
 

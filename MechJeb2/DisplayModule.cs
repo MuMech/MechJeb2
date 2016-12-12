@@ -6,7 +6,6 @@ namespace MuMech
     public class DisplayModule : ComputerModule
     {
         public bool hidden = false;
-        public bool locked = false;
 
         public Rect windowPos
         {
@@ -47,8 +46,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-
-
+        
         [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
 
@@ -58,8 +56,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool isOverlay = false;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool locked = false;
+
         internal bool enabledEditor;
         internal bool enabledFlight;
+
+        private GUILayoutOption[] windowOptions;
 
         public bool showInCurrentScene { get { return (HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight); } }
 
@@ -119,7 +122,11 @@ namespace MuMech
         {
             if (showInCurrentScene)
             {
-                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), WindowOptions());
+                // Cache the array to not create one each frame
+                if (windowOptions == null)
+                    windowOptions = WindowOptions();
+
+                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), windowOptions);
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
                 //                

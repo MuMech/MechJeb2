@@ -38,15 +38,49 @@ namespace MuMech
 
         public CelestialBody editorBody;
         public bool liveSLT = true;
-
+        public double altSLT = 0;
+        public double mach = 0;
 
         protected bool updateRequested = false;
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
+        private int dirty = 1;
+
         private FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
 
         long millisecondsBetweenSimulations;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GameEvents.onEditorShipModified.Add(onEditorShipModified);
+                GameEvents.onPartCrossfeedStateChange.Add(onPartCrossfeedStateChange);
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onEditorShipModified.Remove(onEditorShipModified);
+            GameEvents.onPartCrossfeedStateChange.Remove(onPartCrossfeedStateChange);
+        }
+
+        private void onPartCrossfeedStateChange(Part data)
+        {
+            setDirty();
+        }
+
+        void onEditorShipModified(ShipConstruct data)
+        {
+            setDirty();
+        }
+
+        void setDirty()
+        {
+            // The ship is not really ready in the first frame following the event so we wait 2
+            dirty = 2;
+        }
 
         public override void OnModuleEnabled()
         {
@@ -98,10 +132,23 @@ namespace MuMech
             {
                 simulationRunning = true;
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
-
+                
                 //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
                 List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
-                
+
+                if (HighLogic.LoadedSceneIsEditor)
+                {
+                    if (dirty > 0)
+                    {
+                        PartSet.BuildPartSets(parts, null);
+                        dirty--;
+                    }
+                }
+                else
+                {
+                    vessel.UpdateResourceSetsIfDirty();
+                }
+
                 sims[0].Init(parts, dVLinearThrust);
                 sims[1].Init(parts, dVLinearThrust);
 
@@ -130,9 +177,9 @@ namespace MuMech
             {
                 CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
 
-                double staticPressureKpa = (HighLogic.LoadedSceneIsEditor || !liveSLT ? (simBody.atmosphere ? simBody.GetPressure(0) : 0) : vessel.staticPressurekPa);
-                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT ? simBody.GetDensity(simBody.GetPressure(0), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
-                double mach = HighLogic.LoadedSceneIsEditor ? 1 : vessel.mach;
+                double staticPressureKpa = (HighLogic.LoadedSceneIsEditor || !liveSLT ? (simBody.atmosphere ? simBody.GetPressure(altSLT) : 0) : vessel.staticPressurekPa);
+                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
+                double mach = HighLogic.LoadedSceneIsEditor ? this.mach : vessel.mach;
 
                 //Run the simulation
                 FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
@@ -142,7 +189,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e.StackTrace);
+                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e);
             }
 
             //see how long the simulation took

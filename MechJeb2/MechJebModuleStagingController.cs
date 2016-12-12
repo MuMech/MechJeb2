@@ -164,13 +164,12 @@ namespace MuMech
             {
                 return true; // TODO: properly check if ModuleEngines is active
             }
-            if ((p is FuelTank) && (((FuelTank)p).fuel > 0)) return true;
             if (!p.IsSepratron())
             {
                 for (int i = 0; i < p.Resources.Count; i++)
                 {
                     PartResource r = p.Resources[i];
-                    if (r.amount > 0 && r.info.name != "ElectricCharge" && tankResources.Contains(r.info.id))
+                    if (r.amount > 0 && r.info.id != PartResourceLibrary.ElectricityHashcode && tankResources.Contains(r.info.id))
                     {
                         return true;
                     }
@@ -218,7 +217,7 @@ namespace MuMech
         //detect if a part is above a deactivated engine or fuel tank
         public static bool HasDeactivatedEngineOrTankDescendant(Part p)
         {
-            if ((p.State == PartStates.DEACTIVATED) && (p is FuelTank || p.IsEngine()) && !p.IsSepratron())
+            if ((p.State == PartStates.DEACTIVATED) && (p.IsEngine()) && !p.IsSepratron())
             {
                 return true; // TODO: yet more ModuleEngine lazy checks
             }
@@ -229,7 +228,7 @@ namespace MuMech
             for (int i = 0; i < p.Resources.Count; i++)
             {
                 PartResource r = p.Resources[i];
-                if (r.name == "ElectricCharge") continue;
+                if (r.info.id == PartResourceLibrary.ElectricityHashcode) continue;
                 if (r.maxAmount > 0) hadResources = true;
                 if (r.amount > 0) hasResources = true;
             }

@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using KSP.IO;
 using System.Diagnostics;
+using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
 
@@ -126,7 +127,7 @@ namespace MuMech
             EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
         }
 
-        [KSPAction("Deactivate SmartASS")]
+        [KSPAction("Deactivate SmartACS")]
         public void OnDeactivateSmartASSAction(KSPActionParam param)
         {
             EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
@@ -510,6 +511,8 @@ namespace MuMech
 
         public override void OnAwake()
         {
+            Dispatcher.CreateDispatcher();
+
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
                 try
@@ -693,7 +696,8 @@ namespace MuMech
             else
                 version = dev_version;
 
-            print("Loading Mechjeb " + version);
+            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
+                print("Loading Mechjeb " + version);
 
             try
             {
@@ -910,9 +914,9 @@ namespace MuMech
 
                 // The EDITOR => FLIGHT transition is annoying to handle. OnDestroy is called when HighLogic.LoadedSceneIsEditor is already false
                 // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
-                if (vessel != null)
+                if (vessel != null || (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null))
                 {
-                    string vesselName = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
+                    string vesselName = (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                     vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
                     type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
                 }

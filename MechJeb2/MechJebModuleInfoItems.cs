@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UniLinq;
 using KSP.UI.Screens;
 using Smooth.Pools;
-using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
@@ -96,6 +95,12 @@ namespace MuMech
         public string OrbitSummaryWithInclination(Orbit o)
         {
             return OrbitSummary(o) + ", inc. " + o.inclination.ToString("F1") + "º";
+        }
+
+        [ValueInfoItem("Mean Anomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
+        public double MeanAnomaly()
+        {
+            return orbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
@@ -279,7 +284,7 @@ namespace MuMech
         [ValueInfoItem("Angular Velocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * 180 / Math.PI, "F3") + "°/s" ;
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s" ;
         }
         
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
@@ -312,6 +317,12 @@ namespace MuMech
         public double EscapeVelocity()
         {
             return Math.Sqrt(2 * mainBody.gravParameter / vesselState.radius);
+        }
+
+        [ValueInfoItem("Vessel name", InfoItem.Category.Vessel, showInEditor = false)]
+        public string VesselName()
+        {
+            return vessel.vesselName;
         }
 
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
@@ -354,10 +365,8 @@ namespace MuMech
         [ValueInfoItem("Total electric charge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, siMaxPrecision = 1, units = "Ah")]
         public double TotalElectricCharge()
         {
-            return vessel.TotalResourceAmount("ElectricCharge");
+            return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
-
-
 
         [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MaxThrust()
@@ -466,11 +475,17 @@ namespace MuMech
         {
             return string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
         }
-
+        
         [ValueInfoItem("Strut count", InfoItem.Category.Vessel, showInEditor = true)]
         public int StrutCount()
         {
-            return parts.Count(p => p is StrutConnector);
+            return parts.Count(p => p is CompoundPart && p.Modules.GetModule<CompoundParts.CModuleStrut>());
+        }
+
+        [ValueInfoItem("Fuel Lines count", InfoItem.Category.Vessel, showInEditor = true)]
+        public int FuelLinesCount()
+        {
+            return parts.Count(p => p is CompoundPart && p.Modules.GetModule<CompoundParts.CModuleFuelLine>());
         }
 
         [ValueInfoItem("Vessel cost", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "$")]
@@ -788,6 +803,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool liveSLT = true;
         [Persistent(pass = (int)Pass.Global)]
+        public float altSLTScale = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public float machScale = 0;
+        [Persistent(pass = (int)Pass.Global)]
         public int TWRBody = 1;
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
@@ -824,24 +843,6 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
 
-            double geeASL;
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                if (bodies == null)
-                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
-
-                // We're in the VAB/SPH
-                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this);
-                stats.editorBody = FlightGlobals.Bodies[TWRBody];
-                geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
-            }
-            else
-            {
-                // We're in flight
-                stats.editorBody = mainBody;
-                geeASL = mainBody.GeeASL;
-            }
-
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
@@ -855,8 +856,44 @@ namespace MuMech
                 }
                 stats.liveSLT = liveSLT;
             }
-
             GUILayout.EndHorizontal();
+
+            double geeASL;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GUILayout.BeginHorizontal();
+                if (bodies == null)
+                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
+
+                // We're in the VAB/SPH
+                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this, false);
+                stats.editorBody = FlightGlobals.Bodies[TWRBody];
+                geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
+
+                GUILayout.BeginVertical();
+
+                GUILayout.BeginHorizontal();
+                altSLTScale = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GUILayout.ExpandWidth(true));
+                stats.altSLT = Math.Pow(altSLTScale, 2) * stats.editorBody.atmosphereDepth;
+                GUILayout.Label(MuUtils.ToSI(stats.altSLT, 2) + "m", GUILayout.Width(80));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                machScale = GUILayout.HorizontalSlider(machScale, 0, 1, GUILayout.ExpandWidth(true));
+                stats.mach = Math.Pow(machScale * 2, 3);
+                GUILayout.Label(stats.mach.ToString("F1") + " M", GUILayout.Width(80));
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndVertical();
+
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                // We're in flight
+                stats.editorBody = mainBody;
+                geeASL = mainBody.GeeASL;
+            }
 
             switch (StageDisplayState)
             {
@@ -901,7 +938,7 @@ namespace MuMech
             if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
             if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));
 
             if (!noChange)
                 StageDisplayState = 3;
@@ -1070,14 +1107,14 @@ namespace MuMech
         [GeneralInfoItem("Docking guidance: Angular velocity", InfoItem.Category.Target)]
         public void DockingGuidanceAngularVelocity()
         {
-            if (!(core.target.Target is Vessel)  || core.target.vessel.rootPart == null || core.target.vessel.rootPart.rb == null)
+            if (!(core.target.Target is Vessel))
             {
                 GUILayout.Label("Target-relative Angular velocity: (N/A)");
                 return;
             }
 
             Vessel target = (Vessel)core.target.Target;
-            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.rootPart.rb.angularVelocity - vessel.rootPart.rb.angularVelocity) * Mathf.Rad2Deg;
+            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) * Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative angular velocity:");
@@ -1187,7 +1224,7 @@ namespace MuMech
                 return vessel.landedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).name;
             if (biome != "")
                 biome = "'s " + biome;
 

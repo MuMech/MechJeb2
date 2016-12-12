@@ -9,21 +9,85 @@ namespace MuMech
         public MechJebModuleWarpController(MechJebCore core)
             : base(core)
         {
+            WarpPaused = false;
             priority = 100;
+            enabled = true;
         }
 
         double warpIncreaseAttemptTime = 0;
 
+        private int lastAskedIndex = 0;
+
+        public bool WarpPaused { get; private set; }
+
+        [Persistent(pass = (int)Pass.Global)]
+        public bool activateSASOnWarp = true;
+
+        [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
+        public void ControlWarpButton()
+        {
+            if (WarpPaused && GUILayout.Button("Resume MJ Warp"))
+            {
+                ResumeWarp();
+            }
+            if (!WarpPaused && GUILayout.Button("Pause MJ Warp"))
+            {
+                PauseWarp();
+            }
+        }
+
+        public override void OnUpdate()
+        {
+            if (!WarpPaused && lastAskedIndex > 0 && lastAskedIndex != TimeWarp.CurrentRateIndex)
+            {
+                // Rate limited by the altitude so we should not care
+                if (!vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody))
+                    return;
+
+                print("Warppause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex + " WarpMode=" + TimeWarp.WarpMode + " MaxCurrentRate=" + TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody));
+                WarpPaused = false;
+                //PauseWarp();
+
+                //ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
+            }
+        }
+
+        private void PauseWarp()
+        {
+            WarpPaused = true;
+
+            if (activateSASOnWarp && TimeWarp.CurrentRateIndex == 0)
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+        }
+
+        private void ResumeWarp()
+        {
+            if (!WarpPaused)
+                return;
+
+            WarpPaused = false;
+            SetTimeWarpRate(lastAskedIndex, false);
+        }
 
         // Turn SAS on during regular warp for compatibility with PersistentRotation 
-        void SetTimeWarpRate(int rateIndex, bool instant)
+        private void SetTimeWarpRate(int rateIndex, bool instant)
         {
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
-                if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
+                if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                TimeWarp.SetRate(rateIndex, instant);
-                if (rateIndex == 0)
+
+                lastAskedIndex = rateIndex;
+                if (WarpPaused)
+                {
+                    ScreenMessages.PostScreenMessage("MJ : Warp paused - resume in the Warp Helper menu");
+                }
+                else
+                {
+                    TimeWarp.SetRate(rateIndex, instant);
+                }
+
+                if (activateSASOnWarp && rateIndex == 0)
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
             }
         }
@@ -105,7 +169,7 @@ namespace MuMech
             return true;
         }
 
-        public bool IncreaseRegularWarp(bool instant = false)
+        private bool IncreaseRegularWarp(bool instant = false)
         {
             if (!CheckRegularWarp()) return false; //make sure we are in regular warp
 
@@ -125,7 +189,7 @@ namespace MuMech
             return true;
         }
 
-        public bool IncreasePhysicsWarp(bool instant = false)
+        private bool IncreasePhysicsWarp(bool instant = false)
         {
             if (!CheckPhysicsWarp()) return false; //make sure we are in regular warp
 
@@ -139,7 +203,7 @@ namespace MuMech
             return true;
         }
 
-        public bool DecreaseRegularWarp(bool instant = false)
+        private bool DecreaseRegularWarp(bool instant = false)
         {
             if (!CheckRegularWarp()) return false;
 
@@ -149,7 +213,7 @@ namespace MuMech
             return true;
         }
 
-        public bool DecreasePhysicsWarp(bool instant = false)
+        private bool DecreasePhysicsWarp(bool instant = false)
         {
             if (!CheckPhysicsWarp()) return false;
 

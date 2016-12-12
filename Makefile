@@ -14,11 +14,12 @@ else
 		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 	endif
 	ifeq ($(UNAME_S),Darwin)
+		GMCS ?= mcs
 		ifndef KSPDIR
 			KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
 		endif
 		ifndef MANAGED
-			MANAGED := ${KSPDIR}/KSP.app/Contents/Data/Managed/
+		MANAGED := ${KSPDIR}/KSP.app/Contents/Resources/Data/Managed/
 		endif
 	endif
 endif
@@ -51,7 +52,7 @@ build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
 	${GMCS} -t:library -lib:"${MANAGED}" \
-		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI,KSPUtil \
+		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI \
 		-out:$@ \
 		${MECHJEBFILES} \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources

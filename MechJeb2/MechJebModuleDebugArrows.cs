@@ -35,28 +35,16 @@ namespace MuMech
         public EditableDouble comSphereRadius = new EditableDouble(0.09);
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool podSrfVelocityArrowActive;
-        public static DebugArrow podSrfVelocityArrow;
-
-        [Persistent(pass = (int)Pass.Global)]
-        public bool comSrfVelocityArrowActive;
-        public static DebugArrow comSrfVelocityArrow;
+        public bool srfVelocityArrowActive;
+        public static DebugArrow srfVelocityArrow;
         
         [Persistent(pass = (int)Pass.Global)]
-        public bool podObtVelocityArrowActive;
-        public static DebugArrow podObtVelocityArrow;
-
-        [Persistent(pass = (int)Pass.Global)]
-        public bool comObtVelocityArrowActive;
-        public static DebugArrow comObtVelocityArrow;
+        public bool obtVelocityArrowActive;
+        public static DebugArrow obtVelocityArrow;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool dotArrowActive;
         public static DebugArrow dotArrow;
-
-        [Persistent(pass = (int)Pass.Global)]
-        public bool dotInstantArrowActive;
-        public static DebugArrow dotInstantArrow;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool forwardArrowActive;
@@ -105,20 +93,14 @@ namespace MuMech
             cotSphere.Destroy();
             cotSphere = null;
 
-            podSrfVelocityArrow.Destroy();
-            podSrfVelocityArrow = null;
-            comSrfVelocityArrow.Destroy();
-            comSrfVelocityArrow = null;
+            srfVelocityArrow.Destroy();
+            srfVelocityArrow = null;
 
-            podObtVelocityArrow.Destroy();
-            podObtVelocityArrow = null;
-            comObtVelocityArrow.Destroy();
-            comObtVelocityArrow = null;
+            obtVelocityArrow.Destroy();
+            obtVelocityArrow = null;
 
             dotArrow.Destroy();
             dotArrow = null;
-            dotInstantArrow.Destroy();
-            dotInstantArrow = null;
             
             forwardArrow.Destroy();
             forwardArrow = null;
@@ -148,14 +130,10 @@ namespace MuMech
                 colSphere = new DebugIcoSphere(XKCDColors.Teal, true);
                 cotSphere = new DebugIcoSphere(XKCDColors.PurplePink, true);
 
-                podSrfVelocityArrow = new DebugArrow(Color.yellow);
-                comSrfVelocityArrow = new DebugArrow(Color.green);
-
-                podObtVelocityArrow = new DebugArrow(Color.red);
-                comObtVelocityArrow = new DebugArrow(XKCDColors.Orange);
+                srfVelocityArrow = new DebugArrow(Color.green);
+                obtVelocityArrow = new DebugArrow(Color.red);
 
                 dotArrow        = new DebugArrow(XKCDColors.PurplePink);
-                dotInstantArrow = new DebugArrow(XKCDColors.Pink);
 
                 forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
                 avgForwardArrow = new DebugArrow(Color.blue);
@@ -195,36 +173,20 @@ namespace MuMech
                 cotSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            podSrfVelocityArrow.State(podSrfVelocityArrowActive);
-            if (podSrfVelocityArrowActive)
+            srfVelocityArrow.State(srfVelocityArrowActive);
+            if (srfVelocityArrowActive)
             {
-                podSrfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
-                podSrfVelocityArrow.SetLength((float)arrowsLength.val);
-                podSrfVelocityArrow.SeeThrough(seeThrough);
+                srfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
+                srfVelocityArrow.SetLength((float)arrowsLength.val);
+                srfVelocityArrow.SeeThrough(seeThrough);
             }
 
-            comSrfVelocityArrow.State(comSrfVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
-            if (comSrfVelocityArrowActive)
+            obtVelocityArrow.State(obtVelocityArrowActive);
+            if (obtVelocityArrowActive)
             {
-                comSrfVelocityArrow.Set(arrowPos, vesselState.surfaceVelocity);
-                comSrfVelocityArrow.SetLength((float)arrowsLength.val);
-                comSrfVelocityArrow.SeeThrough(seeThrough);
-            }
-
-            podObtVelocityArrow.State(podObtVelocityArrowActive);
-            if (podObtVelocityArrowActive)
-            {
-                podObtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
-                podObtVelocityArrow.SetLength((float)arrowsLength.val);
-                podObtVelocityArrow.SeeThrough(seeThrough);
-            }
-
-            comObtVelocityArrow.State(comObtVelocityArrowActive && MechJebModuleAttitudeController.useCoMVelocity);
-            if (comObtVelocityArrowActive)
-            {
-                comObtVelocityArrow.Set(arrowPos, vesselState.orbitalVelocity);
-                comObtVelocityArrow.SetLength((float)arrowsLength.val);
-                comObtVelocityArrow.SeeThrough(seeThrough);
+                obtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
+                obtVelocityArrow.SetLength((float)arrowsLength.val);
+                obtVelocityArrow.SeeThrough(seeThrough);
             }
             
             dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0);
@@ -233,14 +195,6 @@ namespace MuMech
                 dotArrow.Set(vesselState.CoT + frameVel, vesselState.DoT);
                 dotArrow.SetLength((float)Math.Log10(vesselState.thrustCurrent + 1));
                 dotArrow.SeeThrough(seeThrough);
-            }
-
-            dotInstantArrow.State(dotInstantArrowActive && vesselState.thrustCurrent > 0);
-            if (dotInstantArrowActive)
-            {
-                dotInstantArrow.Set(vesselState.CoT+ frameVel, vesselState.DoTInstant);
-                dotInstantArrow.SetLength((float) Math.Log10(vesselState.thrustCurrent + 1));
-                dotInstantArrow.SeeThrough(seeThrough);
             }
             
             forwardArrow.State(forwardArrowActive);
@@ -302,21 +256,13 @@ namespace MuMech
         private readonly GameObject haft;
         private GameObject cone;
 
-        private static readonly Shader diffuseAmbient;
-        private static readonly Shader diffuseAmbientIgnoreZ;
-
         private const float coneLength = 0.5f;
         private float length;
         private bool seeThrough = false;
         private readonly MeshRenderer _haftMeshRenderer;
         private readonly MeshRenderer _coneMeshRenderer;
 
-        static  DebugArrow()
-        {
-            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
-            diffuseAmbientIgnoreZ = new Material(Encoding.ASCII.GetString(Properties.Resources.shader3)).shader;
-        }
-
+        
         public DebugArrow(Color color, bool seeThrough = false)
         {
             gameObject = new GameObject("DebugArrow");
@@ -359,8 +305,8 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _coneMeshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
-                _haftMeshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
+                _coneMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+                _haftMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
             }
         }
 
@@ -613,9 +559,6 @@ namespace MuMech
 
         private readonly MeshRenderer _meshRenderer;
 
-        private static readonly Shader diffuseAmbient;
-        private static readonly Shader diffuseAmbientIgnoreZ;
-
         private float radius;
         private bool seeThrough = false;
 
@@ -634,12 +577,6 @@ namespace MuMech
             SeeThrough(seeThrough);
         }
         
-        static DebugIcoSphere()
-        {
-            diffuseAmbient = new Material(Encoding.ASCII.GetString(Properties.Resources.shader2)).shader;
-            diffuseAmbientIgnoreZ = new Material(Encoding.ASCII.GetString(Properties.Resources.shader3)).shader;
-        }
-
         public void Destroy()
         {
             Object.Destroy(gameObject);
@@ -669,7 +606,7 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _meshRenderer.material.shader = state ? diffuseAmbientIgnoreZ : diffuseAmbient;
+                _meshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
             }
         }
 

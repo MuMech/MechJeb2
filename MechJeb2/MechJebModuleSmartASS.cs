@@ -82,7 +82,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDisableSmartASS = true;
-        [GeneralInfoItem("Disable SmartASS automatically", InfoItem.Category.Misc)]
+        [GeneralInfoItem("Disable SmartACS automatically", InfoItem.Category.Misc)]
         public void AutoDisableSmartASS()
         {
             autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, core.eduMode ? "Disable SmartACS automatically" : "Disable SmartASS automatically");
@@ -133,7 +133,7 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
             if (target != Target.OFF)
-                Engage();
+                Engage(false);
         }
 
 

@@ -43,6 +43,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public double TfMax = 0.5;
         [Persistent(pass = (int)Pass.Global)]
+        public bool lowPassFilter = true;
+
+        [Persistent(pass = (int)Pass.Global)]
         public double kpFactor = 3;
         [Persistent(pass = (int)Pass.Global)]
         public double kiFactor = 6;
@@ -57,10 +60,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
-
-        [Persistent(pass = (int)Pass.Global)]
-        public static bool useCoMVelocity = true;
-
+        
         public bool attitudeKILLROT = false;
 
         protected bool attitudeChanged = false;
@@ -122,7 +122,7 @@ namespace MuMech
         {
             get
             {
-                return _axisControl.z > 0;
+                return _axisControl.y > 0;
             }
         }
 
@@ -132,7 +132,8 @@ namespace MuMech
         }
 
 
-        [Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
+        //[Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
+        // Disable the use of Stock SAS for now
         public bool useSAS = false;
 
         protected Quaternion lastSAS = new Quaternion();
@@ -189,19 +190,25 @@ namespace MuMech
         {
             Vector3d ratio = new Vector3d(
                 torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
-                torque.z != 0 ? vesselState.MoI.z / torque.z : 0,   //y <=> z
-                torque.y != 0 ? vesselState.MoI.y / torque.y : 0    //z <=> y
+                torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
+                torque.z != 0 ? vesselState.MoI.z / torque.z : 0 
                 );
 
             TfV = 0.05 * ratio;
 
+            //print("TfV O " + MuUtils.PrettyPrint(TfV));
+
             Vector3d delayFactor = Vector3d.one + 2 * vesselState.torqueReactionSpeed;
+
+            //print("del F " + MuUtils.PrettyPrint(delayFactor));
 
             TfV.Scale(delayFactor);
 
 
-            TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, 1.0);
+            TfV = TfV.Clamp(2.0 * TimeWarp.fixedDeltaTime, TfMax);
             TfV = TfV.Clamp(TfMin, TfMax);
+
+            //print("TfV F " + MuUtils.PrettyPrint(TfV));
 
             //Tf = Mathf.Clamp((float)ratio.magnitude / 20f, 2 * TimeWarp.fixedDeltaTime, 1f);
             //Tf = Mathf.Clamp((float)Tf, (float)TfMin, (float)TfMax);
@@ -233,8 +240,8 @@ namespace MuMech
         public void AxisControl(bool pitch, bool yaw, bool roll)
         {
             _axisControl.x = pitch ? 1 : 0;
-            _axisControl.y = yaw ? 1 : 0;
-            _axisControl.z = roll ? 1 : 0;
+            _axisControl.y = roll ? 1 : 0;
+            _axisControl.z = yaw ? 1 : 0;
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
@@ -300,7 +307,7 @@ namespace MuMech
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
                     up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
-                    fwd = Vector3d.Cross(-baseOrbit.GetOrbitNormal().Reorder(132).normalized, up);
+                    fwd = Vector3d.Cross(-baseOrbit.GetOrbitNormal().xzy.normalized, up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
@@ -377,9 +384,8 @@ namespace MuMech
                 return;
 
             torque = vesselState.torqueAvailable;
-            // TODO : bring DifferentialThrottle back
-            //if (core.thrust.differentialThrottleSuccess)
-            //    torque += vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+            if (core.thrust.differentialThrottleSuccess)
+                torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             inertia = Vector3d.Scale(
                 vesselState.angularMomentum.Sign(),
@@ -409,39 +415,35 @@ namespace MuMech
         {
             if (useSAS)
             {
+                // TODO : This most likely require some love to use all the new SAS magic
+
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Quaternion.Euler(90, 0, 0);
                 if (!part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude);
+                    part.vessel.Autopilot.SAS.SetTargetOrientation(_requestedAttitude * Vector3.up, false);
                     lastSAS = _requestedAttitude;
                 }
                 else if (Quaternion.Angle(lastSAS, _requestedAttitude) > 10)
                 {
-                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude);
+                    part.vessel.Autopilot.SAS.SetTargetOrientation(_requestedAttitude * Vector3.up, false);
                     lastSAS = _requestedAttitude;
                 }
                 else
                 {
-                    part.vessel.Autopilot.SAS.LockHeading(_requestedAttitude, true);
+                    part.vessel.Autopilot.SAS.SetTargetOrientation(_requestedAttitude * Vector3.up, true);
                 }
 
-                // TODO : bring DifferentialThrottle back
-                //core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
+                core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
             }
             else
             {
                 // Direction we want to be facing
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
                 Transform vesselTransform = vessel.ReferenceTransform;
-                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
-
-                Vector3d deltaEuler = delta.DeltaEuler();
+                //Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
                 
-                // ( MoI / available torque ) factor:
-                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.InvertNoNaN()).Reorder(132);
-
-                // Find out the real shorter way to turn were we wan to.
+                // Find out the real shorter way to turn where we wan to.
                 // Thanks to HoneyFox
                 Vector3d tgtLocalUp = vesselTransform.transform.rotation.Inverse() * _requestedAttitude * Vector3d.forward;
                 Vector3d curLocalUp = Vector3d.up;
@@ -456,27 +458,32 @@ namespace MuMech
                 Quaternion targetDeRotated = Quaternion.AngleAxis((float)turnAngle, normVec) * _requestedAttitude;
                 float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) * Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
 
+                // From here everything should use MOI order for Vectors (pitch, roll, yaw)
+
                 error = new Vector3d(
                     -rotDirection.y * Math.PI,
-                    rotDirection.x * Math.PI,
-                    rollError * Mathf.Deg2Rad
+                    rollError * Mathf.Deg2Rad,
+                    rotDirection.x * Math.PI
                     );
 
                 error.Scale(_axisControl);
 
-                Vector3d err = error + inertia.Reorder(132) / 2d;
+                Vector3d err = error + inertia * 0.5;
                 err = new Vector3d(
                     Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
                     Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
                     Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
 
+                // ( MoI / available torque ) factor:
+                Vector3d NormFactor = Vector3d.Scale(vesselState.MoI, torque.InvertNoNaN());
+
                 err.Scale(NormFactor);
 
                 // angular velocity:
-                Vector3d omega;
-                omega.x = vessel.angularVelocity.x;
-                omega.y = vessel.angularVelocity.z; // y <=> z
-                omega.z = vessel.angularVelocity.y; // z <=> y
+                Vector3d omega = vessel.angularVelocity;
+                //omega.x = vessel.angularVelocity.x;
+                //omega.y = vessel.angularVelocity.z; // y <=> z
+                //omega.z = vessel.angularVelocity.y; // z <=> y
                 omega.Scale(NormFactor);
 
                 if (Tf_autoTune)
@@ -497,19 +504,27 @@ namespace MuMech
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
-                act.x += (pidAction.x - lastAct.x) * (1.0 / ((TfV.x / TimeWarp.fixedDeltaTime) + 1.0));
-                act.y += (pidAction.y - lastAct.y) * (1.0 / ((TfV.y / TimeWarp.fixedDeltaTime) + 1.0));
-                act.z += (pidAction.z - lastAct.z) * (1.0 / ((TfV.z / TimeWarp.fixedDeltaTime) + 1.0));
+                if (lowPassFilter)
+                {
+                    act.x += (pidAction.x - lastAct.x) * (1.0 / ((TfV.x / TimeWarp.fixedDeltaTime) + 1.0));
+                    act.y += (pidAction.y - lastAct.y) * (1.0 / ((TfV.y / TimeWarp.fixedDeltaTime) + 1.0));
+                    act.z += (pidAction.z - lastAct.z) * (1.0 / ((TfV.z / TimeWarp.fixedDeltaTime) + 1.0));
+                }
+                else
+                {
+                    act = pidAction;
+                }
                 lastAct = act;
+
+                Vector3d deltaEuler = error * UtilMath.Rad2Deg;
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 
-                act = new Vector3d(s.pitch, s.yaw, s.roll);
+                act = new Vector3d(s.pitch, s.roll, s.yaw);
 
                 // Feed the control torque to the differential throttle
-                // TODO : bring DifferentialThrottle back
-                //if (core.thrust.differentialThrottleSuccess)
-                //    core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueFromDiffThrottle * vessel.ctrlState.mainThrottle);
+                if (core.thrust.differentialThrottleSuccess)
+                    core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act, vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }
 
@@ -538,13 +553,13 @@ namespace MuMech
 
             if (!userCommandingRoll)
             {
-                if (!double.IsNaN(act.z)) s.roll = Mathf.Clamp((float)(act.z), -drive_limit, drive_limit);
+                if (!double.IsNaN(act.y)) s.roll = Mathf.Clamp((float)(act.y), -drive_limit, drive_limit);
             }
 
             if (!userCommandingPitchYaw)
             {
                 if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float)(act.x), -drive_limit, drive_limit);
-                if (!double.IsNaN(act.y)) s.yaw = Mathf.Clamp((float)(act.y), -drive_limit, drive_limit);
+                if (!double.IsNaN(act.z)) s.yaw = Mathf.Clamp((float)(act.z), -drive_limit, drive_limit);
             }
 
             // RCS and SAS control:

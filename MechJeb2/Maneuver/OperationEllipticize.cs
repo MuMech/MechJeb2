@@ -43,6 +43,11 @@
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, newPeA + o.referenceBody.Radius, newApA + o.referenceBody.Radius), UT);
         }
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 

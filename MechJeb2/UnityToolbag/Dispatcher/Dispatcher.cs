@@ -110,7 +110,7 @@ namespace UnityToolbag
             }
         }
 
-        static Dispatcher()
+        public static void CreateDispatcher()
         {
             Debug.Log("Starting the Dispatcher");
             new GameObject(typeof(Dispatcher).Name).AddComponent<Dispatcher>();

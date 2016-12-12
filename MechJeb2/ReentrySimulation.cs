@@ -830,12 +830,19 @@ namespace MuMech
                 // No point in copying those again if we already have them loaded
                 if (!loaded)
                 {
+                    dragCurveCd = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
+                    dragCurveCdPower = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
                     dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
-                    dragCurveSurface = new FloatCurve(PhysicsGlobals.DragCurveSurface.Curve.keys);
-                    dragCurveTail = new FloatCurve(PhysicsGlobals.DragCurveTail.Curve.keys);
-                    dragCurveTip = new FloatCurve(PhysicsGlobals.DragCurveTip.Curve.keys);
-                    liftCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftCurve.Curve.keys);
-                    liftMachCurve = new FloatCurve(PhysicsGlobals.GetLiftingSurfaceCurve("BodyLift").liftMachCurve.Curve.keys);
+
+                    dragCurveSurface = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface .Curve.keys);
+                    dragCurveTail = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
+                    dragCurveTip = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
+
+                    liftCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
+                    liftMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    dragCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    dragMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+
                     spaceTemperature = PhysicsGlobals.SpaceTemperature;
                     loaded = true;
                 }
@@ -857,15 +864,16 @@ namespace MuMech
             private CelestialBody body;
 
             private FloatCurve liftCurve;
-
             private FloatCurve liftMachCurve;
+            private FloatCurve dragCurve;
+            private FloatCurve dragMachCurve;
 
             private FloatCurve dragCurveTail;
-
             private FloatCurve dragCurveSurface;
-
             private FloatCurve dragCurveTip;
 
+            private FloatCurve dragCurveCd;
+            private FloatCurve dragCurveCdPower;
             private FloatCurve dragCurveMultiplier;
 
             private FloatCurve atmospherePressureCurve;
@@ -881,7 +889,7 @@ namespace MuMech
             private FloatCurve atmosphereTemperatureCurve;
 
             private double spaceTemperature;
-
+            
             public FloatCurve LiftCurve
             {
                 get { return liftCurve; }
@@ -890,6 +898,16 @@ namespace MuMech
             public FloatCurve LiftMachCurve
             {
                 get { return liftMachCurve; }
+            }
+
+            public FloatCurve DragCurve
+            {
+                get { return dragCurve; }
+            }
+
+            public FloatCurve DragMachCurve
+            {
+                get { return dragMachCurve; }
             }
 
             public FloatCurve DragCurveTail
@@ -905,6 +923,16 @@ namespace MuMech
             public FloatCurve DragCurveTip
             {
                 get { return dragCurveTip; }
+            }
+
+            public FloatCurve DragCurveCd
+            {
+                get { return dragCurveCd; }
+            }
+
+            public FloatCurve DragCurveCdPower
+            {
+                get { return dragCurveCdPower; }
             }
 
             public FloatCurve DragCurveMultiplier
@@ -1247,7 +1275,7 @@ namespace MuMech
 
             absolute.latitude = Latitude(vector3d);
 
-            double longitude = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vector3d.normalized, lat0lon90AtStart), Vector3d.Dot(vector3d.normalized, lat0lon0AtStart));
+            double longitude = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(vector3d.normalized, lat0lon90AtStart), Vector3d.Dot(vector3d.normalized, lat0lon0AtStart));
             longitude -= 360 * (UT - epoch) / referenceBody.rotationPeriod;
             absolute.longitude = MuUtils.ClampDegrees180(longitude);
 
@@ -1283,7 +1311,7 @@ namespace MuMech
 
         public double Latitude(Vector3d vector3d)
         {
-            return 180 / Math.PI * Math.Asin(Vector3d.Dot(vector3d.normalized, lat90AtStart));
+            return UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, lat90AtStart));
         }
 
     }

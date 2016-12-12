@@ -73,7 +73,7 @@ namespace MuMech
         public void DriveHeadingAndAltitudeHold(FlightCtrlState s)
         {
             double targetClimbRate = (targetAltitude - vesselState.altitudeASL) / 30.0;
-            double targetFlightPathAngle = 180 / Math.PI * Math.Asin(Mathf.Clamp((float)(targetClimbRate / vesselState.speedSurface), (float)Math.Sin(-Math.PI / 9), (float)Math.Sin(Math.PI / 9)));
+            double targetFlightPathAngle = UtilMath.Rad2Deg * Math.Asin(Mathf.Clamp((float)(targetClimbRate / vesselState.speedSurface), (float)Math.Sin(-Math.PI / 9), (float)Math.Sin(Math.PI / 9)));
             AimVelocityVector(targetFlightPathAngle, targetHeading);
         }
 
@@ -95,7 +95,7 @@ namespace MuMech
                 Vector3d vectorToRunway = runwayStart - vesselState.CoM;
                 double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up) + (vesselState.altitudeTrue - vesselState.altitudeBottom);
                 double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
-                double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
+                double flightPathAngleToRunway = UtilMath.Rad2Deg * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
                 double desiredFPA = Mathf.Clamp((float)(flightPathAngleToRunway + 3 * (flightPathAngleToRunway + glideslope)), -20.0F, 0.0F);
 
                 AimVelocityVector(desiredFPA, headingToWaypoint);
@@ -105,7 +105,7 @@ namespace MuMech
                 //keep the plane aligned with the runway:
                 Vector3d runwayDir = runway.End(vesselState.CoM) - runway.Start(vesselState.CoM);
                 if (Vector3d.Dot(runwayDir, vesselState.forward) < 0) runwayDir *= -1;
-                double runwayHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
+                double runwayHeading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(runwayDir, vesselState.east), Vector3d.Dot(runwayDir, vesselState.north));
                 core.attitude.attitudeTo(runwayHeading, 0, 0, this);
             }
         }
@@ -121,7 +121,7 @@ namespace MuMech
         void AimVelocityVector(double desiredFpa, double desiredHeading)
         {
             //horizontal control
-            double velocityHeading = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vesselState.surfaceVelocity, vesselState.east),
+            double velocityHeading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(vesselState.surfaceVelocity, vesselState.east),
                                                                 Vector3d.Dot(vesselState.surfaceVelocity, vesselState.north));
             double headingTurn = Mathf.Clamp((float)MuUtils.ClampDegrees180(desiredHeading - velocityHeading), -maxYaw, maxYaw);
             double noseHeading = velocityHeading + headingTurn;
@@ -132,7 +132,7 @@ namespace MuMech
 
             core.attitude.attitudeTo(noseHeading, nosePitch, noseRoll, this);
 
-            double flightPathAngle = 180 / Math.PI * Math.Atan2(vesselState.speedVertical, vesselState.speedSurfaceHorizontal);
+            double flightPathAngle = UtilMath.Rad2Deg * Math.Atan2(vesselState.speedVertical, vesselState.speedSurfaceHorizontal);
             double AoA = vesselState.vesselPitch - flightPathAngle;
             stableAoA = (AoAtimeConstant * stableAoA + vesselState.deltaT * AoA) / (AoAtimeConstant + vesselState.deltaT); //a sort of integral error
 
@@ -165,14 +165,14 @@ namespace MuMech
             double leftSpeed = Vector3d.Dot(vesselState.surfaceVelocity, runwayLeftUnit);
             double verticalSpeed = vesselState.speedVertical;
             double horizontalSpeed = vesselState.speedSurfaceHorizontal;
-            double flightPathAngle = 180 / Math.PI * Math.Atan2(verticalSpeed, horizontalSpeed);
+            double flightPathAngle = UtilMath.Rad2Deg * Math.Atan2(verticalSpeed, horizontalSpeed);
 
             double leftDisplacement = Vector3d.Dot(runwayLeftUnit, vesselState.CoM - runwayStart);
 
             Vector3d vectorToRunway = runwayStart - vesselState.CoM;
             double verticalDistanceToRunway = Vector3d.Dot(vectorToRunway, vesselState.up) + (vesselState.altitudeTrue - vesselState.altitudeBottom);
             double horizontalDistanceToRunway = Math.Sqrt(vectorToRunway.sqrMagnitude - verticalDistanceToRunway * verticalDistanceToRunway);
-            double flightPathAngleToRunway = 180 / Math.PI * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
+            double flightPathAngleToRunway = UtilMath.Rad2Deg * Math.Atan2(verticalDistanceToRunway, horizontalDistanceToRunway);
 
             Vector3d aimToward = runwayStart - 3 * leftDisplacement * runwayLeftUnit;
             Vector3d aimDir = aimToward - vesselState.CoM;

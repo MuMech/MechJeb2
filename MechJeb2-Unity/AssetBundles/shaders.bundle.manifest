@@ -1,0 +1,18 @@
+ManifestFileVersion: 0
+CRC: 2124711942
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 66f47af053113b5066d01bb305c583a5
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 80729077cb39806c86b5c10073f074fb
+HashAppended: 0
+ClassTypes:
+- Class: 48
+  Script: {instanceID: 0}
+Assets:
+- Assets/Shaders/MJ_SelfIlluminSpecular.shader
+- Assets/Shaders/MJ_DiffuseAmbiant.shader
+- Assets/Shaders/MJ_DiffuseAmbiantIgnoreZ.shader
+Dependencies: []

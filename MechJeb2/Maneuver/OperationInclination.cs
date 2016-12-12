@@ -30,6 +30,11 @@
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, newInc), UT);
         }
+
+		public TimeSelector getTimeSelector() //Required for scripts to save configuration
+		{
+			return this.timeSelector;
+		}
     }
 }
 

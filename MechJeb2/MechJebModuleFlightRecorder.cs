@@ -164,7 +164,7 @@ namespace MuMech
             CelestialBody markBody = FlightGlobals.Bodies[markBodyIndex];
             Vector3d markVector = markBody.GetSurfaceNVector(markLatitude, markLongitude);
             Vector3d vesselVector = vesselState.CoM - markBody.transform.position;
-            return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * Math.PI / 180;
+            return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * UtilMath.Deg2Rad;
         }
 
         [Persistent(pass = (int)Pass.Local)]
