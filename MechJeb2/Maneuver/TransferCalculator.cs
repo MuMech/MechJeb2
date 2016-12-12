@@ -123,8 +123,9 @@ namespace MuMech
 					double t1 = t0 + dt;
 
 					Vector3d R2 = destination.getRelativePositionAtUT(t1);
+					Vector3d V2_1 = destination.getOrbitalVelocityAtUT(t1);
 
-					bool short_way = Vector3d.Dot(Vector3d.Cross(R1, R2), origin_planet.orbit.GetOrbitNormal()) > 0;
+					/* bool short_way = Vector3d.Dot(Vector3d.Cross(R1, R2), origin_planet.orbit.GetOrbitNormal()) > 0; */
 					try
 					{
 						Vector3d V1, V2;
@@ -134,7 +135,8 @@ namespace MuMech
 								+ R2.x + "," + R2.y + "," + R2.z + ","
 								+ V1_0.x + "," + V1_0.y + "," + V1_0.z;
 #endif
-						LambertSolver.Solve(R1, R2, dt, origin_planet.referenceBody, short_way, out V1, out V2);
+						/* LambertSolver.Solve(R1, R2, dt, origin_planet.referenceBody, short_way, out V1, out V2); */
+						GoodingSolver.Solve(R1, V1_0, R2, V2_1, dt, origin_planet.referenceBody, 0, out V1, out V2);
 
 #if DEBUG
 						log[date_index, duration_index] += "," + V1.x + "," + V1.y + "," + V1.z;
@@ -308,12 +310,12 @@ namespace MuMech
 
             /*
             //old way infinity hyperbolic:
-            //problems: it's not necessary hyperbolic (in case of low speed exit_velocity), 
+            //problems: it's not necessary hyperbolic (in case of low speed exit_velocity),
             //and exit_velocity appears not infinite far from celestial body, but only sphereOfInfluence far
             //i.e. Mh in previous statements(theta, isma) is not infinity!
 
 			double sma = -GM / C3;
-			
+
 			double ecc = 1 - Rpe / sma;
 			double theta = Math.Acos(-1 / ecc);
 
@@ -495,4 +497,3 @@ namespace MuMech
 		public override int Progress { get { return Math.Min(100, (int)(100 * (1 - (double)nextDateIndex / dateSamples))); } }
 	}
 }
-
