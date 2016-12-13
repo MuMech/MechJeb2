@@ -18,6 +18,7 @@ namespace MuMech
 
         private int lastAskedIndex = 0;
 
+        public double warpToUT { get; private set; }
         public bool WarpPaused { get; private set; }
 
         [Persistent(pass = (int)Pass.Global)]
@@ -50,6 +51,11 @@ namespace MuMech
 
                 //ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
             }
+        }
+
+        public override void OnFixedUpdate() {
+            if (warpToUT > 0)
+                WarpToUT(warpToUT);
         }
 
         private void PauseWarp()
@@ -94,6 +100,11 @@ namespace MuMech
 
         public void WarpToUT(double UT, double maxRate = -1)
         {
+            if (UT <= vesselState.time) {
+                warpToUT = 0.0;
+                return;
+            }
+
             if (maxRate < 0)
                 maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];
 
@@ -110,6 +121,7 @@ namespace MuMech
             {
                 WarpRegularAtRate((float)desiredRate);
             }
+            warpToUT = UT;
         }
 
         //warp at the highest regular warp rate that is <= maxRate
@@ -228,6 +240,7 @@ namespace MuMech
 
         public bool MinimumWarp(bool instant = false)
         {
+            warpToUT = 0.0;
             if (TimeWarp.CurrentRateIndex == 0) return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
             SetTimeWarpRate(0, instant);
             return true;
