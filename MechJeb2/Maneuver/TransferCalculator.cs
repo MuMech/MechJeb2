@@ -433,6 +433,9 @@ namespace MuMech
 
         public static ManeuverParameters OptimizeEjection(ManeuverParameters original_maneuver, Orbit initial_orbit, Orbit target, double UT_arrival, double earliest_UT)
         {
+
+            int N = 0;
+
             while(true)
             {
                 alglib.minlmstate state;
@@ -440,7 +443,6 @@ namespace MuMech
 
                 double[] x = new double[5];
                 double[] scale = new double[5];
-                int N = 0;
 
                 x[0] = original_maneuver.dV.x;
                 x[1] = original_maneuver.dV.y;
