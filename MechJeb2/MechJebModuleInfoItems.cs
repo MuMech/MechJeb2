@@ -129,6 +129,24 @@ namespace MuMech
             return OrbitSummaryWithInclination(core.target.TargetOrbit);
         }
 
+        [ValueInfoItem("Orbital energy", InfoItem.Category.Orbit, description = "Specific orbital energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double OrbitalEnergy()
+        {
+            return orbit.orbitalEnergy;
+        }
+        
+        [ValueInfoItem("Potential energy", InfoItem.Category.Orbit, description = "Specific potential energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double PotentialEnergy()
+        {
+            return -orbit.referenceBody.gravParameter / orbit.radius;
+        }
+        
+        [ValueInfoItem("Kinetic energy", InfoItem.Category.Orbit, description = "Specific kinetic energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double KineticEnergy()
+        {
+            return orbit.orbitalEnergy + orbit.referenceBody.gravParameter / orbit.radius;
+        }
+        
         //TODO: consider turning this into a binary search
         [ValueInfoItem("Time to impact", InfoItem.Category.Misc)]
         public string TimeToImpact()

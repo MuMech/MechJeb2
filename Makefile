@@ -18,7 +18,9 @@ else
 		ifndef KSPDIR
 			KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
 		endif
+		ifndef MANAGED
 		MANAGED := ${KSPDIR}/KSP.app/Contents/Resources/Data/Managed/
+		endif
 	endif
 endif
 
