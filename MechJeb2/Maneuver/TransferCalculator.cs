@@ -110,6 +110,12 @@ namespace MuMech
                     date_index = TakeDateIndex())
             {
                 double t0 = DateFromIndex(date_index);
+
+                if (double.IsInfinity(t0))
+                {
+                    continue;
+                }
+
                 Vector3d V1_0 = origin_planet.orbit.getOrbitalVelocityAtUT(t0);
                 Vector3d R1 = origin_planet.orbit.getRelativePositionAtUT(t0);
 
