@@ -144,7 +144,7 @@ namespace MuMech {
                 SIG = R1R2TH / CSQ;
             } else {
                 RHO = 0.0;
-                RHO = 1.0;
+                SIG = 1.0;
             }
             double T = 4.0 * GMS * TDELT / Math.Pow(S, 2);
 
@@ -321,6 +321,12 @@ Three:
             double XSQ = X * X;
             double U = (1.0 - X) * (1.0 + X);
             T = 0.0;
+
+            // Yes, we could remove the next test but I added that only to get the compiler to shut up
+            DT = 0.0;
+            D2T = 0.0;
+            D3T = 0.0;
+
             if (!LM1) {
                 /* "NEEDED IF SERIES AND OTHERWISE USEFUL WHEN Z = 0" -- Gooding */
                 DT = 0.0;
