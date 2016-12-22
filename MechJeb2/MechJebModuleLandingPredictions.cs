@@ -464,7 +464,7 @@ namespace MuMech
                     {
                         //update the existing node
                         Vector3d nodeDV = preAerobrakeOrbit.DeltaVToManeuverNodeCoordinates(UT, dV);
-                        aerobrakeNode.OnGizmoUpdated(nodeDV, UT);
+                        aerobrakeNode.UpdateNode(nodeDV, UT);
                     }
                     else
                     {

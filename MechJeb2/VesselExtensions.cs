@@ -329,5 +329,15 @@ namespace MuMech
         {
             return GameVariables.Instance.GetOrbitDisplayMode(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation)) == GameVariables.OrbitDisplayMode.PatchedConics;
         }
+
+        public static void UpdateNode(this ManeuverNode node, Vector3d dV, double ut)
+        {
+            node.UT = ut;
+            node.solver.UpdateFlightPlan();
+            if (node.attachedGizmo == null)
+                return;
+            node.attachedGizmo.patchBefore = node.patch;
+            node.attachedGizmo.patchAhead = node.nextPatch;
+        }
     }
 }

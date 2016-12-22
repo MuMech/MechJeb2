@@ -82,13 +82,13 @@ namespace MuMech
             if (LimitedRepeatButtoon("-"))
             {
                 prograde -= progradeDelta;
-                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));
             if (LimitedRepeatButtoon("+"))
             {
                 prograde += progradeDelta;
-                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
@@ -98,13 +98,13 @@ namespace MuMech
             if (LimitedRepeatButtoon("-"))
             {
                 radialPlus -= radialPlusDelta;
-                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
             if (LimitedRepeatButtoon("+"))
             {
                 radialPlus += radialPlusDelta;
-                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
@@ -114,13 +114,13 @@ namespace MuMech
             if (LimitedRepeatButtoon("-"))
             {
                 normalPlus -= normalPlusDelta;
-                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));
             if (LimitedRepeatButtoon("+"))
             {
                 normalPlus += normalPlusDelta;
-                node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
             GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
@@ -139,26 +139,26 @@ namespace MuMech
                 progradeDelta = radialPlusDelta = normalPlusDelta = 100;
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Update")) node.OnGizmoUpdated(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            if (GUILayout.Button("Update")) node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Shift time", GUILayout.ExpandWidth(true));
             if (GUILayout.Button("-o", GUILayout.ExpandWidth(false)))
             {
-                node.OnGizmoUpdated(node.DeltaV, node.UT - node.patch.period);
+                node.UpdateNode(node.DeltaV, node.UT - node.patch.period);
             }
             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
             {
-                node.OnGizmoUpdated(node.DeltaV, node.UT - timeOffset);
+                node.UpdateNode(node.DeltaV, node.UT - timeOffset);
             }
             timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
-                node.OnGizmoUpdated(node.DeltaV, node.UT + timeOffset);
+                node.UpdateNode(node.DeltaV, node.UT + timeOffset);
             }
             if (GUILayout.Button("+o", GUILayout.ExpandWidth(false)))
             {
-                node.OnGizmoUpdated(node.DeltaV, node.UT + node.patch.period);
+                node.UpdateNode(node.DeltaV, node.UT + node.patch.period);
             }
             GUILayout.EndHorizontal();
 
@@ -199,7 +199,7 @@ namespace MuMech
                         }
                         break;
                 }
-                node.OnGizmoUpdated(node.DeltaV, UT);
+                node.UpdateNode(node.DeltaV, UT);
             }
 
             snap = (Snap)GuiUtils.ArrowSelector((int)snap, numSnaps, snapStrings[(int)snap]);
