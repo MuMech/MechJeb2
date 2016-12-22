@@ -454,6 +454,7 @@ namespace MuMech
 
             GameEvents.onShowUI.Add(ShowGUI);
             GameEvents.onHideUI.Add(HideGUI);
+            GameEvents.onVesselChange.Add(UnlockControl);
 
             lastSettingsSaveTime = Time.time;
 
@@ -941,10 +942,11 @@ namespace MuMech
 
             GameEvents.onShowUI.Remove(ShowGUI);
             GameEvents.onHideUI.Remove(HideGUI);
+            GameEvents.onVesselChange.Remove(UnlockControl);
 
             if (weLockedInputs)
             {
-                InputLockManager.RemoveControlLock("MechJeb_noclick");
+                UnlockControl();
                 ManeuverGizmo.HasMouseFocus = false;
             }
 
@@ -1061,8 +1063,7 @@ namespace MuMech
                     Profiler.EndSample();
                 }
 
-                if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
-                if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium) PreventInFlightClickthrough();
+                PreventClickthrough();
                 GUI.matrix = previousGuiMatrix;
 
                 for (int i = 0; i < postDrawQueue.Count; i++)
@@ -1085,35 +1086,52 @@ namespace MuMech
         }
 
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
-        void PreventEditorClickthrough()
+        void PreventClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
-                EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
-                weLockedInputs = true;
+                LockControl();
             }
-            if (weLockedInputs && !mouseOverWindow)
+            else if (weLockedInputs && !mouseOverWindow)
             {
-                EditorLogic.fetch.Unlock("MechJeb_noclick");
-                weLockedInputs = false;
+                UnlockControl();
             }
         }
 
-        void PreventInFlightClickthrough()
+        private const string lockId = "MechJeb_noclick";
+
+        void LockControl()
         {
-            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, "MechJeb_noclick");
-                weLockedInputs = true;
+                EditorLogic.fetch.Lock(true, true, true, lockId);
             }
-            if (weLockedInputs && !mouseOverWindow)
+            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
             {
-                InputLockManager.RemoveControlLock("MechJeb_noclick");
-                weLockedInputs = false;
+                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, lockId);
             }
+            weLockedInputs = true;
         }
+
+        void UnlockControl(Vessel v)
+        {
+            UnlockControl();
+        }
+
+        void UnlockControl()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                EditorLogic.fetch.Unlock(lockId);
+            }
+            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
+            {
+                InputLockManager.RemoveControlLock(lockId);
+            }
+            weLockedInputs = false;
+        }
+
 
         public new static void print(object message)
         {
