@@ -170,7 +170,7 @@ namespace MuMech
                 switch (snap)
                 {
                     case Snap.PERIAPSIS:
-                        UT = o.NextPeriapsisTime(UT - o.period / 2); //period is who-knows-what for e > 1, but this should still work
+                        UT = o.NextPeriapsisTime(o.eccentricity < 1 ? UT - o.period / 2 : UT);
                         break;
 
                     case Snap.APOAPSIS:
