@@ -332,6 +332,7 @@ namespace MuMech
 
         public static void UpdateNode(this ManeuverNode node, Vector3d dV, double ut)
         {
+            node.DeltaV = dV;
             node.UT = ut;
             node.solver.UpdateFlightPlan();
             if (node.attachedGizmo == null)
