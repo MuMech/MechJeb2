@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityToolbag;
 using Object = UnityEngine.Object;
 
 namespace MuMech
@@ -39,10 +38,13 @@ namespace MuMech
 
 		private string CheckPreconditions(Orbit o, MechJebModuleTargetController target)
 		{
-			if (o.eccentricity >= 1 || o.ApR >= o.referenceBody.sphereOfInfluence)
+			if (o.eccentricity >= 1)
 				return "initial orbit must not be hyperbolic";
 
-			if (!target.NormalTargetExists)
+            if (o.ApR >= o.referenceBody.sphereOfInfluence)
+                return "initial orbit must not escape " + o.referenceBody.theName + " sphere of influence.";
+
+            if (!target.NormalTargetExists)
 				return "must select a target for the interplanetary transfer.";
 
 			if (o.referenceBody.referenceBody == null)

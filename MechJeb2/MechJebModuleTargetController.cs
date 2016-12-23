@@ -206,9 +206,12 @@ namespace MuMech
                     targetLatitude = vessel.mainBody.GetLatitude(target.GetTransform().position);
                     targetLongitude = vessel.mainBody.GetLongitude(target.GetTransform().position);
                 }
+                if (target is CelestialBody)
+                {
+                    targetBody = (CelestialBody) target;
+                }
             }
-
-
+            
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
                 targetBody = vessel.mainBody;
