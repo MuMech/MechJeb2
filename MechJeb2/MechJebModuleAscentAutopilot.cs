@@ -454,8 +454,15 @@ namespace MuMech
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
                 double UT = orbit.NextApoapsisTime(vesselState.time);
-                //Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit, UT, desiredOrbitAltitude + mainBody.Radius);
+                //During the circularization burn, try to correct any inclination errors because it's better to combine the two burns.
+                //  For example, if you're about to do a 1500 m/s circularization burn, if you combine a 200 m/s inclination correction
+                //  into it, you actually only spend 1513 m/s to execute combined manuver.  Mechjeb should also do correction burns before
+                //  this if possible, and this can't correct all errors... but it's better then nothing.
+                //   (A better version of this should try to match inclination & LAN if target is specified)
+                Vector3d inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, desiredInclination);
+                Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit.PerturbedOrbit(UT, inclinationCorrection), UT,
+                    desiredOrbitAltitude + mainBody.Radius);
+                Vector3d dV = inclinationCorrection + smaCorrection;
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 
