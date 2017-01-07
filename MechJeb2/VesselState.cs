@@ -616,15 +616,15 @@ namespace MuMech
                     if (rcs == null)
                         continue;
 
-                    Vector3 pos;
-                    Vector3 neg;
-                    rcs.GetPotentialTorque(out pos, out neg);
+                    //Vector3 pos;
+                    //Vector3 neg;
+                    //rcs.GetPotentialTorque(out pos, out neg);
 
                     //torqueRcs.Add(pos);
                     //torqueRcs.Add(neg);
 
-                    if (rcsbal.enabled)
-                        continue;
+                    //if (rcsbal.enabled)
+                    //    continue;
 
                     if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                     {
@@ -667,9 +667,7 @@ namespace MuMech
 
                             // Convert in vessel local coordinate
                             rcsTorqueAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
-
-
-                            rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
+                            //rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
                         }
                     }
                 }
