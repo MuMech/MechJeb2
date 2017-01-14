@@ -16,8 +16,8 @@ namespace MuMech
             priority = -1000;
             enabled = true;
             hidden = true;
-            showInFlight = true;
-            showInEditor = true;
+            ShowInFlight = true;
+            ShowInEditor = true;
 
             if (toolbarButtons == null)
                 toolbarButtons = new Dictionary<DisplayModule, Button>();
