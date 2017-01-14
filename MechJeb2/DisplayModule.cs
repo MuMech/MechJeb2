@@ -45,12 +45,15 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
         private Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
         private Vector4 windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-        
+
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
         private bool showInFlight = true;
         public bool ShowInFlight
@@ -66,6 +69,7 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
         private bool showInEditor = false;
         public bool ShowInEditor
@@ -81,9 +85,9 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
         private bool isOverlay = false;
-
         public bool IsOverlay
         {
             get { return isOverlay; }
@@ -97,6 +101,7 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
         public bool locked = false;
         public bool Locked

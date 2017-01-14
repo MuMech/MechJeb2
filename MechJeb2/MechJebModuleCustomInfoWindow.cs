@@ -14,9 +14,10 @@ namespace MuMech
         public string title = "Custom Info Window";
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
         public List<InfoItem> items = new List<InfoItem>();
-        [Persistent(pass = (int)Pass.Global)]
-        public bool isCompact = false;
 
+        [SerializeField]
+        [Persistent(pass = (int)Pass.Global)]
+        private bool isCompact = false;
         public bool IsCompact
         {
             get { return isCompact; }
