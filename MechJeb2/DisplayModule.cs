@@ -45,6 +45,9 @@ namespace MuMech
             }
         }
 
+
+        // Those field should be private but Persistant has a bug that prevent it to work properly on parent class private fields
+
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
