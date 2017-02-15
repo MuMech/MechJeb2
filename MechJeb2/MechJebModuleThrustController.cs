@@ -8,6 +8,14 @@ namespace MuMech
 {
     public class MechJebModuleThrustController : ComputerModule
     {
+		public enum DifferentialThrottleStatus
+		{
+			Success,
+			AllEnginesOff,
+			MoreEnginesRequired,
+			SolverFailed
+		}
+
         public MechJebModuleThrustController(MechJebCore core)
             : base(core)
         {
@@ -163,7 +171,7 @@ namespace MuMech
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
             if (differentialThrottle && vessel.LiftedOff())
             {
-                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess ? Color.green : Color.yellow;
+                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess == DifferentialThrottleStatus.Success ? Color.green : Color.yellow;
             }
             differentialThrottle = GUILayout.Toggle(differentialThrottle, "Differential throttle", s);
             
@@ -173,8 +181,7 @@ namespace MuMech
 
         public Vector3d differentialThrottleDemandedTorque = new Vector3d();
 
-        // true if differential throttle is active and a solution has been found i.e. at least 3 engines are on and they are not aligned
-        public bool differentialThrottleSuccess = false;
+		public DifferentialThrottleStatus differentialThrottleSuccess = DifferentialThrottleStatus.Success;
 
         [Persistent(pass = (int)Pass.Local)]
         public bool electricThrottle = false;
@@ -498,7 +505,7 @@ namespace MuMech
             }
             else
             {
-                differentialThrottleSuccess = false;
+				differentialThrottleSuccess = DifferentialThrottleStatus.Success;
             }
         }
 
@@ -781,14 +788,18 @@ namespace MuMech
             }
         }
 
-		public bool ComputeDifferentialThrottle(Vector3d torque)
+		private DifferentialThrottleStatus ComputeDifferentialThrottle(Vector3d torque)
 		{
 			//var stopwatch = new Stopwatch();
 			//stopwatch.Start();
 
 			float mainThrottle = vessel.ctrlState.mainThrottle;
-			if (mainThrottle < 0.001)
-				return false;
+
+			if (mainThrottle == 0)
+			{
+				torque = Vector3d.zero;
+				mainThrottle = 1;
+			}
 
 			int nb_engines = vesselState.enginesWrappers.Count;
 
@@ -807,8 +818,13 @@ namespace MuMech
 
 			var engines = vesselState.enginesWrappers.Where(eng => !eng.engine.throttleLocked).ToList();
 			var n = engines.Count;
-			if (n < 2)
-				return false;
+
+			if (nb_engines == 0)
+				return DifferentialThrottleStatus.AllEnginesOff;
+			
+			if (nb_engines == 1 || n == 0)
+				return DifferentialThrottleStatus.MoreEnginesRequired;
+			
 
 			double[,] a = new double[n, n];
 			double[] b = new double[n];
@@ -844,14 +860,14 @@ namespace MuMech
 			//UnityEngine.Debug.LogFormat("[DiffThrottle] t1: {0}, t2: {1}, t3: {2}", t1, t2 - t1, t3 - t2);
 
             if (x.Any(val => double.IsNaN(val)))
-				return false;
+				return DifferentialThrottleStatus.SolverFailed;
 
 			for (int i = 0; i < n; i++)
 			{
 				engines[i].thrustRatio = (float)(x[i] / mainThrottle);
 			}
 
-			return true;
+			return DifferentialThrottleStatus.Success;
 		}
         
         public void DisableDifferentialThrottle()
