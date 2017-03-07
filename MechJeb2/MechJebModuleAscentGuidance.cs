@@ -127,7 +127,14 @@ namespace MuMech
                 }
                 GUILayout.EndHorizontal();
 
-                autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering");
+                GUILayout.BeginHorizontal();
+                autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering", GUILayout.ExpandWidth(false));
+                if (autopilot.correctiveSteering)
+                {
+                    GUILayout.Label("Gain", GUILayout.ExpandWidth(false));
+                    autopilot.correctiveSteeringGain.text = GUILayout.TextField(autopilot.correctiveSteeringGain.text, GUILayout.Width(40));
+                }
+                GUILayout.EndHorizontal();
 
                 autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
                 if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();

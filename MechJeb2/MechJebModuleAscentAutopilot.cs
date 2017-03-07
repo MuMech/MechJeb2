@@ -26,6 +26,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble correctiveSteeringGain = 0.6; //control gain
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble verticalRoll = new EditableDouble(0);
@@ -315,16 +317,11 @@ namespace MuMech
             if (correctiveSteering)
             {
                 Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
-
-                const double Kp = 5.0; //control gain
-
-                //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-                double difficulty = vesselState.surfaceVelocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
-                if (difficulty > 5) difficulty = 5;
-
-                if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
-
-                Vector3d steerOffset = Kp * difficulty * velocityError;
+                
+                double difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
+                difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
+                Vector3d steerOffset = correctiveSteeringGain * difficulty * velocityError;
+                
 
                 //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
                 double maxOffset = 10 * UtilMath.Deg2Rad;
