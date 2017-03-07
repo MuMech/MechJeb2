@@ -149,7 +149,7 @@ namespace MuMech
 //            }
             
             bool allowDrag = !locked;
-            if (locked && !isOverlay && core.settings.useTitlebarDragging)
+            if (!locked && !isOverlay && core.settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
