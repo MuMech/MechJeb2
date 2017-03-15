@@ -812,7 +812,7 @@ namespace MuMech
 				torque -= vesselState.enginesWrappers[i].constantTorque;
 				torqueScale += vesselState.enginesWrappers[i].maxVariableTorque.magnitude;
 
-				force += mainThrottle * vesselState.enginesWrappers[i].maxVariableForce;
+				force += Vector3d.Dot(mainThrottle * vesselState.enginesWrappers[i].maxVariableForce, Vector3d.up) * Vector3d.up;
 				forceScale += vesselState.enginesWrappers[i].maxVariableForce.magnitude * 10;
 			}
 
