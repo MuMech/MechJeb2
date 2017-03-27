@@ -62,7 +62,7 @@ namespace MuMech
                 return "use regular Hohmann transfer function to intercept another body orbiting the Sun.";
             }
 
-		    if (o.referenceBody == target.targetBody)
+		    if (target.Target is CelestialBody && o.referenceBody == target.targetBody)
 		    {
                 return "you are already orbiting " + o.referenceBody.theName + ".";
             }
