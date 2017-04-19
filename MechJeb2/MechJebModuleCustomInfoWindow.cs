@@ -399,7 +399,7 @@ namespace MuMech
 
                         if (editedWindow.title != newTitle)
                         {
-                            editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
+                            editedWindow.title = newTitle;
                             editedWindow.dirty = true;
                         }
                     });
