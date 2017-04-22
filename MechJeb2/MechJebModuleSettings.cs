@@ -6,8 +6,8 @@ namespace MuMech
     {
         public MechJebModuleSettings(MechJebCore core) : base(core) 
         { 
-            showInEditor = true;
-            showInFlight = true;
+            ShowInEditor = true;
+            ShowInFlight = true;
         }
 
         // Kept for old conf compatibility
@@ -53,7 +53,8 @@ namespace MuMech
             if (GUILayout.Button("\nRestore factory default settings\n"))
             {
                 KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_global.cfg").Delete();
-                KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg").Delete();
+                if (vessel != null && vessel.vesselName != null)
+                    KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg").Delete();
                 core.ReloadAllComputerModules();
                 GuiUtils.SetGUIScale(1);
             }

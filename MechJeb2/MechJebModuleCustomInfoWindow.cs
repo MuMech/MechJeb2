@@ -14,8 +14,24 @@ namespace MuMech
         public string title = "Custom Info Window";
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
         public List<InfoItem> items = new List<InfoItem>();
+
+        [SerializeField]
         [Persistent(pass = (int)Pass.Global)]
-        public bool isCompact = false;
+        private bool isCompact = false;
+        public bool IsCompact
+        {
+            get { return isCompact; }
+            set
+            {
+                isCompact = value;
+                if (isCompact != value)
+                {
+                    isCompact = value;
+                    dirty = true;
+                }
+            }
+        }
+
 
         [Persistent(pass = (int) Pass.Global)]
         public Color backgroundColor = new Color(0,0,0,1);
@@ -62,7 +78,7 @@ namespace MuMech
             if (items.Count == 0) GUILayout.Label("Add items to this window with the custom window editor.");
             GUILayout.EndVertical();
 
-            if (!isOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
+            if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
             {
                 MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                 if (editor != null)
@@ -72,7 +88,7 @@ namespace MuMech
                 }
             }
 
-            if (!isOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
+            if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
             {
                 MuUtils.SystemClipboard = ToSharingString();
                 ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
@@ -89,13 +105,13 @@ namespace MuMech
         public override void DrawGUI(bool inEditor)
         {
             Init();
-            if (isOverlay)
+            if (IsOverlay)
             {
                 GUI.skin = localSkin;
             }
 
             base.DrawGUI(inEditor);
-            if (isOverlay)
+            if (IsOverlay)
                 GUI.skin = GuiUtils.skin;
         }
 
@@ -108,7 +124,7 @@ namespace MuMech
                 background.Apply();
             }
 
-            if (isOverlay && !localSkin)
+            if (IsOverlay && !localSkin)
             {
                 localSkin = Object.Instantiate(GuiUtils.transparentSkin);
                 localSkin.window.normal.background = background;
@@ -120,7 +136,7 @@ namespace MuMech
         {
             string windowSharingString = "--- MechJeb Custom Window ---\n";
             windowSharingString += "Name: " + GetName() + "\n";
-            windowSharingString += "Show in:" + (showInEditor ? " editor" : "") + (showInFlight ? " flight" : "") + "\n";
+            windowSharingString += "Show in:" + (ShowInEditor ? " editor" : "") + (ShowInFlight ? " flight" : "") + "\n";
             for (int i = 0; i < items.Count; i++)
             {
                 InfoItem item = items[i];
@@ -136,8 +152,8 @@ namespace MuMech
             if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Trim().Substring("Name: ".Length);
             if (lines.Length > 2 && lines[2].StartsWith("Show in:"))
             {
-                showInEditor = lines[2].Contains("editor");
-                showInFlight = lines[2].Contains("flight");
+                ShowInEditor = lines[2].Contains("editor");
+                ShowInFlight = lines[2].Contains("flight");
             }
 
             for (int i = 3; i < lines.Length; i++)
@@ -272,6 +288,7 @@ namespace MuMech
                 windowNode.AddValue("enabledFlight", window.enabledFlight);
                 windowNode.AddValue("enabledEditor", window.enabledEditor);
                 windowNode.CopyTo(global.AddNode(name));
+                window.dirty = false;
             }
         }
 
@@ -298,10 +315,11 @@ namespace MuMech
         void AddNewWindow()
         {
             editedWindow = new MechJebModuleCustomInfoWindow(core);
-            if (HighLogic.LoadedSceneIsEditor) editedWindow.showInEditor = true;
-            if (HighLogic.LoadedSceneIsFlight) editedWindow.showInFlight = true;
+            if (HighLogic.LoadedSceneIsEditor) editedWindow.ShowInEditor = true;
+            if (HighLogic.LoadedSceneIsFlight) editedWindow.ShowInFlight = true;
             core.AddComputerModule(editedWindow);
             editedWindow.enabled = true;
+            editedWindow.dirty = true;
         }
 
         void RemoveCurrentWindow()
@@ -322,9 +340,16 @@ namespace MuMech
                 if (editedWindow != null)
                 {
                     editedWindow.Init();
-                    editedWindow.backgroundColor = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.backgroundColor);
-                    editedWindow.background.SetPixel(0, 0, editedWindow.backgroundColor);
-                    editedWindow.background.Apply();
+
+                    Color newColor = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.backgroundColor);
+
+                    if (editedWindow.backgroundColor != newColor)
+                    {
+                        editedWindow.backgroundColor = newColor;
+                        editedWindow.background.SetPixel(0, 0, editedWindow.backgroundColor);
+                        editedWindow.background.Apply();
+                        editedWindow.dirty = true;
+                    }
                 }
             }
 
@@ -332,7 +357,12 @@ namespace MuMech
             {
                 if (editedWindow != null)
                 {
-                    editedWindow.text = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.text);
+                    Color newColor = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.text);
+                    if (editedWindow.text != newColor)
+                    {
+                        editedWindow.text = newColor;
+                        editedWindow.dirty = true;
+                    }
                 }
             }
         }
@@ -365,22 +395,28 @@ namespace MuMech
                 int editedWindowIndex = allWindows.IndexOf(editedWindow);
                 editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
                     {
-                        editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
+                        string newTitle = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
+
+                        if (editedWindow.title != newTitle)
+                        {
+                            editedWindow.title = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
+                            editedWindow.dirty = true;
+                        }
                     });
                 editedWindow = (MechJebModuleCustomInfoWindow)allWindows[editedWindowIndex];
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Show in:");
-                editedWindow.showInFlight = GUILayout.Toggle(editedWindow.showInFlight, "Flight", GUILayout.Width(60));
-                editedWindow.showInEditor = GUILayout.Toggle(editedWindow.showInEditor, "Editor");
+                editedWindow.ShowInFlight = GUILayout.Toggle(editedWindow.ShowInFlight, "Flight", GUILayout.Width(60));
+                editedWindow.ShowInEditor = GUILayout.Toggle(editedWindow.ShowInEditor, "Editor");
                 GUILayout.EndHorizontal();
 
 
                 GUILayout.BeginHorizontal();
-                editedWindow.isOverlay = GUILayout.Toggle(editedWindow.isOverlay, "Overlay");
-                editedWindow.locked = GUILayout.Toggle(editedWindow.locked, "Locked");
-                editedWindow.isCompact = GUILayout.Toggle(editedWindow.isCompact, "Compact");
+                editedWindow.IsOverlay = GUILayout.Toggle(editedWindow.IsOverlay, "Overlay");
+                editedWindow.Locked = GUILayout.Toggle(editedWindow.Locked, "Locked");
+                editedWindow.IsCompact = GUILayout.Toggle(editedWindow.IsCompact, "Compact");
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
@@ -486,8 +522,8 @@ namespace MuMech
         public MechJebModuleCustomWindowEditor(MechJebCore core)
             : base(core)
         {
-            showInFlight = true;
-            showInEditor = true;
+            ShowInFlight = true;
+            ShowInEditor = true;
         }
 
         public void AddDefaultWindows()

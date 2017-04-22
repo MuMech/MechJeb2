@@ -223,7 +223,7 @@ namespace MuMech
                 //hyperbolic orbits:
                 for (int meanAnomaly = -1000; meanAnomaly <= 1000; meanAnomaly += 5)
                 {
-                    points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * Math.PI / 180, 0)));
+                    points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * UtilMath.Deg2Rad, 0)));
                 }
             }
 

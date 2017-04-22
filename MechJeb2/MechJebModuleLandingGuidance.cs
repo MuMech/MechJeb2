@@ -36,7 +36,7 @@ namespace MuMech
 
         private void moveByMeter(ref EditableAngle angle, double distance, double Alt)
         {
-            double angularDelta = distance * 180d / (Math.PI * (Alt + mainBody.Radius));
+            double angularDelta = distance * UtilMath.Rad2Deg / (Alt + mainBody.Radius);
             angle += angularDelta;
         }
 
@@ -313,8 +313,8 @@ namespace MuMech
                     Vector3d pos = ConfigNode.ParseVector3D(radialPos).normalized;
                     CelestialBody body = FlightGlobals.Bodies.Find(b => b.bodyName == bodyName);
 
-                    double latitude = Math.Asin(pos.y) * 180 / Math.PI;
-                    double longitude = Math.Atan2(pos.z, pos.x) * 180 / Math.PI;
+                    double latitude = Math.Asin(pos.y) * UtilMath.Rad2Deg;
+                    double longitude = Math.Atan2(pos.z, pos.x) * UtilMath.Rad2Deg;
 
                     if (body != null && !landingSites.Any(p => p.name == launchSiteName))
                     {

@@ -60,10 +60,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
-
-        [Persistent(pass = (int)Pass.Global)]
-        public static bool useCoMVelocity = true;
-
+        
         public bool attitudeKILLROT = false;
 
         protected bool attitudeChanged = false;
@@ -135,7 +132,8 @@ namespace MuMech
         }
 
 
-        [Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
+        //[Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
+        // Disable the use of Stock SAS for now
         public bool useSAS = false;
 
         protected Quaternion lastSAS = new Quaternion();
@@ -386,7 +384,7 @@ namespace MuMech
                 return;
 
             torque = vesselState.torqueAvailable;
-            if (core.thrust.differentialThrottleSuccess)
+			if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
                 torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             inertia = Vector3d.Scale(
@@ -443,7 +441,7 @@ namespace MuMech
                 // Direction we want to be facing
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
                 Transform vesselTransform = vessel.ReferenceTransform;
-                Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
+                //Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
                 
                 // Find out the real shorter way to turn where we wan to.
                 // Thanks to HoneyFox
@@ -518,14 +516,14 @@ namespace MuMech
                 }
                 lastAct = act;
 
-                Vector3d deltaEuler = error * MathExtensions.Rad2Deg;
+                Vector3d deltaEuler = error * UtilMath.Rad2Deg;
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
 
                 // Feed the control torque to the differential throttle
-                if (core.thrust.differentialThrottleSuccess)
+				if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
                     core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act, vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }

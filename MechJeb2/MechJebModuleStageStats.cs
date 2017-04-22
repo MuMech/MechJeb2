@@ -45,9 +45,42 @@ namespace MuMech
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
+        private int dirty = 1;
+
         private FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
 
         long millisecondsBetweenSimulations;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GameEvents.onEditorShipModified.Add(onEditorShipModified);
+                GameEvents.onPartCrossfeedStateChange.Add(onPartCrossfeedStateChange);
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onEditorShipModified.Remove(onEditorShipModified);
+            GameEvents.onPartCrossfeedStateChange.Remove(onPartCrossfeedStateChange);
+        }
+
+        private void onPartCrossfeedStateChange(Part data)
+        {
+            setDirty();
+        }
+
+        void onEditorShipModified(ShipConstruct data)
+        {
+            setDirty();
+        }
+
+        void setDirty()
+        {
+            // The ship is not really ready in the first frame following the event so we wait 2
+            dirty = 2;
+        }
 
         public override void OnModuleEnabled()
         {
@@ -99,10 +132,23 @@ namespace MuMech
             {
                 simulationRunning = true;
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
-
+                
                 //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
                 List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
-                
+
+                if (HighLogic.LoadedSceneIsEditor)
+                {
+                    if (dirty > 0)
+                    {
+                        PartSet.BuildPartSets(parts, null);
+                        dirty--;
+                    }
+                }
+                else
+                {
+                    vessel.UpdateResourceSetsIfDirty();
+                }
+
                 sims[0].Init(parts, dVLinearThrust);
                 sims[1].Init(parts, dVLinearThrust);
 

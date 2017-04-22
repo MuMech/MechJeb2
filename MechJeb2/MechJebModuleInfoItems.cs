@@ -100,7 +100,7 @@ namespace MuMech
         [ValueInfoItem("Mean Anomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
         public double MeanAnomaly()
         {
-            return orbit.meanAnomaly * MathExtensions.Rad2Deg;
+            return orbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
@@ -129,6 +129,24 @@ namespace MuMech
             return OrbitSummaryWithInclination(core.target.TargetOrbit);
         }
 
+        [ValueInfoItem("Orbital energy", InfoItem.Category.Orbit, description = "Specific orbital energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double OrbitalEnergy()
+        {
+            return orbit.orbitalEnergy;
+        }
+        
+        [ValueInfoItem("Potential energy", InfoItem.Category.Orbit, description = "Specific potential energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double PotentialEnergy()
+        {
+            return -orbit.referenceBody.gravParameter / orbit.radius;
+        }
+        
+        [ValueInfoItem("Kinetic energy", InfoItem.Category.Orbit, description = "Specific kinetic energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double KineticEnergy()
+        {
+            return orbit.orbitalEnergy + orbit.referenceBody.gravParameter / orbit.radius;
+        }
+        
         //TODO: consider turning this into a binary search
         [ValueInfoItem("Time to impact", InfoItem.Category.Misc)]
         public string TimeToImpact()
@@ -284,7 +302,7 @@ namespace MuMech
         [ValueInfoItem("Angular Velocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * 180 / Math.PI, "F3") + "°/s" ;
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s" ;
         }
         
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
@@ -365,10 +383,8 @@ namespace MuMech
         [ValueInfoItem("Total electric charge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, siMaxPrecision = 1, units = "Ah")]
         public double TotalElectricCharge()
         {
-            return vessel.TotalResourceAmount("ElectricCharge");
+            return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
-
-
 
         [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MaxThrust()
@@ -940,7 +956,7 @@ namespace MuMech
             if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
             if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
             if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime)));
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));
 
             if (!noChange)
                 StageDisplayState = 3;
@@ -1109,14 +1125,14 @@ namespace MuMech
         [GeneralInfoItem("Docking guidance: Angular velocity", InfoItem.Category.Target)]
         public void DockingGuidanceAngularVelocity()
         {
-            if (!(core.target.Target is Vessel)  || core.target.vessel.rootPart == null || core.target.vessel.rootPart.rb == null)
+            if (!(core.target.Target is Vessel))
             {
                 GUILayout.Label("Target-relative Angular velocity: (N/A)");
                 return;
             }
 
             Vessel target = (Vessel)core.target.Target;
-            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.rootPart.rb.angularVelocity - vessel.rootPart.rb.angularVelocity) * Mathf.Rad2Deg;
+            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) * Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
             GUILayout.Label("Target-relative angular velocity:");
@@ -1226,7 +1242,7 @@ namespace MuMech
                 return vessel.landedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).name;
             if (biome != "")
                 biome = "'s " + biome;
 

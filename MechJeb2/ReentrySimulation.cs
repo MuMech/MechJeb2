@@ -1275,7 +1275,7 @@ namespace MuMech
 
             absolute.latitude = Latitude(vector3d);
 
-            double longitude = 180 / Math.PI * Math.Atan2(Vector3d.Dot(vector3d.normalized, lat0lon90AtStart), Vector3d.Dot(vector3d.normalized, lat0lon0AtStart));
+            double longitude = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(vector3d.normalized, lat0lon90AtStart), Vector3d.Dot(vector3d.normalized, lat0lon0AtStart));
             longitude -= 360 * (UT - epoch) / referenceBody.rotationPeriod;
             absolute.longitude = MuUtils.ClampDegrees180(longitude);
 
@@ -1311,7 +1311,7 @@ namespace MuMech
 
         public double Latitude(Vector3d vector3d)
         {
-            return 180 / Math.PI * Math.Asin(Vector3d.Dot(vector3d.normalized, lat90AtStart));
+            return UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, lat90AtStart));
         }
 
     }

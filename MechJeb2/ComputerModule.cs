@@ -41,6 +41,7 @@ namespace MuMech
             {
                 if (value != _enabled)
                 {
+                    dirty = true;
                     _enabled = value;
                     if (_enabled)
                     {
@@ -55,6 +56,9 @@ namespace MuMech
         }
 
         public string profilerName;
+
+        // Has this module config changed and should it be saved
+        public bool dirty = false;
 
         //The UserPool is an alternative way to handle enabling/disabling of a ComputerModule. 
         //Users can add and remove themselves from the user pool and the ComputerModule will be
@@ -134,6 +138,7 @@ namespace MuMech
                 if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global);
                 if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type);
                 if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local);
+                dirty = false;
             }
             catch (Exception e)
             {

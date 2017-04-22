@@ -26,6 +26,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble correctiveSteeringGain = 0.6; //control gain
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble verticalRoll = new EditableDouble(0);
@@ -303,32 +305,27 @@ namespace MuMech
             Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
                                                + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
-            double desiredHeading = MathExtensions.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
+            double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
-            Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * Math.PI / 180) * desiredHeadingVector
-                                         + Math.Sin(desiredFlightPathAngle * Math.PI / 180) * vesselState.up;
+            Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * UtilMath.Deg2Rad) * desiredHeadingVector
+                                         + Math.Sin(desiredFlightPathAngle * UtilMath.Deg2Rad) * vesselState.up;
 
             Vector3d desiredThrustVector = desiredVelocityUnit;
 
             if (correctiveSteering)
             {
                 Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
-
-                const double Kp = 5.0; //control gain
-
-                //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-                double difficulty = vesselState.surfaceVelocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
-                if (difficulty > 5) difficulty = 5;
-
-                if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
-
-                Vector3d steerOffset = Kp * difficulty * velocityError;
+                
+                double difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
+                difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
+                Vector3d steerOffset = correctiveSteeringGain * difficulty * velocityError;
+                
 
                 //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
-                double maxOffset = 10 * Math.PI / 180;
-                if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * Math.PI / 180;
+                double maxOffset = 10 * UtilMath.Deg2Rad;
+                if (desiredFlightPathAngle > 80) maxOffset = (90 - desiredFlightPathAngle) * UtilMath.Deg2Rad;
                 if (steerOffset.magnitude > maxOffset) steerOffset = maxOffset * steerOffset.normalized;
 
                 desiredThrustVector += steerOffset;
@@ -404,12 +401,12 @@ namespace MuMech
             // - Starwaster
             core.thrust.targetThrottle = 0;
 
-            double desiredHeading = MathExtensions.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
+            double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
-            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * MathExtensions.Deg2Rad) * desiredHeadingVector
-                + Math.Sin(desiredFlightPathAngle * MathExtensions.Deg2Rad) * vesselState.up;
+            Vector3d desiredThrustVector = Math.Cos(desiredFlightPathAngle * UtilMath.Deg2Rad) * desiredHeadingVector
+                + Math.Sin(desiredFlightPathAngle * UtilMath.Deg2Rad) * vesselState.up;
 
 
             core.attitude.attitudeTo(desiredThrustVector.normalized, AttitudeReference.INERTIAL, this);
@@ -454,8 +451,15 @@ namespace MuMech
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
                 double UT = orbit.NextApoapsisTime(vesselState.time);
-                //Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit, UT, desiredOrbitAltitude + mainBody.Radius);
+                //During the circularization burn, try to correct any inclination errors because it's better to combine the two burns.
+                //  For example, if you're about to do a 1500 m/s circularization burn, if you combine a 200 m/s inclination correction
+                //  into it, you actually only spend 1513 m/s to execute combined manuver.  Mechjeb should also do correction burns before
+                //  this if possible, and this can't correct all errors... but it's better then nothing.
+                //   (A better version of this should try to match inclination & LAN if target is specified)
+                Vector3d inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, desiredInclination);
+                Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit.PerturbedOrbit(UT, inclinationCorrection), UT,
+                    desiredOrbitAltitude + mainBody.Radius);
+                Vector3d dV = inclinationCorrection + smaCorrection;
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 
@@ -614,9 +618,9 @@ namespace MuMech
         {
             double inc = Math.Abs(Vector3d.Angle(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity));
             Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.GetOrbitNormal().Reorder(132).normalized).normalized; // I don't understand the sign here, but this seems to work
-            b *= launchBody.Radius * Math.Sin(Math.PI / 180 * launchLatitude) / Math.Tan(Math.PI / 180 * inc);
+            b *= launchBody.Radius * Math.Sin(UtilMath.Deg2Rad * launchLatitude) / Math.Tan(UtilMath.Deg2Rad * inc);
             Vector3d c = Vector3d.Cross(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity).normalized;
-            double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(Math.PI / 180 * launchLatitude), 2) - b.sqrMagnitude;
+            double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(UtilMath.Deg2Rad * launchLatitude), 2) - b.sqrMagnitude;
             if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
             c *= Math.Sqrt(cMagnitudeSquared);
             Vector3d a1 = b + c;

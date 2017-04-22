@@ -16,8 +16,8 @@ namespace MuMech
             priority = -1000;
             enabled = true;
             hidden = true;
-            showInFlight = true;
-            showInEditor = true;
+            ShowInFlight = true;
+            ShowInEditor = true;
 
             if (toolbarButtons == null)
                 toolbarButtons = new Dictionary<DisplayModule, Button>();
@@ -214,7 +214,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (core.someModuleAreLocked)
-                GUILayout.Label("Some module are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
+                GUILayout.Label("Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
         }
 
         public void SetupAppLauncher()

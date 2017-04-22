@@ -169,7 +169,7 @@ namespace MuMech
                 for (int i = 0; i < p.Resources.Count; i++)
                 {
                     PartResource r = p.Resources[i];
-                    if (r.amount > 0 && r.info.name != "ElectricCharge" && tankResources.Contains(r.info.id))
+                    if (r.amount > 0 && r.info.id != PartResourceLibrary.ElectricityHashcode && tankResources.Contains(r.info.id))
                     {
                         return true;
                     }
@@ -228,7 +228,7 @@ namespace MuMech
             for (int i = 0; i < p.Resources.Count; i++)
             {
                 PartResource r = p.Resources[i];
-                if (r.info.name == "ElectricCharge") continue;
+                if (r.info.id == PartResourceLibrary.ElectricityHashcode) continue;
                 if (r.maxAmount > 0) hadResources = true;
                 if (r.amount > 0) hasResources = true;
             }

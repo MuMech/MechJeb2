@@ -420,8 +420,8 @@ namespace MuMech
 			
 			if (BrakeOnEnergyDepletion)
 			{
-				var batteries = vessel.Parts.FindAll(p => p.Resources.Contains("ElectricCharge") && p.Resources["ElectricCharge"].flowState);
-				var energyLeft = batteries.Sum(p => p.Resources["ElectricCharge"].amount) / batteries.Sum(p => p.Resources["ElectricCharge"].maxAmount); 
+				var batteries = vessel.Parts.FindAll(p => p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) && p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
+				var energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) / batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount); 
 				var openSolars = vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
 					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable && p.deployState != ModuleDeployablePart.DeployState.BROKEN &&
 					                                                                         p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
@@ -502,8 +502,8 @@ namespace MuMech
 		{
 			if (WarpToDaylight && waitingForDaylight && vessel.isActiveVessel)
 			{
-				var batteries = vessel.Parts.FindAll(p => p.Resources.Contains("ElectricCharge") && p.Resources["ElectricCharge"].flowState);
-				var energyLeft = batteries.Sum(p => p.Resources["ElectricCharge"].amount) / batteries.Sum(p => p.Resources["ElectricCharge"].maxAmount);
+				var batteries = vessel.Parts.FindAll(p => p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) && p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
+				var energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) / batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount);
 				
 				if (waitingForDaylight)
 				{
