@@ -76,9 +76,24 @@ namespace MuMech
             }
 
             core.thrust.DifferentialThrottle();
-            
-            if (core.thrust.differentialThrottle && !core.thrust.differentialThrottleSuccess && vessel.LiftedOff())
-                GUILayout.Label("Differential throttle failed\nwith current engine layout", new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}});
+
+			if (core.thrust.differentialThrottle && vessel.LiftedOff())
+			{
+				switch (core.thrust.differentialThrottleSuccess)
+				{
+					case MechJebModuleThrustController.DifferentialThrottleStatus.MoreEnginesRequired:
+						GUILayout.Label("Differential throttle failed\nMore engines required", new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });
+						break;
+					case MechJebModuleThrustController.DifferentialThrottleStatus.AllEnginesOff:
+						GUILayout.Label("Differential throttle failed\nNo active engine", new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });
+						break;
+					case MechJebModuleThrustController.DifferentialThrottleStatus.SolverFailed:
+						GUILayout.Label("Differential throttle failed\nCannot find solution", new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });
+						break;
+					case MechJebModuleThrustController.DifferentialThrottleStatus.Success:
+						break;
+				}
+			}
 
             core.solarpanel.AutoDeploySolarPanelsInfoItem();
 

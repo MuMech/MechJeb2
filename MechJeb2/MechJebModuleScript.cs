@@ -79,12 +79,14 @@ namespace MuMech
 		public void addAction(MechJebModuleScriptAction action)
 		{
 			this.actionsList.Add(action);
+		    dirty = true;
 		}
 
 		public void removeAction(MechJebModuleScriptAction action)
 		{
 			this.actionsList.Remove (action);
-		}
+            dirty = true;
+        }
 
 		public void moveActionUp(MechJebModuleScriptAction action)
 		{
@@ -94,7 +96,8 @@ namespace MuMech
 			{
 				this.actionsList.Insert (index - 1, action);
 			}
-		}
+            dirty = true;
+        }
 
 		public override void OnStart(PartModule.StartState state)
 		{
@@ -838,7 +841,8 @@ namespace MuMech
 		{
 			this.savePointJustSet = true;
 			this.activeSavepoint = activeSavepoint;
-		}
+            dirty = true;
+        }
 
 		//Start after the action defined at a specified index (for load restore or vessel switch)
 		public void startAfterIndex(int index)

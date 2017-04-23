@@ -454,6 +454,7 @@ namespace MuMech
 
             GameEvents.onShowUI.Add(ShowGUI);
             GameEvents.onHideUI.Add(HideGUI);
+            GameEvents.onVesselChange.Add(UnlockControl);
 
             lastSettingsSaveTime = Time.time;
 
@@ -592,6 +593,19 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+
+        private bool NeedToSave()
+        {
+            bool needToSave = false;
+            foreach (ComputerModule module in GetComputerModules<ComputerModule>())
+            {
+                //if (module.dirty)
+                //    print(module.profilerName + " is dirty");
+                needToSave |= module.dirty;
+            }
+            return needToSave;
+        }
+
         public void Update()
         {
             if (this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !ready)
@@ -607,15 +621,20 @@ namespace MuMech
             }
 
             //periodically save settings in case we quit unexpectedly
+            Profiler.BeginSample("MechJebCore.Update.OnSave");
             if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
             {
                 if (Time.time > lastSettingsSaveTime + 5)
                 {
-                    //Debug.Log("MechJeb doing periodic settings save");
-                    OnSave(null);
+                    if (NeedToSave())
+                    {
+                        //print("Periodic settings save");
+                        OnSave(null);
+                    }
                     lastSettingsSaveTime = Time.time;
                 }
             }
+            Profiler.EndSample();
 
             if (ResearchAndDevelopment.Instance != null && unorderedComputerModules.Any(a => !a.unlockChecked))
             {
@@ -878,19 +897,24 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsFlight && vessel != null && vessel.vesselName == null)
                 return;
 
+            Profiler.BeginSample("MechJebCore.OnSave");
             try
             {
                 //Add any to-be-loaded modules so they get saved properly
+                Profiler.BeginSample("MechJebCore.OnSave.LoadDelayedModules");
                 LoadDelayedModules();
 
                 // base.OnSave(sfsNode); //is this necessary?
-
+                Profiler.EndSample();
+                Profiler.BeginSample("MechJebCore.OnSave.ConfigNode");
                 ConfigNode local = new ConfigNode("MechJebLocalSettings");
                 ConfigNode type = new ConfigNode("MechJebTypeSettings");
                 ConfigNode global = new ConfigNode("MechJebGlobalSettings");
-
+                Profiler.EndSample();
+                Profiler.BeginSample("MechJebCore.OnSave.loop");
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
+                    Profiler.BeginSample(module.profilerName);
                     try
                     {
                         string name = module.GetType().Name;
@@ -900,6 +924,7 @@ namespace MuMech
                     {
                         Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnSave: " + e);
                     }
+                    Profiler.EndSample();
                 }
 
                 /*Debug.Log("OnSave:");
@@ -909,9 +934,11 @@ namespace MuMech
                 Debug.Log(type.ToString());
                 Debug.Log("Global:");
                 Debug.Log(global.ToString());*/
-
+                Profiler.EndSample();
+                Profiler.BeginSample("MechJebCore.OnSave.sfsNode");
                 if (sfsNode != null) sfsNode.nodes.Add(local);
-
+                Profiler.EndSample();
+                Profiler.BeginSample("MechJebCore.OnSave.vesselName");
                 // The EDITOR => FLIGHT transition is annoying to handle. OnDestroy is called when HighLogic.LoadedSceneIsEditor is already false
                 // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
                 if (vessel != null || (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null))
@@ -920,16 +947,19 @@ namespace MuMech
                     vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
                     type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
                 }
-
+                Profiler.EndSample();
+                Profiler.BeginSample("MechJebCore.OnSave.global");
                 if (lastFocus == vessel)
                 {
                     global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
                 }
+                Profiler.EndSample();
             }
             catch (Exception e)
             {
                 Debug.LogError("MechJeb caught exception in core OnSave: " + e);
             }
+            Profiler.EndSample();
         }
 
         public void OnDestroy()
@@ -941,10 +971,11 @@ namespace MuMech
 
             GameEvents.onShowUI.Remove(ShowGUI);
             GameEvents.onHideUI.Remove(HideGUI);
+            GameEvents.onVesselChange.Remove(UnlockControl);
 
             if (weLockedInputs)
             {
-                InputLockManager.RemoveControlLock("MechJeb_noclick");
+                UnlockControl();
                 ManeuverGizmo.HasMouseFocus = false;
             }
 
@@ -1061,8 +1092,7 @@ namespace MuMech
                     Profiler.EndSample();
                 }
 
-                if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
-                if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium) PreventInFlightClickthrough();
+                PreventClickthrough();
                 GUI.matrix = previousGuiMatrix;
 
                 for (int i = 0; i < postDrawQueue.Count; i++)
@@ -1085,35 +1115,52 @@ namespace MuMech
         }
 
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
-        void PreventEditorClickthrough()
+        void PreventClickthrough()
         {
             bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
             {
-                EditorLogic.fetch.Lock(true, true, true, "MechJeb_noclick");
-                weLockedInputs = true;
+                LockControl();
             }
-            if (weLockedInputs && !mouseOverWindow)
+            else if (weLockedInputs && !mouseOverWindow)
             {
-                EditorLogic.fetch.Unlock("MechJeb_noclick");
-                weLockedInputs = false;
+                UnlockControl();
             }
         }
 
-        void PreventInFlightClickthrough()
+        private const string lockId = "MechJeb_noclick";
+
+        void LockControl()
         {
-            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            if (!weLockedInputs && mouseOverWindow && !Input.GetMouseButton(1))
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, "MechJeb_noclick");
-                weLockedInputs = true;
+                EditorLogic.fetch.Lock(true, true, true, lockId);
             }
-            if (weLockedInputs && !mouseOverWindow)
+            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
             {
-                InputLockManager.RemoveControlLock("MechJeb_noclick");
-                weLockedInputs = false;
+                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, lockId);
             }
+            weLockedInputs = true;
         }
+
+        void UnlockControl(Vessel v)
+        {
+            UnlockControl();
+        }
+
+        void UnlockControl()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                EditorLogic.fetch.Unlock(lockId);
+            }
+            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
+            {
+                InputLockManager.RemoveControlLock(lockId);
+            }
+            weLockedInputs = false;
+        }
+
 
         public new static void print(object message)
         {

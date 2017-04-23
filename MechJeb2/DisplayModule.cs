@@ -18,46 +18,101 @@ namespace MuMech
             }
             set
             {
-                if (!HighLogic.LoadedSceneIsEditor)
-                {
-                    windowVector = new Vector4(
+                Vector4 newPos = new Vector4(
                         Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
                         Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
                         value.width, value.height
                     );
-                    windowVector.x = Mathf.Clamp(windowVector.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
-                    windowVector.y = Mathf.Clamp(windowVector.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
+                newPos.x = Mathf.Clamp(newPos.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
+                newPos.y = Mathf.Clamp(newPos.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
+
+                if (!HighLogic.LoadedSceneIsEditor)
+                {
+                    if (windowVector != newPos)
+                    {
+                        dirty = true;
+                        windowVector = newPos;
+                    }
                 }
                 else
                 {
-                    windowVectorEditor = new Vector4(
-                        Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
-                        Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
-                        value.width, value.height
-                    );
-                    windowVectorEditor.x = Mathf.Clamp(windowVectorEditor.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
-                    windowVectorEditor.y = Mathf.Clamp(windowVectorEditor.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
+                    if (windowVectorEditor != newPos)
+                    {
+                        dirty = true;
+                        windowVectorEditor = newPos;
+                    }
                 }
             }
         }
+
+
+        // Those field should be private but Persistant has a bug that prevent it to work properly on parent class private fields
 
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
         [Persistent(pass = (int)Pass.Global)]
         public Vector4 windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-        
+
         [Persistent(pass = (int)Pass.Global)]
         public bool showInFlight = true;
+        public bool ShowInFlight
+        {
+            get { return showInFlight; }
+            set
+            {
+                if (showInFlight != value)
+                {
+                    showInFlight = value;
+                    dirty = true;
+                }
+            }
+        }
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInEditor = false;
+        public bool ShowInEditor
+        {
+            get { return showInEditor; }
+            set
+            {
+                if (showInEditor != value)
+                {
+                    showInEditor = value;
+                    dirty = true;
+                }
+            }
+        }
 
         [Persistent(pass = (int)Pass.Global)]
         public bool isOverlay = false;
+        public bool IsOverlay
+        {
+            get { return isOverlay; }
+            set
+            {
+                if (isOverlay != value)
+                {
+                    isOverlay = value;
+                    dirty = true;
+                }
+            }
+        }
 
         [Persistent(pass = (int)Pass.Global)]
         public bool locked = false;
+        public bool Locked
+        {
+            get { return locked; }
+            set
+            {
+                if (locked != value)
+                {
+                    locked = value;
+                    dirty = true;
+                }
+            }
+        }
 
         internal bool enabledEditor;
         internal bool enabledFlight;
@@ -94,7 +149,7 @@ namespace MuMech
 //            }
             
             bool allowDrag = !locked;
-            if (locked && !isOverlay && core.settings.useTitlebarDragging)
+            if (!locked && !isOverlay && core.settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
@@ -219,16 +274,21 @@ namespace MuMech
             //            }
         }
 
+        private ComputerModule[] makesActive;
+
         public virtual bool isActive()
         {
-            ComputerModule[] makesActive = { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
+            if (makesActive == null)
+                makesActive = new ComputerModule[] { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
 
             bool active = false;
-            foreach (var m in makesActive)
+            for (int i = 0; i < makesActive.Length; i++)
             {
+                var m = makesActive[i];
                 if (m != null)
                 {
-                    if (active |= m.users.RecursiveUser(this)) break;
+                    if (active |= m.users.RecursiveUser(this))
+                        break;
                 }
             }
             return active;

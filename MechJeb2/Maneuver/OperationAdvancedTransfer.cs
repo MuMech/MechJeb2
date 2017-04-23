@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityToolbag;
 using Object = UnityEngine.Object;
 
 namespace MuMech
@@ -39,10 +38,13 @@ namespace MuMech
 
 		private string CheckPreconditions(Orbit o, MechJebModuleTargetController target)
 		{
-			if (o.eccentricity >= 1 || o.ApR >= o.referenceBody.sphereOfInfluence)
+			if (o.eccentricity >= 1)
 				return "initial orbit must not be hyperbolic";
 
-			if (!target.NormalTargetExists)
+            if (o.ApR >= o.referenceBody.sphereOfInfluence)
+                return "initial orbit must not escape " + o.referenceBody.theName + " sphere of influence.";
+
+            if (!target.NormalTargetExists)
 				return "must select a target for the interplanetary transfer.";
 
 			if (o.referenceBody.referenceBody == null)
@@ -54,7 +56,18 @@ namespace MuMech
 					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
 				return "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
 			}
-			return null;
+
+		    if (o.referenceBody == Planetarium.fetch.Sun)
+		    {
+                return "use regular Hohmann transfer function to intercept another body orbiting the Sun.";
+            }
+
+		    if (o.referenceBody == target.targetBody)
+		    {
+                return "you are already orbiting " + o.referenceBody.theName + ".";
+            }
+
+		    return null;
 		}
 
 		void ComputeStuff(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -88,7 +101,11 @@ namespace MuMech
 			double synodic_period = o.referenceBody.orbit.SynodicPeriod(destination);
 			double hohmann_transfer_time = OrbitUtil.GetTransferTime(o.referenceBody.orbit, destination);
 
-			minDepartureTime = universalTime;
+            // Both orbit have the same period
+		    if (double.IsInfinity(synodic_period))
+		        synodic_period = o.referenceBody.orbit.period;
+
+            minDepartureTime = universalTime;
 			minTransferTime = 3600;
 
 			maxDepartureTime = minDepartureTime + synodic_period * 1.5;

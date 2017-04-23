@@ -87,6 +87,7 @@ namespace MuMech
         public void StopPickPositionTargetOnMap()
         {
             pickingPositionTarget = false;
+            Cursor.visible = true;
         }
 
         public void Unset()
@@ -206,9 +207,12 @@ namespace MuMech
                     targetLatitude = vessel.mainBody.GetLatitude(target.GetTransform().position);
                     targetLongitude = vessel.mainBody.GetLongitude(target.GetTransform().position);
                 }
+                if (target is CelestialBody)
+                {
+                    targetBody = (CelestialBody) target;
+                }
             }
-
-
+            
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
                 targetBody = vessel.mainBody;
@@ -222,8 +226,13 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (pickingPositionTarget && !GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null) Cursor.visible = false;
-            else Cursor.visible = true;
+            if (MapView.MapIsEnabled && pickingPositionTarget)
+            {
+                if (!GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null)
+                    Cursor.visible = false;
+                else
+                    Cursor.visible = true;
+            }
         }
 
         void DoMapView()
@@ -235,9 +244,11 @@ namespace MuMech
 
         void DoCoordinatePicking()
         {
-            if (pickingPositionTarget && !MapView.MapIsEnabled) pickingPositionTarget = false; //stop picking on leaving map view
+            if (pickingPositionTarget && !MapView.MapIsEnabled)
+                StopPickPositionTargetOnMap();  //stop picking on leaving map view
 
-            if (!pickingPositionTarget) return;
+            if (!pickingPositionTarget)
+                return;
 
             if (MapView.MapIsEnabled && vessel.isActiveVessel)
             {
@@ -253,7 +264,7 @@ namespace MuMech
                         if (Input.GetMouseButtonDown(0))
                         {
                             SetPositionTarget(mainBody, mouseCoords.latitude, mouseCoords.longitude);
-                            pickingPositionTarget = false;
+                            StopPickPositionTargetOnMap();
                         }
                     }
                 }
