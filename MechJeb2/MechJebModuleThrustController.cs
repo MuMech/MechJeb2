@@ -136,7 +136,7 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.Throttle) s.onHover.textColor = s.onNormal.textColor = Color.green;
+			if (limiter == LimitMode.Throttle) s.onHover.textColor = s.onNormal.textColor = maxThrottle > 0d ? Color.green : Color.red;
             limitThrottle = GUILayout.Toggle(limitThrottle, "Limit throttle to", s, GUILayout.Width(110));
             maxThrottle.text = GUILayout.TextField(maxThrottle.text, GUILayout.Width(30));
             GUILayout.Label("%", GUILayout.ExpandWidth(false));
