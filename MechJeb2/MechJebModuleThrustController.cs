@@ -113,6 +113,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxAcceleration = 40;
 
+		public double maxAccelerationLimit = 1;
+
         [GeneralInfoItem("Limit acceleration", InfoItem.Category.Thrust)]
         public void LimitAccelerationInfoItem()
         {
@@ -431,6 +433,8 @@ namespace MuMech
                 float limit = AccelerationLimitedThrottle();
                 if(limit < throttleLimit) limiter = LimitMode.Acceleration;
                 throttleLimit = Mathf.Min(throttleLimit, limit);
+				// to provide an externally facing value. (used when ignition is unstable so we can approximate throttle limit when ignition stablizes)
+				maxAccelerationLimit = throttleLimit;
             }
 
             if (electricThrottle && ElectricEngineRunning())
@@ -458,15 +462,16 @@ namespace MuMech
             // RealFuels ullage integration.  Stock always has stableUllage.
             if (limitToPreventUnstableIgnition && !vesselState.stableUllage)
             {
-                if (( targetThrottle > 0.0F || s.mainThrottle > 0.0F ) && throttleLimit > 0.0F ) {
+                if (( targetThrottle > 0.0F || s.mainThrottle > 0.0F ) && throttleLimit > 0.0F )
+				{
                     // We want to fire the throttle, and nothing else is limiting us, but we have unstable ullage
-                    limiter = LimitMode.UnstableIgnition;
                     if (vessel.ActionGroups[KSPActionGroup.RCS] && s.Z == 0) {
                         // RCS is on, so use it to ullage
                         s.Z = -1.0F;
                     }
                 }
-                throttleLimit = 0.0F;
+				limiter = LimitMode.UnstableIgnition;
+				throttleLimit = 0.0F;
             }
 
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
