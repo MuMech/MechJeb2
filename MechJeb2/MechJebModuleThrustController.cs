@@ -463,15 +463,16 @@ namespace MuMech
             if (limitToPreventUnstableIgnition && !vesselState.stableUllage)
             {
                 if (( targetThrottle > 0.0F || s.mainThrottle > 0.0F ) && throttleLimit > 0.0F )
-				{
+                {
                     // We want to fire the throttle, and nothing else is limiting us, but we have unstable ullage
-                    if (vessel.ActionGroups[KSPActionGroup.RCS] && s.Z == 0) {
+                    limiter = LimitMode.UnstableIgnition;
+                    throttleLimit = 0.0F;
+                    if (vessel.ActionGroups[KSPActionGroup.RCS] && s.Z == 0)
+                    {
                         // RCS is on, so use it to ullage
                         s.Z = -1.0F;
                     }
                 }
-				limiter = LimitMode.UnstableIgnition;
-				throttleLimit = 0.0F;
             }
 
             if (double.IsNaN(throttleLimit)) throttleLimit = 0;
