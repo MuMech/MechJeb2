@@ -462,7 +462,7 @@ namespace MuMech
             // RealFuels ullage integration.  Stock always has stableUllage.
             if (limitToPreventUnstableIgnition && !vesselState.stableUllage)
             {
-                if (( targetThrottle > 0.0F || s.mainThrottle > 0.0F ) && throttleLimit > 0.0F )
+                if (s.mainThrottle > 0.0F && throttleLimit > 0.0F )
                 {
                     // We want to fire the throttle, and nothing else is limiting us, but we have unstable ullage
                     limiter = LimitMode.UnstableIgnition;
