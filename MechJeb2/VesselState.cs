@@ -15,6 +15,8 @@ namespace MuMech
         private static FieldInfo RFPropStatusField;
         // RealFuels.ModuleEngineRF ignitions field to call via reflection
         private static FieldInfo RFignitionsField;
+        // RealFuels.ModuleEngineRF ullage field to call via reflection
+        private static FieldInfo RFullageField;
         // stableUllage is always true without RealFuels installed
         public bool stableUllage { get { return this.einfo.stableUllage; } }
 
@@ -260,6 +262,12 @@ namespace MuMech
                 if (RFignitionsField == null)
                 {
                     Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
+                    isLoadedRealFuels = false;
+                }
+                RFullageField = getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
+                if (RFullageField == null)
+                {
+                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
                     isLoadedRealFuels = false;
                 }
             }
@@ -894,7 +902,7 @@ namespace MuMech
                 foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
                 {
                     einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref CoTScalar);
-                    if (isLoadedRealFuels && RFPropStatusField != null && RFignitionsField != null)
+                    if (isLoadedRealFuels && RFPropStatusField != null && RFignitionsField != null && RFullageField != null)
                     {
                         einfo.CheckUllageStatus(engine.Key);
                     }
@@ -1197,6 +1205,29 @@ namespace MuMech
                     return;
                 }
 
+                bool? ullage;
+                try
+                {
+                    ullage = RFullageField.GetValue(e) as bool?;
+                }
+                catch (ArgumentException)
+                {
+                    Debug.Log("ArgumentError thrown while getting ullage from RealFuels, ullage integration disabled");
+                    RFullageField = null;
+                    return;
+                }
+
+                if (ullage == null)
+                {
+                    Debug.Log("BUG: getting ullage from RealFuels casted to null, ullage status likely broken");
+                    return;
+                }
+
+                if (ullage == false)
+                {
+                    return;
+                }
+
                 /* ullage is 'stable' if the engine has no ignitions left */
                 int? ignitions;
                 try
@@ -1216,7 +1247,8 @@ namespace MuMech
                     return;
                 }
 
-                if (ignitions < 1)
+                /* -1 => infinite ignitions;  0 => no ignitions left;  1+ => ignitions remaining */
+                if (ignitions == 0)
                 {
                     return;
                 }
