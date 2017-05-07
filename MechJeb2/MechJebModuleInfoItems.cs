@@ -1280,7 +1280,7 @@ namespace MuMech
                 TextEditor te = new TextEditor();
                 string result = "latitude =  " + vesselState.latitude.ToString("F6") + "\nlongitude = " + vesselState.longitude.ToString("F6") +
                                 "\naltitude = " + vessel.altitude.ToString("F2") + "\n";
-                te.content = new GUIContent(result);
+                te.text = result;
                 te.SelectAll();
                 te.Copy();
             }

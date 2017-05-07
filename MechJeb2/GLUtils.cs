@@ -133,7 +133,7 @@ namespace MuMech
             Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
 
             int step = (dashed ? 2 : 1);
-            for (int i = 0; i < points.Count() - 1; i += step)
+            for (int i = 0; i < points.Count - 1; i += step)
             {
                 if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
                 {
