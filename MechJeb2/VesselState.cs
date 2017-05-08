@@ -139,7 +139,10 @@ namespace MuMech
         public double maxEngineResponseTime = 0;
 
         public bool rcsThrust = false;
+        /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
         public float throttleLimit = 1;
+        /* the fixed throttle limit (i.e. user limited in the GUI), does not include transient conditions as limiting to zero due to unstable propellants in RF */
+        public float throttleFixedLimit = 1;
         public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit + minThrustAccel * (1 - throttleLimit); } }
 
         public Vector3d CoT;
