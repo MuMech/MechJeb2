@@ -314,7 +314,7 @@ namespace MuMech
                     return null;
                 }
 
-                return type.GetField("propellantStatus");
+                return type.GetField(fieldName);
         }
 
 
