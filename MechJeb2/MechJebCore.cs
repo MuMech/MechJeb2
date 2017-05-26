@@ -227,6 +227,28 @@ namespace MuMech
             }
         }
 
+        [KSPAction("Ascent AP toggle")]
+        public void OnAscentAPToggleAction(KSPActionParam param)
+        {
+
+            MechJebModuleAscentAutopilot autopilot = GetComputerModule<MechJebModuleAscentAutopilot>();
+            MechJebModuleAscentGuidance ascentGuidance = GetComputerModule<MechJebModuleAscentGuidance>();
+
+
+            if (autopilot == null || ascentGuidance == null)
+                return;
+
+            if (autopilot.enabled)
+            {
+                    autopilot.users.Remove(ascentGuidance);
+            }
+            else
+            {
+                    autopilot.users.Add(ascentGuidance);
+            }
+        }
+
+
         private void EngageTranslatronControl(MechJebModuleThrustController.TMode mode)
         {
             MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
