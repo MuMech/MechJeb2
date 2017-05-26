@@ -30,7 +30,7 @@
             }
             else if (newPeA < -o.referenceBody.Radius)
             {
-                throw new OperationException("new periapsis cannot be lower than minus the radius of " + o.referenceBody.theName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
+                throw new OperationException("new periapsis cannot be lower than minus the radius of " + o.referenceBody.bodyDisplayName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, newPeA + o.referenceBody.Radius), UT);

@@ -313,7 +313,7 @@ namespace MuMech
 
         private double VesselThrust(float throttle, double staticPressure, double atmDensity, double machNumber)
         {
-            var param = new Tuple<float, double, double, double>(throttle, staticPressure, atmDensity, machNumber);
+            var param = new Smooth.Algebraics.Tuple<float, double, double, double>(throttle, staticPressure, atmDensity, machNumber);
 
             using (var activeEngines = FindActiveEngines())
             {
@@ -325,7 +325,7 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         private Disposable<List<FuelNode>> FindActiveEngines()
         {
-            var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
+            var param = new Smooth.Algebraics.Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
             //print("Finding active engines: excluding resource considerations, there are " + nodes.Slinq().Where(n => n.isEngine && n.inverseStage >= simStage).Count());
             nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.isDrawingResources && n.CanDrawNeededResources(p.Item2), param).AddTo(activeEngines.value);
@@ -601,7 +601,7 @@ namespace MuMech
                     propellantSumRatioTimesDensity = engine.propellants.Slinq().Where(prop => !prop.ignoreForIsp).Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
                     propellantRatios.Clear();
                     propellantFlows.Clear();
-                    var dics = new Tuple<KeyableDictionary<int, float>, KeyableDictionary<int, ResourceFlowMode>>(propellantRatios, propellantFlows);
+                    var dics = new Smooth.Algebraics.Tuple<KeyableDictionary<int, float>, KeyableDictionary<int, ResourceFlowMode>>(propellantRatios, propellantFlows);
                     engine.propellants.Slinq()
                         .Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp)
                         .ForEach((p, dic) =>
@@ -896,7 +896,7 @@ namespace MuMech
 
         public double MaxTimeStep()
         {
-            var param = new Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>>(resources, resourceRequestRemainingThreshold, resourceDrains);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>>(resources, resourceRequestRemainingThreshold, resourceDrains);
             if (!resourceDrains.KeysList.Slinq().Any((id, p) => p.Item1[id] > p.Item2, param)) return double.MaxValue;
             return resourceDrains.KeysList.Slinq().Where((id, p) => p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
         }
@@ -910,7 +910,7 @@ namespace MuMech
         //returns whether this part contains any of the given resources
         public bool ContainsResources(List<int> whichResources)
         {
-            var param = new Tuple<DefaultableDictionary<int, double>, double>(resources, resourceRequestRemainingThreshold);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double>(resources, resourceRequestRemainingThreshold);
             //return whichResources.Any(id => resources[id] > DRAINED);
             return whichResources.Slinq().Any((id, r) => r.Item1[id] > r.Item2, param);
         }
