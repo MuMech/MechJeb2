@@ -1251,24 +1251,24 @@ namespace MuMech
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.theName + (biome == "" ? "'s surface" : biome);
+                    return mainBody.displayName + (biome == "" ? "'s surface" : biome);
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.theName + (biome == "" ? "'s oceans" : biome);
+                    return mainBody.displayName + (biome == "" ? "'s oceans" : biome);
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
-                        return "Flying over " + mainBody.theName + biome;
+                        return "Flying over " + mainBody.displayName + biome;
                     else
                         //ExperimentSituations.FlyingHigh
-                        return "Upper atmosphere of " + mainBody.theName + biome;
+                        return "Upper atmosphere of " + mainBody.displayName + biome;
                 default:
                     if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
-                        return "Space just above " + mainBody.theName + biome;
+                        return "Space just above " + mainBody.displayName + biome;
                     else
                         // ExperimentSituations.InSpaceHigh
-                        return "Space high over " + mainBody.theName + biome;
+                        return "Space high over " + mainBody.displayName + biome;
             }
         }
 

@@ -30,7 +30,7 @@
 
             if(o.Radius(UT) > 2*newSMA)
             {
-                throw new OperationException("cannot make Semi-Major Axis less than twice the burn altitude plus the radius of " + o.referenceBody.theName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
+                throw new OperationException("cannot make Semi-Major Axis less than twice the burn altitude plus the radius of " + o.referenceBody.displayName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT);
