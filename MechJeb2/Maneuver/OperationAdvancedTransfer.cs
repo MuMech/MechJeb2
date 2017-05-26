@@ -46,13 +46,13 @@ namespace MuMech
 				return "must select a target for the interplanetary transfer.";
 
 			if (o.referenceBody.referenceBody == null)
-				return "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".";
+				return "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.bodyDisplayName + ".";
 
 			if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
 			{
 				if (o.referenceBody == target.TargetOrbit.referenceBody)
-					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
-				return "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
+					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.bodyDisplayName + ".";
+				return "an interplanetary transfer from within " + o.referenceBody.bodyDisplayName + "'s sphere of influence must target a body that orbits " + o.referenceBody.bodyDisplayName + "'s parent, " + o.referenceBody.referenceBody.bodyDisplayName + ".";
 			}
 			return null;
 		}
