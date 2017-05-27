@@ -481,7 +481,7 @@ namespace MuMech
             //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.enabled && m.showInCurrentScene && !m.isOverlay
+                if (m.enabled && m.showInCurrentScene && !m.IsOverlay
                     && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / GuiUtils.scale))
                 {
                     return true;
@@ -605,9 +605,6 @@ namespace MuMech
 
             public static int Box(int selectedItem, string[] entries, object caller, bool expandWidth = true)
             {
-                if (dontUseDropDownMenu)
-                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem], expandWidth);
-
                 // Trivial cases (0-1 items)
                 if (entries.Length == 0)
                     return 0;
@@ -616,6 +613,12 @@ namespace MuMech
                     GUILayout.Label(entries[0]);
                     return 0;
                 }
+
+                if (selectedItem >= entries.Length)
+                    selectedItem = entries.Length - 1;
+
+                if (dontUseDropDownMenu)
+                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem], expandWidth);
 
                 // A choice has been made, update the return value
                 if (popupOwner == caller && ! ComboBox.popupActive)

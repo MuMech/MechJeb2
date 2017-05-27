@@ -26,6 +26,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble correctiveSteeringGain = 0.6; //control gain
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble verticalRoll = new EditableDouble(0);
@@ -315,16 +317,11 @@ namespace MuMech
             if (correctiveSteering)
             {
                 Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
-
-                const double Kp = 5.0; //control gain
-
-                //"difficulty" scales the controller gain to account for the difficulty of changing a large velocity vector given our current thrust
-                double difficulty = vesselState.surfaceVelocity.magnitude / (50 + 10 * vesselState.ThrustAccel(core.thrust.targetThrottle));
-                if (difficulty > 5) difficulty = 5;
-
-                if (vesselState.limitedMaxThrustAccel == 0) difficulty = 1.0; //so we don't freak out over having no thrust between stages
-
-                Vector3d steerOffset = Kp * difficulty * velocityError;
+                
+                double difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
+                difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
+                Vector3d steerOffset = correctiveSteeringGain * difficulty * velocityError;
+                
 
                 //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
                 double maxOffset = 10 * UtilMath.Deg2Rad;
@@ -454,8 +451,15 @@ namespace MuMech
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
                 double UT = orbit.NextApoapsisTime(vesselState.time);
-                //Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit, UT, desiredOrbitAltitude + mainBody.Radius);
+                //During the circularization burn, try to correct any inclination errors because it's better to combine the two burns.
+                //  For example, if you're about to do a 1500 m/s circularization burn, if you combine a 200 m/s inclination correction
+                //  into it, you actually only spend 1513 m/s to execute combined manuver.  Mechjeb should also do correction burns before
+                //  this if possible, and this can't correct all errors... but it's better then nothing.
+                //   (A better version of this should try to match inclination & LAN if target is specified)
+                Vector3d inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, desiredInclination);
+                Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit.PerturbedOrbit(UT, inclinationCorrection), UT,
+                    desiredOrbitAltitude + mainBody.Radius);
+                Vector3d dV = inclinationCorrection + smaCorrection;
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 

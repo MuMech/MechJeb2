@@ -45,7 +45,7 @@ namespace MuMech
         protected bool simulationRunning = false;
         protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
-        private int dirty = 1;
+        private int needRebuild = 1;
 
         private FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
 
@@ -79,7 +79,7 @@ namespace MuMech
         void setDirty()
         {
             // The ship is not really ready in the first frame following the event so we wait 2
-            dirty = 2;
+            needRebuild = 2;
         }
 
         public override void OnModuleEnabled()
@@ -138,10 +138,10 @@ namespace MuMech
 
                 if (HighLogic.LoadedSceneIsEditor)
                 {
-                    if (dirty > 0)
+                    if (needRebuild > 0)
                     {
                         PartSet.BuildPartSets(parts, null);
-                        dirty--;
+                        needRebuild--;
                     }
                 }
                 else

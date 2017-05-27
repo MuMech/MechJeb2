@@ -36,6 +36,10 @@ namespace MuMech
             double dV = node.GetBurnVector(orbit).magnitude;
             double halfBurnTIme;
             double burnTIme = BurnTime(dV, out halfBurnTIme);
+            if (double.IsInfinity(halfBurnTIme))
+            {
+                halfBurnTIme = 0.0;
+            }
             return GuiUtils.TimeToDHMS(node.UT - halfBurnTIme - vesselState.time);
         }
 
@@ -124,8 +128,8 @@ namespace MuMech
             double burnTime = BurnTime(dVLeft, out halfBurnTime);
 
             double timeToNode = node.UT - vesselState.time;
-
-            if (halfBurnTime > 0 && timeToNode < halfBurnTime)
+            //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
+            if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
             {
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -134,7 +138,7 @@ namespace MuMech
             //autowarp, but only if we're already aligned with the node
             if (autowarp && !burnTriggered)
             {
-                if (core.attitude.attitudeAngleFromTarget() < 1 || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001d) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
                     core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }
@@ -223,7 +227,27 @@ namespace MuMech
                 // TODO: Be smarter about throttle limits on future stages.
                 if (i == stats.vacStats.Length - 1)
                 {
-                    stageAvgAccel *= vesselState.throttleLimit;
+                    if (this.core.thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
+                    {
+                        stageAvgAccel *= (double)this.vesselState.throttleLimit;
+                    }
+                    else
+                    {
+                        double fLimitTemp = 1.0;
+                        if (this.core.thrust.limitThrottle)
+                        {
+                            fLimitTemp = this.core.thrust.maxThrottle;
+                        }
+                        if (this.core.thrust.limitAcceleration)
+                        {
+                            fLimitTemp = Math.Min(fLimitTemp, this.core.thrust.maxAccelerationLimit);
+                        }
+                        if (this.core.thrust.limiterMinThrottle)
+                        {
+                            fLimitTemp = Math.Max(this.core.thrust.minThrottle, fLimitTemp);
+                        }
+                        stageAvgAccel *= fLimitTemp;
+                    }
                 }
 
                 halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
