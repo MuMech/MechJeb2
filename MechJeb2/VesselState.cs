@@ -1274,7 +1274,7 @@ namespace MuMech
                     return;
                 }
 
-                if ((propellantStatus != "Nominal") && (propellantStatus != "Very Stable"))
+                if ((propellantStatus != "Nominal") && (propellantStatus != "Very Stable") && (propellantStatus != "Stable"))
                 {
                     stableUllage = false;
                 }

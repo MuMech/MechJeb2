@@ -27,7 +27,7 @@ namespace MuMech
 		private bool partHighlightedS = false;
 		private bool partHighlightedT = false;
 
-		public MechJebModuleScriptActionCrewTransfer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionCrewTransfer (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.crewableParts.Clear();
 			this.crewablePartsNamesS.Clear();
@@ -88,9 +88,9 @@ namespace MuMech
 			GameEvents.onVesselChange.Fire(FlightGlobals.ActiveVessel);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (crewableParts [selectedPartIndexT].protoModuleCrew.Count < crewableParts [selectedPartIndexT].CrewCapacity)
 			{
 				MoveKerbal(crewableParts [selectedPartIndexS], crewableParts [selectedPartIndexT], kerbalsList[selectedKerbal]);

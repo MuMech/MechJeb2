@@ -15,7 +15,7 @@ namespace MuMech
 		private bool nextStage = true;
 		private List<String> stagesList = new List<String>();
 
-		public MechJebModuleScriptActionStaging (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionStaging (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			for (int i = 0; i<StageManager.StageCount; i++)
 			{
@@ -23,9 +23,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			if (nextStage)
 			{
 				StageManager.ActivateNextStage();
