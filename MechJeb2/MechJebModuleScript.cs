@@ -16,10 +16,15 @@ namespace MuMech
 		[Persistent(pass = (int)(Pass.Local))]
 		private bool minifiedGUI = false;
 		private List<String> scriptsList = new List<String>();
+		private List<String> memorySlotsList = new List<String>();
 		[Persistent(pass = (int)(Pass.Type))]
 		private String[] scriptNames = {"","","","","","","",""};
+		[Persistent(pass = (int)(Pass.Type))]
+		private String[] globalScriptNames = { "", "", "", "", "", "", "", "" };
 		[Persistent(pass = (int)(Pass.Local))]
 		private int selectedSlot = 0;
+		[Persistent(pass = (int)(Pass.Local))]
+		private int selectedMemorySlotType = 0;
 		[Persistent(pass = (int)(Pass.Local))]
 		public String vesselSaveName;
 		[Persistent(pass = (int)(Pass.Local))]
@@ -40,6 +45,7 @@ namespace MuMech
 		private bool waitingDeletionConfirmation = false;
 		private List<String> compatiblePluginsInstalled = new List<String>();
 		private bool addActionDisabled = false;
+		private int old_selectedMemorySlotType;
 
 		public MechJebModuleScript(MechJebCore core) : base(core)
 		{
@@ -64,6 +70,9 @@ namespace MuMech
 			imageRed.Apply();
 			imageGreen.Apply();
 			imageGray.Apply();
+			this.memorySlotsList.Clear();
+			this.memorySlotsList.Add("Global Memory");
+			this.memorySlotsList.Add("Vessel Memory");
 			//Init main actions list
 			this.actionsList = new MechJebModuleScriptActionsList(core, this, this, 0);
 		}
@@ -73,7 +82,14 @@ namespace MuMech
 			scriptsList.Clear();
 			for (int i = 0; i < 8; i++)
 			{
-				scriptsList.Add("Slot " + (i+1) + " - " + scriptNames[i]);
+				if (selectedMemorySlotType == 1)
+				{
+					scriptsList.Add("Slot " + (i + 1) + " - " + scriptNames[i]);
+				}
+				else
+				{
+					scriptsList.Add("Slot " + (i + 1) + " - " + globalScriptNames[i]);
+				}
 			}
 		}
 
@@ -162,22 +178,24 @@ namespace MuMech
 
 		public void SaveScriptModuleConfig()
 		{
+			string slotName = this.getSaveSlotName(false);
 			ConfigNode node = ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null);
-			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"));
+			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_conf.cfg"));
 		}
 
 		public void LoadScriptModuleConfig()
 		{
-			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"))
+			string slotName = this.getSaveSlotName(false);
+			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + slotName + "_conf.cfg"))
 			{
 				ConfigNode node = null;
 				try
 				{
-					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_conf.cfg"));
+					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_conf.cfg"));
 				}
 				catch (Exception e)
 				{
-					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + vesselSaveName + "_conf.cfg: " + e);
+					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + slotName + "_conf.cfg: " + e);
 				}
 				if (node == null) return;
 
@@ -244,13 +262,33 @@ namespace MuMech
 					{
 						this.actionsList.clearAll();
 					}
+					selectedMemorySlotType = GuiUtils.ComboBox.Box(selectedMemorySlotType, memorySlotsList.ToArray(), memorySlotsList);
+					if (selectedMemorySlotType != old_selectedMemorySlotType)
+					{
+						old_selectedMemorySlotType = selectedMemorySlotType;
+						this.updateScriptsNames();
+					}
 					selectedSlot = GuiUtils.ComboBox.Box(selectedSlot, scriptsList.ToArray(), scriptsList);
 					if (deployScriptNameField)
 					{
-						scriptNames[selectedSlot] = GUILayout.TextField(scriptNames[selectedSlot], GUILayout.Width(120), GUILayout.ExpandWidth(false));
+						if (this.selectedMemorySlotType == 1)
+						{
+							scriptNames[selectedSlot] = GUILayout.TextField(scriptNames[selectedSlot], GUILayout.Width(120), GUILayout.ExpandWidth(false));
+						}
+						else
+						{
+							globalScriptNames[selectedSlot] = GUILayout.TextField(globalScriptNames[selectedSlot], GUILayout.Width(120), GUILayout.ExpandWidth(false));
+						}
 						if (scriptNames[selectedSlot].Length > 20)//Limit the script name to 20 chars
 						{
-							scriptNames[selectedSlot] = scriptNames[selectedSlot].Substring(0, 20);
+							if (this.selectedMemorySlotType == 1)
+							{
+								scriptNames[selectedSlot] = scriptNames[selectedSlot].Substring(0, 20);
+							}
+							else
+							{
+								globalScriptNames[selectedSlot] = globalScriptNames[selectedSlot].Substring(0, 20);
+							}
 						}
 						if (GUILayout.Button("<<", GUILayout.ExpandWidth(false)))
 						{
@@ -275,8 +313,15 @@ namespace MuMech
 						}
 						else
 						{
-							this.DeleteConfig(this.selectedSlot, true);
-							scriptNames[selectedSlot] = "";
+							this.DeleteConfig(this.selectedSlot, true, false);
+							if (this.selectedMemorySlotType == 1)
+							{
+								scriptNames[selectedSlot] = "";
+							}
+							else
+							{
+								globalScriptNames[selectedSlot] = "";
+							}
 							this.updateScriptsNames();
 							this.SaveScriptModuleConfig();
 						}
@@ -284,11 +329,11 @@ namespace MuMech
 
 					if (GUILayout.Button("Save", style2))
 					{
-						this.SaveConfig(this.selectedSlot, true);
+						this.SaveConfig(this.selectedSlot, true, false);
 					}
 					if (GUILayout.Button("Load", style2))
 					{
-						this.LoadConfig(this.selectedSlot, true);
+						this.LoadConfig(this.selectedSlot, true, false);
 					}
 					GUILayout.EndHorizontal();
 					if (this.flashMessage.Length > 0)
@@ -361,7 +406,7 @@ namespace MuMech
 						{
 							this.warmingUp = false;
 							this.startTime = 0;
-							this.LoadConfig(this.selectedSlot, false);
+							this.LoadConfig(this.selectedSlot, false, false);
 							int asp = this.activeSavepoint;
 							this.activeSavepoint = -1;
 							this.startAfterIndex(asp);
@@ -411,7 +456,17 @@ namespace MuMech
 			}
 		}
 
-		public void LoadConfig(int slot, bool notify)
+		public string getSaveSlotName(bool forceSlotName)
+		{
+			string slotName = this.vesselSaveName;
+			if (selectedMemorySlotType == 0 && !forceSlotName)
+			{
+				slotName = "G";
+			}
+			return slotName;
+		}
+
+		public void LoadConfig(int slot, bool notify, bool forceSlotName)
 		{
 			if (vessel == null)
 			{
@@ -421,43 +476,54 @@ namespace MuMech
 			{
 				this.selectedSlot = slot; //Select the slot for the UI. Except slot 9 (temp)
 			}
+			string slotName = this.getSaveSlotName(forceSlotName);
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
-			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"))
+			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"))
 			{
 				try
 				{
-					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
+					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 				}
 				catch (Exception e)
 				{
-					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg: " + e);
+					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + slotName + "_" + slot + ".cfg: " + e);
 				}
 			}
 			else if (notify)
 			{
-				this.setFlashMessage("ERROR: File not found: mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg", 1);
+				this.setFlashMessage("ERROR: File not found: mechjeb_settings_script_" + slotName + "_" + slot + ".cfg", 1);
 			}
 			if (node == null) return;
 
 			actionsList.LoadConfig(node);
 		}
 
-		public void SaveConfig(int slot, bool notify)
+		public void SaveConfig(int slot, bool notify, bool forceSlotName)
 		{
 			ConfigNode node = new ConfigNode("MechJebScriptSettings");
 
 			actionsList.SaveConfig(node);
-
-			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
+			string slotName = this.getSaveSlotName(forceSlotName);
+			if (selectedMemorySlotType == 0)
+			{
+				slotName = "G";
+			}
+			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 			if (notify)
 			{
-				this.setFlashMessage("Script saved in slot " + (slot + 1) + " on current vessel", 0);
+				string message_label = "current vessel";
+				if (selectedMemorySlotType == 0 && !forceSlotName)
+				{
+					message_label = "global memory";
+				}
+				this.setFlashMessage("Script saved in slot " + (slot + 1) + " on " + message_label, 0);
 			}
 		}
 
-		public void DeleteConfig(int slot, bool notify)
+		public void DeleteConfig(int slot, bool notify, bool forceSlotName)
 		{
-			File.Delete<MechJebCore>(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + vesselSaveName + "_" + slot + ".cfg"));
+			string slotName = this.getSaveSlotName(forceSlotName);
+			File.Delete<MechJebCore>(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 			if (notify)
 			{
 				this.setFlashMessage("Script deleted on slot " + (slot+1), 0);
@@ -493,7 +559,7 @@ namespace MuMech
 		//Set a breakpoint to be able to recover when we switch vessel
 		public void setActiveBreakpoint(int index, Vessel new_vessel)
 		{
-			this.SaveConfig(9, false); //Slot 9 is used for "temp"
+			this.SaveConfig(9, false, true); //Slot 9 is used for "temp"
 			this.stop();
 			this.actionsList.clearAll();
 			List<MechJebCore> mechjebCoresList = new_vessel.FindPartModulesImplementing<MechJebCore>();
@@ -507,8 +573,8 @@ namespace MuMech
 
 		public void loadFromBreakpoint(int index)
 		{
-			this.LoadConfig(9, false); //Slot 9 is used for "temp"
-			this.DeleteConfig(9, false); //Delete the temp config
+			this.LoadConfig(9, false, true); //Slot 9 is used for "temp"
+			this.DeleteConfig(9, false, true); //Delete the temp config
 			this.startAfterIndex(index);
 		}
 
@@ -551,6 +617,11 @@ namespace MuMech
 		public bool isAddActionDisabled()
 		{
 			return this.addActionDisabled;
+		}
+
+		public void setSelectedMemorySlotType(int selectedMemorySlotType)
+		{
+			this.selectedMemorySlotType = selectedMemorySlotType;
 		}
 	}
 }
