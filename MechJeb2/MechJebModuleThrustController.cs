@@ -506,12 +506,12 @@ namespace MuMech
                 }
             }
 
-            if (double.IsNaN(throttleLimit)) throttleLimit = 1.0;
+            if (double.IsNaN(throttleLimit)) throttleLimit = 1.0F;
             throttleLimit = Mathf.Clamp01(throttleLimit);
 
             /* we do not _apply_ the "fixed" limit, the actual throttleLimit should always be the more limited and lower one */
             /* the purpose of the "fixed" limit is for external consumers like the node executor to consume */
-            if (double.IsNaN(throttleFixedLimit)) throttleFixedLimit = 1.0;
+            if (double.IsNaN(throttleFixedLimit)) throttleFixedLimit = 1.0F;
             throttleFixedLimit = Mathf.Clamp01(throttleFixedLimit);
 
             vesselState.throttleLimit = throttleLimit;
