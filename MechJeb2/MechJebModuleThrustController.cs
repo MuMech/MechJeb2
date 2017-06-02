@@ -296,15 +296,23 @@ namespace MuMech
         /* the fixed throttle limit (i.e. user limited in the GUI), does not include transient conditions as limiting to zero due to unstable propellants in RF */
         public float throttleFixedLimit { get; private set; }
 
+        /* This is an API for limits which are "temporary" or "conditional" (things like ullage status which will change very soon).
+           This will often be temporarily zero, which means the computed accelleration of the ship will be zero, which would cause
+           consumers (like the NodeExecutor) to compute infinite burntime, so this value should not be used by those consumers */
         private void setTempLimit(float limit, LimitMode mode)
         {
             throttleLimit = limit;
             limiter = mode;
         }
 
+        /* This is an API for limits which are not temporary (like the throttle limit set in the GUI)
+           The throttleFixedLimit is what consumers like the NodeExecutor should use to compute acceleration and burntime.
+           This deliberately sets both values.  The actually applied throttle limit may be lower than thottleFixedLimit
+           (i.e. there may be a more limiting temp limit) */
         private void setFixedLimit(float limit, LimitMode mode)
         {
-            throttleLimit = limit;
+            if (throttleLimit > limit)
+                throttleLimit = limit;
             throttleFixedLimit = limit;
             limiter = mode;
         }
