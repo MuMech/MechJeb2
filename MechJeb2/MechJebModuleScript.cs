@@ -365,7 +365,7 @@ namespace MuMech
 
 		public override string GetName()
 		{
-			return "Scripting Module (Beta)";
+			return "Scripting Module";
 		}
 
 		public void start()
