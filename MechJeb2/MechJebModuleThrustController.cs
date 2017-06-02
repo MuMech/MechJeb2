@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using KSP.UI.Screens;
@@ -112,8 +112,6 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxAcceleration = 40;
-
-        public double maxAccelerationLimit = 1;
 
         [GeneralInfoItem("Limit acceleration", InfoItem.Category.Thrust)]
         public void LimitAccelerationInfoItem()
@@ -293,6 +291,32 @@ namespace MuMech
             targetThrottle = Mathf.Clamp01((float)(desiredAcceleration / vesselState.maxThrustAccel));
         }
 
+        /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
+        public float throttleLimit { get; private set; }
+        /* the fixed throttle limit (i.e. user limited in the GUI), does not include transient conditions as limiting to zero due to unstable propellants in RF */
+        public float throttleFixedLimit { get; private set; }
+
+        /* This is an API for limits which are "temporary" or "conditional" (things like ullage status which will change very soon).
+           This will often be temporarily zero, which means the computed accelleration of the ship will be zero, which would cause
+           consumers (like the NodeExecutor) to compute infinite burntime, so this value should not be used by those consumers */
+        private void setTempLimit(float limit, LimitMode mode)
+        {
+            throttleLimit = limit;
+            limiter = mode;
+        }
+
+        /* This is an API for limits which are not temporary (like the throttle limit set in the GUI)
+           The throttleFixedLimit is what consumers like the NodeExecutor should use to compute acceleration and burntime.
+           This deliberately sets both values.  The actually applied throttle limit may be lower than thottleFixedLimit
+           (i.e. there may be a more limiting temp limit) */
+        private void setFixedLimit(float limit, LimitMode mode)
+        {
+            if (throttleLimit > limit)
+                throttleLimit = limit;
+            throttleFixedLimit = limit;
+            limiter = mode;
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             float threshold = 0.1F;
@@ -397,51 +421,59 @@ namespace MuMech
             if (users.Count > 1)
                 s.mainThrottle = targetThrottle;
 
-            float throttleLimit = 1;
+            throttleLimit = 1;
+            throttleFixedLimit = 1;
 
             limiter = LimitMode.None;
 
             if (limitThrottle)
             {
-                if (maxThrottle < throttleLimit) limiter = LimitMode.Throttle;
-                throttleLimit = Mathf.Min(throttleLimit, (float)maxThrottle);
+                if (maxThrottle < throttleLimit)
+                {
+                    setFixedLimit((float)maxThrottle, LimitMode.Throttle);
+                }
             }
 
             if (limitToTerminalVelocity)
             {
                 float limit = TerminalVelocityThrottle();
-                if (limit < throttleLimit) limiter = LimitMode.TerminalVelocity;
-                throttleLimit = Mathf.Min(throttleLimit, limit);
+                if (limit < throttleLimit)
+                {
+                    setFixedLimit(limit, LimitMode.TerminalVelocity);
+                }
             }
 
             if (limitDynamicPressure)
             {
                 float limit = MaximumDynamicPressureThrottle();
-                if (limit < throttleLimit) limiter = LimitMode.DynamicPressure;
-                throttleLimit = Mathf.Min(throttleLimit, limit);
+                if (limit < throttleLimit)
+                {
+                    setFixedLimit(limit, LimitMode.DynamicPressure);
+                }
             }
 
             if (limitToPreventOverheats)
             {
                 float limit = (float)TemperatureSafetyThrottle();
-                if(limit < throttleLimit) limiter = LimitMode.Temperature;
-                throttleLimit = Mathf.Min(throttleLimit, limit);
+                if (limit < throttleLimit) {
+                    setFixedLimit(limit, LimitMode.Temperature);
+                }
             }
 
             if (limitAcceleration)
             {
                 float limit = AccelerationLimitedThrottle();
-                if(limit < throttleLimit) limiter = LimitMode.Acceleration;
-                throttleLimit = Mathf.Min(throttleLimit, limit);
-                // to provide an externally facing value. (used when ignition is unstable so we can approximate throttle limit when ignition stablizes)
-                maxAccelerationLimit = throttleLimit;
+                if (limit < throttleLimit) {
+                    setFixedLimit(limit, LimitMode.Acceleration);
+                }
             }
 
             if (electricThrottle && ElectricEngineRunning())
             {
                 float limit = ElectricThrottle();
-                if (limit < throttleLimit) limiter = LimitMode.Electric;
-                throttleLimit = Mathf.Min(throttleLimit, limit);
+                if (limit < throttleLimit) {
+                    setFixedLimit(limit, LimitMode.Electric);
+                }
             }
 
             if (limitToPreventFlameout)
@@ -449,14 +481,14 @@ namespace MuMech
                 // This clause benefits being last: if we don't need much air
                 // due to prior limits, we can close some intakes.
                 float limit = FlameoutSafetyThrottle();
-                if (limit < throttleLimit) limiter = LimitMode.Flameout;
-                throttleLimit = Mathf.Min(throttleLimit, limit);
+                if (limit < throttleLimit) {
+                    setFixedLimit(limit, LimitMode.Flameout);
+                }
             }
 
-            if (limiterMinThrottle  && limiter != LimitMode.None && throttleLimit < minThrottle)
+            if (limiterMinThrottle && limiter != LimitMode.None && throttleLimit < minThrottle)
             {
-                limiter = LimitMode.MinThrottle;
-                throttleLimit = (float) minThrottle;
+                setFixedLimit((float) minThrottle, LimitMode.MinThrottle);
             }
 
             // RealFuels ullage integration.  Stock always has stableUllage.
@@ -465,8 +497,7 @@ namespace MuMech
                 if (s.mainThrottle > 0.0F && throttleLimit > 0.0F )
                 {
                     // We want to fire the throttle, and nothing else is limiting us, but we have unstable ullage
-                    limiter = LimitMode.UnstableIgnition;
-                    throttleLimit = 0.0F;
+                    setTempLimit(0.0F, LimitMode.UnstableIgnition);
                     if (vessel.ActionGroups[KSPActionGroup.RCS] && s.Z == 0)
                     {
                         // RCS is on, so use it to ullage
@@ -475,10 +506,16 @@ namespace MuMech
                 }
             }
 
-            if (double.IsNaN(throttleLimit)) throttleLimit = 0;
+            if (double.IsNaN(throttleLimit)) throttleLimit = 1.0;
             throttleLimit = Mathf.Clamp01(throttleLimit);
 
+            /* we do not _apply_ the "fixed" limit, the actual throttleLimit should always be the more limited and lower one */
+            /* the purpose of the "fixed" limit is for external consumers like the node executor to consume */
+            if (double.IsNaN(throttleFixedLimit)) throttleFixedLimit = 1.0;
+            throttleFixedLimit = Mathf.Clamp01(throttleFixedLimit);
+
             vesselState.throttleLimit = throttleLimit;
+            vesselState.throttleFixedLimit = throttleFixedLimit;
 
             if (s.mainThrottle < throttleLimit) limiter = LimitMode.None;
 
