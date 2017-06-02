@@ -23,7 +23,7 @@ namespace MuMech
                 Vector3d currentRadialVector = core.vesselState.CoM - core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 //this calculation seems like it might be be working right:
-                double timeToTarget = orbit.TimeOfTrueAnomaly(core.vessel.orbit.trueAnomaly * MathExtensions.Rad2Deg + angleToTarget, vesselState.time) - vesselState.time;
+                double timeToTarget = orbit.TimeOfTrueAnomaly(core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, vesselState.time) - vesselState.time;
                 double planetRotationAngle = 360 * timeToTarget / mainBody.rotationPeriod;
                 Quaternion planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, mainBody.angularVelocity);
                 Vector3d targetRadialVectorOnFlyover = planetRotation * targetRadialVector;
@@ -65,7 +65,7 @@ namespace MuMech
                     Vector3d deltaV = finalVelocity - vesselState.orbitalVelocity;
                     //burn normal+ or normal- to avoid dropping the Pe:
                     Vector3d burnDir = Vector3d.Exclude(vesselState.up, Vector3d.Exclude(vesselState.orbitalVelocity, deltaV));
-                    planeChangeDVLeft = Math.PI / 180 * Vector3d.Angle(finalVelocity, vesselState.orbitalVelocity) * vesselState.speedOrbitHorizontal;
+                    planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, vesselState.orbitalVelocity) * vesselState.speedOrbitHorizontal;
                     core.attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, core.landing);
                     status = "Executing low orbit plane change of about " + planeChangeDVLeft.ToString("F0") + " m/s";
 

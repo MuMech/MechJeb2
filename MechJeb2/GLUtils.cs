@@ -133,7 +133,7 @@ namespace MuMech
             Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
 
             int step = (dashed ? 2 : 1);
-            for (int i = 0; i < points.Count() - 1; i += step)
+            for (int i = 0; i < points.Count - 1; i += step)
             {
                 if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
                 {
@@ -223,7 +223,7 @@ namespace MuMech
                 //hyperbolic orbits:
                 for (int meanAnomaly = -1000; meanAnomaly <= 1000; meanAnomaly += 5)
                 {
-                    points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * Math.PI / 180, 0)));
+                    points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * UtilMath.Deg2Rad, 0)));
                 }
             }
 

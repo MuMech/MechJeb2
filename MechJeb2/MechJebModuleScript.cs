@@ -540,7 +540,8 @@ namespace MuMech
 		{
 			this.savePointJustSet = true;
 			this.activeSavepoint = activeSavepoint;
-		}
+            dirty = true;
+        }
 
 		//Start after the action defined at a specified index (for load restore or vessel switch)
 		public void startAfterIndex(int index)

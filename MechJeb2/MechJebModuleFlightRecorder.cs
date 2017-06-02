@@ -1,12 +1,10 @@
 ﻿using System;
+using System.IO;
 using KSP.UI.Screens;
 
 namespace MuMech
 {
     //A class to record flight data, currently deltaV and time
-    //TODO: add launch phase angle measurement
-    //TODO: decide whether to keep separate "total" and "since mark" records
-    //TODO: record RCS dV expended?
     //TODO: make records persistent
     public class MechJebModuleFlightRecorder : ComputerModule
     {
@@ -14,6 +12,7 @@ namespace MuMech
         public struct record
         {
             public double timeSinceMark;
+            public int currentStage;
             public double altitudeASL;
             public double downRange;
             public double speedSurface;
@@ -24,7 +23,10 @@ namespace MuMech
             public double altitudeTrue;
             public double pitch;
             public double mass;
-            public int currentStage;
+            public double gravityLosses;
+            public double dragLosses;
+            public double steeringLosses;
+            public double deltaVExpended;
 
             public double this[recordType type]
             {
@@ -34,6 +36,8 @@ namespace MuMech
                     {
                         case recordType.TimeSinceMark:
                             return timeSinceMark;
+                        case recordType.CurrentStage:
+                            return currentStage;
                         case recordType.AltitudeASL:
                             return altitudeASL;
                         case recordType.DownRange:
@@ -54,6 +58,14 @@ namespace MuMech
                             return pitch;
                         case recordType.Mass:
                             return mass;
+                        case recordType.GravityLosses:
+                            return gravityLosses;
+                        case recordType.DragLosses:
+                            return dragLosses;
+                        case recordType.SteeringLosses:
+                            return steeringLosses;
+                        case recordType.DeltaVExpended:
+                            return deltaVExpended;
                         default:
                             return 0;
                     }
@@ -64,6 +76,7 @@ namespace MuMech
         public enum recordType
         {
             TimeSinceMark,
+            CurrentStage,
             AltitudeASL,
             DownRange,
             SpeedSurface,
@@ -73,7 +86,11 @@ namespace MuMech
             AoA,
             AltitudeTrue,
             Pitch,
-            Mass
+            Mass,
+            GravityLosses,
+            DragLosses,
+            SteeringLosses,
+            DeltaVExpended
         }
 
         public record[] history = new record[3000];
@@ -164,7 +181,7 @@ namespace MuMech
             CelestialBody markBody = FlightGlobals.Bodies[markBodyIndex];
             Vector3d markVector = markBody.GetSurfaceNVector(markLatitude, markLongitude);
             Vector3d vesselVector = vesselState.CoM - markBody.transform.position;
-            return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * Math.PI / 180;
+            return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * UtilMath.Deg2Rad;
         }
 
         [Persistent(pass = (int)Pass.Local)]
@@ -265,6 +282,10 @@ namespace MuMech
             history[idx].altitudeTrue = vesselState.altitudeTrue;
             history[idx].pitch = vesselState.vesselPitch;
             history[idx].mass = vesselState.mass;
+            history[idx].gravityLosses = gravityLosses;
+            history[idx].dragLosses = dragLosses;
+            history[idx].steeringLosses = steeringLosses;
+            history[idx].deltaVExpended = deltaVExpended;
 
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
@@ -283,26 +304,43 @@ namespace MuMech
                 maximums[t] = Math.Max(maximums[t], current);
             }
         }
-        
-        // TODO : not do the full scale update as often
-        private void UpdateMinMax()
-        {
-            for (int t = 0; t < typeCount; t++)
-            {
-                minimums[t] = Double.MaxValue;
-                maximums[t] = Double.MinValue;
-            }
 
-            for (int i = 0; i <= historyIdx; i++)
+
+        public void DumpCSV()
+        {
+            string exportPath = KSPUtil.ApplicationRootPath + "/GameData/MechJeb2/Export/";
+
+            if (!Directory.Exists(exportPath))
+                Directory.CreateDirectory(exportPath);
+
+            string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : "";
+
+            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            using (StreamWriter writer = new StreamWriter(exportPath + vesselName + "_" + timestamp + ".csv"))
             {
-                record r = history[i];
-                for (int t = 0; t < typeCount; t++)
+                writer.WriteLine(string.Join(",", Enum.GetNames(typeof(recordType))));
+
+                for (int idx = 0; idx <= historyIdx; idx++)
                 {
-                    minimums[t] = Math.Min(minimums[t], r[(recordType)t]);
-                    maximums[t] = Math.Max(maximums[t], r[(recordType)t]);
+                    record r = history[idx];
+                    writer.Write(r[(recordType)0]);
+                    for (int i = 1; i < typeCount; i++)
+                    {
+                        writer.Write(',');
+                        writer.Write(r[(recordType)i]);
+                    }
+                    writer.WriteLine();
                 }
             }
         }
+
+
+
+
+
+
+
 
     }
 }

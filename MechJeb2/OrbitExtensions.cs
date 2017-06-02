@@ -254,7 +254,7 @@ namespace MuMech
         public static double MaximumTrueAnomaly(this Orbit o)
         {
             if (o.eccentricity < 1) return 180;
-            else return 180 / Math.PI * Math.Acos(-1 / o.eccentricity);
+            else return UtilMath.Rad2Deg * Math.Acos(-1 / o.eccentricity);
         }
 
         //Returns whether a has an ascending node with b. This can be false
@@ -357,7 +357,7 @@ namespace MuMech
         {
             double e = o.eccentricity;
             trueAnomaly = MuUtils.ClampDegrees360(trueAnomaly);
-            trueAnomaly = trueAnomaly * (Math.PI / 180);
+            trueAnomaly = trueAnomaly * (UtilMath.Deg2Rad);
 
             if (e < 1) //elliptical orbits
             {
@@ -509,7 +509,7 @@ namespace MuMech
         {
             if (radius < o.PeR || (o.eccentricity < 1 && radius > o.ApR)) throw new ArgumentException("OrbitExtensions.NextTimeOfRadius: given radius of " + radius + " is never achieved: o.PeR = " + o.PeR + " and o.ApR = " + o.ApR);
 
-            double trueAnomaly1 = 180 / Math.PI * o.TrueAnomalyAtRadius(radius);
+            double trueAnomaly1 = UtilMath.Rad2Deg * o.TrueAnomalyAtRadius(radius);
             double trueAnomaly2 = 360 - trueAnomaly1;
             double time1 = o.TimeOfTrueAnomaly(trueAnomaly1, UT);
             double time2 = o.TimeOfTrueAnomaly(trueAnomaly2, UT);
@@ -543,7 +543,7 @@ namespace MuMech
 
             double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
-            double sine = Math.Sin(angleFromHorizontal * Math.PI / 180);
+            double sine = Math.Sin(angleFromHorizontal * UtilMath.Deg2Rad);
             double g = vesselState.localg;
             double T = vesselState.limitedMaxThrustAccel;
 

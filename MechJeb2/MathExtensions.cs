@@ -5,10 +5,6 @@ namespace MuMech
 {
     public static class MathExtensions
     {
-
-        public const double Rad2Deg = 180 / Math.PI;
-        public const double Deg2Rad = Math.PI / 180;
-
         public static Vector3d Sign(this Vector3d vector)
         {
             return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
@@ -104,7 +100,7 @@ namespace MuMech
             Vector3 r1 = rot * v1;
             Vector3 r2 = rot * v2;
 
-            return (float)((Math.Atan2(r1.y, r1.x) - Math.Atan2(r2.y, r2.x)) * 180.0 / Math.PI);
+            return (float)((Math.Atan2(r1.y, r1.x) - Math.Atan2(r2.y, r2.x)) * UtilMath.Rad2Deg);
         }
 
 		public static Quaternion Add(this Quaternion left, Quaternion right)

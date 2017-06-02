@@ -7,9 +7,7 @@ namespace MuMech
 {
 	public class Porkchop
 	{
-		public readonly Texture2D texture;
-
-		public Porkchop(ManeuverParameters[,] nodes)
+		public static void RefreshTexture(ManeuverParameters[,] nodes, Texture2D texture)
 		{
 			Gradient colours = new Gradient();
 			var colourKeys = new GradientColorKey[6];
@@ -34,11 +32,14 @@ namespace MuMech
 
 			colours.SetKeys(colourKeys, alphaKeys);
 
-			double DVminsqr = double.MaxValue;
+            int width = nodes.GetLength(0);
+            int height = nodes.GetLength(1);
+
+            double DVminsqr = double.MaxValue;
 			double DVmaxsqr = double.MinValue;
-			for (int i = 0; i < nodes.GetLength(0); i++)
+			for (int i = 0; i < width; i++)
 			{
-				for (int j = 0; j < nodes.GetLength(1); j++)
+				for (int j = 0; j < height; j++)
 				{
 					if (nodes[i, j] != null)
 					{
@@ -52,15 +53,13 @@ namespace MuMech
 					}
 				}
 			}
-
-			texture = new Texture2D(nodes.GetLength(0), nodes.GetLength(1), TextureFormat.RGB24, false);
+            
 			double logDVminsqr = Math.Log(DVminsqr);
 			double logDVmaxsqr = Math.Min(Math.Log(DVmaxsqr), logDVminsqr + 4);
 
-
-			for (int i = 0; i < nodes.GetLength(0); i++)
+			for (int i = 0; i < width; i++)
 			{
-				for (int j = 0; j < nodes.GetLength(1); j++)
+				for (int j = 0; j < height; j++)
 				{
 					if (nodes[i, j] == null)
 					{

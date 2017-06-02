@@ -100,7 +100,7 @@ namespace MuMech
         [ValueInfoItem("Mean Anomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
         public double MeanAnomaly()
         {
-            return orbit.meanAnomaly * MathExtensions.Rad2Deg;
+            return orbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
         [ValueInfoItem("Orbit", InfoItem.Category.Orbit)]
@@ -129,6 +129,24 @@ namespace MuMech
             return OrbitSummaryWithInclination(core.target.TargetOrbit);
         }
 
+        [ValueInfoItem("Orbital energy", InfoItem.Category.Orbit, description = "Specific orbital energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double OrbitalEnergy()
+        {
+            return orbit.orbitalEnergy;
+        }
+        
+        [ValueInfoItem("Potential energy", InfoItem.Category.Orbit, description = "Specific potential energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double PotentialEnergy()
+        {
+            return -orbit.referenceBody.gravParameter / orbit.radius;
+        }
+        
+        [ValueInfoItem("Kinetic energy", InfoItem.Category.Orbit, description = "Specific kinetic energy", format = ValueInfoItem.SI, units = "J/kg")]
+        public double KineticEnergy()
+        {
+            return orbit.orbitalEnergy + orbit.referenceBody.gravParameter / orbit.radius;
+        }
+        
         //TODO: consider turning this into a binary search
         [ValueInfoItem("Time to impact", InfoItem.Category.Misc)]
         public string TimeToImpact()
@@ -284,7 +302,7 @@ namespace MuMech
         [ValueInfoItem("Angular Velocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * 180 / Math.PI, "F3") + "°/s" ;
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s" ;
         }
         
         [ValueInfoItem("Current acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
@@ -367,8 +385,6 @@ namespace MuMech
         {
             return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
-
-
 
         [ValueInfoItem("Max thrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)]
         public double MaxThrust()
@@ -1226,7 +1242,7 @@ namespace MuMech
                 return vessel.landedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * Math.PI / 180d, vessel.longitude * Math.PI / 180d).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).name;
             if (biome != "")
                 biome = "'s " + biome;
 
@@ -1235,24 +1251,24 @@ namespace MuMech
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.theName + (biome == "" ? "'s surface" : biome);
+                    return mainBody.displayName + (biome == "" ? "'s surface" : biome);
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.theName + (biome == "" ? "'s oceans" : biome);
+                    return mainBody.displayName + (biome == "" ? "'s oceans" : biome);
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
-                        return "Flying over " + mainBody.theName + biome;
+                        return "Flying over " + mainBody.displayName + biome;
                     else
                         //ExperimentSituations.FlyingHigh
-                        return "Upper atmosphere of " + mainBody.theName + biome;
+                        return "Upper atmosphere of " + mainBody.displayName + biome;
                 default:
                     if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
-                        return "Space just above " + mainBody.theName + biome;
+                        return "Space just above " + mainBody.displayName + biome;
                     else
                         // ExperimentSituations.InSpaceHigh
-                        return "Space high over " + mainBody.theName + biome;
+                        return "Space high over " + mainBody.displayName + biome;
             }
         }
 
@@ -1264,7 +1280,7 @@ namespace MuMech
                 TextEditor te = new TextEditor();
                 string result = "latitude =  " + vesselState.latitude.ToString("F6") + "\nlongitude = " + vesselState.longitude.ToString("F6") +
                                 "\naltitude = " + vessel.altitude.ToString("F2") + "\n";
-                te.content = new GUIContent(result);
+                te.text = result;
                 te.SelectAll();
                 te.Copy();
             }

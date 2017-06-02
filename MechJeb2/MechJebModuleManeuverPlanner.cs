@@ -60,9 +60,9 @@ namespace MuMech
                     UT = last.UT;
                     o = last.nextPatch;
                 }
-                else if (maneuverNodes.Count() > 1)
+                else if (maneuverNodes.Count > 1)
                 {
-                    ManeuverNode last = maneuverNodes[maneuverNodes.Count() - 1];
+                    ManeuverNode last = maneuverNodes[maneuverNodes.Count - 1];
                     UT = last.UT;
                     o = last.nextPatch;
                 }
