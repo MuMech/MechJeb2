@@ -14,14 +14,14 @@ namespace MuMech
 		private List<String> actionTypes = new List<String>();
 		private int startNodeCount = 0;
 
-		public MechJebModuleScriptActionExecuteNode (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionExecuteNode (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionTypes.Add("Next node");
 			actionTypes.Add("All nodes");
 		}
 
-		override public void activateAction(int actionIndex) {
-			base.activateAction(actionIndex);
+		override public void activateAction() {
+			base.activateAction();
 			if (core.node != null)
 			{
 				if (FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count > 0 && !core.node.enabled)
