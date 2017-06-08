@@ -311,8 +311,9 @@ namespace MuMech
            (i.e. there may be a more limiting temp limit) */
         private void setFixedLimit(float limit, LimitMode mode)
         {
-            if (throttleLimit > limit)
+            if (throttleLimit > limit) {
                 throttleLimit = limit;
+            }
             throttleFixedLimit = limit;
             limiter = mode;
         }
@@ -489,13 +490,13 @@ namespace MuMech
             // Any limiters which can limit to non-zero values must come before this, any
             // limiters (like ullage) which enforce zero throttle should come after.  The
             // minThrottle setting has authority over any other limiter that sets non-zero throttle.
-            if (limiterMinThrottle)
+            if (limiterMinThrottle && limiter != LimitMode.None)
             {
-                if (throttleFixedLimit < minThrottle)
+                if (minThrottle > throttleFixedLimit)
                 {
                     setFixedLimit((float) minThrottle, LimitMode.MinThrottle);
                 }
-                if (throttleLimit < minThrottle)
+                if (minThrottle > throttleLimit)
                 {
                     setTempLimit((float) minThrottle, LimitMode.MinThrottle);
                 }
