@@ -311,8 +311,9 @@ namespace MuMech
            (i.e. there may be a more limiting temp limit) */
         private void setFixedLimit(float limit, LimitMode mode)
         {
-            if (throttleLimit > limit)
+            if (throttleLimit > limit) {
                 throttleLimit = limit;
+            }
             throttleFixedLimit = limit;
             limiter = mode;
         }
@@ -486,9 +487,19 @@ namespace MuMech
                 }
             }
 
-            if (limiterMinThrottle && limiter != LimitMode.None && throttleLimit < minThrottle)
+            // Any limiters which can limit to non-zero values must come before this, any
+            // limiters (like ullage) which enforce zero throttle should come after.  The
+            // minThrottle setting has authority over any other limiter that sets non-zero throttle.
+            if (limiterMinThrottle && limiter != LimitMode.None)
             {
-                setFixedLimit((float) minThrottle, LimitMode.MinThrottle);
+                if (minThrottle > throttleFixedLimit)
+                {
+                    setFixedLimit((float) minThrottle, LimitMode.MinThrottle);
+                }
+                if (minThrottle > throttleLimit)
+                {
+                    setTempLimit((float) minThrottle, LimitMode.MinThrottle);
+                }
             }
 
             // RealFuels ullage integration.  Stock always has stableUllage.
