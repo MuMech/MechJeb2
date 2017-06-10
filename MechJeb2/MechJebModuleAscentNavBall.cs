@@ -8,7 +8,7 @@ namespace MuMech
         {
             enabled = true;
         }
-        
+
         public bool NavBallGuidance
         {
             get
@@ -45,7 +45,7 @@ namespace MuMech
             if (NavBallGuidance && autopilot != null && autopilot.ascentPath != null)
             {
                 double angle = UtilMath.Deg2Rad * autopilot.ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
-                double heading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination);
+                double heading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination, autopilot.launchLatitude);
                 Vector3d horizontalDir = Math.Cos(heading) * vesselState.north + Math.Sin(heading) * vesselState.east;
                 Vector3d dir = Math.Cos(angle) * horizontalDir + Math.Sin(angle) * vesselState.up;
                 core.target.UpdateDirectionTarget(dir);
