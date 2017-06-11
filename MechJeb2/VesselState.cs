@@ -17,8 +17,18 @@ namespace MuMech
         private static FieldInfo RFignitionsField;
         // RealFuels.ModuleEngineRF ullage field to call via reflection
         private static FieldInfo RFullageField;
-        // stableUllage is always true without RealFuels installed
-        public bool stableUllage { get { return this.einfo.stableUllage; } }
+
+        public enum UllageState {
+            VeryUnstable,
+            Unstable,
+            VeryRisky,
+            Risky,
+            Stable,
+            VeryStable  // "Nominal" also winds up here
+        }
+
+        // lowestUllage is always VeryStable without RealFuels installed
+        public UllageState lowestUllage { get { return this.einfo.lowestUllage; } }
 
         private Vessel vesselRef = null;
 
@@ -310,7 +320,7 @@ namespace MuMech
                     return null;
                 }
 
-                Type type = Type.GetType("RealFuels.ModuleEnginesRF, " + assemblyName);
+                Type type = Type.GetType(className + ", " + assemblyName);
 
                 if (type == null)
                 {
@@ -1164,8 +1174,8 @@ namespace MuMech
             public Vector3d thrustMin = new Vector3d(); // thrust at zero throttle
             public double maxResponseTime = 0;
             public Vector6 torqueDiffThrottle = new Vector6();
-            // stableUllage is always true without RealFuels installed
-            public bool stableUllage = true;
+            // lowestUllage is always VeryStable without RealFuels installed
+            public UllageState lowestUllage = UllageState.VeryStable;
 
             public struct FuelRequirement
             {
@@ -1190,7 +1200,7 @@ namespace MuMech
 
                 resourceRequired.Clear();
 
-                stableUllage = true;
+                lowestUllage = UllageState.VeryStable;
 
                 CoM = c;
 
@@ -1277,9 +1287,28 @@ namespace MuMech
                     return;
                 }
 
-                if ((propellantStatus != "Nominal") && (propellantStatus != "Very Stable") && (propellantStatus != "Stable"))
+                UllageState propellantState;
+
+                if (propellantStatus == "Nominal" || propellantStatus == "Very Stable" )
+                    propellantState = UllageState.VeryStable;
+                else if (propellantStatus == "Stable")
+                    propellantState = UllageState.Stable;
+                else if (propellantStatus == "Risky")
+                    propellantState = UllageState.Risky;
+                else if (propellantStatus == "Very Risky")
+                    propellantState = UllageState.VeryRisky;
+                else if (propellantStatus == "Unstable")
+                    propellantState = UllageState.Unstable;
+                else if (propellantStatus == "Very Unstable")
+                    propellantState = UllageState.VeryUnstable;
+                else {
+                    propellantState = UllageState.VeryStable;
+                    Debug.Log("BUG: Unknown propellantStatus from RealFuels: " + propellantStatus);
+                }
+
+                if (propellantState < lowestUllage)
                 {
-                    stableUllage = false;
+                    lowestUllage = propellantState;
                 }
             }
 
