@@ -135,6 +135,7 @@ namespace MuMech
 			actionsNamesList.Add ("Warp");
 			actionsNamesList.Add ("Wait for");
 			actionsNamesList.Add ("Load Script");
+			actionsNamesList.Add ("MODULE Smart A.S.S.");
 			actionsNamesList.Add ("MODULE Ascent Autopilot");
 			actionsNamesList.Add ("MODULE Docking Autopilot");
 			actionsNamesList.Add ("MODULE Landing");
@@ -463,6 +464,10 @@ namespace MuMech
 						{
 							this.addAction(new MechJebModuleScriptActionLoadScript(this, core));
 						}
+						else if (actionNames[selectedActionIndex].CompareTo("MODULE Smart A.S.S.") == 0)
+						{
+							this.addAction(new MechJebModuleScriptActionSmartASS(this, core));
+						}
 						else if (actionNames[selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
 						{
 							this.addAction(new MechJebModuleScriptActionAscent(this, core));
@@ -675,7 +680,11 @@ namespace MuMech
 			foreach (ConfigNode scriptNode in scriptNodes)
 			{
 				MechJebModuleScriptAction obj = null;
-				if (scriptNode.name.CompareTo(MechJebModuleScriptActionAscent.NAME) == 0)
+				if (scriptNode.name.CompareTo(MechJebModuleScriptActionSmartASS.NAME) == 0)
+				{
+					obj = new MechJebModuleScriptActionSmartASS(this, core);
+				}
+				else if (scriptNode.name.CompareTo(MechJebModuleScriptActionAscent.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionAscent(this, core);
 				}

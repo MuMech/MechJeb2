@@ -41,8 +41,11 @@ namespace MuMech
             VERTICAL_PLUS
         }
         public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE };
+        public static bool[] TargetIsMode = { true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false };
         public static string[] ModeTexts = { "OBT", "SURF", "TGT", "ADV", "AUTO" };
+        public static string[] ScriptModeTexts = { "Orbit", "Surface", "Target", "Advanced", "Auto" };
         public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO", "SVEL\n+", "SVEL\n-", "HVEL\n+", "HVEL\n-", "UP" };
+        public static string[] ScriptTargetTexts = { "Off", "Kill Rotation", "Node", "Surface", "Prograde", "Retrograde", "Normal+", "Normal-", "Radial+", "Radial-", "Relative Velocity+", "Relative Velocity-", "Target+", "Target-", "Parallel+", "Parallel-", "Advanced", "Auto", "Surface Velocity+", "Surface Velocity-", "Horizontal Velocity+", "Horizontal Velocity-", "Up" };
         public static string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
         public static string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
