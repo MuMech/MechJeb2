@@ -143,7 +143,7 @@ namespace MuMech
         public float throttleLimit = 1;
         /* the fixed throttle limit (i.e. user limited in the GUI), does not include transient conditions as limiting to zero due to unstable propellants in RF */
         public float throttleFixedLimit = 1;
-        public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleLimit + minThrustAccel * (1 - throttleLimit); } }
+        public double limitedMaxThrustAccel { get { return maxThrustAccel * throttleFixedLimit + minThrustAccel * (1 - throttleFixedLimit); } }
 
         public Vector3d CoT;
         public Vector3d DoT;
@@ -359,6 +359,7 @@ namespace MuMech
             ToggleRCSThrust(vessel);
 
             UpdateMoIAndAngularMom(vessel);
+
             return true;
         }
 
@@ -1314,8 +1315,10 @@ namespace MuMech
                     double minThrust = e.minFuelFlow * e.flowMultiplier * Isp * e.g;
 
                     // RealFuels engines reports as operational even when they are shutdown
-                    if (e.finalThrust == 0f && minThrust > 0f)
-                        minThrust = maxThrust = 0;
+                    // REMOVED: this definitively screws up the 1kN thruster in RO/RF and sets minThrust/maxThrust
+                    // to zero when the engine is just throttled down -- which screws up suicide burn calcs, etc.
+                    // if (e.finalThrust == 0f && minThrust > 0f)
+                    //    minThrust = maxThrust = 0;
 
                     //MechJebCore.print(maxThrust.ToString("F2") + " " + minThrust.ToString("F2") + " " + e.minFuelFlow.ToString("F2") + " " + e.maxFuelFlow.ToString("F2") + " " + e.flowMultiplier.ToString("F2") + " " + Isp.ToString("F2") + " " + thrustLimiter.ToString("F3"));
 
