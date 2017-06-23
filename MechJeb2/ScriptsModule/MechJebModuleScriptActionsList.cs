@@ -109,7 +109,8 @@ namespace MuMech
 
 			//Modules
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("MODULE Ascent Autopilot");
+            actionsNamesList.Add("MODULE Smart A.S.S.");
+            actionsNamesList.Add("MODULE Ascent Autopilot");
 			actionsNamesList.Add("MODULE Docking Autopilot");
 			actionsNamesList.Add("MODULE Landing");
 			actionsNamesList.Add("MODULE Rendezvous");
@@ -338,6 +339,10 @@ namespace MuMech
 					{
 						this.addAction(new MechJebModuleScriptActionLoadScript(scriptModule, core, this));
 					}
+                    else if (actionName.CompareTo("MODULE Smart A.S.S.") == 0)
+					{
+                        this.addAction(new MechJebModuleScriptActionSmartASS(scriptModule, core, this));
+					}
 					else if (actionName.CompareTo("MODULE Ascent Autopilot") == 0)
 					{
 						this.addAction(new MechJebModuleScriptActionAscent(scriptModule, core, this));
@@ -486,7 +491,11 @@ namespace MuMech
 			foreach (ConfigNode scriptNode in scriptNodes)
 			{
 				MechJebModuleScriptAction obj = null;
-				if (scriptNode.name.CompareTo(MechJebModuleScriptActionAscent.NAME) == 0)
+                if (scriptNode.name.CompareTo(MechJebModuleScriptActionSmartASS.NAME) == 0)
+                {
+                    obj = new MechJebModuleScriptActionSmartASS(scriptModule, core, this);
+                }
+                else if(scriptNode.name.CompareTo(MechJebModuleScriptActionAscent.NAME) == 0)
 				{
 					obj = new MechJebModuleScriptActionAscent(scriptModule, core, this);
 				}
