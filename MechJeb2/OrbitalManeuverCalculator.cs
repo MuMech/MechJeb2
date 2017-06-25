@@ -229,7 +229,9 @@ namespace MuMech
             double latitudeDegrees = vesselState.latitude;
             // we have to clamp our inclination to above our launch site or else tracks go very wonky
             double clampedInclination = clampInclination(inclinationDegrees, launchLatitude, vessel.orbit.inclination);
-            Debug.Log("clampinedInc: " + clampedInclination + " incDegrees: " + inclinationDegrees + " lat: " + launchLatitude + " inc: " + vessel.orbit.inclination);
+            // hack just to make launches to 0 inclination from KSC in stock be precise
+            if (Math.Abs(launchLatitude) < 0.1) clampedInclination = inclinationDegrees;
+
             double orbVel = OrbitalManeuverCalculator.CircularOrbitSpeed(body, vesselState.altitudeASL + body.Radius);
             double headingOne = HeadingForInclination(clampedInclination, latitudeDegrees) * UtilMath.Deg2Rad;
             double headingTwo = HeadingForInclination(-clampedInclination, latitudeDegrees) * UtilMath.Deg2Rad;
