@@ -14,7 +14,7 @@ namespace MuMech
 		private List<String> actionTypes = new List<String>();
 		//Module Parameters
 		[Persistent(pass = (int)Pass.Type)]
-		public IAscentPath ascentPath;
+		public MechJebModuleAscentBase ascentPath;
 		[Persistent(pass = (int)Pass.Type)]
 		public double desiredOrbitAltitude;
 		[Persistent(pass = (int)Pass.Type)]
@@ -154,4 +154,3 @@ namespace MuMech
 		}
 	}
 }
-
