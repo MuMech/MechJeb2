@@ -49,10 +49,23 @@ namespace MuMech
             GUILayout.Label(String.Format("pitch: {0:F2}", path.guidancePitch));
             GUILayout.Label(String.Format("steps: {0:F2}", path.convergenceSteps));
 
+            if (path.guidanceEnabled)
+            {
+                if (GUILayout.Button("Disable PEG Guidance"))
+                    path.guidanceEnabled = false;
+            }
+            else
+            {
+                if (GUILayout.Button("Enable PEG Guidance"))
+                    path.guidanceEnabled = true;
+            }
+
+
             if (autopilot.enabled)
             {
                 GUILayout.Label("Autopilot status: " + autopilot.status);
             }
+
 
             GUILayout.EndVertical();
             base.WindowGUI(windowID);
