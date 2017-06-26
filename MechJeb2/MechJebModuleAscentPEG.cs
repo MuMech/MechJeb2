@@ -206,8 +206,8 @@ namespace MuMech
             return Double.IsNaN(T) || Double.IsInfinity(T) || T <= 0.0D || Double.IsNaN(A) || Double.IsInfinity(A) || Double.IsNaN(B) || Double.IsInfinity(B);
         }
 
+        public bool guidanceEnabled = true;
         public bool saneGuidance = false;
-
         public int convergenceSteps;
 
         private void converge(double dt, bool initialize = false)
@@ -341,7 +341,7 @@ namespace MuMech
                 return;
             }
 
-            if (saneGuidance) {
+            if (saneGuidance && guidanceEnabled) {
                 status = "Stable PEG Guidance";
                 attitudeTo(guidancePitch);
             }
