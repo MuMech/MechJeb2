@@ -3,26 +3,27 @@ using KSP.UI.Screens;
 using UnityEngine;
 
 /*
- * Apollo-style IGM launches for RSS/RO
+ * Atlas/Centaur-style PEG launches for RSS/RO
  */
 
 namespace MuMech
 {
-    public class MechJebModuleAscentIGM : MechJebModuleAscentBase
+    public class MechJebModuleAscentPEG : MechJebModuleAscentBase
     {
-        public MechJebModuleAscentIGM(MechJebCore core) : base(core) { }
+        public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
 
+        /* default pitch program here works seemingly decent at SLT of about 1.4 */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(500, 1000);
+            public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult turnStartVelocity = new EditableDoubleMult(50);
+            public EditableDoubleMult pitchRate = new EditableDoubleMult(0.75);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult turnStartPitch = new EditableDoubleMult(25);
-
+            public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+            public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
 
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
-
 
         public override void OnModuleEnabled()
         {
@@ -33,17 +34,11 @@ namespace MuMech
         {
         }
 
-        public bool IsVerticalAscent(double altitude, double velocity)
-        {
-            if (altitude < turnStartAltitude && velocity < turnStartVelocity)
-            {
-                return true;
-            }
-            return false;
-        }
-
         enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, EXIT };
         AscentMode mode;
+
+        /* guidancePitchAngle -- output from the guidance algorithm, not 'manual' pitch */
+        public double guidancePitch { get { return Math.Asin(A + C) * UtilMath.Rad2Deg; } }
 
         /* current MJ stage index */
         private int last_stage;
@@ -147,9 +142,9 @@ namespace MuMech
         private double A;
         private double B;
         /* time to burnout */
-        private double T;
+        public double T;
         /* dV to add */
-        private double dV;
+        public double dV;
 
         private void peg_estimate(double dt, bool debug = false)
         {
@@ -203,7 +198,7 @@ namespace MuMech
 
         private bool bad_pitch()
         {
-            return Double.IsNaN(Math.Asin(A+C));
+            return Double.IsNaN(guidancePitch);
         }
 
         private bool bad_guidance()
@@ -211,11 +206,13 @@ namespace MuMech
             return Double.IsNaN(T) || Double.IsInfinity(T) || T <= 0.0D || Double.IsNaN(A) || Double.IsInfinity(A) || Double.IsNaN(B) || Double.IsInfinity(B);
         }
 
-        private bool sane_guidance = false;
+        public bool saneGuidance = false;
+
+        public int convergenceSteps;
 
         private void converge(double dt, bool initialize = false)
         {
-            if (initialize || bad_guidance() || bad_pitch() || bad_dV() || !sane_guidance)
+            if (initialize || bad_guidance() || bad_pitch() || bad_dV() || !saneGuidance)
             {
                 T = 120.0D;
                 A = 0.0D;
@@ -228,10 +225,9 @@ namespace MuMech
             double startingB = B;
 
             bool converged = false;
-            int i;
-            for(i = 0; i < 50; i++) {
+            for(convergenceSteps = 0; convergenceSteps < 50; convergenceSteps++) {
                 double oldT = T;
-                if (i == 0)
+                if (convergenceSteps == 0)
                     peg_estimate(dt);
                 else
                     peg_estimate(0);
@@ -242,19 +238,20 @@ namespace MuMech
                 }
             }
 
-            Debug.Log("pitch = " + Math.Asin(A+C) + " dV = " + dV + " cycles = " + i);
+            Debug.Log("pitch = " + Math.Asin(A+C) + " dV = " + dV + " cycles = " + convergenceSteps);
 
             if (!converged || bad_guidance() || bad_dV() || bad_pitch())
             {
-                /* FIXME: probably shouldn't scribble over globals then restore them if they're bad */
+                /* FIXME: probably shouldn't scribble over globals then restore them if they're bad --
+                   should scribble in local vars and then set them if they're good. */
                 A = startingA;
                 B = startingB;
                 T = startingT;
-                sane_guidance = false;
+                saneGuidance = false;
             }
             else
             {
-                sane_guidance = true;
+                saneGuidance = true;
             }
         }
 
@@ -293,9 +290,12 @@ namespace MuMech
                 return true;
         }
 
+        double ascentStartTime = 0.0D;
+
         void DriveVerticalAscent(FlightCtrlState s)
         {
-            if (!IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
+            if (ascentStartTime > 0.0D && (vesselState.time - ascentStartTime ) > pitchStartTime)
+                mode = AscentMode.INITIATE_TURN;
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
@@ -304,49 +304,53 @@ namespace MuMech
 
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
-            if (!vessel.LiftedOff() || vessel.Landed) status = "Awaiting liftoff";
-            else status = "Vertical ascent";
+            if (!vessel.LiftedOff() || vessel.Landed) {
+                status = "Awaiting liftoff";
+            }
+            else
+            {
+                if (ascentStartTime == 0.0D)
+                    ascentStartTime = vesselState.time;
+                double dt = pitchStartTime - ( vesselState.time - ascentStartTime );
+                status = "Vertical ascent " + dt + " s";
+            }
         }
 
         void DriveInitiateTurn(FlightCtrlState s)
         {
-            if ((90 - turnStartPitch) >= srfvelPitch())
+            if ((vesselState.time - ascentStartTime ) > pitchEndTime)
             {
                 mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface))
-            {
-                mode = AscentMode.VERTICAL_ASCENT;
-                return;
-            }
+            double dt = vesselState.time - ascentStartTime - pitchStartTime;
+            double theta = dt * pitchRate;
+            attitudeTo(Math.Min(90, 90 - theta + pitchBias));
 
-            attitudeTo(90 - turnStartPitch);
-
-            status = "Initiate gravity turn";
+            status = "Pitch program " + (pitchEndTime - pitchStartTime - dt) + " s";
         }
 
         void DriveGravityTurn(FlightCtrlState s)
         {
             if (h >= hT)
             {
+                status = "Angular momentum target achieved";
                 core.thrust.targetThrottle = 0.0F;
                 mode = AscentMode.EXIT;
                 return;
             }
 
-            if (sane_guidance) {
-                attitudeTo(Math.Asin(A + C) * UtilMath.Rad2Deg);
+            if (saneGuidance) {
+                status = "Stable PEG Guidance";
+                attitudeTo(guidancePitch);
             }
             else
             {
                 // srfvelPitch == zero AoA
-                attitudeTo(srfvelPitch());
+                status = "Unguided Gravity Turn";
+                attitudeTo(Math.Min(90, srfvelPitch() + pitchBias));
             }
-
-            status = "Gravity turn";
         }
     }
 }

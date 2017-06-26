@@ -24,7 +24,7 @@ namespace MuMech
 
         /* FIXME: this probably needs to get persisted? */
         public int ascentPathIdx = 0;
-        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Iterative Guidance Mode (RSS/RO)" };
+        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Powered Explicit Guidance (RSS/RO)" };
 
         /* XXX: this is all a bit janky, could rub some reflection on it */
         private void get_path_and_editor(int i, out MechJebModuleAscentBase p, out MechJebModuleAscentMenuBase e)
@@ -41,8 +41,8 @@ namespace MuMech
             }
             else if ( i == 2 )
             {
-                p = core.GetComputerModule<MechJebModuleAscentIGM>();
-                e = core.GetComputerModule<MechJebModuleAscentIGMMenu>();
+                p = core.GetComputerModule<MechJebModuleAscentPEG>();
+                e = core.GetComputerModule<MechJebModuleAscentPEGMenu>();
             }
             else
             {
