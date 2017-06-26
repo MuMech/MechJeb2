@@ -44,9 +44,10 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.Label("Burnout Stats");
-            GUILayout.Label("delta-V: " + path.dV);
-            GUILayout.Label("time: " + path.T);
-            GUILayout.Label("pitch: " + path.guidancePitch);
+            GUILayout.Label(String.Format("delta-V: {0:F2}", path.dV));
+            GUILayout.Label(String.Format("time: {0:F2}", path.T));
+            GUILayout.Label(String.Format("pitch: {0:F2}", path.guidancePitch));
+            GUILayout.Label(String.Format("steps: {0:F2}", path.convergenceSteps));
 
             if (autopilot.enabled)
             {
