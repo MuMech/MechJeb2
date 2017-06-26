@@ -225,14 +225,14 @@ namespace MuMech
             double startingB = B;
 
             bool converged = false;
-            for(convergenceSteps = 0; convergenceSteps < 50; convergenceSteps++) {
+            for(convergenceSteps = 1; convergenceSteps <= 250; convergenceSteps++) {
                 double oldT = T;
                 if (convergenceSteps == 0)
                     peg_estimate(dt);
                 else
                     peg_estimate(0);
                 peg_solve();
-                if ( Math.Abs(T - oldT) < 0.1 ) {
+                if ( Math.Abs(T - oldT) < 0.01 ) {
                     converged = true;
                     break;
                 }
@@ -312,7 +312,7 @@ namespace MuMech
                 if (ascentStartTime == 0.0D)
                     ascentStartTime = vesselState.time;
                 double dt = pitchStartTime - ( vesselState.time - ascentStartTime );
-                status = "Vertical ascent " + dt + " s";
+                status = String.Format("Vertical ascent {0:F2} s", dt);
             }
         }
 
@@ -328,7 +328,7 @@ namespace MuMech
             double theta = dt * pitchRate;
             attitudeTo(Math.Min(90, 90 - theta + pitchBias));
 
-            status = "Pitch program " + (pitchEndTime - pitchStartTime - dt) + " s";
+            status = String.Format("Pitch program {0:F2} s", pitchEndTime - pitchStartTime - dt);
         }
 
         void DriveGravityTurn(FlightCtrlState s)
