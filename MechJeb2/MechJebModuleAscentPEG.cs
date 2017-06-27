@@ -53,7 +53,7 @@ namespace MuMech
         private double tau;
         /* current acceleration */
         private double a0;
-        /* tangential velocity at burnout FIXME: circular for now */
+        /* tangential velocity at burnout */
         private double vT;
         /* radius at burnout */
         private double rT;
@@ -62,7 +62,7 @@ namespace MuMech
         /* gravParameter */
         private double GM;
 
-        /* ending radial velocity (FIXME: circular for now) */
+        /* ending radial velocity */
         double rdT;
         /* current radial velocity */
         double rd;
@@ -77,7 +77,7 @@ namespace MuMech
         double w;
         /* mean radius */
         double rbar;
-        /* angular momentum at burnout FIXME: circular for now */
+        /* angular momentum at burnout */
         double hT;
         /* angular momentum */
         double h;
@@ -90,11 +90,18 @@ namespace MuMech
         /* gravity + centrifugal force at burnout */
         double CT;
 
+        public double sma() {
+            if ( desiredApoapsis > autopilot.desiredOrbitAltitude )
+                return (autopilot.desiredOrbitAltitude + 2 * mainBody.Radius + desiredApoapsis) / 2;
+            else
+                return autopilot.desiredOrbitAltitude + mainBody.Radius;
+        }
+
         private void update_rocket_stats() {
             /* sometimes the last stage in MJ has 0.0 dV and we have to search back for the actively burning stage */
             for(int i = vacStats.Length - 1; i >= 0; i--)
             {
-                if ( vacStats[i].deltaV > 0.0D )
+                if ( vacStats[i].deltaV > 0 )
                 {
                     last_stage = i;
                     break;
@@ -106,16 +113,16 @@ namespace MuMech
             a0 = vesselState.currentThrustAccel;
             tau = v_e / a0;
             rT = autopilot.desiredOrbitAltitude + mainBody.Radius;
-            vT = Math.Sqrt(GM/rT);  /* FIXME: assumes circular */
+            vT = Math.Sqrt(GM * (2/rT - 1/sma()));  /* FIXME: assumes periapsis insertion */
             r = mainBody.position.magnitude;
 
-            rdT = 0;  /* FIXME: assumes circular */
+            rdT = 0;  /* FIXME: assumes periapsis insertion */
             rd = vesselState.speedVertical;
 
             wT = vT / rT;
             w = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude / (r * r);
             rbar = ( rT + r ) / 2.0D;
-            hT = rT * vT;  /* FIXME: assumes circular */
+            hT = rT * vT;  /* FIXME: assumes periapsis insertion */
             h = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude;
             dh = hT - h;
             aT = a0 / ( 1.0D - T / tau );
