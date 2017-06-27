@@ -223,9 +223,9 @@ namespace MuMech
         {
             if (initialize || bad_guidance() || bad_pitch() || bad_dV() || !saneGuidance)
             {
-                T = 120.0D;
-                A = 0.0D;
-                B = 0.0D;
+                T = vacStats[last_stage].deltaTime;
+                A = -0.4;
+                B = 0.0036;
                 dt = 0.0;
             }
 
