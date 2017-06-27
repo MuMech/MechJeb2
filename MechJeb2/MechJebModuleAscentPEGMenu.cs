@@ -47,7 +47,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Booster Pitch start:", path.pitchStartTime, "s");
             GuiUtils.SimpleTextBox("Booster Pitch rate:", path.pitchRate, "°/s");
             GuiUtils.SimpleTextBox("Booster Pitch end:", path.pitchEndTime, "s");
-            GUILayout.Label(String.Format("ending pitch: {0:F1}°", (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
+            GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
             GuiUtils.SimpleTextBox("Terminal Guidance Period:", path.terminalGuidanceSecs, "s");
 
 
