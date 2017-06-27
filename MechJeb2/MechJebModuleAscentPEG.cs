@@ -355,6 +355,13 @@ namespace MuMech
 
         void DriveGravityTurn(FlightCtrlState s)
         {
+            if ((vesselState.time - ascentStartTime ) < pitchEndTime)
+            {
+                /* this can happen when users update the endtime box */
+                mode = AscentMode.INITIATE_TURN;
+                return;
+            }
+
             if (h >= hT)
             {
                 status = "Angular momentum target achieved";
