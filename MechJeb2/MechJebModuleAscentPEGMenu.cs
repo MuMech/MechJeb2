@@ -35,19 +35,30 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
+            GuiUtils.SimpleTextBox("Target Periapsis:", autopilot.desiredOrbitAltitude, "km");
+            GuiUtils.SimpleTextBox("Target Apoapsis:", path.desiredApoapsis, "km");
+            if ( path.desiredApoapsis < autopilot.desiredOrbitAltitude )
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label("Apoapsis < Periapsis: circularizing orbit at periapsis", s);
+            }
+
             GuiUtils.SimpleTextBox("Booster Pitch start:", path.pitchStartTime, "s");
             GuiUtils.SimpleTextBox("Booster Pitch rate:", path.pitchRate, "°/s");
             GuiUtils.SimpleTextBox("Booster Pitch end:", path.pitchEndTime, "s");
-            GuiUtils.SimpleTextBox("Pitch adjustment:", path.pitchBias, "°");
+            GUILayout.Label(String.Format("ending pitch: {0:F1}°", (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
+            GuiUtils.SimpleTextBox("Terminal Guidance Period:", path.terminalGuidanceSecs, "s");
+
 
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
 
             GUILayout.Label("Burnout Stats");
-            GUILayout.Label(String.Format("delta-V: {0:F2}", path.dV));
-            GUILayout.Label(String.Format("time: {0:F2}", path.T));
-            GUILayout.Label(String.Format("pitch: {0:F2}", path.guidancePitch));
-            GUILayout.Label(String.Format("steps: {0:F2}", path.convergenceSteps));
+            GUILayout.Label(String.Format("delta-V: {0:F1}", path.dV));
+            GUILayout.Label(String.Format("time: {0:F1}", path.T));
+            GUILayout.Label(String.Format("pitch: {0:F1}", path.guidancePitch));
+            GUILayout.Label(String.Format("steps: {0:D}", path.convergenceSteps));
 
             if (path.guidanceEnabled)
             {
@@ -59,6 +70,8 @@ namespace MuMech
                 if (GUILayout.Button("Enable PEG Guidance"))
                     path.guidanceEnabled = true;
             }
+
+            GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
 
             if (autopilot.enabled)

@@ -12,7 +12,7 @@ namespace MuMech
     {
         public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
 
-        /* default pitch program here works seemingly decent at SLT of about 1.4 */
+        /* default pitch program here works decently at SLT of about 1.4 */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
             public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -20,7 +20,12 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
             public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
+            public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, 1000);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+            public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
+
+        /* this deliberately does not persist, it is for emergencies only */
+        public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
 
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
@@ -148,10 +153,6 @@ namespace MuMech
 
         private void peg_estimate(double dt, bool debug = false)
         {
-            double oldA = A;
-            double oldB = B;
-            double oldT = T;
-
             /* update old guidance */
             A = A + B * dt;
             B = B;
@@ -209,6 +210,7 @@ namespace MuMech
         public bool guidanceEnabled = true;
         public bool saneGuidance = false;
         public int convergenceSteps;
+        public bool terminalGuidance = false;
 
         private void converge(double dt, bool initialize = false)
         {
@@ -224,23 +226,36 @@ namespace MuMech
             double startingA = A;
             double startingB = B;
 
-            bool converged = false;
-            for(convergenceSteps = 1; convergenceSteps <= 250; convergenceSteps++) {
-                double oldT = T;
-                if (convergenceSteps == 0)
-                    peg_estimate(dt);
-                else
-                    peg_estimate(0);
-                peg_solve();
-                if ( Math.Abs(T - oldT) < 0.01 ) {
-                    converged = true;
-                    break;
+            bool stable = false;
+
+            if (T < terminalGuidanceSecs)
+            {
+                peg_estimate(dt);
+                terminalGuidance = true;
+                stable = true; /* terminal guidance is always considered stable */
+            }
+            else
+            {
+                for(convergenceSteps = 1; convergenceSteps <= 250; convergenceSteps++) {
+                    double oldT = T;
+                    if (convergenceSteps == 0)
+                        peg_estimate(dt);
+                    else
+                        peg_estimate(0);
+
+                    peg_solve();
+
+                    if ( Math.Abs(T - oldT) < 0.01 ) {
+                        stable = true;
+                        break;
+                    }
                 }
+                terminalGuidance = false;
             }
 
             Debug.Log("pitch = " + Math.Asin(A+C) + " dV = " + dV + " cycles = " + convergenceSteps);
 
-            if (!converged || bad_guidance() || bad_dV() || bad_pitch())
+            if (!stable || bad_guidance() || bad_dV() || bad_pitch())
             {
                 /* FIXME: probably shouldn't scribble over globals then restore them if they're bad --
                    should scribble in local vars and then set them if they're good. */
@@ -342,7 +357,11 @@ namespace MuMech
             }
 
             if (saneGuidance && guidanceEnabled) {
-                status = "Stable PEG Guidance";
+                if (terminalGuidance)
+                    status = "Locked Terminal Guidance";
+                else
+                    status = "Stable PEG Guidance";
+
                 attitudeTo(guidancePitch);
             }
             else
