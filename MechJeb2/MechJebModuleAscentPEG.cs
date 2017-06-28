@@ -292,8 +292,6 @@ namespace MuMech
 
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
-            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
-
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -320,6 +318,8 @@ namespace MuMech
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
+
+            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
 
             if (!vessel.LiftedOff() || vessel.Landed) {
                 status = "Awaiting liftoff";
