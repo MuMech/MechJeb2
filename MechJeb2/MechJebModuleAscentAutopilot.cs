@@ -220,10 +220,10 @@ namespace MuMech
             DriveSolarPanels(s);
 
             if ( ascentPath.DriveAscent(s) ) {
-                Debug.Log("Remaining in Ascent");
+                if (GameSettings.VERBOSE_DEBUG_LOG) { Debug.Log("Remaining in Ascent"); }
                 status = ascentPath.status;
             } else {
-                Debug.Log("Ascend -> Circularize");
+                if (GameSettings.VERBOSE_DEBUG_LOG) { Debug.Log("Ascend -> Circularize"); }
                 mode = AscentMode.CIRCULARIZE;
             }
         }

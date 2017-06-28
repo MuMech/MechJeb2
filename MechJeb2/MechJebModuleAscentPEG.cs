@@ -1,5 +1,4 @@
 using System;
-using KSP.UI.Screens;
 using UnityEngine;
 
 /*
@@ -14,15 +13,15 @@ namespace MuMech
 
         /* default pitch program here works decently at SLT of about 1.4 */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
+        public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult pitchRate = new EditableDoubleMult(0.75);
+        public EditableDoubleMult pitchRate = new EditableDoubleMult(0.75);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
+        public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, 1000);
+        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
+        public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
@@ -39,11 +38,28 @@ namespace MuMech
         {
         }
 
-        enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, EXIT };
-        AscentMode mode;
+        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, EXIT };
+        private AscentMode mode;
 
         /* guidancePitchAngle -- output from the guidance algorithm, not 'manual' pitch */
         public double guidancePitch { get { return Math.Asin(A + C) * UtilMath.Rad2Deg; } }
+
+        /* time to burnout */
+        public double T { get; private set; }
+        /* dV to add */
+        public double dV { get; private set; }
+        /* dV estimated from difference in specific orbital energy*/
+        public double dVest { get; private set; }
+
+        /* steering constants */
+        public double A { get; private set; }
+        public double B { get; private set; }
+
+        public bool guidanceEnabled = true;
+        public int convergenceSteps { get; private set; }
+
+        private bool saneGuidance = false;
+        private bool terminalGuidance = false;
 
         /* current MJ stage index */
         private int last_stage;
@@ -63,40 +79,38 @@ namespace MuMech
         private double GM;
 
         /* ending radial velocity */
-        double rdT;
+        private double rdT;
         /* current radial velocity */
-        double rd;
+        private double rd;
         /* r: this is in the radial direction (altitude to gain) */
-        double dr;
+        private double dr;
         /* rdot: also in the radial direction (upwards velocity to lose) */
-        double drd;
+        private double drd;
 
         /* angular velocity at burnout */
-        double wT;
+        private double wT;
         /* current angular velocity */
-        double w;
+        private double w;
         /* mean radius */
-        double rbar;
+        private double rbar;
         /* angular momentum at burnout */
-        double hT;
+        private double hT;
         /* angular momentum */
-        double h;
+        private double h;
         /* angular momentum to gain */
-        double dh;
+        private double dh;
         /* acceleration at burnout */
-        double aT;
+        private double aT;
         /* current gravity + centrifugal force term */
-        double C;
+        private double C;
         /* gravity + centrifugal force at burnout */
-        double CT;
+        private double CT;
         /* specific orbital energy at burnout */
-        double eT;
+        private double eT;
         /* current specific orbital energy */
-        double e0;
-        /* dV estimated from difference in specific orbital energy*/
-        public double dVest;
+        private double e0;
 
-        public double smaT() {
+        private double smaT() {
             if ( desiredApoapsis > autopilot.desiredOrbitAltitude )
                 return (autopilot.desiredOrbitAltitude + 2 * mainBody.Radius + desiredApoapsis) / 2;
             else
@@ -155,19 +169,11 @@ namespace MuMech
             B = ( -c0 * ( rdT - rd ) + b0 * ( rT - r - rd * T ) ) / d;
         }
 
-        /* steering constants */
-        public double A;
-        public double B;
-        /* time to burnout */
-        public double T;
-        /* dV to add */
-        public double dV;
-
         private void peg_estimate(double dt)
         {
             /* update old guidance */
             A = A + B * dt;
-            B = B;
+            /* B does not change. */
             T = T - dt;
 
             aT = a0 / ( 1.0D - T / tau );
@@ -213,11 +219,6 @@ namespace MuMech
         {
             return Double.IsNaN(T) || Double.IsInfinity(T) || T <= 0.0D || Double.IsNaN(A) || Double.IsInfinity(A) || Double.IsNaN(B) || Double.IsInfinity(B);
         }
-
-        public bool guidanceEnabled = true;
-        public bool saneGuidance = false;
-        public int convergenceSteps;
-        public bool terminalGuidance = false;
 
         private void converge(double dt, bool initialize = false)
         {
@@ -275,7 +276,7 @@ namespace MuMech
             }
         }
 
-        double last_time = 0.0D;
+        private double last_time = 0.0D;
 
         public override bool DriveAscent(FlightCtrlState s)
         {
@@ -314,7 +315,7 @@ namespace MuMech
                 return true;
         }
 
-        void DriveVerticalAscent(FlightCtrlState s)
+        private void DriveVerticalAscent(FlightCtrlState s)
         {
 
             //during the vertical ascent we just thrust straight up at max throttle
@@ -335,7 +336,7 @@ namespace MuMech
             }
         }
 
-        void DriveInitiateTurn(FlightCtrlState s)
+        private void DriveInitiateTurn(FlightCtrlState s)
         {
             if ((vesselState.time - vessel.launchTime ) > pitchEndTime)
             {
@@ -350,7 +351,7 @@ namespace MuMech
             status = String.Format("Pitch program {0:F2} s", pitchEndTime - pitchStartTime - dt);
         }
 
-        void DriveGravityTurn(FlightCtrlState s)
+        private void DriveGravityTurn(FlightCtrlState s)
         {
             if ((vesselState.time - vessel.launchTime ) < pitchEndTime)
             {
