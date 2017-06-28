@@ -89,8 +89,14 @@ namespace MuMech
         double C;
         /* gravity + centrifugal force at burnout */
         double CT;
+        /* specific orbital energy at burnout */
+        double eT;
+        /* current specific orbital energy */
+        double e0;
+        /* dV estimated from difference in specific orbital energy*/
+        public double dVest;
 
-        public double sma() {
+        public double smaT() {
             if ( desiredApoapsis > autopilot.desiredOrbitAltitude )
                 return (autopilot.desiredOrbitAltitude + 2 * mainBody.Radius + desiredApoapsis) / 2;
             else
@@ -113,8 +119,12 @@ namespace MuMech
             a0 = vesselState.currentThrustAccel;
             tau = v_e / a0;
             rT = autopilot.desiredOrbitAltitude + mainBody.Radius;
-            vT = Math.Sqrt(GM * (2/rT - 1/sma()));  /* FIXME: assumes periapsis insertion */
+            vT = Math.Sqrt(GM * (2/rT - 1/smaT()));  /* FIXME: assumes periapsis insertion */
             r = mainBody.position.magnitude;
+
+            eT = - GM / (2*smaT());
+            e0 = - GM / (2*orbit.semiMajorAxis);
+            dVest = Math.Sqrt(2 * Math.Abs(eT - e0));
 
             rdT = 0;  /* FIXME: assumes periapsis insertion */
             rd = vesselState.speedVertical;
@@ -129,11 +139,6 @@ namespace MuMech
 
             C = (GM / (r * r) - w * w * r ) / a0;
             CT = (GM / (rT * rT) - wT * wT * rT ) / aT;
-
-            Debug.Log("GM = " + GM + " v_e = " + v_e + " tau = " + tau + "vT = " + vT);
-            Debug.Log("aT = " + aT + " rT = " + rT + " rdT = " + rdT + " wT = " + wT + " hT = " + hT);
-            Debug.Log("a0 = " + a0 + " r = " + r + " rd = " + rd + " w = " + w + " h = " + h + " rbar = " + rbar);
-            Debug.Log("C = " + C + " CT = " + CT);
         }
 
         private void peg_solve()
@@ -151,14 +156,14 @@ namespace MuMech
         }
 
         /* steering constants */
-        private double A;
-        private double B;
+        public double A;
+        public double B;
         /* time to burnout */
         public double T;
         /* dV to add */
         public double dV;
 
-        private void peg_estimate(double dt, bool debug = false)
+        private void peg_estimate(double dt)
         {
             /* update old guidance */
             A = A + B * dt;
@@ -186,11 +191,6 @@ namespace MuMech
             double fd_th = - ( f_r * fd_r + f_h * fd_h );
             /* cos pitch accel */
             double fdd_th = - ( fd_r * fd_r + fd_h * fd_h ) / 2.0D;
-
-            if (debug) {
-               Debug.Log("f_th = " + f_th + " fd_th = " + fd_th + " fdd_th = " + fdd_th);
-               Debug.Log("f_r = " + f_r + " f_rT = " + f_rT + " fd_r = " + fd_r);
-            }
 
             /* updated estimate of dV to burn */
             dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * tau ) + fdd_th * v_e * T * T / 2.0D ) / ( f_th + fd_th * tau + fdd_th * tau * tau );
@@ -259,8 +259,6 @@ namespace MuMech
                 }
                 terminalGuidance = false;
             }
-
-            Debug.Log("pitch = " + Math.Asin(A+C) + " dV = " + dV + " cycles = " + convergenceSteps);
 
             if (!stable || bad_guidance() || bad_dV() || bad_pitch())
             {
