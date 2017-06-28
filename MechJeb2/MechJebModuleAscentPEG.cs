@@ -137,8 +137,8 @@ namespace MuMech
             r = mainBody.position.magnitude;
 
             eT = - GM / (2*smaT());
-            e0 = - GM / (2*orbit.semiMajorAxis);
-            dVest = Math.Sqrt(2 * Math.Abs(eT - e0));
+            /* XXX: estimate on the pad is very low, might need mean-radius or might need potential energy term, should be closer to 8100m/s */
+            dVest = Math.Sqrt(2 * ( eT + GM / r )) - vessel.obt_velocity.magnitude;
 
             rdT = 0;  /* FIXME: assumes periapsis insertion */
             rd = vesselState.speedVertical;
