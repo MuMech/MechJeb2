@@ -332,8 +332,6 @@ namespace MuMech
 
             last_time = vesselState.time;
 
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -349,10 +347,7 @@ namespace MuMech
                     break;
             }
 
-            if (mode == AscentMode.EXIT)
-                return false;
-            else
-                return true;
+            return (mode != AscentMode.EXIT);
         }
 
         private void DriveVerticalAscent(FlightCtrlState s)
@@ -360,6 +355,7 @@ namespace MuMech
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
+            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
 
@@ -380,6 +376,7 @@ namespace MuMech
 
         private void DriveInitiateTurn(FlightCtrlState s)
         {
+            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
             if ((vesselState.time - vessel.launchTime ) > pitchEndTime)
             {
                 mode = AscentMode.GRAVITY_TURN;
@@ -395,6 +392,7 @@ namespace MuMech
 
         private void DriveGravityTurn(FlightCtrlState s)
         {
+            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
             if ((vesselState.time - vessel.launchTime ) < pitchEndTime)
             {
                 /* this can happen when users update the endtime box */
