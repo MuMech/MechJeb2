@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 /*
  * Atlas/Centaur-style PEG launches for RSS/RO
@@ -22,12 +23,15 @@ namespace MuMech
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
 
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
+        private FuelFlowSimulation.Stats[] atmoStats { get { return stats.atmoStats; } }
 
         public override void OnModuleEnabled()
         {
@@ -36,6 +40,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            stages = null;
         }
 
         private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, EXIT };
@@ -110,6 +115,42 @@ namespace MuMech
         /* current specific orbital energy */
         private double e0;
 
+        /* stage-specific information */
+        public List<StageInfo> stages = new List<StageInfo>();
+
+        public struct StageInfo
+        {
+            public double vac_dV; /* total vacuum deltaV */
+            public double vac_ve; /* vacuum exhaust velocity */
+            public double vac_a0; /* starting/current vacuum thrust acceleration */
+            public double atm_ve; /* atmospheric exhaust velocity */
+            public double atm_a0; /* starting/current atmospheric thrust acceleration */
+            public double A;
+            public double B;
+            public double K;
+            public double T;
+            public int mjStage;
+        }
+
+        public int numStages;
+
+        /* these stages are indexed so the currently burning stage is stage 0 and the last stage
+           is at the end of the array */
+        void UpdateStageStats()
+        {
+            stages.Clear();
+            for( int i = vacStats.Length-1; i >= 0; i-- )
+            {
+                if ( vacStats[i].deltaV > stageLowDVLimit )
+                {
+                    StageInfo stage = new StageInfo();
+                    stage.vac_dV = vacStats[i].deltaV;
+                    stage.mjStage = i;
+                    stages.Add( stage );
+                }
+            }
+        }
+
         private double smaT() {
             if ( desiredApoapsis > autopilot.desiredOrbitAltitude )
                 return (autopilot.desiredOrbitAltitude + 2 * mainBody.Radius + desiredApoapsis) / 2;
@@ -117,7 +158,8 @@ namespace MuMech
                 return autopilot.desiredOrbitAltitude + mainBody.Radius;
         }
 
-        private void update_rocket_stats() {
+        private void UpdateRocketStats() {
+            UpdateStageStats();
             /* sometimes the last stage in MJ has 0.0 dV and we have to search back for the actively burning stage */
             for(int i = vacStats.Length - 1; i >= 0; i--)
             {
@@ -281,7 +323,7 @@ namespace MuMech
         public override bool DriveAscent(FlightCtrlState s)
         {
             stats.RequestUpdate(this);
-            update_rocket_stats();
+            UpdateRocketStats();
 
             if (last_time != 0.0D)
                 converge(vesselState.time - last_time);
