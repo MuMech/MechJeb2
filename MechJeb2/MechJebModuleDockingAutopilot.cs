@@ -46,6 +46,8 @@ namespace MuMech
         Vector3d zAxis;
         public double zSep;
         public Vector3d lateralSep;
+        public double relativeZ;
+        public double relativeLateral;
 
         ITargetable lastTarget;
 
@@ -99,6 +101,7 @@ namespace MuMech
         {
             if (speedLimit != 0)
             {
+                
                 if (s >  speedLimit) s =  speedLimit;
                 if (s < -speedLimit) s = -speedLimit;
             }
@@ -140,25 +143,37 @@ namespace MuMech
             {
                 case DockingStep.WRONG_SIDE_BACKING_UP:
                     zApproachSpeed = MaxSpeedForDistance(safeDistance + zSep + 2.0, -zAxis);
-                    latApproachSpeed = 0;
+                    if (lateralSep.magnitude < safeDistance)
+                        latApproachSpeed *= -1;
+                    else if (lateralSep.magnitude < safeDistance * 2)
+                        latApproachSpeed = 0;
+
                     align = false;
-                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side";
+                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side (lat: " + latApproachSpeed.ToString() + " m/s)";
                     break;
 
                 case DockingStep.WRONG_SIDE_LATERAL:
                     zApproachSpeed = 0;
-                    latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, lateralSep);
+                    latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, -lateralSep);
                     status = "Moving away from docking axis at " + latApproachSpeed.ToString("F2") + " m/s to avoid hitting target on backing up";
                     break;
 
                 case DockingStep.WRONG_SIDE_SWITCHSIDE:
                     zApproachSpeed = -MaxSpeedForDistance(-zSep + targetSize, -zAxis);
-                    latApproachSpeed = 0;
-                    status = "Moving at " + zApproachSpeed.ToString("F2") + " m/s to get on the correct side of the target.";
+                    if (lateralSep.magnitude < safeDistance)
+                        latApproachSpeed *= -1;
+                    else if (lateralSep.magnitude < safeDistance * 2)
+                        latApproachSpeed = 0;
+                    
+                    status = "Moving at " + zApproachSpeed.ToString("F2") + " m/s to get on the correct side of the target. (lat: " + latApproachSpeed.ToString() + " m/s)";
                     break;
 
                 case DockingStep.BACKING_UP:
-                    latApproachSpeed = 0;
+                    if (lateralSep.magnitude < safeDistance)
+                        latApproachSpeed *= -1;
+                    else if (lateralSep.magnitude < safeDistance * 2)
+                        latApproachSpeed = 0;
+
                     zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, -zAxis);
                     align = false;
                     status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s";
@@ -166,30 +181,29 @@ namespace MuMech
 
                 case DockingStep.MOVING_TO_START:
                     
-                        timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
-                        timeToTargetSize = Math.Abs((zSep - targetSize) / zApproachSpeed);                                               
+                    timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
+                    timeToTargetSize = Math.Abs((zSep - targetSize) / zApproachSpeed);
 
-                        if (timeToTargetSize < timeToAxis && timeToAxis > 0 && timeToTargetSize > 0)
-                        {
-                            zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
-                        }
                     if (zSep < targetSize)
-                        //zApproachSpeed = 0;
                         zApproachSpeed *= -1;
-                    
-                    
+                    if (((zSep <= lateralSep.magnitude * 10) || (timeToTargetSize <= timeToAxis * 10)) && (timeToAxis > 0 && timeToTargetSize > 0))
+                    {
+                        latApproachSpeed *= 2;
+                    }
+
                     status = "Moving toward the starting point at " + zApproachSpeed.ToString("F2") + " m/s.";
                     break;
 
                 case DockingStep.DOCKING:
-                    status = "Moving forward to dock at " + zApproachSpeed.ToString("F2") + " m/s.";
                     timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
                     timeToTargetSize = Math.Abs((zSep) / zApproachSpeed);                                               
                     
-                    if (timeToTargetSize < timeToAxis && timeToAxis > 0 && timeToTargetSize > 0)
+                    if (((zSep <= lateralSep.magnitude * 10) || (timeToTargetSize <= timeToAxis * 10)) && (timeToAxis > 0 && timeToTargetSize > 0))
                     {
-                        zApproachSpeed *= Math.Min(timeToTargetSize / (timeToAxis * 2.0), 1);
+                        zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
+                        latApproachSpeed *= 2;
                     }
+                    status = "Moving forward to dock at " + zApproachSpeed.ToString("F2") + " / " + latApproachSpeed.ToString("F2") + " m/s.";
                     break;
 
                 default:
@@ -203,11 +217,19 @@ namespace MuMech
                     core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back), AttitudeReference.TARGET_ORIENTATION, this);
                 else
                     core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+
+            // Purpose of of this section is to compensate for relative velocities because the docking code does poorly with very low speed limits
+            // And can't seem to keep up if relative velocities are greater than the speed limit.
+            //if (relativeZ > 0 && relativeZ > Math.Abs(zApproachSpeed))
+            //    zApproachSpeed *= relativeZ / Math.Abs(zApproachSpeed);
+            //if (relativeLateral > 0 && relativeLateral > Math.Abs(latApproachSpeed))
+            //    latApproachSpeed *= relativeLateral / Math.Abs(latApproachSpeed);
             
 
-            Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
+            Vector3d adjustment = (-lateralSep.normalized * latApproachSpeed) + (zApproachSpeed * zAxis);
             core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
-
+            MechJebModuleDebugArrows.debugVector = adjustment;
+            MechJebModuleDebugArrows.debugVector2 = -core.target.RelativePosition;
         }
 
 
@@ -218,6 +240,17 @@ namespace MuMech
                 EndDocking();
                 return;
             }
+
+            // Check if overrides have changed
+            if (!overrideTargetSize)
+                targetSize = targetBoundingBox.size.magnitude;
+            else
+                targetSize = (float)overridenTargetSize.val;
+
+            if (!overrideSafeDistance)
+                safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
+            else
+                safeDistance = (float)overridenSafeDistance.val;
 
             UpdateDistance();
 
@@ -248,7 +281,7 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    if (lateralSep.magnitude < dockingcorridorRadius)
+                    if (lateralSep.magnitude < dockingcorridorRadius && zSep >= targetSize)
                         dockingStep = DockingStep.DOCKING;
                     break;
 
@@ -283,6 +316,8 @@ namespace MuMech
             zAxis = core.target.DockingAxis.normalized;
             zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             lateralSep = Vector3d.Exclude(zAxis, separation);
+            relativeZ = Vector3d.Dot(core.target.RelativeVelocity, zAxis);
+            relativeLateral = Vector3d.Dot(lateralSep, core.target.RelativeVelocity);
         }
 
         void InitDocking()
@@ -315,23 +350,25 @@ namespace MuMech
                 print(e);
             }
 
-			if (zSep < 0)  //we're behind the target
-			{
-				// If we're more than half our own bounding box size behind the target port then use wrong side behavior
-				// Still needs improvement. The reason for these changes is that to prevent wrong side behavior when our
-				// port slipped behind the target by a fractional amount. The result is that rather than avoiding the 
-				// target ship we end up trying to pass right through it.
-				// What's really needed here is code that compares bounding box positions to determine if we just try to back up or change sides completely.
-				if (Math.Abs (zSep) > vesselBoundingBox.size.magnitude * 0.5f)
-					dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
-				else
-					dockingStep = DockingStep.BACKING_UP; // Just back straight up.
-			}
-			else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
-                if (zSep < targetSize) 
+            if (zSep < 0)  //we're behind the target
+            {
+                // If we're more than half our own bounding box size behind the target port then use wrong side behavior
+                // Still needs improvement. The reason for these changes is that to prevent wrong side behavior when our
+                // port slipped behind the target by a fractional amount. The result is that rather than avoiding the 
+                // target ship we end up trying to pass right through it.
+                // What's really needed here is code that compares bounding box positions to determine if we just try to back up or change sides completely.
+                if (Math.Abs(zSep) > vesselBoundingBox.size.magnitude * 0.5f)
+                    dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
+                else
+                    dockingStep = DockingStep.BACKING_UP; // Just back straight up.
+            }
+            else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
+            {
+                if (zSep < targetSize)
                     dockingStep = DockingStep.BACKING_UP;
                 else
                     dockingStep = DockingStep.MOVING_TO_START;
+            }
             else
                 dockingStep = DockingStep.DOCKING;
 
