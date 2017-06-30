@@ -79,7 +79,7 @@ namespace MuMech
         public double currentMaxAoA = 0;
 
         public double launchLatitude = 0 ;
-   
+
 
         public double tMinus
         {
@@ -91,7 +91,7 @@ namespace MuMech
         AscentMode mode;
         bool placedCircularizeNode = false;
         private double lastTMinus = 999;
-        
+
         public override void OnModuleEnabled()
         {
             if (autodeploySolarPanels && mainBody.atmosphere)
@@ -197,7 +197,7 @@ namespace MuMech
             if (timedLaunch)
             {
                 status = "Awaiting liftoff";
-                core.attitude.AxisControl(false, false, false); 
+                core.attitude.AxisControl(false, false, false);
                 return;
             }
 
@@ -207,10 +207,10 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             if (forceRoll)
             { // pre-align roll unless correctiveSteering is active as it would just interfere with that
-                double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
+                double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination, launchLatitude);
                 core.attitude.attitudeTo(desiredHeading, 90, verticalRoll, this);
             }
-            else 
+            else
             {
                 core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
             }
@@ -305,7 +305,7 @@ namespace MuMech
             Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
                                                + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
-            double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
+            double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination, launchLatitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
@@ -317,11 +317,11 @@ namespace MuMech
             if (correctiveSteering)
             {
                 Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
-                
+
                 double difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
                 Vector3d steerOffset = correctiveSteeringGain * difficulty * velocityError;
-                
+
 
                 //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
                 double maxOffset = 10 * UtilMath.Deg2Rad;
@@ -401,7 +401,7 @@ namespace MuMech
             // - Starwaster
             core.thrust.targetThrottle = 0;
 
-            double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination);
+            double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, desiredInclination, launchLatitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             double desiredFlightPathAngle = ascentPath.FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
@@ -456,7 +456,7 @@ namespace MuMech
                 //  into it, you actually only spend 1513 m/s to execute combined manuver.  Mechjeb should also do correction burns before
                 //  this if possible, and this can't correct all errors... but it's better then nothing.
                 //   (A better version of this should try to match inclination & LAN if target is specified)
-                Vector3d inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, desiredInclination);
+                Vector3d inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, Math.Abs(desiredInclination));
                 Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit.PerturbedOrbit(UT, inclinationCorrection), UT,
                     desiredOrbitAltitude + mainBody.Radius);
                 Vector3d dV = inclinationCorrection + smaCorrection;

@@ -118,7 +118,7 @@ namespace MuMech
 			base.WindowGUI(windowID);
 
 			GUILayout.Label("Warp to: ", GUILayout.ExpandWidth(false));
-			warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, warpTargetStrings);
+			warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
 
 			if (warpTarget == WarpTarget.Time)
 			{

@@ -162,12 +162,12 @@ namespace MuMech
 
         //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
         //Both inputs are in degrees.
-        //Convention: At equator, inclination    0 => heading 90 (east) 
+        //Convention: At equator, inclination    0 => heading 90 (east)
         //                        inclination   90 => heading 0  (north)
         //                        inclination  -90 => heading 180 (south)
         //                        inclination ±180 => heading 270 (west)
         //Returned heading is in degrees and in the range 0 to 360.
-        //If the given latitude is too large, so that an orbit with a given inclination never attains the 
+        //If the given latitude is too large, so that an orbit with a given inclination never attains the
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
         public static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees)
         {
@@ -188,23 +188,51 @@ namespace MuMech
             }
         }
 
+        // converts an inclination clamp into a positive value between 0,90 (reflected north/south and east/west)
+        private static double inc90(double inclination) {
+            double inc = MuUtils.ClampDegrees180(inclination);
+            if ( Math.Abs(inc) > 90.0f )
+                inc = 180.0f - inc;
+            return Math.Abs(inc);
+        }
+
+        // clamp the inclination based on two possible clamps (launch latitude and current inclination) whichever is
+        // the less restrictive clamp.
+        private static double clampInclination(double desiredInc, double clampOne, double clampTwo) {
+            clampOne = inc90(clampOne);
+            clampTwo = inc90(clampTwo);
+            double clamp = Math.Min(clampOne, clampTwo);
+            if (desiredInc > (180.0f - clamp))
+                return 180.0f - clamp;
+            if (desiredInc < (-180.0f + clamp))
+                return -180.0f + clamp;
+            if (desiredInc < 0.0f && desiredInc > -clamp)
+                return -clamp;
+            if (desiredInc >= 0.0f && desiredInc < clamp)
+                return clamp;
+            return desiredInc;
+        }
+
         //See #676
         //Computes the heading for a ground launch at the specified latitude accounting for the body rotation.
         //Both inputs are in degrees.
-        //Convention: At equator, inclination    0 => heading 90 (east) 
+        //Convention: At equator, inclination    0 => heading 90 (east)
         //                        inclination   90 => heading 0  (north)
         //                        inclination  -90 => heading 180 (south)
         //                        inclination ±180 => heading 270 (west)
         //Returned heading is in degrees and in the range 0 to 360.
-        //If the given latitude is too large, so that an orbit with a given inclination never attains the 
+        //If the given latitude is too large, so that an orbit with a given inclination never attains the
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        public static double HeadingForLaunchInclination(Vessel vessel, VesselState vesselState, double inclinationDegrees)
+        public static double HeadingForLaunchInclination(Vessel vessel, VesselState vesselState, double inclinationDegrees, double launchLatitude)
         {
             CelestialBody body = vessel.mainBody;
             double latitudeDegrees = vesselState.latitude;
+            // we have to clamp our inclination to above our launch site or else tracks go very wonky
+            double clampedInclination = clampInclination(inclinationDegrees, launchLatitude, vessel.orbit.inclination);
+            Debug.Log("clampinedInc: " + clampedInclination + " incDegrees: " + inclinationDegrees + " lat: " + launchLatitude + " inc: " + vessel.orbit.inclination);
             double orbVel = OrbitalManeuverCalculator.CircularOrbitSpeed(body, vesselState.altitudeASL + body.Radius);
-            double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
-            double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
+            double headingOne = HeadingForInclination(clampedInclination, latitudeDegrees) * UtilMath.Deg2Rad;
+            double headingTwo = HeadingForInclination(-clampedInclination, latitudeDegrees) * UtilMath.Deg2Rad;
             double now = Planetarium.GetUniversalTime();
             Orbit o = vessel.orbit;
 
@@ -248,7 +276,7 @@ namespace MuMech
                 // it is important that we do NOT do the fracReserveDV math here, we want to ignore the deltaHV entirely at ths point
                 return MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(desiredHorizontalVelocity, east), Vector3d.Dot(desiredHorizontalVelocity, north)));
             }
-            
+
             return MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
         }
 
@@ -439,7 +467,7 @@ namespace MuMech
         //First finds the time of closest approach to the target during the next orbit after the
         //time UT. Then returns the delta-V of a burn at UT that will change the separation at
         //that closest approach time to zero.
-        //This will likely only return sensible results when the given orbit is already an 
+        //This will likely only return sensible results when the given orbit is already an
         //approximate intercept trajectory.
         public static Vector3d DeltaVForCourseCorrection(Orbit o, double UT, Orbit target)
         {
@@ -516,7 +544,7 @@ namespace MuMech
             return deltaV;
         }
 
-        //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another. 
+        //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another.
         //It's assumed that the initial orbit around the first planet is circular, and that this orbit
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
         //the target planet has a fairly low relative inclination with respect to the first planet. If the
@@ -551,7 +579,7 @@ namespace MuMech
             //Now figure out how to approximately eject from our current orbit into the Hohmann orbit we just computed.
 
             //Assume we want to exit the SOI with the same velocity as the ideal transfer orbit at idealUT -- i.e., immediately
-            //after the "ideal" burn we used to compute the transfer orbit. This isn't quite right. 
+            //after the "ideal" burn we used to compute the transfer orbit. This isn't quite right.
             //We intend to eject from our planet at idealUT and only several hours later will we exit the SOI. Meanwhile
             //the transfer orbit will have acquired a slightly different velocity, which we should correct for. Maybe
             //just add in (1/2)(sun gravity)*(time to exit soi)^2 ? But how to compute time to exit soi? Or maybe once we
@@ -560,7 +588,7 @@ namespace MuMech
             //project the desired exit direction into the current orbit plane to get the feasible exit direction
             Vector3d inPlaneSoiExitDirection = Vector3d.Exclude(o.SwappedOrbitNormal(), soiExitVelocity).normalized;
 
-            //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn) 
+            //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn)
             //and SOI exit (approximated as radius = infinity)
             double soiExitEnergy = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
             double ejectionRadius = o.semiMajorAxis; //a guess, good for nearly circular orbits
@@ -650,7 +678,7 @@ namespace MuMech
             return dV;
         }
 
-        //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another. 
+        //Computes the time and delta-V of an ejection burn to a Hohmann transfer from one planet to another.
         //It's assumed that the initial orbit around the first planet is circular, and that this orbit
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
         //the target planet has a fairly low relative inclination with respect to the first planet. If the
@@ -679,7 +707,7 @@ namespace MuMech
             //Now figure out how to approximately eject from our current orbit into the Hohmann orbit we just computed.
 
             //Assume we want to exit the SOI with the same velocity as the ideal transfer orbit at idealUT -- i.e., immediately
-            //after the "ideal" burn we used to compute the transfer orbit. This isn't quite right. 
+            //after the "ideal" burn we used to compute the transfer orbit. This isn't quite right.
             //We intend to eject from our planet at idealUT and only several hours later will we exit the SOI. Meanwhile
             //the transfer orbit will have acquired a slightly different velocity, which we should correct for. Maybe
             //just add in (1/2)(sun gravity)*(time to exit soi)^2 ? But how to compute time to exit soi? Or maybe once we
@@ -687,7 +715,7 @@ namespace MuMech
             Vector3d soiExitVelocity = idealDeltaV;
             Debug.Log("soiExitVelocity = " + (Vector3)soiExitVelocity);
 
-            //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn) 
+            //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn)
             //and SOI exit (approximated as radius = infinity)
             double soiExitEnergy = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
             double ejectionRadius = o.semiMajorAxis; //a guess, good for nearly circular orbits
@@ -768,13 +796,13 @@ namespace MuMech
             return target.SwappedOrbitalVelocityAtUT(UT) - o.SwappedOrbitalVelocityAtUT(UT);
         }
 
-        // Compute the delta-V of the burn at the givent time required to enter an orbit with a period of (resonanceDivider-1)/resonanceDivider of the starting orbit period        
+        // Compute the delta-V of the burn at the givent time required to enter an orbit with a period of (resonanceDivider-1)/resonanceDivider of the starting orbit period
         public static Vector3d DeltaVToResonantOrbit(Orbit o, double UT, double f)
         {
             double a = o.ApR;
             double p = o.PeR;
 
-            // Thanks wolframAlpha for the Math 
+            // Thanks wolframAlpha for the Math
             // x = (a^3 f^2 + 3 a^2 f^2 p + 3 a f^2 p^2 + f^2 p^3)^(1/3)-a
             double x = Math.Pow(Math.Pow(a, 3) * Math.Pow(f, 2) + 3 * Math.Pow(a, 2) * Math.Pow(f, 2) * p + 3 * a * Math.Pow(f, 2) * Math.Pow(p, 2) + Math.Pow(f, 2) * Math.Pow(p, 3), 1d / 3) - a;
 

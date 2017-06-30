@@ -99,6 +99,17 @@ namespace MuMech
             limitToPreventUnstableIgnition = GUILayout.Toggle(limitToPreventUnstableIgnition, "Prevent unstable ignition", s);
         }
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool autoRCSUllaging = true;
+
+        [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
+        public void AutoRCsUllageInfoItem()
+        {
+            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            if (limiter == LimitMode.AutoRCSUllage) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            autoRCSUllaging = GUILayout.Toggle(autoRCSUllaging, "Use RCS to ullage", s);
+        }
+
         // 5% safety margin on flameouts
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble flameoutSafetyPct = 5;
@@ -213,7 +224,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle, Electric, UnstableIgnition }
+        public enum LimitMode { None, TerminalVelocity, Temperature, Flameout, Acceleration, Throttle, DynamicPressure, MinThrottle, Electric, UnstableIgnition, AutoRCSUllage }
         public LimitMode limiter = LimitMode.None;
 
         public float targetThrottle = 0;
@@ -311,8 +322,9 @@ namespace MuMech
            (i.e. there may be a more limiting temp limit) */
         private void setFixedLimit(float limit, LimitMode mode)
         {
-            if (throttleLimit > limit)
+            if (throttleLimit > limit) {
                 throttleLimit = limit;
+            }
             throttleFixedLimit = limit;
             limiter = mode;
         }
@@ -486,23 +498,50 @@ namespace MuMech
                 }
             }
 
-            if (limiterMinThrottle && limiter != LimitMode.None && throttleLimit < minThrottle)
+            // Any limiters which can limit to non-zero values must come before this, any
+            // limiters (like ullage) which enforce zero throttle should come after.  The
+            // minThrottle setting has authority over any other limiter that sets non-zero throttle.
+            if (limiterMinThrottle && limiter != LimitMode.None)
             {
-                setFixedLimit((float) minThrottle, LimitMode.MinThrottle);
+                if (minThrottle > throttleFixedLimit)
+                {
+                    setFixedLimit((float) minThrottle, LimitMode.MinThrottle);
+                }
+                if (minThrottle > throttleLimit)
+                {
+                    setTempLimit((float) minThrottle, LimitMode.MinThrottle);
+                }
             }
 
-            // RealFuels ullage integration.  Stock always has stableUllage.
-            if (limitToPreventUnstableIgnition && !vesselState.stableUllage)
+            /* auto-RCS ullaging up to very stable */
+            if (autoRCSUllaging && s.mainThrottle > 0.0F && throttleLimit > 0.0F )
             {
-                if (s.mainThrottle > 0.0F && throttleLimit > 0.0F )
+                if (vesselState.lowestUllage < VesselState.UllageState.VeryStable)
                 {
-                    // We want to fire the throttle, and nothing else is limiting us, but we have unstable ullage
-                    setTempLimit(0.0F, LimitMode.UnstableIgnition);
-                    if (vessel.ActionGroups[KSPActionGroup.RCS] && s.Z == 0)
+                    Debug.Log("MechJeb RCS auto-ullaging: found state below very stable: " + vesselState.lowestUllage);
+                    if (vessel.hasEnabledRCSModules())
                     {
-                        // RCS is on, so use it to ullage
+                        if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                        {
+                            Debug.Log("MechJeb RCS auto-ullaging: enabling RCS action group for automatic ullaging");
+                            vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                        }
+                        Debug.Log("MechJeb RCS auto-ullaging: firing RCS to stabilize ulllage");
+                        setTempLimit(0.0F, LimitMode.UnstableIgnition);
                         s.Z = -1.0F;
+                    } else {
+                        Debug.Log("MechJeb RCS auto-ullaging: vessel has no enabled/staged RCS modules");
                     }
+                }
+            }
+
+            /* prevent unstable ignitions */
+            if (limitToPreventUnstableIgnition && s.mainThrottle > 0.0F && throttleLimit > 0.0F )
+            {
+                if (vesselState.lowestUllage < VesselState.UllageState.Stable)
+                {
+                    Debug.Log("MechJeb Unstable Ignitions: preventing ignition in state: " + vesselState.lowestUllage);
+                    setTempLimit(0.0F, LimitMode.UnstableIgnition);
                 }
             }
 
