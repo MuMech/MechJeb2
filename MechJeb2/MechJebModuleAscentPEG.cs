@@ -41,7 +41,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            stages = null;
+            stages.Clear();
         }
 
         private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, EXIT };
