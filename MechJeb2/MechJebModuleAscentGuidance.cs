@@ -17,16 +17,16 @@ namespace MuMech
         public bool launchingToInterplanetary = false;
         public double interplanetaryWindowUT;
 
-        MechJebModuleAscentAutopilot autopilot;
-        MechJebModuleAscentNavBall navBall;
-        MechJebModuleAscentBase path;
-        MechJebModuleAscentMenuBase editor;
+        public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
+        public MechJebModuleAscentBase path;
+        public MechJebModuleAscentMenuBase editor;
 
-        /* FIXME: this probably needs to get persisted? */
-        public int ascentPathIdx = 0;
-        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Powered Explicit Guidance (RSS/RO)" };
+        MechJebModuleAscentNavBall navBall;
 
         /* XXX: this is all a bit janky, could rub some reflection on it */
+        public int ascentPathIdx { get { return autopilot.ascentPathIdx; } set { autopilot.ascentPathIdx = value; } }
+        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Powered Explicit Guidance (RSS/RO)" };
+
         private void get_path_and_editor(int i, out MechJebModuleAscentBase p, out MechJebModuleAscentMenuBase e)
         {
             if ( i == 0 )
@@ -74,12 +74,13 @@ namespace MuMech
             get_path_and_editor(index, out path, out editor);
 
             if (path != null) path.enabled = true;
+
+            autopilot.ascentPath = path;
             /* the editor is not necessarily enabled by this, or the window will always pop up */
         }
 
         public override void OnStart(PartModule.StartState state)
         {
-            autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
             if (autopilot != null)
             {
                 desiredInclination = autopilot.desiredInclination;
@@ -331,8 +332,6 @@ namespace MuMech
 
                 editor.enabled = last_enabled;
             }
-
-            autopilot.ascentPath = path;
 
             if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 

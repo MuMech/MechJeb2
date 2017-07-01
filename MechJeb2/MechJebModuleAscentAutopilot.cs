@@ -16,6 +16,8 @@ namespace MuMech
 
         //input parameters:
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public int ascentPathIdx;
+        // this is not persisted, the ascentPathIdx controls it very indirectly (via being set from AscentGuidance)
         public MechJebModuleAscentBase ascentPath;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
