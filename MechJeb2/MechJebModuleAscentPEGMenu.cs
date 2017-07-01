@@ -51,7 +51,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Terminal Guidance Period:", path.terminalGuidanceSecs, "s");
             GUILayout.Label("Stage Stats");
             for(int i = path.stages.Count - 1; i >= 0; i--) {
-                GUILayout.Label(String.Format("{0:D}: {1:F1}", i+1, path.stages[i].vac_dV));
+                GUILayout.Label(String.Format("{0:D}: {1:F1} {2:D}", i+1, path.stages[i].vac_dV, path.stages[i].kspStage));
             }
             GUILayout.Label("Burnout Stats");
             GUILayout.Label(String.Format("delta-V (estimate): {0:F1}", path.dVest));
