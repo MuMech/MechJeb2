@@ -36,6 +36,7 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             mode = AscentMode.VERTICAL_ASCENT;
+            InitStageStats();
         }
 
         public override void OnModuleDisabled()
@@ -66,7 +67,7 @@ namespace MuMech
         private bool saneGuidance = false;
         private bool terminalGuidance = false;
 
-        /* current MJ stage index */
+        /* current KSP stage index */
         private int last_stage;
         /* current exhaust velocity */
         private double v_e;
@@ -115,38 +116,109 @@ namespace MuMech
         /* current specific orbital energy */
         private double e0;
 
-        /* stage-specific information */
+        /*
+         * handle tracking ksp/mechjeb stage information and keep state about stages
+         * (this is mildly awful because of everything that can dynamically happen to
+         * stages in flight, including players manually rearranging stages).
+         */
+
         public List<StageInfo> stages = new List<StageInfo>();
 
-        public struct StageInfo
+        public class StageInfo
         {
             public double vac_dV; /* total vacuum deltaV */
-            public double vac_ve; /* vacuum exhaust velocity */
-            public double vac_a0; /* starting/current vacuum thrust acceleration */
-            public double atm_ve; /* atmospheric exhaust velocity */
-            public double atm_a0; /* starting/current atmospheric thrust acceleration */
             public double A;
             public double B;
             public double K;
             public double T;
-            public int mjStage;
+            public List<Part> parts;
+            public int kspStage;
         }
 
-        public int numStages;
+        void UpdateStageFromMechJeb(StageInfo stage)
+        {
+            /* stage.kspStage must be corrected before calling this */
+            int s = stage.kspStage;
+            stage.vac_dV = vacStats[s].deltaV;
+        }
 
-        /* these stages are indexed so the currently burning stage is stage 0 and the last stage
-           is at the end of the array */
-        void UpdateStageStats()
+        public List<Part> skippedParts = new List<Part>();
+
+        void InitStageStats()
         {
             stages.Clear();
-            for( int i = vacStats.Length-1; i >= 0; i-- )
+            skippedParts.Clear();
+            for ( int i = vacStats.Length-1; i >= 0; i-- )
             {
                 if ( vacStats[i].deltaV > stageLowDVLimit )
                 {
                     StageInfo stage = new StageInfo();
-                    stage.vac_dV = vacStats[i].deltaV;
-                    stage.mjStage = i;
+                    stage.parts = vacStats[i].parts;
+                    stage.kspStage = i;
+                    UpdateStageFromMechJeb(stage);
                     stages.Add( stage );
+                }
+                else
+                {
+                    skippedParts.AddRange( vacStats[i].parts );
+                }
+            }
+        }
+
+        bool PartsListsMatch(List<Part> one, List<Part> two)
+        {
+            for(int i = 0; i < one.Count; i++)
+            {
+                /* skip burned sepratrons that wind up in the stage, etc */
+                if ( skippedParts.Contains(one[i]) )
+                    continue;
+
+                if ( !two.Contains(one[i]) )
+                    return false;
+            }
+            for(int i = 0; i < two.Count; i++)
+            {
+                if ( skippedParts.Contains(two[i]) )
+                    continue;
+
+                if ( !one.Contains(two[i]) )
+                    return false;
+            }
+            return true;
+        }
+
+        int FixKSPStage(int oldstage, List<Part> parts)
+        {
+            if (oldstage < vacStats.Length && PartsListsMatch(vacStats[oldstage].parts, parts))
+                return oldstage;
+
+            for( int i = 0; i < vacStats.Length; i++ )
+            {
+                if (PartsListsMatch(vacStats[i].parts, parts))
+                    return i;
+            }
+            return -1;
+        }
+
+        void UpdateStageStats()
+        {
+            for ( int i = 0; i < stages.Count; i++ )
+            {
+                StageInfo stage = stages[i];
+
+                /* skip already burned stage */
+                if ( stage.kspStage < 0 )
+                    continue;
+
+                stage.kspStage = FixKSPStage(stage.kspStage, stage.parts);
+                if ( stage.kspStage < 0 )
+                {
+                    /* we staged */
+                    stage.vac_dV = 0;
+                }
+                else
+                {
+                    UpdateStageFromMechJeb(stage);
                 }
             }
         }
@@ -161,7 +233,7 @@ namespace MuMech
         private void UpdateRocketStats() {
             UpdateStageStats();
             /* sometimes the last stage in MJ has 0.0 dV and we have to search back for the actively burning stage */
-            for(int i = vacStats.Length - 1; i >= 0; i--)
+            for ( int i = vacStats.Length - 1; i >= 0; i-- )
             {
                 if ( vacStats[i].deltaV > 0 )
                 {
