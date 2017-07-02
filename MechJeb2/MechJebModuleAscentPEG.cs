@@ -136,14 +136,24 @@ namespace MuMech
             public int kspStage;
         }
 
-        void UpdateStageFromMechJeb(StageInfo stage)
+        void UpdateStageFromMechJeb(StageInfo stage, bool atmo = false)
         {
             /* stage.kspStage must be corrected before calling this */
             int s = stage.kspStage;
-            stage.dV = vacStats[s].deltaV;
-            stage.deltaTime = vacStats[s].deltaTime;
-            stage.v_e = vacStats[s].isp * 9.80665;
-            stage.a0 = vacStats[s].startThrust / vacStats[s].startMass;
+            if (atmo)  /* really "current" stats */
+            {
+                stage.dV = atmoStats[s].deltaV;
+                stage.deltaTime = atmoStats[s].deltaTime;
+                stage.v_e = atmoStats[s].isp * 9.80665;
+                stage.a0 = atmoStats[s].startThrust / atmoStats[s].startMass;
+            }
+            else
+            {
+                stage.dV = vacStats[s].deltaV;
+                stage.deltaTime = vacStats[s].deltaTime;
+                stage.v_e = vacStats[s].isp * 9.80665;
+                stage.a0 = vacStats[s].startThrust / vacStats[s].startMass;
+            }
         }
 
         public List<Part> skippedParts = new List<Part>();
@@ -160,7 +170,7 @@ namespace MuMech
                     StageInfo stage = new StageInfo();
                     stage.parts = vacStats[i].parts;
                     stage.kspStage = i;
-                    UpdateStageFromMechJeb(stage);
+                    UpdateStageFromMechJeb(stage, i == 0);
                     stages.Add( stage );
                 }
                 else
@@ -400,6 +410,7 @@ namespace MuMech
         public override bool DriveAscent(FlightCtrlState s)
         {
             stats.RequestUpdate(this);
+            stats.liveSLT = true;  /* yes, this disables the button, yes, it is important we do this */
             UpdateRocketStats();
 
             if (last_time != 0.0D)
