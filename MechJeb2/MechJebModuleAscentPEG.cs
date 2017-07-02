@@ -126,7 +126,9 @@ namespace MuMech
 
         public class StageInfo
         {
-            public double vac_dV; /* total vacuum deltaV */
+            public double dV;
+            public double v_e;
+            public double deltaTime;
             public double A;
             public double B;
             public double K;
@@ -139,13 +141,16 @@ namespace MuMech
         {
             /* stage.kspStage must be corrected before calling this */
             int s = stage.kspStage;
-            stage.vac_dV = vacStats[s].deltaV;
+            stage.dV = vacStats[s].deltaV;
+            stage.deltaTime = vacStats[s].deltaTime;
+            stage.v_e = vacStats[s].isp * 9.80665;
         }
 
         public List<Part> skippedParts = new List<Part>();
 
         void InitStageStats()
         {
+            Debug.Log("MechJebModuleAscentPEG.InitStageStats()");
             stages.Clear();
             skippedParts.Clear();
             for ( int i = vacStats.Length-1; i >= 0; i-- )
@@ -161,6 +166,13 @@ namespace MuMech
                 else
                 {
                     skippedParts.AddRange( vacStats[i].parts );
+                }
+            }
+            /* sometimes parts wind up in zero dV stages and we need to remove them here */
+            for ( int i = 0; i < stages.Count; i++ ) {
+                for ( int j = 0; j < stages[i].parts.Count; j++ ) {
+                    if ( skippedParts.Contains(stages[i].parts[j]) )
+                        skippedParts.Remove(stages[i].parts[j]);
                 }
             }
         }
@@ -190,7 +202,9 @@ namespace MuMech
         int FixKSPStage(int oldstage, List<Part> parts)
         {
             if (oldstage < vacStats.Length && PartsListsMatch(vacStats[oldstage].parts, parts))
+            {
                 return oldstage;
+            }
 
             for( int i = 0; i < vacStats.Length; i++ )
             {
@@ -202,24 +216,24 @@ namespace MuMech
 
         void UpdateStageStats()
         {
+            if ( stages.Count == 0 )
+                InitStageStats();
+
             for ( int i = 0; i < stages.Count; i++ )
             {
                 StageInfo stage = stages[i];
 
-                /* skip already burned stage */
-                if ( stage.kspStage < 0 )
-                    continue;
-
                 stage.kspStage = FixKSPStage(stage.kspStage, stage.parts);
-                if ( stage.kspStage < 0 )
-                {
-                    /* we staged */
-                    stage.vac_dV = 0;
-                }
-                else
+
+                if ( stage.kspStage >= 0 )
                 {
                     UpdateStageFromMechJeb(stage);
                 }
+            }
+            for ( int i = stages.Count - 1; i >= 0; i-- )
+            {
+                if ( stages[i].kspStage < 0 )
+                    stages.RemoveAt(i);
             }
         }
 
