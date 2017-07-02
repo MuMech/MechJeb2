@@ -67,8 +67,6 @@ namespace MuMech
         private bool saneGuidance = false;
         private bool terminalGuidance = false;
 
-        /* current KSP stage index */
-        private int last_stage;
         /* current exhaust velocity */
         private double v_e;
         /* time to burn the entire vehicle */
@@ -128,6 +126,7 @@ namespace MuMech
         {
             public double dV;
             public double v_e;
+            public double a0;
             public double deltaTime;
             public double A;
             public double B;
@@ -144,6 +143,7 @@ namespace MuMech
             stage.dV = vacStats[s].deltaV;
             stage.deltaTime = vacStats[s].deltaTime;
             stage.v_e = vacStats[s].isp * 9.80665;
+            stage.a0 = vacStats[s].startThrust / vacStats[s].startMass;
         }
 
         public List<Part> skippedParts = new List<Part>();
@@ -246,19 +246,10 @@ namespace MuMech
 
         private void UpdateRocketStats() {
             UpdateStageStats();
-            /* sometimes the last stage in MJ has 0.0 dV and we have to search back for the actively burning stage */
-            for ( int i = vacStats.Length - 1; i >= 0; i-- )
-            {
-                if ( vacStats[i].deltaV > 0 )
-                {
-                    last_stage = i;
-                    break;
-                }
-            }
 
             GM = mainBody.gravParameter;
-            v_e = vacStats[last_stage].isp * 9.80665;
-            a0 = vesselState.currentThrustAccel;
+            v_e = stages[0].v_e;
+            a0 = stages[0].a0;
             tau = v_e / a0;
             rT = autopilot.desiredOrbitAltitude + mainBody.Radius;
             vT = Math.Sqrt(GM * (2/rT - 1/smaT()));  /* FIXME: assumes periapsis insertion */
@@ -352,7 +343,7 @@ namespace MuMech
         {
             if (initialize || bad_guidance() || bad_pitch() || bad_dV() || !saneGuidance)
             {
-                T = vacStats[last_stage].deltaTime;
+                T = stages[0].deltaTime;
                 A = -0.4;
                 B = 0.0036;
                 dt = 0.0;
