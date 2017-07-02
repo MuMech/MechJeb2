@@ -48,18 +48,12 @@ namespace MuMech
         private AscentMode mode;
 
         /* guidancePitchAngle -- output from the guidance algorithm, not 'manual' pitch */
-        public double guidancePitch { get { return Math.Asin(A + C) * UtilMath.Rad2Deg; } }
+        public double guidancePitch { get { return Math.Asin(stages[0].A + stages[0].C) * UtilMath.Rad2Deg; } }
 
-        /* time to burnout */
-        public double T { get; private set; }
         /* dV to add */
         public double dV { get; private set; }
         /* dV estimated from difference in specific orbital energy*/
         public double dVest { get; private set; }
-
-        /* steering constants */
-        public double A { get; private set; }
-        public double B { get; private set; }
 
         public bool guidanceEnabled = true;
         public int convergenceSteps { get; private set; }
@@ -67,12 +61,6 @@ namespace MuMech
         private bool saneGuidance = false;
         private bool terminalGuidance = false;
 
-        /* current exhaust velocity */
-        private double v_e;
-        /* time to burn the entire vehicle */
-        private double tau;
-        /* current acceleration */
-        private double a0;
         /* tangential velocity at burnout */
         private double vT;
         /* radius at burnout */
@@ -86,10 +74,6 @@ namespace MuMech
         private double rdT;
         /* current radial velocity */
         private double rd;
-        /* r: this is in the radial direction (altitude to gain) */
-        private double dr;
-        /* rdot: also in the radial direction (upwards velocity to lose) */
-        private double drd;
 
         /* angular velocity at burnout */
         private double wT;
@@ -103,16 +87,8 @@ namespace MuMech
         private double h;
         /* angular momentum to gain */
         private double dh;
-        /* acceleration at burnout */
-        private double aT;
-        /* current gravity + centrifugal force term */
-        private double C;
-        /* gravity + centrifugal force at burnout */
-        private double CT;
         /* specific orbital energy at burnout */
         private double eT;
-        /* current specific orbital energy */
-        private double e0;
 
         /*
          * handle tracking ksp/mechjeb stage information and keep state about stages
@@ -130,6 +106,7 @@ namespace MuMech
             public double deltaTime;
             public double A;
             public double B;
+            public double C;
             public double K;
             public double T;
             public List<Part> parts;
@@ -258,9 +235,6 @@ namespace MuMech
             UpdateStageStats();
 
             GM = mainBody.gravParameter;
-            v_e = stages[0].v_e;
-            a0 = stages[0].a0;
-            tau = v_e / a0;
             rT = autopilot.desiredOrbitAltitude + mainBody.Radius;
             vT = Math.Sqrt(GM * (2/rT - 1/smaT()));  /* FIXME: assumes periapsis insertion */
             r = mainBody.position.magnitude;
@@ -278,14 +252,14 @@ namespace MuMech
             hT = rT * vT;  /* FIXME: assumes periapsis insertion */
             h = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude;
             dh = hT - h;
-            aT = a0 / ( 1.0D - T / tau );
-
-            C = (GM / (r * r) - w * w * r ) / a0;
-            CT = (GM / (rT * rT) - wT * wT * rT ) / aT;
         }
 
-        private void peg_solve()
+        private void peg_solve1(StageInfo stage)
         {
+            double T = stage.T;
+            double v_e = stage.v_e;
+            double a0 = stage.a0;
+            double tau = v_e / a0;
 
             double b0 = -v_e * Math.Log(1.0D - T/tau);
             double b1 = b0 * tau - v_e * T;
@@ -294,19 +268,32 @@ namespace MuMech
 
             double d = b0 * c1 - b1 * c0;
 
-            A = ( c1 * ( rdT - rd ) - b1 * ( rT - r - rd * T ) ) / d;
-            B = ( -c0 * ( rdT - rd ) + b0 * ( rT - r - rd * T ) ) / d;
+            stage.A = ( c1 * ( rdT - rd ) - b1 * ( rT - r - rd * T ) ) / d;
+            stage.B = ( -c0 * ( rdT - rd ) + b0 * ( rT - r - rd * T ) ) / d;
         }
 
-        private void peg_estimate(double dt)
+        private void peg_update(double dt, StageInfo stage)
         {
             /* update old guidance */
-            A = A + B * dt;
-            /* B does not change. */
-            T = T - dt;
+            stage.A = stage.A + stage.B * dt;
+            /* B does not update */
+            stage.T = stage.T - dt;
+        }
 
-            aT = a0 / ( 1.0D - T / tau );
-            CT = (GM / (rT * rT) - wT * wT * rT ) / aT;
+        private void peg_estimate(StageInfo stage)
+        {
+            /* update old guidance */
+            double A = stage.A;
+            double B = stage.B;
+            double T = stage.T;
+
+            double v_e = stage.v_e;
+            double a0 = stage.a0;
+            double tau = v_e / a0;
+
+            double aT = a0 / ( 1.0D - T / tau );
+            double C = stage.C = (GM / (r * r) - w * w * r ) / a0;
+            double CT = (GM / (rT * rT) - wT * wT * rT ) / aT;
 
             /* current sin pitch  */
             double f_r = A + C;
@@ -331,11 +318,12 @@ namespace MuMech
             dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * tau ) + fdd_th * v_e * T * T / 2.0D ) / ( f_th + fd_th * tau + fdd_th * tau * tau );
 
             /* updated estimate of T */
-            T = tau * ( 1 - Math.Exp( - dV / v_e ) );
+            stage.T = tau * ( 1 - Math.Exp( - dV / v_e ) );
         }
 
         private bool bad_dV()
         {
+            /* FIXME: this could look for other obviously insane values */
             return dV <= 0.0D;
         }
 
@@ -344,64 +332,54 @@ namespace MuMech
             return Double.IsNaN(guidancePitch);
         }
 
-        private bool bad_guidance()
+        private bool bad_guidance(StageInfo stage)
         {
+            double A = stage.A;
+            double T = stage.T;
+            double B = stage.B;
             return Double.IsNaN(T) || Double.IsInfinity(T) || T <= 0.0D || Double.IsNaN(A) || Double.IsInfinity(A) || Double.IsNaN(B) || Double.IsInfinity(B);
         }
 
         private void converge(double dt, bool initialize = false)
         {
-            if (initialize || bad_guidance() || bad_pitch() || bad_dV() || !saneGuidance)
+            if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance)
             {
-                T = stages[0].deltaTime;
-                A = -0.4;
-                B = 0.0036;
+                stages[0].T = stages[0].deltaTime;
+                stages[0].A = -0.4;
+                stages[0].B = 0.0036;
                 dt = 0.0;
             }
 
-            double startingT = T;
-            double startingA = A;
-            double startingB = B;
-
             bool stable = false;
 
-            if (T < terminalGuidanceSecs)
+            peg_update(dt, stages[0]);
+
+            if (stages[0].T < terminalGuidanceSecs)
             {
-                peg_estimate(dt);
+                peg_estimate(stages[0]);
                 terminalGuidance = true;
                 stable = true; /* terminal guidance is always considered stable */
             }
             else
             {
-                for(convergenceSteps = 1; convergenceSteps <= 250; convergenceSteps++) {
-                    double oldT = T;
-                    if (convergenceSteps == 0)
-                        peg_estimate(dt);
-                    else
-                        peg_estimate(0);
+                for(convergenceSteps = 1; convergenceSteps <= 50; convergenceSteps++) {
+                    double oldT = stages[0].T;
 
-                    peg_solve();
+                    peg_estimate(stages[0]);
+                    peg_solve1(stages[0]);
 
-                    if ( Math.Abs(T - oldT) < 0.01 ) {
+                    if ( Math.Abs(stages[0].T - oldT) < 0.01 ) {
                         stable = true;
                         break;
                     }
+                    /* FIXME: consider breaking out on bad_guidance() here */
                 }
                 terminalGuidance = false;
             }
 
-            if (!stable || bad_guidance() || bad_dV() || bad_pitch())
+            if (!stable || bad_guidance(stages[0]) || bad_dV() || bad_pitch())
             {
-                /* FIXME: probably shouldn't scribble over globals then restore them if they're bad --
-                   should scribble in local vars and then set them if they're good. */
-                A = startingA;
-                B = startingB;
-                T = startingT;
                 saneGuidance = false;
-            }
-            else
-            {
-                saneGuidance = true;
             }
         }
 
