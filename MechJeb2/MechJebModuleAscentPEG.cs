@@ -51,7 +51,7 @@ namespace MuMech
         public double guidancePitch { get { return Math.Asin(stages[0].A + stages[0].C) * UtilMath.Rad2Deg; } }
 
         /* dV to add */
-        public double dV { get; private set; }
+        /* public double dV { get; private set; } */
         /* dV estimated from difference in specific orbital energy*/
         public double dVest { get; private set; }
 
@@ -72,8 +72,6 @@ namespace MuMech
 
         /* ending radial velocity */
         private double rdT;
-        /* current radial velocity */
-        private double rd;
 
         /* angular velocity at burnout */
         private double wT;
@@ -100,37 +98,47 @@ namespace MuMech
 
         public class StageInfo
         {
-            public double dV;
+            public double avail_dV;
             public double v_e;
+            public double tau;
             public double a0;
             public double deltaTime;
             public double A;
             public double B;
             public double C;
-            public double K;
+            public double dV;
             public double T;
+            public double rd0;
+            public double dr;
+            public double drd;
             public List<Part> parts;
             public int kspStage;
+            public override string ToString()
+            {
+                return "A = " + A + "\n" +
+                       "B = " + B + "\n" +
+                       "C = " + C + "\n" +
+                       "T = " + T + "\n" +
+                       "a0 = " + a0 + "\n" +
+                       "v_e = " + v_e + "\n" +
+                       "tau = " + tau + "\n" +
+                       "rd0 = " + rd0 + "\n" +
+                       "dr = " + dr + "\n" +
+                       "drd = " + drd + "\n";
+            }
         }
 
         void UpdateStageFromMechJeb(StageInfo stage, bool atmo = false)
         {
             /* stage.kspStage must be corrected before calling this */
             int s = stage.kspStage;
-            if (atmo)  /* really "current" stats */
-            {
-                stage.dV = atmoStats[s].deltaV;
-                stage.deltaTime = atmoStats[s].deltaTime;
-                stage.v_e = atmoStats[s].isp * 9.80665;
-                stage.a0 = atmoStats[s].startThrust / atmoStats[s].startMass;
-            }
-            else
-            {
-                stage.dV = vacStats[s].deltaV;
-                stage.deltaTime = vacStats[s].deltaTime;
-                stage.v_e = vacStats[s].isp * 9.80665;
-                stage.a0 = vacStats[s].startThrust / vacStats[s].startMass;
-            }
+            FuelFlowSimulation.Stats[] mjstats = atmo ? atmoStats : vacStats;
+
+            stage.avail_dV = mjstats[s].deltaV;
+            stage.deltaTime = mjstats[s].deltaTime;
+            stage.v_e = mjstats[s].isp * 9.80665;
+            stage.a0 = mjstats[s].startThrust / mjstats[s].startMass;
+            stage.tau = stage.v_e / stage.a0;
         }
 
         public List<Part> skippedParts = new List<Part>();
@@ -155,7 +163,7 @@ namespace MuMech
                     skippedParts.AddRange( vacStats[i].parts );
                 }
             }
-            /* sometimes parts wind up in zero dV stages and we need to remove them here */
+            /* sometimes parts we want also wind up in zero dV stages and we need to remove them here */
             for ( int i = 0; i < stages.Count; i++ ) {
                 for ( int j = 0; j < stages[i].parts.Count; j++ ) {
                     if ( skippedParts.Contains(stages[i].parts[j]) )
@@ -244,7 +252,7 @@ namespace MuMech
             dVest = Math.Sqrt(2 * ( eT + GM / r )) - vessel.obt_velocity.magnitude;
 
             rdT = 0;  /* FIXME: assumes periapsis insertion */
-            rd = vesselState.speedVertical;
+            stages[0].rd0 = vesselState.speedVertical;
 
             wT = vT / rT;
             w = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude / (r * r);
@@ -254,22 +262,99 @@ namespace MuMech
             dh = hT - h;
         }
 
-        private void peg_solve1(StageInfo stage)
+        /* FIXME: some memoization */
+        private double b(int n, int snum)
         {
-            double T = stage.T;
-            double v_e = stage.v_e;
-            double a0 = stage.a0;
-            double tau = v_e / a0;
+            StageInfo stage = stages[snum];
+            if (n == 0)
+                return stage.dV;
 
-            double b0 = -v_e * Math.Log(1.0D - T/tau);
-            double b1 = b0 * tau - v_e * T;
-            double c0 = b0 * T - b1;
-            double c1 = c0 * tau - v_e * T * T / 2.0D;
+            return b(n-1, snum) * stage.tau - stage.v_e * Math.Pow(stage.T, n) / n;
+        }
 
-            double d = b0 * c1 - b1 * c0;
+        /* FIXME: some memoization */
+        private double c(int n, int snum)
+        {
+            StageInfo stage = stages[snum];
+            if (n == 0)
+                return b(0, snum) * stage.T - b(1, snum);
 
-            stage.A = ( c1 * ( rdT - rd ) - b1 * ( rT - r - rd * T ) ) / d;
-            stage.B = ( -c0 * ( rdT - rd ) + b0 * ( rT - r - rd * T ) ) / d;
+            return c(n-1, snum) * stage.tau - stage.v_e * Math.Pow(stage.T, n+1) / ( n * (n + 1 ) );
+        }
+
+        private double alpha(int snum)
+        {
+            double sum = 0;
+            for(int l = 0; l <= snum; l++)
+                sum += b(0, l);
+            return sum;
+        }
+
+        private double beta(int snum)
+        {
+            double sum = 0;
+            for(int l = 0; l <= snum; l++)
+            {
+                double sum2 = 0;
+                for(int k = 0; k <= (l-1); k++)
+                {
+                    sum2 += stages[k].T;
+                }
+
+                sum += b(1, l) + b(0, l) * sum2;
+            }
+            return sum;
+        }
+
+        private double gamma(int snum)
+        {
+            double sum = 0;
+            for(int l = 0; l <= snum; l++)
+            {
+                double sum2 = 0;
+                for(int k = 0; k <= (l-1); k++) {
+                    sum += b(0, k);
+                }
+
+                sum += c(0, l) + stages[l].T * sum2;
+            }
+            return sum;
+        }
+
+        private double delta(int snum)
+        {
+            double sum = 0;
+            for(int l = 0; l <= snum; l++)
+            {
+                double sum2 = 0;
+                for(int k = 0; k <= (l-1); k++) {
+                    double sum3 = 0;
+                    for(int i = 0; i <= (k - 1); i++) {
+                        sum3 += stages[i].T;
+                    }
+                    sum2 += c(0, l) * stages[k].T + b(1, k) * stages[l].T + b(0, k) * stages[l].T * sum3;
+                }
+                sum += c(1, l) + sum2;
+            }
+            return sum;
+        }
+
+        private void peg_solve(int snum)
+        {
+            double dr = stages[snum].dr;
+            double drd = stages[snum].drd;
+
+            double a = alpha(snum);
+            double b = beta(snum);
+            double g = gamma(snum);
+            double d = delta(snum);
+
+            double D = a * d - b * g;
+
+            //Debug.Log(snum + " a:" + a + " b:" + b + " g:" + g + " d:" + d + " D:" + D);
+
+            stages[0].A = ( d * drd - b * dr ) / D;
+            stages[0].B = ( a * dr - g * drd ) / D;
         }
 
         private void peg_update(double dt, StageInfo stage)
@@ -280,8 +365,10 @@ namespace MuMech
             stage.T = stage.T - dt;
         }
 
-        private void peg_estimate(StageInfo stage)
+        private void peg_estimate(int snum)
         {
+            StageInfo stage = stages[snum];
+
             /* update old guidance */
             double A = stage.A;
             double B = stage.B;
@@ -315,16 +402,19 @@ namespace MuMech
             double fdd_th = - ( fd_r * fd_r + fd_h * fd_h ) / 2.0D;
 
             /* updated estimate of dV to burn */
-            dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * tau ) + fdd_th * v_e * T * T / 2.0D ) / ( f_th + fd_th * tau + fdd_th * tau * tau );
+            stage.dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * tau ) + fdd_th * v_e * T * T / 2.0D ) / ( f_th + fd_th * tau + fdd_th * tau * tau );
 
             /* updated estimate of T */
-            stage.T = tau * ( 1 - Math.Exp( - dV / v_e ) );
+            stage.T = tau * ( 1 - Math.Exp( - stage.dV / v_e ) );
+
+            stage.drd = rdT - stage.rd0;
+            stage.dr  = rT - r  - stage.rd0 * T;
         }
 
         private bool bad_dV()
         {
             /* FIXME: this could look for other obviously insane values */
-            return dV <= 0.0D;
+            return stages[0].dV <= 0.0D;
         }
 
         private bool bad_pitch()
@@ -354,9 +444,12 @@ namespace MuMech
 
             peg_update(dt, stages[0]);
 
+            //Debug.Log("ONE:");
+            //Debug.Log(stages[0]);
+
             if (stages[0].T < terminalGuidanceSecs)
             {
-                peg_estimate(stages[0]);
+                peg_estimate(0);
                 terminalGuidance = true;
                 stable = true; /* terminal guidance is always considered stable */
             }
@@ -365,8 +458,18 @@ namespace MuMech
                 for(convergenceSteps = 1; convergenceSteps <= 50; convergenceSteps++) {
                     double oldT = stages[0].T;
 
-                    peg_estimate(stages[0]);
-                    peg_solve1(stages[0]);
+                    peg_estimate(0);
+                    //if (convergenceSteps == 1)
+                    //{
+                    //    Debug.Log("TWO:");
+                    //    Debug.Log(stages[0]);
+                    //}
+                    peg_solve(0);
+                    //if (convergenceSteps == 1)
+                    //{
+                    //    Debug.Log("THREE:");
+                    //    Debug.Log(stages[0]);
+                    //}
 
                     if ( Math.Abs(stages[0].T - oldT) < 0.01 ) {
                         stable = true;
@@ -377,9 +480,22 @@ namespace MuMech
                 terminalGuidance = false;
             }
 
+            if (!stable)
+                Debug.Log("unstable");
+            if (bad_guidance(stages[0]))
+                Debug.Log("bad guidance");
+            if (bad_dV())
+                Debug.Log("bad dV");
+            if (bad_pitch())
+                Debug.Log("bad pitch");
+
             if (!stable || bad_guidance(stages[0]) || bad_dV() || bad_pitch())
             {
                 saneGuidance = false;
+            }
+            else
+            {
+                saneGuidance = true;
             }
         }
 
