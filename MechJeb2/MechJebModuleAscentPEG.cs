@@ -480,15 +480,6 @@ namespace MuMech
                 terminalGuidance = false;
             }
 
-            if (!stable)
-                Debug.Log("unstable");
-            if (bad_guidance(stages[0]))
-                Debug.Log("bad guidance");
-            if (bad_dV())
-                Debug.Log("bad dV");
-            if (bad_pitch())
-                Debug.Log("bad pitch");
-
             if (!stable || bad_guidance(stages[0]) || bad_dV() || bad_pitch())
             {
                 saneGuidance = false;
