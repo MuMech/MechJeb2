@@ -34,26 +34,26 @@ namespace MuMech
                 throw new OperationException("must select a target for the interplanetary transfer.");
 
             if (o.referenceBody.referenceBody == null)
-                throw new OperationException("doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.displayName + ".");
+                throw new OperationException("doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".");
 
             if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
             {
                 if (o.referenceBody == target.TargetOrbit.referenceBody)
-                    throw new OperationException("use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.displayName + ".");
-                throw new OperationException("an interplanetary transfer from within " + o.referenceBody.displayName + "'s sphere of influence must target a body that orbits " + o.referenceBody.displayName + "'s parent, " + o.referenceBody.referenceBody.displayName + ".");
+                    throw new OperationException("use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".");
+                throw new OperationException("an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".");
             }
 
             // Simple warnings
             if (o.referenceBody.orbit.RelativeInclination(target.TargetOrbit) > 30)
             {
-                errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(target.TargetOrbit).ToString("F0") + "º angle to " + o.referenceBody.displayName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly.";
+                errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(target.TargetOrbit).ToString("F0") + "º angle to " + o.referenceBody.theName + "'s orbital plane (recommend at most 30º). Planned interplanetary transfer may not intercept target properly.";
             }
             else
             {
                 double relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
                 if (relativeInclination > 10)
                 {
-                    errorMessage = "Warning: Recommend starting interplanetary transfers from " + o.referenceBody.displayName + " from an orbit in the same plane as " + o.referenceBody.displayName + "'s orbit around " + o.referenceBody.referenceBody.displayName + ". Starting orbit around " + o.referenceBody.displayName + " is inclined " + relativeInclination.ToString("F1") + "º with respect to " + o.referenceBody.displayName + "'s orbit around " + o.referenceBody.referenceBody.displayName + " (recommend < 10º). Planned transfer may not intercept target properly.";
+                    errorMessage = "Warning: Recommend starting interplanetary transfers from " + o.referenceBody.theName + " from an orbit in the same plane as " + o.referenceBody.theName + "'s orbit around " + o.referenceBody.referenceBody.theName + ". Starting orbit around " + o.referenceBody.theName + " is inclined " + relativeInclination.ToString("F1") + "º with respect to " + o.referenceBody.theName + "'s orbit around " + o.referenceBody.referenceBody.theName + " (recommend < 10º). Planned transfer may not intercept target properly.";
                 }
                 else if (o.eccentricity > 0.2)
                 {
