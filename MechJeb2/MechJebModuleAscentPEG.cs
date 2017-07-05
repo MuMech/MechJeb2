@@ -48,45 +48,40 @@ namespace MuMech
         private AscentMode mode;
 
         /* guidancePitchAngle -- output from the guidance algorithm, not 'manual' pitch */
-        public double guidancePitch { get { return Math.Asin(stages[0].A + stages[0].C) * UtilMath.Rad2Deg; } }
+        public double guidancePitch { get { return Math.Asin(stages[0].A + stages[0].G / stages[0].a0 ) * UtilMath.Rad2Deg; } }
 
         /* dV to add */
         /* public double dV { get; private set; } */
         /* dV estimated from difference in specific orbital energy*/
-        public double dVest { get; private set; }
+        // public double dVest { get; private set; }
 
         public bool guidanceEnabled = true;
         public int convergenceSteps { get; private set; }
 
         private bool saneGuidance = false;
-        private bool terminalGuidance = false;
+        public bool terminalGuidance = false;
 
         /* tangential velocity at burnout */
-        private double vT;
+        private double v_burnout;
         /* radius at burnout */
-        private double rT;
-        /* radius now */
-        private double r;
+        private double r_burnout;
         /* gravParameter */
         private double GM;
-
         /* ending radial velocity */
-        private double rdT;
-
+        private double rd_burnout;
         /* angular velocity at burnout */
-        private double wT;
-        /* current angular velocity */
-        private double w;
-        /* mean radius */
-        private double rbar;
+        private double w_burnout;
         /* angular momentum at burnout */
-        private double hT;
-        /* angular momentum */
-        private double h;
-        /* angular momentum to gain */
-        private double dh;
+        private double h_burnout;
+        /* G at burnout */
+        private double G_burnout;
         /* specific orbital energy at burnout */
         private double eT;
+        /* average change in the angle of thrust over the whole burn */
+        private double fd_r;
+
+        public double total_T;
+        public double total_dV;
 
         /*
          * handle tracking ksp/mechjeb stage information and keep state about stages
@@ -98,33 +93,64 @@ namespace MuMech
 
         public class StageInfo
         {
-            public double avail_dV;
-            public double v_e;
+            /* updated directly from vehicle stats */
+            public double v_e;       /* current/initial exhaust velocity */
             public double tau;
-            public double a0;
-            public double deltaTime;
+            public double a0;        /* current/initial acceleration */
+            public double avail_dV;  /* stage stat from MJ */
+            public double avail_T;   /* stage stat from MJ */
+
+            public double dV; /* lower stages are == avail_dV, upper stage needs estimation */
+            public double T;  /* lower stages are == avail_T, upper stage needs estimation */
+
+            /* steering constants */
             public double A;
             public double B;
-            public double C;
-            public double dV;
-            public double T;
-            public double rd0;
-            public double dr;
-            public double drd;
+            public double dA;
+            public double dB;
+
+            /* output from estimation */
+            public double G;         /* current G */
+            public double GT;        /* final G */
+            public double aT;        /* final acceleration */
+
+            /* input */
+            public double r;         /* current radius */
+            public double rd;        /* initial upwards velocity */
+            public double h;         /* current angular momentum */
+
+            /* output deltas */
+            public double dr;        /* delta r */
+            public double drd;       /* delta rdot */
+            public double dh;        /* delta h */
+
+            /* output estimates */
+            public double rT;        /* ending radius */
+            public double rdT;       /* final upwards velocity */
+            public double hT;        /* ending angular momentum */
+
+            /* steering */
+            public double f_r;       /* current/initial steering sin angle */
+            public double f_rT;      /* ending steering sin angle */
+
+            /* misc */
             public List<Part> parts;
             public int kspStage;
             public override string ToString()
             {
                 return "A = " + A + "\n" +
                        "B = " + B + "\n" +
-                       "C = " + C + "\n" +
+                       "G = " + G + "\n" +
                        "T = " + T + "\n" +
                        "a0 = " + a0 + "\n" +
                        "v_e = " + v_e + "\n" +
                        "tau = " + tau + "\n" +
-                       "rd0 = " + rd0 + "\n" +
+                       "r = " + r + "\n" +
+                       "rd = " + rd + "\n" +
+                       "h = " + h + "\n" +
                        "dr = " + dr + "\n" +
-                       "drd = " + drd + "\n";
+                       "drd = " + drd + "\n" +
+                       "dh = " + dh + "\n";
             }
         }
 
@@ -135,7 +161,7 @@ namespace MuMech
             FuelFlowSimulation.Stats[] mjstats = atmo ? atmoStats : vacStats;
 
             stage.avail_dV = mjstats[s].deltaV;
-            stage.deltaTime = mjstats[s].deltaTime;
+            stage.avail_T = mjstats[s].deltaTime;
             stage.v_e = mjstats[s].isp * 9.80665;
             stage.a0 = mjstats[s].startThrust / mjstats[s].startMass;
             stage.tau = stage.v_e / stage.a0;
@@ -227,8 +253,10 @@ namespace MuMech
             }
             for ( int i = stages.Count - 1; i >= 0; i-- )
             {
-                if ( stages[i].kspStage < 0 )
+                if ( stages[i].kspStage < 0 ) {
+                    num_stages--;  /* FIXME this needs to be way smarter */
                     stages.RemoveAt(i);
+                }
             }
         }
 
@@ -243,23 +271,20 @@ namespace MuMech
             UpdateStageStats();
 
             GM = mainBody.gravParameter;
-            rT = autopilot.desiredOrbitAltitude + mainBody.Radius;
-            vT = Math.Sqrt(GM * (2/rT - 1/smaT()));  /* FIXME: assumes periapsis insertion */
-            r = mainBody.position.magnitude;
+            stages[num_stages - 1].rT = r_burnout = autopilot.desiredOrbitAltitude + mainBody.Radius;
+
+            v_burnout = Math.Sqrt(GM * (2/r_burnout - 1/smaT()));  /* FIXME: assumes periapsis insertion */
+            stages[0].r = mainBody.position.magnitude;
 
             eT = - GM / (2*smaT());
             /* XXX: estimate on the pad is very low, might need mean-radius or might need potential energy term, should be closer to 8100m/s */
-            dVest = Math.Sqrt(2 * ( eT + GM / r )) - vessel.obt_velocity.magnitude;
+            // dVest = Math.Sqrt(2 * ( eT + GM / r )) - vessel.obt_velocity.magnitude;
 
-            rdT = 0;  /* FIXME: assumes periapsis insertion */
-            stages[0].rd0 = vesselState.speedVertical;
+            stages[num_stages - 1].rdT = rd_burnout = 0;  /* FIXME: assumes periapsis insertion */
+            stages[0].rd = vesselState.speedVertical;
 
-            wT = vT / rT;
-            w = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude / (r * r);
-            rbar = ( rT + r ) / 2.0D;
-            hT = rT * vT;  /* FIXME: assumes periapsis insertion */
-            h = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude;
-            dh = hT - h;
+            stages[num_stages - 1].h = h_burnout = r_burnout * v_burnout;  /* FIXME: assumes periapsis insertion */
+            stages[0].h = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude;
         }
 
         /* FIXME: some memoization */
@@ -357,19 +382,32 @@ namespace MuMech
             stages[0].B = ( a * dr - g * drd ) / D;
         }
 
-        private void peg_update(double dt, StageInfo stage)
+        private void peg_update(double dt)
         {
-            /* update old guidance */
-            stage.A = stage.A + stage.B * dt;
-            /* B does not update */
-            stage.T = stage.T - dt;
+            stages[0].A = stages[0].A + stages[0].B * dt;
+            if (num_stages == 0) {
+                /* if we only have one stage, count down the estimate */
+                stages[0].T -= dt;
+            }
+            for (int i = 0; i < num_stages - 1 ; i++) {
+                /* all the lower stages are assumed to burn completely */
+                stages[i].dV = stages[i].avail_dV;
+                stages[i].T = stages[i].avail_T;
+            }
+            for (int i = 0; i < num_stages; i++) {
+                stages[i].dA = 0.0;
+                stages[i].dB = 0.0;
+            }
         }
+
+        int num_stages = 2;
 
         private void peg_estimate(int snum)
         {
             StageInfo stage = stages[snum];
 
-            /* update old guidance */
+            bool upper = ( snum == num_stages - 1);  /* final stage */
+
             double A = stage.A;
             double B = stage.B;
             double T = stage.T;
@@ -377,38 +415,93 @@ namespace MuMech
             double v_e = stage.v_e;
             double a0 = stage.a0;
             double tau = v_e / a0;
+            double r = stage.r;
+            double rd = stage.rd;
+            double h = stage.h;
 
-            double aT = a0 / ( 1.0D - T / tau );
-            double C = stage.C = (GM / (r * r) - w * w * r ) / a0;
-            double CT = (GM / (rT * rT) - wT * wT * rT ) / aT;
+            double G = stage.G = ( GM - h * h / r ) / ( r * r );
+
+            double f_r = stage.f_r = A + G / a0;
 
             /* current sin pitch  */
-            double f_r = A + C;
+            // double f_r = A + G / a0;
             /* sin pitch at burnout */
-            double f_rT = A + B * T + CT;
+            // double f_rT = A + B * T + GT/aT;
             /* appx rate of sin pitch */
-            double fd_r = ( f_rT - f_r ) / T;
-
-            /* placeholder for future yaw term */
-            double f_h = 0.0D;
-            /* placeholder for future yaw rate term */
-            double fd_h = 0.0D;
+            // double fd_r = ( f_rT - f_r ) / T;
 
             /* cos pitch */
-            double f_th = 1.0D - f_r * f_r / 2.0D - f_h * f_h / 2.0D;
+            double f_th = 1.0D - stage.f_r * stage.f_r / 2.0D;
             /* cos pitch rate */
-            double fd_th = - ( f_r * fd_r + f_h * fd_h );
+            double fd_th = - stage.f_r * fd_r;
             /* cos pitch accel */
-            double fdd_th = - ( fd_r * fd_r + fd_h * fd_h ) / 2.0D;
+            double fdd_th = - ( fd_r * fd_r ) / 2.0D;
 
-            /* updated estimate of dV to burn */
-            stage.dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * tau ) + fdd_th * v_e * T * T / 2.0D ) / ( f_th + fd_th * tau + fdd_th * tau * tau );
+            double rT;
+            double rdT;
+            double hT;
 
-            /* updated estimate of T */
-            stage.T = tau * ( 1 - Math.Exp( - stage.dV / v_e ) );
 
-            stage.drd = rdT - stage.rd0;
-            stage.dr  = rT - r  - stage.rd0 * T;
+            if (upper) {
+                double dh = stage.dh = 2 * ( h_burnout - h ) / ( r_burnout + r );
+                hT = stage.hT = h + dh;
+
+                /* updated estimate of dV to burn */
+                stage.dV = ( dh + v_e * T * ( fd_th + fdd_th * ( tau + T / 2.0 ) ) ) / ( ( fdd_th * tau + fd_th ) * tau + f_th );
+
+                /* updated estimate of T */
+                T = stage.T = tau * ( 1 - Math.Exp( - stage.dV / v_e ) );
+
+            total_T = 0.0;
+            for(int i = 0; i < num_stages; i++)
+            {
+                total_T += stages[i].T;
+            }
+
+                double drd = stage.drd = rd_burnout - stages[0].rd - b(0,1) * stage.dA - b(1, 1) * stage.dB;
+                double dr = stage.dr   = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stage.dA - c(1, 1) * stage.dB;
+
+                rT = stage.rT = r + dr;
+                rdT = stage.rdT = rd + drd;
+            } else { /* boosters */
+                double dr = stage.dr = rd * T + c(0,0) * A + c(1, 0) * B;
+                double drd = stage.drd = b(0,0) * A + b(1, 0) * B;
+                rT = stage.rT = r + dr;
+                rdT = stage.rdT = rd + drd;
+                double dh = stage.dh = ( r + rT ) / 2.0 * ( f_th * b(0, 0) + fd_th * b(1, 0) + fdd_th * b(2, 0));
+                hT = stage.hT = h + dh;
+            }
+
+            double aT = stage.aT = a0 / ( 1.0D - T / tau );
+            double GT = stage.GT = ( GM - hT * hT / rT ) / ( rT * rT );
+
+            double f_rT = A + B * T + GT / aT;
+
+            /* set next stages initial conditions */
+            if (!upper) {
+                double dA = GT * ( 1.0 / aT - 1.0 / stages[snum+1].a0 );
+                double dB = GT * ( 1.0 / stages[snum+1].v_e - 1.0 / v_e ) + ( 3 * hT * hT / rT - 2 * GM ) * rdT / ( rT * rT * rT ) * ( 1.0 / aT - 1.0 / stages[snum+1].a0 );
+
+                stages[snum+1].r  = rT;
+                stages[snum+1].rd = rdT;
+                stages[snum+1].h  = hT;
+                stages[snum+1].A  = A + dA;
+                stages[snum+1].B  = B + dB;
+                stages[snum+1].dA = dA;
+                stages[snum+1].dB = dB;
+            }
+        }
+
+        private void peg_final() {
+            total_T = 0.0;
+            total_dV = 0.0;
+            for(int i = 0; i < num_stages; i++)
+            {
+                total_T += stages[i].T;
+                total_dV += stages[i].dV;
+            }
+            /* appx rate of sin pitch over the whole burn */
+            fd_r = ( stages[num_stages-1].f_rT - stages[0].f_r ) / total_T;
         }
 
         private bool bad_dV()
@@ -432,46 +525,67 @@ namespace MuMech
 
         private void converge(double dt, bool initialize = false)
         {
-            if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance)
-            {
-                stages[0].T = stages[0].deltaTime;
-                stages[0].A = -0.4;
-                stages[0].B = 0.0036;
-                dt = 0.0;
+            double Astart = stages[0].A;
+            double Bstart = stages[0].B;
+            double Tstart = stages[num_stages-1].T;
+
+            if (num_stages == 1 && stages[0].T < terminalGuidanceSecs && saneGuidance)
+                terminalGuidance = true;
+
+            if (!terminalGuidance) {
+                if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance )
+                {
+                    stages[num_stages-1].T = stages[num_stages-1].avail_T;
+                    stages[0].A = -0.9;
+                    stages[0].B = 0.0036;
+                    fd_r = -0.001;
+                    dt = 0.0;
+                }
             }
 
             bool stable = false;
 
-            peg_update(dt, stages[0]);
+            peg_update(dt);
 
             //Debug.Log("ONE:");
             //Debug.Log(stages[0]);
 
-            if (stages[0].T < terminalGuidanceSecs)
+            if (terminalGuidance)
             {
                 peg_estimate(0);
-                terminalGuidance = true;
+                peg_final();
                 stable = true; /* terminal guidance is always considered stable */
             }
             else
             {
+                Debug.Log("=========== START ================");
                 for(convergenceSteps = 1; convergenceSteps <= 50; convergenceSteps++) {
                     double oldT = stages[0].T;
 
-                    peg_estimate(0);
+                    for(int i = 0; i < num_stages; i++)
+                        peg_estimate(i);
+
+                    peg_final();
+
                     //if (convergenceSteps == 1)
                     //{
                     //    Debug.Log("TWO:");
                     //    Debug.Log(stages[0]);
                     //}
-                    peg_solve(0);
-                    //if (convergenceSteps == 1)
-                    //{
-                    //    Debug.Log("THREE:");
-                    //    Debug.Log(stages[0]);
-                    //}
+                    peg_solve(num_stages - 1);
+                    if (convergenceSteps == 1)
+                    {
+                        Debug.Log("BOOSTER:");
+                        Debug.Log(stages[0]);
+                    }
+                    if (convergenceSteps == 1)
+                    {
+                        Debug.Log("UPPER:");
+                        Debug.Log(stages[1]);
+                    }
 
-                    if ( Math.Abs(stages[0].T - oldT) < 0.01 ) {
+                    Debug.Log("    deltaT = " + (stages[0].T - oldT));
+                    if ( Math.Abs(stages[0].T - oldT) < 0.1 ) {
                         stable = true;
                         break;
                     }
@@ -482,7 +596,15 @@ namespace MuMech
 
             if (!stable || bad_guidance(stages[0]) || bad_dV() || bad_pitch())
             {
-                saneGuidance = false;
+                stages[0].A = Astart;
+                stages[0].B = Bstart;
+                stages[num_stages-1].T = Tstart;
+
+                /* if we're within 30 secs of burnout and we just lost guidance, switch to terminal guidance */
+                if (saneGuidance && num_stages == 1 && stages[0].T <= 30)
+                    terminalGuidance = true;
+                else
+                    saneGuidance = false;
             }
             else
             {
@@ -573,7 +695,7 @@ namespace MuMech
                 return;
             }
 
-            if (h >= hT)
+            if (stages[0].h >= h_burnout)
             {
                 status = "Angular momentum target achieved";
                 core.thrust.targetThrottle = 0.0F;

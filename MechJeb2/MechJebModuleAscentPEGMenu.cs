@@ -51,16 +51,18 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Terminal Guidance Period:", path.terminalGuidanceSecs, "s");
             GUILayout.Label("Stage Stats");
             for(int i = path.stages.Count - 1; i >= 0; i--) {
-                GUILayout.Label(String.Format("{0:D}: {1:F1} {2:F1} {3:F1} {4:D}", i, path.stages[i].avail_dV, path.stages[i].v_e, path.stages[i].deltaTime, path.stages[i].kspStage));
+                GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1} {4:F1} {5:F1} {6:F1}", i, path.stages[i].kspStage, path.stages[i].v_e, path.stages[i].avail_dV, path.stages[i].avail_T, path.stages[i].dV, path.stages[i].T));
             }
             GUILayout.Label("Burnout Stats");
-            GUILayout.Label(String.Format("delta-V (estimate): {0:F1}", path.dVest));
-            GUILayout.Label(String.Format("delta-V (guidance): {0:F1}", path.stages[0].dV));
-            GUILayout.Label(String.Format("A: {0:F1}", path.stages[0].A));
-            GUILayout.Label(String.Format("B: {0:F1}", path.stages[0].B));
-            GUILayout.Label(String.Format("time: {0:F1}", path.stages[0].T));
-            GUILayout.Label(String.Format("pitch: {0:F1}", path.guidancePitch));
-            GUILayout.Label(String.Format("steps: {0:D}", path.convergenceSteps));
+            if (path.stages.Count > 0) {
+            // GUILayout.Label(String.Format("delta-V (estimate): {0:F1}", path.dVest));
+                GUILayout.Label(String.Format("delta-V (guidance): {0:F1}", path.total_dV));
+                GUILayout.Label(String.Format("A: {0:F4}", path.stages[0].A));
+                GUILayout.Label(String.Format("B: {0:F4}", path.stages[0].B));
+                GUILayout.Label(String.Format("time: {0:F1}", path.total_T));
+                GUILayout.Label(String.Format("pitch: {0:F1}", path.guidancePitch));
+                GUILayout.Label(String.Format("steps: {0:D}", path.convergenceSteps));
+            }
 
             if (path.guidanceEnabled)
             {
@@ -69,8 +71,10 @@ namespace MuMech
             }
             else
             {
-                if (GUILayout.Button("Enable PEG Guidance"))
+                if (GUILayout.Button("Enable PEG Guidance")) {
                     path.guidanceEnabled = true;
+                    path.terminalGuidance = false;
+                }
             }
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
