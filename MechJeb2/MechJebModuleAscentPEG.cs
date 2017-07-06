@@ -52,11 +52,6 @@ namespace MuMech
         /* guidancePitchAngle -- output from the guidance algorithm, not 'manual' pitch */
         public double guidancePitch { get { return Math.Asin(stages[0].A + stages[0].G / stages[0].a0 ) * UtilMath.Rad2Deg; } }
 
-        /* dV to add */
-        /* public double dV { get; private set; } */
-        /* dV estimated from difference in specific orbital energy*/
-        // public double dVest { get; private set; }
-
         public bool guidanceEnabled = true;
         public int convergenceSteps { get; private set; }
 
@@ -322,7 +317,7 @@ namespace MuMech
             return c(n-1, snum) * stage.tau - stage.v_e * Math.Pow(stage.T, n+1) / ( n * (n + 1 ) );
         }
 
-        private double alpha(int snum)
+        private double Alpha(int snum)
         {
             double sum = 0;
             for(int l = 0; l <= snum; l++)
@@ -331,7 +326,7 @@ namespace MuMech
             return sum;
         }
 
-        private double beta(int snum)
+        private double Beta(int snum)
         {
             double sum = 0;
             for(int l = 0; l <= snum; l++)
@@ -348,7 +343,7 @@ namespace MuMech
             return sum;
         }
 
-        private double gamma(int snum)
+        private double Gamma(int snum)
         {
             double sum = 0;
             for(int l = 0; l <= snum; l++)
@@ -364,7 +359,7 @@ namespace MuMech
             return sum;
         }
 
-        private double delta(int snum)
+        private double Delta(int snum)
         {
             double sum = 0;
             for(int l = 0; l <= snum; l++)
@@ -385,22 +380,18 @@ namespace MuMech
 
         private void peg_solve(int snum)
         {
-            double dr = stages[snum].dr;
-            double drd = stages[snum].drd;
+            double drd = rd_burnout - stages[0].rd - b(0,1) * stages[1].dA - b(1,1) * stages[1].dB;
+            double dr = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stages[1].dA - c(1, 1) * stages[1].dB;
 
-            //Debug.Log("peg_solve: dr = " + dr + " drd = " + drd);
+            double alpha = Alpha(snum);
+            double beta  = Beta(snum);
+            double gamma = Gamma(snum);
+            double delta = Delta(snum);
 
-            double a = alpha(snum);
-            double b = beta(snum);
-            double g = gamma(snum);
-            double d = delta(snum);
+            double D = alpha * delta - beta * gamma;
 
-            double D = a * d - b * g;
-
-            //Debug.Log(snum + " a:" + a + " b:" + b + " g:" + g + " d:" + d + " D:" + D);
-
-            stages[0].A = ( d * drd - b * dr ) / D;
-            stages[0].B = ( a * dr - g * drd ) / D;
+            stages[0].A = ( delta * drd - beta * dr ) / D;
+            stages[0].B = ( alpha * dr - gamma * drd ) / D;
         }
 
         private void peg_update(double dt)
@@ -480,9 +471,6 @@ namespace MuMech
                 total_T += stages[i].T;
             }
 
-                // FIXME: move from peg_estimate upper phase to peg_solve, since these are drd/dr values over the whole trajectory
-                double drd = stage.drd = rd_burnout - stages[0].rd - b(0,1) * stage.dA - b(1, 1) * stage.dB;
-                double dr = stage.dr   = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stage.dA - c(1, 1) * stage.dB;
 
                 rT = stage.rT;
                 rdT = stage.rdT;
