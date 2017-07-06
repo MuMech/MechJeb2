@@ -391,7 +391,7 @@ namespace MuMech
             double dr = stages[snum].dr;
             double drd = stages[snum].drd;
 
-            Debug.Log("peg_solve: dr = " + dr + " drd = " + drd);
+            //Debug.Log("peg_solve: dr = " + dr + " drd = " + drd);
 
             double a = alpha(snum);
             double b = beta(snum);
@@ -496,8 +496,8 @@ namespace MuMech
                 double drd = stage.drd = b(0,0) * A + b(1, 0) * B;
                 rT = stage.rT = r + dr;
                 rdT = stage.rdT = rd + drd;
-                Debug.Log("f_th: " + f_th + " fd_th: " + fd_th + " fdd_th: " + fdd_th);
-                Debug.Log("b(0,0): " + b(0,0) + " b(1,0): " + b(1,0) + " b(2,0): " + b(2,0));
+                //Debug.Log("f_th: " + f_th + " fd_th: " + fd_th + " fdd_th: " + fdd_th);
+                //Debug.Log("b(0,0): " + b(0,0) + " b(1,0): " + b(1,0) + " b(2,0): " + b(2,0));
                 double dh = stage.dh = ( r + rT ) / 2.0 * ( f_th * b(0, 0) + fd_th * b(1, 0) + fdd_th * b(2, 0));
                 hT = stage.hT = h + dh;
             }
@@ -588,7 +588,7 @@ namespace MuMech
             }
             else
             {
-                Debug.Log("=========== START ================");
+                //Debug.Log("=========== START ================");
                 for(convergenceSteps = 1; convergenceSteps <= 50; convergenceSteps++) {
                     double oldT = stages[num_stages-1].T;
 
@@ -604,17 +604,17 @@ namespace MuMech
                     //}
                     peg_solve(num_stages - 1);
                     //if (convergenceSteps == 1)
-                    {
-                        Debug.Log("BOOSTER:");
-                        Debug.Log(stages[0]);
-                    }
+                    //{
+                        //Debug.Log("BOOSTER:");
+                        //Debug.Log(stages[0]);
+                    //}
                     //if (convergenceSteps == 1)
-                    {
-                        Debug.Log("UPPER:");
-                        Debug.Log(stages[1]);
-                    }
+                    //{
+                        //Debug.Log("UPPER:");
+                        //Debug.Log(stages[1]);
+                    //}
 
-                    Debug.Log("    deltaT = " + (stages[num_stages-1].T - oldT));
+                    //Debug.Log("    deltaT = " + (stages[num_stages-1].T - oldT));
                     if ( Math.Abs(stages[num_stages-1].T - oldT) < 0.1 ) {
                         stable = true;
                         break;
