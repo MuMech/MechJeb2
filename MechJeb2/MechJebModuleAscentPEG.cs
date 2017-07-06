@@ -319,6 +319,9 @@ namespace MuMech
 
         private double alpha(int snum)
         {
+            if (snum == 1)
+                return b(0, 0) + b(0, 1);
+
             double sum = 0;
             for(int l = 0; l <= snum; l++)
                 sum += b(0, l);
@@ -327,6 +330,9 @@ namespace MuMech
 
         private double beta(int snum)
         {
+            if (snum == 1)
+                return b(1, 0) + b(1, 1) + b(0, 1) * stages[0].T;
+
             double sum = 0;
             for(int l = 0; l <= snum; l++)
             {
@@ -343,6 +349,9 @@ namespace MuMech
 
         private double gamma(int snum)
         {
+            if (snum == 1)
+                return c(0, 0) + c(0, 1) + b(0, 0) * stages[1].T;
+
             double sum = 0;
             for(int l = 0; l <= snum; l++)
             {
@@ -358,6 +367,9 @@ namespace MuMech
 
         private double delta(int snum)
         {
+            if (snum == 1)
+                return c(1, 0) + c(1,1) + b(1,0) * stages[1].T + c(0,1) * stages[0].T;
+
             double sum = 0;
             for(int l = 0; l <= snum; l++)
             {
@@ -378,6 +390,8 @@ namespace MuMech
         {
             double dr = stages[snum].dr;
             double drd = stages[snum].drd;
+
+            Debug.Log("peg_solve: dr = " + dr + " drd = " + drd);
 
             double a = alpha(snum);
             double b = beta(snum);
@@ -441,7 +455,7 @@ namespace MuMech
             // double fd_r = ( f_rT - f_r ) / T;
 
             /* cos pitch */
-            double f_th = 1.0D - stage.f_r * stage.f_r / 2.0D;
+            double f_th = Math.Sqrt(1.0D - stage.f_r * stage.f_r);
             /* cos pitch rate */
             double fd_th = - stage.f_r * fd_r;
             /* cos pitch accel */
@@ -589,12 +603,12 @@ namespace MuMech
                     //    Debug.Log(stages[0]);
                     //}
                     peg_solve(num_stages - 1);
-                    if (convergenceSteps == 1)
+                    //if (convergenceSteps == 1)
                     {
                         Debug.Log("BOOSTER:");
                         Debug.Log(stages[0]);
                     }
-                    if (convergenceSteps == 1)
+                    //if (convergenceSteps == 1)
                     {
                         Debug.Log("UPPER:");
                         Debug.Log(stages[1]);
