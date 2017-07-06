@@ -549,10 +549,10 @@ namespace MuMech
                 terminalGuidance = true;
 
             if (!terminalGuidance) {
-                if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance )
+                if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance || mode != AscentMode.GRAVITY_TURN )
                 {
                     stages[num_stages-1].T = stages[num_stages-1].avail_T;
-                    stages[0].A = -0.9;
+                    stages[0].A = Math.Sin(srfvelPitch()) - stages[0].G / stages[0].a0;
                     stages[0].B = 0.0036;
                     fd_r = -0.001;
                     dt = 0.0;
@@ -576,7 +576,7 @@ namespace MuMech
             {
                 Debug.Log("=========== START ================");
                 for(convergenceSteps = 1; convergenceSteps <= 50; convergenceSteps++) {
-                    double oldT = stages[0].T;
+                    double oldT = stages[num_stages-1].T;
 
                     for(int i = 0; i < num_stages; i++)
                         peg_estimate(i);
@@ -600,8 +600,8 @@ namespace MuMech
                         Debug.Log(stages[1]);
                     }
 
-                    Debug.Log("    deltaT = " + (stages[0].T - oldT));
-                    if ( Math.Abs(stages[0].T - oldT) < 0.1 ) {
+                    Debug.Log("    deltaT = " + (stages[num_stages-1].T - oldT));
+                    if ( Math.Abs(stages[num_stages-1].T - oldT) < 0.1 ) {
                         stable = true;
                         break;
                     }
