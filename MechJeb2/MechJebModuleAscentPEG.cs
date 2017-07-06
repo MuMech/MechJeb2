@@ -140,17 +140,27 @@ namespace MuMech
             {
                 return "A = " + A + "\n" +
                        "B = " + B + "\n" +
+                       "dA = " + dA + "\n" +
+                       "dB = " + dB + "\n" +
                        "G = " + G + "\n" +
+                       "GT = " + GT + "\n" +
                        "T = " + T + "\n" +
+                       "dV = " + dV + "\n" +
                        "a0 = " + a0 + "\n" +
+                       "aT = " + aT + "\n" +
                        "v_e = " + v_e + "\n" +
                        "tau = " + tau + "\n" +
                        "r = " + r + "\n" +
-                       "rd = " + rd + "\n" +
-                       "h = " + h + "\n" +
                        "dr = " + dr + "\n" +
+                       "rT = " + rT + "\n" +
+                       "rd = " + rd + "\n" +
                        "drd = " + drd + "\n" +
-                       "dh = " + dh + "\n";
+                       "rdT = " + rdT + "\n" +
+                       "h = " + h + "\n" +
+                       "dh = " + dh + "\n" +
+                       "hT = " + hT + "\n" +
+                       "f_r = " + f_r + "\n" +
+                       "f_rT = " + f_rT + "\n";
             }
         }
 
@@ -443,11 +453,14 @@ namespace MuMech
 
 
             if (upper) {
-                double dh = stage.dh = 2 * ( h_burnout - h ) / ( r_burnout + r );
+                double dh = stage.dh = h_burnout - h;
+                double rbar = (r_burnout + r ) / 2.0;
+
                 hT = stage.hT = h + dh;
 
                 /* updated estimate of dV to burn */
-                stage.dV = ( dh + v_e * T * ( fd_th + fdd_th * ( tau + T / 2.0 ) ) ) / ( ( fdd_th * tau + fd_th ) * tau + f_th );
+                //stage.dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * ( tau + T / 2.0 ) ) ) / ( ( fdd_th * tau + fd_th ) * tau + f_th );
+                stage.dV = ( dh / rbar + v_e * T * ( fd_th + fdd_th * tau ) + ( fdd_th * v_e * T * T ) / 2.0 ) / ( f_th + fd_th * tau + fdd_th * tau * tau );
 
                 /* updated estimate of T */
                 T = stage.T = tau * ( 1 - Math.Exp( - stage.dV / v_e ) );
@@ -458,16 +471,19 @@ namespace MuMech
                 total_T += stages[i].T;
             }
 
+                // FIXME: move from peg_estimate upper phase to peg_solve, since these are drd/dr values over the whole trajectory
                 double drd = stage.drd = rd_burnout - stages[0].rd - b(0,1) * stage.dA - b(1, 1) * stage.dB;
                 double dr = stage.dr   = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stage.dA - c(1, 1) * stage.dB;
 
-                rT = stage.rT = r + dr;
-                rdT = stage.rdT = rd + drd;
+                rT = stage.rT;
+                rdT = stage.rdT;
             } else { /* boosters */
                 double dr = stage.dr = rd * T + c(0,0) * A + c(1, 0) * B;
                 double drd = stage.drd = b(0,0) * A + b(1, 0) * B;
                 rT = stage.rT = r + dr;
                 rdT = stage.rdT = rd + drd;
+                Debug.Log("f_th: " + f_th + " fd_th: " + fd_th + " fdd_th: " + fdd_th);
+                Debug.Log("b(0,0): " + b(0,0) + " b(1,0): " + b(1,0) + " b(2,0): " + b(2,0));
                 double dh = stage.dh = ( r + rT ) / 2.0 * ( f_th * b(0, 0) + fd_th * b(1, 0) + fdd_th * b(2, 0));
                 hT = stage.hT = h + dh;
             }
@@ -475,7 +491,7 @@ namespace MuMech
             double aT = stage.aT = a0 / ( 1.0D - T / tau );
             double GT = stage.GT = ( GM - hT * hT / rT ) / ( rT * rT );
 
-            double f_rT = A + B * T + GT / aT;
+            double f_rT = stage.f_rT = A + B * T + GT / aT;
 
             /* set next stages initial conditions */
             if (!upper) {
@@ -485,7 +501,7 @@ namespace MuMech
                 stages[snum+1].r  = rT;
                 stages[snum+1].rd = rdT;
                 stages[snum+1].h  = hT;
-                stages[snum+1].A  = A + dA;
+                stages[snum+1].A  = A + B * T + dA;
                 stages[snum+1].B  = B + dB;
                 stages[snum+1].dA = dA;
                 stages[snum+1].dB = dB;
@@ -596,13 +612,15 @@ namespace MuMech
 
             if (!stable || bad_guidance(stages[0]) || bad_dV() || bad_pitch())
             {
-                stages[0].A = Astart;
-                stages[0].B = Bstart;
-                stages[num_stages-1].T = Tstart;
-
-                /* if we're within 30 secs of burnout and we just lost guidance, switch to terminal guidance */
+                /* if we're within 30 secs of burnout and we just lost guidance, restore A,B,T and switch to terminal guidance */
                 if (saneGuidance && num_stages == 1 && stages[0].T <= 30)
+                {
+
+                    stages[0].A = Astart;
+                    stages[0].B = Bstart;
+                    stages[num_stages-1].T = Tstart;
                     terminalGuidance = true;
+                }
                 else
                     saneGuidance = false;
             }
