@@ -25,6 +25,8 @@ namespace MuMech
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableInt num_stages = new EditableInt(2);
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
@@ -264,7 +266,10 @@ namespace MuMech
             for ( int i = stages.Count - 1; i >= 0; i-- )
             {
                 if ( stages[i].kspStage < 0 ) {
-                    num_stages--;  /* FIXME this needs to be way smarter */
+                    /* if someone runs a booster program though the full boster we don't consume a PEG stage */
+                    /* also if PEG is disabled manually we don't consume stages */
+                    if ( mode == AscentMode.GRAVITY_TURN && guidanceEnabled )
+                        num_stages = Math.Max(1, num_stages - 1);
                     stages.RemoveAt(i);
                 }
             }
@@ -423,8 +428,6 @@ namespace MuMech
                 stages[i].dB = 0.0;
             }
         }
-
-        int num_stages = 2;
 
         private void peg_estimate(int snum)
         {
