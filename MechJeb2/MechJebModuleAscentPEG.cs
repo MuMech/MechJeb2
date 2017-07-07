@@ -199,7 +199,7 @@ namespace MuMech
             }
         }
 
-        void UpdateStageFromMechJeb(StageInfo stage, bool atmo = false)
+        void UpdateStageFromMechJeb(StageInfo stage, bool atmo)
         {
             /* stage.kspStage must be corrected before calling this */
             int s = stage.kspStage;
@@ -294,7 +294,7 @@ namespace MuMech
 
                 if ( stage.kspStage >= 0 )
                 {
-                    UpdateStageFromMechJeb(stage);
+                    UpdateStageFromMechJeb(stage, i == 0);
                 }
             }
             for ( int i = stages.Count - 1; i >= 0; i-- )
@@ -439,21 +439,48 @@ namespace MuMech
             return sum;
         }
 
+        private double Drd(int snum)
+        {
+            double sum = 0;
+            for(int l = 0; l <= snum; l++) {
+                double sum2 = 0;
+                for(int k = 0; k <= (l-1); k++) {
+                    double sum3 = 0;
+                    for(int i = 0; i <= (k-1); i++) {
+                        sum3 += stages[i].dB;
+                    }
+                    sum2 += b(0, l) * stages[k].dA + b(0, l) * stages[k].T * sum3 + b(1, l) * stages[k].dB;
+                }
+                sum += sum2;
+            }
+            return rd_burnout - stages[0].rd - sum;
+        }
+
+        private double Dr(int snum)
+        {
+            double sum = 0;
+            for(int l = 0; l <= snum; l++) {
+                double sum2 = 0;
+                for(int k = 0; k<= (l-1); k++) {
+                    double sum3 = 0;
+                    for(int i = 0; i <= (k-1); i++) {
+                        double sum4 = 0;
+                        for(int m = 0; m <= (i-1); m++) {
+                            sum4 += stages[m].dB;
+                        }
+                        sum3 += b(0, k) * stages[l].T * stages[i].dA + b(0,k) * stages[i].T * stages[l].T * sum4 + b(1,k) * stages[l].T * stages[i].dB + c(0,l) * stages[k].T * stages[i].dB;
+                    }
+                    sum2 += c(0,l) * stages[k].dA + c(1,l) * stages[k].dB + sum3;
+                }
+                sum += sum2;
+            }
+            return r_burnout - stages[0].r  - stages[0].rd * total_T - sum;
+        }
+
         private void peg_solve(int snum)
         {
-            double drd;
-            double dr;
-
-            if (num_stages == 2)
-            {
-                drd = rd_burnout - stages[0].rd - b(0,1) * stages[1].dA - b(1,1) * stages[1].dB;
-                dr = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stages[1].dA - c(1, 1) * stages[1].dB;
-            }
-            else
-            {
-                drd = rd_burnout - stages[0].rd;
-                dr = r_burnout - stages[0].r  - stages[0].rd * total_T;
-            }
+            double drd = Drd(snum);
+            double dr = Dr(snum);
 
             double alpha = Alpha(snum);
             double beta  = Beta(snum);
@@ -469,10 +496,8 @@ namespace MuMech
         private void peg_update(double dt)
         {
             stages[0].A = stages[0].A + stages[0].B * dt;
-            if (num_stages == 0) {
-                /* if we only have one stage, count down the estimate */
-                stages[0].T -= dt;
-            }
+            stages[num_stages - 1].T -= dt;
+
             for (int i = 0; i < num_stages - 1 ; i++) {
                 /* all the lower stages are assumed to burn completely */
                 stages[i].dV = stages[i].avail_dV;
@@ -541,23 +566,22 @@ namespace MuMech
                 /* now that we have the updated T and dV values, dirty the upper stages constant cache */
                 DirtyCacheForStage(snum);
 
-            total_T = 0.0;
-            for(int i = 0; i < num_stages; i++)
-            {
-                total_T += stages[i].T;
-            }
-
+                total_T = 0.0;
+                for(int i = 0; i < num_stages; i++)
+                {
+                    total_T += stages[i].T;
+                }
 
                 rT = stage.rT;
                 rdT = stage.rdT;
             } else { /* boosters */
-                double dr = stage.dr = rd * T + c(0,0) * A + c(1, 0) * B;
-                double drd = stage.drd = b(0,0) * A + b(1, 0) * B;
+                double dr = stage.dr = rd * T + c(0,snum) * A + c(1, snum) * B;
+                double drd = stage.drd = b(0,snum) * A + b(1, snum) * B;
                 rT = stage.rT = r + dr;
                 rdT = stage.rdT = rd + drd;
                 //Debug.Log("f_th: " + f_th + " fd_th: " + fd_th + " fdd_th: " + fdd_th);
                 //Debug.Log("b(0,0): " + b(0,0) + " b(1,0): " + b(1,0) + " b(2,0): " + b(2,0));
-                double dh = stage.dh = ( r + rT ) / 2.0 * ( f_th * b(0, 0) + fd_th * b(1, 0) + fdd_th * b(2, 0));
+                double dh = stage.dh = ( r + rT ) / 2.0 * ( f_th * b(0, snum) + fd_th * b(1, snum) + fdd_th * b(2, snum) );
                 hT = stage.hT = h + dh;
             }
 
@@ -568,16 +592,13 @@ namespace MuMech
 
             /* set next stages initial conditions */
             if (!upper) {
-                double dA = GT * ( 1.0 / aT - 1.0 / stages[snum+1].a0 );
-                double dB = GT * ( 1.0 / stages[snum+1].v_e - 1.0 / v_e ) + ( 3 * hT * hT / rT - 2 * GM ) * rdT / ( rT * rT * rT ) * ( 1.0 / aT - 1.0 / stages[snum+1].a0 );
-
+                double dA = stage.dA = GT * ( 1.0 / aT - 1.0 / stages[snum+1].a0 );
+                double dB = stage.dB = GT * ( 1.0 / stages[snum+1].v_e - 1.0 / v_e ) + ( 3 * hT * hT / rT - 2 * GM ) * rdT / ( rT * rT * rT ) * ( 1.0 / aT - 1.0 / stages[snum+1].a0 );
                 stages[snum+1].r  = rT;
                 stages[snum+1].rd = rdT;
                 stages[snum+1].h  = hT;
                 stages[snum+1].A  = A + B * T + dA;
                 stages[snum+1].B  = B + dB;
-                stages[snum+1].dA = dA;
-                stages[snum+1].dB = dB;
             }
         }
 
@@ -663,6 +684,10 @@ namespace MuMech
                     if (bad_guidance(stages[0]))
                         break;
                 }
+
+                for(int i = 0; i < num_stages; i++)
+                    Debug.Log(stages[i]);
+
                 terminalGuidance = false;
             }
 
