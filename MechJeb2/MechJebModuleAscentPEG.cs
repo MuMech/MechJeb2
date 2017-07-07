@@ -100,6 +100,13 @@ namespace MuMech
             }
         }
 
+        private void DirtyCacheForStage(int snum)
+        {
+            for(int i = 0; i <= num_stages; i++) {
+                stages[snum].b_dirty[i] = stages[snum].c_dirty[i] = true;
+            }
+        }
+
         private void InitConstantCache()
         {
             for(int i = 0; i < num_stages; i++) {
@@ -107,9 +114,7 @@ namespace MuMech
                 stages[i].c = new double[num_stages+1];
                 stages[i].b_dirty = new bool[num_stages+1];
                 stages[i].c_dirty = new bool[num_stages+1];
-                for(int j = 0; i <= num_stages; j++) {
-                    stages[i].b_dirty[j] = stages[i].c_dirty[j] = true;
-                }
+                DirtyCacheForStage(i);
             }
         }
 
@@ -299,6 +304,8 @@ namespace MuMech
                     stages.RemoveAt(i);
                 }
             }
+            // dirty the constant cache for the bottom stage because v_e and such is live and may be changing (even exoatmospheric due to Agathorn)
+            DirtyCacheForStage(0);
         }
 
         private double smaT() {
@@ -328,24 +335,44 @@ namespace MuMech
             stages[0].h = Vector3.Cross(mainBody.position, vessel.obt_velocity).magnitude;
         }
 
-        /* FIXME: some memoization */
         private double b(int n, int snum)
         {
             StageInfo stage = stages[snum];
-            if (n == 0)
-                return stage.dV;
 
-            return b(n-1, snum) * stage.tau - stage.v_e * MuUtils.IntPow(stage.T, n) / n;
+            if (!stage.b_dirty[n])
+                return stage.b[n];
+
+            double ret;
+
+            if (n == 0)
+                ret = stage.dV;
+            else
+                ret = b(n-1, snum) * stage.tau - stage.v_e * MuUtils.IntPow(stage.T, n) / n;
+
+            stage.b[n] = ret;
+            stage.b_dirty[n] = false;
+
+            return ret;
         }
 
-        /* FIXME: some memoization */
         private double c(int n, int snum)
         {
             StageInfo stage = stages[snum];
-            if (n == 0)
-                return b(0, snum) * stage.T - b(1, snum);
 
-            return c(n-1, snum) * stage.tau - stage.v_e * MuUtils.IntPow(stage.T, n+1) / ( n * (n + 1 ) );
+            if (!stage.c_dirty[n])
+                return stage.c[n];
+
+            double ret;
+
+            if (n == 0)
+                ret = b(0, snum) * stage.T - b(1, snum);
+            else
+                ret = c(n-1, snum) * stage.tau - stage.v_e * MuUtils.IntPow(stage.T, n+1) / ( n * (n + 1 ) );
+
+            stage.c[n] = ret;
+            stage.c_dirty[n] = false;
+
+            return ret;
         }
 
         private double Alpha(int snum)
@@ -496,6 +523,9 @@ namespace MuMech
 
                 /* updated estimate of T */
                 T = stage.T = tau * ( 1 - Math.Exp( - stage.dV / v_e ) );
+
+                /* now that we have the updated T and dV values, dirty the upper stages constant cache */
+                DirtyCacheForStage(snum);
 
             total_T = 0.0;
             for(int i = 0; i < num_stages; i++)
