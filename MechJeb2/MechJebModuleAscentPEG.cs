@@ -26,7 +26,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableInt num_stages = new EditableInt(2);
+        public EditableInt edit_num_stages = new EditableInt(2);
+        private int num_stages;
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
@@ -37,6 +38,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            SetNumStages(edit_num_stages);
             mode = AscentMode.VERTICAL_ASCENT;
             InitStageStats();
         }
@@ -88,6 +90,29 @@ namespace MuMech
 
         public List<StageInfo> stages = new List<StageInfo>();
 
+        private void SetNumStages(int n)
+        {
+            edit_num_stages = n;
+            if (num_stages != n)
+            {
+                num_stages = n;
+                InitConstantCache();
+            }
+        }
+
+        private void InitConstantCache()
+        {
+            for(int i = 0; i < num_stages; i++) {
+                stages[i].b = new double[num_stages+1];
+                stages[i].c = new double[num_stages+1];
+                stages[i].b_dirty = new bool[num_stages+1];
+                stages[i].c_dirty = new bool[num_stages+1];
+                for(int j = 0; i <= num_stages; j++) {
+                    stages[i].b_dirty[j] = stages[i].c_dirty[j] = true;
+                }
+            }
+        }
+
         public class StageInfo
         {
             /* updated directly from vehicle stats */
@@ -99,6 +124,12 @@ namespace MuMech
 
             public double dV; /* lower stages are == avail_dV, upper stage needs estimation */
             public double T;  /* lower stages are == avail_T, upper stage needs estimation */
+
+            /* constant cache */
+            public double[] b;
+            public double[] c;
+            public bool[] b_dirty;
+            public bool[] c_dirty;
 
             /* steering constants */
             public double A;
@@ -264,7 +295,7 @@ namespace MuMech
                     /* if someone runs a booster program though the full boster we don't consume a PEG stage */
                     /* also if PEG is disabled manually we don't consume stages */
                     if ( mode == AscentMode.GRAVITY_TURN && guidanceEnabled )
-                        num_stages = Math.Max(1, num_stages - 1);
+                        SetNumStages( Math.Max(1, num_stages - 1) );
                     stages.RemoveAt(i);
                 }
             }
@@ -617,6 +648,7 @@ namespace MuMech
         {
             stats.RequestUpdate(this);
             stats.liveSLT = true;  /* yes, this disables the button, yes, it is important we do this */
+            SetNumStages(edit_num_stages);
             UpdateRocketStats();
 
             if (last_time != 0.0D)
