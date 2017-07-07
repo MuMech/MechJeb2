@@ -685,9 +685,6 @@ namespace MuMech
                         break;
                 }
 
-                for(int i = 0; i < num_stages; i++)
-                    Debug.Log(stages[i]);
-
                 terminalGuidance = false;
             }
 
