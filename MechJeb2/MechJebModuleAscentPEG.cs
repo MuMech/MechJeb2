@@ -101,6 +101,9 @@ namespace MuMech
 
         private void DirtyCacheForStage(int snum)
         {
+            if (snum >= stages.Count)
+                return;
+
             for(int i = 0; i <= num_stages; i++) {
                 stages[snum].b_dirty[i] = stages[snum].c_dirty[i] = true;
             }
@@ -438,8 +441,19 @@ namespace MuMech
 
         private void peg_solve(int snum)
         {
-            double drd = rd_burnout - stages[0].rd - b(0,1) * stages[1].dA - b(1,1) * stages[1].dB;
-            double dr = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stages[1].dA - c(1, 1) * stages[1].dB;
+            double drd;
+            double dr;
+
+            if (num_stages == 2)
+            {
+                drd = rd_burnout - stages[0].rd - b(0,1) * stages[1].dA - b(1,1) * stages[1].dB;
+                dr = r_burnout - stages[0].r  - stages[0].rd * total_T  - c(0,1) * stages[1].dA - c(1, 1) * stages[1].dB;
+            }
+            else
+            {
+                drd = rd_burnout - stages[0].rd;
+                dr = r_burnout - stages[0].r  - stages[0].rd * total_T;
+            }
 
             double alpha = Alpha(snum);
             double beta  = Beta(snum);
