@@ -116,6 +116,13 @@ namespace MuMech
             return angle;
         }
 
+        public static double IntPow(double val, int exp) {
+            double result = val;
+            for(int i=1;i<exp;++i)
+                result *= val;
+            return result;
+        }
+
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
         {
             Orbit ret = new Orbit();
