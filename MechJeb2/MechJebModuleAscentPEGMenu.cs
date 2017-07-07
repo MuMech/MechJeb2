@@ -56,7 +56,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Stage Minimum dV Limit:", path.stageLowDVLimit, "m/s");
 
             for(int i = path.stages.Count - 1; i >= 0; i--) {
-                GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1} {4:F1} {5:F1} {6:F1}", i, path.stages[i].kspStage, path.stages[i].v_e, path.stages[i].avail_dV, path.stages[i].avail_T, path.stages[i].dV, path.stages[i].T));
+                GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1} {4:F1} {5:F1} ({6:F1})", i, path.stages[i].kspStage, path.stages[i].avail_T, path.stages[i].avail_dV, path.stages[i].T, path.stages[i].dV, path.stages[i].avail_dV - path.stages[i].dV));
             }
             GUILayout.Label("Burnout Stats");
             if (path.stages.Count > 0) {
