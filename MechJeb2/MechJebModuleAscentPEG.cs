@@ -176,7 +176,7 @@ namespace MuMech
 
         public List<Part> skippedParts = new List<Part>();
 
-        void InitStageStats()
+        public void InitStageStats()
         {
             Debug.Log("MechJebModuleAscentPEG.InitStageStats()");
             stages.Clear();
