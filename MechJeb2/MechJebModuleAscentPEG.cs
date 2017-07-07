@@ -304,7 +304,7 @@ namespace MuMech
             if (n == 0)
                 return stage.dV;
 
-            return b(n-1, snum) * stage.tau - stage.v_e * Math.Pow(stage.T, n) / n;
+            return b(n-1, snum) * stage.tau - stage.v_e * MuUtils.IntPow(stage.T, n) / n;
         }
 
         /* FIXME: some memoization */
@@ -314,7 +314,7 @@ namespace MuMech
             if (n == 0)
                 return b(0, snum) * stage.T - b(1, snum);
 
-            return c(n-1, snum) * stage.tau - stage.v_e * Math.Pow(stage.T, n+1) / ( n * (n + 1 ) );
+            return c(n-1, snum) * stage.tau - stage.v_e * MuUtils.IntPow(stage.T, n+1) / ( n * (n + 1 ) );
         }
 
         private double Alpha(int snum)
