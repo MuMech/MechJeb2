@@ -180,6 +180,12 @@ namespace MuMech
 
         void DrivePrelaunch(FlightCtrlState s)
         {
+            if (vessel.LiftedOff() && !vessel.Landed) {
+                status = "Vessel is not landed, skipping pre-launch";
+                mode = AscentMode.ASCEND;
+                return;
+            }
+
             if (autoThrottle) {
                 Debug.Log("prelaunch killing throttle");
                 core.thrust.targetThrottle = 0.0f;
