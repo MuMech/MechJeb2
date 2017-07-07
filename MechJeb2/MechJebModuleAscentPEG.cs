@@ -96,7 +96,6 @@ namespace MuMech
             if (num_stages != n)
             {
                 num_stages = n;
-                InitConstantCache();
             }
         }
 
@@ -109,7 +108,7 @@ namespace MuMech
 
         private void InitConstantCache()
         {
-            for(int i = 0; i < num_stages; i++) {
+            for(int i = 0; i < num_stages && i < stages.Count; i++) {
                 stages[i].b = new double[num_stages+1];
                 stages[i].c = new double[num_stages+1];
                 stages[i].b_dirty = new bool[num_stages+1];
@@ -239,6 +238,7 @@ namespace MuMech
                         skippedParts.Remove(stages[i].parts[j]);
                 }
             }
+            InitConstantCache();
         }
 
         bool PartsListsMatch(List<Part> one, List<Part> two)
