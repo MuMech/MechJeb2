@@ -441,7 +441,8 @@ namespace MuMech
             // double fd_r = ( f_rT - f_r ) / T;
 
             /* cos pitch */
-            double f_th = Math.Sqrt(MuUtils.Clamp(1.0D - stage.f_r * stage.f_r, 0.0, 1.0));
+            // note that when this Sqrt goes NaN that is a useful condition to terminate guidance, clamping it will increase terminal guidance wiggles
+            double f_th = Math.Sqrt(1.0D - stage.f_r * stage.f_r);
             /* cos pitch rate */
             double fd_th = - stage.f_r * fd_r;
             /* cos pitch accel */
@@ -546,7 +547,7 @@ namespace MuMech
                 terminalGuidance = true;
 
             if (!terminalGuidance) {
-                if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance || mode != AscentMode.GRAVITY_TURN )
+                if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance )
                 {
                     stages[num_stages-1].T = stages[num_stages-1].avail_T;
                     stages[0].A = Math.Sin(srfvelPitch()) - stages[0].G / stages[0].a0;
@@ -560,9 +561,6 @@ namespace MuMech
 
             peg_update(dt);
 
-            //Debug.Log("ONE:");
-            //Debug.Log(stages[0]);
-
             if (terminalGuidance)
             {
                 peg_estimate(0);
@@ -571,7 +569,6 @@ namespace MuMech
             }
             else
             {
-                //Debug.Log("=========== START ================");
                 for(convergenceSteps = 1; convergenceSteps <= 50; convergenceSteps++) {
                     double oldT = stages[num_stages-1].T;
 
@@ -580,29 +577,16 @@ namespace MuMech
 
                     peg_final();
 
-                    //if (convergenceSteps == 1)
-                    //{
-                    //    Debug.Log("TWO:");
-                    //    Debug.Log(stages[0]);
-                    //}
                     peg_solve(num_stages - 1);
-                    //if (convergenceSteps == 1)
-                    //{
-                        //Debug.Log("BOOSTER:");
-                        //Debug.Log(stages[0]);
-                    //}
-                    //if (convergenceSteps == 1)
-                    //{
-                        //Debug.Log("UPPER:");
-                        //Debug.Log(stages[1]);
-                    //}
 
-                    //Debug.Log("    deltaT = " + (stages[num_stages-1].T - oldT));
                     if ( Math.Abs(stages[num_stages-1].T - oldT) < 0.1 ) {
                         stable = true;
                         break;
                     }
-                    /* FIXME: consider breaking out on bad_guidance() here */
+
+                    // abort cycles if we hit NaN values or something insane
+                    if (bad_guidance(stages[0]))
+                        break;
                 }
                 terminalGuidance = false;
             }
