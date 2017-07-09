@@ -48,7 +48,7 @@ namespace MuMech
             simStage = StageManager.LastStage + 1;
             
             // Add a fake stage if we are beyond the first one
-            // Mostly usefull for the Node Executor who use the last stage info
+            // Mostly useful for the Node Executor who use the last stage info
             // and fail to get proper info when the ship was never staged and
             // some engine were activated manually
             if (StageManager.CurrentStage > StageManager.LastStage)
@@ -246,12 +246,29 @@ namespace MuMech
                         //print(n.partName + " is sepratron? " + n.isSepratron);
                         if (n.decoupledInStage == (simStage - 1) && !n.isSepratron)
                         {
-                            if (activeEngines.value.Contains(n) || n.ContainsResources(burnedResources.value))
+                            if (activeEngines.value.Contains(n))
                             {
-                                //print("Not allowed to stage because " + n.partName + " either contains resources (" + n.ContainsResources(burnedResources.value) + ") or is an active engine (" + activeEngines.value.Contains(n) +")");
+                                //print("Not allowed to stage because " + n.partName + " is an active engine (" + activeEngines.value.Contains(n) +")");
                                 //n.DebugResources();
                                 return false;
                             }
+
+                            if (n.ContainsResources(burnedResources.value))
+                            {
+                                int activeEnginesCount = activeEngines.value.Count;
+                                for (int j = 0; j < activeEnginesCount; j++)
+                                {
+                                    FuelNode engine = activeEngines.value[j];
+                                    if ( engine.CanDrawFrom(n))
+                                    {
+                                        //print("Not allowed to stage because " + n.partName + " contains resources (" + n.ContainsResources(burnedResources.value) + ") reachable by an active engine");
+                                        //n.DebugResources();
+                                        return false;
+                                    }
+                                }
+                            }
+
+
                         }
                     }
                 }
@@ -955,6 +972,11 @@ namespace MuMech
             {
                 print(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
             }
+        }
+
+        public bool CanDrawFrom(FuelNode node)
+        {
+            return crossfeedSources.Contains(node);
         }
 
         public void AssignResourceDrainRates(List<FuelNode> vessel)
