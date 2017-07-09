@@ -615,12 +615,12 @@ namespace MuMech
                     if (useVelCurve)
                         velCurve = new FloatCurve(engine.velCurve.Curve.keys);
 
-                    propellantSumRatioTimesDensity = engine.propellants.Slinq().Where(prop => !prop.ignoreForIsp).Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
+                    propellantSumRatioTimesDensity = engine.propellants.Slinq().Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
                     propellantRatios.Clear();
                     propellantFlows.Clear();
                     var dics = new Tuple<KeyableDictionary<int, float>, KeyableDictionary<int, ResourceFlowMode>>(propellantRatios, propellantFlows);
                     engine.propellants.Slinq()
-                        .Where(prop => MuUtils.ResourceDensity(prop.id) > 0 && !prop.ignoreForIsp)
+                        .Where(prop => MuUtils.ResourceDensity(prop.id) > 0)
                         .ForEach((p, dic) =>
                         {
                             dic.Item1.Add(p.id, p.ratio);
