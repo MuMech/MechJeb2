@@ -13,19 +13,19 @@ namespace MuMech
         public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
 
         /* default pitch program here works decently at SLT of about 1.4 */
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult pitchRate = new EditableDoubleMult(0.75);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, 1000);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Global))]
+        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, -1);
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableInt edit_num_stages = new EditableInt(2);
         private int num_stages;
 
