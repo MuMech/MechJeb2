@@ -49,7 +49,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Booster Pitch end:", path.pitchEndTime, "s");
             GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
             GuiUtils.SimpleTextBox("Terminal Guidance Period:", path.terminalGuidanceSecs, "s");
-            GuiUtils.SimpleTextBox("Num Stages:", path.edit_num_stages);
+            GuiUtils.SimpleTextBox(String.Format("Num Stages: ({0:D})", path.num_stages), path.edit_num_stages);
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reinitialize Stage Analysis"))
                 path.InitStageStats();

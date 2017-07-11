@@ -27,7 +27,8 @@ namespace MuMech
         public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
         [Persistent(pass = (int)(Pass.Type))]
         public EditableInt edit_num_stages = new EditableInt(2);
-        private int num_stages;
+        private int last_edit_num_stages; // need this to track if the user updated the edit_num_stages value
+        public int num_stages;            // need this so that PEG can decreate the num_stages independently of edit_num_stages
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDoubleMult pitchBias = new EditableDoubleMult(0);
@@ -39,6 +40,7 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             SetNumStages(edit_num_stages);
+            last_edit_num_stages = edit_num_stages;
             mode = AscentMode.VERTICAL_ASCENT;
             InitStageStats();
         }
@@ -92,17 +94,26 @@ namespace MuMech
 
         private void SetNumStages(int n)
         {
-            edit_num_stages = n;
-            if (num_stages != n)
-            {
-                num_stages = n;
-            }
+            num_stages = n;
+            InitConstantCache();
         }
 
         private void DirtyCacheForStage(int snum)
         {
             if (snum >= stages.Count)
                 return;
+
+            if (stages[snum].b_dirty == null)
+            {
+                Debug.Log("[MechJeb] MechJebModuleAscentPEG DirtyCacheForStage() called when b_dirty is null");
+                return;
+            }
+
+            if (stages[snum].c_dirty == null)
+            {
+                Debug.Log("[MechJeb] MechJebModuleAscentPEG DirtyCacheForStage() called when c_dirty is null");
+                return;
+            }
 
             for(int i = 0; i <= num_stages; i++) {
                 stages[snum].b_dirty[i] = stages[snum].c_dirty[i] = true;
@@ -305,6 +316,7 @@ namespace MuMech
                     if ( mode == AscentMode.GRAVITY_TURN && guidanceEnabled )
                         SetNumStages( Math.Max(1, num_stages - 1) );
                     stages.RemoveAt(i);
+                    InitConstantCache();
                 }
             }
             // dirty the constant cache for the bottom stage because v_e and such is live and may be changing (even exoatmospheric due to Agathorn)
@@ -714,7 +726,12 @@ namespace MuMech
         {
             stats.RequestUpdate(this);
             stats.liveSLT = true;  /* yes, this disables the button, yes, it is important we do this */
-            SetNumStages(edit_num_stages);
+            if (last_edit_num_stages != edit_num_stages)
+            {
+                SetNumStages(edit_num_stages);
+                last_edit_num_stages = edit_num_stages;
+            }
+
             UpdateRocketStats();
 
             if (last_time != 0.0D)
