@@ -630,7 +630,7 @@ namespace MuMech
                         velCurve = new FloatCurve(engine.velCurve.Curve.keys);
 
                     propellantSumRatioTimesDensity = engine.propellants.Slinq().Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
-                    float ratip = propellantSumRatioTimesDensity / engine.propellants.Slinq().Where(prop => !prop.ignoreForIsp).Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
+                    float ratio = propellantSumRatioTimesDensity / engine.propellants.Slinq().Where(prop => !prop.ignoreForIsp).Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
                     maxFuelFlow *= ratio;
                     minFuelFlow *= ratio;
                     propellantRatios.Clear();
