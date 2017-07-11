@@ -613,7 +613,7 @@ namespace MuMech
                     // Some brilliant engine mod seems to consider that FuelFlow is not something they should properly initialize
                     if (minFuelFlow == 0 && engine.minThrust > 0)
                     {
-                        maxFuelFlow = engine.minThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
+                        minFuelFlow = engine.minThrust / (engine.atmosphereCurve.Evaluate(0f) * engine.g);
                     }
                     if (maxFuelFlow == 0 && engine.maxThrust > 0)
                     {
@@ -630,6 +630,9 @@ namespace MuMech
                         velCurve = new FloatCurve(engine.velCurve.Curve.keys);
 
                     propellantSumRatioTimesDensity = engine.propellants.Slinq().Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
+                    float ratip = propellantSumRatioTimesDensity / engine.propellants.Slinq().Where(prop => !prop.ignoreForIsp).Select(prop => prop.ratio * MuUtils.ResourceDensity(prop.id)).Sum();
+                    maxFuelFlow *= ratio;
+                    minFuelFlow *= ratio;
                     propellantRatios.Clear();
                     propellantFlows.Clear();
                     var dics = new Tuple<KeyableDictionary<int, float>, KeyableDictionary<int, ResourceFlowMode>>(propellantRatios, propellantFlows);
