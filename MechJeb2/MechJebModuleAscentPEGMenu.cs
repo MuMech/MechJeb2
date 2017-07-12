@@ -60,12 +60,11 @@ namespace MuMech
             }
             GUILayout.Label("Burnout Stats");
             if (path.stages.Count > 0) {
-            // GUILayout.Label(String.Format("delta-V (estimate): {0:F1}", path.dVest));
-                GUILayout.Label(String.Format("delta-V (guidance): {0:F1}", path.total_dV));
-                GUILayout.Label(String.Format("A: {0:F4}", path.stages[0].A));
-                GUILayout.Label(String.Format("B: {0:F4}", path.stages[0].B));
-                GUILayout.Label(String.Format("time: {0:F1}", path.total_T));
-                GUILayout.Label(String.Format("pitch: {0:F1}", path.guidancePitch));
+                GUILayout.Label(String.Format("delta-V (guidance): {0:G5}", path.total_dV));
+                GUILayout.Label(String.Format("A: {0:G5}", path.stages[0].A));
+                GUILayout.Label(String.Format("B: {0:G5}", path.stages[0].B));
+                GUILayout.Label(String.Format("time: {0:G5}", path.total_T));
+                GUILayout.Label(String.Format("pitch: {0:G5}", path.guidancePitch));
                 GUILayout.Label(String.Format("steps: {0:D}", path.convergenceSteps));
             }
 
