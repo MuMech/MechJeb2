@@ -228,6 +228,7 @@ namespace MuMech
         public void InitStageStats()
         {
             Debug.Log("MechJebModuleAscentPEG.InitStageStats()");
+            terminalGuidance = false
             stages.Clear();
             skippedParts.Clear();
             for ( int i = vacStats.Length-1; i >= 0; i-- )
