@@ -43,6 +43,7 @@ namespace MuMech
             last_edit_num_stages = edit_num_stages;
             mode = AscentMode.VERTICAL_ASCENT;
             InitStageStats();
+            needsConverge = true;
         }
 
         public override void OnModuleDisabled()
@@ -59,8 +60,19 @@ namespace MuMech
         public bool guidanceEnabled = true;
         public int convergenceSteps { get; private set; }
 
+        /* saneGuidance tracks the state of the last iteration and if it was sane or not */
         private bool saneGuidance = false;
+        /* terminal guidance is set when we're in terminal guidance phase */
         public bool terminalGuidance = false;
+        /* needsConverge is set when we need to re-converge again */
+        public bool needsConverge = true;
+
+        /* clears state so that we fully reconverge next time */
+        public void ResetBooleans() {
+            saneGuidance = false;
+            terminalGuidance = false;
+            needsConverge = true;
+        }
 
         /* tangential velocity at burnout */
         private double v_burnout;
@@ -254,6 +266,7 @@ namespace MuMech
                 }
             }
             InitConstantCache();
+            ResetBooleans();
         }
 
         bool PartsListsMatch(List<Part> one, List<Part> two)
@@ -646,7 +659,7 @@ namespace MuMech
             return Double.IsNaN(T) || Double.IsInfinity(T) || T <= 0.0D || Double.IsNaN(A) || Double.IsInfinity(A) || Double.IsNaN(B) || Double.IsInfinity(B);
         }
 
-        private void converge(double dt, bool initialize = false)
+        private void converge(double dt)
         {
             double Astart = stages[0].A;
             double Bstart = stages[0].B;
@@ -656,7 +669,7 @@ namespace MuMech
                 terminalGuidance = true;
 
             if (!terminalGuidance) {
-                if (initialize || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance )
+                if (needsConverge || bad_guidance(stages[0]) || bad_pitch() || bad_dV() || !saneGuidance )
                 {
                     stages[num_stages-1].T = stages[num_stages-1].avail_T;
                     stages[0].A = Math.Sin(srfvelPitch()) - stages[0].G / stages[0].a0;
@@ -717,6 +730,7 @@ namespace MuMech
             }
             else
             {
+                needsConverge = false;
                 saneGuidance = true;
             }
         }
