@@ -20,7 +20,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
         [Persistent(pass = (int)(Pass.Global))]
-        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(100000, -1);
+        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(-1, 1000);
         [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
         [Persistent(pass = (int)(Pass.Type))]
