@@ -333,7 +333,7 @@ namespace MuMech
 				headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
 				if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
 				{
-					float limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Math.Pow(curSpeed, 2)), 0.1f, 1f) : 1f);
+					float limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Square(curSpeed)), 0.1f, 1f) : 1f);
 					// turnSpeed needs to be higher than curSpeed or it will never steer as much as it could even at 0.2m/s above it
 					// double act = headingPID.Compute(headingErr * headingErr / 10 * Math.Sign(headingErr));
 					double act = headingPID.Compute(headingErr);
