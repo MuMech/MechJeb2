@@ -63,7 +63,7 @@ namespace MuMech
 		public bool BrakeOnEnergyDepletion = false;
 		
         [ToggleInfoItem("Warp until Day if Depleted", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
-		public bool WarpToDaylight = true;
+		public bool WarpToDaylight = false;
 		public bool waitingForDaylight = false;
 
 		[ToggleInfoItem("Stability Control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
@@ -85,11 +85,11 @@ namespace MuMech
 		public EditableDouble brakeSpeedLimit = 0.7;
 
 		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDp = 0.01;
+		public EditableDouble hPIDp = 0.03; // 0.01
 		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDi = 0.001;
+		public EditableDouble hPIDi = 0.002; // 0.001
 		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
-		public EditableDouble hPIDd = 0.001;
+		public EditableDouble hPIDd = 0.005;
 		
 		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
 		public EditableDouble sPIDp = 2.0;
@@ -148,7 +148,7 @@ namespace MuMech
 		[ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
 		public double speedErr;
 		public double tgtSpeed;
-		public MuMech.MovingAverage etaSpeed = new MovingAverage(300);
+		public MuMech.MovingAverage etaSpeed = new MovingAverage(50);
 		private double lastETA = 0;
 		private float lastThrottle = 0;
 		double curSpeed;
@@ -221,6 +221,9 @@ namespace MuMech
 			base.OnModuleDisabled();
 		}
 		
+		private float Square(float number) { return number * number; }
+		private double Square(double number) { return number * number; }
+		
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
 		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up -- should be done now?
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
@@ -243,15 +246,14 @@ namespace MuMech
 					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
 					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
-					//var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
+					// var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
-					                (nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
-					                 (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
+					               (nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
+					               (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					var brakeFactor = Math.Max((curSpeed - minSpeed) * 1, 3);
-					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / brakeFactor, minSpeed)); // brake when getting closer
+					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
 //					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
 //					newSpeed = tgtSpeed + Mathf.Clamp((float)(newSpeed - tgtSpeed), -Time.deltaTime * 8f, Time.deltaTime * 2f);
@@ -269,6 +271,7 @@ namespace MuMech
 							else
 							{
 								newSpeed = 0;
+								brake = true;
 //								tgtSpeed.force(newSpeed);
 								if (curSpeed < brakeSpeedLimit)
 								{
@@ -330,10 +333,14 @@ namespace MuMech
 				headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
 				if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
 				{
-					float spd = Mathf.Min((float)speed, (float)turnSpeed); // if a slower speed than the turnspeed is used also be more careful with the steering
-					float limit = (Mathf.Abs((float)curSpeed) <= turnSpeed ? 1 : Mathf.Clamp((float)(spd / Mathf.Abs((float)curSpeed)), 0.35f, 1f));
+					float limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Math.Pow(curSpeed, 2)), 0.1f, 1f) : 1f);
+					// turnSpeed needs to be higher than curSpeed or it will never steer as much as it could even at 0.2m/s above it
+					// double act = headingPID.Compute(headingErr * headingErr / 10 * Math.Sign(headingErr));
 					double act = headingPID.Compute(headingErr);
-					s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
+					if (traction >= tractionLimit) {
+						s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
+						// prevents it from flying above a waypoint and landing with steering at max while still going fast
+					}
 				}
 			}
 			
@@ -352,22 +359,23 @@ namespace MuMech
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
 				{
 					float act = (float)speedPID.Compute(speedErr);
-					s.wheelThrottle = (!LimitAcceleration ? Mathf.Clamp(act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
-						(traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.01f, 0.01f)) * (traction < tractionLimit ? -1 : 1))));
+					s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
+					// s.wheelThrottle = (!LimitAcceleration ? Mathf.Clamp(act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
+						// (traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.01f, 0.01f)) * (traction < tractionLimit ? -1 : 1))));
 //						(lastThrottle + Mathf.Clamp(act, -0.01f, 0.01f)));
 //					Debug.Log(s.wheelThrottle + Mathf.Clamp(act, -0.01f, 0.01f));
 					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
 					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
-//					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) == 0) { // StabilityControl && traction > 50 && 
+					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Math.Sign(curSpeed) == 0) { // StabilityControl && traction > 50 &&
 ////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
-//						brake = true;
+						brake = true;
 //						foreach (Part p in wheels) {
 //							if (p.GetModule<ModuleWheels.ModuleWheelDamage>().stressPercent >= 0.01) { // #TODO needs adaptive braking
 //								brake = false;
 //								break;
 //							}
 //						}
-//					}
+					}
 ////					else if (!StabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
 ////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
 ////					}
@@ -432,7 +440,7 @@ namespace MuMech
 					                                                                         p.deployState == ModuleDeployablePart.DeployState.EXTENDED).ForEach(p => p.Retract());
 				}
 				
-				if (energyLeft < 0.05 && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) { s.wheelThrottle = 0; } // save remaining energy by not using it for acceleration
+				if (energyLeft < 0.05 && Math.Sign(s.wheelThrottle) + Math.Sign(curSpeed) != 0) { s.wheelThrottle = 0; } // save remaining energy by not using it for acceleration
 				if (openSolars || energyLeft < 0.03) { tgtSpeed = 0; }
 				
 				if (curSpeed < brakeSpeedLimit && (energyLeft < 0.05 || openSolars))
@@ -448,7 +456,7 @@ namespace MuMech
 			}
 			
 //			brake = brake && (s.wheelThrottle == 0); // release brake if the user or AP want to drive
-			if (s.wheelThrottle != 0 && Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0)
+			if (s.wheelThrottle != 0 && (Math.Sign(s.wheelThrottle) + Math.Sign(curSpeed) != 0 || curSpeed < 1))
 			{
 				brake = false; // the AP or user want to drive into the direction of momentum so release the brake
 			}
@@ -466,8 +474,9 @@ namespace MuMech
 			}
 
 			tractionLimit = (double)Mathf.Clamp((float)tractionLimit, 0, 100);
-			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake && (StabilityControl && curSpeed > brakeSpeedLimit ? traction >= tractionLimit : true));
-			// ^ brake but hopefully prevent flipping over, assuming the user set up the limit right
+			vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brake && (StabilityControl && (ControlHeading || ControlSpeed) ? traction >= tractionLimit : true));
+			// only let go of the brake when losing traction if the AP is driving, otherwise assume the player knows when to let go of it
+			// also to not constantly turn off the parking brake from going over a small bump
 			if (brake && curSpeed < 0.1) { s.wheelThrottle = 0; }
 		}
 		
@@ -486,6 +495,7 @@ namespace MuMech
 			speedPID.Kp = sPIDp;
 			speedPID.Ki = sPIDi;
 			speedPID.Kd = sPIDd;
+			
 			if (lastETA + 0.2 < DateTime.Now.TimeOfDay.TotalSeconds)
 			{
 				etaSpeed.value = curSpeed;
