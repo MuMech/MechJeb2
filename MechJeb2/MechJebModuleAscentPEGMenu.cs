@@ -37,7 +37,7 @@ namespace MuMech
 
             GuiUtils.SimpleTextBox("Target Periapsis:", autopilot.desiredOrbitAltitude, "km");
             GuiUtils.SimpleTextBox("Target Apoapsis:", path.desiredApoapsis, "km");
-            if ( path.desiredApoapsis < autopilot.desiredOrbitAltitude )
+            if ( path.desiredApoapsis >= 0 && path.desiredApoapsis < autopilot.desiredOrbitAltitude )
             {
                 GUIStyle s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;

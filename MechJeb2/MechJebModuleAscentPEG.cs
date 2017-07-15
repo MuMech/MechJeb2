@@ -20,7 +20,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
         [Persistent(pass = (int)(Pass.Global))]
-        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(-1, 1000);
+        public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
         [Persistent(pass = (int)(Pass.Type))]
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
         [Persistent(pass = (int)(Pass.Type))]
@@ -338,10 +338,10 @@ namespace MuMech
         }
 
         private double smaT() {
-            if ( desiredApoapsis > autopilot.desiredOrbitAltitude )
-                return (autopilot.desiredOrbitAltitude + 2 * mainBody.Radius + desiredApoapsis) / 2;
-            else
+            if ( desiredApoapsis >= 0 && desiredApoapsis < autopilot.desiredOrbitAltitude )
                 return autopilot.desiredOrbitAltitude + mainBody.Radius;
+            else
+                return (autopilot.desiredOrbitAltitude + 2 * mainBody.Radius + desiredApoapsis) / 2;
         }
 
         private void UpdateRocketStats() {
