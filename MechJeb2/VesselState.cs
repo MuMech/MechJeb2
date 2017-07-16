@@ -559,8 +559,7 @@ namespace MuMech
             orbitPeA.value = vessel.orbit.PeA;
             orbitPeriod.value = vessel.orbit.period;
             orbitTimeToAp.value = vessel.orbit.timeToAp;
-            if (vessel.orbit.eccentricity < 1) orbitTimeToPe.value = vessel.orbit.timeToPe;
-            else orbitTimeToPe.value = -vessel.orbit.meanAnomaly / (2 * Math.PI / vessel.orbit.period);
+            orbitTimeToPe.value = vessel.orbit.timeToPe;
 
             if (!vessel.LandedOrSplashed)
             {
