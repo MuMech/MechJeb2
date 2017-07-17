@@ -60,7 +60,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
-        
+
         public bool attitudeKILLROT = false;
 
         protected bool attitudeChanged = false;
@@ -139,7 +139,7 @@ namespace MuMech
         protected Quaternion lastSAS = new Quaternion();
 
         public double attitudeError;
-        
+
         public Vector3d torque;
         public Vector3d inertia;
 
@@ -191,7 +191,7 @@ namespace MuMech
             Vector3d ratio = new Vector3d(
                 torque.x != 0 ? vesselState.MoI.x / torque.x : 0,
                 torque.y != 0 ? vesselState.MoI.y / torque.y : 0,
-                torque.z != 0 ? vesselState.MoI.z / torque.z : 0 
+                torque.z != 0 ? vesselState.MoI.z / torque.z : 0
                 );
 
             TfV = 0.05 * ratio;
@@ -442,7 +442,7 @@ namespace MuMech
                 _requestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget;
                 Transform vesselTransform = vessel.ReferenceTransform;
                 //Quaternion delta = Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(vesselTransform.rotation) * _requestedAttitude);
-                
+
                 // Find out the real shorter way to turn where we wan to.
                 // Thanks to HoneyFox
                 Vector3d tgtLocalUp = vesselTransform.transform.rotation.Inverse() * _requestedAttitude * Vector3d.forward;

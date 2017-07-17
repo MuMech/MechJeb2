@@ -82,7 +82,7 @@ namespace MuMech
 
         [KSPField(isPersistant = false)]
         public bool eduMode = false;
-        
+
         public bool rssMode { get { return settings.rssMode; } }
 
         [KSPAction("Orbit Prograde")]
@@ -306,7 +306,7 @@ namespace MuMech
 
         public bool someModuleAreLocked = false; // True if any module was locked by the R&D system
 
-        //Returns whether the vessel we've registered OnFlyByWire with is the correct one. 
+        //Returns whether the vessel we've registered OnFlyByWire with is the correct one.
         //If it isn't the correct one, fixes it before returning false
         bool CheckControlledVessel()
         {
@@ -461,7 +461,7 @@ namespace MuMech
                 ready = true;
             if (state == PartModule.StartState.None) return; //don't do anything when we start up in the loading screen
 
-            //OnLoad doesn't get called for parts created in editor, so do that manually so 
+            //OnLoad doesn't get called for parts created in editor, so do that manually so
             //that we can load global settings.
             //However, if you press ctrl-Z, a new PartModule object gets created, on which the
             //game DOES call OnLoad, and then OnStart. So before calling OnLoad from OnStart,
@@ -676,7 +676,7 @@ namespace MuMech
             Profiler.BeginSample("OnMenuUpdate");
             GetComputerModule<MechJebModuleMenu>().OnMenuUpdate(); // Allow the menu movement, even while in Editor
             Profiler.EndSample();
-            
+
             if (vessel == null)
             {
                 Profiler.EndSample();
@@ -708,7 +708,7 @@ namespace MuMech
                 {
                     try
                     {
-                        foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) select t).ToList())
+                        foreach (var module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) && !t.IsAbstract select t).ToList())
                         {
                             moduleRegistry.Add(module);
                         }
@@ -911,7 +911,7 @@ namespace MuMech
             // Only Masters can save
             if (this != vessel.GetMasterMechJeb()) return;
 
-            //KSP calls OnSave *before* OnLoad when the first command pod is created in the editor. 
+            //KSP calls OnSave *before* OnLoad when the first command pod is created in the editor.
             //Defend against saving empty settings.
             if (unorderedComputerModules.Count == 0) return;
 
@@ -1190,4 +1190,3 @@ namespace MuMech
         }
     }
 }
-
