@@ -739,7 +739,7 @@ namespace MuMech
 
         public override bool DriveAscent(FlightCtrlState s)
         {
-            stats.RequestUpdate(this);
+            stats.RequestUpdate(this, true);
             stats.liveSLT = true;  /* yes, this disables the button, yes, it is important we do this */
             if (last_edit_num_stages != edit_num_stages)
             {
