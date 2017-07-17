@@ -844,10 +844,11 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             if (Event.current.type == EventType.Layout)
             {
-                vacStats = stats.vacStats;
-                atmoStats = stats.atmoStats;
                 stats.RequestUpdate(this);
             }
+
+            vacStats = stats.vacStats;
+            atmoStats = stats.atmoStats;
 
             Profiler.EndSample();
 

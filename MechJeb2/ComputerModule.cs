@@ -113,6 +113,10 @@ namespace MuMech
         {
         }
 
+        public virtual void OnWaitForFixedUpdate()
+        {
+        }
+
         public virtual void OnUpdate()
         {
         }

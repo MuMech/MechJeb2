@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -18,21 +19,35 @@ namespace MuMech
         public FuelFlowSimulation.Stats[] atmoStats = { };
         public FuelFlowSimulation.Stats[] vacStats = { };
 
+
+        // Those are used to store the next result from the thread since we must move result 
+        // to atmoStats/vacStats only in the main thread.
+        private FuelFlowSimulation.Stats[] newAtmoStats;
+        private FuelFlowSimulation.Stats[] newVacStats;
+        private bool resultReady = false;
+
         public void RequestUpdate(object controller, bool wait = false)
         {
             users.Add(controller);
             updateRequested = true;
 
-            if (HighLogic.LoadedSceneIsEditor && editorBody != null)
+            IsResultReady();
+
+            // In the editor this is our only entry point
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                if (TryStartSimulation() && wait)
+                TryStartSimulation();
+            }
+            
+            // wait means the code needs some result to run so we wait if we do not have any result yet
+            if (wait && atmoStats.Length == 0 && (simulationRunning || TryStartSimulation()))
+            {
+                while (simulationRunning)
                 {
-                    while (simulationRunning)
-                    {
-                        // wait for a sim to be ready. Risked ?
-                        Thread.Sleep(1);
-                    }
+                    // wait for a sim to be ready. Risked ?
+                    Thread.Sleep(1);
                 }
+                IsResultReady();
             }
         }
 
@@ -96,12 +111,36 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            // Check if we have a result ready from the previous physic frame
+            IsResultReady();
+
             TryStartSimulation();
         }
 
-        public bool TryStartSimulation()
+        public override void OnWaitForFixedUpdate()
         {
-            if ((HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel)) && !simulationRunning)
+            // Check if we managed to get a result while the physic frame was running
+            IsResultReady();
+        }
+
+        public override void OnUpdate()
+        {
+            IsResultReady();
+        }
+
+        private void IsResultReady()
+        {
+            if (resultReady)
+            {
+                atmoStats = newAtmoStats;
+                vacStats = newVacStats;
+                resultReady = false;
+            }
+        }
+
+        private bool TryStartSimulation()
+        {
+            if (!simulationRunning && ((HighLogic.LoadedSceneIsEditor && editorBody != null) || (vessel != null && vessel.isActiveVessel)))
             {
                 //We should be running simulations periodically, but one is not running right now.
                 //Check if enough time has passed since the last one to start a new one:
@@ -128,9 +167,11 @@ namespace MuMech
 
         protected void StartSimulation()
         {
+            Profiler.BeginSample("StartSimulation");
             try
             {
                 simulationRunning = true;
+                resultReady = false;
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
                 
                 //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
@@ -149,12 +190,18 @@ namespace MuMech
                     vessel.UpdateResourceSetsIfDirty();
                 }
 
+                Profiler.BeginSample("StartSimulation_Init");
+
                 sims[0].Init(parts, dVLinearThrust);
                 sims[1].Init(parts, dVLinearThrust);
 
+                Profiler.EndSample();
+
                 //Run the simulation in a separate thread
                 ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+                //Profiler.BeginSample("StartSimulation_Run");
                 //RunSimulation(sims);
+                //Profiler.EndSample();
             }
             catch (Exception e)
             {
@@ -169,6 +216,7 @@ namespace MuMech
                 stopwatch.Start();
                 simulationRunning = false;
             }
+            Profiler.EndSample();
         }
 
         protected void RunSimulation(object o)
@@ -182,10 +230,8 @@ namespace MuMech
                 double mach = HighLogic.LoadedSceneIsEditor ? this.mach : vessel.mach;
 
                 //Run the simulation
-                FuelFlowSimulation.Stats[] newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
-                FuelFlowSimulation.Stats[] newVacStats = sims[1].SimulateAllStages(1.0f, 0.0, 0.0 , mach);
-                atmoStats = newAtmoStats;
-                vacStats = newVacStats;
+                newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
+                newVacStats = sims[1].SimulateAllStages(1.0f, 0.0, 0.0, mach);
             }
             catch (Exception e)
             {
@@ -202,6 +248,7 @@ namespace MuMech
 
             //start the stopwatch that will count off this delay
             stopwatch.Start();
+            resultReady = true;
             simulationRunning = false;
         }
     }
