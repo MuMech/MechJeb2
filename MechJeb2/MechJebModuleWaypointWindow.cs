@@ -573,7 +573,8 @@ namespace MuMech
 					{
 						if (alt)
 						{
-							ap.WaypointIndex = i;
+							ap.WaypointIndex = (ap.WaypointIndex == i ? -1 : i);
+							// set current waypoint or unset it if it's already the current one
 						}
 						else
 						{
