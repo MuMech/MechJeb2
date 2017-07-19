@@ -42,19 +42,19 @@ namespace MuMech
 				return "initial orbit must not be hyperbolic";
 
             if (o.ApR >= o.referenceBody.sphereOfInfluence)
-                return "initial orbit must not escape " + o.referenceBody.displayName + " sphere of influence.";
+                return "initial orbit must not escape " + o.referenceBody.theName + " sphere of influence.";
 
             if (!target.NormalTargetExists)
 				return "must select a target for the interplanetary transfer.";
 
 			if (o.referenceBody.referenceBody == null)
-				return "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.displayName + ".";
+				return "doesn't make sense to plot an interplanetary transfer from an orbit around " + o.referenceBody.theName + ".";
 
 			if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
 			{
 				if (o.referenceBody == target.TargetOrbit.referenceBody)
-					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.displayName + ".";
-				return "an interplanetary transfer from within " + o.referenceBody.displayName + "'s sphere of influence must target a body that orbits " + o.referenceBody.displayName + "'s parent, " + o.referenceBody.referenceBody.displayName + ".";
+					return "use regular Hohmann transfer function to intercept another body orbiting " + o.referenceBody.theName + ".";
+				return "an interplanetary transfer from within " + o.referenceBody.theName + "'s sphere of influence must target a body that orbits " + o.referenceBody.theName + "'s parent, " + o.referenceBody.referenceBody.theName + ".";
 			}
 
 		    if (o.referenceBody == Planetarium.fetch.Sun)
@@ -64,7 +64,7 @@ namespace MuMech
 
 		    if (target.Target is CelestialBody && o.referenceBody == target.targetBody)
 		    {
-                return "you are already orbiting " + o.referenceBody.displayName + ".";
+                return "you are already orbiting " + o.referenceBody.theName + ".";
             }
 
 		    return null;
@@ -197,7 +197,9 @@ namespace MuMech
 					normal = {textColor = GuiUtils.skin.label.normal.textColor}
 				};
 
-				GUILayout.Box("Computing: " + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth), GUILayout.Height(porkchop_Height));
+				GUILayout.Box("Computing: " + worker.Progress + "%", progressStyle, new GUILayoutOption[] {
+					GUILayout.Width(windowWidth),
+					GUILayout.Height(porkchop_Height)});
 			}
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("ΔV: " + dv);
