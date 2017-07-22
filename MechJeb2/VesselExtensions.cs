@@ -341,6 +341,11 @@ namespace MuMech
             node.attachedGizmo.patchAhead = node.nextPatch;
         }
 
+        public static Vector3d WorldDeltaV(this ManeuverNode node)
+        {
+            return node.patch.Prograde(node.UT) * node.DeltaV.z + node.patch.RadialPlus(node.UT) * node.DeltaV.x + -node.patch.NormalPlus(node.UT) * node.DeltaV.y;
+        }
+
         // The part loop in VesselState could expose this, but it gets disabled when the RCS action group is disabled.
         // This method is also useful when the RCS AG is off.
         public static bool hasEnabledRCSModules(this Vessel vessel)
