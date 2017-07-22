@@ -94,9 +94,9 @@ namespace MuMech
             if (HasStayingChutes(StageManager.CurrentStage - 1, vessel))
                 return;
 
-            //only fire decouplers to drop deactivated engines or tanks
+            //only fire decouplers to drop deactivated engines or tanks or fairings
             bool firesDecoupler = InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel);
-            if (firesDecoupler && !InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
+            if (firesDecoupler && !(InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel) || HasFairing(StageManager.CurrentStage - 1, vessel)))
                 return;
 
             //only decouple fairings if the dynamic pressure and altitude conditions are respected
