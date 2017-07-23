@@ -284,7 +284,7 @@ namespace MuMech
                         }
                         else if (launchingToPlane)
                         {
-                            desiredInclination = core.target.TargetOrbit.inclination;
+                            desiredInclination = Math.Max(core.target.TargetOrbit.inclination, Math.Abs(vesselState.latitude));
                             desiredInclination *=
                                 Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(),
                                             Vector3d.Cross(vesselState.CoM - mainBody.position, mainBody.transform.up)));
