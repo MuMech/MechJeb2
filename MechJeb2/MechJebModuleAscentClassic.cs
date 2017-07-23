@@ -188,7 +188,7 @@ namespace MuMech
                 Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
                         + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
 
-                double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination, autopilot.launchLatitude);
+                double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
 
                 Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * UtilMath.Deg2Rad) * desiredHeadingVector
