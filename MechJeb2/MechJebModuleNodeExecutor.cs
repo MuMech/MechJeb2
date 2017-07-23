@@ -134,7 +134,7 @@ namespace MuMech
             //autowarp, but only if we're already aligned with the node
             if (autowarp && !burnTriggered)
             {
-                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001d) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularMomentum.magnitude < 0.05) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
                     core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }
