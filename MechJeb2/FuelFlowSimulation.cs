@@ -928,11 +928,20 @@ namespace MuMech
                 print(partName + " " + PartResourceLibrary.Instance.GetDefinition(type.Key).name + " is " + type.Value);
         }
 
+        public void DebugDrainRates()
+        {
+            foreach (int type in resourceDrains.Keys)
+            {
+                print(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + "(" + type  + ") is " + resourceDrains[type] + " free=" + freeResources[type]);
+            }
+        }
+
         public double MaxTimeStep()
         {
-            var param = new Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>>(resources, resourceRequestRemainingThreshold, resourceDrains);
-            if (!resourceDrains.KeysList.Slinq().Any((id, p) => p.Item1[id] > p.Item2, param)) return double.MaxValue;
-            return resourceDrains.KeysList.Slinq().Where((id, p) => p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
+            //DebugDrainRates();
+            var param = new Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources);
+            if (!resourceDrains.KeysList.Slinq().Any((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param)) return double.MaxValue;
+            return resourceDrains.KeysList.Slinq().Where((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
         }
 
         //Returns an enumeration of the resources this part burns
@@ -981,14 +990,6 @@ namespace MuMech
                 }
             }
             return true; //we didn't find ourselves lacking for any resource
-        }
-
-        public void DebugDrainRates()
-        {
-            foreach (int type in resourceDrains.Keys)
-            {
-                print(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + " is " + resourceDrains[type]);
-            }
         }
 
         public bool CanDrawFrom(FuelNode node)
