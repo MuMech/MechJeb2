@@ -13,19 +13,19 @@ namespace MuMech
         public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
 
         /* default pitch program here works decently at SLT of about 1.4 */
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult pitchRate = new EditableDoubleMult(0.75);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
         [Persistent(pass = (int)(Pass.Global))]
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableInt edit_num_stages = new EditableInt(2);
         private int last_edit_num_stages; // need this to track if the user updated the edit_num_stages value
         public int num_stages;            // need this so that PEG can decreate the num_stages independently of edit_num_stages
