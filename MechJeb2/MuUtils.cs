@@ -450,8 +450,11 @@ namespace MuMech
         {
             get
             {
-                if (d.ContainsKey(key)) return d[key];
-                else return defaultValue;
+                TValue val;
+                if (d.TryGetValue(key, out val))
+                    return val;
+                
+                return defaultValue;
             }
             set
             {
