@@ -52,11 +52,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public double kdFactor = 0.5;
 
-		[Persistent(pass = (int)Pass.Global)]
-		public double deadband = 0.0001;
+        [Persistent(pass = (int)Pass.Global)]
+        public double deadband = 0.0001;
 
-		[Persistent(pass = (int)Pass.Global)]
-		public double kWlimit = 0.15;
+        [Persistent(pass = (int)Pass.Global)]
+        public double kWlimit = 0.15;
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -390,7 +390,7 @@ namespace MuMech
                 return;
 
             torque = vesselState.torqueAvailable;
-			if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+            if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
                 torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             inertia = Vector3d.Scale(
@@ -497,16 +497,16 @@ namespace MuMech
                 setPIDParameters();
 
                 // angular velocity limit:
-				var Wlimit = new Vector3d( Math.Sqrt(NormFactor.x * Math.PI * kWlimit),
-										   Math.Sqrt(NormFactor.y * Math.PI * kWlimit),
-										   Math.Sqrt(NormFactor.z * Math.PI * kWlimit));
+                var Wlimit = new Vector3d( Math.Sqrt(NormFactor.x * Math.PI * kWlimit),
+                                           Math.Sqrt(NormFactor.y * Math.PI * kWlimit),
+                                           Math.Sqrt(NormFactor.z * Math.PI * kWlimit));
 
                 pidAction = pid.Compute(err, omega, Wlimit);
 
-				// deadband
-				pidAction.x = Math.Abs(pidAction.x) >= deadband ? pidAction.x : 0.0;
-				pidAction.y = Math.Abs(pidAction.y) >= deadband ? pidAction.y : 0.0;
-				pidAction.z = Math.Abs(pidAction.z) >= deadband ? pidAction.z : 0.0;
+                // deadband
+                pidAction.x = Math.Abs(pidAction.x) >= deadband ? pidAction.x : 0.0;
+                pidAction.y = Math.Abs(pidAction.y) >= deadband ? pidAction.y : 0.0;
+                pidAction.z = Math.Abs(pidAction.z) >= deadband ? pidAction.z : 0.0;
 
                 // low pass filter,  wf = 1/Tf:
                 Vector3d act = lastAct;
@@ -529,7 +529,7 @@ namespace MuMech
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
 
                 // Feed the control torque to the differential throttle
-				if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+                if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
                     core.thrust.differentialThrottleDemandedTorque = -Vector3d.Scale(act, vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }

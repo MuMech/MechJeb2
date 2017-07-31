@@ -13,7 +13,7 @@ namespace MuMech
         public EditableDouble kpFactor;
         public EditableDouble kiFactor;
         public EditableDouble kdFactor;
-		public EditableDouble deadband;
+        public EditableDouble deadband;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool showInfos = false;
@@ -109,22 +109,22 @@ namespace MuMech
                 kpFactor = Math.Max(kpFactor, 0.01);
                 GuiUtils.SimpleTextBox("Ki = pid.Kp / (", kiFactor, " * Math.Sqrt(2) * Tf)", 50);
                 kiFactor = Math.Max(kiFactor, 0.01);
-				GuiUtils.SimpleTextBox ("Deadband = ", deadband, "", 50);
-				core.attitude.deadband = Math.Max(deadband, 0.0);
+                GuiUtils.SimpleTextBox ("Deadband = ", deadband, "", 50);
+                core.attitude.deadband = Math.Max(deadband, 0.0);
 
                 core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, " RCS auto mode");
 
                 //Lower value of "kWlimit" reduces maximum angular velocity
-				double kWlimit = core.attitude.kWlimit;
-				var nextkWlimit = new EditableDoubleMult(kWlimit, 0.01);
+                double kWlimit = core.attitude.kWlimit;
+                var nextkWlimit = new EditableDoubleMult(kWlimit, 0.01);
                 GuiUtils.SimpleTextBox("Maximum Relative Angular Velocity", nextkWlimit, "%");
-				nextkWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)nextkWlimit, 0.0F, 1.0F);
-				const int sliderPrecision = 3;
-				if (Math.Round(Math.Abs(nextkWlimit - kWlimit), sliderPrecision) > 0)
-				{
-					core.attitude.kWlimit = Math.Round(nextkWlimit, sliderPrecision);
-				}
-				
+                nextkWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)nextkWlimit, 0.0F, 1.0F);
+                const int sliderPrecision = 3;
+                if (Math.Round(Math.Abs(nextkWlimit - kWlimit), sliderPrecision) > 0)
+                {
+                    core.attitude.kWlimit = Math.Round(nextkWlimit, sliderPrecision);
+                }
+                
                 showInfos = GUILayout.Toggle(showInfos, "Show Numbers");
                 if (showInfos)
                 {
@@ -249,21 +249,21 @@ namespace MuMech
             if (!core.attitude.Tf_autoTune)
             {
                 if (core.attitude.TfV.x != TfX || core.attitude.TfV.y != TfY || core.attitude.TfV.z != TfZ)
-            	{
-            		core.attitude.TfV.x = TfX;
-            		core.attitude.TfV.y = TfY;
-            		core.attitude.TfV.z = TfZ;
-            		core.attitude.setPIDParameters();
-            	}
+                {
+                    core.attitude.TfV.x = TfX;
+                    core.attitude.TfV.y = TfY;
+                    core.attitude.TfV.z = TfZ;
+                    core.attitude.setPIDParameters();
+                }
             }
             else
             {
-            	if (core.attitude.TfMin != TfMin || core.attitude.TfMax != TfMax)
-            	{
-            		core.attitude.TfMin = TfMin;
-            		core.attitude.TfMax = TfMax;
-            		core.attitude.setPIDParameters();
-            	}
+                if (core.attitude.TfMin != TfMin || core.attitude.TfMax != TfMax)
+                {
+                    core.attitude.TfMin = TfMin;
+                    core.attitude.TfMax = TfMax;
+                    core.attitude.setPIDParameters();
+                }
             }
             if (core.attitude.kpFactor != kpFactor || core.attitude.kiFactor != kiFactor || core.attitude.kdFactor != kdFactor)
             {
