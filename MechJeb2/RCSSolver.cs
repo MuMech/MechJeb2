@@ -447,8 +447,6 @@ namespace MuMech
         {
             bool changed = false;
 
-            var rcsBalancer = VesselExtensions.GetMasterMechJeb(vessel).rcsbal;
-
             if (vessel.parts.Count != lastPartCount)
             {
                 lastPartCount = vessel.parts.Count;
@@ -594,9 +592,7 @@ namespace MuMech
             thrustersOut = callerThrusters;
 
             Vector3 rotation = Vector3.zero;
-
-            var rcsBalancer = VesselExtensions.GetMasterMechJeb(vessel).rcsbal;
-
+            
             // Update vessel info if needed.
             CheckVessel(vessel, state);
 
