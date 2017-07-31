@@ -217,6 +217,9 @@ namespace MuMech
         public void setPIDParameters()
         {
             Vector3d invTf = TfV.InvertNoNaN();
+            if (!lowPassFilter)
+                invTf = Vector3d.one;
+
             pid.Kd = kdFactor * invTf;
 
             pid.Kp = (1 / (kpFactor * Math.Sqrt(2))) * pid.Kd;
@@ -230,11 +233,14 @@ namespace MuMech
 
         public void ResetConfig()
         {
+            TfV = new Vector3d(0.3, 0.3, 0.3);
             TfMin = 0.1;
             TfMax = 0.5;
             kpFactor = 3;
             kiFactor = 6;
             kdFactor = 0.5;
+            deadband = 0.0001;
+            kWlimit = 0.15;
         }
 
         public void AxisControl(bool pitch, bool yaw, bool roll)

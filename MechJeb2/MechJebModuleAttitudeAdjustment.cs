@@ -48,11 +48,22 @@ namespace MuMech
 
             if (!core.attitude.useSAS)
             {
-                core.attitude.lowPassFilter = GUILayout.Toggle(core.attitude.lowPassFilter, " Low Pass Filter");
-                
+                bool lowPassFilter = GUILayout.Toggle(core.attitude.lowPassFilter, " Low Pass Filter");
+
+                if (core.attitude.lowPassFilter != lowPassFilter)
+                {
+                    core.attitude.setPIDParameters();
+                    core.attitude.lowPassFilter = lowPassFilter;
+                }
+
                 if (core.attitude.lowPassFilter)
                 {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(20);
+                    GUILayout.BeginVertical();
+
                     core.attitude.Tf_autoTune = GUILayout.Toggle(core.attitude.Tf_autoTune, " Tf auto-tuning");
+                   
 
                     if (!core.attitude.Tf_autoTune)
                     {
@@ -80,13 +91,15 @@ namespace MuMech
                         GUILayout.EndHorizontal();
 
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label("Tf range");
+                        GUILayout.Label("Tf range", GUILayout.ExpandWidth(true));
                         GuiUtils.SimpleTextBox("min", TfMin, "", 50);
                         TfMin = Math.Max(TfMin, 0.01);
                         GuiUtils.SimpleTextBox("max", TfMax, "", 50);
                         TfMax = Math.Max(TfMax, 0.01);
                         GUILayout.EndHorizontal();
                     }
+                    GUILayout.EndVertical();
+                    GUILayout.EndHorizontal();
                 }
 
                 GUILayout.Label("PID factors");
@@ -251,13 +264,13 @@ namespace MuMech
             		core.attitude.TfMax = TfMax;
             		core.attitude.setPIDParameters();
             	}
-            	if (core.attitude.kpFactor != kpFactor || core.attitude.kiFactor != kiFactor || core.attitude.kdFactor != kdFactor)
-            	{
-            		core.attitude.kpFactor = kpFactor;
-            		core.attitude.kiFactor = kiFactor;
-            		core.attitude.kdFactor = kdFactor;
-            		core.attitude.setPIDParameters();
-            	}
+            }
+            if (core.attitude.kpFactor != kpFactor || core.attitude.kiFactor != kiFactor || core.attitude.kdFactor != kdFactor)
+            {
+                core.attitude.kpFactor = kpFactor;
+                core.attitude.kiFactor = kiFactor;
+                core.attitude.kdFactor = kdFactor;
+                core.attitude.setPIDParameters();
             }
             base.WindowGUI(windowID);
         }
