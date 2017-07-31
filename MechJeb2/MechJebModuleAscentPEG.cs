@@ -788,12 +788,12 @@ namespace MuMech
             }
             else
             {
-                if ((vesselState.time - vessel.launchTime ) > pitchStartTime)
+                if (autopilot.MET > pitchStartTime)
                 {
                     mode = AscentMode.INITIATE_TURN;
                     return;
                 }
-                double dt = pitchStartTime - ( vesselState.time - vessel.launchTime );
+                double dt = pitchStartTime - autopilot.MET;
                 status = String.Format("Vertical ascent {0:F2} s", dt);
             }
         }
@@ -801,13 +801,13 @@ namespace MuMech
         private void DriveInitiateTurn(FlightCtrlState s)
         {
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-            if ((vesselState.time - vessel.launchTime ) > pitchEndTime)
+            if (autopilot.MET > pitchEndTime)
             {
                 mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            double dt = vesselState.time - vessel.launchTime - pitchStartTime;
+            double dt = autopilot.MET - pitchStartTime;
             double theta = dt * pitchRate;
             attitudeTo(Math.Min(90, 90 - theta + pitchBias));
 
@@ -817,7 +817,7 @@ namespace MuMech
         private void DriveGravityTurn(FlightCtrlState s)
         {
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-            if ((vesselState.time - vessel.launchTime ) < pitchEndTime)
+            if (autopilot.MET < pitchEndTime)
             {
                 /* this can happen when users update the endtime box */
                 mode = AscentMode.INITIATE_TURN;
