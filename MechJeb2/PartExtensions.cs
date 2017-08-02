@@ -102,31 +102,17 @@ namespace MuMech
 
         public static bool IsEngine(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                if (m is ModuleEngines) return true;
-            }
-            return false;
+            return p.FindModuleImplementing<ModuleEngines>() != null;
         }
 
         public static bool IsParachute(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                if (p.Modules[i] is ModuleParachute) return true;
-            }
-            return false;
+            return p.FindModuleImplementing<ModuleParachute>() != null;
         }
 
-        // TODO add some kind of cache ? This is called a lot but reply false 99.9999% oif the time
         public static bool IsLaunchClamp(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                if (p.Modules[i] is LaunchClamp) return true;
-            }
-            return false;
+            return p.FindModuleImplementing<LaunchClamp>() != null;
         }
 
         public static bool IsDecoupledInStage(this Part p, int stage)

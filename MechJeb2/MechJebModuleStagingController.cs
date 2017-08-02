@@ -79,9 +79,9 @@ namespace MuMech
             if (!vessel.isActiveVessel)
                 return;
 
-            //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
+            //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (!vessel.LiftedOff() || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
+            if (StageManager.CurrentStage == StageManager.StageCount || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
@@ -94,15 +94,19 @@ namespace MuMech
             if (HasStayingChutes(StageManager.CurrentStage - 1, vessel))
                 return;
 
-            //only fire decouplers to drop deactivated engines or tanks or fairings
-            bool firesDecoupler = InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel);
-            if (firesDecoupler && !(InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel) || HasFairing(StageManager.CurrentStage - 1, vessel)))
-                return;
+            //Always drop deactivated engines or tanks
+            if (!InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
+            {
+                //only decouple fairings if the dynamic pressure and altitude conditions are respected
+                if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude) &&
+                    HasFairing(StageManager.CurrentStage - 1, vessel))
+                    return;
 
-            //only decouple fairings if the dynamic pressure and altitude conditions are respected
-            if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude) &&
-                HasFairing(StageManager.CurrentStage - 1, vessel))
-                return;
+                //only release launch clamps if we're at nearly full thrust
+                if (vesselState.thrustCurrent / vesselState.thrustAvailable < 1/1.2 &&
+                    InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel))
+                    return;
+            }
 
             //When we find that we're allowed to stage, start a countdown (with a
             //length given by autostagePreDelay) and only stage once that countdown finishes,
@@ -110,7 +114,7 @@ namespace MuMech
             {
                 if (vesselState.time - stageCountdownStart > autostagePreDelay)
                 {
-                    if (firesDecoupler)
+                    if (InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel))
                     {
                         //if we decouple things, delay the next stage a bit to avoid exploding the debris
                         lastStageTime = vesselState.time;
@@ -200,6 +204,20 @@ namespace MuMech
             return false;
         }
 
+        //determine whether activating inverseStage will release launch clamps
+        public static bool InverseStageReleasesClamps(int inverseStage, Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsLaunchClamp())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         //determine whether inverseStage sheds a dead engine
         public static bool InverseStageDecouplesDeactivatedEngineOrTank(int inverseStage, Vessel v)
         {
@@ -266,7 +284,7 @@ namespace MuMech
         // determine if there is a fairing to be deployed
         public static bool HasFairing(int inverseStage, Vessel v)
         {
-            return v.parts.Any(p => (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))) && p.inverseStage == inverseStage);
+            return v.parts.Any(p => p.inverseStage == inverseStage && (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))));
         }
     }
 }
