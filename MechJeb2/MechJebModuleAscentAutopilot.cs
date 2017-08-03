@@ -82,6 +82,9 @@ namespace MuMech
 
         public double launchLatitude = 0 ;
 
+        // useful to track time since launch event (works around bugs with physics starting early and vessel.launchTime being wildly off)
+        // FIXME?: any time we lift off from a rock this should probably be set to that time?
+        public double launchStarted;
 
         public double tMinus
         {
@@ -93,6 +96,32 @@ namespace MuMech
         AscentMode mode;
         bool placedCircularizeNode = false;
         private double lastTMinus = 999;
+
+        // wiring for launchStarted
+        public void OnLaunch(EventReport report)
+        {
+            launchStarted = vesselState.time;
+            Debug.Log("[MechJebModuleAscentAutopilot] LaunchStarted = " + launchStarted);
+        }
+
+        // wiring for launchStarted
+        public override void OnStart(PartModule.StartState state)
+        {
+            launchStarted = -1;
+            GameEvents.onLaunch.Add(OnLaunch);
+        }
+
+        private void FixupLaunchStart()
+        {
+            // continuously update the launchStarted time if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
+            if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
+                launchStarted = vesselState.time;
+        }
+
+        // various events can cause launchStarted to be before or after vessel.launchTime, but the most recent one is so far always the most accurate
+        // (physics wobbles can start vessel.launchTime (KSP's zero MET) early, while staging before engaging the autopilot can cause launchStarted to happen early)
+        // this will only be valid AFTER launching
+        public double MET { get { return vesselState.time - ( launchStarted > vessel.launchTime ? launchStarted : vessel.launchTime ); } }
 
         public override void OnModuleEnabled()
         {
@@ -129,6 +158,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            FixupLaunchStart();
             if (timedLaunch)
             {
                 if (tMinus < 3*vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))

@@ -13,19 +13,19 @@ namespace MuMech
         public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
 
         /* default pitch program here works decently at SLT of about 1.4 */
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult pitchStartTime = new EditableDoubleMult(10);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult pitchRate = new EditableDoubleMult(0.75);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult pitchEndTime = new EditableDoubleMult(55);
         [Persistent(pass = (int)(Pass.Global))]
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult terminalGuidanceSecs = new EditableDoubleMult(10);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult stageLowDVLimit = new EditableDoubleMult(20);
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableInt edit_num_stages = new EditableInt(2);
         private int last_edit_num_stages; // need this to track if the user updated the edit_num_stages value
         public int num_stages;            // need this so that PEG can decreate the num_stages independently of edit_num_stages
@@ -82,14 +82,8 @@ namespace MuMech
         private double GM;
         /* ending radial velocity */
         private double rd_burnout;
-        /* angular velocity at burnout */
-        private double w_burnout;
         /* angular momentum at burnout */
         private double h_burnout;
-        /* G at burnout */
-        private double G_burnout;
-        /* specific orbital energy at burnout */
-        private double eT;
         /* average change in the angle of thrust over the whole burn */
         private double fd_r;
 
@@ -353,10 +347,6 @@ namespace MuMech
             v_burnout = Math.Sqrt(GM * (2/r_burnout - 1/smaT()));  /* FIXME: assumes periapsis insertion */
             stages[0].r = mainBody.position.magnitude;
 
-            eT = - GM / (2*smaT());
-            /* XXX: estimate on the pad is very low, might need mean-radius or might need potential energy term, should be closer to 8100m/s */
-            // dVest = Math.Sqrt(2 * ( eT + GM / r )) - vessel.obt_velocity.magnitude;
-
             stages[num_stages - 1].rdT = rd_burnout = 0;  /* FIXME: assumes periapsis insertion */
             stages[0].rd = vesselState.speedVertical;
 
@@ -565,9 +555,9 @@ namespace MuMech
 
             /* cos pitch */
             // note that when this Sqrt goes NaN that is a useful condition to terminate guidance, clamping it will increase terminal guidance wiggles
-            double f_th = Math.Sqrt(1.0D - stage.f_r * stage.f_r);
+            double f_th = Math.Sqrt(1.0D - f_r * f_r);
             /* cos pitch rate */
-            double fd_th = - stage.f_r * fd_r;
+            double fd_th = - f_r * fd_r;
             /* cos pitch accel */
             double fdd_th = - ( fd_r * fd_r ) / 2.0D;
 
@@ -614,7 +604,7 @@ namespace MuMech
             double aT = stage.aT = a0 / ( 1.0D - T / tau );
             double GT = stage.GT = ( GM - hT * hT / rT ) / ( rT * rT );
 
-            double f_rT = stage.f_rT = A + B * T + GT / aT;
+            stage.f_rT = A + B * T + GT / aT;
 
             /* set next stages initial conditions */
             if (!upper) {
@@ -788,12 +778,12 @@ namespace MuMech
             }
             else
             {
-                if ((vesselState.time - vessel.launchTime ) > pitchStartTime)
+                if (autopilot.MET > pitchStartTime)
                 {
                     mode = AscentMode.INITIATE_TURN;
                     return;
                 }
-                double dt = pitchStartTime - ( vesselState.time - vessel.launchTime );
+                double dt = pitchStartTime - autopilot.MET;
                 status = String.Format("Vertical ascent {0:F2} s", dt);
             }
         }
@@ -801,13 +791,13 @@ namespace MuMech
         private void DriveInitiateTurn(FlightCtrlState s)
         {
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-            if ((vesselState.time - vessel.launchTime ) > pitchEndTime)
+            if (autopilot.MET > pitchEndTime)
             {
                 mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            double dt = vesselState.time - vessel.launchTime - pitchStartTime;
+            double dt = autopilot.MET - pitchStartTime;
             double theta = dt * pitchRate;
             attitudeTo(Math.Min(90, 90 - theta + pitchBias));
 
@@ -817,7 +807,7 @@ namespace MuMech
         private void DriveGravityTurn(FlightCtrlState s)
         {
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-            if ((vesselState.time - vessel.launchTime ) < pitchEndTime)
+            if (autopilot.MET < pitchEndTime)
             {
                 /* this can happen when users update the endtime box */
                 mode = AscentMode.INITIATE_TURN;
