@@ -103,7 +103,7 @@ namespace MuMech
                     return;
 
                 //only release launch clamps if we're at nearly full thrust
-                if (vesselState.thrustCurrent / vesselState.thrustAvailable < 1/1.2 &&
+                if (vesselState.thrustCurrent / vesselState.thrustAvailable < 1/1.1 &&
                     InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel))
                     return;
             }
