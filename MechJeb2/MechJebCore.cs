@@ -365,28 +365,7 @@ namespace MuMech
             sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
             return value;
         }
-
-        //public IEnumerable<T> GetComputerModules<T>() where T : ComputerModule
-        //{
-        //    Type key = typeof(T);
-        //    IEnumerable<ComputerModule> value;
-        //    if (sortedModules.TryGetValue(key, out value))
-        //        return value.Cast<T>();
-        //    sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
-        //    return value.Cast<T>();
-        //}
-
-        // Return the list of modules of type T in the order specified by comparer function
-        // Be sure to always use the same instance of comparer in order to avoid memory leaks
-        //public IEnumerable<T> GetComputerModules<T>(IComparer<T> comparer) where T : ComputerModule
-        //{
-        //    IEnumerable<ComputerModule> value;
-        //    if (sortedModules.TryGetValue(comparer, out value))
-        //        return value.Cast<T>();
-        //    sortedModules[comparer] = value = unorderedComputerModules.OfType<T>().OrderBy(m => m, comparer).Cast<ComputerModule>().ToList();
-        //    return value.Cast<T>();
-        //}
-
+        
         // Added because the generic version eats memory like candy when casting from ComputerModule to DisplayModule (.Cast<T>())
         public List<DisplayModule> GetDisplayModules(IComparer<DisplayModule> comparer)
         {
