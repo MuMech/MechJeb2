@@ -68,6 +68,8 @@ namespace MuMech
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
 
         protected Vector3d _axisControl = Vector3d.one;
+        
+        private readonly Vector3d defaultTfV = new Vector3d(0.3, 0.3, 0.3);
 
         public override void OnModuleEnabled()
         {
@@ -216,9 +218,7 @@ namespace MuMech
 
         public void setPIDParameters()
         {
-            Vector3d invTf = TfV.InvertNoNaN();
-            if (!lowPassFilter)
-                invTf = Vector3d.one;
+            Vector3d invTf = (Tf_autoTune ? TfV : defaultTfV).InvertNoNaN();
 
             pid.Kd = kdFactor * invTf;
 
@@ -233,7 +233,7 @@ namespace MuMech
 
         public void ResetConfig()
         {
-            TfV = new Vector3d(0.3, 0.3, 0.3);
+            TfV = defaultTfV;
             TfMin = 0.1;
             TfMax = 0.5;
             kpFactor = 3;
