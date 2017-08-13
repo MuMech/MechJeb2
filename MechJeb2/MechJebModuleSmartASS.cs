@@ -532,7 +532,7 @@ namespace MuMech
             else
                 core.attitude.attitudeTo(attitude, reference, this);
 
-            if (resetPID) { core.attitude.pid.Reset(); }
+            if (resetPID) { core.attitude.Controller.Reset(); }
         }
 
         public override GUILayoutOption[] WindowOptions()
