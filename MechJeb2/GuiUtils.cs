@@ -19,7 +19,7 @@ namespace MuMech
     public class EditableDoubleMult : IEditable
     {
         [Persistent]
-        public double _val;
+        protected double _val;
         public virtual double val
         {
             get { return _val; }
@@ -33,7 +33,7 @@ namespace MuMech
 
         public bool parsed;
         [Persistent]
-        public string _text;
+        protected string _text;
         public virtual string text
         {
             get { return _text; }
