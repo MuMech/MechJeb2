@@ -24,6 +24,14 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool activateSASOnWarp = true;
 
+        [Persistent(pass = (int)Pass.Global)]
+		public bool useQuickWarp = false;
+
+		public void useQuickWarpInfoItem()
+		{
+			useQuickWarp = GUILayout.Toggle(useQuickWarp, "Use Quick Warp");
+		}
+
         [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
         public void ControlWarpButton()
         {
@@ -108,7 +116,10 @@ namespace MuMech
             if (maxRate < 0)
                 maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];
 
-            double desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
+            double desiredRate;
+            if(useQuickWarp) desiredRate = 0.9 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex]))/Time.fixedDeltaTime;
+			else desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
+            
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
             if (!vessel.LandedOrSplashed &&
@@ -119,7 +130,7 @@ namespace MuMech
             }
             else
             {
-                WarpRegularAtRate((float)desiredRate);
+                WarpRegularAtRate((float)desiredRate,useQuickWarp,useQuickWarp);
             }
             warpToUT = UT;
         }
