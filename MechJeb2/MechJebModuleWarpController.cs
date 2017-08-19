@@ -117,8 +117,24 @@ namespace MuMech
                 maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];
 
             double desiredRate;
-            if(useQuickWarp) desiredRate = 0.9 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex]))/Time.fixedDeltaTime;
-			else desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
+            if (useQuickWarp) {
+				desiredRate = 1;
+				if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL && orbit.EndUT < UT) {
+					for(int i=0; i<TimeWarp.fetch.warpRates.Length; i++){
+						if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= orbit.EndUT - vesselState.time)
+                            desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
+						else break;
+					}
+				}
+				else{
+					for(int i=0; i<TimeWarp.fetch.warpRates.Length; i++){
+						if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= UT - vesselState.time)
+                            desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
+						else break;
+					}
+				}
+			}
+		    else desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
             
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
