@@ -29,7 +29,7 @@ namespace MuMech
 
 		public void useQuickWarpInfoItem()
 		{
-			useQuickWarp = GUILayout.Toggle(useQuickWarp, "Use Quick Warp");
+			useQuickWarp = GUILayout.Toggle(useQuickWarp, "Quick warp");
 		}
 
         [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
