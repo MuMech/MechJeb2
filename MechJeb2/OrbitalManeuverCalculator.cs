@@ -67,6 +67,7 @@ namespace MuMech
                 maxDeltaV = 0.25;
                 while (o.PerturbedOrbit(UT, maxDeltaV * burnDirection).PeR < newPeR)
                 {
+                    minDeltaV = maxDeltaV; //narrow the range
                     maxDeltaV *= 2;
                     if (maxDeltaV > 100000) break; //a safety precaution
                 }
@@ -124,10 +125,11 @@ namespace MuMech
             {
                 //put an upper bound on the required deltaV:
                 maxDeltaV = 0.25;
-
-                double ap = o.ApR;
+                
+                double ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
                 while (ApoapsisIsHigher(newApR, ap))
                 {
+                    minDeltaV = maxDeltaV; //narrow the range
                     maxDeltaV *= 2;
                     ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
                     if (maxDeltaV > 100000) break; //a safety precaution
