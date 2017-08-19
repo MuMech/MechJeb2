@@ -125,7 +125,7 @@ namespace MuMech
             {
                 //put an upper bound on the required deltaV:
                 maxDeltaV = 0.25;
-                
+
                 double ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
                 while (ApoapsisIsHigher(newApR, ap))
                 {
