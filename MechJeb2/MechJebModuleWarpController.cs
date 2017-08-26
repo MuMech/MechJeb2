@@ -25,12 +25,12 @@ namespace MuMech
         public bool activateSASOnWarp = true;
 
         [Persistent(pass = (int)Pass.Global)]
-		public bool useQuickWarp = false;
+        public bool useQuickWarp = false;
 
-		public void useQuickWarpInfoItem()
-		{
-			useQuickWarp = GUILayout.Toggle(useQuickWarp, "Quick warp");
-		}
+        public void useQuickWarpInfoItem()
+        {
+            useQuickWarp = GUILayout.Toggle(useQuickWarp, "Quick warp");
+        }
 
         [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
         public void ControlWarpButton()
