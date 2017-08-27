@@ -172,7 +172,7 @@ namespace MuMech
                 double vertspd = vesselState.speedVertical;
                 v_err = RealVertSpeedTarget - vertspd;
                 VertSpeedPIDController.intAccum = MuUtils.Clamp (VertSpeedPIDController.intAccum, -60 / AccKi, 60 / AccKi);
-                exp_act = Mathf.Asin (Mathf.Clamp ((float)(RealVertSpeedTarget / vesselState.speedSurface), -1, 1)) * 57.2957795;
+                exp_act = Mathf.Asin (Mathf.Clamp ((float)(RealVertSpeedTarget / vesselState.speedSurface), -1, 1)) * UtilMath.Rad2Deg;
                 double p_act = exp_act + VertSpeedPIDController.Compute (v_err);
                 //Debug.Log(p_act);
                 if (!double.IsNaN (p_act)) {
@@ -184,17 +184,19 @@ namespace MuMech
             } else {
                 pitch = vesselState.vesselPitch;
             }
-
+            double curHeading = vesselState.HeadingFromDirection(vesselState.forward);
             if (HeadingHoldEnabled) {
                 //heading = HeadingTarget;
-                double toturn = MuUtils.ClampDegrees180 (HeadingTarget - vesselState.vesselHeading);
+                //double curHeading = vesselState.HeadingFromDirection(vesselState.forward);
+                double toturn = MuUtils.ClampDegrees180 (HeadingTarget - curHeading);
+                //Debug.Log(curHeading.ToString("F2")+" "+toturn.ToString ("F2"));
                 RealRollTarget = MuUtils.Clamp (toturn * 2, -RollMax, RollMax);
-                heading = MuUtils.ClampDegrees360 (vesselState.vesselHeading + RealRollTarget / 10);
+                heading = MuUtils.ClampDegrees360 (curHeading + RealRollTarget / 10);
                 if (-3 < toturn && toturn < 3)
                     heading = HeadingTarget;
             } else {
                 RealRollTarget = RollTarget;
-                heading = MuUtils.ClampDegrees360 (vesselState.vesselHeading + RealRollTarget / 10);
+                heading = MuUtils.ClampDegrees360 (curHeading + RealRollTarget / 10);
             }
             if (RollHoldEnabled) {
                 roll = RealRollTarget;
