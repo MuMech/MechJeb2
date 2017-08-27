@@ -266,12 +266,12 @@ namespace MuMech
             return attitudeGetReferenceRotation(reference) * vector;
         }
 
-        public bool attitudeTo(Quaternion attitude, AttitudeReference reference, object controller)
+        public bool attitudeTo(Quaternion attitude, AttitudeReference reference, object controller, bool AxisCtrlPitch=true, bool AxisCtrlYaw=true, bool AxisCtrlRoll=true)
         {
             users.Add(controller);
             attitudeReference = reference;
             attitudeTarget = attitude;
-            AxisControl(true, true, true);
+            AxisControl(AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
             return true;
         }
 
@@ -295,10 +295,10 @@ namespace MuMech
             return true;
         }
 
-        public bool attitudeTo(double heading, double pitch, double roll, object controller)
+        public bool attitudeTo(double heading, double pitch, double roll, object controller, bool AxisCtrlPitch=true, bool AxisCtrlYaw=true, bool AxisCtrlRoll=true)
         {
             Quaternion attitude = Quaternion.AngleAxis((float)heading, Vector3.up) * Quaternion.AngleAxis(-(float)pitch, Vector3.right) * Quaternion.AngleAxis(-(float)roll, Vector3.forward);
-            return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller);
+            return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller, AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
         }
 
         public bool attitudeDeactivate()

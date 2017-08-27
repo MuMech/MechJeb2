@@ -41,6 +41,7 @@ namespace MuMech
         public MechJebModuleSolarPanelController solarpanel;
         public MechJebModuleLandingAutopilot landing;
         public MechJebModuleSettings settings;
+        public MechJebModuleAirplaneAutopilot airplane;
 
         public VesselState vesselState = new VesselState();
 
@@ -750,6 +751,7 @@ namespace MuMech
             solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
             landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             settings = GetComputerModule<MechJebModuleSettings>();
+            airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
