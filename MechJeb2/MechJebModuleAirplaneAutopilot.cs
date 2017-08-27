@@ -6,7 +6,6 @@ namespace MuMech
 {
     public class MechJebModuleAirplaneAutopilot : ComputerModule
     {
-        //double heading,pitch,roll;
         public bool HeadingHoldEnabled = false, AltitudeHoldEnabled = false, VertSpeedHoldEnabled = false, RollHoldEnabled = false, SpeedHoldEnabled = false;
 
         [Persistent (pass = (int)Pass.Global)]
@@ -144,6 +143,7 @@ namespace MuMech
         {
             UpdatePID ();
 
+            //SpeedHold (set AccelerationTarget automatically to hold speed)
             if (SpeedHoldEnabled) {
                 double spd = vesselState.speedSurface;
                 cur_acc = (spd - _spd) / Time.fixedDeltaTime;
@@ -151,10 +151,8 @@ namespace MuMech
                 RealAccelerationTarget = (SpeedTarget - spd) / 4;
                 a_err = (RealAccelerationTarget - cur_acc);
                 AccelerationPIDController.intAccum = MuUtils.Clamp (AccelerationPIDController.intAccum, -1 / AccKi, 1 / AccKi);
-                //float t_act = (float)AccelerationPIDController.Compute(a_err);
                 double t_act = AccelerationPIDController.Compute (a_err);
                 if (!double.IsNaN (t_act)) {
-                    //Debug.Log(t_act);
                     core.thrust.targetThrottle = (float)MuUtils.Clamp (t_act, 0, 1);
                 } else {
                     core.thrust.targetThrottle = 0.0f;
@@ -162,19 +160,19 @@ namespace MuMech
                 }
             }
 
-            //Pitch ctrl
+            //AltitudeHold (set VertSpeed automatically to hold altitude)
             if (AltitudeHoldEnabled)
                 RealVertSpeedTarget = MuUtils.Clamp (fixVertSpeed (AltitudeTarget - vesselState.altitudeASL), -VertSpeedMax, VertSpeedMax);
             else
                 RealVertSpeedTarget = VertSpeedTarget;
 
+            //VertSpeedHold
             if (VertSpeedHoldEnabled) {
                 double vertspd = vesselState.speedVertical;
                 v_err = RealVertSpeedTarget - vertspd;
                 VertSpeedPIDController.intAccum = MuUtils.Clamp (VertSpeedPIDController.intAccum, -60 / AccKi, 60 / AccKi);
                 exp_act = Mathf.Asin (Mathf.Clamp ((float)(RealVertSpeedTarget / vesselState.speedSurface), -1, 1)) * UtilMath.Rad2Deg;
                 double p_act = exp_act + VertSpeedPIDController.Compute (v_err);
-                //Debug.Log(p_act);
                 if (!double.IsNaN (p_act)) {
                     pitch = MuUtils.Clamp (p_act, -60, 60);
                 } else {
@@ -184,12 +182,11 @@ namespace MuMech
             } else {
                 pitch = vesselState.vesselPitch;
             }
-            double curHeading = vesselState.HeadingFromDirection(vesselState.forward);
+
+            //HeadingHold
+            double curHeading = vesselState.HeadingFromDirection (vesselState.forward);
             if (HeadingHoldEnabled) {
-                //heading = HeadingTarget;
-                //double curHeading = vesselState.HeadingFromDirection(vesselState.forward);
                 double toturn = MuUtils.ClampDegrees180 (HeadingTarget - curHeading);
-                //Debug.Log(curHeading.ToString("F2")+" "+toturn.ToString ("F2"));
                 RealRollTarget = MuUtils.Clamp (toturn * 2, -RollMax, RollMax);
                 heading = MuUtils.ClampDegrees360 (curHeading + RealRollTarget / 10);
                 if (-3 < toturn && toturn < 3)
@@ -203,6 +200,8 @@ namespace MuMech
             } else {
                 roll = vesselState.vesselPitch;
             }
+
+
             core.attitude.attitudeTo (heading, pitch, roll, this, AltitudeHoldEnabled || VertSpeedHoldEnabled, HeadingHoldEnabled, RollHoldEnabled && vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH);
         }
     }
