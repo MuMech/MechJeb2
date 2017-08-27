@@ -113,7 +113,7 @@ namespace MuMech
 
         double fixVertSpeed (double deltaAltitude)
         {
-            double reference = 4;
+            double reference = 5;
             if (reference < 2)
                 reference = 2;
             if (deltaAltitude > reference || deltaAltitude < -reference)
