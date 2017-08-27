@@ -171,7 +171,9 @@ namespace MuMech
                 double vertspd = vesselState.speedVertical;
                 v_err = RealVertSpeedTarget - vertspd;
                 VertSpeedPIDController.intAccum = MuUtils.Clamp (VertSpeedPIDController.intAccum, -60 / AccKi, 60 / AccKi);
-                exp_act = Mathf.Asin (Mathf.Clamp ((float)(RealVertSpeedTarget / vesselState.speedSurface), -1, 1)) * UtilMath.Rad2Deg;
+                //Debug.Log (vessel.graviticAcceleration.magnitude);
+                //Todo :find a better expression to update expected_act
+                exp_act = Mathf.Asin (Mathf.Clamp ((float)((RealVertSpeedTarget + (vessel.graviticAcceleration.magnitude / 2)) / vesselState.speedSurface), -1, 1)) * UtilMath.Rad2Deg;
                 double p_act = exp_act + VertSpeedPIDController.Compute (v_err);
                 if (!double.IsNaN (p_act)) {
                     pitch = MuUtils.Clamp (p_act, -60, 60);
