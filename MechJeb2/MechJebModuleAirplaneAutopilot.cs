@@ -43,8 +43,9 @@ namespace MuMech
         public override void OnModuleDisabled ()
         {
             core.attitude.attitudeDeactivate ();
-            if (SpeedHoldEnabled)
-                DisableSpeedHold ();
+            if (SpeedHoldEnabled) {
+                core.thrust.users.Remove (this);
+            }
         }
 
         public void EnableHeadingHold ()
