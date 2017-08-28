@@ -93,8 +93,6 @@ namespace MuMech
                         autopilot.DisableVertSpeedHold ();
                 }
                 VertSpeedTargettmp.text = GUILayout.TextField (VertSpeedTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
-                if (VertSpeedTargettmp < 0)
-                    VertSpeedTargettmp = 0;
                 GUILayout.Label ("m/s", GUILayout.ExpandWidth (true));
                 if (GUILayout.Button ("Set", autopilot.VertSpeedTarget == VertSpeedTargettmp ? btWhite : btGreen)) {
                     autopilot.VertSpeedTarget = VertSpeedTargettmp;
@@ -205,6 +203,30 @@ namespace MuMech
                 GUILayout.EndHorizontal ();
                 if (autopilot.VertSpeedHoldEnabled)
                     GUILayout.Label ("error:" + autopilot.v_err.ToString ("F2") + " Target:" + autopilot.RealVertSpeedTarget.ToString ("F2") + " Cur:" + vesselState.speedVertical.ToString ("F2"), GUILayout.ExpandWidth (false));
+                
+                GUILayout.BeginHorizontal ();
+                GUILayout.Label ("Roll", GUILayout.ExpandWidth (true));
+                GUILayout.Label ("Kp", GUILayout.ExpandWidth (false));
+                autopilot.RolKp.text = GUILayout.TextField (autopilot.RolKp.text, GUILayout.Width (40));
+                GUILayout.Label ("i", GUILayout.ExpandWidth (false));
+                autopilot.RolKi.text = GUILayout.TextField (autopilot.RolKi.text, GUILayout.Width (40));
+                GUILayout.Label ("d", GUILayout.ExpandWidth (false));
+                autopilot.RolKd.text = GUILayout.TextField (autopilot.RolKd.text, GUILayout.Width (40));
+                GUILayout.EndHorizontal ();
+
+                GUILayout.BeginHorizontal ();
+                GUILayout.Label ("Yaw", GUILayout.ExpandWidth (true));
+                GUILayout.Label ("Kp", GUILayout.ExpandWidth (false));
+                autopilot.YawKp.text = GUILayout.TextField (autopilot.YawKp.text, GUILayout.Width (40));
+                GUILayout.Label ("i", GUILayout.ExpandWidth (false));
+                autopilot.YawKi.text = GUILayout.TextField (autopilot.YawKi.text, GUILayout.Width (40));
+                GUILayout.Label ("d", GUILayout.ExpandWidth (false));
+                autopilot.YawKd.text = GUILayout.TextField (autopilot.YawKd.text, GUILayout.Width (40));
+                GUILayout.EndHorizontal ();
+                GUILayout.BeginHorizontal ();
+                GUILayout.Label ("Yaw Control Limit", GUILayout.ExpandWidth (false));
+                autopilot.YawLimit.text = GUILayout.TextField (autopilot.YawLimit.text, GUILayout.Width (40));
+                GUILayout.EndHorizontal ();
             }
             base.WindowGUI (windowID);
         }
