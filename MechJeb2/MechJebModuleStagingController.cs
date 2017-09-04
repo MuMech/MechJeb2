@@ -24,6 +24,8 @@ namespace MuMech
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
         [Persistent(pass = (int)Pass.Type)]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
+        [Persistent(pass = (int)Pass.Type)]
+        public EditableDouble clampAutoStageThrustPct = 0.95;
 
         public bool autostagingOnce = false;
 
@@ -51,6 +53,8 @@ namespace MuMech
             GUILayout.Label("s", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
+            ClampAutostageThrust();
+
             GUILayout.Label("Stage fairings when:");
             GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
             GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
@@ -66,6 +70,17 @@ namespace MuMech
             if (!this.enabled) return "Autostaging off";
             if (autostagingOnce) return "Will autostage next stage only";
             return "Autostaging until stage #" + (int)autostageLimit;
+        }
+
+        [GeneralInfoItem("Clamp Autostage Thrust", InfoItem.Category.Misc)]
+        public void ClampAutostageThrust()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Clamp AutoStage Thrust ");
+            core.staging.clampAutoStageThrustPct.text = GUILayout.TextField(core.staging.clampAutoStageThrustPct.text, 5);
+            GUILayout.Label("%");
+            core.staging.clampAutoStageThrustPct = UtilMath.Clamp(core.staging.clampAutoStageThrustPct, 0, 100);
+            GUILayout.EndVertical();
         }
 
         //internal state:
@@ -103,7 +118,7 @@ namespace MuMech
                     return;
 
                 //only release launch clamps if we're at nearly full thrust
-                if (vesselState.thrustCurrent / vesselState.thrustAvailable < 1/1.1 &&
+                if (vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct &&
                     InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel))
                     return;
             }
