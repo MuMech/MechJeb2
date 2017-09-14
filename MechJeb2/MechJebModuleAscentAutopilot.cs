@@ -282,7 +282,7 @@ namespace MuMech
                 {
                     MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
                     if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
-                    if (recorder != null) launchLANDifference = vesselState.orbitLAN - recorder.markLAN;
+                    if (core.target != null) launchLANDifference = vesselState.orbitLAN - core.target.orbit.LAN;
 
                     //finished circularize
                     this.users.Clear();
