@@ -182,10 +182,6 @@ namespace MuMech
         /// </summary>
         private const double lateralDistanceFromTouchdownToFinalApproach = 3700;
 
-        // The initial approach distance. A vessel outside the approach cone
-        // will fly towards this point.
-        //private const double lateralDistanceFromTouchdownToInitialApproach = 10000.0;
-
         /// <summary>
         /// Approach intercept angle; the angle at which the aircraft will
         /// intercept the glide slope laterally.
@@ -205,28 +201,23 @@ namespace MuMech
         /// <summary>
         /// Rate of turn in degrees per second.
         /// </summary>
-        public EditableDouble targetRateOfTurn = 3.0;
+        public const double targetRateOfTurn = 3.0;
 
         /// <summary>
         /// Minimum approach speed in meters per second. Stall + 10 seems to
         /// result in a decent approach and landing.
         /// </summary>
-        public EditableDouble minimumApproachSpeed = 60.0;
+        public EditableDouble approachSpeed = 60.0;
 
         /// <summary>
-        /// Cruise speed in meters per second.
+        /// Maximum allowed bank angle.
         /// </summary>
-        public EditableDouble cruiseSpeed = 100.0;
+        public const double maximumSafeBankAngle = 25.0;
 
         /// <summary>
-        /// Maximum safe bank angle the aircraft can handle.
+        /// Maximum allowed vertical speed.
         /// </summary>
-        public EditableDouble maximumSafeBankAngle = 25.0;
-
-        /// <summary>
-        /// Maximum safe vertical speed the aircraft can handle.
-        /// </summary>
-        public EditableDouble maximumSafeVerticalSpeed = 20.0;
+        public const double maximumSafeVerticalSpeed = 15.0;
 
         /// <summary>
         /// Angle of attack at the start of flare state.
@@ -251,9 +242,32 @@ namespace MuMech
         public double GetAutolandTargetVerticalSpeed(Vector3d vectorToWaypoint)
         {
             double timeToWaypoint = LateralDistance(vesselState.CoM, vectorToWaypoint) / vesselState.speedSurfaceHorizontal;
-            double deltaAlt =  GetAutolandTargetAltitude(vectorToWaypoint) - vesselState.altitudeASL;
+            double deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - vesselState.altitudeASL;
 
-            return UtilMath.Clamp(deltaAlt / timeToWaypoint, -maximumSafeVerticalSpeed, maximumSafeVerticalSpeed);
+            double vertSpeed = deltaAlt / timeToWaypoint;
+
+            // If we are on final, we want to maintain glideslope as much as
+            // possible so that we don't overshoot or undershoot the runway.
+            if (approachState == AutolandApproachState.TOUCHDOWN || approachState == AutolandApproachState.FAP)
+            {
+                Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()));
+                double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope);
+                double deltaToCorrectAlt = desiredAlt - vesselState.altitudeTrue;
+
+                Debug.Assert(vertSpeed < 0);
+
+                if (!UtilMath.Approximately(deltaAlt, 0))
+                {
+                    double remainingVertSpeedRange = maximumSafeVerticalSpeed - (deltaAlt > 0 ? vertSpeed : -1 * vertSpeed);
+                    double expPerMeter = (Math.Log(remainingVertSpeedRange + 1) - Math.Log(1)) / desiredAlt;
+
+                    double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
+
+                    vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -1 * adjustment;
+                }
+            }
+
+            return UtilMath.Clamp(vertSpeed, -maximumSafeVerticalSpeed, maximumSafeVerticalSpeed);
         }
 
         public double GetAutolandTargetHeading(Vector3d vectorToWaypoint)
@@ -272,7 +286,7 @@ namespace MuMech
                     double alignOffset = Math.Atan2(Vector3d.Dot(runway.Up(), Vector3d.Cross(vectorToWaypoint, runwayDir)), Vector3d.Dot(vectorToWaypoint, runwayDir)) * UtilMath.Rad2Deg;
                     Debug.Assert(alignOffset < lateralInterceptAngle);
 
-                    double exponentPerDegreeOfError = (Math.Log(2.5) - Math.Log(1.0)) / lateralInterceptAngle;
+                    double exponentPerDegreeOfError = (Math.Log(3) - Math.Log(1.0)) / lateralInterceptAngle;
                     double offsetMultiplier = Math.Exp((lateralInterceptAngle - Math.Abs(alignOffset)) * exponentPerDegreeOfError);
 
                     targetHeading -= alignOffset * offsetMultiplier;
@@ -294,7 +308,7 @@ namespace MuMech
         public double GetAutolandLateralDistanceFromTouchdownToFinalApproach()
         {
             // Formula is x = cot(omega) * 2r
-            return (1.0 / Math.Tan(angleToFinalApproachPointTurnDiameter * UtilMath.Deg2Rad)) * GetAutolandTurnRadius() * 2.0;
+            return ((1.0 / Math.Tan(angleToFinalApproachPointTurnDiameter * UtilMath.Deg2Rad)) * GetAutolandTurnRadius() * 2.0) + lateralDistanceFromTouchdownToFinalApproach;
         }
 
         public double GetAutolandTurnRadius()
@@ -322,19 +336,13 @@ namespace MuMech
 
             switch (approachState)
             {
-                case AutolandApproachState.FAP:
-                    return minimumApproachSpeed * 1.5;
-
-                case AutolandApproachState.TOUCHDOWN:
                 case AutolandApproachState.WAITINGFORFLARE:
-                    return minimumApproachSpeed;
-
                 case AutolandApproachState.ROLLOUT:
                 case AutolandApproachState.FLARE:
                     return 0;
             }
 
-            return cruiseSpeed;
+            return approachSpeed;
         }
 
         /// <summary>
@@ -395,10 +403,10 @@ namespace MuMech
                 Vector3d vectorToGlideslopeIntercept = FindVectorToGlideslopeIntercept(finalApproachVector,  lateralAngleOfFinalApproachVector);
 
                 // Determine whether we should start turning towards FAP.
-                double estimatedTimeToTurn = lateralAngleOfFinalApproachVector / GetAutolandMaxRateOfTurn();
+                double estimatedTimeToTurn = lateralInterceptAngle / GetAutolandMaxRateOfTurn();
                 double timeToGlideslopeIntercept = LateralDistance(vesselState.CoM, vectorToGlideslopeIntercept) / vesselState.speedSurfaceHorizontal;
 
-                if (estimatedTimeToTurn >= timeToGlideslopeIntercept || timeToGlideslopeIntercept < 3)
+                if (estimatedTimeToTurn >= timeToGlideslopeIntercept)
                 {
                     approachState = AutolandApproachState.FAP;
                     return finalApproachVector;
@@ -430,7 +438,7 @@ namespace MuMech
             else if (approachState == AutolandApproachState.TOUCHDOWN)
             {
                 // TODO: also arbitrary
-                if (LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()) < 200.0 || vesselState.altitudeTrue < 50.0)
+                if (LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()) < 100.0)
                 {
                     approachState = AutolandApproachState.WAITINGFORFLARE;
                     return runway.End();

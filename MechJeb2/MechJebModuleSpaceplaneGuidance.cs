@@ -50,12 +50,8 @@ namespace MuMech
                 if (autoland.enabled && GUILayout.Button("Abort"))
                     autoland.AutopilotOff();
 
-                GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope, "º");
-                GuiUtils.SimpleTextBox("Cruise speed:", autoland.cruiseSpeed, "m/s");
-                GuiUtils.SimpleTextBox("Minimum approach speed:", autoland.minimumApproachSpeed, "m/s");
-                GuiUtils.SimpleTextBox("Target rate of turn:", autoland.targetRateOfTurn, "º/s");
-                GuiUtils.SimpleTextBox("Maximum safe bank angle:", autoland.maximumSafeBankAngle, "º");
-                GuiUtils.SimpleTextBox("Maximum safe vertical speed:", autoland.maximumSafeVerticalSpeed, "m/s");
+                GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope);
+                GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
 
                 if (autoland.enabled)
                 {
