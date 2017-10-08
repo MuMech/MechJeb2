@@ -23,9 +23,8 @@ namespace MuMech
             Autopilot.users.Add(this);
 
             approachState = AutolandApproachState.START;
+            bEngagedReverseThrusters = false;
         }
-
-        public double saveSpeedTarget, saveHeadingTarget, saveVertSpeedTarget, saveRollMax;
 
         public void AutopilotOff()
         {
@@ -135,12 +134,12 @@ namespace MuMech
 
             if (approachState == AutolandApproachState.FLARE)
             {
-                Autopilot.DisableVertSpeedHold();
-
-                double exponentPerMeter = (Math.Log(targetFlareAoA) / startFlareAtAltitude);
-                double desiredAoA = Math.Exp((startFlareAtAltitude - vesselState.altitudeTrue) * exponentPerMeter);
+                double exponentPerMeter = (Math.Log(targetFlareAoA + 1) - Math.Log(1)) / startFlareAtAltitude;
+                double desiredAoA = Math.Exp((startFlareAtAltitude - vesselState.altitudeTrue) * exponentPerMeter) - 1;
 
                 core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Max(desiredAoA, flareStartAoA), 0, this, true, false, false);
+
+                Autopilot.DisableVertSpeedHold();
             }
             else if (approachState == AutolandApproachState.TOUCHDOWN)
             {
@@ -149,11 +148,53 @@ namespace MuMech
             else if (approachState == AutolandApproachState.ROLLOUT)
             {
                 Autopilot.DisableSpeedHold();
-                core.thrust.ThrustOff();
 
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                // Smoothen the main gear touchdown
+                double exponentPerMeterPerSecond = (Math.Log(touchdownMomentAoA + 1) - Math.Log(1)) / touchdownMomentSpeed;
+                double desiredAoA = touchdownMomentAoA - (Math.Exp(exponentPerMeterPerSecond * (touchdownMomentSpeed - vesselState.speedSurfaceHorizontal)) - 1);
+                double currentAoA = vesselState.AoA;
+                core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Min(desiredAoA, currentAoA), 0, this, true, false, false);
+
+                // Engage reverse thrusters and full throttle
+                SetReverseThrusters(bEngageReverseIfAvailable && vesselState.speedSurfaceHorizontal > 10);
+
+                if (bEngagedReverseThrusters)
+                    s.mainThrottle = 1;
+                else
+                    s.mainThrottle = 0;
+
+                // Apply brakes under 30 (if there are no reversers) otherwise under 10 m/s.
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, bEngagedReverseThrusters ? vesselState.speedSurfaceHorizontal < 10 : vesselState.speedSurfaceHorizontal < 30);
             }
         }
+
+        private void SetReverseThrusters(bool bEngage)
+        {
+            if (bEngage == bEngagedReverseThrusters)
+                return;
+
+            foreach (Part part in vessel.parts)
+            {
+                if (part.IsEngine())
+                {
+                    foreach (ModuleAnimateGeneric module in part.FindModulesImplementing<ModuleAnimateGeneric>())
+                    {
+                        module.Toggle();
+                        bEngagedReverseThrusters = bEngage;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set to true if reverse thrusters are engaged.
+        /// </summary>
+        private bool bEngagedReverseThrusters = false;
+
+        /// <summary>
+        /// Set to true if user wants reverse thrust upon touchdown.
+        /// </summary>
+        public bool bEngageReverseIfAvailable = true;
 
         /// <summary>
         /// The runway to land at.
@@ -163,6 +204,7 @@ namespace MuMech
         /// <summary>
         /// Glide slope angle for approach (3-5 seems to work best).
         /// </summary>
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
         public EditableDouble glideslope = 3.0;
 
         /// <summary>
@@ -191,12 +233,12 @@ namespace MuMech
         /// <summary>
         /// Target angle of attack during flare.
         /// </summary>
-        private const double targetFlareAoA = 10.0;
+        private const double targetFlareAoA = 15.0;
 
         /// <summary>
         /// Altitude in meters when flare will start.
         /// </summary>
-        private const double startFlareAtAltitude = 30.0;
+        private const double startFlareAtAltitude = 20.0;
 
         /// <summary>
         /// Rate of turn in degrees per second.
@@ -207,12 +249,14 @@ namespace MuMech
         /// Minimum approach speed in meters per second. Stall + 10 seems to
         /// result in a decent approach and landing.
         /// </summary>
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
         public EditableDouble approachSpeed = 60.0;
 
         /// <summary>
         /// Maximum allowed bank angle.
         /// </summary>
-        public const double maximumSafeBankAngle = 25.0;
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble maximumSafeBankAngle = 25.0;
 
         /// <summary>
         /// Maximum allowed vertical speed.
@@ -230,6 +274,17 @@ namespace MuMech
         /// at a distance of turn diameter.
         /// </summary>
         private double angleToFinalApproachPointTurnDiameter = 20.0;
+
+        /// <summary>
+        /// Touchdown AoA and speed recorded for smooth main gear touchdown.
+        /// </summary>
+        private double touchdownMomentAoA = 0.0;
+        private double touchdownMomentSpeed = 0.0;
+
+        /// <summary>
+        /// Threshold in seconds to move on to the next waypoint.
+        /// </summary>
+        private double secondsThresholdToNextWaypoint = 5.0;
 
         public double GetAutolandTargetAltitude(Vector3d vectorToWaypoint)
         {
@@ -270,6 +325,12 @@ namespace MuMech
             return UtilMath.Clamp(vertSpeed, -maximumSafeVerticalSpeed, maximumSafeVerticalSpeed);
         }
 
+        public double GetAutolandAlignmentError(Vector3d vectorToWaypoint)
+        {
+            Vector3d runwayDir = (runway.End() - runway.Start()).normalized;
+            return Math.Atan2(Vector3d.Dot(runway.Up(), Vector3d.Cross(vectorToWaypoint, runwayDir)), Vector3d.Dot(vectorToWaypoint, runwayDir)) * UtilMath.Rad2Deg;
+        }
+
         public double GetAutolandTargetHeading(Vector3d vectorToWaypoint)
         {
             double targetHeading = vesselState.HeadingFromDirection(vectorToWaypoint);
@@ -282,11 +343,10 @@ namespace MuMech
                 case AutolandApproachState.WAITINGFORFLARE:
                 case AutolandApproachState.FLARE:
                 {
-                    Vector3d runwayDir = (runway.End() - runway.Start()).normalized;
-                    double alignOffset = Math.Atan2(Vector3d.Dot(runway.Up(), Vector3d.Cross(vectorToWaypoint, runwayDir)), Vector3d.Dot(vectorToWaypoint, runwayDir)) * UtilMath.Rad2Deg;
+                    double alignOffset = GetAutolandAlignmentError(vectorToWaypoint);
                     Debug.Assert(alignOffset < lateralInterceptAngle);
 
-                    double exponentPerDegreeOfError = (Math.Log(3) - Math.Log(1.0)) / lateralInterceptAngle;
+                    double exponentPerDegreeOfError = (Math.Log(3) - Math.Log(1)) / lateralInterceptAngle;
                     double offsetMultiplier = Math.Exp((lateralInterceptAngle - Math.Abs(alignOffset)) * exponentPerDegreeOfError);
 
                     targetHeading -= alignOffset * offsetMultiplier;
@@ -326,7 +386,7 @@ namespace MuMech
         public double GetAutolandTargetBankAngle()
         {
             // Formula is Bank = atan((v * t) / (g * (180/pi)))
-            return Math.Min(Math.Atan((vesselState.speedSurfaceHorizontal * targetRateOfTurn) / (runway.GetGravitationalAcceleration() * UtilMath.Deg2Rad)) * UtilMath.Rad2Deg, GetAutolandMaxRateOfTurn());
+            return Math.Min(Math.Atan((vesselState.speedSurfaceHorizontal * targetRateOfTurn) / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) * UtilMath.Rad2Deg, GetAutolandMaxRateOfTurn());
         }
 
         public double GetAutolandTargetSpeed()
@@ -426,8 +486,7 @@ namespace MuMech
 
                 double timeToFAP = LateralDistance(vesselState.CoM, finalApproachVector) / vesselState.speedSurfaceHorizontal;
 
-                // TODO: this is rather arbitrary
-                if (timeToFAP < 3)
+                if (GetAutolandAlignmentError(finalApproachVector) < 3.0 && timeToFAP < secondsThresholdToNextWaypoint)
                 {
                     approachState = AutolandApproachState.TOUCHDOWN;
                     return runway.GetVectorToTouchdown();
@@ -437,8 +496,9 @@ namespace MuMech
             }
             else if (approachState == AutolandApproachState.TOUCHDOWN)
             {
-                // TODO: also arbitrary
-                if (LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()) < 100.0)
+                double timeToTouchdown = LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()) / vesselState.speedSurfaceHorizontal;
+
+                if (vesselState.altitudeTrue < startFlareAtAltitude + 10)
                 {
                     approachState = AutolandApproachState.WAITINGFORFLARE;
                     return runway.End();
@@ -459,7 +519,11 @@ namespace MuMech
             else if (approachState == AutolandApproachState.FLARE)
             {
                 if (vessel.Landed)
+                {
+                    touchdownMomentAoA = vesselState.AoA;
+                    touchdownMomentSpeed = vesselState.speedSurfaceHorizontal;
                     approachState = AutolandApproachState.ROLLOUT;
+                }
 
                 return runway.End();
             }

@@ -49,9 +49,10 @@ namespace MuMech
                 if (GUILayout.Button("Autoland")) autoland.Autoland(this);
                 if (autoland.enabled && GUILayout.Button("Abort"))
                     autoland.AutopilotOff();
-
+                
                 GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope);
                 GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
+                autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, "Reverse thrust upon touchdown");
 
                 if (autoland.enabled)
                 {
@@ -61,7 +62,6 @@ namespace MuMech
                     GUILayout.Label(string.Format("Target vertical speed: {0} m/s", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));
                     GUILayout.Label(string.Format("Target heading: {0}º", Math.Round(autoland.Autopilot.HeadingTarget, 0)));
                 }
-                    
             }
 
             GUILayout.EndVertical();
