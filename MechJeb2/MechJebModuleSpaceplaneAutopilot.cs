@@ -98,29 +98,9 @@ namespace MuMech
             return "";
         }
 
-        LineRenderer line;
-
         public override void Drive(FlightCtrlState s)
         {
-            if (line == null)
-            {
-                GameObject obj = new GameObject("Line");
-
-                // Then create renderer itself...
-                line = obj.AddComponent<LineRenderer>();
-                line.useWorldSpace = true;
-
-                line.material = new Material(Shader.Find("Particles/Additive"));
-                line.SetColors(Color.red, Color.red);
-                line.SetWidth(1, 0);
-
-                line.SetVertexCount(2);
-            }
-
             Vector3d vectorToWaypoint = GetAutolandTargetVector();
-
-            line.SetPosition(0, Vector3d.zero);
-            line.SetPosition(1, vectorToWaypoint);
 
             // Make sure autopilot is enabled properly
             if (!Autopilot.HeadingHoldEnabled)
