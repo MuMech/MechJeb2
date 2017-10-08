@@ -733,13 +733,25 @@ namespace MuMech
             Vector3d runwayStart = GetVectorToTouchdown();
             Vector3d runwayEnd = End();
 
-            // The approach line 
             Vector3d runwayDir = (runwayEnd - runwayStart).normalized;
-            runwayDir = QuaternionD.AngleAxis(Math.Sign(runwayDir.z) * glideslope, Vector3d.up) * runwayDir;
 
-            runwayStart -= distanceOnCenterline * runwayDir;
+            Vector3d glideslopeDir = QuaternionD.AngleAxis(glideslope, Vector3d.up) * runwayDir;
+            Vector3d pointOnGlideslope = runwayStart - (distanceOnCenterline * glideslopeDir);
 
-            return runwayStart;
+            double latAtDistance, lonAtDistance, altAtDistance;
+            body.GetLatLonAlt(pointOnGlideslope, out latAtDistance, out lonAtDistance, out altAtDistance);
+
+            double latAtTouchdown, lonAtTouchdown, altAtTouchdown;
+            body.GetLatLonAlt(GetVectorToTouchdown(), out latAtTouchdown, out lonAtTouchdown, out altAtTouchdown);
+
+            if (altAtDistance < altAtTouchdown)
+            {
+                // TODO: can we optimize this?
+                glideslopeDir = QuaternionD.AngleAxis(-glideslope, Vector3d.up) * runwayDir;
+                pointOnGlideslope = runwayStart - (distanceOnCenterline * glideslopeDir);
+            }
+
+            return pointOnGlideslope;
         }
     }
 }
