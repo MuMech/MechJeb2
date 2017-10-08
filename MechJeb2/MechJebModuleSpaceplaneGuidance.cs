@@ -57,6 +57,7 @@ namespace MuMech
                 if (autoland.enabled)
                 {
                     GUILayout.Label("State: " + autoland.AutolandApproachStateToHumanReadableDescription());
+                    GUILayout.Label(string.Format("Distance to waypoint: {0} m", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));
                     GUILayout.Label(string.Format("Target speed: {0} m/s", Math.Round(autoland.Autopilot.SpeedTarget, 1)));
                     GUILayout.Label(string.Format("Target altitude: {0} m", Math.Round(autoland.GetAutolandTargetAltitude(autoland.GetAutolandTargetVector()), 0)));
                     GUILayout.Label(string.Format("Target vertical speed: {0} m/s", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));

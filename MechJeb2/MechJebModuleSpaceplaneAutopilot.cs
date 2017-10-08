@@ -405,6 +405,11 @@ namespace MuMech
             return approachSpeed;
         }
 
+        public double GetAutolandLateralDistanceToNextWaypoint()
+        {
+            return LateralDistance(vesselState.CoM, GetAutolandTargetVector());
+        }
+
         /// <summary>
         /// Computes and returns the target vector for approach and autoland.
         /// </summary>
