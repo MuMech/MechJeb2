@@ -17,10 +17,22 @@ namespace MuMech
             }
         }
 
+        public MechJebModuleRoverController RoverPilot
+        {
+            get
+            {
+                return core.GetComputerModule<MechJebModuleRoverController>();
+            }
+        }
+
         public void Autoland(object controller)
         {
             users.Add(controller);
             Autopilot.users.Add(this);
+            RoverPilot.users.Add(this);
+
+            RoverPilot.ControlHeading = false;
+            RoverPilot.ControlSpeed = false;
 
             approachState = AutolandApproachState.START;
             bEngagedReverseThrusters = false;
@@ -30,7 +42,10 @@ namespace MuMech
         {
             users.Clear();
             Autopilot.users.Remove(this);
+            RoverPilot.users.Remove(this);
             core.attitude.attitudeDeactivate();
+
+            RoverPilot.ControlHeading = false;
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -128,7 +143,7 @@ namespace MuMech
 
             // Set autopilot target and max values for navigation
             Autopilot.SpeedTarget = GetAutolandTargetSpeed();
-            Autopilot.HeadingTarget = GetAutolandTargetHeading(vectorToWaypoint);
+            Autopilot.HeadingTarget = RoverPilot.heading = GetAutolandTargetHeading(vectorToWaypoint);
             Autopilot.VertSpeedTarget = GetAutolandTargetVerticalSpeed(vectorToWaypoint);
             Autopilot.RollMax = GetAutolandTargetBankAngle();
 
@@ -148,6 +163,7 @@ namespace MuMech
             else if (approachState == AutolandApproachState.ROLLOUT)
             {
                 Autopilot.DisableSpeedHold();
+                RoverPilot.ControlHeading = true;
 
                 // Smoothen the main gear touchdown
                 double exponentPerMeterPerSecond = (Math.Log(touchdownMomentAoA + 1) - Math.Log(1)) / touchdownMomentSpeed;
@@ -341,6 +357,7 @@ namespace MuMech
                 case AutolandApproachState.FAP:
                 case AutolandApproachState.TOUCHDOWN:
                 case AutolandApproachState.WAITINGFORFLARE:
+                case AutolandApproachState.ROLLOUT:
                 case AutolandApproachState.FLARE:
                 {
                     double alignOffset = GetAutolandAlignmentError(vectorToWaypoint);
