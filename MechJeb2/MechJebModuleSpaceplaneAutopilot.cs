@@ -377,13 +377,13 @@ namespace MuMech
         public double GetAutolandMaxRateOfTurn()
         {
             // Formula is RoT = (g * (180/pi) * tan(Bank)) / v
-            return (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg * Math.Tan(GetAutolandMaxBankAngle() * UtilMath.Deg2Rad)) / vesselState.speedSurfaceHorizontal;
+            return (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg * Math.Tan(GetAutolandTargetBankAngle() * UtilMath.Deg2Rad)) / vesselState.speedSurfaceHorizontal;
         }
 
         public double GetAutolandTargetBankAngle()
         {
             // Formula is Bank = atan((v * t) / (g * (180/pi)))
-            return Math.Min(Math.Atan((vesselState.speedSurfaceHorizontal * targetRateOfTurn) / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) * UtilMath.Rad2Deg, GetAutolandMaxRateOfTurn());
+            return Math.Min(Math.Atan((vesselState.speedSurfaceHorizontal * targetRateOfTurn) / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) * UtilMath.Rad2Deg, GetAutolandMaxBankAngle());
         }
 
         public double GetAutolandTargetSpeed()
