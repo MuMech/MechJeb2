@@ -49,23 +49,20 @@ namespace MuMech
                 if (GUILayout.Button("Autoland")) autoland.Autoland(this);
                 if (autoland.enabled && GUILayout.Button("Abort"))
                     autoland.AutopilotOff();
-
-                GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope, "º");
-                GuiUtils.SimpleTextBox("Cruise speed:", autoland.cruiseSpeed, "m/s");
-                GuiUtils.SimpleTextBox("Minimum approach speed:", autoland.minimumApproachSpeed, "m/s");
-                GuiUtils.SimpleTextBox("Target rate of turn:", autoland.targetRateOfTurn, "º/s");
-                GuiUtils.SimpleTextBox("Maximum safe bank angle:", autoland.maximumSafeBankAngle, "º");
-                GuiUtils.SimpleTextBox("Maximum safe vertical speed:", autoland.maximumSafeVerticalSpeed, "m/s");
+                
+                GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope);
+                GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
+                autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, "Reverse thrust upon touchdown");
 
                 if (autoland.enabled)
                 {
                     GUILayout.Label("State: " + autoland.AutolandApproachStateToHumanReadableDescription());
+                    GUILayout.Label(string.Format("Distance to waypoint: {0} m", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));
                     GUILayout.Label(string.Format("Target speed: {0} m/s", Math.Round(autoland.Autopilot.SpeedTarget, 1)));
                     GUILayout.Label(string.Format("Target altitude: {0} m", Math.Round(autoland.GetAutolandTargetAltitude(autoland.GetAutolandTargetVector()), 0)));
                     GUILayout.Label(string.Format("Target vertical speed: {0} m/s", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));
                     GUILayout.Label(string.Format("Target heading: {0}º", Math.Round(autoland.Autopilot.HeadingTarget, 0)));
                 }
-                    
             }
 
             GUILayout.EndVertical();
