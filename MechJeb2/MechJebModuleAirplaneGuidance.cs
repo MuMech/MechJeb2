@@ -85,7 +85,7 @@ namespace MuMech
             if (!autopilot.AltitudeHoldEnabled) {
                 bool _VertSpeedHoldEnabled = autopilot.VertSpeedHoldEnabled;
                 GUILayout.BeginHorizontal ();
-                autopilot.VertSpeedHoldEnabled = GUILayout.Toggle (autopilot.VertSpeedHoldEnabled, "VERTSPEED Hold", GUILayout.Width (140));
+                autopilot.VertSpeedHoldEnabled = GUILayout.Toggle (autopilot.VertSpeedHoldEnabled, "Vertical Speed Hold", GUILayout.Width (140));
                 if (_VertSpeedHoldEnabled != autopilot.VertSpeedHoldEnabled) {
                     if (autopilot.VertSpeedHoldEnabled)
                         autopilot.EnableVertSpeedHold ();
@@ -100,7 +100,7 @@ namespace MuMech
                 GUILayout.EndHorizontal ();
             } else {
                 GUILayout.BeginHorizontal ();
-                GUILayout.Label ("    VERTSPEED Limit", GUILayout.Width (140));
+                GUILayout.Label ("    Vertical Speed Limit", GUILayout.Width (140));
                 VertSpeedMaxtmp.text = GUILayout.TextField (VertSpeedMaxtmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
                 if (VertSpeedMaxtmp < 0)
                     VertSpeedMaxtmp = 0;
@@ -238,7 +238,7 @@ namespace MuMech
 
         public override string GetName ()
         {
-            return "Airplane AutoPilot";
+            return "Aircraft Autopilot";
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace MuMech
 {
     public class MechJebModuleSpaceplaneGuidance : DisplayModule
     {
-        MechJebModuleSpaceplaneAutopilot autopilot;
+        MechJebModuleSpaceplaneAutopilot autoland;
 
         protected bool _showLandingTarget = false;
 
@@ -39,32 +40,30 @@ namespace MuMech
                 GUILayout.Label("Landing", s);
 
                 runwayIndex = GuiUtils.ComboBox.Box(runwayIndex, availableRunways.Select(p => p.name).ToArray(), this);
-                autopilot.runway = availableRunways[runwayIndex];
+                autoland.runway = availableRunways[runwayIndex];
 
-                GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autopilot.runway.Start(vesselState.CoM)), 0) + "m");
+                GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autoland.runway.Start()), 0) + "m");
 
                 showLandingTarget = GUILayout.Toggle(showLandingTarget, "Show landing navball guidance");
 
-                if (GUILayout.Button("Autoland")) autopilot.Autoland(this);
-                if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.AUTOLAND
-                    && GUILayout.Button("Abort")) autopilot.AutopilotOff();
+                if (GUILayout.Button("Autoland")) autoland.Autoland(this);
+                if (autoland.enabled && GUILayout.Button("Abort"))
+                    autoland.AutopilotOff();
+                
+                GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope);
+                GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
+                autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, "Reverse thrust upon touchdown");
 
-                GuiUtils.SimpleTextBox("Autoland glideslope:", autopilot.glideslope, "º");
+                if (autoland.enabled)
+                {
+                    GUILayout.Label("State: " + autoland.AutolandApproachStateToHumanReadableDescription());
+                    GUILayout.Label(string.Format("Distance to waypoint: {0} m", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));
+                    GUILayout.Label(string.Format("Target speed: {0} m/s", Math.Round(autoland.Autopilot.SpeedTarget, 1)));
+                    GUILayout.Label(string.Format("Target altitude: {0} m", Math.Round(autoland.GetAutolandTargetAltitude(autoland.GetAutolandTargetVector()), 0)));
+                    GUILayout.Label(string.Format("Target vertical speed: {0} m/s", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));
+                    GUILayout.Label(string.Format("Target heading: {0}º", Math.Round(autoland.Autopilot.HeadingTarget, 0)));
+                }
             }
-
-            GUILayout.Label("Hold", s);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Initiate hold:")) autopilot.HoldHeadingAndAltitude(this);
-            GUILayout.Label("Heading:");
-            autopilot.targetHeading.text = GUILayout.TextField(autopilot.targetHeading.text, GUILayout.Width(40));
-            GUILayout.Label("º Altitude:");
-            autopilot.targetAltitude.text = GUILayout.TextField(autopilot.targetAltitude.text, GUILayout.Width(40));
-            GUILayout.Label("m");
-            GUILayout.EndHorizontal();
-
-            if (autopilot.enabled && autopilot.mode == MechJebModuleSpaceplaneAutopilot.Mode.HOLD
-                && GUILayout.Button("Abort")) autopilot.AutopilotOff();
 
             GUILayout.EndVertical();
 
@@ -78,12 +77,12 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (showLandingTarget && autopilot != null)
+            if (showLandingTarget && autoland != null)
             {
                 if (!(core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance")) showLandingTarget = false;
                 else
                 {
-                    core.target.UpdateDirectionTarget(autopilot.ILSAimDirection());
+                    core.target.UpdateDirectionTarget(autoland.GetAutolandTargetVector());
                 }
             }
         }
@@ -92,14 +91,14 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            autopilot = core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
+            autoland = core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
         }
 
         public MechJebModuleSpaceplaneGuidance(MechJebCore core) : base(core) { }
 
         public override string GetName()
         {
-            return "Spaceplane Guidance";
+            return "Aircraft Approach & Autoland";
         }
     }
 }
