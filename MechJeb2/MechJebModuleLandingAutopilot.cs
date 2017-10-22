@@ -99,7 +99,7 @@ namespace MuMech
             get
             {
                 return mainBody.GetWorldSurfacePosition(prediction.endPosition.latitude,
-                    prediction.endPosition.longitude, LandingAltitude);
+                    prediction.endPosition.longitude, LandingAltitude) - mainBody.position;
             }
         }
 
@@ -287,7 +287,7 @@ namespace MuMech
             // First we compute the target landing position. We have to convert the latitude and longitude of the target
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
-            Vector3d desiredLandingPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+            Vector3d desiredLandingPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
             float bodyRotationAngleDuringDescent = (float)(360 * (prediction.endUT - vesselState.time) / mainBody.rotationPeriod);
             Quaternion bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;

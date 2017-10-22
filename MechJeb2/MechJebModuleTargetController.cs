@@ -67,7 +67,7 @@ namespace MuMech
 
         public Vector3d GetPositionTargetPosition()
         {
-            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude));
+            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude))-targetBody.position;
         }
 
         public void SetDirectionTarget(string name)
