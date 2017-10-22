@@ -200,8 +200,8 @@ namespace MuMech
                         GUILayout.Label("Landing Predictions:");
                         GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + MuUtils.ToSI(result.endASL,-1, 4) + "m");
                         GUILayout.Label(ScienceUtil.GetExperimentBiome(result.body, result.endPosition.latitude, result.endPosition.longitude));
-                        double error = Vector3d.Distance(mainBody.GetWorldSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0),
-                                                         mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0));
+                        double error = Vector3d.Distance(mainBody.GetWorldSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0) - mainBody.position,
+                                                         mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position);
                         GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
                                        +"\nMax drag: " + result.maxDragGees.ToString("F1") +"g"
                                        +"\nDelta-v needed: " + result.deltaVExpended.ToString("F1") + "m/s"

@@ -172,7 +172,7 @@ namespace MuMech
         [ValueInfoItem("Distance from mark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
         public double DistanceFromMark()
         {
-            return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude));
+            return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude) - FlightGlobals.Bodies[markBodyIndex].position);
         }
 
         [ValueInfoItem("Downrange distance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
