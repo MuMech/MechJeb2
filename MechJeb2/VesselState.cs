@@ -330,6 +330,32 @@ namespace MuMech
                 return type.GetField(fieldName);
         }
 
+        static MethodInfo getMethodByReflection(String assemblyString, String className, String methodName, BindingFlags flags, Type[] args)
+        {
+            string assemblyName = "";
+
+            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+            {
+                if (loaded.assembly.GetName().Name == assemblyString)
+                {
+                    assemblyName = loaded.assembly.FullName;
+                }
+            }
+
+            if (assemblyName == "")
+            {
+                return null;
+            }
+
+            Type type = Type.GetType(className + ", " + assemblyName);
+
+            if (type == null)
+            {
+                return null;
+            }
+            return type.GetMethod(methodName, flags, null, args, null);
+        }
+
 
         public VesselState()
         {
