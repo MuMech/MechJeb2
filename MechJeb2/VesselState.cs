@@ -32,6 +32,8 @@ namespace MuMech
 
         public static bool isLoadedFAR = false;
         private delegate double FARVesselDelegate(Vessel v);
+        private static FARVesselDelegate FARVesselAoA;
+        private static FARVesselDelegate FARVesselSideslip;
         private static FARVesselDelegate FARVesselDragCoeff;
         private static FARVesselDelegate FARVesselRefArea;
         private static FARVesselDelegate FARVesselTermVelEst;
@@ -296,7 +298,7 @@ namespace MuMech
             isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
-                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
+                List<string> farNames = new List<string>{ "VesselAoA", "VesselSideslip", "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
                 foreach (var name in farNames)
                 {
                     var methodInfo = getMethodByReflection(
@@ -601,19 +603,27 @@ namespace MuMech
             speedSurfaceHorizontal.value = Vector3d.Exclude(up, surfaceVelocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
             speedOrbitHorizontal = (orbitalVelocity - (speedVertical * up)).magnitude;
 
-            // Angle of attack, angle between surface velocity and the vessel's "up" vector
-            // Originally from ferram4's FAR
-            Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
-                           + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, surfaceVelocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-            double tmpAoA = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
-            AoA.value = double.IsNaN(tmpAoA) || speedSurface.value < 0.01 ? 0 : tmpAoA;
+            if (isLoadedFAR)
+            {
+                AoA.value = FARVesselAoA(vessel);
+                AoS.value = FARVesselSideslip(vessel);
+            }
+            else
+            {
+                // Angle of attack, angle between surface velocity and the vessel's "up" vector
+                // Originally from ferram4's FAR
+                Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
+                               + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, surfaceVelocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+                double tmpAoA = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
+                AoA.value = double.IsNaN(tmpAoA) || speedSurface.value < 0.01 ? 0 : tmpAoA;
 
-            // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
-            // Originally from ferram4's FAR
-            tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
-                   + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
-            double tempAoS = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
-            AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
+                // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
+                // Originally from ferram4's FAR
+                tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
+                       + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
+                double tempAoS = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
+                AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
+            }
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
