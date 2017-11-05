@@ -31,6 +31,9 @@ namespace MuMech
         public UllageState lowestUllage { get { return this.einfo.lowestUllage; } }
 
         public static bool isLoadedFAR = false;
+        private delegate double FARVesselDelegate(Vessel v);
+        private static FARVesselDelegate FARVesselDragCoeff;
+        private static FARVesselDelegate FARVesselRefArea;
         private delegate void FARCalculateVesselAeroForcesDelegate(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude);
         private static FARCalculateVesselAeroForcesDelegate FARCalculateVesselAeroForces;
 
@@ -291,6 +294,27 @@ namespace MuMech
             isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
+                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea" };
+                foreach (var name in farNames)
+                {
+                    var methodInfo = getMethodByReflection(
+                        "FerramAerospaceResearch",
+                        "FerramAerospaceResearch.FARAPI",
+                        name,
+                        BindingFlags.Public | BindingFlags.Static,
+                        new Type[] { typeof(Vessel) }
+                    );
+                    if (methodInfo == null)
+                    {
+                        Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no " + name + " method. Disabling FAR");
+                        isLoadedFAR = false;
+                    }
+                    else
+                    {
+                        typeof(VesselState).GetField("FAR" + name, BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, (FARVesselDelegate)Delegate.CreateDelegate(typeof(FARVesselDelegate), methodInfo));
+                    }
+                }
+
                 var FARCalculateVesselAeroForcesMethodInfo = getMethodByReflection(
                     "FerramAerospaceResearch",
                     "FerramAerospaceResearch.FARAPI",
@@ -805,8 +829,16 @@ namespace MuMech
             pureDragV = Vector3d.zero;
             pureLiftV = Vector3d.zero;
 
-            dragCoef = 0;
-            areaDrag = 0;
+            if (isLoadedFAR)
+            {
+                dragCoef = FARVesselDragCoeff(vessel);
+                areaDrag = FARVesselRefArea(vessel);
+            }
+            else
+            {
+                dragCoef = 0;
+                areaDrag = 0;
+            }
 
             CoL = Vector3d.zero;
             CoLScalar = 0;
@@ -834,8 +866,11 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                dragCoef += p.DragCubes.DragCoeff;
-                areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+                if (!isLoadedFAR)
+                {
+                    dragCoef += p.DragCubes.DragCoeff;
+                    areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+                }
 
                 for (int index = 0; index < vesselStatePartExtensions.Count; index++)
                 {
