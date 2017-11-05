@@ -30,6 +30,10 @@ namespace MuMech
         // lowestUllage is always VeryStable without RealFuels installed
         public UllageState lowestUllage { get { return this.einfo.lowestUllage; } }
 
+        public static bool isLoadedFAR = false;
+        private delegate void FARCalculateVesselAeroForcesDelegate(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude);
+        private static FARCalculateVesselAeroForcesDelegate FARCalculateVesselAeroForces;
+
         private Vessel vesselRef = null;
 
         private EngineInfo einfo = new EngineInfo();
@@ -282,6 +286,25 @@ namespace MuMech
                 {
                     Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
                     isLoadedRealFuels = false;
+                }
+            }
+            isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
+            if (isLoadedFAR)
+            {
+                var FARCalculateVesselAeroForcesMethodInfo = getMethodByReflection(
+                    "FerramAerospaceResearch",
+                    "FerramAerospaceResearch.FARAPI",
+                    "CalculateVesselAeroForces",
+                    BindingFlags.Public | BindingFlags.Static,
+                    new Type[] { typeof(Vessel), typeof(Vector3).MakeByRefType(), typeof(Vector3).MakeByRefType(), typeof(Vector3), typeof(double) }
+                );
+                if (FARCalculateVesselAeroForcesMethodInfo == null){
+                    Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no CalculateVesselAeroForces method, disabling FAR");
+                    isLoadedFAR = false;
+                }
+                else
+                {
+                    FARCalculateVesselAeroForces = (FARCalculateVesselAeroForcesDelegate)Delegate.CreateDelegate(typeof(FARCalculateVesselAeroForcesDelegate), FARCalculateVesselAeroForcesMethodInfo);
                 }
             }
         }
@@ -1000,24 +1023,45 @@ namespace MuMech
             if (CoLScalar > 0)
                 CoL = CoL / CoLScalar;
 
-            pureDragV = pureDragV / mass;
-            pureLiftV = pureLiftV / mass;
-
-            pureDrag = pureDragV.magnitude;
-
-            pureLift = pureLiftV.magnitude;
-
-            Vector3d force = pureDragV + pureLiftV;
             Vector3d liftDir = -Vector3d.Cross(vessel.transform.right, -surfaceVelocity.normalized);
 
-            // Drag is the part (pureDrag + PureLift) applied opposite of the surface vel
-            drag = Vector3d.Dot(force, -surfaceVelocity.normalized);
-            // DragUp is the part (pureDrag + PureLift) applied in the "Up" direction
-            dragUp = Vector3d.Dot(pureDragV, up);
-            // Lift is the part (pureDrag + PureLift) applied in the "Lift" direction
-            lift = Vector3d.Dot(force, liftDir);
-            // LiftUp is the part (pureDrag + PureLift) applied in the "Up" direction
-            liftUp = Vector3d.Dot(force, up);
+            if (isLoadedFAR)
+            {
+                Vector3 farForce = Vector3.zero;
+                Vector3 farTorque = Vector3.zero;
+                FARCalculateVesselAeroForces(vessel, out farForce, out farTorque, surfaceVelocity, altitudeASL);
+
+                Vector3d farDragVector = Vector3d.Dot(farForce, -surfaceVelocity.normalized) * -surfaceVelocity.normalized;
+                drag = farDragVector.magnitude / mass;
+                dragUp = Vector3d.Dot(farDragVector, up) / mass;
+                pureDragV = farDragVector;
+                pureDrag = drag;
+
+                Vector3d farLiftVector = Vector3d.Dot(farForce, liftDir) * liftDir;
+                lift = farLiftVector.magnitude / mass;
+                liftUp = Vector3d.Dot(farForce, up) / mass; // Use farForce instead of farLiftVector to match code for stock aero
+                pureLiftV = farLiftVector;
+                pureLift = lift;
+            }
+            else
+            {
+                pureDragV = pureDragV / mass;
+                pureLiftV = pureLiftV / mass;
+
+                pureDrag = pureDragV.magnitude;
+
+                pureLift = pureLiftV.magnitude;
+
+                Vector3d force = pureDragV + pureLiftV;
+                // Drag is the part (pureDrag + PureLift) applied opposite of the surface vel
+                drag = Vector3d.Dot(force, -surfaceVelocity.normalized);
+                // DragUp is the part (pureDrag + PureLift) applied in the "Up" direction
+                dragUp = Vector3d.Dot(pureDragV, up);
+                // Lift is the part (pureDrag + PureLift) applied in the "Lift" direction
+                lift = Vector3d.Dot(force, liftDir);
+                // LiftUp is the part (pureDrag + PureLift) applied in the "Up" direction
+                liftUp = Vector3d.Dot(force, up);
+            }
 
             maxEngineResponseTime = einfo.maxResponseTime;
         }
