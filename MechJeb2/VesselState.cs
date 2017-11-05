@@ -34,6 +34,7 @@ namespace MuMech
         private delegate double FARVesselDelegate(Vessel v);
         private static FARVesselDelegate FARVesselDragCoeff;
         private static FARVesselDelegate FARVesselRefArea;
+        private static FARVesselDelegate FARVesselTermVelEst;
         private delegate void FARCalculateVesselAeroForcesDelegate(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude);
         private static FARCalculateVesselAeroForcesDelegate FARCalculateVesselAeroForces;
 
@@ -294,7 +295,7 @@ namespace MuMech
             isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
-                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea" };
+                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst" };
                 foreach (var name in farNames)
                 {
                     var methodInfo = getMethodByReflection(
@@ -406,7 +407,14 @@ namespace MuMech
 
         public VesselState()
         {
-            TerminalVelocityCall = TerminalVelocityStockKSP;
+            if (isLoadedFAR)
+            {
+                TerminalVelocityCall = TerminalVelocityFAR;
+            }
+            else
+            {
+                TerminalVelocityCall = TerminalVelocityStockKSP;
+            }
         }
 
         //public static bool SupportsGimbalExtension<T>() where T : PartModule
@@ -1215,6 +1223,11 @@ namespace MuMech
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
             return Math.Sqrt((2000 * mass * localg) / (areaDrag * vesselRef.atmDensity));
+        }
+
+        public double TerminalVelocityFAR()
+        {
+            return FARVesselTermVelEst(vesselRef);
         }
 
         public double ThrustAccel(double throttle)
