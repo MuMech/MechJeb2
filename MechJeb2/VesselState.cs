@@ -35,6 +35,7 @@ namespace MuMech
         private static FARVesselDelegate FARVesselDragCoeff;
         private static FARVesselDelegate FARVesselRefArea;
         private static FARVesselDelegate FARVesselTermVelEst;
+        private static FARVesselDelegate FARVesselDynPres;
         private delegate void FARCalculateVesselAeroForcesDelegate(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude);
         private static FARCalculateVesselAeroForcesDelegate FARCalculateVesselAeroForces;
 
@@ -295,7 +296,7 @@ namespace MuMech
             isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
-                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst" };
+                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
                 foreach (var name in farNames)
                 {
                     var methodInfo = getMethodByReflection(
@@ -632,7 +633,15 @@ namespace MuMech
             double temperature = FlightGlobals.getExternalTemperature(altitudeASL);
             atmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure, temperature);
             atmosphericDensityGrams = atmosphericDensity * 1000;
-            dynamicPressure = vessel.dynamicPressurekPa * 1000;
+            if (isLoadedFAR)
+            {
+                dynamicPressure = FARVesselDynPres(vessel) * 1000;
+            }
+            else
+            {
+                dynamicPressure = vessel.dynamicPressurekPa * 1000;
+            }
+
 
             speedOfSound = vessel.speedOfSound;
 
