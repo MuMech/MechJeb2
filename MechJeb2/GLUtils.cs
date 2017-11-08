@@ -76,7 +76,7 @@ namespace MuMech
             GL.End();
             GL.PopMatrix();
         }
-        
+
         public static void GLVertex(Vector3d worldPosition, bool map = false)
         {
             Vector3 screenPoint = map ? PlanetariumCamera.Camera.WorldToViewportPoint(ScaledSpace.LocalToScaledSpace(worldPosition)) : FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosition);
@@ -122,7 +122,7 @@ namespace MuMech
 
         //If dashed = false, draws 0-1-2-3-4-5...
         //If dashed = true, draws 0-1 2-3 4-5...
-        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false)
+        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false, bool occlude = true)
         {
             GL.PushMatrix();
             material.SetPass(0);
@@ -135,7 +135,7 @@ namespace MuMech
             int step = (dashed ? 2 : 1);
             for (int i = 0; i < points.Count - 1; i += step)
             {
-                if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
+                if (!occlude || (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos)))
                 {
                     GLPixelLine(points[i], points[i + 1], map);
                 }
@@ -143,7 +143,7 @@ namespace MuMech
             GL.End();
             GL.PopMatrix();
         }
-        
+
         public static void DrawBoundingBox(CelestialBody mainBody, Vessel vessel, MechJebModuleDockingAutopilot.Box3d box, Color c )
         {
             //Vector3d origin = vessel.GetWorldPos3D() - vessel.GetTransform().rotation * box.center ;
@@ -168,7 +168,7 @@ namespace MuMech
 
             GLVertex(A1);
             GLVertex(A2);
-            
+
             GLVertex(A2);
             GLVertex(A3);
 
@@ -180,7 +180,7 @@ namespace MuMech
 
             GLVertex(B1);
             GLVertex(B2);
-            
+
             GLVertex(B2);
             GLVertex(B3);
 
