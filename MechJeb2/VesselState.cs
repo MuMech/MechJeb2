@@ -68,6 +68,7 @@ namespace MuMech
         public Vector3d velocityMainBodySurface;
 
         public Vector3d orbitalVelocity;
+        public Vector3d orbitalPosition;
         public Vector3d surfaceVelocity;
 
         public Vector3d angularVelocity;
@@ -560,6 +561,7 @@ namespace MuMech
             mass = vessel.totalMass;
             CoM = vessel.CoMD;
             orbitalVelocity = vessel.obt_velocity;
+            orbitalPosition = CoM - vessel.mainBody.position;
         }
 
         // Calculate a bunch of simple quantities each frame.
@@ -569,7 +571,7 @@ namespace MuMech
             deltaT = TimeWarp.fixedDeltaTime;
 
             //CoM = °;
-            up = (CoM - vessel.mainBody.position).normalized;
+            up = orbitalPosition.normalized;
 
             Rigidbody rigidBody = vessel.rootPart.rb;
             if (rigidBody != null) rootPartPos = rigidBody.position;
@@ -694,7 +696,7 @@ namespace MuMech
 
             mainBody = vessel.mainBody;
 
-            radius = (CoM - vessel.mainBody.position).magnitude;
+            radius = orbitalPosition.magnitude;
 
             vesselRef = vessel;
         }
