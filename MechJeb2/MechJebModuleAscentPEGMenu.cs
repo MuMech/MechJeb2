@@ -12,6 +12,7 @@ namespace MuMech
         }
 
         public MechJebModuleAscentPEG path { get { return autopilot.ascentPath as MechJebModuleAscentPEG; } }
+        private MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
         public MechJebModuleAscentAutopilot autopilot;
 
         public override void OnStart(PartModule.StartState state)
@@ -43,43 +44,38 @@ namespace MuMech
                 s.normal.textColor = Color.yellow;
                 GUILayout.Label("Apoapsis < Periapsis: circularizing orbit at periapsis", s);
             }
+            GuiUtils.SimpleTextBox("leading angle to plane: ", autopilot.launchLANDifference, "°");
 
             GuiUtils.SimpleTextBox("Booster Pitch start:", path.pitchStartTime, "s");
             GuiUtils.SimpleTextBox("Booster Pitch rate:", path.pitchRate, "°/s");
-            GuiUtils.SimpleTextBox("Booster Pitch end:", path.pitchEndTime, "s");
-            GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
-            GuiUtils.SimpleTextBox("Terminal Guidance Period:", path.terminalGuidanceSecs, "s");
-            GuiUtils.SimpleTextBox(String.Format("Num Stages: ({0:D})", path.num_stages), path.edit_num_stages);
+            GUILayout.BeginHorizontal();
+            path.pitchEndToggle = GUILayout.Toggle(path.pitchEndToggle, "Booster Pitch end:");
+            if (path.pitchEndToggle)
+                GuiUtils.SimpleTextBox("", path.pitchEndTime, "s");
+            GUILayout.EndHorizontal();
+            if (path.pitchEndToggle)
+                GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
+            GUILayout.BeginHorizontal();
+            path.pegAfterStageToggle = GUILayout.Toggle(path.pegAfterStageToggle, "Start PEG after KSP Stage #");
+            if (path.pegAfterStageToggle)
+                GuiUtils.SimpleTextBox("", path.pegAfterStage);
+            GUILayout.EndHorizontal();
+            GuiUtils.SimpleTextBox("Terminal Guidance Period:", peg.terminalGuidanceTime, "s");
+            GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
             GUILayout.Label("Stage Stats");
-            if (GUILayout.Button("Reinitialize Stage Analysis"))
-                path.InitStageStats();
-            GuiUtils.SimpleTextBox("Stage Minimum dV Limit:", path.stageLowDVLimit, "m/s");
+            if (GUILayout.Button("Reset PEG"))
+                peg.Reset();
+            GuiUtils.SimpleTextBox("Stage Minimum dV Limit:", peg.stageLowDVLimit, "m/s");
 
-            for(int i = path.stages.Count - 1; i >= 0; i--) {
-                GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1} {4:F1} {5:F1} ({6:F1})", i, path.stages[i].kspStage, path.stages[i].avail_T, path.stages[i].avail_dV, path.stages[i].T, path.stages[i].dV, path.stages[i].avail_dV - path.stages[i].dV));
+            for(int i = peg.stages.Count - 1; i >= 0; i--) {
+                GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1}", i, peg.stages[i].kspStage, peg.stages[i].dt, peg.stages[i].Li));
             }
-            GUILayout.Label("Burnout Stats");
-            if (path.stages.Count > 0) {
-                GUILayout.Label(String.Format("delta-V (guidance): {0:G5}", path.total_dV));
-                GUILayout.Label(String.Format("A: {0:G5}", path.stages[0].A));
-                GUILayout.Label(String.Format("B: {0:G5}", path.stages[0].B));
-                GUILayout.Label(String.Format("time: {0:G5}", path.total_T));
-                GUILayout.Label(String.Format("pitch: {0:G5}", path.guidancePitch));
-                GUILayout.Label(String.Format("steps: {0:D}", path.convergenceSteps));
-            }
-
-            if (path.guidanceEnabled)
-            {
-                if (GUILayout.Button("Disable PEG Guidance"))
-                    path.guidanceEnabled = false;
-            }
-            else
-            {
-                if (GUILayout.Button("Enable PEG Guidance")) {
-                    path.guidanceEnabled = true;
-                    path.terminalGuidance = false;
-                }
-            }
+            GUILayout.Label(String.Format("vgo: {0:F1}", peg.vgo.magnitude));
+            GUILayout.Label(String.Format("tgo: {0:F1}", peg.tgo));
+            GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
+            GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
+            GUILayout.Label(String.Format("primer mag: {0:F1}", peg.primerMag));
+            GUILayout.Label(String.Format("phi: {0:F1}", peg.omega * UtilMath.Rad2Deg));
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
@@ -96,7 +92,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Atlas/Centaur PEG Pitch Program";
+            return "Space Shuttle PEG Pitch Program";
         }
     }
 }
