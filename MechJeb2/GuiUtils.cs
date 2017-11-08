@@ -10,9 +10,9 @@ namespace MuMech
         string text { get; set; }
     }
 
-    //An EditableDouble stores a double value and a text string. The user can edit the string. 
-    //Whenever the text is edited, it is parsed and the parsed value is stored in val. As a 
-    //convenience, a multiplier can be specified so that the stored value is actually 
+    //An EditableDouble stores a double value and a text string. The user can edit the string.
+    //Whenever the text is edited, it is parsed and the parsed value is stored in val. As a
+    //convenience, a multiplier can be specified so that the stored value is actually
     //(multiplier * parsed value). If the parsing fails, the parsed flag is set to false and
     //the stored value is unchanged. There are implicit conversions between EditableDouble and
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
@@ -463,7 +463,7 @@ namespace MuMech
 
             return parsedSomething;
         }
-        
+
         public static double ArcDistance(Vector3 From, Vector3 To) {
             double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
             double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
@@ -471,7 +471,7 @@ namespace MuMech
             double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
-        
+
         public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) {
             return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
         }
@@ -729,7 +729,7 @@ namespace MuMech
                 }
             }
             displayPicker.Apply();
-            
+
             float v = 0.0F;
             float diff = 1.0f / textureHeight;
             saturationTexture = new Texture2D(20, textureHeight);
@@ -749,7 +749,7 @@ namespace MuMech
         {
             if (!displayPicker)
                 Init();
-            
+
             GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 90, textureHeight + 30), "");
 
             if (GUI.RepeatButton(new Rect(positionLeft, positionTop, textureWidth, textureHeight), displayPicker))
@@ -768,7 +768,7 @@ namespace MuMech
             alphaSlider = GUI.VerticalSlider(new Rect(positionLeft + textureWidth + 3 + 10 + 20 + 10, positionTop, 10, textureHeight), alphaSlider, 1, 0);
             setColor.a = alphaSlider;
             GUI.Box(new Rect(positionLeft + textureWidth + 20 + 10 + 20 + 10, positionTop, 20, textureHeight), saturationTexture);
-            
+
         }
 
     }
@@ -776,12 +776,12 @@ namespace MuMech
     {
         private static int textureWidth = 240;
         private static int textureHeight = 10;
-        
+
         private static Texture2D rTexture;
         private static Texture2D gTexture;
         private static Texture2D bTexture;
         private static Texture2D aTexture;
-        
+
         private static void Init()
         {
             rTexture = new Texture2D(textureWidth, 1);
@@ -800,7 +800,7 @@ namespace MuMech
             gTexture.Apply();
             bTexture.Apply();
             aTexture.Apply();
-            
+
             rTexture.wrapMode = TextureWrapMode.Repeat;
             gTexture.wrapMode = TextureWrapMode.Repeat;
             bTexture.wrapMode = TextureWrapMode.Repeat;
