@@ -19,7 +19,7 @@ namespace MuMech
         {
             return new Vector3(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
         }
-        
+
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)
@@ -141,7 +141,11 @@ namespace MuMech
             return vector - Vector3d.Project(vector, planeNormal);
         }
 
-
-
+        // +/- infinity is not a finite number (not finite)
+        // NaN is also not a finite number (not a number)
+        public static bool IsFinite(this double v)
+        {
+            return !Double.IsNaN(v) && !Double.IsInfinity(v);
+        }
     }
 }
