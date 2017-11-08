@@ -173,44 +173,23 @@ namespace MuMech
 
             double desiredFlightPathAngle = FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
-            /* FIXME: this code is now somewhat horrible and overly complicated and should probably just a PID to adjust the
-               pitch to try to fix the flight angle */
             if (autopilot.correctiveSteering)
             {
-                //transition gradually from the rotating to the non-rotating reference frame. this calculation ensures that
-                //when our maximum possible apoapsis, given our orbital energy, is desiredOrbitalRadius, then we are
-                //fully in the non-rotating reference frame and thus doing the correct calculations to get the right inclination
-                double GM = mainBody.gravParameter;
-                double potentialDifferenceWithApoapsis = GM / vesselState.radius - GM / (mainBody.Radius + autopilot.desiredOrbitAltitude);
-                double verticalSpeedForDesiredApoapsis = Math.Sqrt(2 * potentialDifferenceWithApoapsis);
-                double referenceFrameBlend = Mathf.Clamp((float)(vesselState.speedOrbital / verticalSpeedForDesiredApoapsis), 0.0F, 1.0F);
 
-                Vector3d actualVelocityUnit = ((1 - referenceFrameBlend) * vesselState.surfaceVelocity.normalized
-                        + referenceFrameBlend * vesselState.orbitalVelocity.normalized).normalized;
+                double actualFlightPathAngle = Math.Atan2(vesselState.speedVertical, vesselState.speedSurfaceHorizontal) * UtilMath.Rad2Deg;
 
-                double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination);
-                Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
-
-                Vector3d desiredVelocityUnit = Math.Cos(desiredFlightPathAngle * UtilMath.Deg2Rad) * desiredHeadingVector
-                    + Math.Sin(desiredFlightPathAngle * UtilMath.Deg2Rad) * vesselState.up;
-
-                Vector3d desiredThrustVector = desiredVelocityUnit;
-
-                Vector3d velocityError = (desiredVelocityUnit - actualVelocityUnit);
+                /* form an isosceles triangle with unit vectors pointing in the desired and actual flight path angle directions and find the length of the base */
+                double velocityError = 2 * Math.Sin( UtilMath.Deg2Rad * ( desiredFlightPathAngle - actualFlightPathAngle ) / 2 );
 
                 double difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
-                Vector3d steerOffset = autopilot.correctiveSteeringGain * difficulty * velocityError;
+                double steerOffset = autopilot.correctiveSteeringGain * difficulty * velocityError;
 
-                //limit the amount of steering to 10 degrees. Furthermore, never steer to a FPA of > 90 (that is, never lean backward)
-                double maxOffset = 10 * UtilMath.Deg2Rad;
-                if (desiredFlightPathAngle > 80)
-                    maxOffset = (90 - desiredFlightPathAngle) * UtilMath.Deg2Rad;
-                if (steerOffset.magnitude > maxOffset)
-                    steerOffset = maxOffset * steerOffset.normalized;
+                double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset) * UtilMath.Rad2Deg, -30, 30);
 
-                desiredThrustVector += steerOffset;
-                desiredFlightPathAngle = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
+                desiredFlightPathAngle += steerAngle;
+                if (desiredFlightPathAngle > 90)
+                    desiredFlightPathAngle = 90;
             }
 
             attitudeTo(desiredFlightPathAngle);
