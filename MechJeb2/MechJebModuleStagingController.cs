@@ -20,9 +20,9 @@ namespace MuMech
         public EditableDouble autostagePostDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
         public EditableInt autostageLimit = 0;
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
         [Persistent(pass = (int)Pass.Type)]
         public EditableDouble clampAutoStageThrustPct = 0.95;
@@ -55,8 +55,6 @@ namespace MuMech
             GUILayout.Label("s", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
-            ClampAutostageThrust();
-
             GUILayout.Label("Stage fairings when:");
             GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
             GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
@@ -73,17 +71,6 @@ namespace MuMech
             if (!this.enabled) return "Autostaging off";
             if (autostagingOnce) return "Will autostage next stage only";
             return "Autostaging until stage #" + (int)autostageLimit;
-        }
-
-        [GeneralInfoItem("Clamp Autostage Thrust", InfoItem.Category.Misc)]
-        public void ClampAutostageThrust()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Clamp AutoStage Thrust ");
-            core.staging.clampAutoStageThrustPct.text = GUILayout.TextField(core.staging.clampAutoStageThrustPct.text, 5);
-            GUILayout.Label("%");
-            core.staging.clampAutoStageThrustPct = UtilMath.Clamp(core.staging.clampAutoStageThrustPct, 0, 100);
-            GUILayout.EndVertical();
         }
 
         //internal state:
@@ -121,7 +108,7 @@ namespace MuMech
                     return;
 
                 //only release launch clamps if we're at nearly full thrust
-                if (vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct &&
+                if (vesselState.thrustCurrent / vesselState.thrustAvailable < 0.99 &&
                     InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel))
                     return;
             }
@@ -281,7 +268,7 @@ namespace MuMech
             }
             return false;
         }
-        
+
         //determine if there are chutes being fired that wouldn't also get decoupled
         public static bool HasStayingChutes(int inverseStage, Vessel v)
         {
