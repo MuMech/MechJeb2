@@ -1087,7 +1087,7 @@ namespace MuMech
 
             Vector3d liftDir = -Vector3d.Cross(vessel.transform.right, -surfaceVelocity.normalized);
 
-            if (isLoadedFAR)
+            if (isLoadedFAR && !vessel.packed)
             {
                 Vector3 farForce = Vector3.zero;
                 Vector3 farTorque = Vector3.zero;
