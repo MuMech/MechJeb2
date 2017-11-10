@@ -30,6 +30,17 @@ namespace MuMech
         // lowestUllage is always VeryStable without RealFuels installed
         public UllageState lowestUllage { get { return this.einfo.lowestUllage; } }
 
+        public static bool isLoadedFAR = false;
+        private delegate double FARVesselDelegate(Vessel v);
+        private static FARVesselDelegate FARVesselAoA;
+        private static FARVesselDelegate FARVesselSideslip;
+        private static FARVesselDelegate FARVesselDragCoeff;
+        private static FARVesselDelegate FARVesselRefArea;
+        private static FARVesselDelegate FARVesselTermVelEst;
+        private static FARVesselDelegate FARVesselDynPres;
+        private delegate void FARCalculateVesselAeroForcesDelegate(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude);
+        private static FARCalculateVesselAeroForcesDelegate FARCalculateVesselAeroForces;
+
         private Vessel vesselRef = null;
 
         private EngineInfo einfo = new EngineInfo();
@@ -284,6 +295,46 @@ namespace MuMech
                     isLoadedRealFuels = false;
                 }
             }
+            isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
+            if (isLoadedFAR)
+            {
+                List<string> farNames = new List<string>{ "VesselAoA", "VesselSideslip", "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
+                foreach (var name in farNames)
+                {
+                    var methodInfo = getMethodByReflection(
+                        "FerramAerospaceResearch",
+                        "FerramAerospaceResearch.FARAPI",
+                        name,
+                        BindingFlags.Public | BindingFlags.Static,
+                        new Type[] { typeof(Vessel) }
+                    );
+                    if (methodInfo == null)
+                    {
+                        Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no " + name + " method. Disabling FAR");
+                        isLoadedFAR = false;
+                    }
+                    else
+                    {
+                        typeof(VesselState).GetField("FAR" + name, BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, (FARVesselDelegate)Delegate.CreateDelegate(typeof(FARVesselDelegate), methodInfo));
+                    }
+                }
+
+                var FARCalculateVesselAeroForcesMethodInfo = getMethodByReflection(
+                    "FerramAerospaceResearch",
+                    "FerramAerospaceResearch.FARAPI",
+                    "CalculateVesselAeroForces",
+                    BindingFlags.Public | BindingFlags.Static,
+                    new Type[] { typeof(Vessel), typeof(Vector3).MakeByRefType(), typeof(Vector3).MakeByRefType(), typeof(Vector3), typeof(double) }
+                );
+                if (FARCalculateVesselAeroForcesMethodInfo == null){
+                    Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no CalculateVesselAeroForces method, disabling FAR");
+                    isLoadedFAR = false;
+                }
+                else
+                {
+                    FARCalculateVesselAeroForces = (FARCalculateVesselAeroForcesDelegate)Delegate.CreateDelegate(typeof(FARCalculateVesselAeroForcesDelegate), FARCalculateVesselAeroForcesMethodInfo);
+                }
+            }
         }
 
         static bool isAssemblyLoaded(string assemblyName)
@@ -330,10 +381,43 @@ namespace MuMech
                 return type.GetField(fieldName);
         }
 
+        static MethodInfo getMethodByReflection(String assemblyString, String className, String methodName, BindingFlags flags, Type[] args)
+        {
+            string assemblyName = "";
+
+            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+            {
+                if (loaded.assembly.GetName().Name == assemblyString)
+                {
+                    assemblyName = loaded.assembly.FullName;
+                }
+            }
+
+            if (assemblyName == "")
+            {
+                return null;
+            }
+
+            Type type = Type.GetType(className + ", " + assemblyName);
+
+            if (type == null)
+            {
+                return null;
+            }
+            return type.GetMethod(methodName, flags, null, args, null);
+        }
+
 
         public VesselState()
         {
-            TerminalVelocityCall = TerminalVelocityStockKSP;
+            if (isLoadedFAR)
+            {
+                TerminalVelocityCall = TerminalVelocityFAR;
+            }
+            else
+            {
+                TerminalVelocityCall = TerminalVelocityStockKSP;
+            }
         }
 
         //public static bool SupportsGimbalExtension<T>() where T : PartModule
@@ -519,19 +603,27 @@ namespace MuMech
             speedSurfaceHorizontal.value = Vector3d.Exclude(up, surfaceVelocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
             speedOrbitHorizontal = (orbitalVelocity - (speedVertical * up)).magnitude;
 
-            // Angle of attack, angle between surface velocity and the vessel's "up" vector
-            // Originally from ferram4's FAR
-            Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
-                           + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, surfaceVelocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-            double tmpAoA = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
-            AoA.value = double.IsNaN(tmpAoA) || speedSurface.value < 0.01 ? 0 : tmpAoA;
+            if (isLoadedFAR)
+            {
+                AoA.value = FARVesselAoA(vessel);
+                AoS.value = FARVesselSideslip(vessel);
+            }
+            else
+            {
+                // Angle of attack, angle between surface velocity and the vessel's "up" vector
+                // Originally from ferram4's FAR
+                Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
+                               + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, surfaceVelocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+                double tmpAoA = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward));
+                AoA.value = double.IsNaN(tmpAoA) || speedSurface.value < 0.01 ? 0 : tmpAoA;
 
-            // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
-            // Originally from ferram4's FAR
-            tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
-                   + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
-            double tempAoS = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
-            AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
+                // Angle of Sideslip, angle between surface velocity and the vessel's "right" vector
+                // Originally from ferram4's FAR
+                tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized)
+                       + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, surfaceVelocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
+                double tempAoS = UtilMath.Rad2Deg * Math.Asin(Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right));
+                AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
+            }
 
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
@@ -551,7 +643,15 @@ namespace MuMech
             double temperature = FlightGlobals.getExternalTemperature(altitudeASL);
             atmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure, temperature);
             atmosphericDensityGrams = atmosphericDensity * 1000;
-            dynamicPressure = vessel.dynamicPressurekPa * 1000;
+            if (isLoadedFAR)
+            {
+                dynamicPressure = FARVesselDynPres(vessel) * 1000;
+            }
+            else
+            {
+                dynamicPressure = vessel.dynamicPressurekPa * 1000;
+            }
+
 
             speedOfSound = vessel.speedOfSound;
 
@@ -756,8 +856,16 @@ namespace MuMech
             pureDragV = Vector3d.zero;
             pureLiftV = Vector3d.zero;
 
-            dragCoef = 0;
-            areaDrag = 0;
+            if (isLoadedFAR)
+            {
+                dragCoef = FARVesselDragCoeff(vessel);
+                areaDrag = FARVesselRefArea(vessel);
+            }
+            else
+            {
+                dragCoef = 0;
+                areaDrag = 0;
+            }
 
             CoL = Vector3d.zero;
             CoLScalar = 0;
@@ -785,8 +893,11 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                dragCoef += p.DragCubes.DragCoeff;
-                areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+                if (!isLoadedFAR)
+                {
+                    dragCoef += p.DragCubes.DragCoeff;
+                    areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+                }
 
                 for (int index = 0; index < vesselStatePartExtensions.Count; index++)
                 {
@@ -974,24 +1085,45 @@ namespace MuMech
             if (CoLScalar > 0)
                 CoL = CoL / CoLScalar;
 
-            pureDragV = pureDragV / mass;
-            pureLiftV = pureLiftV / mass;
-
-            pureDrag = pureDragV.magnitude;
-
-            pureLift = pureLiftV.magnitude;
-
-            Vector3d force = pureDragV + pureLiftV;
             Vector3d liftDir = -Vector3d.Cross(vessel.transform.right, -surfaceVelocity.normalized);
 
-            // Drag is the part (pureDrag + PureLift) applied opposite of the surface vel
-            drag = Vector3d.Dot(force, -surfaceVelocity.normalized);
-            // DragUp is the part (pureDrag + PureLift) applied in the "Up" direction
-            dragUp = Vector3d.Dot(pureDragV, up);
-            // Lift is the part (pureDrag + PureLift) applied in the "Lift" direction
-            lift = Vector3d.Dot(force, liftDir);
-            // LiftUp is the part (pureDrag + PureLift) applied in the "Up" direction
-            liftUp = Vector3d.Dot(force, up);
+            if (isLoadedFAR && !vessel.packed && surfaceVelocity != Vector3d.zero)
+            {
+                Vector3 farForce = Vector3.zero;
+                Vector3 farTorque = Vector3.zero;
+                FARCalculateVesselAeroForces(vessel, out farForce, out farTorque, surfaceVelocity, altitudeASL);
+
+                Vector3d farDragVector = Vector3d.Dot(farForce, -surfaceVelocity.normalized) * -surfaceVelocity.normalized;
+                drag = farDragVector.magnitude / mass;
+                dragUp = Vector3d.Dot(farDragVector, up) / mass;
+                pureDragV = farDragVector;
+                pureDrag = drag;
+
+                Vector3d farLiftVector = Vector3d.Dot(farForce, liftDir) * liftDir;
+                lift = farLiftVector.magnitude / mass;
+                liftUp = Vector3d.Dot(farForce, up) / mass; // Use farForce instead of farLiftVector to match code for stock aero
+                pureLiftV = farLiftVector;
+                pureLift = lift;
+            }
+            else
+            {
+                pureDragV = pureDragV / mass;
+                pureLiftV = pureLiftV / mass;
+
+                pureDrag = pureDragV.magnitude;
+
+                pureLift = pureLiftV.magnitude;
+
+                Vector3d force = pureDragV + pureLiftV;
+                // Drag is the part (pureDrag + PureLift) applied opposite of the surface vel
+                drag = Vector3d.Dot(force, -surfaceVelocity.normalized);
+                // DragUp is the part (pureDrag + PureLift) applied in the "Up" direction
+                dragUp = Vector3d.Dot(pureDragV, up);
+                // Lift is the part (pureDrag + PureLift) applied in the "Lift" direction
+                lift = Vector3d.Dot(force, liftDir);
+                // LiftUp is the part (pureDrag + PureLift) applied in the "Up" direction
+                liftUp = Vector3d.Dot(force, up);
+            }
 
             maxEngineResponseTime = einfo.maxResponseTime;
         }
@@ -1110,6 +1242,11 @@ namespace MuMech
             if (mainBody == null || altitudeASL > mainBody.RealMaxAtmosphereAltitude()) return double.PositiveInfinity;
 
             return Math.Sqrt((2000 * mass * localg) / (areaDrag * vesselRef.atmDensity));
+        }
+
+        public double TerminalVelocityFAR()
+        {
+            return FARVesselTermVelEst(vesselRef);
         }
 
         public double ThrustAccel(double throttle)

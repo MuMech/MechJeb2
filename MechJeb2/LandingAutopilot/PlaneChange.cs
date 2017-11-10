@@ -19,7 +19,7 @@ namespace MuMech
             //Could make this an iterative procedure for improved accuracy
             Vector3d ComputePlaneChange()
             {
-                Vector3d targetRadialVector = core.vessel.mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+                Vector3d targetRadialVector = core.vessel.mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
                 Vector3d currentRadialVector = core.vesselState.CoM - core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 //this calculation seems like it might be be working right:
@@ -46,7 +46,7 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                Vector3d targetRadialVector = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+                Vector3d targetRadialVector = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
                 Vector3d currentRadialVector = vesselState.CoM - mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, vesselState.orbitalVelocity) > 0;
