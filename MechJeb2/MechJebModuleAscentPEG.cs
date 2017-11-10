@@ -160,8 +160,6 @@ namespace MuMech
 
                 if (peg.finished)
                 {
-                    status = "Angular momentum target reached";
-                    peg.enabled = false;
                     mode = AscentMode.EXIT;
                     return;
                 }
