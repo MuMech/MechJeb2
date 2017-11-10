@@ -2,14 +2,60 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/*
+ * PEG algorithm, mostly from:
+ *
+ * https://ntrs.nasa.gov/search.jsp?R=19760020204
+ *
+ * Jaggers 1976 is mostly referencing and builds atop the implementation in:
+ *
+ * https://ntrs.nasa.gov/search.jsp?R=19790048206
+ *
+ * Some additional tweaks from:
+ *
+ * https://arc.aiaa.org/doi/abs/10.2514/6.1977-1051 (very different thrust integral / gravity integral formulation which is not used here)
+ *
+ * Related earlier work for background:
+ *
+ * https://ntrs.nasa.gov/search.jsp?R=19740024190
+ *
+ */
+
+/*
+ *  Higher Priority / Nearer Term TODO list:
+ *
+ *  - why do we have to pin omega to 0.00001 or else have some launches freak out? (linear tangent/angle stuff from Jaggers1976)
+ *  - the iy corrector for free-lan mode from Jaggers1977 seems to not work well for inclinations below the launch latitude
+ *  - external delta-v mode and hooking PEG up to the NodeExecutor
+ *  - fixing the angular momentum cutoff to be smarter (requirement for NodeExecutor)
+ *  - "FREE" inclination mode (in-plane maneuvers -- requirement for NodeExecutor)
+ *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
+ *
+ *  Medium Priority / Medium Term TODO list:
+ *
+ *  - injection into orbits at other than the periapsis
+ *  - matching planes with contract orbits
+ *  - launch to rendevous with space-stations (engine throttling?)
+ *  - Lambert-driven end conditions
+ *  - direct ascent to Lunar intercept
+ *  - J^2 fixes for Principia
+ *
+ *  Wishlist for PEG Nirvana:
+ *
+ *  - throttling down core engine asymmetrically until booster sep (Delta IV Heavy)
+ *  - constant accelleration phase through throttle down (space shuttle style g-limiting)
+ *  - timed stage-and-a-half booster separation (Atlas I/II)
+ *  - PEG for landing
+ *  - launch to free-return around Moon (with and without N-body Principia)
+ *  - direct ascent to interplanetary trajectories, 'cuz why the hell not?
+ */
+
 namespace MuMech
 {
     public class MechJebModulePEGController : ComputerModule
     {
         public MechJebModulePEGController(MechJebCore core) : base(core) { }
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble stageLowDVLimit = new EditableDouble(20);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble terminalGuidanceTime = new EditableDouble(10);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -19,7 +65,7 @@ namespace MuMech
         public Vector3d lambdaDot;
         public double t_lambda;
         public Vector3d iF;
-        public double phi { get { return omega * K; } }
+        public double phi { get { return omega * K * UtilMath.Rad2Deg; } }
         public double primerMag { get { return ( lambda + lambdaDot * ( vesselState.time - t_lambda ) ).magnitude; } }  /* FIXME: incorrect */
         public double pitch;
         public double heading;
@@ -98,7 +144,7 @@ namespace MuMech
         // target burnout angle
         private double gamma;
         // tangent plane (minus orbit normal for PEG)
-        private Vector3d iy;
+        public Vector3d iy;
         // inclination target for FREE_LAN
         private double incval;
 
@@ -198,6 +244,8 @@ namespace MuMech
                 failed = true;
             }
             last_PEG = vesselState.time;
+            log_stages();
+            Debug.Log("----==-- END ---------");
         }
 
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
@@ -329,6 +377,7 @@ namespace MuMech
 
                 lambdaDot = ( rgo - S * lambda ) / Q;
                 omega = lambdaDot.magnitude;
+                /* not pinning omega here leads to instability during launches on some flights */
                 /* if ( omega * K > phiMax )
                     omega = phiMax / K;
                 if ( omega < 0.00001 ) */
@@ -469,6 +518,12 @@ namespace MuMech
             }
         }
 
+        private void Done()
+        {
+            users.Clear();
+            finished = true;
+        }
+
         private void Fail()
         {
             failed = true;
@@ -502,8 +557,7 @@ namespace MuMech
             if ( vacStats[i].deltaV <= 0 )
                 return -1;
 
-            // mostly this is useful for tracking the final stage when its dV falls below the stageLowDVLimit
-            // and for copying old stages to the new stagelist and thereby reducing garbage
+            // this is used to copy stages from the oldlist to the newlist and reduce garbage
             for ( int j = 0; j < stages.Count; j++ )
             {
                 if ( stages[j].kspStage == i && stages[j].PartsListMatch(vacStats[i].parts) )
@@ -529,6 +583,7 @@ namespace MuMech
                 stages[i].thrust = mjstats[k].startThrust;
                 stages[i].dt = mjstats[k].deltaTime;
                 stages[i].Li = mjstats[k].deltaV;
+                Debug.Log("stage: " + i + " mjstage: " + k + " Li: " + stages[i].Li);
                 stages[i].tau = stages[i].ve / stages[i].a0;
                 stages[i].mdot = stages[i].thrust / stages[i].ve;
             }
@@ -541,12 +596,13 @@ namespace MuMech
             for ( int i = vacStats.Length-1; i >= 0; i-- )
             {
                 int j;
-                if ( ( j = MatchInOldStageList(i) ) > 0 ) {
+                if ( ( j = MatchInOldStageList(i) ) > 0 )
+                {
                     newlist.Add(stages[j]);
                     stages.RemoveAt(j);
                     continue;
                 }
-                if ( vacStats[i].deltaV > stageLowDVLimit )
+                if ( vacStats[i].deltaV > 0 )
                 {
                     StageInfo stage = new StageInfo();
                     stage.kspStage =  i;
