@@ -65,7 +65,6 @@ namespace MuMech
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reset PEG"))
                 peg.Reset();
-            GuiUtils.SimpleTextBox("Stage Minimum dV Limit:", peg.stageLowDVLimit, "m/s");
 
             for(int i = peg.stages.Count - 1; i >= 0; i--) {
                 GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1}", i, peg.stages[i].kspStage, peg.stages[i].dt, peg.stages[i].Li));
@@ -76,6 +75,7 @@ namespace MuMech
             GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
             GUILayout.Label(String.Format("primer mag: {0:F1}", peg.primerMag));
             GUILayout.Label(String.Format("phi: {0:F1}", peg.omega * UtilMath.Rad2Deg));
+            GUILayout.Label(String.Format("target inc: {0:F1}", Math.Acos(Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
