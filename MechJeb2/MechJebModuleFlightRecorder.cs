@@ -93,9 +93,15 @@ namespace MuMech
             DeltaVExpended
         }
 
-        public record[] history = new record[3000];
+        public record[] history = new record[1];
 
         public int historyIdx = -1;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int historySize = 3000;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public double precision = 0.2;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool downrange = true;
@@ -116,9 +122,7 @@ namespace MuMech
 
         public double[] maximums;
         public double[] minimums;
-
-        private double precision = 0.2;
-
+        
         private bool paused = false;
 
         [Persistent(pass = (int)Pass.Local)]
@@ -220,6 +224,8 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (history.Length != historySize)
+                history = new record[historySize];
             this.users.Add(this); //flight recorder should always run.
         }
 
