@@ -22,10 +22,20 @@ using System.Collections.Generic;
  */
 
 /*
+ *  MAYBE/RESEARCH list:
+ *
+ *  - setting for linear tangent / linear angle to switch between clipping omega to 0.00001 or not?
+ *  - allow tweaking the corrector vmiss gain?
+ *  - should vd = vp before projecting vp into the iy plane?
+ *  - when omega is clipped should the magnitude of lambdaDot be adjusted?
+ *  - what should phimax be clipped to?
+ *  - can the Jaggers1977 tweaks to the corrector be fixed, will they give better terminal guidance or anything?
+ *  - f2 and f3 tweaks from the Jaggers papers?
+ *
  *  Higher Priority / Nearer Term TODO list:
  *
- *  - why do we have to pin omega to 0.00001 or else have some launches freak out? (linear tangent/angle stuff from Jaggers1976)
  *  - the iy corrector for free-lan mode from Jaggers1977 seems to not work well for inclinations below the launch latitude
+ *  - the iy corrector seems to have lambda/lambdaDot orthogonality issues?
  *  - external delta-v mode and hooking PEG up to the NodeExecutor
  *  - fixing the angular momentum cutoff to be smarter (requirement for NodeExecutor)
  *  - "FREE" inclination mode (in-plane maneuvers -- requirement for NodeExecutor)
@@ -65,7 +75,7 @@ namespace MuMech
         public Vector3d lambdaDot;
         public double t_lambda;
         public Vector3d iF;
-        public double phi { get { return omega * K * UtilMath.Rad2Deg; } }
+        public double phi { get { return omega * K; } }
         public double primerMag { get { return ( lambda + lambdaDot * ( vesselState.time - t_lambda ) ).magnitude; } }  /* FIXME: incorrect */
         public double pitch;
         public double heading;
@@ -125,7 +135,7 @@ namespace MuMech
         private Vector3d rgo;  // FIXME: temp for graphing
 
         private double last_PEG;    // this is the last PEG update time
-        private double K;
+        public double K;
 
         public List<StageInfo> stages = new List<StageInfo>();
 
@@ -244,8 +254,6 @@ namespace MuMech
                 failed = true;
             }
             last_PEG = vesselState.time;
-            log_stages();
-            Debug.Log("----==-- END ---------");
         }
 
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
@@ -264,6 +272,9 @@ namespace MuMech
         {
             failed = true;
 
+            Vector3d r = vesselState.orbitalPosition;
+            Vector3d v = vesselState.orbitalVelocity;
+
             double gm = mainBody.gravParameter;
 
             // value of tgo from previous iteration
@@ -277,15 +288,15 @@ namespace MuMech
                 // rd initialized to rdval-length vector 20 degrees downrange from r
                 rd = QuaternionD.AngleAxis(20, -iy) * vesselState.up * rdval;
                 // vgo initialized to rdval-length vector perpendicular to rd, minus current v
-                vgo = Vector3d.Cross(-iy, rd).normalized * vdval - vesselState.orbitalVelocity;
+                vgo = Vector3d.Cross(-iy, rd).normalized * vdval - v;
                 tgo = 1;
             }
             else
             {
                 tgo_prev = tgo;
-                Vector3d dvsensed = vesselState.orbitalVelocity - vprev;
+                Vector3d dvsensed = v - vprev;
                 vgo = vgo - dvsensed;
-                vprev = vesselState.orbitalVelocity;
+                vprev = v;
             }
 
             // need accurate stage information before thrust integrals, Li is just dV so we read it from MJ
@@ -363,8 +374,8 @@ namespace MuMech
 
             if (!initialized)
             {
-                var r = vesselState.radius;
-                rgrav = -vesselState.orbitalPosition * Math.Sqrt( gm / ( r * r * r ) ) / 2.0;
+                var rad = vesselState.radius;
+                rgrav = -r * Math.Sqrt( gm / ( rad * rad * rad ) ) / 2.0;
             }
             else
             {
@@ -373,31 +384,29 @@ namespace MuMech
 
             if (!terminalGuidance)
             {
-                double phiMax = 45.0 * UtilMath.Deg2Rad;
+                double phiMax = 30.0 * UtilMath.Deg2Rad;
 
                 lambdaDot = ( rgo - S * lambda ) / Q;
                 omega = lambdaDot.magnitude;
-                /* not pinning omega here leads to instability during launches on some flights */
-                /* if ( omega * K > phiMax )
+                if ( omega * K > phiMax )
                     omega = phiMax / K;
-                if ( omega < 0.00001 ) */
+                if ( omega < 0.00001 )
                     omega = 0.00001;
             }
 
-            rgo = rd - ( vesselState.orbitalPosition + vesselState.orbitalVelocity * tgo + rgrav );
+            rgo = rd - ( r + v * tgo + rgrav );
 
-            if ( imode == IncMode.FREE_LAN )
+            /*if ( imode == IncMode.FREE_LAN )
             {
                 Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
                 double A1 = Vector3d.Dot(rgo - Vector3d.Dot(lambda, rgo) * lambda, ip);
                 rgo = S * lambda + A1 * ip;
             }
             else
-            {
+            { */
                 rgo = rgo + ( S - Vector3d.Dot(lambda, rgo) ) * lambda;
-            }
+            /*} */
             S = f1 * S;
-
 
             f1 = ( 2.0 / ( omega * tgo ) ) * Math.Sin( omega * tgo / 2.0 );
             Vector3d rthrust = rgo;
@@ -412,8 +421,8 @@ namespace MuMech
 
             // BLOCK7 - CSE gravity averaging
 
-            Vector3d rc1 = vesselState.orbitalPosition - rthrust / 10.0 - vthrust * tgo / 30.0;
-            Vector3d vc1 = vesselState.orbitalVelocity + 1.2 * rthrust / tgo - vthrust/10.0;
+            Vector3d rc1 = r - rthrust / 10.0 - vthrust * tgo / 30.0;
+            Vector3d vc1 = v + 1.2 * rthrust / tgo - vthrust/10.0;
 
             if (!vc1.magnitude.IsFinite() || !rc1.magnitude.IsFinite() || !tgo.IsFinite())
             {
@@ -433,8 +442,8 @@ namespace MuMech
             Vector3d vgrav = vc2 - vc1;
             rgrav = rc2 - rc1 - vc1 * tgo;
 
-            Vector3d rp = vesselState.orbitalPosition + vesselState.orbitalVelocity * tgo + rgrav + rthrust;
-            Vector3d vp = vesselState.orbitalVelocity + vthrust + vgrav;
+            Vector3d rp = r + v * tgo + rgrav + rthrust;
+            Vector3d vp = v + vthrust + vgrav;
 
             // corrector
 
@@ -450,8 +459,16 @@ namespace MuMech
             Vector3d ix = rd.normalized;
             Vector3d iz = Vector3d.Cross(ix, iy);
             Vector3d vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
-            Vector3d vmiss = vp - vd;
-            vgo = vgo - 1.0 * vmiss;
+            Vector3d vmiss = vd - vp;
+            Vector3d vgo_new = vgo + 0.5 * vmiss;  // gain of 1.0 causes PEG to flail on ascents
+
+            // from Jaggers 1977 - but this tends to cause PEG to flail, maybe 0.05 is either too big or too small for ascents?
+            /* Vector3d lambdav = vgo_new.normalized;
+            double Fv = Vector3d.Dot(lambdav, vd - v) / Vector3d.Dot(lambda, vp - v ) - 1.0;
+            if ( Math.Abs(Fv) < 0.05 )
+                vgo = vgo * ( 1 + Fv );
+            else */
+                vgo = vgo_new;
 
             if ( imode == IncMode.FREE_LAN && !terminalGuidance )
             {
@@ -583,7 +600,6 @@ namespace MuMech
                 stages[i].thrust = mjstats[k].startThrust;
                 stages[i].dt = mjstats[k].deltaTime;
                 stages[i].Li = mjstats[k].deltaV;
-                Debug.Log("stage: " + i + " mjstage: " + k + " Li: " + stages[i].Li);
                 stages[i].tau = stages[i].ve / stages[i].a0;
                 stages[i].mdot = stages[i].thrust / stages[i].ve;
             }
