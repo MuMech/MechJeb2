@@ -73,9 +73,12 @@ namespace MuMech
             GUILayout.Label(String.Format("tgo: {0:F1}", peg.tgo));
             GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
             GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
-            GUILayout.Label(String.Format("primer mag: {0:F1}", peg.primerMag));
-            GUILayout.Label(String.Format("phi: {0:F1}", peg.omega * UtilMath.Rad2Deg));
-            GUILayout.Label(String.Format("target inc: {0:F1}", Math.Acos(Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
+            GUILayout.Label(String.Format("primer mag: {0:F2}", peg.primerMag));
+            GUILayout.Label(String.Format("phi: {0:F2}", peg.phi * UtilMath.Rad2Deg));
+            GUILayout.Label(String.Format("omega: {0:F5}", peg.omega ));
+            GUILayout.Label(String.Format("K: {0:F1}", peg.K ));
+            GUILayout.Label(String.Format("iy inc: {0:F4}", Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
+            GUILayout.Label(String.Format("orth. test: {0:F5}", Vector3d.Dot(peg.lambda, peg.lambdaDot)));
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
