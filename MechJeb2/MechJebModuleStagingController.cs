@@ -26,6 +26,8 @@ namespace MuMech
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
         [Persistent(pass = (int)Pass.Type)]
         public EditableDouble clampAutoStageThrustPct = 0.95;
+        [Persistent(pass = (int)Pass.Type)]
+        public EditableDoubleMult fairingMaxAerothermalHeating = new EditableDoubleMult(1135, 1);
 
         public bool autostagingOnce = false;
 
@@ -58,6 +60,7 @@ namespace MuMech
             GUILayout.Label("Stage fairings when:");
             GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
             GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
+            GuiUtils.SimpleTextBox("  aerothermal heating <", fairingMaxAerothermalHeating, "W/m^2", 50);
 
             GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
 
@@ -112,8 +115,8 @@ namespace MuMech
             //Always drop deactivated engines or tanks
             if (!InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
             {
-                //only decouple fairings if the dynamic pressure and altitude conditions are respected
-                if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude) &&
+                //only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
+                if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude || HeatFluxPerArea() > fairingMaxAerothermalHeating) &&
                     HasFairing(StageManager.CurrentStage - 1, vessel))
                     return;
 
@@ -300,6 +303,12 @@ namespace MuMech
         public static bool HasFairing(int inverseStage, Vessel v)
         {
             return v.parts.Any(p => p.inverseStage == inverseStage && (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))));
+        }
+
+        public double HeatFluxPerArea()
+        {
+            double surfaceSpeed = core.vesselState.speedSurface;
+            return core.vesselState.atmosphericDensity * surfaceSpeed * surfaceSpeed * surfaceSpeed / 2;
         }
     }
 }
