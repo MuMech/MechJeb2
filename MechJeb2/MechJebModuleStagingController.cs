@@ -60,7 +60,7 @@ namespace MuMech
             GUILayout.Label("Stage fairings when:");
             GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
             GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
-            GuiUtils.SimpleTextBox("  aerothermal heating <", fairingMaxAerothermalFlux, "W/m²", 50);
+            GuiUtils.SimpleTextBox("  aerothermal flux <", fairingMaxAerothermalFlux, "W/m²", 50);
 
             GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
 
