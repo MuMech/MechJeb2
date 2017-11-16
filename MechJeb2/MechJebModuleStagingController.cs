@@ -116,7 +116,7 @@ namespace MuMech
             if (!InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
             {
                 //only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
-                if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude || HeatFluxPerArea() > fairingMaxAerothermalFlux) &&
+                if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude || core.vesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux) &&
                     HasFairing(StageManager.CurrentStage - 1, vessel))
                     return;
 
@@ -303,12 +303,6 @@ namespace MuMech
         public static bool HasFairing(int inverseStage, Vessel v)
         {
             return v.parts.Any(p => p.inverseStage == inverseStage && (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))));
-        }
-
-        public double HeatFluxPerArea()
-        {
-            double surfaceSpeed = core.vesselState.speedSurface;
-            return core.vesselState.atmosphericDensity * surfaceSpeed * surfaceSpeed * surfaceSpeed / 2;
         }
     }
 }
