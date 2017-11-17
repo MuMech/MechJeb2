@@ -219,6 +219,8 @@ namespace MuMech
         public double intakeAirAtMax;
         [ValueInfoItem("Angle to prograde", InfoItem.Category.Orbit, format = "F2", units = "º")]
         public double angleToPrograde;
+        [ValueInfoItem("Aerothermal flux", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "W/m²")]
+        public double freeMolecularAerothermalFlux;
 
         public Vector6 rcsThrustAvailable = new Vector6(); // thrust available from RCS thrusters
 
@@ -651,6 +653,7 @@ namespace MuMech
             {
                 dynamicPressure = vessel.dynamicPressurekPa * 1000;
             }
+            freeMolecularAerothermalFlux = 0.5 * atmosphericDensity * speedSurface * speedSurface * speedSurface;
 
 
             speedOfSound = vessel.speedOfSound;
