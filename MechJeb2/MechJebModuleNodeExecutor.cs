@@ -65,6 +65,7 @@ namespace MuMech
         {
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
+            peg.users.Add(this);
         }
 
         public override void OnModuleDisabled()
@@ -72,6 +73,7 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
+            peg.users.Remove(this);
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
@@ -79,6 +81,8 @@ namespace MuMech
 
         public bool burnTriggered = false;
         public bool alignedForBurn = false;
+
+        private MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
 
         public override void OnFixedUpdate()
         {
@@ -88,13 +92,15 @@ namespace MuMech
                 return;
             }
 
-            //check if we've finished a node:
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            if (dVLeft < tolerance && core.attitude.attitudeAngleFromTarget() > 5)
+            peg.TargetNode(node);
+
+            if (burnTriggered && peg.finished)
             {
                 burnTriggered = false;
+                core.thrust.targetThrottle = 0.0F;
 
                 node.RemoveSelf();
 
@@ -127,7 +133,10 @@ namespace MuMech
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
             if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
             {
-                burnTriggered = true;
+                if (!burnTriggered)
+                {
+                    burnTriggered = true;
+                }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
             }
 
@@ -145,29 +154,14 @@ namespace MuMech
                 }
             }
 
-            core.thrust.targetThrottle = 0;
-
             if (burnTriggered)
             {
-                if (alignedForBurn)
-                {
-                    if (core.attitude.attitudeAngleFromTarget() < 90)
-                    {
-                        double timeConstant = (dVLeft > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
-                        core.thrust.ThrustForDV(dVLeft + tolerance, timeConstant);
-                    }
-                    else
-                    {
-                        alignedForBurn = false;
-                    }
-                }
-                else
-                {
-                    if (core.attitude.attitudeAngleFromTarget() < 2)
-                    {
-                        alignedForBurn = true;
-                    }
-                }
+                core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
+                core.thrust.targetThrottle = 1.0F;
+            }
+            else
+            {
+                core.thrust.targetThrottle = 0;
             }
         }
 
