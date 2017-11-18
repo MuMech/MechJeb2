@@ -862,7 +862,7 @@ namespace MuMech
             if (isLoadedFAR)
             {
                 dragCoef = FARVesselDragCoeff(vessel);
-                areaDrag = FARVesselRefArea(vessel);
+                areaDrag = FARVesselRefArea(vessel) * dragCoef * PhysicsGlobals.DragMultiplier;
             }
             else
             {
