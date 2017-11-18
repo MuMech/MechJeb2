@@ -79,6 +79,7 @@ namespace MuMech
             {
                 peg.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination);
             }
+            peg.AscentInit();
         }
 
         private void attitudeToPEG(double pitch)
