@@ -2,8 +2,12 @@ using System;
 using UnityEngine;
 
 /*
- * alternative to using the Orbit class to do state prediction
- * benefits:  fast, no garbage, works in the atmosphere without the inverse rotation issue
+ * This is the Space-Shuttle Conic State Extrpolator
+ *
+ * I belive it is Goodyear's universal variables with Battin's normalization.
+ *
+ * The main benefit over KSP's Orbit class is its a bit faster, and there's no gawdawful
+ * Inverse Rotation issues in the atmosphere.
  */
 
 namespace MuMech
