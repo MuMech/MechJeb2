@@ -5,48 +5,16 @@ using System.Collections.Generic;
 /*
  * PEG algorithm, which begins mostly with the implementation in:
  *
+ * - https://arc.aiaa.org/doi/abs/10.2514/6.1977-1051 (Jaggers1977)
+ * - https://ntrs.nasa.gov/search.jsp?R=19760020204 (Jaggers1976)
  * - https://ntrs.nasa.gov/search.jsp?R=19790048206 (Mchenry1979)
  * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19760024151.pdf (Langston1976)
- *
- * The additional thrust integration and predictor corrections were taken from:
- *
- * - https://ntrs.nasa.gov/search.jsp?R=19760020204 (Jaggers1976)
- *
- * Some additional tweaks were applied from:
- *
- * - https://arc.aiaa.org/doi/abs/10.2514/6.1977-1051 (Jaggers1977)
- *
- * Related earlier works:
- *
  * - https://ntrs.nasa.gov/search.jsp?R=19740024190 (Jaggers1974)
  * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740004402.pdf (Brand1973)
  *
  * Best Guess at Next Generation:
  *
- * - http://sci-hub.cc/10.2514/6.2008-6288 (simple atmospheric gravity turn optimization -- requires simulation of PEG)
  * - https://arc.aiaa.org/doi/abs/10.2514/6.2012-4843 (Ping Lu's updated PEG)
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20030000844.pdf (Dukeman's closed-loop guidance)
- *
- * Ares I/Dukeman
- *
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20030000844.pdf
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20080048217.pdf
- * - https://mospace.umsystem.edu/xmlui/bitstream/handle/10355/5648/research.pdf
- *
- * Ping Lu endoatmospheric homotopy method:
- *
- * - http://lib.dr.iastate.edu/cgi/viewcontent.cgi?article=2595&context=rtd
- * - https://arc.aiaa.org/doi/abs/10.2514/2.4712
- * - https://arc.aiaa.org/doi/abs/10.2514/2.5045?journalCode=jgcd
- * - https://arc.aiaa.org/doi/abs/10.2514/6.2010-8174
- *
- * Ping Lu FNPEG:
- *
- * - https://arc.aiaa.org/doi/abs/10.2514/1.G000327?journalCode=jgcd
- *
- * Convex optimization:
- *
- * - e.g. https://arc.aiaa.org/doi/abs/10.2514/1.62110 and all papers that cite this
  *
  */
 
@@ -101,9 +69,10 @@ namespace MuMech
         public Vector3d lambda;
         public Vector3d lambdaDot;
         public double t_lambda;
-        public Vector3d iF;
+        public Vector3d primer;
+        public Vector3d iF { get { return primer.normalized; } }
         public double phi { get { return lambdaDot.magnitude * K; } }
-        public double primerMag { get { return ( lambda + lambdaDot * ( vesselState.time - t_lambda ) ).magnitude; } }  /* FIXME: incorrect */
+        public double primerMag { get { return primer.magnitude; } }
         public double pitch;
         public double heading;
 
@@ -159,6 +128,8 @@ namespace MuMech
         private Vector3d vd;
         private Vector3d rp;
         private Vector3d vp;
+        private double F1, F2, F3;
+        private double ldm;
 
         private double last_PEG;    // this is the last PEG update time
         private double last_call;   // this is the last call to converge
@@ -349,7 +320,7 @@ namespace MuMech
             double sinTheta = Vector3d.Dot(lambda, vesselState.up);
             double z = vesselState.time - t_lambda;
             double w = Math.Sqrt( mainBody.gravParameter / ( vesselState.radius * vesselState.radius * vesselState.radius ) );
-            iF = ( lambda * Math.Cos(w * z) + lambdaDot / w * Math.Sin(w * z)  + 3.0 * w * z / 2.0 * sinTheta * Math.Sin(w * z) * vesselState.up ).normalized;
+            primer = lambda * Math.Cos(w * z) + lambdaDot / w * Math.Sin(w * z)  + 3.0 * w * z / 2.0 * sinTheta * Math.Sin(w * z) * vesselState.up;
             pitch = 90.0 - Vector3d.Angle(iF, vesselState.up);
             Vector3d headingDir = iF - Vector3d.Project(iF, vesselState.up);
             heading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(headingDir, vesselState.east), Vector3d.Dot(headingDir, vesselState.north));
@@ -370,9 +341,13 @@ namespace MuMech
                 lambda = v.normalized;
                 tgo = 1;
                 Dv = v.normalized * 1;
-                lambdaDot = Vector3d.zero;
+                lambdaDot = Vector3d.up;
                 rp = r + v * tgo;
                 vp = v;
+                ldm = 0.00001;
+                F1 = 1.0;
+                F2 = 1.0;
+                F3 = 1.0;
             }
             else
             {
@@ -386,6 +361,8 @@ namespace MuMech
 
             // need accurate stage information before thrust integrals, Li is just dV so we read it from MJ
             UpdateStages();
+
+            log_stages();
 
             // find out how many stages we really need and clean up the Li (dV) and dt of the upper stage
             double Dv_temp_mag = Dv.magnitude;
@@ -405,6 +382,7 @@ namespace MuMech
                 }
             }
 
+
             // zero out all the upper stages
             for(int i = last_stage + 1; i < stages.Count; i++)
             {
@@ -412,8 +390,6 @@ namespace MuMech
                 stages[i].Qi = stages[i].Pi = stages[i].Hi = 0;
                 stages[i].dt = 0;
             }
-
-            log_stages();
 
             // compute cumulative tgo's
             double tgo2 = 0;
@@ -443,6 +419,7 @@ namespace MuMech
                 stages[i].updateIntegrals();
             }
 
+
             for(int i = 0; i <= last_stage; i++)
             {
                 double SA = 0.0;
@@ -458,13 +435,68 @@ namespace MuMech
                 Q += stages[i].Qi + QA * stages[i].dt;
             }
 
-            double ldm = lambdaDot.magnitude;
-            if (ldm < 0.00001)
+            Debug.Log("L = " + L + " J = " + J + " S = " + S + " Q = " + Q );
+
+            K = tgo - S / L;
+            double LT = F1 * L;
+            double QT = F2 * ( Q - S * K );
+            double ST = F3 * S;
+
+            // steering
+            lambda = Dv.normalized;
+
+            if (!initialized)
+            {
+                rgrav = -vesselState.orbitalPosition * Math.Sqrt( gm / ( rm * rm * rm ) ) / 2.0;
+            }
+            else
+            {
+                rgrav = tgo * tgo / ( tgo_prev * tgo_prev ) * rgrav;
+            }
+
+            rgo = rd - ( r + v * tgo + rgrav );
+
+            /*
+            if ( imode == IncMode.FREE_LAN && !terminalGuidance )
+            {
+                Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
+                double Q1 = Vector3d.Dot(rgo - Vector3d.Dot(lambda, rgo) * lambda, ip);
+                rgo = S * lambda + Q1 * ip;
+            }
+            */
+
+            rgo = rgo + ( ST - Vector3d.Dot(lambda, rgo) ) * lambda;
+
+            double phiMax = 45.0 * UtilMath.Deg2Rad;
+
+            /*
+               if (tmode == TargetMode.ORBIT)
+               {
+               var rad = vesselState.radius;
+               double lambdaDot_xz = 0.35 * Math.Sqrt( gm / ( rad * rad * rad ) );
+               lambdaDot = lambdaDot_xz * ( Vector3d.Cross( lambda, iy ) );
+               }
+               else
+               { */
+            lambdaDot = ( rgo - ST * lambda ) / QT;
+            /*
+               }
+               */
+
+            Debug.Log("lambdaDot = " + lambdaDot);
+
+            ldm = lambdaDot.magnitude;
+
+            if ( ldm > phiMax / K )
+            {
+                ldm = phiMax / K;
+            }
+            if ( ldm < 0.00001 )
+            {
                 ldm = 0.00001;
+            }
 
             double Kp = tgo / 2;
-            if (ldm * Kp > 45.0 * UtilMath.Deg2Rad)
-                ldm = 45.0 * UtilMath.Deg2Rad / Kp;
             double theta = ldm * Kp;
             double f1 = Math.Sin(theta) / theta;
             double f2 = 3.0 * ( f1 - Math.Cos(theta) ) / ( theta * theta );
@@ -473,81 +505,24 @@ namespace MuMech
             double D = L * Kp - S;
             double Jp = f2 * D;
             double Qp = ( - L * Kp * Kp / 3.0 + D * Kp ) * f2;
-            K = tgo - S / L;
             double delta = ldm * ( K - tgo / 2.0);
-            double F1 = f1 * Math.Cos( delta );
-            double F2 = f2 * Math.Cos( delta );
-            double F3 = F1 * ( 1.0 - theta * delta / 3.0 );
-            double LT = F1 * L;
-            double QT = F2 * ( Q - S * K );
-            double ST = F3 * S;
+            F1 = f1 * Math.Cos( delta );
+            F2 = f2 * Math.Cos( delta );
+            F3 = F1 * ( 1.0 - theta * delta / 3.0 );
+            LT = F1 * L;
+            QT = F2 * ( Q - S * K );
+            ST = F3 * S;
+
+            t_lambda = vesselState.time + Math.Tan( ldm * K ) / ldm;
+
+                Debug.Log("ldm = " + ldm + " lambdaDot.magnitude = " + lambdaDot.magnitude + " theta = " + theta * UtilMath.Rad2Deg + " thetanext = " + ( lambdaDot.magnitude * K * UtilMath.Rad2Deg )) ;
 
             Debug.Log("Kp:" + Kp + " theta:" + theta + " f1:" + f1 + " f2:" + f2 + " Lp:" + Lp + " Sp:" + Sp + " D:" + D + " Jp:" + Jp + " Qp:" + Qp + " K:" + K + " delta:" + delta + " F1:" + F1 + " F2:" + F2 + " F3:" + F3 + " LT:" + LT + " QT:" + QT + " ST:" + ST);
 
             Vector3d vgo = F1 * Dv;
+            Vector3d rthrust = QT * ldm * lambdaDot.normalized + ST * lambda;
+            rgo = rthrust;
 
-            // steering
-            lambda = vgo.normalized;
-
-            if (!initialized)
-            {
-                rgrav = -r * Math.Sqrt( gm / ( rm * rm * rm ) ) / 2.0;
-            }
-            else
-            {
-                rgrav = tgo * tgo / ( tgo_prev * tgo_prev ) * rgrav;
-            }
-
-            double theta1 = tgo * Math.Sqrt( gm / (rm * rm * rm )) / 2.0;
-            double rpm = rp.magnitude;
-            double theta2 = tgo * Math.Sqrt( gm / (rpm * rpm * rpm )) / 2.0;
-            double T1 = Math.Tan(theta1) / theta1;
-            double T2 = Math.Tan(theta2) / theta2;
-
-            rgo = rd / T2 - r / T1 - tgo * ( v + vd - vgo ) / 2.0;
-
-            if ( imode == IncMode.FREE_LAN && !terminalGuidance )
-            {
-                Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
-                double A1 = Vector3d.Dot(rgo - Vector3d.Dot(lambda, rgo) * lambda, ip);
-                rgo = S * lambda + A1 * ip;
-            }
-
-            rgo = rgo + ( ST - Vector3d.Dot(lambda, rgo) ) * lambda;
-
-            /* if (!terminalGuidance)
-            { */
-                double phiMax = 45.0 * UtilMath.Deg2Rad;   // 90 is definitely too high
-
-                if (tmode == TargetMode.ORBIT)
-                {
-                    var rad = vesselState.radius;
-                    double lambdaDot_xz = 0.35 * Math.Sqrt( gm / ( rad * rad * rad ) );
-                    lambdaDot = lambdaDot_xz * ( Vector3d.Cross( lambda, iy ) );
-                }
-                else
-                {
-                    lambdaDot = ( rgo - ST * lambda ) / QT;
-                }
-
-/*                if ( lambdaDot.magnitude > phiMax / K )
-                {
-                    lambdaDot = lambdaDot.normalized * phiMax / K;
-                    rgo = lambdaDot * QT + ST * lambda;
-                } */
-                if ( lambdaDot.magnitude < 0.00001 )
-                {
-                    lambdaDot = lambdaDot.normalized * 0.00001;
-                    /* rgo = lambdaDot * QT + ST * lambda; */
-                }
-          /*  } */
-
-            t_lambda = vesselState.time + Math.Tan( lambdaDot.magnitude * K ) / lambdaDot.magnitude;
-
-            // Vector3d rthrust = rgo;
-            // Vector3d vthrust = vgo;
-
-            Debug.Log("rthrust = " + rgo + " vthrust = " + vgo);
 
             // going faster than the speed of light or doing burns the length of the Oort cloud are not supported...
             if (!vgo.magnitude.IsFinite() || !rgo.magnitude.IsFinite() || (vgo.magnitude > 1E10) || (rgo.magnitude > 1E16))
@@ -556,22 +531,45 @@ namespace MuMech
                 return;
             }
 
-            // BLOCK7 - CSE gravity averaging
+/*
+            // gravity + total integrals
+            double rf1 = 3.0 * Vector3d.Dot( v, r ) / ( rm * rm );
+            double B1 = - 2.0 * theta1 * theta1 / tgo;
+
+            int c = 30;
+            do {
+                rpm = rp.magnitude;
+                theta2 = tgo * Math.Sqrt( gm / (rpm * rpm * rpm )) / 2.0;
+                T2 = Math.Tan(theta2) / theta2;
+                double rf2 = 3.0 * Vector3d.Dot( vp, rp ) / ( rpm * rpm );
+
+                double B2 = - 2.0 * theta2 * theta2 / tgo;
+                double A1 = T2 * B1 + ( B2 - T2 / T1 ) * rf1;
+                double A2 = T2 * B2 - ( T2 - 1.0 ) * rf2;
+                double A3 = 1.0 / T1 + A1 / tgo / 2.0;
+                double A4 = 1.0 / T2 - A2 / tgo / 2.0;
+
+                rp = ( A3 * r + tgo / 2.0 * ( ( 1.0 + T2 / T1 ) * v + ( T2 - 1.0 ) * vgo ) + rgo ) / A4;
+                vp = ( T2 / T1 ) * v + A1 * r + A2 * rp + T2 * vgo;
+                c++;
+            } while ( Math.Abs(rp.magnitude - rpm) > 33 && c >= 0 );
+
+            if (c < 0)
+            {
+                Debug.Log("gravity integral calc failed to converge!");
+                Fail();
+                return;
+            }
+*/
 
             Vector3d rc1 = r - rgo / 10.0 - vgo * tgo / 30.0;
             Vector3d vc1 = v + 1.2 * rgo / tgo - vgo/10.0;
 
-            if (!vc1.magnitude.IsFinite() || !rc1.magnitude.IsFinite() || !tgo.IsFinite())
-            {
-                Fail();
-                return;
-            }
-
             Vector3d rc2, vc2;
 
             //CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
-            //ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
-            CSESimple(rc1, vc1, tgo, out rc2, out vc2);
+            ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
+            //CSESimple(rc1, vc1, tgo, out rc2, out vc2);
 
             Vector3d vgrav = vc2 - vc1;
             rgrav = rc2 - rc1 - vc1 * tgo;
@@ -584,46 +582,30 @@ namespace MuMech
             vmissGain = MuUtils.Clamp(vmissGain, 0.01, 1.0);
 
             rp = rp - Vector3d.Dot(rp, iy) * iy;
-       /*     if (terminalGuidance)
-            {
-                rd = rp;
-            }
-            else
-            { */
-                if (tmode == TargetMode.ORBIT)
-                {
-                    rdval = targetOrbit.SwappedRelativePositionAtUT(vesselState.time + tgo).magnitude;
-                    vdval = targetOrbit.SwappedOrbitalVelocityAtUT(vesselState.time + tgo).magnitude;
-                    // FIXME: set gamma
-                }
-          /*  } */
             Vector3d ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
             rd = rdval * ix;
             Vector3d iz = Vector3d.Cross(ix, iy);
-            if (tmode == TargetMode.PERIAPSIS)
-            {
-                vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
-            }
-            else
-            {
-                vd = targetOrbit.SwappedOrbitalVelocityAtUT(vesselState.time + tgo);
-            }
+            vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
 
             Vector3d vmiss = vd - vp;
             Dv = Dv + vmissGain * vmiss;  // gain of 1.0 causes PEG to flail on ascents
 
+            /*
             Vector3d lambdav = Dv.normalized;
             Fv = Vector3d.Dot(lambdav, vd - v) / Vector3d.Dot(lambda, vp - v ) - 1.0;
             if ( tgo < 300 && Math.Abs(Fv) < 0.05 )
                 Dv = Dv * ( 1 + Fv );
+                */
 
+           /*
             if ( imode == IncMode.FREE_LAN && !terminalGuidance )
             {
-                /* correct iy to fixed inc with free LAN */
+                // correct iy to fixed inc with free LAN
                 double d = Vector3d.Dot( -Planetarium.up, ix );
                 double SE = - 0.5 * ( Vector3d.Dot( -Planetarium.up, iy) + Math.Cos(incval * UtilMath.Deg2Rad) ) * Vector3d.Dot( -Planetarium.up, iz ) / (1 - d * d);
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
+            */
 
             // housekeeping
             initialized = true;
@@ -864,6 +846,8 @@ namespace MuMech
                        "tau = " + tau + "\n" +
                        "dt = " + dt + "\n" +
                        "Li = " + Li + "\n" +
+                       "Si = " + Si + "\n" +
+                       "Ji = " + Ji + "\n" +
                        "Parts = ";
 
                 for(int i=0; i < parts.Count; i++)
