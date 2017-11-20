@@ -69,7 +69,7 @@ namespace MuMech
             for(int i = peg.stages.Count - 1; i >= 0; i--) {
                 GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1}", i, peg.stages[i].kspStage, peg.stages[i].dt, peg.stages[i].Li));
             }
-            GUILayout.Label(String.Format("Dv: {0:F1}", peg.Dv.magnitude));
+            GUILayout.Label(String.Format("vgo: {0:F1}", peg.vgo.magnitude));
             GUILayout.Label(String.Format("tgo: {0:F1}", peg.tgo));
             GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
             GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
