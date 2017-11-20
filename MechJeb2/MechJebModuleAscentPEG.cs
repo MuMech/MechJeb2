@@ -84,9 +84,13 @@ namespace MuMech
 
         private void attitudeToPEG(double pitch)
         {
-            double heading = peg.heading;
             /* FIXME: use srfvel heading if peg is bad */
-            attitudeTo(pitch, heading);
+            if (MuUtils.headingAngle(peg.heading, peg.lambdaHeading) > 90.0)
+            {
+                attitudeTo(pitch, peg.lambdaHeading);
+            } else {
+                attitudeTo(pitch, peg.heading);
+            }
         }
 
         private void DriveVerticalAscent(FlightCtrlState s)
@@ -121,17 +125,24 @@ namespace MuMech
             double theta = dt * pitchRate;
             double pitch = 90 - theta + pitchBias;
 
-            if ((pitchEndToggle && autopilot.MET > pitchEndTime) || ( pitch < peg.pitch && !peg.failed && peg.converged))
+            if (pitchEndToggle)
             {
-                mode = AscentMode.GRAVITY_TURN;
-                return;
-            }
-            attitudeToPEG(pitch);
-
-            if ( pitchEndToggle )
+                if ( autopilot.MET > pitchEndTime )
+                {
+                    mode = AscentMode.GRAVITY_TURN;
+                    return;
+                }
                 status = String.Format("Pitch program {0:F2} s", pitchEndTime - pitchStartTime - dt);
-            else
+            } else {
+                if ( pitch < peg.pitch && !peg.failed && peg.converged )
+                {
+                    mode = AscentMode.GRAVITY_TURN;
+                    return;
+                }
                 status = String.Format("Pitch program {0:F2} °", pitch - peg.pitch);
+            }
+
+            attitudeToPEG(pitch);
         }
 
         private void DriveGravityTurn(FlightCtrlState s)
