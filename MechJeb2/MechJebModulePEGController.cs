@@ -3,16 +3,17 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /*
- * PEG algorithm, which begins mostly with the implementation in:
+ * PEG algorithm references:
  *
+ * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19760024151.pdf (Langston1976)
+ * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740004402.pdf (Brand1973)
+ * - https://ntrs.nasa.gov/search.jsp?R=19790048206 (Mchenry1979)
  * - https://arc.aiaa.org/doi/abs/10.2514/6.1977-1051 (Jaggers1977)
  * - https://ntrs.nasa.gov/search.jsp?R=19760020204 (Jaggers1976)
- * - https://ntrs.nasa.gov/search.jsp?R=19790048206 (Mchenry1979)
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19760024151.pdf (Langston1976)
  * - https://ntrs.nasa.gov/search.jsp?R=19740024190 (Jaggers1974)
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740004402.pdf (Brand1973)
+ * - i've found the Jaggers thrust integrals aren't stable
  *
- * Best Guess at Next Generation:
+ * For future inspiration:
  *
  * - https://arc.aiaa.org/doi/abs/10.2514/6.2012-4843 (Ping Lu's updated PEG)
  *
@@ -75,6 +76,7 @@ namespace MuMech
         public double primerMag { get { return primer.magnitude; } }
         public double pitch;
         public double heading;
+        public double lambdaHeading;
 
         /* FIXME: status enum? */
         public bool initialized;
@@ -119,17 +121,15 @@ namespace MuMech
         // state for next iteration
         public double tgo;          // time to burnout
         public double tgo_prev;     // time for last full converge
-        public Vector3d Dv;        // velocity remaining to be gained
+        public Vector3d vgo;        // velocity remaining to be gained
         private Vector3d rd;        // burnout position vector
         private Vector3d vprev;     // value of v on prior iteration
         private Vector3d rgrav;
+        private Vector3d rbias;
         // following for graphing + stats
-        private Vector3d rgo;
         private Vector3d vd;
         private Vector3d rp;
         private Vector3d vp;
-        private double F1, F2, F3;
-        private double ldm;
 
         private double last_PEG;    // this is the last PEG update time
         private double last_call;   // this is the last call to converge
@@ -170,7 +170,7 @@ namespace MuMech
                 // rd initialized to rdval-length vector 20 degrees downrange from r
                 rd = QuaternionD.AngleAxis(20, -iy) * vesselState.up * rdval;
                 // Dv initialized to rdval-length vector perpendicular to rd, minus current v
-                Dv = Vector3d.Cross(-iy, rd).normalized * vdval - vesselState.orbitalVelocity;
+                vgo = Vector3d.Cross(-iy, rd).normalized * vdval - vesselState.orbitalVelocity;
             }
         }
 
@@ -179,7 +179,7 @@ namespace MuMech
         {
             if (!initialized)
             {
-                Dv = node.GetBurnVector(orbit);
+                vgo = node.GetBurnVector(orbit);
                 TargetOrbit(node.nextPatch);
                 rd = node.nextPatch.SwappedRelativePositionAtUT(node.UT);
             }
@@ -264,11 +264,8 @@ namespace MuMech
 
         private void converge()
         {
-            Debug.Log("tgo before = " + tgo);
-            Debug.Log("dt = " + (vesselState.time - last_call));
             if ( last_call != 0 )
                 tgo -= vesselState.time - last_call;
-            Debug.Log("tgo after = " + tgo);
 
             last_call = vesselState.time;
 
@@ -299,7 +296,7 @@ namespace MuMech
             if (!converged)
                 failed = true;
 
-            if (Dv.magnitude == 0.0)
+            if (vgo.magnitude == 0.0)
                 failed = true;
 
             if (converged && !failed && tgo < terminalGuidanceTime)
@@ -324,6 +321,9 @@ namespace MuMech
             pitch = 90.0 - Vector3d.Angle(iF, vesselState.up);
             Vector3d headingDir = iF - Vector3d.Project(iF, vesselState.up);
             heading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(headingDir, vesselState.east), Vector3d.Dot(headingDir, vesselState.north));
+            // lambdaHeading is useful for ascents if iF winds up over the zenith pointing in the wrong direction
+            Vector3d lambdaDir = lambda - Vector3d.Project(lambda, vesselState.up);
+            lambdaHeading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(lambdaDir, vesselState.east), Vector3d.Dot(lambdaDir, vesselState.north));
         }
 
         private void update()
@@ -340,45 +340,39 @@ namespace MuMech
             {
                 lambda = v.normalized;
                 tgo = 1;
-                Dv = v.normalized * 1;
+                vgo = v.normalized * 1;
                 lambdaDot = Vector3d.up;
                 rp = r + v * tgo;
                 vp = v;
-                ldm = 0.00001;
-                F1 = 1.0;
-                F2 = 1.0;
-                F3 = 1.0;
             }
             else
             {
                 Vector3d dvsensed = v - vprev;
-                Dv = Dv - dvsensed;
+                vgo = vgo - dvsensed;
                 vprev = v;
             }
 
-            if (Dv == Vector3d.zero)
-                Dv = v.normalized;
+            if (vgo == Vector3d.zero)
+                vgo = v.normalized;
 
             // need accurate stage information before thrust integrals, Li is just dV so we read it from MJ
             UpdateStages();
 
-            log_stages();
-
             // find out how many stages we really need and clean up the Li (dV) and dt of the upper stage
-            double Dv_temp_mag = Dv.magnitude;
+            double vgo_temp_mag = vgo.magnitude;
             int last_stage = 0;
             for(int i = 0; i < stages.Count; i++)
             {
                 last_stage = i;
-                if ( stages[i].Li > Dv_temp_mag || i == stages.Count - 1 )
+                if ( stages[i].Li > vgo_temp_mag || i == stages.Count - 1 )
                 {
-                    stages[i].Li = Dv_temp_mag;
+                    stages[i].Li = vgo_temp_mag;
                     stages[i].dt = stages[i].tau * ( 1 - Math.Exp(-stages[i].Li/stages[i].ve) );
                     break;
                 }
                 else
                 {
-                  Dv_temp_mag -= stages[i].Li;
+                  vgo_temp_mag -= stages[i].Li;
                 }
             }
 
@@ -400,50 +394,45 @@ namespace MuMech
                 stages[i].tgo = tgo2;
             }
 
-            Debug.Log("tgo2 = " + tgo2);
-
             if (!terminalGuidance)
             {
-                /* use calculated tgo off of Dv + stage analysis */
+                /* use calculated tgo off of vgo + stage analysis */
                 /* (this also sneakily initializes tgo to 1 on the first-pass) */
                 tgo = ( tgo2 > 0 ) ? tgo2 : 1;
-                Debug.Log("tgo = " + tgo);
             }
 
             // total thrust integrals
-            double J, L, S, Q;
-            L = J = S = Q = 0;
+            double J, L, S, Q, H, P;
+            L = J = S = Q = H = P = 0.0;
 
             for(int i = 0; i <= last_stage; i++)
             {
                 stages[i].updateIntegrals();
             }
 
-
             for(int i = 0; i <= last_stage; i++)
             {
-                double SA = 0.0;
-                double QA = 0.0;
-                for(int j = 1; j < i; j++)
-                {
-                    SA += stages[j].Li - stages[i].Li;
-                    QA += stages[j].Ji - stages[i].Ji;
-                }
+                double HA = stages[i].Ji * stages[i].tgo - stages[i].Qi;
+                double SA = stages[i].Si + L * stages[i].dt;
+                double QA = stages[i].Qi + J * stages[i].dt;
+                double PA = stages[i].Pi + H * stages[i].dt;
                 L += stages[i].Li;
+                S += SA;
+                H += HA;
                 J += stages[i].Ji;
-                S += stages[i].Si + SA * stages[i].dt;
-                Q += stages[i].Qi + QA * stages[i].dt;
+                Q += QA;
+                P += PA;
             }
+            log_stages();
+
 
             Debug.Log("L = " + L + " J = " + J + " S = " + S + " Q = " + Q );
 
-            K = tgo - S / L;
-            double LT = F1 * L;
-            double QT = F2 * ( Q - S * K );
-            double ST = F3 * S;
+            K = J / L;
+            double QT = Q - S * K;
 
             // steering
-            lambda = Dv.normalized;
+            lambda = vgo.normalized;
 
             if (!initialized)
             {
@@ -454,7 +443,7 @@ namespace MuMech
                 rgrav = tgo * tgo / ( tgo_prev * tgo_prev ) * rgrav;
             }
 
-            rgo = rd - ( r + v * tgo + rgrav );
+            Vector3d rgo = rd - ( r + v * tgo + rgrav ) + rbias;
 
             /*
             if ( imode == IncMode.FREE_LAN && !terminalGuidance )
@@ -465,7 +454,7 @@ namespace MuMech
             }
             */
 
-            rgo = rgo + ( ST - Vector3d.Dot(lambda, rgo) ) * lambda;
+            rgo = rgo + ( S - Vector3d.Dot(lambda, rgo) ) * lambda;
 
             double phiMax = 45.0 * UtilMath.Deg2Rad;
 
@@ -478,92 +467,36 @@ namespace MuMech
                }
                else
                { */
-            lambdaDot = ( rgo - ST * lambda ) / QT;
+            lambdaDot = ( rgo - S * lambda ) / QT;
             /*
                }
                */
 
-            Debug.Log("lambdaDot = " + lambdaDot);
+            double ldm = lambdaDot.magnitude;
 
-            ldm = lambdaDot.magnitude;
-
-            if ( ldm > phiMax / K )
+            if ( lambdaDot.magnitude > phiMax / K )
             {
                 ldm = phiMax / K;
+                lambdaDot = lambdaDot.normalized * ldm;
+                rgo = S * lambda + QT * lambdaDot;
             }
-            if ( ldm < 0.00001 )
-            {
-                ldm = 0.00001;
-            }
-
-            double Kp = tgo / 2;
-            double theta = ldm * Kp;
-            double f1 = Math.Sin(theta) / theta;
-            double f2 = 3.0 * ( f1 - Math.Cos(theta) ) / ( theta * theta );
-            double Lp = f1 * L;
-            double Sp = f1 * S;
-            double D = L * Kp - S;
-            double Jp = f2 * D;
-            double Qp = ( - L * Kp * Kp / 3.0 + D * Kp ) * f2;
-            double delta = ldm * ( K - tgo / 2.0);
-            F1 = f1 * Math.Cos( delta );
-            F2 = f2 * Math.Cos( delta );
-            F3 = F1 * ( 1.0 - theta * delta / 3.0 );
-            LT = F1 * L;
-            QT = F2 * ( Q - S * K );
-            ST = F3 * S;
 
             t_lambda = vesselState.time + Math.Tan( ldm * K ) / ldm;
 
-                Debug.Log("ldm = " + ldm + " lambdaDot.magnitude = " + lambdaDot.magnitude + " theta = " + theta * UtilMath.Rad2Deg + " thetanext = " + ( lambdaDot.magnitude * K * UtilMath.Rad2Deg )) ;
+            Vector3d vthrust = lambda * ( L - ldm * ldm * ( H - J * K ) / 2.0 );
+            Vector3d rthrust = lambda * ( S - ldm * ldm * ( P - 2.0 * Q * K + S * K * K ) / 2.0 ) + QT * lambdaDot;
 
-            Debug.Log("Kp:" + Kp + " theta:" + theta + " f1:" + f1 + " f2:" + f2 + " Lp:" + Lp + " Sp:" + Sp + " D:" + D + " Jp:" + Jp + " Qp:" + Qp + " K:" + K + " delta:" + delta + " F1:" + F1 + " F2:" + F2 + " F3:" + F3 + " LT:" + LT + " QT:" + QT + " ST:" + ST);
-
-            Vector3d vgo = F1 * Dv;
-            Vector3d rthrust = QT * ldm * lambdaDot.normalized + ST * lambda;
-            rgo = rthrust;
-
+            rbias = rgo - rthrust;
 
             // going faster than the speed of light or doing burns the length of the Oort cloud are not supported...
-            if (!vgo.magnitude.IsFinite() || !rgo.magnitude.IsFinite() || (vgo.magnitude > 1E10) || (rgo.magnitude > 1E16))
+            if (!vthrust.magnitude.IsFinite() || !rthrust.magnitude.IsFinite() || (vthrust.magnitude > 1E10) || (rthrust.magnitude > 1E16))
             {
                 Fail();
                 return;
             }
 
-/*
-            // gravity + total integrals
-            double rf1 = 3.0 * Vector3d.Dot( v, r ) / ( rm * rm );
-            double B1 = - 2.0 * theta1 * theta1 / tgo;
-
-            int c = 30;
-            do {
-                rpm = rp.magnitude;
-                theta2 = tgo * Math.Sqrt( gm / (rpm * rpm * rpm )) / 2.0;
-                T2 = Math.Tan(theta2) / theta2;
-                double rf2 = 3.0 * Vector3d.Dot( vp, rp ) / ( rpm * rpm );
-
-                double B2 = - 2.0 * theta2 * theta2 / tgo;
-                double A1 = T2 * B1 + ( B2 - T2 / T1 ) * rf1;
-                double A2 = T2 * B2 - ( T2 - 1.0 ) * rf2;
-                double A3 = 1.0 / T1 + A1 / tgo / 2.0;
-                double A4 = 1.0 / T2 - A2 / tgo / 2.0;
-
-                rp = ( A3 * r + tgo / 2.0 * ( ( 1.0 + T2 / T1 ) * v + ( T2 - 1.0 ) * vgo ) + rgo ) / A4;
-                vp = ( T2 / T1 ) * v + A1 * r + A2 * rp + T2 * vgo;
-                c++;
-            } while ( Math.Abs(rp.magnitude - rpm) > 33 && c >= 0 );
-
-            if (c < 0)
-            {
-                Debug.Log("gravity integral calc failed to converge!");
-                Fail();
-                return;
-            }
-*/
-
-            Vector3d rc1 = r - rgo / 10.0 - vgo * tgo / 30.0;
-            Vector3d vc1 = v + 1.2 * rgo / tgo - vgo/10.0;
+            Vector3d rc1 = r - rthrust / 10.0 - vthrust * tgo / 30.0;
+            Vector3d vc1 = v + 1.2 * rthrust / tgo - vthrust/10.0;
 
             Vector3d rc2, vc2;
 
@@ -574,7 +507,7 @@ namespace MuMech
             Vector3d vgrav = vc2 - vc1;
             rgrav = rc2 - rc1 - vc1 * tgo;
 
-            rp = r + v * tgo + rgrav + rgo;
+            rp = r + v * tgo + rgrav + rthrust;
             vp = v + vgo + vgrav;
 
             // corrector
@@ -588,7 +521,7 @@ namespace MuMech
             vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
 
             Vector3d vmiss = vd - vp;
-            Dv = Dv + vmissGain * vmiss;  // gain of 1.0 causes PEG to flail on ascents
+            vgo = vgo + vmissGain * vmiss;  // gain of 1.0 causes PEG to flail on ascents
 
             /*
             Vector3d lambdav = Dv.normalized;
@@ -610,14 +543,14 @@ namespace MuMech
             // housekeeping
             initialized = true;
 
-            if ( Math.Abs(vmiss.magnitude) < 0.01 * Math.Abs(Dv.magnitude) )
+            if ( Math.Abs(vmiss.magnitude) < 0.01 * Math.Abs(vgo.magnitude) )
             {
-                Debug.Log("converged!");
+                //Debug.Log("converged!");
                 converged = true;
             }
             else
             {
-                Debug.Log("miss = " + ( vmiss.magnitude / Dv.magnitude ) + " [ " + vmiss + " ] ");
+                //Debug.Log("miss = " + ( vmiss.magnitude / vgo.magnitude ) + " [ " + vmiss + " ] ");
                 converged = false;
             }
 
@@ -632,13 +565,13 @@ namespace MuMech
         {
             var p = mainBody.position;
             var vpos = mainBody.position + vesselState.orbitalPosition;
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + Dv }, Color.green, true, false, false);
+            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + vgo }, Color.green, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { rd + p, rd + p + ( vd * 100 ) }, Color.green, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { rp + p, rp + p + ( vp * 100 ) }, Color.red, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + iF * 100 }, Color.red, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambda * 101 }, Color.blue, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambdaDot * 100 }, Color.cyan, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rgo }, Color.magenta, true, false, false);
+            // GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rthrust }, Color.magenta, true, false, false);
             // GLUtils.DrawPath(mainBody, CSEPoints, Color.red, true, false, false);
         }
 
@@ -707,7 +640,6 @@ namespace MuMech
             last_PEG = 0.0;
             last_call = 0.0;
             rd = Vector3d.zero;
-            Dv = Vector3d.zero;
             vprev = Vector3d.zero;
             rgrav = Vector3d.zero;
         }
@@ -815,9 +747,9 @@ namespace MuMech
             public void updateIntegrals()
             {
                 Si = - Li * ( tau - dt ) + ve * dt;
-                Ji = Li * tau - ve * dt + Li * tgo1;
+                Ji = Li * tgo - Si;
                 Qi = Si * ( tau + tgo1 ) - ve * dt * dt / 2.0;
-                /* Pi = Qi * ( tau + tgo1 ) - ve * dt * dt / 2.0 * ( dt / 3.0 + tgo1 ); */
+                Pi = Qi * ( tau + tgo1 ) - ve * dt * dt / 2.0 * ( dt / 3.0 + tgo1 );
             }
 
             public bool PartsListMatch(List<Part> other)
@@ -837,25 +769,19 @@ namespace MuMech
 
             public override string ToString()
             {
-                String ret = "kspstage = " + kspStage + "\n" +
-                       "a0 = " + a0 + "\n" +
-                       "mdot = " + mdot + "\n" +
-                       "ve = " + ve + "\n" +
-                       "thrust = " + thrust + "\n" +
-                       "mass = " + mass + "\n" +
-                       "tau = " + tau + "\n" +
-                       "dt = " + dt + "\n" +
-                       "Li = " + Li + "\n" +
-                       "Si = " + Si + "\n" +
-                       "Ji = " + Ji + "\n" +
-                       "Parts = ";
-
-                for(int i=0; i < parts.Count; i++)
-                {
-                    ret += parts[i];
-                }
-                ret += "\n";
-                return ret;
+                return "kspstage = " + kspStage +
+                       " a0 = " + a0 +
+                       " mdot = " + mdot +
+                       " ve = " + ve +
+                       " thrust = " + thrust +
+                       " mass = " + mass +
+                       " tau = " + tau +
+                       " tgo1 = " + tgo1 +
+                       " dt = " + dt +
+                       " tgo = " + tgo +
+                       " Li = " + Li +
+                       " Si = " + Si +
+                       " Ji = " + Ji;
             }
         }
 
