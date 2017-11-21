@@ -278,6 +278,10 @@ namespace MuMech
             if ( (vesselState.time - last_PEG) < pegInterval)
                 return;
 
+            // skip active guidance entirely for last 2 seconds
+            if (terminalGuidance && tgo < 2)
+                return;
+
             converged = false;
 
             if (terminalGuidance)
@@ -314,10 +318,12 @@ namespace MuMech
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
         private void update_pitch_and_heading()
         {
-            double sinTheta = Vector3d.Dot(lambda, vesselState.up);
             double z = vesselState.time - t_lambda;
-            double w = Math.Sqrt( mainBody.gravParameter / ( vesselState.radius * vesselState.radius * vesselState.radius ) );
-            primer = lambda * Math.Cos(w * z) + lambdaDot / w * Math.Sin(w * z)  + 3.0 * w * z / 2.0 * sinTheta * Math.Sin(w * z) * vesselState.up;
+            // this more complicated implementation from Jaggers seems to offer no practical advantage as far as I can tell
+            // double sinTheta = Vector3d.Dot(lambda, vesselState.up);
+            // double w = Math.Sqrt( mainBody.gravParameter / ( vesselState.radius * vesselState.radius * vesselState.radius ) );
+            // primer = lambda * Math.Cos(w * z) + lambdaDot / w * Math.Sin(w * z)  + 3.0 * w * z / 2.0 * sinTheta * Math.Sin(w * z) * vesselState.up;
+            primer = lambda + lambdaDot * z;
             pitch = 90.0 - Vector3d.Angle(iF, vesselState.up);
             Vector3d headingDir = iF - Vector3d.Project(iF, vesselState.up);
             heading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(headingDir, vesselState.east), Vector3d.Dot(headingDir, vesselState.north));
@@ -394,7 +400,7 @@ namespace MuMech
                 stages[i].tgo = tgo2;
             }
 
-            if (!terminalGuidance)
+            if (!terminalGuidance || tgo > 2)
             {
                 /* use calculated tgo off of vgo + stage analysis */
                 /* (this also sneakily initializes tgo to 1 on the first-pass) */
@@ -432,7 +438,8 @@ namespace MuMech
             double QT = Q - S * K;
 
             // steering
-            lambda = vgo.normalized;
+            if (!terminalGuidance || tgo > 2)
+                lambda = vgo.normalized;
 
             if (!initialized)
             {
@@ -467,7 +474,8 @@ namespace MuMech
                }
                else
                { */
-            lambdaDot = ( rgo - S * lambda ) / QT;
+            if (!terminalGuidance)
+                lambdaDot = ( rgo - S * lambda ) / QT;
             /*
                }
                */
@@ -516,19 +524,15 @@ namespace MuMech
 
             rp = rp - Vector3d.Dot(rp, iy) * iy;
             Vector3d ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
-            rd = rdval * ix;
+            if (!terminalGuidance)
+                rd = rdval * ix;
+            else
+                rd = rp;
             Vector3d iz = Vector3d.Cross(ix, iy);
             vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
 
             Vector3d vmiss = vd - vp;
-            vgo = vgo + vmissGain * vmiss;  // gain of 1.0 causes PEG to flail on ascents
-
-            /*
-            Vector3d lambdav = Dv.normalized;
-            Fv = Vector3d.Dot(lambdav, vd - v) / Vector3d.Dot(lambda, vp - v ) - 1.0;
-            if ( tgo < 300 && Math.Abs(Fv) < 0.05 )
-                Dv = Dv * ( 1 + Fv );
-                */
+            vgo = vgo + vmissGain * vmiss;
 
            /*
             if ( imode == IncMode.FREE_LAN && !terminalGuidance )
