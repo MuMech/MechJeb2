@@ -452,14 +452,14 @@ namespace MuMech
 
             Vector3d rgo = rd - ( r + v * tgo + rgrav ) + rbias;
 
-            /*
+            // from Jaggers 1977, not clear if you still should orthogonolize this (below) or not
+            // also not clear if it should be frozen during terminalGuidance or maybe only the last few seconds?
             if ( imode == IncMode.FREE_LAN && !terminalGuidance )
             {
                 Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
                 double Q1 = Vector3d.Dot(rgo - Vector3d.Dot(lambda, rgo) * lambda, ip);
                 rgo = S * lambda + Q1 * ip;
             }
-            */
 
             rgo = rgo + ( S - Vector3d.Dot(lambda, rgo) ) * lambda;
 
@@ -520,7 +520,7 @@ namespace MuMech
 
             // corrector
 
-            vmissGain = MuUtils.Clamp(vmissGain, 0.01, 1.0);
+            vmissGain = MuUtils.Clamp(vmissGain, 0.01, 0.99);
 
             rp = rp - Vector3d.Dot(rp, iy) * iy;
             Vector3d ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
@@ -534,7 +534,6 @@ namespace MuMech
             Vector3d vmiss = vd - vp;
             vgo = vgo + vmissGain * vmiss;
 
-           /*
             if ( imode == IncMode.FREE_LAN && !terminalGuidance )
             {
                 // correct iy to fixed inc with free LAN
@@ -542,7 +541,6 @@ namespace MuMech
                 double SE = - 0.5 * ( Vector3d.Dot( -Planetarium.up, iy) + Math.Cos(incval * UtilMath.Deg2Rad) ) * Vector3d.Dot( -Planetarium.up, iz ) / (1 - d * d);
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
-            */
 
             // housekeeping
             initialized = true;
@@ -684,6 +682,7 @@ namespace MuMech
                 stages[i].dt = mjstats[k].deltaTime;
                 stages[i].Li = mjstats[k].deltaV;
                 if ( i == 0 )
+                    // mechjeb's staging can get confused sometimes
                     stages[i].mass = vesselState.mass;
                 else
                     stages[i].mass = mjstats[k].startMass;
