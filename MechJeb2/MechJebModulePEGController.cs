@@ -61,11 +61,10 @@ namespace MuMech
         public MechJebModulePEGController(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble terminalGuidanceTime = new EditableDouble(10);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegInterval = new EditableDouble(1);
-        /* does not persist, because its unclear if game players should ever really tweak this */
-        public EditableDouble vmissGain = new EditableDouble(0.5);
+        // these values deliberately do not persist
+        public EditableDouble terminalGuidanceTime = new EditableDouble(40);
+        public EditableDouble vmissGain = new EditableDouble(1.0);
 
         public Vector3d lambda;
         public Vector3d lambdaDot;
@@ -269,7 +268,7 @@ namespace MuMech
 
             last_call = vesselState.time;
 
-            if (tgo < 0)  // and better be terminalGuidance
+            if (tgo < TimeWarp.fixedDeltaTime)
             {
                 finished = true;
                 return;
