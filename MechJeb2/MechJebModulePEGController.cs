@@ -278,7 +278,7 @@ namespace MuMech
                 return;
 
             // skip active guidance entirely for last 2 seconds
-            if (terminalGuidance && tgo < 2)
+            if (terminalGuidance && tgo < 10)
                 return;
 
             converged = false;
@@ -473,8 +473,10 @@ namespace MuMech
                }
                else
                { */
-            if (!terminalGuidance)
+            if (!terminalGuidance || tgo > 10)
                 lambdaDot = ( rgo - S * lambda ) / QT;
+            else
+                rgo = S * lambda + QT * lambdaDot;
             /*
                }
                */
