@@ -1,0 +1,249 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MuMech</RootNamespace>
+    <AssemblyName>MechJeb2</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;ENABLE_PROFILER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13RO\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13RO\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="System, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Games\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_13RO\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="alglib\alglibinternal.cs" />
+    <Compile Include="alglib\alglibmisc.cs" />
+    <Compile Include="alglib\ap.cs" />
+    <Compile Include="alglib\dataanalysis.cs" />
+    <Compile Include="alglib\diffequations.cs" />
+    <Compile Include="alglib\fasttransforms.cs" />
+    <Compile Include="alglib\integration.cs" />
+    <Compile Include="alglib\interpolation.cs" />
+    <Compile Include="alglib\linalg.cs" />
+    <Compile Include="alglib\optimization.cs" />
+    <Compile Include="alglib\solvers.cs" />
+    <Compile Include="alglib\specialfunctions.cs" />
+    <Compile Include="alglib\statistics.cs" />
+    <Compile Include="AutopilotModule.cs" />
+    <Compile Include="CelestialBodyExtensions.cs" />
+    <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="ComputerModule.cs" />
+    <Compile Include="FlyingSim\SimulatedParachute.cs" />
+    <Compile Include="FlyingSim\SimulatedPart.cs" />
+    <Compile Include="FlyingSim\SimulatedVessel.cs" />
+    <Compile Include="GoodingSolver.cs" />
+    <Compile Include="LandingAutopilot\CoastToDeceleration.cs" />
+    <Compile Include="LandingAutopilot\CourseCorrection.cs" />
+    <Compile Include="LandingAutopilot\DecelerationBurn.cs" />
+    <Compile Include="LandingAutopilot\DeorbitBurn.cs" />
+    <Compile Include="LandingAutopilot\FinalDescent.cs" />
+    <Compile Include="LandingAutopilot\KillHorizontalVelocity.cs" />
+    <Compile Include="LandingAutopilot\LowDeorbitBurn.cs" />
+    <Compile Include="LandingAutopilot\PlaneChange.cs" />
+    <Compile Include="LandingAutopilot\UntargetedDeorbit.cs" />
+    <Compile Include="MechjebBundlesManager.cs" />
+    <Compile Include="MechJebModuleAscentNavBall.cs" />
+    <Compile Include="MechJebModuleDebugArrows.cs" />
+    <Compile Include="DisplayModule.cs" />
+    <Compile Include="FuelFlowSimulation.cs" />
+    <Compile Include="GLUtils.cs" />
+    <Compile Include="GuiUtils.cs" />
+    <Compile Include="InstallChecker.cs" />
+    <Compile Include="LambertSolver.cs" />
+    <Compile Include="Maneuver\Operation.cs" />
+    <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
+    <Compile Include="Maneuver\OperationApoapsis.cs" />
+    <Compile Include="Maneuver\OperationCircularize.cs" />
+    <Compile Include="Maneuver\OperationCourseCorrection.cs" />
+    <Compile Include="Maneuver\OperationEllipticize.cs" />
+    <Compile Include="Maneuver\OperationInclination.cs" />
+    <Compile Include="Maneuver\OperationInterplanetaryTransfer.cs" />
+    <Compile Include="Maneuver\OperationKillRelVel.cs" />
+    <Compile Include="Maneuver\OperationLambert.cs" />
+    <Compile Include="Maneuver\OperationLan.cs" />
+    <Compile Include="Maneuver\OperationLongitude.cs" />
+    <Compile Include="Maneuver\OperationMoonReturn.cs" />
+    <Compile Include="Maneuver\OperationPeriapsis.cs" />
+    <Compile Include="Maneuver\OperationPlane.cs" />
+    <Compile Include="Maneuver\OperationResonantOrbit.cs" />
+    <Compile Include="Maneuver\OperationSemiMajor.cs" />
+    <Compile Include="Maneuver\OperationTransfer.cs" />
+    <Compile Include="Maneuver\PlotArea.cs" />
+    <Compile Include="Maneuver\Porkchop.cs" />
+    <Compile Include="Maneuver\TimeSelector.cs" />
+    <Compile Include="Maneuver\TransferCalculator.cs" />
+    <Compile Include="MathExtensions.cs" />
+    <Compile Include="MechJebAR202.cs" />
+    <Compile Include="MechJebCore.cs" />
+    <Compile Include="MechJebModuleAscentAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentGuidance.cs" />
+    <Compile Include="MechJebModuleAscentPathEditor.cs" />
+    <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
+    <Compile Include="MechJebModuleAttitudeController.cs" />
+    <Compile Include="MechJebModuleCustomInfoWindow.cs" />
+    <Compile Include="MechJebModuleDockingAutopilot.cs" />
+    <Compile Include="MechJebModuleDockingGuidance.cs" />
+    <Compile Include="MechJebModuleFlightRecorder.cs" />
+    <Compile Include="MechJebModuleFlightRecorderGraph.cs" />
+    <Compile Include="MechJebModuleInfoItems.cs" />
+    <Compile Include="MechJebModuleLandingAutopilot.cs" />
+    <Compile Include="MechJebModuleLandingGuidance.cs" />
+    <Compile Include="MechJebModuleLandingPredictions.cs" />
+    <Compile Include="MechJebModuleManeuverPlanner.cs" />
+    <Compile Include="MechJebModuleMenu.cs" />
+    <Compile Include="MechJebModuleNodeEditor.cs" />
+    <Compile Include="MechJebModuleNodeExecutor.cs" />
+    <Compile Include="MechJebModuleRCSBalancer.cs" />
+    <Compile Include="MechJebModuleRCSBalancerWindow.cs" />
+    <Compile Include="MechJebModuleRCSController.cs" />
+    <Compile Include="MechJebModuleRendezvousAutopilot.cs" />
+    <Compile Include="MechJebModuleRendezvousAutopilotWindow.cs" />
+    <Compile Include="MechJebModuleRendezvousGuidance.cs" />
+    <Compile Include="MechJebModuleRoverController.cs" />
+    <Compile Include="MechJebModuleRoverWindow.cs" />
+    <Compile Include="MechJebModuleScript.cs" />
+    <Compile Include="MechJebModuleSettings.cs" />
+    <Compile Include="MechJebModuleSmartASS.cs" />
+    <Compile Include="MechJebModuleSmartRcs.cs" />
+    <Compile Include="MechJebModuleSolarPanelController.cs" />
+    <Compile Include="MechJebModuleSpaceplaneAutopilot.cs" />
+    <Compile Include="MechJebModuleSpaceplaneGuidance.cs" />
+    <Compile Include="MechJebModuleStageStats.cs" />
+    <Compile Include="MechJebModuleStagingController.cs" />
+    <Compile Include="MechJebModuleTargetController.cs" />
+    <Compile Include="MechJebModuleThrustController.cs" />
+    <Compile Include="MechJebModuleThrustWindow.cs" />
+    <Compile Include="MechJebModuleTranslatron.cs" />
+    <Compile Include="MechJebModuleWarpController.cs" />
+    <Compile Include="MechJebModuleWarpHelper.cs" />
+    <Compile Include="MechJebModuleWaypointWindow.cs" />
+    <Compile Include="MechJebPod.cs" />
+    <Compile Include="MuUtils.cs" />
+    <Compile Include="OrbitalManeuverCalculator.cs" />
+    <Compile Include="OrbitExtensions.cs" />
+    <Compile Include="PartExtensions.cs" />
+    <Compile Include="PIDController.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RCSSolver.cs" />
+    <Compile Include="ReentrySimulation.cs" />
+    <Compile Include="Properties\Resources.Designer.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptAction.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionActionGroup.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionActivateEngine.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionActiveVessel.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionAscent.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionControlFrom.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionCrewTransfer.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionDockingAutopilot.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionDockingShield.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionExecuteNode.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionInterceptWithHohmann.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionIRSequencer.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionKos.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionLanding.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionLoadScript.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionManoeuver.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionPause.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionQuicksave.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionRCS.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionRendezvous.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionRendezvousAP.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionSAS.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionStaging.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionTarget.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionTargetDock.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionTemplate.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionThrottle.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionTimer.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionTolerance.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionUndock.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionWaitFor.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionWarp.cs" />
+    <Compile Include="SpeechBubble.cs" />
+    <Compile Include="ModExtensionDemo.cs" />
+    <Compile Include="ToolbarWrapper.cs" />
+    <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
+    <Compile Include="UnityToolbag\Future\Future.cs" />
+    <Compile Include="Vector6.cs" />
+    <Compile Include="VesselExtensions.cs" />
+    <Compile Include="VesselState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\shader" />
+    <None Include="Properties\shader2" />
+    <None Include="Properties\shader3" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="G:\GAMES\KERBAL\Kerbal Space Program_DEV_13RO\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll" />
+    <Analyzer Include="G:\GAMES\KERBAL\Kerbal Space Program_DEV_13RO\KSP_x64_Data\Managed\Assembly-CSharp.dll" />
+    <Analyzer Include="G:\GAMES\KERBAL\Kerbal Space Program_DEV_13RO\KSP_x64_Data\Managed\UnityEngine.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CodeAnalysisAdditionalOptions>/assemblyCompareMode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <BaseAddress>4194304</BaseAddress>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <StartAction>Project</StartAction>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

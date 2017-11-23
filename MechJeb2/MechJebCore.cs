@@ -133,6 +133,18 @@ namespace MuMech
             EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
         }
 
+        [KSPAction("Land somewhere")]
+        public void OnLandsomewhereAction(KSPActionParam param)
+        {
+
+            LandSomewhere();
+        }
+
+        private void LandSomewhere()
+        {
+            landing.LandUntargeted(this);
+        }
+
         private void EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target target)
         {
             MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
