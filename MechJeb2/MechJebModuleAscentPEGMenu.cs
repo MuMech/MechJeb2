@@ -60,7 +60,6 @@ namespace MuMech
             if (path.pegAfterStageToggle)
                 GuiUtils.SimpleTextBox("", path.pegAfterStage);
             GUILayout.EndHorizontal();
-            GuiUtils.SimpleTextBox("Terminal Guidance Period:", peg.terminalGuidanceTime, "s");
             GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reset PEG"))
@@ -75,8 +74,7 @@ namespace MuMech
             GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
             GUILayout.Label(String.Format("primer mag: {0:F2}", peg.primerMag));
             GUILayout.Label(String.Format("phi: {0:F2}", peg.phi * UtilMath.Rad2Deg));
-            GUILayout.Label(String.Format("K: {0:F1}", peg.K ));
-            GUILayout.Label(String.Format("Fv: {0:F4}", peg.Fv ));
+            GUILayout.Label(String.Format("K: {0:F4}", peg.K ));
             GUILayout.Label(String.Format("iy inc: {0:F4}", Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
             GUILayout.Label(String.Format("orth. test: {0:F5}", Vector3d.Dot(peg.lambda, peg.lambdaDot)));
 
