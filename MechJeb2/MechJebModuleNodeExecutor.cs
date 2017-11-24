@@ -97,7 +97,7 @@ namespace MuMech
 
             peg.TargetNode(node);
 
-            if (burnTriggered && peg.finished)
+            if (burnTriggered && peg.status == PegStatus.FINISHED)
             {
                 burnTriggered = false;
                 core.thrust.targetThrottle = 0.0F;
