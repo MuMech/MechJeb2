@@ -56,6 +56,8 @@ using System.Collections.Generic;
 
 namespace MuMech
 {
+    public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, CONVERGED, TERMINAL, FINISHED, FAILED };
+
     public class MechJebModulePEGController : ComputerModule
     {
         public MechJebModulePEGController(MechJebCore core) : base(core) { }
@@ -63,7 +65,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegInterval = new EditableDouble(1);
         // these values deliberately do not persist
-        public EditableDouble terminalGuidanceTime = new EditableDouble(40);
         public EditableDouble vmissGain = new EditableDouble(1.0);
 
         public Vector3d lambda;
@@ -75,14 +76,8 @@ namespace MuMech
         public double primerMag { get { return primer.magnitude; } }
         public double pitch;
         public double heading;
-        public double lambdaHeading;
 
-        /* FIXME: status enum? */
-        public bool initialized;
-        public bool converged;
-        public bool finished;
-        public bool terminalGuidance;
-        public bool failed;
+        public PegStatus status;
 
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
@@ -90,7 +85,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            Reset();
+            status = PegStatus.ENABLED;
             core.AddToPostDrawQueue(DrawCSE);
         }
 
@@ -98,23 +93,33 @@ namespace MuMech
         {
         }
 
+        public void AssertStart()
+        {
+            if (status == PegStatus.ENABLED )
+                Reset();
+        }
+
         public override void OnFixedUpdate()
         {
-            if (finished) /* i told you i was done */
+
+            if ( !enabled || status == PegStatus.ENABLED )
                 return;
+
+            if ( status == PegStatus.FINISHED )
+            {
+                Done();
+                return;
+            }
 
             // FIXME: we need to add liveStats to vacStats and atmoStats from MechJebModuleStageStats so we don't have to force liveSLT here
             stats.liveSLT = true;
             stats.RequestUpdate(this, true);
-            if (enabled)
-               converge();
+            converge();
 
             update_pitch_and_heading();
 
-            if ( finished )
-            {
-                core.thrust.targetThrottle = 0.0F;
-            }
+            if ( status == PegStatus.FINISHED )
+                Done();
         }
 
         // state for next iteration
@@ -131,9 +136,7 @@ namespace MuMech
         private Vector3d vp;
 
         private double last_PEG;    // this is the last PEG update time
-        private double last_call;   // this is the last call to converge
         public double K;
-        public double Fv;
 
         public List<StageInfo> stages = new List<StageInfo>();
 
@@ -164,7 +167,7 @@ namespace MuMech
         // must be called after one of TargetPe* for now
         public void AscentInit()
         {
-            if (!initialized)
+            if ( status != PegStatus.CONVERGED )
             {
                 // rd initialized to rdval-length vector 20 degrees downrange from r
                 rd = QuaternionD.AngleAxis(20, -iy) * vesselState.up * rdval;
@@ -176,7 +179,7 @@ namespace MuMech
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node)
         {
-            if (!initialized)
+            if ( status != PegStatus.CONVERGED )
             {
                 vgo = node.GetBurnVector(orbit);
                 TargetOrbit(node.nextPatch);
@@ -261,8 +264,21 @@ namespace MuMech
             iy = -tangent;
         }
 
+        private double last_call;   // this is the last call to converge
+
         private void converge()
         {
+            Debug.Log("STATUS: " + status);
+
+            if ( status == PegStatus.FINISHED )
+            {
+                Done();
+                return;
+            }
+
+            if ( status == PegStatus.FAILED )
+                Reset();
+
             if ( last_call != 0 )
                 tgo -= vesselState.time - last_call;
 
@@ -270,46 +286,37 @@ namespace MuMech
 
             if (tgo < TimeWarp.fixedDeltaTime)
             {
-                finished = true;
+                Done();
                 return;
             }
 
+            if ( status == PegStatus.TERMINAL )
+                return;
+
+            // only do active guidance every pegInterval
             if ( (vesselState.time - last_PEG) < pegInterval)
                 return;
 
-            // skip active guidance entirely for last 2 seconds
-            if (terminalGuidance && tgo < 10)
+            // skipping active guidance for last 10 seconds is more accurate
+            if ( status == PegStatus.CONVERGED && tgo < 10 )
+            {
+                status = PegStatus.TERMINAL;
                 return;
-
-            converged = false;
-
-            if (terminalGuidance)
-            {
-                update();
-                converged = true;
             }
-            else
-            {
-                for(int i = 0; i < 20 && !converged; i++)
-                {
-                    update();
-                }
-            }
+
+            bool converged = false;
+
+            for(int i = 0; i < 20 && !converged && status != PegStatus.FAILED; i++)
+                converged = update();
 
             if (!converged)
-                failed = true;
+                status = PegStatus.FAILED;
 
             if (vgo.magnitude == 0.0)
-                failed = true;
+                status = PegStatus.FAILED;
 
-            if (converged && !failed && tgo < terminalGuidanceTime)
-                terminalGuidance = true;
-
-            if (!converged || failed)
-            {
-                converged = false;
-                failed = true;
-            }
+            if (status != PegStatus.FAILED)
+                status = PegStatus.CONVERGED;
 
             last_PEG = vesselState.time;
         }
@@ -326,22 +333,17 @@ namespace MuMech
             pitch = 90.0 - Vector3d.Angle(iF, vesselState.up);
             Vector3d headingDir = iF - Vector3d.Project(iF, vesselState.up);
             heading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(headingDir, vesselState.east), Vector3d.Dot(headingDir, vesselState.north));
-            // lambdaHeading is useful for ascents if iF winds up over the zenith pointing in the wrong direction
-            Vector3d lambdaDir = lambda - Vector3d.Project(lambda, vesselState.up);
-            lambdaHeading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(lambdaDir, vesselState.east), Vector3d.Dot(lambdaDir, vesselState.north));
         }
 
-        private void update()
+        private bool update()
         {
-            failed = true;
-
             Vector3d r = vesselState.orbitalPosition;
             double rm = vesselState.orbitalPosition.magnitude;
             Vector3d v = vesselState.orbitalVelocity;
 
             double gm = mainBody.gravParameter;
 
-            if (!initialized)
+            if ( status == PegStatus.INITIALIZING )
             {
                 lambda = v.normalized;
                 tgo = 1;
@@ -399,12 +401,7 @@ namespace MuMech
                 stages[i].tgo = tgo2;
             }
 
-            if (!terminalGuidance || tgo > 2)
-            {
-                /* use calculated tgo off of vgo + stage analysis */
-                /* (this also sneakily initializes tgo to 1 on the first-pass) */
-                tgo = ( tgo2 > 0 ) ? tgo2 : 1;
-            }
+            tgo = ( tgo2 > 0 ) ? tgo2 : 1;
 
             // total thrust integrals
             double J, L, S, Q, H, P;
@@ -428,8 +425,6 @@ namespace MuMech
                 Q += QA;
                 P += PA;
             }
-            log_stages();
-
 
             Debug.Log("L = " + L + " J = " + J + " S = " + S + " Q = " + Q );
 
@@ -437,23 +432,17 @@ namespace MuMech
             double QT = Q - S * K;
 
             // steering
-            if (!terminalGuidance || tgo > 2)
-                lambda = vgo.normalized;
+            lambda = vgo.normalized;
 
-            if (!initialized)
-            {
+            if ( status == PegStatus.INITIALIZING )
                 rgrav = -vesselState.orbitalPosition * Math.Sqrt( gm / ( rm * rm * rm ) ) / 2.0;
-            }
             else
-            {
                 rgrav = tgo * tgo / ( tgo_prev * tgo_prev ) * rgrav;
-            }
 
             Vector3d rgo = rd - ( r + v * tgo + rgrav ) + rbias;
 
             // from Jaggers 1977, not clear if you still should orthogonolize this (below) or not
-            // also not clear if it should be frozen during terminalGuidance or maybe only the last few seconds?
-            if ( imode == IncMode.FREE_LAN && !terminalGuidance )
+            if ( imode == IncMode.FREE_LAN )
             {
                 Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
                 double Q1 = Vector3d.Dot(rgo - Vector3d.Dot(lambda, rgo) * lambda, ip);
@@ -473,10 +462,9 @@ namespace MuMech
                }
                else
                { */
-            if (!terminalGuidance || tgo > 10)
-                lambdaDot = ( rgo - S * lambda ) / QT;
-            else
-                rgo = S * lambda + QT * lambdaDot;
+
+            lambdaDot = ( rgo - S * lambda ) / QT;
+
             /*
                }
                */
@@ -497,20 +485,15 @@ namespace MuMech
 
             rbias = rgo - rthrust;
 
-            // going faster than the speed of light or doing burns the length of the Oort cloud are not supported...
-            if (!vthrust.magnitude.IsFinite() || !rthrust.magnitude.IsFinite() || (vthrust.magnitude > 1E10) || (rthrust.magnitude > 1E16))
-            {
-                Fail();
-                return;
-            }
-
             Vector3d rc1 = r - rthrust / 10.0 - vthrust * tgo / 30.0;
             Vector3d vc1 = v + 1.2 * rthrust / tgo - vthrust/10.0;
 
             Vector3d rc2, vc2;
 
             //CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
+            Debug.Log("rc1 = " + rc1 + " vc1 = " + vc1 + " tgo = " + tgo + " QT = " + QT + "lambdadot = " + lambdaDot );
             ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
+
             //CSESimple(rc1, vc1, tgo, out rc2, out vc2);
 
             Vector3d vgrav = vc2 - vc1;
@@ -525,7 +508,7 @@ namespace MuMech
 
             rp = rp - Vector3d.Dot(rp, iy) * iy;
             Vector3d ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
-            if (!terminalGuidance)
+            if ( status == PegStatus.CONVERGED && tgo > 40 )
                 rd = rdval * ix;
             else
                 rd = rp;
@@ -535,7 +518,7 @@ namespace MuMech
             Vector3d vmiss = vd - vp;
             vgo = vgo + vmissGain * vmiss;
 
-            if ( imode == IncMode.FREE_LAN && !terminalGuidance )
+            if ( imode == IncMode.FREE_LAN )
             {
                 // correct iy to fixed inc with free LAN
                 double d = Vector3d.Dot( -Planetarium.up, ix );
@@ -543,23 +526,15 @@ namespace MuMech
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
 
-            // housekeeping
-            initialized = true;
-
-            if ( Math.Abs(vmiss.magnitude) < 0.01 * Math.Abs(vgo.magnitude) )
-            {
-                //Debug.Log("converged!");
-                converged = true;
-            }
-            else
-            {
-                //Debug.Log("miss = " + ( vmiss.magnitude / vgo.magnitude ) + " [ " + vmiss + " ] ");
-                converged = false;
-            }
-
             tgo_prev = tgo;
 
-            failed = false;
+            if ( status == PegStatus.INITIALIZING )
+                status = PegStatus.INITIALIZED;
+
+            if ( Math.Abs(vmiss.magnitude) < 0.01 * Math.Abs(vgo.magnitude) )
+                return true;
+
+            return false;
         }
 
         List<Vector3d> CSEPoints = new List<Vector3d>();
@@ -618,25 +593,19 @@ namespace MuMech
         private void Done()
         {
             users.Clear();
-            finished = true;
-        }
-
-        private void Fail()
-        {
-            failed = true;
-            Reset();
+            core.thrust.targetThrottle = 0.0F;
+            status = PegStatus.FINISHED;
         }
 
         public void Reset()
         {
+            System.Diagnostics.StackTrace t = new System.Diagnostics.StackTrace();
+            Debug.Log("Reset called: " + t);
             // failed is deliberately not set to false here
             // lambda and lambdaDot are deliberately not cleared here
             if ( imode == IncMode.FREE_LAN )
                 SetPlaneFromInclination(incval);
-            terminalGuidance = false;
-            initialized = false;
-            converged = false;
-            finished = false;
+            status = PegStatus.INITIALIZING;
             stages = new List<StageInfo>();
             tgo_prev = 0.0;
             tgo = 1.0;
