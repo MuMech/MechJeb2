@@ -37,6 +37,7 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             mode = AscentMode.VERTICAL_ASCENT;
+            peg.enabled = true;
         }
 
         public override void OnModuleDisabled()
@@ -49,8 +50,8 @@ namespace MuMech
 
         public override bool DriveAscent(FlightCtrlState s)
         {
-            peg.enabled = true;
             setTarget();
+            peg.AssertStart();
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -85,12 +86,7 @@ namespace MuMech
         private void attitudeToPEG(double pitch)
         {
             /* FIXME: use srfvel heading if peg is bad */
-            if (MuUtils.headingAngle(peg.heading, peg.lambdaHeading) > 90.0)
-            {
-                attitudeTo(pitch, peg.lambdaHeading);
-            } else {
-                attitudeTo(pitch, peg.heading);
-            }
+            attitudeTo(pitch, peg.heading);
         }
 
         private void DriveVerticalAscent(FlightCtrlState s)
@@ -134,7 +130,7 @@ namespace MuMech
                 }
                 status = String.Format("Pitch program {0:F2} s", pitchEndTime - pitchStartTime - dt);
             } else {
-                if ( pitch < peg.pitch && !peg.failed && peg.converged )
+                if ( pitch < peg.pitch && peg.status == PegStatus.CONVERGED )
                 {
                     mode = AscentMode.GRAVITY_TURN;
                     return;
@@ -163,14 +159,11 @@ namespace MuMech
             }
             else
             {
-                if (peg.terminalGuidance && !peg.failed && peg.converged)
-                    status = "Locked Terminal Guidance";
-                else
-                    status = "Stable PEG Guidance";
+                status = "Stable PEG Guidance";
 
                 attitudeToPEG(peg.pitch);
 
-                if (peg.finished)
+                if (peg.status == PegStatus.FINISHED)
                 {
                     mode = AscentMode.EXIT;
                     return;
