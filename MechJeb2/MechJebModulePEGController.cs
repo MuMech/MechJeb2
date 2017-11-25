@@ -20,17 +20,9 @@ using System.Collections.Generic;
  */
 
 /*
- *  MAYBE/RESEARCH list:
- *
- *  - should vd = vp before projecting vp into the iy plane?
- *  - can the Jaggers1977 tweaks to the corrector be fixed, will they give better terminal guidance or anything?
- *  - what is up with the Jaggers1977 rgo fixes to the iy corrector not appearing to do anything useful at all?
- *    (oh looks like 90 degree inclination launches got all wiggly again, need to see if the rgo fixes fix them?)
- *
  *  Higher Priority / Nearer Term TODO list:
  *
  *  - external delta-v mode and hooking PEG up to the NodeExecutor
- *  - fixing the angular momentum cutoff to be smarter (requirement for NodeExecutor)
  *  - "FREE" inclination mode (in-plane maneuvers)
  *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
  *
@@ -101,7 +93,6 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-
             if ( !enabled || status == PegStatus.ENABLED )
                 return;
 
@@ -114,12 +105,10 @@ namespace MuMech
             // FIXME: we need to add liveStats to vacStats and atmoStats from MechJebModuleStageStats so we don't have to force liveSLT here
             stats.liveSLT = true;
             stats.RequestUpdate(this, true);
+
             converge();
 
             update_pitch_and_heading();
-
-            if ( status == PegStatus.FINISHED )
-                Done();
         }
 
         // state for next iteration
@@ -161,7 +150,7 @@ namespace MuMech
         // inclination target for FREE_LAN
         private double incval;
 
-        private enum IncMode { FIXED_LAN, FREE_LAN, FREE };
+        private enum IncMode { FIXED_LAN, FREE_LAN };
         private enum TargetMode { PERIAPSIS, ORBIT };
 
         // must be called after one of TargetPe* for now
@@ -207,12 +196,6 @@ namespace MuMech
                 incval = inc;
                 SetPlaneFromInclination(inc);  /* updating every time would defeat PEG's corrector */
             }
-            SetRdvalVdval(PeA, ApA);
-        }
-
-        public void TargetPeInsertFree(double PeA, double ApA) /* FIXME: implement */
-        {
-            imode = IncMode.FREE;
             SetRdvalVdval(PeA, ApA);
         }
 
@@ -268,8 +251,6 @@ namespace MuMech
 
         private void converge()
         {
-            Debug.Log("STATUS: " + status);
-
             if ( status == PegStatus.FINISHED )
             {
                 Done();
@@ -306,8 +287,14 @@ namespace MuMech
 
             bool converged = false;
 
-            for(int i = 0; i < 20 && !converged && status != PegStatus.FAILED; i++)
-                converged = update();
+            try {
+                for(int i = 0; i < 20 && !converged && status != PegStatus.FAILED; i++)
+                    converged = update();
+            }
+            catch
+            {
+                status = PegStatus.FAILED;
+            }
 
             if (!converged)
                 status = PegStatus.FAILED;
@@ -345,12 +332,14 @@ namespace MuMech
 
             if ( status == PegStatus.INITIALIZING )
             {
-                lambda = v.normalized;
-                tgo = 1;
-                vgo = v.normalized * 1;
-                lambdaDot = Vector3d.up;
                 rp = r + v * tgo;
                 vp = v;
+                t_lambda = vesselState.time;
+                rbias = Vector3d.zero;
+                vgo = Vector3d.zero;
+                tgo = 1;
+                rgrav = -vesselState.orbitalPosition * Math.Sqrt( gm / ( rm * rm * rm ) ) / 2.0;
+                corrector();
             }
             else
             {
@@ -393,15 +382,13 @@ namespace MuMech
             }
 
             // compute cumulative tgo's
-            double tgo2 = 0;
+            tgo = 0;
             for(int i = 0; i <= last_stage; i++)
             {
-                stages[i].tgo1 = tgo2;
-                tgo2 += stages[i].dt;
-                stages[i].tgo = tgo2;
+                stages[i].tgo1 = tgo;
+                tgo += stages[i].dt;
+                stages[i].tgo = tgo;
             }
-
-            tgo = ( tgo2 > 0 ) ? tgo2 : 1;
 
             // total thrust integrals
             double J, L, S, Q, H, P;
@@ -426,17 +413,13 @@ namespace MuMech
                 P += PA;
             }
 
-            Debug.Log("L = " + L + " J = " + J + " S = " + S + " Q = " + Q );
-
             K = J / L;
             double QT = Q - S * K;
 
             // steering
             lambda = vgo.normalized;
 
-            if ( status == PegStatus.INITIALIZING )
-                rgrav = -vesselState.orbitalPosition * Math.Sqrt( gm / ( rm * rm * rm ) ) / 2.0;
-            else
+            if ( status != PegStatus.INITIALIZING )
                 rgrav = tgo * tgo / ( tgo_prev * tgo_prev ) * rgrav;
 
             Vector3d rgo = rd - ( r + v * tgo + rgrav ) + rbias;
@@ -491,9 +474,7 @@ namespace MuMech
             Vector3d rc2, vc2;
 
             //CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
-            Debug.Log("rc1 = " + rc1 + " vc1 = " + vc1 + " tgo = " + tgo + " QT = " + QT + "lambdadot = " + lambdaDot );
             ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
-
             //CSESimple(rc1, vc1, tgo, out rc2, out vc2);
 
             Vector3d vgrav = vc2 - vc1;
@@ -503,7 +484,18 @@ namespace MuMech
             vp = v + vgo + vgrav;
 
             // corrector
+            Vector3d vmiss = corrector();
 
+            tgo_prev = tgo;
+
+            if ( status == PegStatus.INITIALIZING )
+                status = PegStatus.INITIALIZED;
+
+            return Math.Abs(vmiss.magnitude) < 0.01 * Math.Abs(vgo.magnitude);
+        }
+
+        private Vector3d corrector()
+        {
             vmissGain = MuUtils.Clamp(vmissGain, 0.01, 0.99);
 
             rp = rp - Vector3d.Dot(rp, iy) * iy;
@@ -525,16 +517,7 @@ namespace MuMech
                 double SE = - 0.5 * ( Vector3d.Dot( -Planetarium.up, iy) + Math.Cos(incval * UtilMath.Deg2Rad) ) * Vector3d.Dot( -Planetarium.up, iz ) / (1 - d * d);
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
-
-            tgo_prev = tgo;
-
-            if ( status == PegStatus.INITIALIZING )
-                status = PegStatus.INITIALIZED;
-
-            if ( Math.Abs(vmiss.magnitude) < 0.01 * Math.Abs(vgo.magnitude) )
-                return true;
-
-            return false;
+            return vmiss;
         }
 
         List<Vector3d> CSEPoints = new List<Vector3d>();
@@ -600,7 +583,6 @@ namespace MuMech
         public void Reset()
         {
             System.Diagnostics.StackTrace t = new System.Diagnostics.StackTrace();
-            Debug.Log("Reset called: " + t);
             // failed is deliberately not set to false here
             // lambda and lambdaDot are deliberately not cleared here
             if ( imode == IncMode.FREE_LAN )
