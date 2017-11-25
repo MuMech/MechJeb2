@@ -72,11 +72,14 @@ namespace MuMech
                 else
                     autopilot.DisableAltitudeHold ();
             }
+            bool change = false;
+            if (GUILayout.Button("-", GUILayout.Width(18))) { AltitudeTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             AltitudeTargettmp.text = GUILayout.TextField (AltitudeTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+            if (GUILayout.Button("+", GUILayout.Width(18))) { AltitudeTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             if (AltitudeTargettmp < 0)
                 AltitudeTargettmp = 0;
             GUILayout.Label ("m", GUILayout.ExpandWidth (true));
-            if (GUILayout.Button ("Set", autopilot.AltitudeTarget == AltitudeTargettmp ? btWhite : btGreen)) {
+            if (change || GUILayout.Button ("Set", autopilot.AltitudeTarget == AltitudeTargettmp ? btWhite : btGreen)) {
                 autopilot.AltitudeTarget = AltitudeTargettmp;
             }
             GUILayout.EndHorizontal ();
@@ -92,20 +95,26 @@ namespace MuMech
                     else
                         autopilot.DisableVertSpeedHold ();
                 }
-                VertSpeedTargettmp.text = GUILayout.TextField (VertSpeedTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+                change = false;
+                if (GUILayout.Button("-", GUILayout.Width(18))) { VertSpeedTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
+                VertSpeedTargettmp.text = GUILayout.TextField(VertSpeedTargettmp.text, GUILayout.ExpandWidth(true),GUILayout.Width(60));
+                if (GUILayout.Button("+", GUILayout.Width(18))) { VertSpeedTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 GUILayout.Label ("m/s", GUILayout.ExpandWidth (true));
-                if (GUILayout.Button ("Set", autopilot.VertSpeedTarget == VertSpeedTargettmp ? btWhite : btGreen)) {
+                if (change || GUILayout.Button ("Set", autopilot.VertSpeedTarget == VertSpeedTargettmp ? btWhite : btGreen)) {
                     autopilot.VertSpeedTarget = VertSpeedTargettmp;
                 }
                 GUILayout.EndHorizontal ();
             } else {
                 GUILayout.BeginHorizontal ();
                 GUILayout.Label ("    Vertical Speed Limit", GUILayout.Width (140));
+                change = false;
+                if (GUILayout.Button("-", GUILayout.Width(18))) { VertSpeedMaxtmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 VertSpeedMaxtmp.text = GUILayout.TextField (VertSpeedMaxtmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+                if (GUILayout.Button("+", GUILayout.Width(18))) { VertSpeedMaxtmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 if (VertSpeedMaxtmp < 0)
                     VertSpeedMaxtmp = 0;
                 GUILayout.Label ("m/s", GUILayout.ExpandWidth (true));
-                if (GUILayout.Button ("Set", autopilot.VertSpeedMax == VertSpeedMaxtmp ? btWhite : btGreen)) {
+                if (change || GUILayout.Button ("Set", autopilot.VertSpeedMax == VertSpeedMaxtmp ? btWhite : btGreen)) {
                     autopilot.VertSpeedMax = VertSpeedMaxtmp;
                 }
                 GUILayout.EndHorizontal ();
@@ -121,10 +130,13 @@ namespace MuMech
                 else
                     autopilot.DisableHeadingHold ();
             }
+            change = false;
+            if (GUILayout.Button("-", GUILayout.Width(18))) { HeadingTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             HeadingTargettmp.text = GUILayout.TextField (HeadingTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+            if (GUILayout.Button("+", GUILayout.Width(18))) { HeadingTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             HeadingTargettmp = MuUtils.ClampDegrees360 (HeadingTargettmp);
             GUILayout.Label ("°", GUILayout.ExpandWidth (true));
-            if (GUILayout.Button ("Set", autopilot.HeadingTarget == HeadingTargettmp ? btWhite : btGreen)) {
+            if (change || GUILayout.Button ("Set", autopilot.HeadingTarget == HeadingTargettmp ? btWhite : btGreen)) {
                 autopilot.HeadingTarget = HeadingTargettmp;
             }
             GUILayout.EndHorizontal ();
@@ -133,20 +145,26 @@ namespace MuMech
             if (!autopilot.HeadingHoldEnabled) {
                 GUILayout.BeginHorizontal ();
                 autopilot.RollHoldEnabled = GUILayout.Toggle (autopilot.RollHoldEnabled, "Roll Hold", GUILayout.Width (140));
+                change = false;
+                if (GUILayout.Button("-", GUILayout.Width(18))) { RollTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 RollTargettmp.text = GUILayout.TextField (RollTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+                if (GUILayout.Button("+", GUILayout.Width(18))) { RollTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 RollTargettmp = MuUtils.Clamp (RollTargettmp, -90, 90);
                 GUILayout.Label ("°", GUILayout.ExpandWidth (true));
-                if (GUILayout.Button ("Set", autopilot.RollTarget == RollTargettmp ? btWhite : btGreen)) {
+                if (change || GUILayout.Button ("Set", autopilot.RollTarget == RollTargettmp ? btWhite : btGreen)) {
                     autopilot.RollTarget = RollTargettmp;
                 }
                 GUILayout.EndHorizontal ();
             } else {
                 GUILayout.BeginHorizontal ();
                 GUILayout.Label ("    Roll Limit ±", GUILayout.Width (140));
+                change = false;
+                if (GUILayout.Button("-", GUILayout.Width(18))) { RollMaxtmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 RollMaxtmp.text = GUILayout.TextField (RollMaxtmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+                if (GUILayout.Button("+", GUILayout.Width(18))) { RollMaxtmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 RollMaxtmp = MuUtils.Clamp (RollMaxtmp, -60, 60);
                 GUILayout.Label ("°", GUILayout.ExpandWidth (true));
-                if (GUILayout.Button ("Set", autopilot.RollMax == RollMaxtmp ? btWhite : btGreen)) {
+                if (change || GUILayout.Button ("Set", autopilot.RollMax == RollMaxtmp ? btWhite : btGreen)) {
                     autopilot.RollMax = RollMaxtmp;
                 }
                 GUILayout.EndHorizontal ();
@@ -162,11 +180,14 @@ namespace MuMech
                 else
                     autopilot.DisableSpeedHold ();
             }
+            change = false;
+            if (GUILayout.Button("-", GUILayout.Width(18))) { SpeedTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             SpeedTargettmp.text = GUILayout.TextField (SpeedTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
+            if (GUILayout.Button("+", GUILayout.Width(18))) { SpeedTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             if (SpeedTargettmp < 0)
                 SpeedTargettmp = 0;
             GUILayout.Label ("m/s", GUILayout.ExpandWidth (true));
-            if (GUILayout.Button ("Set", autopilot.SpeedTarget == SpeedTargettmp ? btWhite : btGreen)) {
+            if (change || GUILayout.Button ("Set", autopilot.SpeedTarget == SpeedTargettmp ? btWhite : btGreen)) {
                 autopilot.SpeedTarget = SpeedTargettmp;
             }
             GUILayout.EndHorizontal ();
