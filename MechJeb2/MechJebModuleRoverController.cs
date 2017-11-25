@@ -330,7 +330,7 @@ namespace MuMech
 				headingPID.intAccum = Mathf.Clamp((float)headingPID.intAccum, -1, 1);
 
 				double instantaneousHeading = vesselState.rotationVesselSurface.eulerAngles.y;
-				headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
+				headingErr = MuUtils.ClampDegrees180(heading - instantaneousHeading);
 				if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
 				{
 					float limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Square(curSpeed)), 0.1f, 1f) : 1f);
