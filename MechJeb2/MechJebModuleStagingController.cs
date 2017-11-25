@@ -31,6 +31,26 @@ namespace MuMech
 
         public bool autostagingOnce = false;
 
+        public bool waitingForFirstStaging = false;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (vessel.situation == Vessel.Situations.PRELAUNCH)
+                waitingForFirstStaging = true;
+
+            GameEvents.onStageActivate.Add(stageActivate);
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onStageActivate.Remove(stageActivate);
+        }
+
+        private void stageActivate(int data)
+        {
+            waitingForFirstStaging = false;
+        }
+
         public void AutostageOnce(object user)
         {
             users.Add(user);
@@ -99,7 +119,7 @@ namespace MuMech
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (StageManager.CurrentStage == StageManager.StageCount || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
+            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
@@ -166,7 +186,7 @@ namespace MuMech
             return false;
         }
 
-    // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
+        // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
         public List<int> FindBurnedResources()
         {
             var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
