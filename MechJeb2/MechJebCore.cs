@@ -140,6 +140,19 @@ namespace MuMech
             LandSomewhere();
         }
 
+        [KSPAction("Land target")]
+        public void OnLandTargetAction(KSPActionParam param)
+        {
+
+            LandTarget();
+        }
+
+        private void LandTarget()
+        {
+            landing.LandAtPositionTarget(this);
+        }
+
+
         private void LandSomewhere()
         {
             landing.LandUntargeted(this);
