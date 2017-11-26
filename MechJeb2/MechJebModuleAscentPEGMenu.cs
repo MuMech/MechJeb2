@@ -79,8 +79,6 @@ namespace MuMech
             GUILayout.Label(String.Format("orth. test: {0:F5}", Vector3d.Dot(peg.lambda, peg.lambdaDot)));
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
-            GUILayout.Label("Debug Settings");
-            GuiUtils.SimpleTextBox("Vmiss gain (0.5 recommended):", peg.vmissGain);
 
 
             if (autopilot.enabled)
