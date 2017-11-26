@@ -56,8 +56,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegInterval = new EditableDouble(1);
-        // these values deliberately do not persist
-        public EditableDouble vmissGain = new EditableDouble(1.0);
 
         public Vector3d lambda;
         public Vector3d lambdaDot;
@@ -143,12 +141,19 @@ namespace MuMech
         private double vdval;
         // target burnout angle
         private double gamma;
-        // target orbit
-        private Orbit targetOrbit;
-        // tangent plane (minus orbit normal for PEG)
+        // tangent plane of desired orbit (opposite of the orbit normal)
         public Vector3d iy;
+        // unit vector of rd
+        private Vector3d ix;
+        // unit vector downrange
+        private Vector3d iz;
         // inclination target for FREE_LAN
         private double incval;
+        // linear terminal velocity targets
+        private Vector3d rT;
+        private Vector3d vT;
+        private double C1;
+        private double C2;
 
         private enum IncMode { FIXED_LAN, FREE_LAN };
         private enum TargetMode { PERIAPSIS, ORBIT };
@@ -170,9 +175,16 @@ namespace MuMech
         {
             if ( status != PegStatus.CONVERGED )
             {
+                imode = IncMode.FIXED_LAN;
+                tmode = TargetMode.ORBIT;
+                Orbit orbit = node.nextPatch;
                 vgo = node.GetBurnVector(orbit);
-                TargetOrbit(node.nextPatch);
-                rd = node.nextPatch.SwappedRelativePositionAtUT(node.UT);
+                iy = - orbit.SwappedOrbitNormal();
+                double time = node.UT + 600;
+                C1 = 0.0;
+                C2 = orbit.VerticalVelocity(time).magnitude / orbit.HorizontalVelocity(time).magnitude;
+                /* FIXME: how do we set C1 and C2? */
+                orbit.GetOrbitalStateVectorsAtUT(time, out rT, out vT);
             }
         }
 
@@ -197,15 +209,6 @@ namespace MuMech
                 SetPlaneFromInclination(inc);  /* updating every time would defeat PEG's corrector */
             }
             SetRdvalVdval(PeA, ApA);
-        }
-
-        // matches oribital parameters, does not rendezvous, will have issues below the inv rotation threshold
-        public void TargetOrbit(Orbit o)
-        {
-            imode = IncMode.FIXED_LAN;
-            iy = -o.SwappedOrbitNormal().normalized;
-            tmode = TargetMode.ORBIT;
-            targetOrbit = o;
         }
 
         /* converts PeA + ApA into rdval/vdval for periapsis insertion.
@@ -434,25 +437,28 @@ namespace MuMech
 
             rgo = rgo + ( S - Vector3d.Dot(lambda, rgo) ) * lambda;
 
-            double phiMax = 45.0 * UtilMath.Deg2Rad;
+            if (tmode == TargetMode.ORBIT)
+            {
+                /* PEG-4: clamp only lambdaDot_xz, let lambdaDot_y float */
+                double lambdaDot_xz = 0.35 * Math.Sqrt( gm / ( rm * rm * rm ) );
+                double lambdaDot_y = Vector3d.Dot(lambdaDot, iy);
+                double rgox = Vector3d.Dot ( lambdaDot_xz * QT * Vector3d.Cross(lambda, iy) + S * lambda, ix ) ;
+                double rgoy = lambdaDot_y * QT + S * Vector3d.Dot(lambda, iy);
+                iz = Vector3d.Cross(ix, iy);
+                Vector3d rgoxy = rgox * ix + rgoy * iy;
+                double rgoz = ( S - Vector3d.Dot(lambda, rgoxy) ) / ( Vector3d.Dot(lambda, iz) );
+                rgo = rgoxy + rgoz * iz;
+            }
 
-            /*
-               if (tmode == TargetMode.ORBIT)
-               {
-               var rad = vesselState.radius;
-               double lambdaDot_xz = 0.35 * Math.Sqrt( gm / ( rad * rad * rad ) );
-               lambdaDot = lambdaDot_xz * ( Vector3d.Cross( lambda, iy ) );
-               }
-               else
-               { */
-
-            lambdaDot = ( rgo - S * lambda ) / QT;
-
-            /*
-               }
-               */
+            if ( QT == 0 )
+                lambdaDot = Vector3d.zero;
+            else
+                lambdaDot = ( rgo - S * lambda ) / QT;
 
             double ldm = lambdaDot.magnitude;
+
+            // rthrust + vthrust expansions are only valid over +/- 45 degrees
+            double phiMax = 45.0 * UtilMath.Deg2Rad;
 
             if ( lambdaDot.magnitude > phiMax / K )
             {
@@ -496,19 +502,32 @@ namespace MuMech
 
         private Vector3d corrector()
         {
-            vmissGain = MuUtils.Clamp(vmissGain, 0.01, 0.99);
-
             rp = rp - Vector3d.Dot(rp, iy) * iy;
-            Vector3d ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
-            if ( status == PegStatus.CONVERGED && tgo > 40 )
-                rd = rdval * ix;
-            else
+            ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
+            if (tmode == TargetMode.ORBIT)
                 rd = rp;
+            else if ( status == PegStatus.CONVERGED && tgo < 40 )
+                rd = rp;
+            else
+                rd = rdval * ix;
             Vector3d iz = Vector3d.Cross(ix, iy);
-            vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
 
-            Vector3d vmiss = vd - vp;
-            vgo = vgo + vmissGain * vmiss;
+            double rho_mag;
+            double deltaTcoast;
+
+            if (tmode == TargetMode.ORBIT)
+            {
+                ltvcon(rd, rT, C1, C2, -iy, out vd, out vT, out deltaTcoast);
+                rho_mag =  1 / ( 1 + 0.5 * tgo / deltaTcoast );
+            }
+            else
+            {
+                rho_mag = 1.0;
+                vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
+            }
+
+            Vector3d vmiss = vp - vd;
+            vgo = vgo - rho_mag * vmiss;
 
             if ( imode == IncMode.FREE_LAN )
             {
@@ -518,6 +537,79 @@ namespace MuMech
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
             return vmiss;
+        }
+
+        /*
+         * r0: predicted position (rd = rp)?
+         * r1: desired target position
+         * C1, C2: horizontal and vertical velocity at desired position
+         * uin: Unit vector normal to the transfer plane and in the direction of the angular momentum of the transfer
+         */
+
+        private bool ltvcon(Vector3d r0, Vector3d r1, double C1, double C2, Vector3d uin, out Vector3d v0, out Vector3d v1, out double deltaT) {
+            v0 = v1 = Vector3d.zero;
+            deltaT = 0.0;
+            /* initialization */
+            double gm = mainBody.gravParameter;
+            double r0m = r0.magnitude;
+            double r1m = r1.magnitude;
+            Vector3d ur0 = r0.normalized;
+            Vector3d ur1 = r0.normalized;
+            double ctheta = Vector3d.Dot(ur0, ur1);
+            double stheta = Vector3d.Dot(Vector3d.Cross(ur0, ur1), uin);
+            double cr = (r1 - r0).magnitude;
+            double s = ( r0m + r1m + cr ) / 2.0;
+            double lambda = Math.Sign(stheta) * Math.Sqrt(1 - cr/s);
+            double rcirc = s/2.0;
+            double vcirc = gm / rcirc;
+
+            /* quadratic */
+            double A = ((r1m / r0m) - ctheta) - C2 * stheta;
+            double C = - (rcirc / r1m) * ( 1 - ctheta);
+            double B = - (C1/vcirc) * stheta;
+            double D = B * B - 4 * A * C;
+
+            if ( D < 0 )
+                return false;
+
+            /* solve for initial and final velocity */
+            double vh1 = -2.0 * C / ( B + Math.Sqrt(D) );
+            double vh0 = (r1m / r0m) * vh1;
+            double vr1 = (C1 / vcirc) + C2 * vh1;
+            double vr0 = vr1 * ctheta - ( vh1 - ( rcirc / r1m ) / vh1 ) * stheta;
+            v0 = vcirc * ( vr0 * ur0 + vh0 * Vector3d.Cross( uin, ur0 ) );
+            v1 = vcirc * ( vr1 * ur1 + vh1 * Vector3d.Cross( uin, ur1 ) );
+
+            /* transtime */
+            double U = lambda * Math.Sqrt( s - r0m / s - r1m ) * vh0 - vr0;
+            double E = Math.Sqrt(1.0 - lambda * lambda * ( 1.0 - U * U ) ) - lambda * U;
+            double W = Math.Sqrt(1.0 + lambda + U * E / 2.0 );  /* unclear if this equation is transcribed correctly */
+            double WW = (W - 1 ) / (W + 1);
+            deltaT = (rcirc / vcirc ) * ( 4.0 * lambda * E + E*E*E/(W*W*W) * QM(W, WW));  /* unclear if (E/W)^3 is right */
+
+            return true;
+        }
+
+        double QM(double W, double WW) {
+            double F = 1.0;
+            double V = 1.0;
+            double X = 1.0;
+            int level = 3;
+            double Bn = 0;
+            double Bd = 15;
+
+            while(true) {
+                double Fold = F;
+                level += 2;
+                Bn += level;
+                Bd = Bd + 4 * level;
+                X = Bd / ( Bd - Bn * WW * X );
+                V = ( X - 1 ) * V;
+                F = Fold + V;
+                if (Fold == F)
+                    break;
+            }
+            return W + (1.0 - WW) * (5.0 - F * WW) / 15.0;
         }
 
         List<Vector3d> CSEPoints = new List<Vector3d>();
