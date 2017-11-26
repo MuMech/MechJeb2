@@ -124,8 +124,9 @@ namespace MuMech
                 return;
 
             //don't decouple active or idle engines or tanks
-            List<int> burnedResources = FindBurnedResources();
-            if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources))
+            List<ModuleEngines> activeModuleEngines = FindActiveModuleEngines();
+            List<int> burnedResources = FindBurnedResources(activeModuleEngines);
+            if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
@@ -173,12 +174,12 @@ namespace MuMech
         }
 
         //determine whether it's safe to activate inverseStage
-        public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources)
+        public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources))
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources, activeModuleEngines))
                 {
                     return true;
                 }
@@ -186,20 +187,24 @@ namespace MuMech
             return false;
         }
 
-        // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
-        public List<int> FindBurnedResources()
+        public List<ModuleEngines> FindActiveModuleEngines()
         {
             var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
-                !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
+                                                        !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
-            var burnedPropellants = engineModules.SelectMany(eng => eng.propellants);
-            List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
+            return engineModules.ToList();
+        }
 
+        // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
+        public List<int> FindBurnedResources(List<ModuleEngines> activeModuleEngines)
+        {
+            var burnedPropellants = activeModuleEngines.SelectMany(eng => eng.propellants);
+            List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
             return propellantIDs;
         }
 
         //detect if a part is above an active or idle engine in the part tree
-        public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources)
+        public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE)
                 && p.IsEngine() && !p.IsSepratron() && p.EngineHasFuel())
@@ -211,15 +216,19 @@ namespace MuMech
                 for (int i = 0; i < p.Resources.Count; i++)
                 {
                     PartResource r = p.Resources[i];
-                    if (r.amount > 0 && r.info.id != PartResourceLibrary.ElectricityHashcode && tankResources.Contains(r.info.id))
+                    if (r.amount > p.resourceRequestRemainingThreshold && r.info.id != PartResourceLibrary.ElectricityHashcode && tankResources.Contains(r.info.id))
                     {
-                        return true;
+                        foreach (ModuleEngines engine in activeModuleEngines)
+                        {
+                            if (engine.part.crossfeedPartSet.ContainsPart(p))
+                                return true;
+                        }
                     }
                 }
             }
             for (int i = 0; i < p.children.Count; i++)
             {
-                if (HasActiveOrIdleEngineOrTankDescendant(p.children[i], tankResources))
+                if (HasActiveOrIdleEngineOrTankDescendant(p.children[i], tankResources, activeModuleEngines))
                 {
                     return true;
                 }
@@ -285,8 +294,8 @@ namespace MuMech
             {
                 PartResource r = p.Resources[i];
                 if (r.info.id == PartResourceLibrary.ElectricityHashcode) continue;
-                if (r.maxAmount > 0) hadResources = true;
-                if (r.amount > 0) hasResources = true;
+                if (r.maxAmount > p.resourceRequestRemainingThreshold) hadResources = true;
+                if (r.amount > p.resourceRequestRemainingThreshold) hasResources = true;
             }
             if (hadResources && !hasResources) return true;
 

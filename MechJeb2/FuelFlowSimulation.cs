@@ -310,7 +310,7 @@ namespace MuMech
 
                     if (!partDecoupledInNextStage && activeEnginesWorking)
                     {
-                        //print("Not allowed to stage because nothing is decoupled in the enst stage, and there are already other engines active.");
+                        //print("Not allowed to stage because nothing is decoupled in the next stage, and there are already other engines active.");
                         return false;
                     }
                 }
