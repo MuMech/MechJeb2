@@ -402,7 +402,7 @@ namespace MuMech
             for (int i = 0; i < vesselState.parachutes.Count; i++)
             {
                 ModuleParachute p = vesselState.parachutes[i];
-                if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
+                if (Math.Max(p.part.inverseStage,0) >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
                 {
                     return true;
                 }
@@ -420,16 +420,13 @@ namespace MuMech
 
         void DeployLandingGears()
         {
-            //new-style landing legs are activated by an event:
-            //vessel.rootPart.SendEvent("LowerLeg");
-
-            //old-style landings legs are activated on part activation:
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
                 if (p.HasModule<ModuleWheelDeployment>())
                 {
-                    if (p.inverseStage >= limitGearsStage)
+                    // p.inverseStage is -1 for some configuration ?!?
+                    if (Math.Max(p.inverseStage, 0) >= limitGearsStage)
                     {
                         foreach (ModuleWheelDeployment wd in p.FindModulesImplementing<ModuleWheelDeployment>())
                         {
