@@ -187,9 +187,7 @@ namespace MuMech
 
                 double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset) * UtilMath.Rad2Deg, -30, 30);
 
-                desiredFlightPathAngle += steerAngle;
-                if (desiredFlightPathAngle > 90)
-                    desiredFlightPathAngle = 90;
+                desiredFlightPathAngle = MuUtils.Clamp(desiredFlightPathAngle + steerAngle, -90, 90);
             }
 
             attitudeTo(desiredFlightPathAngle);
