@@ -32,6 +32,16 @@ namespace MuMech
             normalPlus = dV.y;
         }
 
+        void MergeNext(int index)
+        {
+            ManeuverNode cur = vessel.patchedConicSolver.maneuverNodes[index];
+            ManeuverNode next = vessel.patchedConicSolver.maneuverNodes[index+1];
+
+            double newUT = (cur.UT + next.UT) / 2;
+            cur.UpdateNode(cur.patch.DeltaVToManeuverNodeCoordinates(newUT, cur.WorldDeltaV() + next.WorldDeltaV()), newUT);
+            next.RemoveSelf();
+        }
+
         protected override void WindowGUI(int windowID)
         {
             if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
@@ -60,6 +70,7 @@ namespace MuMech
                 nodeIndex = GuiUtils.ArrowSelector(nodeIndex, numNodes, "Maneuver node #" + (nodeIndex + 1));
 
                 node = vessel.patchedConicSolver.maneuverNodes[nodeIndex];
+                if (nodeIndex < (numNodes-1) && GUILayout.Button("Merge next node")) MergeNext(nodeIndex);
             }
 
             if (node != oldNode)

@@ -18,7 +18,7 @@ namespace MuMech
 		private int initTime = 5; //Add a 5s timer after the action
 		private float startTime = 0f;
 
-		public MechJebModuleScriptActionActiveVessel (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionActiveVessel (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			this.commandParts.Clear();
 			this.commandPartsNames.Clear();
@@ -38,9 +38,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			FlightGlobals.SetActiveVessel(commandParts[selectedPartIndex].vessel);
 			this.scriptModule.setActiveBreakpoint(actionIndex, commandParts[selectedPartIndex].vessel);
 			//crewableParts[selectedPartIndex].vessel.MakeActive();

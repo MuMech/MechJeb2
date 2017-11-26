@@ -1,0 +1,19 @@
+# allow git to guess types we don't specify
+*          text=auto
+
+# explictly specify most everything
+*.cs       text diff=csharp
+*.cfg      text
+*.asset    text
+*.shader   text
+*.manifest text
+*.md       text
+*.txt      text
+*.resx     text
+
+*.png     binary
+*.dds     binary
+*.mu      binary
+*.zip     binary
+*.dll     binary
+*.bundle  binary

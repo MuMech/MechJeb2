@@ -23,7 +23,7 @@ namespace MuMech
             if (d == 0 || double.IsInfinity(d) || double.IsNaN(d)) return d.ToString() + " ";
 
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
-            
+
             const int unitIndexOffset = 8; //index of "" in the units array
             int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
             if (unitIndex < 0) unitIndex = 0;
@@ -116,6 +116,13 @@ namespace MuMech
             return angle;
         }
 
+        public static double IntPow(double val, int exp) {
+            double result = val;
+            for(int i=1;i<exp;++i)
+                result *= val;
+            return result;
+        }
+
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
         {
             Orbit ret = new Orbit();
@@ -143,7 +150,7 @@ namespace MuMech
         }
 
         //Some black magic to access the system clipboard from within Unity, found somewhere on the Web.
-        //Unfortunately it doesn't seem we have access to the System.Windows.Forms.Clipboard class, which would 
+        //Unfortunately it doesn't seem we have access to the System.Windows.Forms.Clipboard class, which would
         //make this easier.
         private static PropertyInfo m_systemCopyBufferProperty = null;
         private static PropertyInfo GetSystemCopyBufferProperty()
@@ -170,7 +177,7 @@ namespace MuMech
                 P.SetValue(null, value, null);
             }
         }
- 
+
 		public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
 		{
 			T tmp = list[indexA];
@@ -239,15 +246,15 @@ namespace MuMech
 
             if (hi == 0)
                 return new Color(v, t, p, alpha);
-            if (hi == 1)           
+            if (hi == 1)
                 return new Color(q, v, p, alpha);
-            if (hi == 2)           
+            if (hi == 2)
                 return new Color(p, v, t, alpha);
-            if (hi == 3)           
+            if (hi == 3)
                 return new Color(p, q, v, alpha);
-            if (hi == 4)           
+            if (hi == 4)
                 return new Color(t, p, v, alpha);
-                                    
+
             return new Color(v, p, q, alpha);
         }
     }
@@ -350,7 +357,7 @@ namespace MuMech
         {
             return v.value;
         }
-        
+
         public override string ToString()
         {
             return value.ToString();
@@ -369,7 +376,7 @@ namespace MuMech
         protected Dictionary<TKey, TValue> d = new Dictionary<TKey, TValue>();
         // Also store the keys in a list so we can iterate them without allocating an IEnumerator
         protected List<TKey> k = new List<TKey>();
-        
+
         public virtual TValue this[TKey key]
         {
             get
@@ -443,8 +450,11 @@ namespace MuMech
         {
             get
             {
-                if (d.ContainsKey(key)) return d[key];
-                else return defaultValue;
+                TValue val;
+                if (d.TryGetValue(key, out val))
+                    return val;
+                
+                return defaultValue;
             }
             set
             {
@@ -457,7 +467,7 @@ namespace MuMech
             }
         }
     }
-    
+
     //Represents a 2x2 matrix
     public class Matrix2x2
     {
@@ -492,14 +502,14 @@ namespace MuMech
     }
 
     //Is it silly to have a Matrix2x2 and a Matrix3x3, and not a generic Matrix? Yes.
-    //However I don't feel like implementing inverse() for matrices larger than 
+    //However I don't feel like implementing inverse() for matrices larger than
     //2x2, and I want Matrix3x3f to interact nicely with Vector3.
     public class Matrix3x3f
     {
         //row index, then column index
         private float[,] e = new float[3, 3];
 
-        public float this[int i, int j] 
+        public float this[int i, int j]
         {
             get { return e[i, j]; }
             set { e[i, j] = value; }
@@ -529,7 +539,7 @@ namespace MuMech
 			return ret;
 		}
 
-        public static Vector3d operator *(Matrix3x3f M, Vector3 v) 
+        public static Vector3d operator *(Matrix3x3f M, Vector3 v)
         {
             Vector3 ret = Vector3.zero;
             for(int i = 0; i < 3; i++) {

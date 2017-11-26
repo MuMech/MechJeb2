@@ -11,15 +11,15 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableDouble leadTime;
 
-		public MechJebModuleScriptActionTolerance (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTolerance (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			tolerance = new EditableDouble(core.node.tolerance.val);
 			leadTime = new EditableDouble(core.node.leadTime.val);
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			core.node.tolerance = tolerance;
 			core.node.leadTime = leadTime;
 			this.endAction();

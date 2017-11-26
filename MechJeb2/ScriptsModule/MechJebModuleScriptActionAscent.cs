@@ -14,7 +14,7 @@ namespace MuMech
 		private List<String> actionTypes = new List<String>();
 		//Module Parameters
 		[Persistent(pass = (int)Pass.Type)]
-		public IAscentPath ascentPath;
+		public MechJebModuleAscentBase ascentPath;
 		[Persistent(pass = (int)Pass.Type)]
 		public double desiredOrbitAltitude;
 		[Persistent(pass = (int)Pass.Type)]
@@ -40,7 +40,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		public Orbit targetOrbit;
 
-		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core) : base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
 		{
 			this.autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
 			this.ascentModule = core.GetComputerModule<MechJebModuleAscentGuidance>();
@@ -128,9 +128,9 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			this.writeModuleConfiguration();
 			if (this.launchingToRendezvous)
 			{
@@ -154,4 +154,3 @@ namespace MuMech
 		}
 	}
 }
-

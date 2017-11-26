@@ -24,13 +24,13 @@ namespace MuMech
 		private int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
 		private float startTime = 0f;
 
-		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			warping = true;
 			Orbit orbit = this.scriptModule.orbit;
 			VesselState vesselState = this.scriptModule.vesselState;
@@ -118,7 +118,7 @@ namespace MuMech
 			base.WindowGUI(windowID);
 
 			GUILayout.Label("Warp to: ", GUILayout.ExpandWidth(false));
-			warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, warpTargetStrings);
+			warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
 
 			if (warpTarget == WarpTarget.Time)
 			{
