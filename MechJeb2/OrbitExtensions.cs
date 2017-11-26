@@ -71,6 +71,18 @@ namespace MuMech
             return Vector3d.Exclude(o.Up(UT), o.Prograde(UT)).normalized;
         }
 
+        //horizontal component of the velocity vector
+        public static Vector3d HorizontalVelocity(this Orbit o, double UT)
+        {
+            return Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
+        }
+
+        //vertical component of the velocity vector
+        public static Vector3d VerticalVelocity(this Orbit o, double UT)
+        {
+            return Vector3d.Dot(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT)) * o.Up(UT);
+        }
+
         //normalized vector parallel to the planet's surface and pointing in the northward direction
         public static Vector3d North(this Orbit o, double UT)
         {
