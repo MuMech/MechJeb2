@@ -121,6 +121,7 @@ namespace MuMech
         private Vector3d vd;
         private Vector3d rp;
         private Vector3d vp;
+        double deltaTcoast;
 
         private double last_PEG;    // this is the last PEG update time
         public double K;
@@ -150,10 +151,7 @@ namespace MuMech
         // inclination target for FREE_LAN
         private double incval;
         // linear terminal velocity targets
-        private Vector3d rT;
-        private Vector3d vT;
-        private double C1;
-        private double C2;
+        private Orbit target_orbit;
 
         private enum IncMode { FIXED_LAN, FREE_LAN };
         private enum TargetMode { PERIAPSIS, ORBIT };
@@ -177,14 +175,9 @@ namespace MuMech
             {
                 imode = IncMode.FIXED_LAN;
                 tmode = TargetMode.ORBIT;
-                Orbit orbit = node.nextPatch;
+                target_orbit = node.nextPatch;
                 vgo = node.GetBurnVector(orbit);
                 iy = - orbit.SwappedOrbitNormal();
-                double time = node.UT + 600;
-                C1 = 0.0;
-                C2 = orbit.VerticalVelocity(time).magnitude / orbit.HorizontalVelocity(time).magnitude;
-                /* FIXME: how do we set C1 and C2? */
-                orbit.GetOrbitalStateVectorsAtUT(time, out rT, out vT);
             }
         }
 
@@ -489,6 +482,13 @@ namespace MuMech
             rp = r + v * tgo + rgrav + rthrust;
             vp = v + vgo + vgrav;
 
+            /*
+            if (tmode == TargetMode.ORBIT)
+            {
+                ConicStateUtils.CSE(mainBody.gravParameter, rp, vp, deltaTcoast, out rp, out vp);
+            }
+            */
+
             // corrector
             Vector3d vmiss = corrector();
 
@@ -513,12 +513,24 @@ namespace MuMech
             Vector3d iz = Vector3d.Cross(ix, iy);
 
             double rho_mag;
-            double deltaTcoast;
 
             if (tmode == TargetMode.ORBIT)
             {
+                Vector3d target_orbit_periapsis = target_orbit.getRelativePositionFromTrueAnomaly(0).xzy;
+                double ta = Vector3.Angle(target_orbit_periapsis, rd) * UtilMath.Deg2Rad;
+                if ( Vector3d.Dot(Vector3d.Cross(target_orbit_periapsis, rd), -iy) < 0 )
+                    ta = -ta;
+                Debug.Log("ta = " + ta);
+                vd = target_orbit.getOrbitalVelocityAtTrueAnomaly(ta).xzy;
+                Vector3d v = vesselState.orbitalVelocity;
+                Debug.Log("v = " + v.magnitude + " vp = " + vp.magnitude + " vd = " + vd.magnitude + " vd-vp = " + (vd - vp).magnitude + " vd-v = " + (vd - v).magnitude);
+
+                /*
+                Debug.Log("BEFORE rd = " + rd + " rT = " + rT + " C1 = " + C1 + " C2 = " + C2 + " vd = " + vd + " vT = " + vT + " deltaTcoast = " + deltaTcoast);
                 ltvcon(rd, rT, C1, C2, -iy, out vd, out vT, out deltaTcoast);
-                rho_mag =  1 / ( 1 + 0.5 * tgo / deltaTcoast );
+                Debug.Log("AFTER rd = " + rd + " rT = " + rT + " C1 = " + C1 + " C2 = " + C2 + " vd = " + vd + " vT = " + vT + " deltaTcoast = " + deltaTcoast);
+                */
+                rho_mag = 1.0;
             }
             else
             {
@@ -570,7 +582,10 @@ namespace MuMech
             double D = B * B - 4 * A * C;
 
             if ( D < 0 )
+            {
+                Debug.Log("no solution from quadratic A = " + A + " B = " + B + " C = " + C + " D = " + D);
                 return false;
+            }
 
             /* solve for initial and final velocity */
             double vh1 = -2.0 * C / ( B + Math.Sqrt(D) );
@@ -598,6 +613,7 @@ namespace MuMech
             double Bn = 0;
             double Bd = 15;
 
+            int i = 0;
             while(true) {
                 double Fold = F;
                 level += 2;
@@ -606,9 +622,15 @@ namespace MuMech
                 X = Bd / ( Bd - Bn * WW * X );
                 V = ( X - 1 ) * V;
                 F = Fold + V;
-                if (Fold == F)
+                if (Math.Abs(Fold - F) < 1e-15)
                     break;
+                if ( i++ > 100 )
+                {
+                    Debug.Log("BOOM!");
+                    break;
+                }
             }
+            Debug.Log("iterations = " + i );
             return W + (1.0 - WW) * (5.0 - F * WW) / 15.0;
         }
 
