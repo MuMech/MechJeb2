@@ -135,6 +135,7 @@ namespace MuMech
             {
                 if (!burnTriggered)
                 {
+                    peg.AssertStart();
                     burnTriggered = true;
                 }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
