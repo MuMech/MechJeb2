@@ -518,10 +518,9 @@ namespace MuMech
                 rd = rdval * ix;
             Vector3d iz = Vector3d.Cross(ix, iy);
 
-            double rho_mag;
-
             if (tmode == TargetMode.ORBIT)
             {
+                /* FIXME: very unlikely to work on ascents / below inv rotation threshold */
                 Vector3d target_orbit_periapsis = target_orbit.getRelativePositionFromTrueAnomaly(0).xzy;
                 double ta = Vector3.Angle(target_orbit_periapsis, rd) * UtilMath.Deg2Rad;
                 if ( Vector3d.Dot(Vector3d.Cross(target_orbit_periapsis, rd), -iy) < 0 )
@@ -530,22 +529,14 @@ namespace MuMech
                 vd = target_orbit.getOrbitalVelocityAtTrueAnomaly(ta).xzy;
                 Vector3d v = vesselState.orbitalVelocity;
                 Debug.Log("v = " + v.magnitude + " vp = " + vp.magnitude + " vd = " + vd.magnitude + " vd-vp = " + (vd - vp).magnitude + " vd-v = " + (vd - v).magnitude);
-
-                /*
-                Debug.Log("BEFORE rd = " + rd + " rT = " + rT + " C1 = " + C1 + " C2 = " + C2 + " vd = " + vd + " vT = " + vT + " deltaTcoast = " + deltaTcoast);
-                ltvcon(rd, rT, C1, C2, -iy, out vd, out vT, out deltaTcoast);
-                Debug.Log("AFTER rd = " + rd + " rT = " + rT + " C1 = " + C1 + " C2 = " + C2 + " vd = " + vd + " vT = " + vT + " deltaTcoast = " + deltaTcoast);
-                */
-                rho_mag = 1.0;
             }
             else
             {
-                rho_mag = 1.0;
                 vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
             }
 
             Vector3d vmiss = vp - vd;
-            vgo = vgo - rho_mag * vmiss;
+            vgo = vgo - 1.0 * vmiss;
 
             if ( imode == IncMode.FREE_LAN )
             {
