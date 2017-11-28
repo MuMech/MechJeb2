@@ -181,6 +181,12 @@ namespace MuMech
             }
         }
 
+        /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
+        public bool isStable()
+        {
+            return status == PegStatus.CONVERGED || status == PegStatus.TERMINAL;
+        }
+
         public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
         {
             imode = IncMode.FIXED_LAN;
