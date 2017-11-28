@@ -123,18 +123,28 @@ namespace MuMech
             }
 
             //aim along the node
-            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
             double halfBurnTime;
             BurnTime(dVLeft, out halfBurnTime);
 
             double timeToNode = node.UT - vesselState.time;
+
+            if (vesselState.time > node.UT - halfBurnTime - leadTime)
+            {
+                peg.AssertStart();
+                if (peg.isStable())
+                    core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
+            }
+            else
+            {
+                core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
+            }
+
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
             if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
             {
-                if (!burnTriggered)
+                if (!burnTriggered && core.attitude.attitudeAngleFromTarget() < 1)
                 {
-                    peg.AssertStart();
                     burnTriggered = true;
                 }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -156,7 +166,6 @@ namespace MuMech
 
             if (burnTriggered)
             {
-                core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
                 core.thrust.targetThrottle = 1.0F;
             }
             else
