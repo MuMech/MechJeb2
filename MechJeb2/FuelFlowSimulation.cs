@@ -132,6 +132,7 @@ namespace MuMech
                 double dt;
                 stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
                 //print("Stage " + simStage + " step " + step + " dt " + dt);
+                stats = stats.Append(SimulateTimeStep(double.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
                 // BS engine detected. Bail out.
                 if (dt == double.MaxValue || double.IsInfinity(dt))
                 {
@@ -148,7 +149,7 @@ namespace MuMech
         //Simulate a single time step, and return stats for the time step.
         // - desiredDt is the requested time step size. Often the actual time step size
         //   with be less than this. The actual step size is reported in dt.
-        private Stats SimulateTimeStep(float desiredDt, float throttle, double staticPressure, double atmDensity, double machNumber, out double dt)
+        private Stats SimulateTimeStep(double desiredDt, float throttle, double staticPressure, double atmDensity, double machNumber, out double dt)
         {
             Stats stats = new Stats();
 
