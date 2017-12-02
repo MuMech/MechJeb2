@@ -417,14 +417,19 @@ namespace MuMech
                     pos = orbit.getTruePositionAtUT(x[4]);
                     Vector3d err = pos - data.target_orbit.getTruePositionAtUT(x[4]);
 
-                    /* this needs to be components of err and cannot simply be err.magnitude */
-                    fi[0] = err.x;
-                    fi[1] = err.y;
-                    fi[2] = err.z;
-                    /* similarly here, and the 10,000x fudge factor was experimentally determined */
-                    fi[3] = DV.x * 10000.0;
-                    fi[4] = DV.y * 10000.0;
-                    fi[5] = DV.z * 10000.0;
+                    if ( err.magnitude < 100000 )
+                    {
+                        fi[0] = DV.x;
+                        fi[1] = DV.y;
+                        fi[2] = DV.z;
+                    }
+                    else
+                    {
+                        /* this needs to be components of err and cannot simply be err.magnitude */
+                        fi[0] = err.x;
+                        fi[1] = err.y;
+                        fi[2] = err.z;
+                    }
                     return;
                 }
 
@@ -464,7 +469,7 @@ namespace MuMech
                 data.initial_orbit = initial_orbit;
                 data.target_orbit = target;
 
-                alglib.minlmcreatev(6, x, 0.001, out state);
+                alglib.minlmcreatev(5, 3, x, 0.001, out state);
                 double epsx = 1e-16; // stop if |(x(k+1)-x(k)) ./ scale| <= EpsX
                 double epsf = 1e-16; // stop if |F(k+1)-F(k)| <= EpsF*max{|F(k)|,|F(k+1)|,1}
             alglib.minlmsetcond(state, 0, epsf, epsx, 50);
