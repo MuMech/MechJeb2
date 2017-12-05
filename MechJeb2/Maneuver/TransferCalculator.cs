@@ -385,6 +385,7 @@ namespace MuMech
             public Orbit initial_orbit;
             public Orbit target_orbit;
             public double UT_arrival;
+            public bool failed;
         }
 
         static void DistanceToTarget(double[] x, double[] fi, object obj)
@@ -417,6 +418,7 @@ namespace MuMech
                         fi[1] = err.y;
                         fi[2] = err.z;
                     }
+                    data.failed = false;  /* we intersected at some point with the target body SOI */
 
                     return;
                 }
@@ -442,6 +444,7 @@ namespace MuMech
                 // As of 0.25 CalculatePatch fails if the orbit does not change SoI
                 if (next_orbit.referenceBody == null)
                 {
+                    // XXX: is this ever hit in current KSP, with this code? should we just return the getTruePositionAtUT() miss here?
                     next_orbit.UpdateFromOrbitAtUT(orbit, orbit.StartUT + orbit.period, orbit.referenceBody);
                 }
                 orbit = next_orbit;
@@ -477,6 +480,7 @@ namespace MuMech
                 data.target_orbit = target;
                 data.target_body = target_body;
                 data.UT_arrival = UT_arrival;
+                data.failed = true;
 
                 alglib.minlmcreatev(4, 3, x, 0.001, out state);
                 alglib.minlmsetcond(state, 0, 0, 0, 200);
@@ -487,8 +491,14 @@ namespace MuMech
                 Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
                 Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
 
+                // try again if we failed to intersect the target orbit
+                if ( data.failed )
+                {
+                    Debug.Log("Failed to intersect target orbit");
+                    N++;
+                }
                 // try again in one orbit if the maneuver node is in the past
-                if (x[3] < earliest_UT)
+                else if (x[3] < earliest_UT || data.failed)
                 {
                     Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - x[3]) + " s too early, trying again in " + initial_orbit.period + " s");
                     N++;
@@ -496,6 +506,10 @@ namespace MuMech
                 else {
                     Debug.Log("from optimizer DV = " + new Vector3d(x[0], x[1], x[2]) + " t = " + x[3] + " original arrival = " + UT_arrival);
                     return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), x[3]);
+                }
+                if (N > 10)
+                {
+                    throw new OperationException("Ejection Optimization failed; try manual selection");
                 }
             }
         }
