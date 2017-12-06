@@ -148,7 +148,7 @@ namespace MuMech
 
                 GUIStyle si = new GUIStyle(GUI.skin.label);
                 if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
-                    si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
+                    si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                 GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º", rightLabelStyle: si);
 
                 core.thrust.LimitToPreventOverheatsInfoItem();
