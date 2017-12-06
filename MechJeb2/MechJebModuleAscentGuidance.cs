@@ -148,7 +148,8 @@ namespace MuMech
 
                 GUIStyle si = new GUIStyle(GUI.skin.label);
                 if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
-                    si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
+                
+                si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
                 desiredInclination.text = GUILayout.TextField(desiredInclination.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
