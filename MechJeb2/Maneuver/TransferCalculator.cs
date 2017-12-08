@@ -156,8 +156,9 @@ namespace MuMech
 
                     Vector3d exitDV, captureDV;
                     CalcLambertDVs(t0, dt, out exitDV, out captureDV);
+                    var maneuver = ComputeEjectionManeuver(exitDV, origin, t0);
 
-                    computed[date_index, duration_index] = exitDV.magnitude;
+                    computed[date_index, duration_index] = maneuver.dV.magnitude;
                     if (includeCaptureBurn)
                         computed[date_index, duration_index] += captureDV.magnitude;
 #if DEBUG
