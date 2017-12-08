@@ -77,8 +77,16 @@ namespace MuMech
             GUILayout.Label(String.Format("K: {0:F4}", peg.K ));
             GUILayout.Label(String.Format("iy inc: {0:F4}", Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
             GUILayout.Label(String.Format("orth. test: {0:F5}", Vector3d.Dot(peg.lambda, peg.lambdaDot)));
-            GUILayout.Label("PEG Status: " + peg.status);
-
+            GUILayout.BeginHorizontal();
+            GUIStyle si = new GUIStyle(GUI.skin.label);
+            if ( peg.isStable() )
+                si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
+            else if ( peg.isInitializing() )
+                si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+            else
+                si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
+            GUILayout.Label("PEG Status: " + peg.status, si);
+            GUILayout.EndHorizontal();
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
