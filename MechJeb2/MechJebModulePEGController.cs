@@ -22,8 +22,7 @@ using System.Collections.Generic;
 /*
  *  Higher Priority / Nearer Term TODO list:
  *
- *  - external delta-v mode and hooking PEG up to the NodeExecutor
- *  - "FREE" inclination mode (in-plane maneuvers)
+ *  - better thrust integrals or just rkf45
  *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
  *
  *  Medium Priority / Medium Term TODO list:
