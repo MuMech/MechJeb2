@@ -81,7 +81,7 @@ namespace MuMech
             GUIStyle si = new GUIStyle(GUI.skin.label);
             if ( peg.isStable() )
                 si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-            else if ( peg.isInitializing() )
+            else if ( peg.isInitializing() || peg.status == PegStatus.FINISHED )
                 si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
             else
                 si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
