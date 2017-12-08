@@ -21,6 +21,8 @@ namespace MuMech
 
         public EditableTime maxArrivalTime = new EditableTime();
 
+        bool includeCaptureBurn = false;
+
         const double minSamplingStep = 12 * 3600;
 
         private Mode selectionMode = Mode.Porkchop;
@@ -85,10 +87,10 @@ namespace MuMech
             switch (selectionMode)
             {
             case Mode.LimitedTime:
-                worker = new TransferCalculator (o, target.TargetOrbit, universalTime, maxArrivalTime, minSamplingStep);
+                worker = new TransferCalculator (o, target.TargetOrbit, universalTime, maxArrivalTime, minSamplingStep, includeCaptureBurn);
                 break;
             case Mode.Porkchop:
-                worker = new AllGraphTransferCalculator(o, target.TargetOrbit, minDepartureTime, maxDepartureTime, minTransferTime, maxTransferTime, windowWidth, porkchop_Height);
+                worker = new AllGraphTransferCalculator(o, target.TargetOrbit, minDepartureTime, maxDepartureTime, minTransferTime, maxTransferTime, windowWidth, porkchop_Height, includeCaptureBurn);
                 break;
             }
         }
@@ -177,7 +179,7 @@ namespace MuMech
                 var p = worker.computed[point[0], point[1]];
                 if (p != null)
                 {
-                    dv = MuUtils.ToSI(p.dV.magnitude) + "m/s";
+                    dv = MuUtils.ToSI(p) + "m/s";
                     if (worker.DateFromIndex(point[0]) < Planetarium.GetUniversalTime())
                         departure = "any time now";
                     else
@@ -207,6 +209,8 @@ namespace MuMech
                 ComputeTimes(o, target.TargetOrbit, universalTime);
             GUILayout.EndHorizontal();
 
+            includeCaptureBurn = GUILayout.Toggle(includeCaptureBurn, "include capture burn");
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Select: ");
             GUILayout.FlexibleSpace();
@@ -221,7 +225,7 @@ namespace MuMech
                 int bestDuration = 0;
                 for (int i = 1; i < worker.computed.GetLength(1); i++)
                 {
-                    if (worker.computed[0, bestDuration].dV.sqrMagnitude > worker.computed[0, i].dV.sqrMagnitude)
+                    if (worker.computed[0, bestDuration] > worker.computed[0, i])
                         bestDuration = i;
                 }
                 plot.selectedPoint = new int[]{ 0, bestDuration };
@@ -282,7 +286,7 @@ namespace MuMech
                 throw new OperationException("Started computation");
             }
 
-            if (worker.result == null)
+            if (worker.arrivalDate < 0 )
             {
                 throw new OperationException("Computation failed");
             }
@@ -290,15 +294,15 @@ namespace MuMech
             {
                 if (plot == null || plot.selectedPoint == null)
                     throw new OperationException("Invalid point selected.");
-                return TransferCalculator.OptimizeEjection(
-                    worker.computed[plot.selectedPoint[0], plot.selectedPoint[1]],
+                return worker.OptimizeEjection(
+                    worker.DateFromIndex(plot.selectedPoint[0]),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(plot.selectedPoint[0]) + worker.DurationFromIndex(plot.selectedPoint[1]),
                     UT);
             }
 
-            return TransferCalculator.OptimizeEjection(
-                    worker.computed[worker.bestDate, worker.bestDuration],
+            return worker.OptimizeEjection(
+                    worker.DateFromIndex(worker.bestDate),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(worker.bestDate) + worker.DurationFromIndex(worker.bestDuration),
                     UT);

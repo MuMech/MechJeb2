@@ -7,7 +7,7 @@ namespace MuMech
 {
 	public class Porkchop
 	{
-		public static void RefreshTexture(ManeuverParameters[,] nodes, Texture2D texture)
+		public static void RefreshTexture(double[,] nodes, Texture2D texture)
 		{
 			Gradient colours = new Gradient();
 			var colourKeys = new GradientColorKey[6];
@@ -41,19 +41,16 @@ namespace MuMech
 			{
 				for (int j = 0; j < height; j++)
 				{
-					if (nodes[i, j] != null)
-					{
-						double DVsqr = nodes[i, j].dV.sqrMagnitude;
-						if (DVsqr < DVminsqr)
-						{
-							DVminsqr = DVsqr;
-						}
+                    double DVsqr = nodes[i, j] * nodes[i, j];
+                    if (DVsqr < DVminsqr)
+                    {
+                        DVminsqr = DVsqr;
+                    }
 
-						DVmaxsqr = Math.Max(DVmaxsqr, nodes[i, j].dV.sqrMagnitude);
-					}
+                    DVmaxsqr = Math.Max(DVmaxsqr, nodes[i, j] * nodes[i, j]);
 				}
 			}
-            
+
 			double logDVminsqr = Math.Log(DVminsqr);
 			double logDVmaxsqr = Math.Min(Math.Log(DVmaxsqr), logDVminsqr + 4);
 
@@ -61,15 +58,8 @@ namespace MuMech
 			{
 				for (int j = 0; j < height; j++)
 				{
-					if (nodes[i, j] == null)
-					{
-						texture.SetPixel(i, j, colours.Evaluate(1));
-					}
-					else
-					{
-						double lambda = (Math.Log(nodes[i, j].dV.sqrMagnitude) - logDVminsqr) / (logDVmaxsqr - logDVminsqr);
-						texture.SetPixel(i, j, colours.Evaluate((float)lambda));
-					}
+                    double lambda = (Math.Log(nodes[i, j] * nodes[i, j]) - logDVminsqr) / (logDVmaxsqr - logDVminsqr);
+                    texture.SetPixel(i, j, colours.Evaluate((float)lambda));
 				}
 			}
 
@@ -82,4 +72,3 @@ namespace MuMech
 		}
 	}
 }
-
