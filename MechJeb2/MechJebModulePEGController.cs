@@ -186,6 +186,12 @@ namespace MuMech
             return status == PegStatus.CONVERGED || status == PegStatus.TERMINAL;
         }
 
+        /* normal pre-states but not usefully converged */
+        public bool isInitializing()
+        {
+            return status == PegStatus.ENABLED || status == PegStatus.INITIALIZING || status == PegStatus.INITIALIZED;
+        }
+
         public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
         {
             imode = IncMode.FIXED_LAN;
