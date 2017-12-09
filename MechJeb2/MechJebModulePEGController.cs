@@ -432,7 +432,7 @@ namespace MuMech
             Vector3d rgo = rd - ( r + v * tgo + rgrav ) + rbias;
 
             // from Jaggers 1977, not clear if you still should orthogonolize this (below) or not
-            if ( imode == IncMode.FREE_LAN )
+            if ( imode == IncMode.FREE_LAN && tgo > 40 && isStable() )
             {
                 Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
                 double Q1 = Vector3d.Dot(rgo - Vector3d.Dot(lambda, rgo) * lambda, ip);
@@ -543,7 +543,7 @@ namespace MuMech
             Vector3d vmiss = vp - vd;
             vgo = vgo - 1.0 * vmiss;
 
-            if ( imode == IncMode.FREE_LAN )
+            if ( imode == IncMode.FREE_LAN && tgo > 40 && isStable() )
             {
                 // correct iy to fixed inc with free LAN
                 double d = Vector3d.Dot( -Planetarium.up, ix );
