@@ -54,7 +54,7 @@ namespace MuMech
         public MechJebModulePEGController(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pegInterval = new EditableDouble(1);
+        public EditableDouble pegInterval = new EditableDouble(0.01);
 
         public Vector3d lambda;
         public Vector3d lambdaDot;
@@ -113,7 +113,6 @@ namespace MuMech
         public double tgo_prev;     // time for last full converge
         public Vector3d vgo;        // velocity remaining to be gained
         private Vector3d rd;        // burnout position vector
-        private Vector3d vprev;     // value of v on prior iteration
         private Vector3d rgrav;
         private Vector3d rbias;
         // following for graphing + stats
@@ -268,24 +267,28 @@ namespace MuMech
                 Reset();
 
             if ( last_call != 0 )
+            {
                 tgo -= vesselState.time - last_call;
+                vgo -= vessel.acceleration_immediate * TimeWarp.fixedDeltaTime;
+            }
 
-            last_call = vesselState.time;
-
-            if (tgo < TimeWarp.fixedDeltaTime)
+            if ( tgo < TimeWarp.fixedDeltaTime && last_call != 0 )
             {
                 Done();
                 return;
             }
 
+            if ( core.thrust.targetThrottle > 0 )
+                last_call = vesselState.time;
+
             if ( status == PegStatus.TERMINAL )
                 return;
 
             // only do active guidance every pegInterval
-            if ( (vesselState.time - last_PEG) < pegInterval)
+            if ( (vesselState.time - last_PEG) < pegInterval && core.thrust.targetThrottle > 0 )
                 return;
 
-            // skipping active guidance for last 10 seconds is more accurate
+            // skipping active guidance for last 10 seconds is neccessary due to thrust integral instability
             if ( status == PegStatus.CONVERGED && tgo < 10 )
             {
                 status = PegStatus.TERMINAL;
@@ -347,12 +350,6 @@ namespace MuMech
                 tgo = 1;
                 rgrav = -vesselState.orbitalPosition * Math.Sqrt( gm / ( rm * rm * rm ) ) / 2.0;
                 corrector();
-            }
-            else
-            {
-                Vector3d dvsensed = v - vprev;
-                vgo = vgo - dvsensed;
-                vprev = v;
             }
 
             if (vgo == Vector3d.zero)
@@ -726,7 +723,6 @@ namespace MuMech
             last_PEG = 0.0;
             last_call = 0.0;
             rd = Vector3d.zero;
-            vprev = Vector3d.zero;
             rgrav = Vector3d.zero;
         }
 
