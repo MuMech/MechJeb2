@@ -176,7 +176,7 @@ namespace MuMech
                 tmode = TargetMode.ORBIT;
                 target_orbit = node.nextPatch;
                 vgo = node.GetBurnVector(orbit);
-                iy = - orbit.SwappedOrbitNormal();
+                iy = - target_orbit.SwappedOrbitNormal();
             }
         }
 
@@ -439,30 +439,31 @@ namespace MuMech
                 rgo = S * lambda + Q1 * ip;
             }
 
-            rgo = rgo + ( S - Vector3d.Dot(lambda, rgo) ) * lambda;
-
-            if (tmode == TargetMode.ORBIT)
+            if (false)
+            //if (tmode == TargetMode.ORBIT)
             {
-                /* PEG-4: clamp only lambdaDot_xz, let lambdaDot_y float */
+                // McHenry 1979: pin in-plane lambdaDot and use cross product steering for lambdaDot_y to zero out of plane miss
                 double lambdaDot_xz = 0.35 * Math.Sqrt( gm / ( rm * rm * rm ) );
-                double lambdaDot_y = Vector3d.Dot(lambdaDot, iy);
-                double rgox = Vector3d.Dot ( lambdaDot_xz * QT * Vector3d.Cross(lambda, iy) + S * lambda, ix ) ;
-                double rgoy = lambdaDot_y * QT + S * Vector3d.Dot(lambda, iy);
-                iz = Vector3d.Cross(ix, iy);
-                Vector3d rgoxy = rgox * ix + rgoy * iy;
-                double rgoz = ( S - Vector3d.Dot(lambda, rgoxy) ) / ( Vector3d.Dot(lambda, iz) );
-                rgo = rgoxy + rgoz * iz;
+                lambdaDot = lambdaDot_xz * ( Vector3d.Cross( lambda, iy ) );
+                rgo = S * lambda + QT * lambdaDot;
+            } else {
+                // orthogonality:  S = Vector3d.Dot(lambda, rgo)
+                rgo = rgo + ( S - Vector3d.Dot(lambda, rgo) ) * lambda;
+                if ( QT == 0 )
+                    lambdaDot = Vector3d.zero;
+                else
+                    // this comes from rgo = S * lambda + QT * lambdaDot (simplified rthrust)
+                    lambdaDot = ( rgo - S * lambda ) / QT;
             }
-
-            if ( QT == 0 )
-                lambdaDot = Vector3d.zero;
-            else
-                lambdaDot = ( rgo - S * lambda ) / QT;
 
             double ldm = lambdaDot.magnitude;
 
             // rthrust + vthrust expansions are only valid over +/- 45 degrees
             double phiMax = 45.0 * UtilMath.Deg2Rad;
+
+            if (tmode == TargetMode.ORBIT)
+                phiMax = K * 0.35 * Math.Sqrt( gm / ( rm * rm * rm ) );
+
 
             if ( lambdaDot.magnitude > phiMax / K )
             {
@@ -471,12 +472,25 @@ namespace MuMech
                 rgo = S * lambda + QT * lambdaDot;
             }
 
+            Debug.Log("lambdaDot_xz = " + Vector3d.Dot(lambdaDot, ix) + " lambdaDot_y = " + Vector3d.Dot(lambdaDot, iy));
+
             t_lambda = vesselState.time + Math.Tan( ldm * K ) / ldm;
 
-            Vector3d vthrust = lambda * ( L - ldm * ldm * ( H - J * K ) / 2.0 );
-            Vector3d rthrust = lambda * ( S - ldm * ldm * ( P - 2.0 * Q * K + S * K * K ) / 2.0 ) + QT * lambdaDot;
+            Vector3d vthrust, rthrust;
 
-            rbias = rgo - rthrust;
+            if (false)
+            //if (tmode == TargetMode.ORBIT)
+            {
+                vthrust = vgo;
+                rthrust = rgo;
+                rbias = Vector3d.zero;
+            }
+            else
+            {
+                vthrust = lambda * ( L - ldm * ldm * ( H - J * K ) / 2.0 );
+                rthrust = lambda * ( S - ldm * ldm * ( P - 2.0 * Q * K + S * K * K ) / 2.0 ) + QT * lambdaDot;
+                rbias = rgo - rthrust;
+            }
 
             Vector3d rc1 = r - rthrust / 10.0 - vthrust * tgo / 30.0;
             Vector3d vc1 = v + 1.2 * rthrust / tgo - vthrust/10.0;
@@ -484,8 +498,8 @@ namespace MuMech
             Vector3d rc2, vc2;
 
             //CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
-            ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
-            //CSESimple(rc1, vc1, tgo, out rc2, out vc2);
+            //ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
+            CSESimple(rc1, vc1, tgo, out rc2, out vc2);
 
             Vector3d vgrav = vc2 - vc1;
             rgrav = rc2 - rc1 - vc1 * tgo;
@@ -514,31 +528,30 @@ namespace MuMech
         private Vector3d corrector()
         {
             rp = rp - Vector3d.Dot(rp, iy) * iy;
-            ix = (rp - Vector3d.Dot(iy, rp) * iy).normalized;
-            if (tmode == TargetMode.ORBIT)
-                rd = rp;
-            else if ( status == PegStatus.CONVERGED && tgo < 40 )
-                rd = rp;
-            else
-                rd = rdval * ix;
+            ix = rp.normalized;
             Vector3d iz = Vector3d.Cross(ix, iy);
 
             if (tmode == TargetMode.ORBIT)
             {
                 /* FIXME: very unlikely to work on ascents / below inv rotation threshold */
                 Vector3d target_orbit_periapsis = target_orbit.getRelativePositionFromTrueAnomaly(0).xzy;
-                double ta = Vector3.Angle(target_orbit_periapsis, rd) * UtilMath.Deg2Rad;
-                if ( Vector3d.Dot(Vector3d.Cross(target_orbit_periapsis, rd), -iy) < 0 )
+                double ta = Vector3.Angle(target_orbit_periapsis, rp) * UtilMath.Deg2Rad;
+                if ( Vector3d.Dot(Vector3d.Cross(target_orbit_periapsis, rp), -iy) < 0 )
                     ta = -ta;
                 Debug.Log("ta = " + ta);
                 vd = target_orbit.getOrbitalVelocityAtTrueAnomaly(ta).xzy;
+                rd = target_orbit.getRelativePositionFromTrueAnomaly(ta).xzy;
                 Vector3d v = vesselState.orbitalVelocity;
                 Debug.Log("v = " + v.magnitude + " vp = " + vp.magnitude + " vd = " + vd.magnitude + " vd-vp = " + (vd - vp).magnitude + " vd-v = " + (vd - v).magnitude);
             }
             else
             {
+                rd = rdval * ix;
                 vd = vdval * ( Math.Sin(gamma) * ix + Math.Cos(gamma) * iz );
             }
+
+            if ( status == PegStatus.CONVERGED && tgo < 40 )
+                rd = rp;
 
             Vector3d vmiss = vp - vd;
             vgo = vgo - 1.0 * vmiss;
@@ -640,13 +653,15 @@ namespace MuMech
 
         private void DrawCSE()
         {
+            var r = orbit.getRelativePositionAtUT(vesselState.time).xzy;
             var p = mainBody.position;
-            var vpos = mainBody.position + vesselState.orbitalPosition;
+            Vector3d vpos = vessel.CoM + (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
+            GLUtils.DrawPath(mainBody, new List<Vector3d> { p, p + r }, Color.red, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + vgo }, Color.green, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { rd + p, rd + p + ( vd * 100 ) }, Color.green, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { rp + p, rp + p + ( vp * 100 ) }, Color.red, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + iF * 100 }, Color.red, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambda * 101 }, Color.blue, true, false, false);
+            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambda * 100 }, Color.blue, true, false, false);
             GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambdaDot * 100 }, Color.cyan, true, false, false);
             // GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rthrust }, Color.magenta, true, false, false);
             // GLUtils.DrawPath(mainBody, CSEPoints, Color.red, true, false, false);
@@ -655,6 +670,7 @@ namespace MuMech
         Orbit CSEorbit = new Orbit();
 
         /* FIXME: this still doesn't quite work due to the inverse rotation problem -- still wiggles at 145km on ascents, particularly polar ones */
+        /* am I just missing Krakensbane.GetFrameVelocity() ? */
         private void CSEKSP(Vector3d r0, Vector3d v0, double t, out Vector3d rf, out Vector3d vf)
         {
             Vector3d rot = orbit.GetRotFrameVelAtPos(mainBody, r0.xzy);
