@@ -137,11 +137,12 @@ namespace MuMech
             {
                 peg.AssertStart();
                 if (peg.isStable())
+                {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
+                    if (peg.t_lambda >= node.UT)
+                        burnTriggered = true;
+                }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
-                Debug.Log("t_lambda: " + peg.t_lambda + " node.UT = " + node.UT + " time to half burn = " + ( node.UT - halfBurnTime - vesselState.time ));
-                if (peg.t_lambda >= node.UT)
-                    burnTriggered = true;
             }
             else
             {
@@ -168,7 +169,7 @@ namespace MuMech
             }
             else
             {
-                core.thrust.targetThrottle = 0;
+                core.thrust.targetThrottle = 0.0F;
             }
         }
 
