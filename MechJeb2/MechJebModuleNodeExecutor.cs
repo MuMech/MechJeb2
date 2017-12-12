@@ -138,7 +138,7 @@ namespace MuMech
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
-                    if (peg.t_lambda >= node.UT)
+                    if (peg.t_lambda >= node.UT && core.attitude.attitudeAngleFromTarget() < 1)
                         burnTriggered = true;
                 }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -155,10 +155,14 @@ namespace MuMech
                 {
                     core.warp.WarpToUT(vesselState.time + timeToPEGEnable);
                 }
-                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToPEGEnable < 600)
+                else
                 {
-                    //realign
-                    core.warp.MinimumWarp();
+                    Debug.Log("angle = " + core.attitude.attitudeAngleFromTarget() + " angmom = " + core.vessel.angularMomentum.magnitude);
+                    if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToPEGEnable < 600)
+                    {
+                        //realign
+                        core.warp.MinimumWarp();
+                    }
                 }
             }
 
