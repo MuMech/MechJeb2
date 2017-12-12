@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -129,35 +130,31 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
 
-            if (vesselState.time > node.UT - halfBurnTime - leadTime)
+            double timeToPEGEnable = node.UT - 1.2 * halfBurnTime - vesselState.time;
+
+            if (timeToPEGEnable <= 0)
             {
                 peg.AssertStart();
                 if (peg.isStable())
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
+                if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                Debug.Log("t_lambda: " + peg.t_lambda + " node.UT = " + node.UT + " time to half burn = " + ( node.UT - halfBurnTime - vesselState.time ));
+                if (peg.t_lambda >= node.UT)
+                    burnTriggered = true;
             }
             else
             {
                 core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
             }
 
-            //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-            if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
-            {
-                if (!burnTriggered && core.attitude.attitudeAngleFromTarget() < 1)
-                {
-                    burnTriggered = true;
-                }
-                if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
-            }
-
             //autowarp, but only if we're already aligned with the node
-            if (autowarp && !burnTriggered)
+            if (autowarp && timeToPEGEnable > 0)
             {
                 if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
-                    core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
+                    core.warp.WarpToUT(vesselState.time + timeToPEGEnable);
                 }
-                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
+                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToPEGEnable < 600)
                 {
                     //realign
                     core.warp.MinimumWarp();
