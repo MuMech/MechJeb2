@@ -22,16 +22,16 @@ using System.Collections.Generic;
 /*
  *  Higher Priority / Nearer Term TODO list:
  *
- *  - better thrust integrals or just rkf45
+ *  - better thrust integrals?
  *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
  *
  *  Medium Priority / Medium Term TODO list:
  *
- *  - linear terminal velocity constraints and engine throttling?  (landings and rendezvous?)
+ *  - landings and rendezvous
+ *     - engine throttling
+ *     - lambert solver integration
  *  - injection into orbits at other than the periapsis
  *  - matching planes with contract orbits
- *  - launch to rendevous with space-stations (engine throttling?)
- *  - Lambert-driven end conditions
  *  - direct ascent to Lunar intercept
  *  - J^2 fixes for Principia
  *
@@ -594,105 +594,25 @@ namespace MuMech
             return vmiss;
         }
 
-        /*
-         * r0: predicted position (rd = rp)?
-         * r1: desired target position
-         * C1, C2: horizontal and vertical velocity at desired position
-         * uin: Unit vector normal to the transfer plane and in the direction of the angular momentum of the transfer
-         */
-
-        private bool ltvcon(Vector3d r0, Vector3d r1, double C1, double C2, Vector3d uin, out Vector3d v0, out Vector3d v1, out double deltaT) {
-            v0 = v1 = Vector3d.zero;
-            deltaT = 0.0;
-            /* initialization */
-            double gm = mainBody.gravParameter;
-            double r0m = r0.magnitude;
-            double r1m = r1.magnitude;
-            Vector3d ur0 = r0.normalized;
-            Vector3d ur1 = r0.normalized;
-            double ctheta = Vector3d.Dot(ur0, ur1);
-            double stheta = Vector3d.Dot(Vector3d.Cross(ur0, ur1), uin);
-            double cr = (r1 - r0).magnitude;
-            double s = ( r0m + r1m + cr ) / 2.0;
-            double lambda = Math.Sign(stheta) * Math.Sqrt(1 - cr/s);
-            double rcirc = s/2.0;
-            double vcirc = gm / rcirc;
-
-            /* quadratic */
-            double A = ((r1m / r0m) - ctheta) - C2 * stheta;
-            double C = - (rcirc / r1m) * ( 1 - ctheta);
-            double B = - (C1/vcirc) * stheta;
-            double D = B * B - 4 * A * C;
-
-            if ( D < 0 )
-            {
-                Debug.Log("no solution from quadratic A = " + A + " B = " + B + " C = " + C + " D = " + D);
-                return false;
-            }
-
-            /* solve for initial and final velocity */
-            double vh1 = -2.0 * C / ( B + Math.Sqrt(D) );
-            double vh0 = (r1m / r0m) * vh1;
-            double vr1 = (C1 / vcirc) + C2 * vh1;
-            double vr0 = vr1 * ctheta - ( vh1 - ( rcirc / r1m ) / vh1 ) * stheta;
-            v0 = vcirc * ( vr0 * ur0 + vh0 * Vector3d.Cross( uin, ur0 ) );
-            v1 = vcirc * ( vr1 * ur1 + vh1 * Vector3d.Cross( uin, ur1 ) );
-
-            /* transtime */
-            double U = lambda * Math.Sqrt( s - r0m / s - r1m ) * vh0 - vr0;
-            double E = Math.Sqrt(1.0 - lambda * lambda * ( 1.0 - U * U ) ) - lambda * U;
-            double W = Math.Sqrt(1.0 + lambda + U * E / 2.0 );  /* unclear if this equation is transcribed correctly */
-            double WW = (W - 1 ) / (W + 1);
-            deltaT = (rcirc / vcirc ) * ( 4.0 * lambda * E + E*E*E/(W*W*W) * QM(W, WW));  /* unclear if (E/W)^3 is right */
-
-            return true;
-        }
-
-        double QM(double W, double WW) {
-            double F = 1.0;
-            double V = 1.0;
-            double X = 1.0;
-            int level = 3;
-            double Bn = 0;
-            double Bd = 15;
-
-            int i = 0;
-            while(true) {
-                double Fold = F;
-                level += 2;
-                Bn += level;
-                Bd = Bd + 4 * level;
-                X = Bd / ( Bd - Bn * WW * X );
-                V = ( X - 1 ) * V;
-                F = Fold + V;
-                if (Math.Abs(Fold - F) < 1e-15)
-                    break;
-                if ( i++ > 100 )
-                {
-                    Debug.Log("BOOM!");
-                    break;
-                }
-            }
-            Debug.Log("iterations = " + i );
-            return W + (1.0 - WW) * (5.0 - F * WW) / 15.0;
-        }
-
         List<Vector3d> CSEPoints = new List<Vector3d>();
 
         private void DrawCSE()
         {
-            var r = orbit.getRelativePositionAtUT(vesselState.time).xzy;
-            var p = mainBody.position;
-            Vector3d vpos = vessel.CoM + (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { p, p + r }, Color.red, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + vgo }, Color.green, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { rd + p, rd + p + ( vd * 100 ) }, Color.green, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { rp + p, rp + p + ( vp * 100 ) }, Color.red, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + iF * 100 }, Color.red, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambda * 100 }, Color.blue, true, false, false);
-            GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambdaDot * 100 }, Color.cyan, true, false, false);
-            // GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rthrust }, Color.magenta, true, false, false);
-            // GLUtils.DrawPath(mainBody, CSEPoints, Color.red, true, false, false);
+            if (enabled && status != PegStatus.FINISHED)
+            {
+                var r = orbit.getRelativePositionAtUT(vesselState.time).xzy;
+                var p = mainBody.position;
+                Vector3d vpos = vessel.CoM + (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { p, p + r }, Color.red, true, false, false);
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + vgo }, Color.green, true, false, false);
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { rd + p, rd + p + ( vd * 100 ) }, Color.green, true, false, false);
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { rp + p, rp + p + ( vp * 100 ) }, Color.red, true, false, false);
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + iF * 100 }, Color.red, true, false, false);
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambda * 100 }, Color.blue, true, false, false);
+                GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambdaDot * 100 }, Color.cyan, true, false, false);
+                // GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rthrust }, Color.magenta, true, false, false);
+                // GLUtils.DrawPath(mainBody, CSEPoints, Color.red, true, false, false);
+            }
         }
 
         Orbit CSEorbit = new Orbit();
