@@ -402,8 +402,6 @@ namespace MuMech
                 P += stages[i].Pi;
             }
 
-            log_stages();
-
             K = J / L;
             double QP = Q - S * K;
 
@@ -484,8 +482,6 @@ namespace MuMech
                 rgo = S * lambda + QP * lambdaDot;
             }
 
-            Debug.Log("lambdaDot_xz = " + Vector3d.Dot(lambdaDot, ix) + " lambdaDot_y = " + Vector3d.Dot(lambdaDot, iy));
-
             t_lambda = vesselState.time + K;
 
 /*
@@ -523,9 +519,9 @@ namespace MuMech
 
             Vector3d rc2, vc2;
 
-            //CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
+            CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
             //ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
-            CSESimple(rc1, vc1, tgo, out rc2, out vc2);
+            //CSESimple(rc1, vc1, tgo, out rc2, out vc2);
 
             Vector3d vgrav = vc2 - vc1;
             rgrav = rc2 - rc1 - vc1 * tgo;
@@ -564,11 +560,9 @@ namespace MuMech
                 double ta = Vector3.Angle(target_orbit_periapsis, rp) * UtilMath.Deg2Rad;
                 if ( Vector3d.Dot(Vector3d.Cross(target_orbit_periapsis, rp), -iy) < 0 )
                     ta = -ta;
-                Debug.Log("ta = " + ta);
                 vd = target_orbit.getOrbitalVelocityAtTrueAnomaly(ta).xzy;
                 rd = target_orbit.getRelativePositionFromTrueAnomaly(ta).xzy;
                 Vector3d v = vesselState.orbitalVelocity;
-                Debug.Log("v = " + v.magnitude + " vp = " + vp.magnitude + " vd = " + vd.magnitude + " vd-vp = " + (vd - vp).magnitude + " vd-v = " + (vd - v).magnitude);
             }
             else
             {
