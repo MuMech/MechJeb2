@@ -75,6 +75,8 @@ namespace MuMech
             if ( core.target.NormalTargetExists )
             {
                 peg.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
+                // fix the desired inclination display for the user
+                autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg;
             }
             else
             {
