@@ -22,6 +22,10 @@ using System.Collections.Generic;
 /*
  *  Higher Priority / Nearer Term TODO list:
  *
+ *  - Full RCS burn execution
+ *  - Buttons in maneuver planner to execute nodes with/without PEG and with/without RCS
+ *  - Dumb PEG-7 style burn of exact deltav in given direction
+ *  - Button to finish up remaining fraction of dV in ascent/burn with RCS (normal burn followed by PEG-7-style RCS burn)
  *  - better thrust integrals?
  *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
  *
@@ -259,6 +263,8 @@ namespace MuMech
         private int last_stage_count;    // num stages we had last time
         private double last_stage_time;  // last time we staged
 
+        public Vector3d dV_atom;           // how much dV we're pushing per frame
+
         private void converge()
         {
             if ( status == PegStatus.FINISHED )
@@ -274,7 +280,8 @@ namespace MuMech
             {
                 double dt = vesselState.time - last_call;
                 tgo -= dt;
-                vgo -= ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
+                dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
+                vgo -= dV_atom;
             }
 
             if ( tgo < TimeWarp.fixedDeltaTime && last_call != 0 )
@@ -436,8 +443,8 @@ namespace MuMech
 
             Vector3d rgo = rd - ( r + v * tgo + rgrav ) + rbias;
 
-            // from Jaggers 1977, not clear if you still should orthogonolize this (below) or not
-            /*
+            // from Jaggers 1977
+            /* this saves about 10 dV to orbit but seems to cost in targetting accuracy
             if ( imode == IncMode.FREE_LAN && tgo > 40 && isStable() )
             {
                 Vector3d ip = Vector3d.Cross(lambda, iy).normalized;
@@ -519,8 +526,14 @@ namespace MuMech
 
             Vector3d rc2, vc2;
 
-            CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
-            //ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
+            if ( Planetarium.FrameIsRotating() )
+                // this routine has no inverse rotation issues but has problems with parabolic/hyperbolic orbits
+                ConicStateUtils.CSE(mainBody.gravParameter, rc1, vc1, tgo, out rc2, out vc2);
+            else
+                // this routine has inverse rotation issues, but should work fine with parabolic/hyperbolic orbits
+                CSEKSP(rc1, vc1, tgo, out rc2, out vc2);
+
+            // debugging routine, always correct, very slow
             //CSESimple(rc1, vc1, tgo, out rc2, out vc2);
 
             Vector3d vgrav = vc2 - vc1;
@@ -528,13 +541,6 @@ namespace MuMech
 
             rp = r + v * tgo + rgrav + rthrust;
             vp = v + vgo + vgrav;
-
-            /*
-            if (tmode == TargetMode.ORBIT)
-            {
-                ConicStateUtils.CSE(mainBody.gravParameter, rp, vp, deltaTcoast, out rp, out vp);
-            }
-            */
 
             // corrector
             Vector3d vmiss = corrector();
@@ -562,7 +568,6 @@ namespace MuMech
                     ta = -ta;
                 vd = target_orbit.getOrbitalVelocityAtTrueAnomaly(ta).xzy;
                 rd = target_orbit.getRelativePositionFromTrueAnomaly(ta).xzy;
-                Vector3d v = vesselState.orbitalVelocity;
             }
             else
             {
@@ -576,7 +581,6 @@ namespace MuMech
             Vector3d vmiss = vp - vd;
             vgo = vgo - 1.0 * vmiss;
 
-            /*
             if ( imode == IncMode.FREE_LAN && tgo > 40 && isStable() )
             {
                 // correct iy to fixed inc with free LAN
@@ -584,7 +588,7 @@ namespace MuMech
                 double SE = - 0.5 * ( Vector3d.Dot( -Planetarium.up, iy) + Math.Cos(incval * UtilMath.Deg2Rad) ) * Vector3d.Dot( -Planetarium.up, iz ) / (1 - d * d);
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
-            */
+
             return vmiss;
         }
 
@@ -612,7 +616,6 @@ namespace MuMech
         Orbit CSEorbit = new Orbit();
 
         /* FIXME: this still doesn't quite work due to the inverse rotation problem -- still wiggles at 145km on ascents, particularly polar ones */
-        /* am I just missing Krakensbane.GetFrameVelocity() ? */
         private void CSEKSP(Vector3d r0, Vector3d v0, double t, out Vector3d rf, out Vector3d vf)
         {
             Vector3d rot = orbit.GetRotFrameVelAtPos(mainBody, r0.xzy);
@@ -620,7 +623,7 @@ namespace MuMech
             CSEorbit.GetOrbitalStateVectorsAtUT(vesselState.time, out rf, out vf);
             CSEorbit.GetOrbitalStateVectorsAtUT(vesselState.time + t, out rf, out vf);
 
-            rot = orbit.GetRotFrameVelAtPos(mainBody, rf);
+            rot = CSEorbit.GetRotFrameVelAtPos(mainBody, rf);
 
             rf = rf.xzy;
             vf = (vf - rot).xzy;
