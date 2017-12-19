@@ -45,7 +45,7 @@ namespace MuMech
             peg.enabled = false;
         }
 
-        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, EXIT };
+        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, PEG, EXIT };
         private AscentMode mode;
 
         public override bool DriveAscent(FlightCtrlState s)
@@ -64,6 +64,10 @@ namespace MuMech
 
                 case AscentMode.GRAVITY_TURN:
                     DriveGravityTurn(s);
+                    break;
+
+                case AscentMode.PEG:
+                    DrivePEG(s);
                     break;
             }
 
@@ -134,7 +138,7 @@ namespace MuMech
             } else {
                 if ( pitch < peg.pitch )
                 {
-                    mode = AscentMode.GRAVITY_TURN;
+                    mode = AscentMode.PEG;
                     return;
                 }
                 status = String.Format("Pitch program {0:F2} °", pitch - peg.pitch);
@@ -145,6 +149,8 @@ namespace MuMech
 
         private void DriveGravityTurn(FlightCtrlState s)
         {
+            double pitch = Math.Min(90, srfvelPitch() + pitchBias);
+
             if (pitchEndToggle && autopilot.MET < pitchEndTime)
             {
                 // this can happen when users update the endtime box
@@ -152,23 +158,40 @@ namespace MuMech
                 return;
             }
 
-            if ( pegAfterStageToggle && StageManager.CurrentStage >= pegAfterStage )
+            if ( pegAfterStageToggle )
             {
-                status = "Unguided Gravity Turn";
-                attitudeToPEG(Math.Min(90, srfvelPitch() + pitchBias));
-            }
-            else
-            {
-                status = "Stable PEG Guidance";
-
-                attitudeToPEG(peg.pitch);
-
-                if (peg.status == PegStatus.FINISHED)
+                if ( StageManager.CurrentStage < pegAfterStage )
                 {
-                    mode = AscentMode.EXIT;
+                    mode = AscentMode.PEG;
                     return;
                 }
             }
+            else if ( pitch < peg.pitch && peg.isStable() )
+            {
+                mode = AscentMode.PEG;
+                return;
+            }
+
+            status = "Unguided Gravity Turn";
+            attitudeToPEG(pitch);
+        }
+
+        private void DrivePEG(FlightCtrlState s)
+        {
+            if (peg.status == PegStatus.FINISHED)
+            {
+                mode = AscentMode.EXIT;
+                return;
+            }
+
+            if (!peg.isStable())
+            {
+                mode = AscentMode.GRAVITY_TURN;
+                return;
+            }
+
+            status = "Stable PEG Guidance";
+            attitudeToPEG(peg.pitch);
         }
     }
 }
