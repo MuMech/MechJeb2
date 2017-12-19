@@ -72,6 +72,9 @@ namespace MuMech
 
         private void setTarget()
         {
+            if ( peg.status == PegStatus.TERMINAL )
+                return;
+
             if ( core.target.NormalTargetExists )
             {
                 peg.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
@@ -82,7 +85,6 @@ namespace MuMech
             {
                 peg.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination);
             }
-            peg.AscentInit();
         }
 
         private void attitudeToPEG(double pitch)

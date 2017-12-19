@@ -52,6 +52,8 @@ using System.Collections.Generic;
 namespace MuMech
 {
     public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, CONVERGED, STAGING, TERMINAL, FINISHED, FAILED };
+    public enum TargetMode { PERIAPSIS, ORBIT, VGO };
+    public enum IncMode { FIXED_LAN, FREE_LAN };
 
     public class MechJebModulePEGController : ComputerModule
     {
@@ -107,7 +109,13 @@ namespace MuMech
             stats.liveSLT = true;
             stats.RequestUpdate(this, true);
 
-            converge();
+            if ( status == PegStatus.FAILED )
+                Reset();
+
+            if (tmode == TargetMode.VGO)
+                converge_vgo();
+            else
+                converge();
 
             update_pitch_and_heading();
         }
@@ -121,7 +129,7 @@ namespace MuMech
         private Vector3d rbias;
         int last_stage;
         // following for graphing + stats
-        private Vector3d vd;
+        public Vector3d vd;
         private Vector3d rp;
         private Vector3d vp;
         double deltaTcoast;
@@ -136,8 +144,8 @@ namespace MuMech
          */
 
         // private
-        private IncMode imode;
-        private TargetMode tmode;
+        public IncMode imode;
+        public TargetMode tmode;
 
         // target burnout radius
         private double rdval;
@@ -156,21 +164,6 @@ namespace MuMech
         // linear terminal velocity targets
         private Orbit target_orbit;
 
-        private enum IncMode { FIXED_LAN, FREE_LAN };
-        private enum TargetMode { PERIAPSIS, ORBIT };
-
-        // must be called after one of TargetPe* for now
-        // FIXME: this is certainly wrong.
-        public void AscentInit()
-        {
-            if ( !isStable() && !(status == PegStatus.FINISHED) )
-            {
-                // rd initialized to rdval-length vector 20 degrees downrange from r
-                rd = QuaternionD.AngleAxis(20, -iy) * vesselState.up * rdval;
-                // Dv initialized to rdval-length vector perpendicular to rd, minus current v
-                vgo = Vector3d.Cross(-iy, rd).normalized * vdval - vesselState.orbitalVelocity;
-            }
-        }
 
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node)
@@ -181,8 +174,8 @@ namespace MuMech
                 tmode = TargetMode.ORBIT;
                 target_orbit = node.nextPatch;
                 vgo = node.GetBurnVector(orbit);
-                iy = - target_orbit.SwappedOrbitNormal();
             }
+            iy = -target_orbit.SwappedOrbitNormal();
         }
 
         /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
@@ -209,14 +202,24 @@ namespace MuMech
             TargetPeInsertMatchPlane(PeA, ApA, o.SwappedOrbitNormal());
         }
 
+        public void TargetVgo(Vector3d vgo)
+        {
+            tmode = TargetMode.VGO;
+            this.vgo = vgo;
+            this.vgain = vgo.magnitude;
+            lambda = vgo.normalized;
+            lambdaDot = Vector3d.zero;
+            t_lambda = vesselState.time;
+        }
+
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
-            imode = IncMode.FREE_LAN;
+            /* imode = IncMode.FREE_LAN;
             if (incval != inc)
-            {
+            { */
                 incval = inc;
                 SetPlaneFromInclination(inc);  /* updating every time would defeat PEG's corrector */
-            }
+            /* } */
             SetRdvalVdval(PeA, ApA);
         }
 
@@ -263,43 +266,78 @@ namespace MuMech
         private int last_stage_count;    // num stages we had last time
         private double last_stage_time;  // last time we staged
 
-        public Vector3d dV_atom;           // how much dV we're pushing per frame
+        // debugging
+        public double vgain;
 
-        private void converge()
+        // sort of like PEG-7.  vgain is set to the initial magnitude of vgo and it counts down (decrementing vector math is
+        // KSP is going to be complicated by the rotating world axes and vectors from multiple ticks ago not being in the same basis, #FML)
+        private void converge_vgo()
         {
-            if ( status == PegStatus.FINISHED )
-            {
-                Done();
-                return;
-            }
-
-            if ( status == PegStatus.FAILED )
-                Reset();
+            double dt = vesselState.time - last_call;
+            double dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ).magnitude * dt;
 
             if ( last_call != 0 )
             {
-                double dt = vesselState.time - last_call;
-                tgo -= dt;
-                dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
-                vgo -= dV_atom;
-            }
-
-            if ( tgo < TimeWarp.fixedDeltaTime && last_call != 0 )
-            {
-                Done();
-                return;
+                vgain -= dV_atom;
+                tgo = vgain * dV_atom;  // constant thrust approximation
             }
 
             UpdateStages();
 
-            if ( core.thrust.targetThrottle > 0 )
+            if ( vgain < 0 )
+                Done();
+
+            last_call = vesselState.time;
+        }
+
+        private void converge()
+        {
+            double dt = vesselState.time - last_call;
+            Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
+
+            if ( last_call != 0 )
+            {
+                tgo -= dt;
+                vgo -= dV_atom;
+            }
+
+            UpdateStages();
+
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS];
+            int tickstop = 1;
+
+            // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
+            if (has_rcs)
+                tickstop = 2;
+
+            if ( tgo < ( tickstop * TimeWarp.fixedDeltaTime ) && last_call != 0 )
+            {
+                if ( has_rcs )
+                {
+                    // finish remaining vgo on RCS
+                    vessel.ctrlState.Z = -1.0F;
+                    core.thrust.ThrustOff();
+                    // we have arrived near enough and all we can do is trim out velocity
+                    rp = vesselState.orbitalPosition;
+                    vp = vesselState.orbitalVelocity;
+                    iy = - orbit.SwappedOrbitNormal();
+                    vgo = Vector3d.zero;
+                    // kind of abusing the corrector, but this should work to share code
+                    corrector();
+                    TargetVgo(vgo);
+                    return;
+                }
+                Done();
+                return;
+            }
+
+            if ( core.thrust.targetThrottle > 0 || vessel.ctrlState.Z != 0.0f )
                 last_call = vesselState.time;
 
             if ( last_stage_count > stages.Count )
                 last_stage_time = vesselState.time;
 
             last_stage_count = stages.Count;
-
             /* 3 second quiet time after staging */
             if ( vesselState.time < last_stage_time + 3.0 )
             {
@@ -471,10 +509,13 @@ namespace MuMech
 
             double phiMax = 45.0 * UtilMath.Deg2Rad;
 
-            // additionally clamp lambdaDot for terminal guidance
-            double clamp = 4.5 * Math.Pow(10, ( tgo - 40 ) / 40 ) * UtilMath.Deg2Rad;
-            if (clamp < phiMax)
-                phiMax = clamp;
+            // try to clamp lambdaDot to something reasonable if we start burns with low tgo
+            if ( status != PegStatus.CONVERGED )
+            {
+                double clamp = 4.5 * Math.Pow(10, ( tgo - 40 ) / 40 ) * UtilMath.Deg2Rad;
+                if (clamp < phiMax)
+                    phiMax = clamp;
+            }
 
             // always allow up to at least the schuler frequency clamp
             double schuler = K * 0.35 * Math.Sqrt( gm / ( rm * rm * rm ) );
@@ -583,6 +624,7 @@ namespace MuMech
 
             if ( imode == IncMode.FREE_LAN && tgo > 40 && isStable() )
             {
+                // FIXME: doesn't look like this works without the rgo corrections (which affect ix here?) but those break accurate targetting...
                 // correct iy to fixed inc with free LAN
                 double d = Vector3d.Dot( -Planetarium.up, ix );
                 double SE = - 0.5 * ( Vector3d.Dot( -Planetarium.up, iy) + Math.Cos(incval * UtilMath.Deg2Rad) ) * Vector3d.Dot( -Planetarium.up, iz ) / (1 - d * d);
@@ -653,7 +695,8 @@ namespace MuMech
         private void Done()
         {
             users.Clear();
-            core.thrust.targetThrottle = 0.0F;
+            core.thrust.ThrustOff();
+            vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
             status = PegStatus.FINISHED;
         }
 
