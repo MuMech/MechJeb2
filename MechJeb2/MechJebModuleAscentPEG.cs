@@ -119,8 +119,6 @@ namespace MuMech
 
         private void DriveInitiateTurn(FlightCtrlState s)
         {
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-
             double dt = autopilot.MET - pitchStartTime;
             double theta = dt * pitchRate;
             double pitch = 90 - theta + pitchBias;
@@ -147,8 +145,6 @@ namespace MuMech
 
         private void DriveGravityTurn(FlightCtrlState s)
         {
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
-
             if (pitchEndToggle && autopilot.MET < pitchEndTime)
             {
                 // this can happen when users update the endtime box

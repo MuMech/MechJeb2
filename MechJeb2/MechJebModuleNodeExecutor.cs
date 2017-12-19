@@ -138,8 +138,11 @@ namespace MuMech
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
-                    if (peg.t_lambda >= node.UT && core.attitude.attitudeAngleFromTarget() < 1)
+                    if (peg.t_lambda >= node.UT && core.attitude.attitudeAngleFromTarget() < 1 && !burnTriggered)
+                    {
+                        core.thrust.targetThrottle = 1.0F;
                         burnTriggered = true;
+                    }
                 }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
             }
@@ -166,11 +169,7 @@ namespace MuMech
                 }
             }
 
-            if (burnTriggered)
-            {
-                core.thrust.targetThrottle = 1.0F;
-            }
-            else
+            if (!burnTriggered)
             {
                 core.thrust.targetThrottle = 0.0F;
             }
