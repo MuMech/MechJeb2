@@ -75,8 +75,6 @@ namespace MuMech
             GUILayout.Label(String.Format("phi: {0:F2}", peg.phi * UtilMath.Rad2Deg));
             GUILayout.Label(String.Format("iy inc: {0:F4}", Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
             GUILayout.Label(String.Format("orth. test: {0:F5}", Vector3d.Dot(peg.lambda, peg.lambdaDot)));
-            GUILayout.Label(String.Format("vgo forward: {0:F3}", Vector3d.Dot(peg.vgo, vesselState.forward)));
-            GUILayout.Label(String.Format("dV_atom forward: {0:F3}", Vector3d.Dot(peg.dV_atom, vesselState.forward)));
             GUILayout.BeginHorizontal();
             GUIStyle si = new GUIStyle(GUI.skin.label);
             if ( peg.isStable() )
@@ -87,6 +85,8 @@ namespace MuMech
                 si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
             GUILayout.Label("PEG Status: " + peg.status, si);
             GUILayout.EndHorizontal();
+            GUILayout.Label("PEG TargetMode: " + peg.tmode);
+            GUILayout.Label("PEG IncMode: " + peg.imode);
 
             GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
