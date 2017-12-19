@@ -82,10 +82,12 @@ namespace MuMech
         {
             status = PegStatus.ENABLED;
             core.AddToPostDrawQueue(DrawCSE);
+            core.attitude.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
+            core.attitude.users.Remove(this);
         }
 
         public void AssertStart()
@@ -273,6 +275,16 @@ namespace MuMech
         // KSP is going to be complicated by the rotating world axes and vectors from multiple ticks ago not being in the same basis, #FML)
         private void converge_vgo()
         {
+            /* we handle attitude directly here, because ascents are $COMPLICATED we do not in converge() */
+            core.attitude.attitudeTo(lambda, AttitudeReference.INERTIAL, this);
+            if ( core.attitude.attitudeAngleFromTarget() > 1 )
+            {
+                vessel.ctrlState.Z = 0.0F;
+                return;
+            }
+
+            // FIXME: only handles RCS right now
+            vessel.ctrlState.Z = -1.0F;
             double dt = vesselState.time - last_call;
             double dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ).magnitude * dt;
 
@@ -315,7 +327,6 @@ namespace MuMech
                 if ( has_rcs )
                 {
                     // finish remaining vgo on RCS
-                    vessel.ctrlState.Z = -1.0F;
                     core.thrust.ThrustOff();
                     // we have arrived near enough and all we can do is trim out velocity
                     rp = vesselState.orbitalPosition;
