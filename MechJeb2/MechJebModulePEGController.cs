@@ -63,6 +63,9 @@ namespace MuMech
         public Vector3d lambda;
         public Vector3d lambdaDot;
         public double t_lambda;
+        public Vector3d oldlambda;
+        public Vector3d oldlambdaDot;
+        public double oldt_lambda;
         public Vector3d primer;
         public Vector3d iF { get { return primer.normalized; } }
         public double phi { get { return lambdaDot.magnitude * K; } }
@@ -326,6 +329,9 @@ namespace MuMech
         private void converge()
         {
             oldstatus = status;
+            oldlambda = lambda;
+            oldlambdaDot = lambdaDot;
+            oldt_lambda = t_lambda;
 
             double dt = vesselState.time - last_call;
             Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
@@ -431,8 +437,15 @@ namespace MuMech
             if (status != PegStatus.FAILED && status != PegStatus.COASTING)
                 status = PegStatus.CONVERGED;
 
-            last_PEG = vesselState.time;
+            // restore saved guidance if we might have screwed it up
+            if (!isStable())
+            {
+                lambda = oldlambda;
+                lambdaDot = oldlambdaDot;
+                t_lambda = old_lambda;
+            }
 
+            last_PEG = vesselState.time;
         }
 
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
