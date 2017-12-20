@@ -28,6 +28,10 @@ namespace MuMech
         public bool pegAfterStageToggle = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegAfterStage = new EditableDouble(0);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble coastSecs = new EditableDouble(0.00);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableInt coastAfterStage = new EditableInt(-1);
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDouble pitchBias = new EditableDouble(0);
@@ -78,6 +82,8 @@ namespace MuMech
         {
             if ( peg.status == PegStatus.TERMINAL )
                 return;
+
+            peg.SetCoast(coastSecs, coastAfterStage);
 
             if ( core.target.NormalTargetExists )
             {
