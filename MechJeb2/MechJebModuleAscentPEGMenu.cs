@@ -60,6 +60,8 @@ namespace MuMech
             if (path.pegAfterStageToggle)
                 GuiUtils.SimpleTextBox("", path.pegAfterStage);
             GUILayout.EndHorizontal();
+            GuiUtils.SimpleTextBox("Coast ", path.coastSecs, "s");
+            GuiUtils.SimpleTextBox("after stage ", path.coastAfterStage);
             GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reset PEG"))
