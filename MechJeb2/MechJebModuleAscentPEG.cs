@@ -149,7 +149,7 @@ namespace MuMech
 
         private void DriveGravityTurn(FlightCtrlState s)
         {
-            double pitch = Math.Min(90, srfvelPitch() + pitchBias);
+            double pitch = Math.Min(Math.Min(90, srfvelPitch() + pitchBias), vesselState.vesselPitch);
 
             if (pitchEndToggle && autopilot.MET < pitchEndTime)
             {
