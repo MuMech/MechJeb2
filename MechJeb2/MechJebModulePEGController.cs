@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.UI.Screens;
 using System.Collections.Generic;
 
 /*
@@ -22,10 +23,7 @@ using System.Collections.Generic;
 /*
  *  Higher Priority / Nearer Term TODO list:
  *
- *  - Full RCS burn execution
  *  - Buttons in maneuver planner to execute nodes with/without PEG and with/without RCS
- *  - Dumb PEG-7 style burn of exact deltav in given direction
- *  - Button to finish up remaining fraction of dV in ascent/burn with RCS (normal burn followed by PEG-7-style RCS burn)
  *  - better thrust integrals?
  *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
  *
@@ -51,7 +49,7 @@ using System.Collections.Generic;
 
 namespace MuMech
 {
-    public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, CONVERGED, STAGING, TERMINAL, FINISHED, FAILED };
+    public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, CONVERGED, STAGING, TERMINAL, FINISHED, FAILED, COASTING };
     public enum TargetMode { PERIAPSIS, ORBIT, VGO };
     public enum IncMode { FIXED_LAN, FREE_LAN };
 
@@ -73,13 +71,19 @@ namespace MuMech
         public double heading;
 
         public PegStatus status;
+        public PegStatus oldstatus;
 
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
         private FuelFlowSimulation.Stats[] atmoStats { get { return stats.atmoStats; } }
 
+        // should only be called once per burn/ascent
         public override void OnModuleEnabled()
         {
+            // coast phases are deliberately not reset in Reset() so we never get a completed coast phase again after whacking Reset()
+            coastFinished = false;
+            coastDone = 0.0;
+            SetCoast(0.0, -1);
             status = PegStatus.ENABLED;
             core.AddToPostDrawQueue(DrawCSE);
             core.attitude.users.Add(this);
@@ -90,6 +94,7 @@ namespace MuMech
             core.attitude.users.Remove(this);
         }
 
+        // this can be hammered on repetetively, peg will start updating data.
         public void AssertStart()
         {
             if (status == PegStatus.ENABLED )
@@ -134,7 +139,6 @@ namespace MuMech
         public Vector3d vd;
         private Vector3d rp;
         private Vector3d vp;
-        double deltaTcoast;
 
         private double last_PEG;    // this is the last PEG update time
         public double K;
@@ -149,6 +153,8 @@ namespace MuMech
         public IncMode imode;
         public TargetMode tmode;
 
+        public double coastSecs = 0.0;
+        public int coastAfterStage = -1;
         // target burnout radius
         private double rdval;
         // target burnout velocity
@@ -166,6 +172,18 @@ namespace MuMech
         // linear terminal velocity targets
         private Orbit target_orbit;
 
+        // can be hammered on repetetively, we remember how much coast we've done and if we've completed the coast
+        public void SetCoast(double secs, int stage)
+        {
+            coastSecs = secs;
+            coastAfterStage = stage;
+        }
+
+        public void ClearCoast()
+        {
+            coastSecs = 0.0;
+            coastAfterStage = 0;
+        }
 
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node)
@@ -183,7 +201,7 @@ namespace MuMech
         /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
         public bool isStable()
         {
-            return status == PegStatus.CONVERGED || status == PegStatus.TERMINAL || status == PegStatus.STAGING;
+            return status == PegStatus.CONVERGED || status == PegStatus.TERMINAL || status == PegStatus.STAGING || status == PegStatus.COASTING;
         }
 
         /* normal pre-states but not usefully converged */
@@ -268,7 +286,6 @@ namespace MuMech
         private int last_stage_count;    // num stages we had last time
         private double last_stage_time;  // last time we staged
 
-        // debugging
         public double vgain;
 
         // sort of like PEG-7.  vgain is set to the initial magnitude of vgo and it counts down (decrementing vector math is
@@ -302,8 +319,14 @@ namespace MuMech
             last_call = vesselState.time;
         }
 
+        private double coastDone;
+        private bool coastFinished;
+        private double coastRemain;
+
         private void converge()
         {
+            oldstatus = status;
+
             double dt = vesselState.time - last_call;
             Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
 
@@ -313,8 +336,27 @@ namespace MuMech
                 vgo -= dV_atom;
             }
 
+            coastRemain = coastSecs - coastDone;
+
+            if ( StageManager.CurrentStage < coastAfterStage && coastRemain > 0 )
+            {
+                status = PegStatus.COASTING;
+                core.thrust.ThrustOff();
+                coastDone += dt;
+            }
+            else
+            {
+                if ( status == PegStatus.COASTING )
+                {
+                    status = PegStatus.CONVERGED;
+                    coastFinished = true;
+                    core.thrust.targetThrottle = 1.0F;
+                }
+            }
+
             UpdateStages();
 
+            // FIXME: we assume we have forward thrusting RCS here, probably shouldn't.
             bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS];
             int tickstop = 1;
 
@@ -342,10 +384,9 @@ namespace MuMech
                 return;
             }
 
-            if ( core.thrust.targetThrottle > 0 || vessel.ctrlState.Z != 0.0f )
-                last_call = vesselState.time;
+            last_call = vesselState.time;
 
-            if ( last_stage_count > stages.Count )
+            if ( last_stage_count > stages.Count && status != PegStatus.COASTING )
                 last_stage_time = vesselState.time;
 
             last_stage_count = stages.Count;
@@ -364,7 +405,7 @@ namespace MuMech
                 return;
 
             // skipping active guidance for last 10 seconds is neccessary due to thrust integral instability
-            if ( status == PegStatus.CONVERGED && tgo < 10 )
+            if ( status == PegStatus.CONVERGED && tgo < 10 && status != PegStatus.COASTING )
             {
                 status = PegStatus.TERMINAL;
                 return;
@@ -387,10 +428,11 @@ namespace MuMech
             if (vgo.magnitude == 0.0)
                 status = PegStatus.FAILED;
 
-            if (status != PegStatus.FAILED)
+            if (status != PegStatus.FAILED && status != PegStatus.COASTING)
                 status = PegStatus.CONVERGED;
 
             last_PEG = vesselState.time;
+
         }
 
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
@@ -441,6 +483,15 @@ namespace MuMech
 
             for(int i = 0; i <= last_stage; i++)
             {
+                if ( stages[i].kspStage == -1 )
+                {
+                    // handle coast phase
+                    S += L * stages[i].dt;
+                    Q += J * stages[i].dt;
+                    P += H * stages[i].dt;
+                    continue;
+                }
+
                 stages[i].Si = - stages[i].Li * ( stages[i].tau - stages[i].dt ) + stages[i].ve * stages[i].dt;
                 stages[i].Ji = stages[i].Li * stages[i].tgo - stages[i].Si;
                 stages[i].Qi = stages[i].Si * ( stages[i].tau + stages[i].tgo1 ) - stages[i].ve * stages[i].dt * stages[i].dt / 2.0;
@@ -716,6 +767,7 @@ namespace MuMech
             // lambda and lambdaDot are deliberately not cleared here
             if ( imode == IncMode.FREE_LAN )
                 SetPlaneFromInclination(incval);
+            coastDone = 0.0;
             status = PegStatus.INITIALIZING;
             stages = new List<StageInfo>();
             tgo_prev = 0.0;
@@ -727,31 +779,13 @@ namespace MuMech
             rgrav = Vector3d.zero;
         }
 
-        private int MatchInOldStageList(int i)
-        {
-            // some paranoia
-            if ( i > (vacStats.Length - 1) )
-                return -1;
-
-            // it may later match, but zero dV is useless
-            if ( vacStats[i].deltaV <= 0 )
-                return -1;
-
-            // this is used to copy stages from the oldlist to the newlist and reduce garbage
-            for ( int j = 0; j < stages.Count; j++ )
-            {
-                if ( stages[j].kspStage == i && stages[j].PartsListMatch(vacStats[i].parts) )
-                {
-                    return j;
-                }
-            }
-            return -1;
-        }
-
         public void SynchStats()
         {
             for (int i = 0; i < stages.Count; i++ )
             {
+                if (stages[i].kspStage == -1 )
+                    continue;
+
                 // only live atmostats for the bottom stage, which is inaccurate, but this
                 // is abusing an algorithm that can't fly properly in the atmosphere anyway
                 FuelFlowSimulation.Stats[] mjstats = ( i == 0 ) ? atmoStats : vacStats;
@@ -775,13 +809,15 @@ namespace MuMech
 
             for ( int i = vacStats.Length-1; i >= 0; i-- )
             {
-                int j;
-                if ( ( j = MatchInOldStageList(i) ) > 0 )
+                if ( i == coastAfterStage - 1 && coastRemain > 0 )
                 {
-                    newlist.Add(stages[j]);
-                    stages.RemoveAt(j);
-                    continue;
+                    StageInfo stage = new StageInfo();
+                    stage.kspStage = -1;
+                    stage.dt = coastRemain;
+                    stage.Li = 0;
+                    newlist.Add(stage);
                 }
+
                 if ( vacStats[i].deltaV > 0 )
                 {
                     StageInfo stage = new StageInfo();
@@ -798,6 +834,9 @@ namespace MuMech
             double vgo_temp_mag = vgo.magnitude;
             for(int i = 0; i < stages.Count; i++)
             {
+                if (stages[i].kspStage == -1)
+                    continue;
+
                 last_stage = i;
                 if ( stages[i].Li > vgo_temp_mag || i == stages.Count - 1 )
                 {
