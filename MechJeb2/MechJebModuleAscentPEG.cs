@@ -190,13 +190,11 @@ namespace MuMech
                 return;
             }
 
-            if (!peg.isStable())
-            {
-                mode = AscentMode.GRAVITY_TURN;
-                return;
-            }
+            if (peg.isStable())
+                status = "Stable PEG Guidance";
+            else
+                status = "WARNING: Unstable Guidance";
 
-            status = "Stable PEG Guidance";
             attitudeToPEG(peg.pitch);
         }
     }
