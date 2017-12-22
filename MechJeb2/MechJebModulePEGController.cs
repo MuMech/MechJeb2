@@ -25,7 +25,6 @@ using System.Collections.Generic;
  *
  *  - Buttons in maneuver planner to execute nodes with/without PEG and with/without RCS
  *  - better thrust integrals?
- *  - manual entry of coast phase (probably based on kerbal-stage rather than final-stage since final-stage may change if we e.g. eat into TLI)
  *
  *  Medium Priority / Medium Term TODO list:
  *
@@ -442,7 +441,7 @@ namespace MuMech
             {
                 lambda = oldlambda;
                 lambdaDot = oldlambdaDot;
-                t_lambda = old_lambda;
+                t_lambda = oldt_lambda;
             }
 
             last_PEG = vesselState.time;
@@ -522,18 +521,25 @@ namespace MuMech
                 P += stages[i].Pi;
             }
 
+            // K = tgo - S / L;  // J / L;
             K = J / L;
             double QP = Q - S * K;
 
-            /*
             double ldm = lambdaDot.magnitude;
-            if (ldm < 1e-6)
-                ldm = 1e-6;
 
+            /*
             double Kp = tgo / 2;
             double theta = ldm * Kp;
-            double f1 = Math.Sin(theta) / theta;
-            double f2 = 3.0 * ( f1 - Math.Cos(theta) ) / ( theta * theta );
+            double f1;
+            if (theta == 0.0)
+                f1 = 1.0;
+            else
+                f1 = Math.Sin(theta) / theta;
+            double f2;
+            if (theta == 0.0)
+                f2 = 1.0;
+            else
+                f2 = 3.0 * ( f1 - Math.Cos(theta) ) / ( theta * theta );
             double Lp = f1 * L;
             double Sp = f1 * S;
             double D = L * Kp - S;
@@ -574,14 +580,13 @@ namespace MuMech
                 if ( QP == 0 )
                     lambdaDot = Vector3d.zero;
                 else
-                    // this comes from rgo = ST * lambda + QT * lambdaDot (simplified rthrust)
+                    // this comes from rgo = S * lambda + QP * lambdaDot (simplified rthrust)
                     lambdaDot = ( rgo - S * lambda ) / QP;
             }
 
-            double ldm = lambdaDot.magnitude;
-            if (ldm < 1e-6)
-                ldm = 1e-6;
+            ldm = lambdaDot.magnitude;
 
+            // large values of phimax get weird even though they converge
             double phiMax = 45.0 * UtilMath.Deg2Rad;
 
             // try to clamp lambdaDot to something reasonable if we start burns with low tgo
@@ -596,6 +601,14 @@ namespace MuMech
             double schuler = K * 0.35 * Math.Sqrt( gm / ( rm * rm * rm ) );
             if (phiMax < schuler)
                 phiMax = schuler;
+/*
+            if ( theta > phiMax )
+            {
+                ldm = phiMax / Kp;
+                lambdaDot = lambdaDot.normalized * ldm;
+                rgo = ST * lambda + QT * lambdaDot;
+            }
+            */
 
             if ( lambdaDot.magnitude > phiMax / K )
             {
@@ -607,11 +620,17 @@ namespace MuMech
 
             t_lambda = vesselState.time + K;
 
-/*
-            Kp = tgo / 2;
+            /*
+            // Kp = tgo / 2;
             theta = ldm * Kp;
-            f1 = Math.Sin(theta) / theta;
-            f2 = 3.0 * ( f1 - Math.Cos(theta) ) / ( theta * theta );
+            if (theta == 0.0)
+                f1 = 1.0;
+            else
+                f1 = Math.Sin(theta) / theta;
+            if (theta == 0.0)
+                f2 = 1.0;
+            else
+                f2 = 3.0 * ( f1 - Math.Cos(theta) ) / ( theta * theta );
             Lp = f1 * L;
             Sp = f1 * S;
             D = L * Kp - S;
@@ -629,10 +648,11 @@ namespace MuMech
             Debug.Log("LT = " + LT + " QT = " + QT + " ST = " + ST);
             */
 
+            Vector3d vthrust, rthrust;
+
 //                vthrust = LT * lambda;
 //                rthrust = ST * lambda + QT * lambdaDot;
 
-            Vector3d vthrust, rthrust;
             vthrust = lambda * ( L - ldm * ldm * ( H - J * K ) / 2.0 );
             rthrust = lambda * ( S - ldm * ldm * ( P - 2.0 * Q * K + S * K * K ) / 2.0 ) + QP * lambdaDot;
             rbias = rgo - rthrust;
