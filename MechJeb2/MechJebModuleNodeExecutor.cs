@@ -138,7 +138,8 @@ namespace MuMech
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
-                    if (peg.t_lambda >= node.UT && core.attitude.attitudeAngleFromTarget() < 1 && !burnTriggered)
+                    if (peg.t_lambda >= node.UT && core.attitude.attitudeAngleFromTarget() < 1 && !burnTriggered &&
+                            ( peg.phi < 40 || peg.tgo / 2 < timeToNode ) )
                     {
                         core.thrust.targetThrottle = 1.0F;
                         burnTriggered = true;
