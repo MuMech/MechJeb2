@@ -402,7 +402,7 @@ namespace MuMech
             try
             {
                 string[] units = { "y", "d", "h", "m", "s" };
-                long[] intervals = { DaysPerYear * HoursPerDay * 3600, HoursPerDay * 3600, 3600, 60, 1 };
+                long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
                 if (seconds < 0)
                 {
@@ -438,7 +438,7 @@ namespace MuMech
         public static bool TryParseDHMS(string s, out double seconds)
         {
             string[] units = { "y", "d", "h", "m", "s" };
-            int[] intervals = { DaysPerYear * HoursPerDay * 3600, HoursPerDay * 3600, 3600, 60, 1 };
+            int[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
             s = s.Trim(' ');
             bool minus = (s.StartsWith("-"));
