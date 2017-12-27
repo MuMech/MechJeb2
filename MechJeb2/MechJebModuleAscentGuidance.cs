@@ -148,8 +148,14 @@ namespace MuMech
 
                 GUIStyle si = new GUIStyle(GUI.skin.label);
                 if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
-                    si.onHover.textColor = si.onNormal.textColor = XKCDColors.Orange;
-                GuiUtils.SimpleTextBox("Orbit inclination", desiredInclination, "º", rightLabelStyle: si);
+                    si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
+                desiredInclination.text = GUILayout.TextField(desiredInclination.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
+                GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                if (GUILayout.Button("Current"))
+                    desiredInclination.val = vesselState.latitude;
+                GUILayout.EndHorizontal();
 
                 core.thrust.LimitToPreventOverheatsInfoItem();
                 //core.thrust.LimitToTerminalVelocityInfoItem();
