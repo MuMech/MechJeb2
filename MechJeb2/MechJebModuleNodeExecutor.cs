@@ -161,7 +161,6 @@ namespace MuMech
                 }
                 else
                 {
-                    Debug.Log("angle = " + core.attitude.attitudeAngleFromTarget() + " angmom = " + core.vessel.angularMomentum.magnitude);
                     if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToPEGEnable < 600)
                     {
                         //realign
