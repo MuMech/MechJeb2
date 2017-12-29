@@ -130,8 +130,8 @@ namespace MuMech
             double burnTime = BurnTime(dVLeft, out halfBurnTime);
 
             double timeToNode = node.UT - vesselState.time;
-
             double timeToPEGEnable = node.UT - 1.2 * halfBurnTime - vesselState.time;
+            double timeToHalfBT = node.UT - halfBurnTime - vesselState.time;
 
             if (timeToPEGEnable <= 0)
             {
@@ -139,11 +139,13 @@ namespace MuMech
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
-                    if (peg.t_lambda >= node.UT && core.attitude.attitudeAngleFromTarget() < 1 && !burnTriggered &&
-                            ( peg.phi < 40 || peg.tgo / 2 < timeToNode ) )
+                    if (core.attitude.attitudeAngleFromTarget() < 1 && !burnTriggered)
                     {
-                        core.thrust.targetThrottle = 1.0F;
-                        burnTriggered = true;
+                        if (( peg.t_lambda >= node.UT && peg.phi < 40 * UtilMath.Deg2Rad ) || timeToHalfBT <= 0.0 )
+                        {
+                            core.thrust.targetThrottle = 1.0F;
+                            burnTriggered = true;
+                        }
                     }
                 }
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -162,6 +164,7 @@ namespace MuMech
                 }
                 else
                 {
+                    Debug.Log("angvel = " + core.vessel.angularVelocity.magnitude);
                     if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToPEGEnable < 600)
                     {
                         //realign
