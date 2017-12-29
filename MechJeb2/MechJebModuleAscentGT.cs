@@ -94,13 +94,20 @@ namespace MuMech
 
         void DriveInitiateTurn(FlightCtrlState s)
         {
+            //stop the intermediate "burn" when our apoapsis reaches the desired altitude
+            if (orbit.ApA > autopilot.desiredOrbitAltitude)
+            {
+                mode = AscentMode.COAST_TO_APOAPSIS;
+                return;
+            }
+
             if ((90 - turnStartPitch) >= srfvelPitch())
             {
                 mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            if (autopilot.autoThrottle && orbit.ApA > intermediateAltitude)
+            if (orbit.ApA > intermediateAltitude)
             {
                 mode = AscentMode.GRAVITY_TURN;
                 return;
@@ -140,6 +147,13 @@ namespace MuMech
 
         void DriveGravityTurn(FlightCtrlState s)
         {
+            //stop the intermediate "burn" when our apoapsis reaches the desired altitude
+            if (orbit.ApA > autopilot.desiredOrbitAltitude)
+            {
+                mode = AscentMode.COAST_TO_APOAPSIS;
+                return;
+            }
+
 
             if (fixedTimeToAp() < holdAPTime && maxholdAPTime > holdAPTime)
             {
@@ -174,6 +188,14 @@ namespace MuMech
             if (orbit.ApA > autopilot.desiredOrbitAltitude)
             {
                 mode = AscentMode.COAST_TO_APOAPSIS;
+                return;
+            }
+
+            // generally this is in response to typing numbers into the intermediate altitude text box and
+            // an accidental transition to later in the state machine
+            if (orbit.ApA < 0.98 * intermediateAltitude)
+            {
+                mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
