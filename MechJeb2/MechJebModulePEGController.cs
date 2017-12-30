@@ -24,7 +24,6 @@ using System.Collections.Generic;
  *  Higher Priority / Nearer Term TODO list:
  *
  *  - Buttons in maneuver planner to execute nodes with/without PEG and with/without RCS
- *  - better thrust integrals?
  *
  *  Medium Priority / Medium Term TODO list:
  *
@@ -361,8 +360,8 @@ namespace MuMech
 
             UpdateStages();
 
-            // FIXME: we assume we have forward thrusting RCS here, probably shouldn't.
-            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS];
+            // only use rcs for trim if its enabled and we have more than 10N of thrust
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
             int tickstop = 1;
 
             // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
