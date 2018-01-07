@@ -80,9 +80,6 @@ namespace MuMech
 
         private void setTarget()
         {
-            if ( peg.status == PegStatus.TERMINAL )
-                return;
-
             peg.SetCoast(coastSecs, coastAfterStage);
 
             if ( core.target.NormalTargetExists )
