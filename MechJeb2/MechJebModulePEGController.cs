@@ -47,8 +47,8 @@ using System.Collections.Generic;
 
 namespace MuMech
 {
-    public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, CONVERGED, STAGING, TERMINAL, FINISHED, FAILED, COASTING };
-    public enum TargetMode { PERIAPSIS, ORBIT, VGO };
+    public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, SLEWING, CONVERGED, STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED, COASTING };
+    public enum TargetMode { PERIAPSIS, ORBIT };
     public enum IncMode { FIXED_LAN, FREE_LAN };
 
     public class MechJebModulePEGController : ComputerModule
@@ -120,7 +120,7 @@ namespace MuMech
             if ( status == PegStatus.FAILED )
                 Reset();
 
-            if (tmode == TargetMode.VGO)
+            if (isTerminalGuidance())
                 converge_vgo();
             else
                 converge();
@@ -176,12 +176,17 @@ namespace MuMech
         // can be hammered on repetetively, we remember how much coast we've done and if we've completed the coast
         public void SetCoast(double secs, int stage)
         {
+            if (isTerminalGuidance())
+                return;
+
             coastSecs = secs;
             coastAfterStage = stage;
         }
 
         public void ClearCoast()
         {
+            if (isTerminalGuidance())
+                return;
             coastSecs = 0.0;
             coastAfterStage = 0;
         }
@@ -189,6 +194,8 @@ namespace MuMech
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node)
         {
+            if (isTerminalGuidance())
+                return;
             if ( !isStable() && !(status == PegStatus.FINISHED) )
             {
                 imode = IncMode.FIXED_LAN;
@@ -202,7 +209,12 @@ namespace MuMech
         /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
         public bool isStable()
         {
-            return status == PegStatus.CONVERGED || status == PegStatus.TERMINAL || status == PegStatus.STAGING || status == PegStatus.COASTING;
+            return status == PegStatus.CONVERGED || status == PegStatus.STAGING || status == PegStatus.COASTING || isTerminalGuidance();
+        }
+
+        public bool isTerminalGuidance()
+        {
+            return status == PegStatus.SLEWING || status == PegStatus.TERMINAL || status == PegStatus.TERMINAL_RCS;
         }
 
         /* normal pre-states but not usefully converged */
@@ -213,6 +225,8 @@ namespace MuMech
 
         public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
         {
+            if (isTerminalGuidance())
+                return;
             imode = IncMode.FIXED_LAN;
             iy = -tangent.normalized;
             SetRdvalVdval(PeA, ApA);
@@ -220,14 +234,24 @@ namespace MuMech
 
         public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o)
         {
+            if (isTerminalGuidance())
+                return;
             TargetPeInsertMatchPlane(PeA, ApA, o.SwappedOrbitNormal());
+        }
+
+        public void TargetRcs(Vector3d vgo)
+        {
+            status = PegStatus.SLEWING;
+            this.vgo = vgo;
+            lambda = vgo.normalized;
+            lambdaDot = Vector3d.zero;
+            t_lambda = vesselState.time;
         }
 
         public void TargetVgo(Vector3d vgo)
         {
-            tmode = TargetMode.VGO;
+            status = PegStatus.TERMINAL;
             this.vgo = vgo;
-            this.vgain = vgo.magnitude;
             lambda = vgo.normalized;
             lambdaDot = Vector3d.zero;
             t_lambda = vesselState.time;
@@ -235,6 +259,8 @@ namespace MuMech
 
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
+            if (isTerminalGuidance())
+                return;
             /* imode = IncMode.FREE_LAN;
             if (incval != inc)
             { */
@@ -287,35 +313,76 @@ namespace MuMech
         private int last_stage_count;    // num stages we had last time
         private double last_stage_time;  // last time we staged
 
-        public double vgain;
-
-        // sort of like PEG-7.  vgain is set to the initial magnitude of vgo and it counts down (decrementing vector math is
-        // KSP is going to be complicated by the rotating world axes and vectors from multiple ticks ago not being in the same basis, #FML)
         private void converge_vgo()
         {
             /* we handle attitude directly here, because ascents are $COMPLICATED we do not in converge() */
-            core.attitude.attitudeTo(lambda, AttitudeReference.INERTIAL, this);
-            if ( core.attitude.attitudeAngleFromTarget() > 1 )
+            core.attitude.attitudeTo(iF, AttitudeReference.INERTIAL, this);
+            if ( core.attitude.attitudeAngleFromTarget() > 1 && status == PegStatus.SLEWING )
             {
                 vessel.ctrlState.Z = 0.0F;
+                core.thrust.ThrustOff();
                 return;
             }
 
-            // FIXME: only handles RCS right now
-            vessel.ctrlState.Z = -1.0F;
+            if ( status == PegStatus.SLEWING )
+                status = PegStatus.TERMINAL_RCS;
+
+            // only use rcs for trim if its enabled and we have more than 10N of thrust
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
+            int tickstop = 1;
+
+            Debug.Log("has_rcs: " + has_rcs);
+
             double dt = vesselState.time - last_call;
-            double dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ).magnitude * dt;
+            Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
 
             if ( last_call != 0 )
+                vgo -= dV_atom;
+
+            double vgo_forward = Vector3d.Dot(vgo, vesselState.forward);
+
+            if ( vgo_forward < 0 )
+                Done();
+
+            tgo = vgo_forward / Vector3d.Dot(dV_atom, vesselState.forward) * TimeWarp.fixedDeltaTime;
+
+            // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
+            if (has_rcs && status == PegStatus.TERMINAL)
+                tickstop = 2;
+
+            if ( tgo < ( tickstop * TimeWarp.fixedDeltaTime ) && last_call != 0 )
             {
-                vgain -= dV_atom;
-                tgo = vgain * dV_atom;  // constant thrust approximation
+                if ( has_rcs && status == PegStatus.TERMINAL )
+                {
+                    // finish remaining vgo on RCS
+                    core.thrust.ThrustOff();
+                    // we have arrived near enough and all we can do is trim out velocity
+                    rp = vesselState.orbitalPosition;
+                    vp = vesselState.orbitalVelocity;
+                    iy = - orbit.SwappedOrbitNormal();
+                    vgo = Vector3d.zero;
+                    // kind of abusing the corrector, but this should work to share code
+                    corrector();
+                    TargetRcs(vgo);
+                    return;
+                }
+                Done();
+                return;
+            }
+
+            if ( status == PegStatus.TERMINAL_RCS )
+            {
+                core.thrust.ThrustOff();
+                vessel.ctrlState.Z = -1.0F;
+            }
+            else
+            {
+                core.thrust.targetThrottle = 1.0F;
+                vessel.ctrlState.Z = 0.0F;
             }
 
             UpdateStages();
 
-            if ( vgain < 0 )
-                Done();
 
             last_call = vesselState.time;
         }
@@ -360,34 +427,6 @@ namespace MuMech
 
             UpdateStages();
 
-            // only use rcs for trim if its enabled and we have more than 10N of thrust
-            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
-            int tickstop = 1;
-
-            // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
-            if (has_rcs)
-                tickstop = 2;
-
-            if ( tgo < ( tickstop * TimeWarp.fixedDeltaTime ) && last_call != 0 )
-            {
-                if ( has_rcs )
-                {
-                    // finish remaining vgo on RCS
-                    core.thrust.ThrustOff();
-                    // we have arrived near enough and all we can do is trim out velocity
-                    rp = vesselState.orbitalPosition;
-                    vp = vesselState.orbitalVelocity;
-                    iy = - orbit.SwappedOrbitNormal();
-                    vgo = Vector3d.zero;
-                    // kind of abusing the corrector, but this should work to share code
-                    corrector();
-                    TargetVgo(vgo);
-                    return;
-                }
-                Done();
-                return;
-            }
-
             last_call = vesselState.time;
 
             if ( last_stage_count > stages.Count && status != PegStatus.COASTING )
@@ -401,9 +440,6 @@ namespace MuMech
                 return;
             }
 
-            if ( status == PegStatus.TERMINAL )
-                return;
-
             // only do active guidance every pegInterval
             if ( (vesselState.time - last_PEG) < pegInterval && core.thrust.targetThrottle > 0 )
                 return;
@@ -411,6 +447,7 @@ namespace MuMech
             // skipping active guidance for last 10 seconds is neccessary due to thrust integral instability
             if ( status == PegStatus.CONVERGED && tgo < 10 && status != PegStatus.COASTING )
             {
+                // go to VGO directly with same vgo/tgo/lambda/lambdaDot/t_lambda
                 status = PegStatus.TERMINAL;
                 return;
             }
