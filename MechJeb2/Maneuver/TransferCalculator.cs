@@ -147,13 +147,6 @@ namespace MuMech
 
                     double dt = DurationFromIndex(duration_index);
 
-#if DEBUG
-                    log[date_index, duration_index] = dt + ","
-                        + R1.x + "," + R1.y + "," + R1.z + ","
-                        + R2.x + "," + R2.y + "," + R2.z + ","
-                        + V1_0.x + "," + V1_0.y + "," + V1_0.z;
-#endif
-
                     Vector3d exitDV, captureDV;
                     CalcLambertDVs(t0, dt, out exitDV, out captureDV);
                     var maneuver = ComputeEjectionManeuver(exitDV, origin, t0);
