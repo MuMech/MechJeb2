@@ -130,9 +130,8 @@ namespace MuMech
                 //print("Stage " + simStage + " step " + step + " endMass " + stats.endMass.ToString("F3"));
                 if (AllowedToStage()) break;
                 double dt;
-                stats = stats.Append(SimulateTimeStep(float.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
-                //print("Stage " + simStage + " step " + step + " dt " + dt);
                 stats = stats.Append(SimulateTimeStep(double.MaxValue, throttle, staticPressure, atmDensity, machNumber, out dt));
+                //print("Stage " + simStage + " step " + step + " dt " + dt);
                 // BS engine detected. Bail out.
                 if (dt == double.MaxValue || double.IsInfinity(dt))
                 {
