@@ -29,24 +29,25 @@ namespace MuMech
         public readonly double maxTransferTime;
         protected readonly int maxDurationSamples;
 
-        public ManeuverParameters[,] computed;
+        public double[,] computed;
 #if DEBUG
         string[,] log;
 #endif
 
-        double arrivalDate;
+        public double arrivalDate = -1;
+        bool includeCaptureBurn;
 
-        public ManeuverParameters result;
+        public double minDV;
 
 
         public TransferCalculator(
                 Orbit o, Orbit target,
                 double min_departure_time,
                 double max_transfer_time,
-                double min_sampling_step):
+                double min_sampling_step, bool includeCaptureBurn):
             this(o, target, min_departure_time, min_departure_time + max_transfer_time, 3600, max_transfer_time,
                     Math.Min(1000, Math.Max(200, (int) (max_transfer_time / Math.Max(min_sampling_step, 60.0)))),
-                    Math.Min(1000, Math.Max(200, (int) (max_transfer_time / Math.Max(min_sampling_step, 60.0)))))
+                    Math.Min(1000, Math.Max(200, (int) (max_transfer_time / Math.Max(min_sampling_step, 60.0)))), includeCaptureBurn)
         {
             StartThreads();
         }
@@ -58,7 +59,8 @@ namespace MuMech
                 double min_transfer_time,
                 double max_transfer_time,
                 int width,
-                int height)
+                int height,
+                bool includeCaptureBurn)
         {
             originOrbit = o;
             destinationOrbit = target;
@@ -74,7 +76,8 @@ namespace MuMech
             this.maxDepartureTime = max_departure_time;
             this.minTransferTime = min_transfer_time;
             this.maxTransferTime = max_transfer_time;
-            computed = new ManeuverParameters[dateSamples, maxDurationSamples];
+            this.includeCaptureBurn = includeCaptureBurn;
+            computed = new double[dateSamples, maxDurationSamples];
             pendingJobs = 0;
 
 #if DEBUG
@@ -98,13 +101,33 @@ namespace MuMech
 
         private bool IsBetter(int date_index1, int duration_index1, int date_index2, int duration_index2)
         {
-            return computed[date_index1, duration_index1].dV.sqrMagnitude > computed[date_index2, duration_index2].dV.sqrMagnitude;
+            return computed[date_index1, duration_index1] > computed[date_index2, duration_index2];
         }
+
+        void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
+        {
+            double t1 = t0 + dt;
+            CelestialBody origin_planet = origin.referenceBody;
+
+            Vector3d V1_0 = origin_planet.orbit.getOrbitalVelocityAtUT(t0);
+            Vector3d R1 = origin_planet.orbit.getRelativePositionAtUT(t0);
+
+            Vector3d R2 = destination.getRelativePositionAtUT(t1);
+            Vector3d V2_1 = destination.getOrbitalVelocityAtUT(t1);
+
+            Vector3d V1 = V1_0;
+            Vector3d V2 = V2_1;
+            try {
+                GoodingSolver.Solve(R1, V1_0, R2, V2_1, dt, origin_planet.referenceBody, 0, out V1, out V2);
+            }
+            catch (Exception) {}
+
+            exitDV = V1 - V1_0;
+            captureDV = V2_1 - V2;
+       }
 
         void ComputeDeltaV(object args)
         {
-            CelestialBody origin_planet = origin.referenceBody;
-
             for (int date_index = TakeDateIndex();
                     date_index >= 0;
                     date_index = TakeDateIndex())
@@ -116,9 +139,6 @@ namespace MuMech
                     continue;
                 }
 
-                Vector3d V1_0 = origin_planet.orbit.getOrbitalVelocityAtUT(t0);
-                Vector3d R1 = origin_planet.orbit.getRelativePositionAtUT(t0);
-
                 int duration_samples = DurationSamplesForDate(date_index);
                 for (int duration_index = 0; duration_index < duration_samples; duration_index++)
                 {
@@ -126,39 +146,17 @@ namespace MuMech
                         break;
 
                     double dt = DurationFromIndex(duration_index);
-                    double t1 = t0 + dt;
 
-                    Vector3d R2 = destination.getRelativePositionAtUT(t1);
-                    Vector3d V2_1 = destination.getOrbitalVelocityAtUT(t1);
+                    Vector3d exitDV, captureDV;
+                    CalcLambertDVs(t0, dt, out exitDV, out captureDV);
+                    var maneuver = ComputeEjectionManeuver(exitDV, origin, t0);
 
-                    /* bool short_way = Vector3d.Dot(Vector3d.Cross(R1, R2), origin_planet.orbit.GetOrbitNormal()) > 0; */
-                    try
-                    {
-                        Vector3d V1, V2;
+                    computed[date_index, duration_index] = maneuver.dV.magnitude;
+                    if (includeCaptureBurn)
+                        computed[date_index, duration_index] += captureDV.magnitude;
 #if DEBUG
-                        log[date_index, duration_index] = dt + ","
-                            + R1.x + "," + R1.y + "," + R1.z + ","
-                            + R2.x + "," + R2.y + "," + R2.z + ","
-                            + V1_0.x + "," + V1_0.y + "," + V1_0.z;
+                    log[date_index, duration_index] += "," + computed[date_index, duration_index];
 #endif
-                        /* LambertSolver.Solve(R1, R2, dt, origin_planet.referenceBody, short_way, out V1, out V2); */
-                        GoodingSolver.Solve(R1, V1_0, R2, V2_1, dt, origin_planet.referenceBody, 0, out V1, out V2);
-
-#if DEBUG
-                        log[date_index, duration_index] += "," + V1.x + "," + V1.y + "," + V1.z;
-#endif
-
-                        Vector3d soi_exit_velocity = V1 - V1_0;
-                        var maneuver = ComputeEjectionManeuver(soi_exit_velocity, origin, t0);
-                        if (!double.IsNaN(maneuver.dV.sqrMagnitude) && !double.IsNaN(maneuver.UT))
-                        {
-                            computed[date_index, duration_index] = maneuver;
-                        }
-#if DEBUG
-                        log[date_index, duration_index] += "," + maneuver.dV.magnitude;
-#endif
-                    }
-                    catch (Exception) {}
                 }
             }
 
@@ -175,9 +173,7 @@ namespace MuMech
                     int n = DurationSamplesForDate(date_index);
                     for (int duration_index = 0; duration_index < n; duration_index++)
                     {
-                        if (computed[bestDate, bestDuration] == null ||
-                                (computed[date_index, duration_index] != null
-                                 && IsBetter(bestDate, bestDuration, date_index, duration_index)))
+                        if (IsBetter(bestDate, bestDuration, date_index, duration_index))
                         {
                             bestDate = date_index;
                             bestDuration = duration_index;
@@ -186,7 +182,7 @@ namespace MuMech
                 }
 
                 arrivalDate = DateFromIndex(bestDate) + DurationFromIndex(bestDuration);
-                result = computed[bestDate, bestDuration];
+                minDV = computed[bestDate, bestDuration];
 
                 pendingJobs = -1;
 
@@ -226,17 +222,9 @@ namespace MuMech
             return minDepartureTime + index * (maxDepartureTime - minDepartureTime) / dateSamples;
         }
 
-        public ManeuverParameters OptimizedResult
-        {
-            get
-            {
-                return OptimizeEjection(result, origin, destination, arrivalDate, minDepartureTime);
-            }
-        }
-
         // Compute the two intersecting lines of a cone with a corner at (0,0,0) with a plane passing by (0,0,0)
         // If there is no intersection, return the line on the plane closest to the cone (assumes cone_angle > pi/2)
-        static void IntersectConePlane(Vector3d cone_direction, double cone_angle, Vector3d plane_normal, out Vector3d intersect_1, out Vector3d intersect_2)
+        void IntersectConePlane(Vector3d cone_direction, double cone_angle, Vector3d plane_normal, out Vector3d intersect_1, out Vector3d intersect_2)
         {
             intersect_1 = Vector3d.zero;
             intersect_2 = Vector3d.zero;
@@ -285,7 +273,7 @@ namespace MuMech
             intersect_2 = M_i_tmp * intersect_2;
         }
 
-        static double AngleAboutAxis(Vector3d v1, Vector3d v2, Vector3d axis)
+        double AngleAboutAxis(Vector3d v1, Vector3d v2, Vector3d axis)
         {
             axis.Normalize();
 
@@ -295,7 +283,7 @@ namespace MuMech
             return Math.Atan2(Vector3d.Dot(axis, Vector3d.Cross(v1, v2)), Vector3d.Dot(v1, v2));
         }
 
-        public static ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0)
+        public ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0)
         {
             double GM = initial_orbit.referenceBody.gravParameter;
             double C3 = exit_velocity.sqrMagnitude;
@@ -389,11 +377,14 @@ namespace MuMech
 
         class OptimizerData
         {
+            public CelestialBody target_body;
             public Orbit initial_orbit;
             public Orbit target_orbit;
+            public double UT_arrival;
+            public bool failed;
         }
 
-        static void DistanceToTarget(double[] x, double[] fi, object obj)
+        void DistanceToTarget(double[] x, double[] fi, object obj)
         {
             OptimizerData data = (OptimizerData)obj;
 
@@ -402,42 +393,64 @@ namespace MuMech
 
             Orbit orbit = new Orbit();
             orbit.UpdateFromStateVectors(data.initial_orbit.getRelativePositionAtUT(t), data.initial_orbit.getOrbitalVelocityAtUT(t) + DV.xzy, data.initial_orbit.referenceBody, t);
-            orbit.StartUT = t;
-
+            Orbit next_orbit = new Orbit();
             var pars = new PatchedConics.SolverParameters();
-            Vector3d pos;
+            PatchedConics.CalculatePatch(orbit, next_orbit, t, pars, null);
 
             while(true)
             {
-                Orbit next_orbit = new Orbit();
-                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, pars, null);
-
-                if (orbit.EndUT > x[4])
+                if (orbit.referenceBody == data.target_body)
                 {
-                    pos = orbit.getTruePositionAtUT(x[4]);
-                    Vector3d err = pos - data.target_orbit.getTruePositionAtUT(x[4]);
+                    if ( orbit.PeR < 100000 )
+                    {
+                        fi[0] = DV.x;
+                        fi[1] = DV.y;
+                        fi[2] = DV.z;
+                    }
+                    else
+                    {
+                        Vector3d err = orbit.getRelativePositionFromTrueAnomaly(0);
+                        fi[0] = err.x;
+                        fi[1] = err.y;
+                        fi[2] = err.z;
+                    }
+                    data.failed = false;  /* we intersected at some point with the target body SOI */
 
-                    /* this needs to be components of err and cannot simply be err.magnitude */
+                    return;
+                }
+                else if (orbit.EndUT > data.UT_arrival)
+                {
+                    Vector3d err;
+                    if ( orbit.referenceBody == data.target_orbit.referenceBody )
+                    {
+                        err = orbit.getRelativePositionAtUT(data.UT_arrival) - data.target_orbit.getRelativePositionAtUT(data.UT_arrival);
+                    }
+                    else
+                    {
+                        err = orbit.getTruePositionAtUT(data.UT_arrival) - data.target_orbit.getTruePositionAtUT(data.UT_arrival);
+                    }
+
                     fi[0] = err.x;
                     fi[1] = err.y;
                     fi[2] = err.z;
-                    /* similarly here, and the 10,000x fudge factor was experimentally determined */
-                    fi[3] = DV.x * 10000.0;
-                    fi[4] = DV.y * 10000.0;
-                    fi[5] = DV.z * 10000.0;
+
                     return;
                 }
 
                 // As of 0.25 CalculatePatch fails if the orbit does not change SoI
                 if (next_orbit.referenceBody == null)
                 {
+                    // XXX: is this ever hit in current KSP, with this code? should we just return the getTruePositionAtUT() miss here?
                     next_orbit.UpdateFromOrbitAtUT(orbit, orbit.StartUT + orbit.period, orbit.referenceBody);
                 }
                 orbit = next_orbit;
+                next_orbit = new Orbit();
+                pars = new PatchedConics.SolverParameters();
+                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, pars, null);
             }
         }
 
-        public static ManeuverParameters OptimizeEjection(ManeuverParameters original_maneuver, Orbit initial_orbit, Orbit target, double UT_arrival, double earliest_UT)
+        public ManeuverParameters OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT)
         {
 
             int N = 0;
@@ -450,41 +463,55 @@ namespace MuMech
                 double[] x = new double[5];
                 double[] scale = new double[5];
 
-                x[0] = original_maneuver.dV.x;
-                x[1] = original_maneuver.dV.y;
-                x[2] = original_maneuver.dV.z;
-                x[3] = original_maneuver.UT + N * initial_orbit.period;
-                x[4] = UT_arrival;
+                Vector3d exitDV, captureDV;
+                CalcLambertDVs(UT_transfer, UT_arrival - UT_transfer, out exitDV, out captureDV);
 
-                scale[0] = scale[1] = scale[2] = original_maneuver.dV.magnitude;
+                var maneuver = ComputeEjectionManeuver(exitDV, origin, UT_transfer);
+
+                x[0] = maneuver.dV.x;
+                x[1] = maneuver.dV.y;
+                x[2] = maneuver.dV.z;
+                x[3] = maneuver.UT + N * initial_orbit.period;
+
+                scale[0] = scale[1] = scale[2] = maneuver.dV.magnitude;
                 scale[3] = initial_orbit.period;
-                scale[4] = target.period / 4.0;
 
                 OptimizerData data = new OptimizerData();
                 data.initial_orbit = initial_orbit;
                 data.target_orbit = target;
+                data.target_body = target_body;
+                data.UT_arrival = UT_arrival;
+                data.failed = true;
 
-                alglib.minlmcreatev(6, x, 0.001, out state);
-                double epsx = 1e-16; // stop if |(x(k+1)-x(k)) ./ scale| <= EpsX
-                double epsf = 1e-16; // stop if |F(k+1)-F(k)| <= EpsF*max{|F(k)|,|F(k+1)|,1}
-            alglib.minlmsetcond(state, 0, epsf, epsx, 50);
-            alglib.minlmsetscale(state, scale);
-            alglib.minlmoptimize(state, DistanceToTarget, null, data);
-            alglib.minlmresults(state, out x, out rep);
+                alglib.minlmcreatev(4, 3, x, 0.001, out state);
+                alglib.minlmsetcond(state, 0, 0, 0, 200);
+                alglib.minlmsetscale(state, scale);
+                alglib.minlmoptimize(state, DistanceToTarget, null, data);
+                alglib.minlmresults(state, out x, out rep);
 
-            Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
-            Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+                Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
+                Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
 
-            // try again in one orbit if the maneuver node is in the past
-            if (x[3] < earliest_UT)
-            {
-                Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - x[3]) + " s too early, trying again in " + initial_orbit.period + " s");
-                N++;
-            }
-            else {
-                Debug.Log("from optimizer DV = " + Math.Sqrt(Math.Pow(x[0], 2.0) + Math.Pow(x[1], 2.0) + Math.Pow(x[2], 2.0)));
-                return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), x[3]);
-            }
+                // try again if we failed to intersect the target orbit
+                if ( data.failed )
+                {
+                    Debug.Log("Failed to intersect target orbit");
+                    N++;
+                }
+                // try again in one orbit if the maneuver node is in the past
+                else if (x[3] < earliest_UT || data.failed)
+                {
+                    Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - x[3]) + " s too early, trying again in " + initial_orbit.period + " s");
+                    N++;
+                }
+                else {
+                    Debug.Log("from optimizer DV = " + new Vector3d(x[0], x[1], x[2]) + " t = " + x[3] + " original arrival = " + UT_arrival);
+                    return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), x[3]);
+                }
+                if (N > 10)
+                {
+                    throw new OperationException("Ejection Optimization failed; try manual selection");
+                }
             }
         }
     }
@@ -498,7 +525,8 @@ namespace MuMech
                 double min_transfer_time,
                 double max_transfer_time,
                 int width,
-                int height) : base(o, target, min_departure_time, max_departure_time, min_transfer_time, max_transfer_time, width, height)
+                int height,
+                bool includeCaptureBurn) : base(o, target, min_departure_time, max_departure_time, min_transfer_time, max_transfer_time, width, height, includeCaptureBurn)
         {
             StartThreads();
         }

@@ -60,6 +60,7 @@ namespace MuMech
             {
                 // does nothing in stock, so we suppress displaying it if RF is not loaded
                 core.thrust.LimitToPreventUnstableIgnitionInfoItem();
+                core.thrust.AutoRCsUllageInfoItem();
             }
             core.thrust.smoothThrottle = GUILayout.Toggle(core.thrust.smoothThrottle, "Smooth throttle");
             core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
@@ -98,9 +99,9 @@ namespace MuMech
             core.solarpanel.AutoDeploySolarPanelsInfoItem();
 
             Autostage();
-            
+
             if (!core.staging.enabled && GUILayout.Button("Autostage once")) core.staging.AutostageOnce(this);
-            
+
             if (core.staging.enabled) core.staging.AutostageSettingsInfoItem();
 
             if (core.staging.enabled) GUILayout.Label(core.staging.AutostageStatus());

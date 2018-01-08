@@ -106,10 +106,10 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 			if (autopilot.Waypoints.Count > 0) {
 				if (!autopilot.ControlHeading || !autopilot.ControlSpeed) {
-					if (GUILayout.Button("Follow")) {
-						autopilot.WaypointIndex = 0;
+					if (GUILayout.Button("Drive")) {
+						autopilot.WaypointIndex = (alt ? 0 : autopilot.WaypointIndex);
 						autopilot.ControlHeading = autopilot.ControlSpeed = true;
-						autopilot.LoopWaypoints = alt;
+						// autopilot.LoopWaypoints = alt;
 					}
 				}
 				else if (GUILayout.Button("Stop")) {

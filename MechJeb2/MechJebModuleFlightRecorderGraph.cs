@@ -25,7 +25,7 @@ namespace MuMech
                 maximum = 0;
                 labels = new string[ScaleTicks];
                 labelsPos = new double[ScaleTicks];
-                
+
             }
         }
 
@@ -110,7 +110,7 @@ namespace MuMech
                     backgroundTexture = new Texture2D(1, height);
                 }
 
-                MechJebModuleAscentPathEditor.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
+                MechJebModuleAscentClassicMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
                 oldMainBody = mainBody;
             }
 
@@ -151,9 +151,9 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            
+
             autoScale = GUILayout.Toggle(autoScale, "Auto Scale", GUILayout.ExpandWidth(false));
-            
+
             if (!autoScale && GUILayout.Button("-", GUILayout.ExpandWidth(false)))
             {
                 if (downrange)
@@ -170,9 +170,9 @@ namespace MuMech
             double activeScaleX = autoScale ? autoScaleX : manualScaleX;
 
             double scaleX = downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
-            
+
             GUILayout.Label((downrange ? MuUtils.ToSI(scaleX, -1, 2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px"), GUILayout.ExpandWidth(false));
-            
+
             if (!autoScale && GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 if (downrange)
@@ -217,7 +217,7 @@ namespace MuMech
             realAtmo = GUILayout.Toggle(realAtmo, "Real Atmo", GUILayout.ExpandWidth(false));
 
             if (oldRealAtmo != realAtmo)
-                MechJebModuleAscentPathEditor.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
+                MechJebModuleAscentClassicMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
 
             //GUILayout.Label("", GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
@@ -297,7 +297,7 @@ namespace MuMech
                     newIdx = 0;
                 scaleIdx = newIdx;
             }
-            
+
             if (graphStates[(int)recordType.AltitudeASL].display)
             {
                 GUI.color = Color.white;
@@ -389,7 +389,7 @@ namespace MuMech
 
                 if (graphStates[(int)recordType.AltitudeASL].display || graphStates[(int)recordType.AltitudeTrue].display)
                     GUI.DrawTexture(r, backgroundTexture, ScaleMode.StretchToFill);
-                
+
                 if (stages)
                     DrawnStages(r, scaleX, downrange);
 
@@ -463,7 +463,7 @@ namespace MuMech
             float yBase = r.yMax + (float)(graphState.minimum * invScaleY);
 
             int t = 0;
-            while (t < recorder.historyIdx && t < recorder.history.Length && 
+            while (t < recorder.historyIdx && t < recorder.history.Length &&
                 (xBase + (float)((downRange ? recorder.history[t].downRange : recorder.history[t].timeSinceMark) * invScaleX)) <= r.xMin)
             {
                 t++;
@@ -471,7 +471,7 @@ namespace MuMech
 
             Vector2 p1 = new Vector2(xBase + (float)((downRange ? recorder.history[t].downRange : recorder.history[t].timeSinceMark) * invScaleX), yBase - (float)(recorder.history[t][type] * invScaleY));
             Vector2 p2 = new Vector2();
-            
+
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
                 var rec = recorder.history[t];
@@ -517,12 +517,12 @@ namespace MuMech
                 t++;
             }
         }
-        
+
         private void UpdateScale()
         {
             if (recorder.historyIdx == 0)
                 ResetScale();
-            
+
             for (int t = 0; t < typeCount; t++)
             {
                 bool change = false;
@@ -532,7 +532,7 @@ namespace MuMech
                     change = true;
                     graphStates[t].maximum = recorder.maximums[t] + Math.Abs(recorder.maximums[t] * 0.2);
                 }
-                
+
                 if (graphStates[t].minimum > recorder.minimums[t])
                 {
                     change = true;
@@ -556,7 +556,7 @@ namespace MuMech
                     minimum = Math.Floor(minimum / step) * step;
                     maximum = Math.Ceiling(maximum / step) * step;
                     int digit = (int)Math.Max(-Math.Floor(Math.Log10(step)), 0);
-                    
+
                     double currX = minimum;
                     int i = 0;
                     while (currX <= maximum + 0.5 * step)
@@ -607,7 +607,7 @@ namespace MuMech
             graphStates[(int)recordType.SteeringLosses].maximum = 100;
             graphStates[(int)recordType.DeltaVExpended].maximum = 100;
         }
-        
+
         private double heckbertNiceNum(double x, bool round)
         {
             int exp = (int)Math.Log10(x);

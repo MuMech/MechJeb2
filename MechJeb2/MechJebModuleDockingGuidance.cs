@@ -126,7 +126,7 @@ namespace MuMech
                 GUILayout.Label("Error Z: " + error_z.ToString("F2") + " m/s  [H/N]");
 
                 GUILayout.Label("Distance Dock: " + autopilot.zSep.ToString("F2") + "m");
-                GUILayout.Label("Distance Axe Dock: " + autopilot.lateralSep.magnitude.ToString("F2") + "m");
+                GUILayout.Label("Distance Dock Axis: " + autopilot.lateralSep.magnitude.ToString("F2") + "m");
 
             }
 

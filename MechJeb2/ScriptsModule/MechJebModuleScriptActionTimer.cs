@@ -13,13 +13,13 @@ namespace MuMech
 		private int initTime = 10;
 		private float startTime;
 
-		public MechJebModuleScriptActionTimer (MechJebModuleScript scriptModule, MechJebCore core):base(scriptModule, core, NAME)
+		public MechJebModuleScriptActionTimer (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 
-		override public void activateAction(int actionIndex)
+		override public void activateAction()
 		{
-			base.activateAction(actionIndex);
+			base.activateAction();
 			startTime = Time.time;
 			initTime = time;
 		}
@@ -47,11 +47,11 @@ namespace MuMech
 			base.WindowGUI(windowID);
 			if (!this.isStarted())
 			{
-				GuiUtils.SimpleTextBox ("Wait Time", time, "s", 30);
+				GuiUtils.SimpleTextBox("Wait Time", time, "s", 30);
 			}
 			if (!this.isExecuted() && this.isStarted())
 			{
-				GUILayout.Label ("T:-" + spendTime + "s");
+				GUILayout.Label ("Wait T:-" + spendTime + "s", GUILayout.ExpandWidth(false));
 			}
 			base.postWindowGUI(windowID);
 		}

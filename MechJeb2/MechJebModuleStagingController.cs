@@ -24,8 +24,32 @@ namespace MuMech
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
         [Persistent(pass = (int)Pass.Type)]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
+        [Persistent(pass = (int)Pass.Type)]
+        public EditableDouble clampAutoStageThrustPct = 0.95;
+        [Persistent(pass = (int)Pass.Type)]
+        public EditableDoubleMult fairingMaxAerothermalFlux = new EditableDoubleMult(1135, 1);
 
         public bool autostagingOnce = false;
+
+        public bool waitingForFirstStaging = false;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (vessel.situation == Vessel.Situations.PRELAUNCH)
+                waitingForFirstStaging = true;
+
+            GameEvents.onStageActivate.Add(stageActivate);
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onStageActivate.Remove(stageActivate);
+        }
+
+        private void stageActivate(int data)
+        {
+            waitingForFirstStaging = false;
+        }
 
         public void AutostageOnce(object user)
         {
@@ -51,9 +75,12 @@ namespace MuMech
             GUILayout.Label("s", GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
+            ClampAutostageThrust();
+
             GUILayout.Label("Stage fairings when:");
             GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
             GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
+            GuiUtils.SimpleTextBox("  aerothermal flux <", fairingMaxAerothermalFlux, "W/m²", 50);
 
             GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
 
@@ -68,6 +95,17 @@ namespace MuMech
             return "Autostaging until stage #" + (int)autostageLimit;
         }
 
+        [GeneralInfoItem("Clamp Autostage Thrust", InfoItem.Category.Misc)]
+        public void ClampAutostageThrust()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Clamp AutoStage Thrust ");
+            core.staging.clampAutoStageThrustPct.text = GUILayout.TextField(core.staging.clampAutoStageThrustPct.text, 5);
+            GUILayout.Label("%");
+            core.staging.clampAutoStageThrustPct = UtilMath.Clamp(core.staging.clampAutoStageThrustPct, 0, 100);
+            GUILayout.EndVertical();
+        }
+
         //internal state:
         double lastStageTime = 0;
 
@@ -79,30 +117,35 @@ namespace MuMech
             if (!vessel.isActiveVessel)
                 return;
 
-            //if autostage enabled, and if we are not waiting on the pad, and if there are stages left,
+            //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (!vessel.LiftedOff() || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
+            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
             //don't decouple active or idle engines or tanks
-            List<int> burnedResources = FindBurnedResources();
-            if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources))
+            List<ModuleEngines> activeModuleEngines = FindActiveModuleEngines();
+            List<int> burnedResources = FindBurnedResources(activeModuleEngines);
+            if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
             if (HasStayingChutes(StageManager.CurrentStage - 1, vessel))
                 return;
 
-            //only fire decouplers to drop deactivated engines or tanks
-            bool firesDecoupler = InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel);
-            if (firesDecoupler && !InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
-                return;
+            //Always drop deactivated engines or tanks
+            if (!InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
+            {
+                //only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
+                if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude || core.vesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux) &&
+                    HasFairing(StageManager.CurrentStage - 1, vessel))
+                    return;
 
-            //only decouple fairings if the dynamic pressure and altitude conditions are respected
-            if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude) &&
-                HasFairing(StageManager.CurrentStage - 1, vessel))
-                return;
+                //only release launch clamps if we're at nearly full thrust
+                if (vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct &&
+                    InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel))
+                    return;
+            }
 
             //When we find that we're allowed to stage, start a countdown (with a
             //length given by autostagePreDelay) and only stage once that countdown finishes,
@@ -110,7 +153,7 @@ namespace MuMech
             {
                 if (vesselState.time - stageCountdownStart > autostagePreDelay)
                 {
-                    if (firesDecoupler)
+                    if (InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel))
                     {
                         //if we decouple things, delay the next stage a bit to avoid exploding the debris
                         lastStageTime = vesselState.time;
@@ -131,12 +174,12 @@ namespace MuMech
         }
 
         //determine whether it's safe to activate inverseStage
-        public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources)
+        public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources))
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources, activeModuleEngines))
                 {
                     return true;
                 }
@@ -144,20 +187,24 @@ namespace MuMech
             return false;
         }
 
-    // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
-        public List<int> FindBurnedResources()
+        public List<ModuleEngines> FindActiveModuleEngines()
         {
             var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
-                !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
+                                                        !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
             var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
-            var burnedPropellants = engineModules.SelectMany(eng => eng.propellants);
-            List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
+            return engineModules.ToList();
+        }
 
+        // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
+        public List<int> FindBurnedResources(List<ModuleEngines> activeModuleEngines)
+        {
+            var burnedPropellants = activeModuleEngines.SelectMany(eng => eng.propellants);
+            List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
             return propellantIDs;
         }
 
         //detect if a part is above an active or idle engine in the part tree
-        public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources)
+        public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE)
                 && p.IsEngine() && !p.IsSepratron() && p.EngineHasFuel())
@@ -169,15 +216,19 @@ namespace MuMech
                 for (int i = 0; i < p.Resources.Count; i++)
                 {
                     PartResource r = p.Resources[i];
-                    if (r.amount > 0 && r.info.id != PartResourceLibrary.ElectricityHashcode && tankResources.Contains(r.info.id))
+                    if (r.amount > p.resourceRequestRemainingThreshold && r.info.id != PartResourceLibrary.ElectricityHashcode && tankResources.Contains(r.info.id))
                     {
-                        return true;
+                        foreach (ModuleEngines engine in activeModuleEngines)
+                        {
+                            if (engine.part.crossfeedPartSet.ContainsPart(p))
+                                return true;
+                        }
                     }
                 }
             }
             for (int i = 0; i < p.children.Count; i++)
             {
-                if (HasActiveOrIdleEngineOrTankDescendant(p.children[i], tankResources))
+                if (HasActiveOrIdleEngineOrTankDescendant(p.children[i], tankResources, activeModuleEngines))
                 {
                     return true;
                 }
@@ -193,6 +244,20 @@ namespace MuMech
             {
                 Part p = v.parts[i];
                 if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //determine whether activating inverseStage will release launch clamps
+        public static bool InverseStageReleasesClamps(int inverseStage, Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsLaunchClamp())
                 {
                     return true;
                 }
@@ -229,8 +294,8 @@ namespace MuMech
             {
                 PartResource r = p.Resources[i];
                 if (r.info.id == PartResourceLibrary.ElectricityHashcode) continue;
-                if (r.maxAmount > 0) hadResources = true;
-                if (r.amount > 0) hasResources = true;
+                if (r.maxAmount > p.resourceRequestRemainingThreshold) hadResources = true;
+                if (r.amount > p.resourceRequestRemainingThreshold) hasResources = true;
             }
             if (hadResources && !hasResources) return true;
 
@@ -266,7 +331,7 @@ namespace MuMech
         // determine if there is a fairing to be deployed
         public static bool HasFairing(int inverseStage, Vessel v)
         {
-            return v.parts.Any(p => (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))) && p.inverseStage == inverseStage);
+            return v.parts.Any(p => p.inverseStage == inverseStage && (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))));
         }
     }
 }

@@ -830,18 +830,18 @@ namespace MuMech
                 // No point in copying those again if we already have them loaded
                 if (!loaded)
                 {
-                    dragCurveCd = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
-                    dragCurveCdPower = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
+                    dragCurveCd         = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
+                    dragCurveCdPower    = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
                     dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
 
-                    dragCurveSurface = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface .Curve.keys);
-                    dragCurveTail = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
-                    dragCurveTip = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
+                    dragCurveSurface    = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface .Curve.keys);
+                    dragCurveTail       = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
+                    dragCurveTip        = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
 
-                    liftCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
-                    liftMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
-                    dragCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
-                    dragMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    liftCurve           = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
+                    liftMachCurve       = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    dragCurve           = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
+                    dragMachCurve       = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragMachCurve.Curve.keys);
 
                     spaceTemperature = PhysicsGlobals.SpaceTemperature;
                     loaded = true;
@@ -1138,9 +1138,9 @@ namespace MuMech
             public double GetOvershoot(EditableAngle targetLatitude,EditableAngle targetLongitude)
             {
                 // Get the start, end and target positions as a set of 3d vectors that we can work with
-                Vector3 end = this.body.GetRelSurfacePosition(endPosition.latitude, endPosition.longitude, 0);
-                Vector3 target = this.body.GetRelSurfacePosition(targetLatitude, targetLongitude, 0); 
-                Vector3 start = this.body.GetRelSurfacePosition(startPosition.latitude, startPosition.longitude, 0);
+                Vector3 end = this.body.GetWorldSurfacePosition(endPosition.latitude, endPosition.longitude, 0) - body.position;
+                Vector3 target = this.body.GetWorldSurfacePosition(targetLatitude, targetLongitude, 0) - body.position; 
+                Vector3 start = this.body.GetWorldSurfacePosition(startPosition.latitude, startPosition.longitude, 0) - body.position;
 
                 // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target. TODO can we simplify this code by using Vector3.Exclude?
                 Vector3 start2Target = target - start;

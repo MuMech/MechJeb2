@@ -99,7 +99,7 @@ namespace MuMech
             get
             {
                 return mainBody.GetWorldSurfacePosition(prediction.endPosition.latitude,
-                    prediction.endPosition.longitude, LandingAltitude);
+                    prediction.endPosition.longitude, LandingAltitude) - mainBody.position;
             }
         }
 
@@ -287,7 +287,7 @@ namespace MuMech
             // First we compute the target landing position. We have to convert the latitude and longitude of the target
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
-            Vector3d desiredLandingPosition = mainBody.GetRelSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0);
+            Vector3d desiredLandingPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
             float bodyRotationAngleDuringDescent = (float)(360 * (prediction.endUT - vesselState.time) / mainBody.rotationPeriod);
             Quaternion bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
@@ -402,7 +402,7 @@ namespace MuMech
             for (int i = 0; i < vesselState.parachutes.Count; i++)
             {
                 ModuleParachute p = vesselState.parachutes[i];
-                if (p.part.inverseStage >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
+                if (Math.Max(p.part.inverseStage,0) >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
                 {
                     return true;
                 }
@@ -420,16 +420,13 @@ namespace MuMech
 
         void DeployLandingGears()
         {
-            //new-style landing legs are activated by an event:
-            //vessel.rootPart.SendEvent("LowerLeg");
-
-            //old-style landings legs are activated on part activation:
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
                 if (p.HasModule<ModuleWheelDeployment>())
                 {
-                    if (p.inverseStage >= limitGearsStage)
+                    // p.inverseStage is -1 for some configuration ?!?
+                    if (Math.Max(p.inverseStage, 0) >= limitGearsStage)
                     {
                         foreach (ModuleWheelDeployment wd in p.FindModulesImplementing<ModuleWheelDeployment>())
                         {

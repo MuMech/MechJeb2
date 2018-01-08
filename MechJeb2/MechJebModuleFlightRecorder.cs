@@ -93,9 +93,15 @@ namespace MuMech
             DeltaVExpended
         }
 
-        public record[] history = new record[3000];
+        public record[] history = new record[1];
 
         public int historyIdx = -1;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public int historySize = 3000;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public double precision = 0.2;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool downrange = true;
@@ -116,9 +122,7 @@ namespace MuMech
 
         public double[] maximums;
         public double[] minimums;
-
-        private double precision = 0.2;
-
+        
         private bool paused = false;
 
         [Persistent(pass = (int)Pass.Local)]
@@ -172,7 +176,7 @@ namespace MuMech
         [ValueInfoItem("Distance from mark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
         public double DistanceFromMark()
         {
-            return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude));
+            return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude) - FlightGlobals.Bodies[markBodyIndex].position);
         }
 
         [ValueInfoItem("Downrange distance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
@@ -220,6 +224,8 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
+            if (history.Length != historySize)
+                history = new record[historySize];
             this.users.Add(this); //flight recorder should always run.
         }
 
@@ -237,11 +243,10 @@ namespace MuMech
                 return;
             }
 
-            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.surfaceVelocity.normalized, vesselState.gravityForce);
-            gravityLosses -= vesselState.deltaT * Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.up * vesselState.radius * Math.Pow(2 * Math.PI / part.vessel.mainBody.rotationPeriod, 2));
+            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.orbitalVelocity.normalized, vesselState.gravityForce);
             dragLosses += vesselState.deltaT * vesselState.drag;
             deltaVExpended += vesselState.deltaT * vesselState.currentThrustAccel;
-            steeringLosses += vesselState.deltaT * vesselState.currentThrustAccel * (1 - Vector3d.Dot(vesselState.surfaceVelocity.normalized, vesselState.forward));
+            steeringLosses += vesselState.deltaT * vesselState.currentThrustAccel * (1 - Vector3d.Dot(vesselState.orbitalVelocity.normalized, vesselState.forward));
 
             maxDragGees = Math.Max(maxDragGees, vesselState.drag / 9.81);
 
