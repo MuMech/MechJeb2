@@ -35,7 +35,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            if (vessel.situation == Vessel.Situations.PRELAUNCH)
+            if (vessel != null && vessel.situation == Vessel.Situations.PRELAUNCH)
                 waitingForFirstStaging = true;
 
             GameEvents.onStageActivate.Add(stageActivate);
