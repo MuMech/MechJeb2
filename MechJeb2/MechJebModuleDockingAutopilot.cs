@@ -180,16 +180,11 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    
-                    timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
-                    timeToTargetSize = Math.Abs((zSep - targetSize) / zApproachSpeed);
 
-                    if (zSep < targetSize)
+                    if (zSep < safeDistance)
                         zApproachSpeed *= -1;
-                    if (((zSep <= lateralSep.magnitude * 10) || (timeToTargetSize <= timeToAxis * 10)) && (timeToAxis > 0 && timeToTargetSize > 0))
-                    {
-                        latApproachSpeed *= 2;
-                    }
+                    else
+                        zApproachSpeed *= 0;
 
                     status = "Moving toward the starting point at " + zApproachSpeed.ToString("F2") + " m/s.";
                     break;
