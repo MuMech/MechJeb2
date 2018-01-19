@@ -3,25 +3,23 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleSolarPanelController : MechJebModuleDeployableController
+    public class MechJebModuleDeployableAntennaController : MechJebModuleDeployableController
     {
-        public MechJebModuleSolarPanelController(MechJebCore core)
-            : base(core)
+        public MechJebModuleDeployableAntennaController(MechJebCore core) : base(core)
         { }
 
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
-            buttonText = "Toggle solar panels";
             extended = !AllRetracted();
+            buttonText = "Toggle antennas";
         }
 
-
-        [GeneralInfoItem("Toggle solar panels", InfoItem.Category.Misc, showInEditor = false)]
-        public void SolarPanelDeployButton()
+        [GeneralInfoItem("Toggle antennas", InfoItem.Category.Misc, showInEditor = false)]
+        public void AntennaDeployButton()
         {
-            autoDeploy = GUILayout.Toggle(autoDeploy, "Auto-deploy solar panels");
-            
+            autoDeploy = GUILayout.Toggle(autoDeploy, "Auto-deploy antennas");
+
             if (GUILayout.Button(buttonText))
             {
                 if (ExtendingOrRetracting())
@@ -42,7 +40,8 @@ namespace MuMech
 
         protected override List<ModuleDeployablePart> getModules(Part p)
         {
-            return p.Modules.GetModules<ModuleDeployableSolarPanel>().ConvertAll(x => (ModuleDeployablePart)x);
+            return p.Modules.GetModules<ModuleDeployableAntenna>().ConvertAll(x => (ModuleDeployablePart)x);
         }
     }
 }
+

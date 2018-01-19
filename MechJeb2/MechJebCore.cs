@@ -39,6 +39,7 @@ namespace MuMech
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
         public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleDeployableAntennaController antennaControl;
         public MechJebModuleLandingAutopilot landing;
         public MechJebModuleSettings settings;
         public MechJebModuleAirplaneAutopilot airplane;
@@ -749,6 +750,7 @@ namespace MuMech
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
             solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            antennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
             landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             settings = GetComputerModule<MechJebModuleSettings>();
             airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
