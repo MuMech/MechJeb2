@@ -45,21 +45,16 @@ namespace MuMech
         public MechJebModuleAirplaneAutopilot airplane;
 
         public VesselState vesselState = new VesselState();
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "Disabled", enabledText = "Enabled")]
         public bool running = true;
-
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
-
         public string version = "";
-
         private bool deactivateControl = false;
-
         public MechJebCore MasterMechJeb
         {
             get { return vessel.GetMasterMechJeb(); }
         }
-
+        
         // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
         public bool DeactivateControl
         {

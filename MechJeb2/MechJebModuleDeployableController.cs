@@ -33,41 +33,35 @@ namespace MuMech
 
         public void ExtendAll()
         {
-            vessel.parts.ForEach(p =>
+            List<Part> vp = vessel.parts;
+            for (int i = 0; i < vp.Count; i++)
             {
+                Part p = vp[i];
+
                 if (p.ShieldedFromAirstream)
                     return;
 
                 var deployable = getModules(p);
                 for (int j = 0; j < deployable.Count; j++)
-                {
                     if (isDeployable(deployable[j]))
                         deployable[j].Extend();
-                }
-            });
+            };
         }
-
-        public void ExtendAll(Callback cb)
-        {
-            RetractAll();
-            cb();
-        }
-
-
+        
         public void RetractAll()
         {
-            vessel.parts.ForEach(p =>
-            {
+            List<Part> vp = vessel.parts;
+            for (int i = 0; i < vp.Count; i++) {
+                Part p = vp[i];
+
                 if (p.ShieldedFromAirstream)
                     return;
 
                 var deployable = getModules(p);
                 for (int j = 0; j < deployable.Count; j++)
-                {
                     if (isDeployable(deployable[j]))
                         deployable[j].Retract();
-                }
-            });
+            }
         }
 
         public bool AllRetracted()
@@ -149,18 +143,20 @@ namespace MuMech
 
         protected bool ExtendingOrRetracting()
         {
-            bool ret = false;
-            vessel.parts.ForEach(p =>
+            foreach (Part p in vessel.parts)
             {
-                getModules(p).ForEach(m =>
+                List<ModuleDeployablePart> deployableModules = getModules(p);
+
+                foreach (ModuleDeployablePart deployableModule in deployableModules)
                 {
-                    if (m.deployState == ModuleDeployablePart.DeployState.EXTENDING || m.deployState == ModuleDeployablePart.DeployState.RETRACTING)
+                    if (deployableModule.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
+                        deployableModule.deployState == ModuleDeployablePart.DeployState.RETRACTING)
                     {
-                        ret = true;
+                        return true;
                     }
-                });
-            });
-            return ret;
+                }
+            }
+            return false;
         }
 
         protected abstract List<ModuleDeployablePart> getModules(Part p);

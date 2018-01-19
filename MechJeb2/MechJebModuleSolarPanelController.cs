@@ -28,13 +28,9 @@ namespace MuMech
                     return;
 
                 if (!extended)
-                {
                     ExtendAll();
-                }
                 else
-                {
                     RetractAll();
-                }
 
                 extended = !extended;
             }
