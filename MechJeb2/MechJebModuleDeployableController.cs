@@ -13,6 +13,8 @@ namespace MuMech
         }
 
 
+        List<ModuleDeployablePart> deployableModules;
+
         protected string buttonText;
         protected bool extended;
 
@@ -73,12 +75,7 @@ namespace MuMech
                 for (int j = 0; j < deployable.Count; j++)
                 {
                     ModuleDeployablePart sa = deployable[j];
-
-                    if (!sa.retractable)
-                    {
-                        return false;
-                    }
-
+                    
                     if (isDeployable(sa) &&
                         ((sa.deployState == ModuleDeployablePart.DeployState.EXTENDED) ||
                          (sa.deployState == ModuleDeployablePart.DeployState.EXTENDING) ||
@@ -139,6 +136,11 @@ namespace MuMech
             {
                 prev_autoDeploy = false;
             }
+
+            if (AllRetracted())
+                buttonText = getButtonText(DeployablePartState.RETRACTED);
+            else
+                buttonText = getButtonText(DeployablePartState.EXTENDED);
         }
 
         protected bool ExtendingOrRetracting()
@@ -160,5 +162,14 @@ namespace MuMech
         }
 
         protected abstract List<ModuleDeployablePart> getModules(Part p);
+
+
+        protected enum DeployablePartState
+        {
+            RETRACTED,
+            EXTENDED
+        }
+
+        protected abstract string getButtonText(DeployablePartState deployablePartState);
     }
 }

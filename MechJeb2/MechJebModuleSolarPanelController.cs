@@ -40,5 +40,18 @@ namespace MuMech
         {
             return p.Modules.GetModules<ModuleDeployableSolarPanel>().ConvertAll(x => (ModuleDeployablePart)x);
         }
+
+        protected override string getButtonText(DeployablePartState deployablePartState)
+        {
+            switch (deployablePartState)
+            {
+                case DeployablePartState.EXTENDED:
+                    return "Toggle solar panels (currently extended)";
+                case DeployablePartState.RETRACTED:
+                    return "Toggle solar panels (currently retracted)";
+                default:
+                    return "Toggle solar panels";
+            }
+        }
     }
 }
