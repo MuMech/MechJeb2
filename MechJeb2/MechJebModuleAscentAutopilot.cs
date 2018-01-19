@@ -33,16 +33,12 @@ namespace MuMech
         public bool forceRoll = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble verticalRoll = new EditableDouble(90);
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble turnRoll = new EditableDouble(90);
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autodeploySolarPanels = true;
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoDeployAntennas = true;
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool skipCircularization = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
