@@ -76,10 +76,7 @@ namespace MuMech
                 {
                     ModuleDeployablePart sa = deployable[j];
                     
-                    if (isDeployable(sa) &&
-                        ((sa.deployState == ModuleDeployablePart.DeployState.EXTENDED) ||
-                         (sa.deployState == ModuleDeployablePart.DeployState.EXTENDING) ||
-                         (sa.deployState == ModuleDeployablePart.DeployState.RETRACTING)))
+                    if (isDeployable(sa) && sa.deployState != ModuleDeployablePart.DeployState.RETRACTED)
                     {
                         return false;
                     }
@@ -141,6 +138,8 @@ namespace MuMech
                 buttonText = getButtonText(DeployablePartState.RETRACTED);
             else
                 buttonText = getButtonText(DeployablePartState.EXTENDED);
+
+            extended = !AllRetracted();
         }
 
         protected bool ExtendingOrRetracting()
