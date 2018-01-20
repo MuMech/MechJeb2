@@ -206,6 +206,9 @@ namespace MuMech
                 autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels,
                         "Auto-deploy solar panels");
 
+                autopilot.autoDeployAntennas = GUILayout.Toggle(autopilot.autoDeployAntennas,
+                        "Auto-deploy antennas");
+
                 GUILayout.BeginHorizontal();
                 core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
                 autopilot.skipCircularization = GUILayout.Toggle(autopilot.skipCircularization, "Skip Circularization");
