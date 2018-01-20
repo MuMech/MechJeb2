@@ -13,8 +13,6 @@ namespace MuMech
         }
 
 
-        List<ModuleDeployablePart> deployableModules;
-
         protected string buttonText;
         protected bool extended;
 
