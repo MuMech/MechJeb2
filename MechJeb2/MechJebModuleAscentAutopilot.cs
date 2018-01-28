@@ -389,6 +389,10 @@ namespace MuMech
             return 90.0 - Vector3d.Angle(vesselState.surfaceVelocity, vesselState.up);
         }
 
+        protected double srfvelHeading() {
+            return vesselState.HeadingFromDirection(vesselState.surfaceVelocity.ProjectOnPlane(vesselState.up));
+        }
+
         // this provides ground track heading based on desired inclination and is what most consumers should call
         protected void attitudeTo(double desiredPitch)
         {
