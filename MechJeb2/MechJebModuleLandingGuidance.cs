@@ -338,7 +338,7 @@ namespace MuMech
                 {
                     foreach (ConfigNode site in launchSites.GetNodes("Site"))
                     {
-                        string launchSiteName = site.GetValue("theName");
+                        string launchSiteName = site.GetValue("displayName");
                         ConfigNode pqsCity = site.GetNode("PQSCity");
                         if (pqsCity == null)
                         {
