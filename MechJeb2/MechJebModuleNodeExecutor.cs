@@ -66,6 +66,8 @@ namespace MuMech
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             peg.users.Add(this);
+            // need to call this at least once
+            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
         }
 
         public override void OnModuleDisabled()
@@ -133,13 +135,14 @@ namespace MuMech
             double timeToPEGEnable = node.UT - 1.2 * halfBurnTime - vesselState.time;
             double timeToHalfBT = node.UT - halfBurnTime - vesselState.time;
 
+
             if (timeToPEGEnable <= 0)
             {
-                peg.AssertStart();
+                peg.AssertStart(!burnTriggered);
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
-                    if (core.attitude.attitudeAngleFromTarget() < 1 && !burnTriggered)
+                    if (Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) < 1 && !burnTriggered)
                     {
                         if (( peg.t_lambda >= node.UT && peg.phi < 40 * UtilMath.Deg2Rad ) || timeToHalfBT <= 0.0 )
                         {
@@ -158,14 +161,14 @@ namespace MuMech
             //autowarp, but only if we're already aligned with the node
             if (autowarp && timeToPEGEnable > 0)
             {
-                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                if ((Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
                     core.warp.WarpToUT(vesselState.time + timeToPEGEnable);
                 }
                 else
                 {
                     Debug.Log("angvel = " + core.vessel.angularVelocity.magnitude);
-                    if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToPEGEnable < 600)
+                    if (!MuUtils.PhysicsRunning() && Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) > 10 && timeToPEGEnable < 600)
                     {
                         //realign
                         core.warp.MinimumWarp();
