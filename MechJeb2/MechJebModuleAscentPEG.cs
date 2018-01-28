@@ -103,15 +103,15 @@ namespace MuMech
             }
         }
 
-        private void attitudeToPEG(double pitch, bool maybeManualAz = false)
+        private void attitudeToPEG(double pitch, bool handleManualAz = false, bool surfHeading = true)
         {
-            /* FIXME: use srfvel heading if peg is bad */
             double heading;
 
-            if (maybeManualAz && pegManualAzimuthToggle)
+            if (surfHeading)
+                heading = srfvelHeading();
+            else if (handleManualAz && pegManualAzimuthToggle)
                 heading = pegManualAzimuth;
             else
-                // FIXME: should remember the launch lat + lng and figure a great circle path from the launch site
                 heading = peg.heading;
 
             attitudeTo(pitch, heading);
@@ -121,7 +121,7 @@ namespace MuMech
         {
 
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeToPEG(90, true);
+            attitudeToPEG(90, handleManualAz: true);
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
@@ -164,7 +164,7 @@ namespace MuMech
                 status = String.Format("Pitch program {0:F2} °", pitch - peg.pitch);
             }
 
-            attitudeToPEG(pitch, true);
+            attitudeToPEG(pitch, handleManualAz: true);
         }
 
         private void DriveGravityTurn(FlightCtrlState s)
@@ -185,15 +185,29 @@ namespace MuMech
                     mode = AscentMode.PEG;
                     return;
                 }
+                if (pegManualAzimuthToggle)
+                    attitudeToPEG(pitch, surfHeading: true);
+                else
+                    attitudeToPEG(pitch);
             }
-            else if ( pitch < peg.pitch && peg.isStable() )
+            else if ( peg.isStable() )
             {
-                mode = AscentMode.PEG;
-                return;
+                if ( pitch < peg.pitch )
+                {
+                    mode = AscentMode.PEG;
+                    return;
+                }
+                else
+                {
+                    attitudeToPEG(pitch);
+                }
+            }
+            else
+            {
+                attitudeToPEG(pitch, surfHeading: true);
             }
 
             status = "Unguided Gravity Turn";
-            attitudeToPEG(pitch, true);
         }
 
         private void DrivePEG(FlightCtrlState s)
