@@ -95,7 +95,8 @@ namespace MuMech
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            peg.TargetNode(node);
+            // if the burn isn't triggered, force peg to re-update vgo from the node to keep it fresh
+            peg.TargetNode(node, !burnTriggered);
 
             if (burnTriggered && peg.status == PegStatus.FINISHED)
             {
