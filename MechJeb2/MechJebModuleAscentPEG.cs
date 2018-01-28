@@ -29,6 +29,10 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool pegCoast = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool pegManualAzimuthToggle = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble pegManualAzimuth = new EditableDouble(0);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegAfterStage = new EditableDouble(0);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble coastSecs = new EditableDouble(0.00);
@@ -99,17 +103,25 @@ namespace MuMech
             }
         }
 
-        private void attitudeToPEG(double pitch)
+        private void attitudeToPEG(double pitch, bool maybeManualAz = false)
         {
             /* FIXME: use srfvel heading if peg is bad */
-            attitudeTo(pitch, peg.heading);
+            double heading;
+
+            if (maybeManualAz && pegManualAzimuthToggle)
+                heading = pegManualAzimuth;
+            else
+                // FIXME: should remember the launch lat + lng and figure a great circle path from the launch site
+                heading = peg.heading;
+
+            attitudeTo(pitch, heading);
         }
 
         private void DriveVerticalAscent(FlightCtrlState s)
         {
 
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeToPEG(90);
+            attitudeToPEG(90, true);
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
@@ -152,7 +164,7 @@ namespace MuMech
                 status = String.Format("Pitch program {0:F2} °", pitch - peg.pitch);
             }
 
-            attitudeToPEG(pitch);
+            attitudeToPEG(pitch, true);
         }
 
         private void DriveGravityTurn(FlightCtrlState s)
@@ -181,7 +193,7 @@ namespace MuMech
             }
 
             status = "Unguided Gravity Turn";
-            attitudeToPEG(pitch);
+            attitudeToPEG(pitch, true);
         }
 
         private void DrivePEG(FlightCtrlState s)
