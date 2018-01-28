@@ -194,14 +194,15 @@ namespace MuMech
         }
 
         // does its own initialization and is idempotent
-        public void TargetNode(ManeuverNode node)
+        public void TargetNode(ManeuverNode node, bool force_vgo = false)
         {
             target_orbit = node.nextPatch;
             iy = -target_orbit.SwappedOrbitNormal();
             imode = IncMode.FIXED_LAN;
             tmode = TargetMode.ORBIT;
-            if ( !isStable() && !(status == PegStatus.FINISHED) )
+            if ( (!isStable() && status != PegStatus.FINISHED) || force_vgo )
             {
+                // do not update vgo if we're stable (and not warping in the node executor or something like that
                 vgo = node.GetBurnVector(orbit);
             }
         }
