@@ -170,6 +170,7 @@ namespace MuMech
         private Vector3d iz;
         // inclination target for manual targetting with inclination
         private double incval;
+        private double leadingAngleval;
         private Orbit incOrbit;
         // linear terminal velocity targets
         private Orbit target_orbit;
@@ -258,17 +259,17 @@ namespace MuMech
             t_lambda = vesselState.time;
         }
 
-        public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
+        public void TargetPeInsertMatchInc(double PeA, double ApA, double inc, double leadingAngle)
         {
-            // FIXME: continuously update if we have not launched
-            if (incval != inc || incOrbit == null)
+            if (incval != inc || leadingAngleval != leadingAngle || incOrbit == null || !vessel.LiftedOff() || vessel.Landed)
             {
                 incval = inc;
+                leadingAngleval = leadingAngle;
                 // we use this orbit solely to be able to pull off the normal at later ticks, which will then be adjusted for
                 // world coordinate rotation in future frames (awful KSP rotating coordinate system).  the Ap and Pe do not matter
                 // and we could not orient it correctly since the location of the Pe insertion is dependent upon thd downrange
                 // termination of the burn and we do not have accurate enough predictions of that point.
-                incOrbit = OrbitFromInclination(inc);
+                incOrbit = OrbitFromInclination(inc, leadingAngle);
             }
             TargetPeInsertMatchOrbitPlane(PeA, ApA, incOrbit);
         }
@@ -295,9 +296,10 @@ namespace MuMech
         }
 
         // this is an orbit which is useful only in that it stores an orbit normal and we can retrieve that later
-        private Orbit OrbitFromInclination(double inc)
+        private Orbit OrbitFromInclination(double inc, double leadingAngle)
         {
             Vector3d tangent = OrbitNormalFromInclination(inc).normalized;
+            tangent = QuaternionD.AngleAxis(-leadingAngle, Planetarium.up) * tangent;
             // on earth this gives a 185x185 orbit, but it doesn't matter.
             Vector3d pos = Vector3d.Cross(tangent, vesselState.orbitalPosition).normalized * 6556000.0;
             Vector3d vel = Vector3d.Cross(tangent, pos).normalized * 77974.0;
