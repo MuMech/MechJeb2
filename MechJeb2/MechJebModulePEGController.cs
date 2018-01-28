@@ -344,13 +344,6 @@ namespace MuMech
                 return;
             }
 
-            bool skip_term_check = false;
-
-            if ( core.thrust.targetThrottle == 0.0 && vessel.ctrlState.Z == 0.0F )
-            {
-                skip_term_check = true; // if we weren't burning dV_atom will be zero'ish nonsense we can't use
-            }
-
             if ( status == PegStatus.SLEWING ) {
                 status = PegStatus.TERMINAL_RCS;
             }
@@ -361,24 +354,25 @@ namespace MuMech
             double dt = vesselState.time - last_call;
             Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
 
-            // we could have throttled up this tick by someone else (node executor) but not have burned last tick
-            if (dV_atom.magnitude < 2e-4)  // 0.001g which is near enough zero
-                skip_term_check = true;
-
             if ( last_call != 0 )
                 vgo -= dV_atom;
 
             double vgo_forward = Vector3d.Dot(vgo, vesselState.forward);
 
-            tgo = vgo_forward / Vector3d.Dot(dV_atom, vesselState.forward) * TimeWarp.fixedDeltaTime;
+            Vector3d next_dV_atom;
+            if (status == PegStatus.TERMINAL_RCS)
+                next_dV_atom = vesselState.rcsThrustAvailable.down / vesselState.mass * vesselState.forward * dt;
+            else
+                next_dV_atom = vesselState.maxThrustAccel * vesselState.forward * dt;
+
+            tgo = vgo_forward / Vector3d.Dot(next_dV_atom, vesselState.forward) * TimeWarp.fixedDeltaTime;
 
             int tickstop = 1;
             // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
             if (has_rcs && status == PegStatus.TERMINAL)
                 tickstop = 2;
 
-            // FIXME: should probably predict thrust from engines or RCS on the *next* tick and use it instead of the observed dV on the last tick
-            if ( tgo < ( tickstop * TimeWarp.fixedDeltaTime ) && last_call != 0 && !skip_term_check )
+            if ( tgo < ( tickstop * TimeWarp.fixedDeltaTime ) && last_call != 0 )
             {
                 Debug.Log("finishing burn due to tgo < tick limit, vgo = " + vgo.magnitude + " tgo = " + tgo);
                 if ( has_rcs && status == PegStatus.TERMINAL )
