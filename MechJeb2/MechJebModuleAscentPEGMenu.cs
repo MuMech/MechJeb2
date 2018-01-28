@@ -71,6 +71,11 @@ namespace MuMech
             {
                 GuiUtils.SimpleTextBox("after stage#", path.coastAfterStage);
             }
+            GUILayout.BeginHorizontal();
+            path.pegManualAzimuthToggle = GUILayout.Toggle(path.pegManualAzimuthToggle, "Manual Azimuth:");
+            if (path.pegManualAzimuthToggle)
+                GuiUtils.SimpleTextBox("", path.pegManualAzimuth);
+            GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reset PEG"))
