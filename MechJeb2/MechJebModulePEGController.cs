@@ -196,15 +196,12 @@ namespace MuMech
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node)
         {
-            // update iy every tick to fix world rotation issues
+            target_orbit = node.nextPatch;
             iy = -target_orbit.SwappedOrbitNormal();
-            if (isTerminalGuidance())
-                return;
+            imode = IncMode.FIXED_LAN;
+            tmode = TargetMode.ORBIT;
             if ( !isStable() && !(status == PegStatus.FINISHED) )
             {
-                imode = IncMode.FIXED_LAN;
-                tmode = TargetMode.ORBIT;
-                target_orbit = node.nextPatch;
                 vgo = node.GetBurnVector(orbit);
             }
         }
