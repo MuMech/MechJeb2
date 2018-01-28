@@ -27,6 +27,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool pegAfterStageToggle = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool pegCoast = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegAfterStage = new EditableDouble(0);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble coastSecs = new EditableDouble(0.00);
@@ -80,7 +82,10 @@ namespace MuMech
 
         private void setTarget()
         {
-            peg.SetCoast(coastSecs, coastAfterStage);
+            if (pegCoast)
+                peg.SetCoast(coastSecs, coastAfterStage);
+            else
+                peg.SetCoast(-1, 0);
 
             if ( core.target.NormalTargetExists )
             {
