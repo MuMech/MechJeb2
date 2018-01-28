@@ -49,7 +49,7 @@ namespace MuMech
 {
     public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, SLEWING, CONVERGED, STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED, COASTING };
     public enum TargetMode { PERIAPSIS, ORBIT };
-    public enum IncMode { FIXED_LAN, FREE_LAN };
+    public enum IncMode { FIXED_LAN };
 
     public class MechJebModulePEGController : ComputerModule
     {
@@ -168,8 +168,9 @@ namespace MuMech
         private Vector3d ix;
         // unit vector downrange
         private Vector3d iz;
-        // inclination target for FREE_LAN
+        // inclination target for manual targetting with inclination
         private double incval;
+        private Orbit incOrbit;
         // linear terminal velocity targets
         private Orbit target_orbit;
 
@@ -194,6 +195,8 @@ namespace MuMech
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node)
         {
+            // update iy every tick to fix world rotation issues
+            iy = -target_orbit.SwappedOrbitNormal();
             if (isTerminalGuidance())
                 return;
             if ( !isStable() && !(status == PegStatus.FINISHED) )
@@ -203,7 +206,6 @@ namespace MuMech
                 target_orbit = node.nextPatch;
                 vgo = node.GetBurnVector(orbit);
             }
-            iy = -target_orbit.SwappedOrbitNormal();
         }
 
         /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
@@ -225,17 +227,16 @@ namespace MuMech
 
         public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
         {
+            // update iy every tick to fix world rotation issues
+            iy = -tangent.normalized;
+            imode = IncMode.FIXED_LAN;
             if (isTerminalGuidance())
                 return;
-            imode = IncMode.FIXED_LAN;
-            iy = -tangent.normalized;
             SetRdvalVdval(PeA, ApA);
         }
 
         public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o)
         {
-            if (isTerminalGuidance())
-                return;
             TargetPeInsertMatchPlane(PeA, ApA, o.SwappedOrbitNormal());
         }
 
@@ -259,15 +260,17 @@ namespace MuMech
 
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
-            if (isTerminalGuidance())
-                return;
-            /* imode = IncMode.FREE_LAN;
-            if (incval != inc)
-            { */
+            // FIXME: continuously update if we have not launched
+            if (incval != inc || incOrbit == null)
+            {
                 incval = inc;
-                SetPlaneFromInclination(inc);  /* updating every time would defeat PEG's corrector */
-            /* } */
-            SetRdvalVdval(PeA, ApA);
+                // we use this orbit solely to be able to pull off the normal at later ticks, which will then be adjusted for
+                // world coordinate rotation in future frames (awful KSP rotating coordinate system).  the Ap and Pe do not matter
+                // and we could not orient it correctly since the location of the Pe insertion is dependent upon thd downrange
+                // termination of the burn and we do not have accurate enough predictions of that point.
+                incOrbit = OrbitFromInclination(inc);
+            }
+            TargetPeInsertMatchOrbitPlane(PeA, ApA, incOrbit);
         }
 
         /* converts PeA + ApA into rdval/vdval for periapsis insertion.
@@ -291,22 +294,36 @@ namespace MuMech
             gamma = 0;  /* periapsis */
         }
 
-        /* this will produce an inclination plane based strictly off of the current vessel position, it is somewhat far from optimal,
-           but is a useful first guess to seed the predictor (not sure if the below-latitude stuff is strictly necessary, but this is
-           code i first used to attempt to directly set iy, but which performs poorly) */
-        private void SetPlaneFromInclination(double inc)
+        // this is an orbit which is useful only in that it stores an orbit normal and we can retrieve that later
+        private Orbit OrbitFromInclination(double inc)
+        {
+            Vector3d tangent = OrbitNormalFromInclination(inc).normalized;
+            // on earth this gives a 185x185 orbit, but it doesn't matter.
+            Vector3d pos = Vector3d.Cross(tangent, vesselState.orbitalPosition).normalized * 6556000.0;
+            Vector3d vel = Vector3d.Cross(tangent, pos).normalized * 77974.0;
+            Orbit o = new Orbit();
+            o.UpdateFromStateVectors(pos.xzy, vel.xzy, mainBody, vesselState.time);
+            return o;
+        }
+
+        // this takes the current position of the vessel and produces an orbit normal for creating a target
+        private Vector3d OrbitNormalFromInclination(double inc)
         {
             double desiredHeading = UtilMath.Deg2Rad * OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading) * vesselState.east + Math.Cos(desiredHeading) * vesselState.north;
             Vector3d tangent = Vector3d.Cross(vesselState.orbitalPosition, desiredHeadingVector).normalized;
             if ( Math.Abs(inc) < Math.Abs(vesselState.latitude) )
             {
-                if (Vector3.Angle(tangent, Planetarium.up) < 90)
-                    tangent = Vector3.RotateTowards(Planetarium.up, tangent, (float)(inc * UtilMath.Deg2Rad), 10.0f);
+                if (Vector3.Angle(tangent, Planetarium.up) < 90) // can't i figure this out from the quadrant of inc?
+                {
+                    tangent = Vector3.RotateTowards(Planetarium.up, tangent, (float)(inc * UtilMath.Deg2Rad), 0.0f);
+                }
                 else
-                    tangent = Vector3.RotateTowards(-Planetarium.up, tangent, (float)(inc * UtilMath.Deg2Rad), 10.0f);
+                {
+                    tangent = Vector3.RotateTowards(-Planetarium.up, tangent, (float)(inc * UtilMath.Deg2Rad), 0.0f);
+                }
             }
-            iy = -tangent;
+            return tangent;
         }
 
         private double last_call;        // this is the last call to converge
@@ -330,8 +347,6 @@ namespace MuMech
             // only use rcs for trim if its enabled and we have more than 10N of thrust
             bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
             int tickstop = 1;
-
-            Debug.Log("has_rcs: " + has_rcs);
 
             double dt = vesselState.time - last_call;
             Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
@@ -753,6 +768,7 @@ namespace MuMech
             Vector3d vmiss = vp - vd;
             vgo = vgo - 1.0 * vmiss;
 
+            /*
             if ( imode == IncMode.FREE_LAN && tgo > 40 && isStable() )
             {
                 // FIXME: doesn't look like this works without the rgo corrections (which affect ix here?) but those break accurate targetting...
@@ -761,6 +777,7 @@ namespace MuMech
                 double SE = - 0.5 * ( Vector3d.Dot( -Planetarium.up, iy) + Math.Cos(incval * UtilMath.Deg2Rad) ) * Vector3d.Dot( -Planetarium.up, iz ) / (1 - d * d);
                 iy = ( iy * Math.Sqrt( 1 - SE * SE ) + SE * iz ).normalized;
             }
+            */
 
             return vmiss;
         }
@@ -834,8 +851,8 @@ namespace MuMech
         public void Reset()
         {
             // lambda and lambdaDot are deliberately not cleared here
-            if ( imode == IncMode.FREE_LAN )
-                SetPlaneFromInclination(incval);
+            /* if ( imode == IncMode.FREE_LAN )
+                SetPlaneFromInclination(incval); */
             coastDone = 0.0;
             status = PegStatus.INITIALIZING;
             stages = new List<StageInfo>();
