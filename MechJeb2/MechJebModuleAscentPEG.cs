@@ -103,7 +103,7 @@ namespace MuMech
             }
         }
 
-        private void attitudeToPEG(double pitch, bool handleManualAz = false, bool surfHeading = true)
+        private void attitudeToPEG(double pitch, bool handleManualAz = false, bool surfHeading = false)
         {
             double heading;
 
