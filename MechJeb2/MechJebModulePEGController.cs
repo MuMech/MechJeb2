@@ -199,15 +199,17 @@ namespace MuMech
         // does its own initialization and is idempotent
         public void TargetNode(ManeuverNode node, bool force_vgo = false)
         {
-            target_orbit = node.nextPatch;
-            iy = -target_orbit.SwappedOrbitNormal();
-            imode = IncMode.FIXED_LAN;
-            tmode = TargetMode.ORBIT;
             if ( (!isStable() && status != PegStatus.FINISHED) || force_vgo )
             {
+                // save the orbit patch and do not update it (Principia likes to mess with the orbits attached to maneuver nodes)
+                target_orbit = node.nextPatch;
                 // do not update vgo if we're stable (and not warping in the node executor or something like that
                 vgo = node.GetBurnVector(orbit);
             }
+            // always pull iy off of the target orbit due to world rotation
+            iy = -target_orbit.SwappedOrbitNormal();
+            imode = IncMode.FIXED_LAN;
+            tmode = TargetMode.ORBIT;
         }
 
         /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
