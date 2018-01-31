@@ -42,7 +42,7 @@ namespace MuMech
         public void ExecuteOneNode(object controller)
         {
             mode = Mode.ONE_NODE;
-            users.Add(controller);
+            enabled = true;
             burnTriggered = false;
             alignedForBurn = false;
         }
@@ -50,7 +50,7 @@ namespace MuMech
         public void ExecuteAllNodes(object controller)
         {
             mode = Mode.ALL_NODES;
-            users.Add(controller);
+            enabled = false;
             burnTriggered = false;
             alignedForBurn = false;
         }
@@ -58,6 +58,7 @@ namespace MuMech
         public void Abort()
         {
             core.warp.MinimumWarp();
+            peg.enabled = false;
             users.Clear();
         }
 
@@ -65,7 +66,7 @@ namespace MuMech
         {
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
-            peg.users.Add(this);
+            peg.enabled = true;
             // need to call this at least once
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
         }
@@ -75,7 +76,7 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            peg.users.Remove(this);
+            peg.enabled = false;
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
@@ -86,59 +87,81 @@ namespace MuMech
 
         private MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
 
+        ManeuverNode node;
+        Vector3d burnVector;
+        double nodeUT;
+
         public override void OnFixedUpdate()
         {
-            if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
+            // principia likes to delete maneuver nodes, but once we're burning with PEG we don't care about them any more
+            if (burnTriggered)
             {
-                Abort();
-                return;
+                burn();
             }
-
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            double dVLeft = node.GetBurnVector(orbit).magnitude;
-
-            // if the burn isn't triggered, force peg to re-update vgo from the node to keep it fresh
-            peg.TargetNode(node, !burnTriggered);
-
-            if (burnTriggered && peg.status == PegStatus.FINISHED)
+            else
             {
-                burnTriggered = false;
-                core.thrust.targetThrottle = 0.0F;
-
-                node.RemoveSelf();
-
-                if (mode == Mode.ONE_NODE)
+                // now make sure we've got a node and do the preburn
+                if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
                 {
                     Abort();
                     return;
                 }
-                else if (mode == Mode.ALL_NODES)
+
+                preburn();
+            }
+        }
+
+        private void burn_finished()
+        {
+            burnTriggered = false;
+            core.thrust.targetThrottle = 0.0F;
+
+            node.RemoveSelf();
+
+            if (mode == Mode.ONE_NODE)
+            {
+                Abort();
+                return;
+            }
+            else if (mode == Mode.ALL_NODES)
+            {
+                if (!vessel.patchedConicSolver.maneuverNodes.Any())
                 {
-                    if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
-                    {
-                        Abort();
-                        return;
-                    }
-                    else
-                    {
-                        node = vessel.patchedConicSolver.maneuverNodes[0];
-                    }
+                    Abort();
+                    return;
+                }
+                else
+                {
+                    node = vessel.patchedConicSolver.maneuverNodes.First();
                 }
             }
+        }
+
+        private void burn()
+        {
+            peg.AssertStart(false);
+            if (peg.status == PegStatus.FINISHED)
+                burn_finished();
+        }
+
+        private void preburn()
+        {
+            node = vessel.patchedConicSolver.maneuverNodes.First();
+            double dVLeft = node.GetBurnVector(orbit).magnitude;
+
+            peg.TargetNode(node, true);
 
             //aim along the node
-
             double halfBurnTime;
             BurnTime(dVLeft, out halfBurnTime);
 
             double timeToNode = node.UT - vesselState.time;
-            double timeToPEGEnable = node.UT - 1.2 * halfBurnTime - vesselState.time;
-            double timeToHalfBT = node.UT - halfBurnTime - vesselState.time;
-
+            double timeToHalfBT = timeToNode - halfBurnTime;
+            double timeToPEGEnable = timeToHalfBT - 10.0; // enable PEG 10 secs before the burntime
 
             if (timeToPEGEnable <= 0)
             {
-                peg.AssertStart(!burnTriggered);
+                peg.AssertStart(true);
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
@@ -147,6 +170,7 @@ namespace MuMech
                         if (( peg.t_lambda >= node.UT && peg.phi < 40 * UtilMath.Deg2Rad ) || timeToHalfBT <= 0.0 )
                         {
                             core.thrust.targetThrottle = 1.0F;
+                            peg.AssertStart(false);
                             burnTriggered = true;
                         }
                     }
@@ -161,13 +185,12 @@ namespace MuMech
             //autowarp, but only if we're already aligned with the node
             if (autowarp && timeToPEGEnable > 0)
             {
-                if ((Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                if ((Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) < 1 && core.vessel.angularVelocity.magnitude < 0.002) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
                     core.warp.WarpToUT(vesselState.time + timeToPEGEnable);
                 }
                 else
                 {
-                    Debug.Log("angvel = " + core.vessel.angularVelocity.magnitude);
                     if (!MuUtils.PhysicsRunning() && Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) > 10 && timeToPEGEnable < 600)
                     {
                         //realign
