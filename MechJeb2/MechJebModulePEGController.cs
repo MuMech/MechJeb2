@@ -93,6 +93,7 @@ namespace MuMech
         public override void OnModuleDisabled()
         {
             core.attitude.users.Remove(this);
+            status = PegStatus.FINISHED;
         }
 
         // peg can now control thrust in converge_vgo() but consumers may want it to not burn
@@ -376,10 +377,8 @@ namespace MuMech
 
             if ( tgo < ( tickstop * TimeWarp.fixedDeltaTime ) && last_call != 0 )
             {
-                Debug.Log("finishing burn due to tgo < tick limit, vgo = " + vgo.magnitude + " tgo = " + tgo);
                 if ( has_rcs && status == PegStatus.TERMINAL )
                 {
-                    Debug.Log("switching to RCS trim burn");
                     // finish remaining vgo on RCS
                     core.thrust.ThrustOff();
                     // we have arrived near enough and all we can do is trim out velocity
@@ -860,6 +859,7 @@ namespace MuMech
             core.thrust.ThrustOff();
             vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
             status = PegStatus.FINISHED;
+            enabled = false;
         }
 
         public void Reset()
