@@ -336,10 +336,21 @@ namespace MuMech
         private int last_stage_count;    // num stages we had last time
         private double last_stage_time;  // last time we staged
 
+        private void converge_vgo_corrector()
+        {
+            // we have arrived near enough and all we can do is trim out velocity
+            rp = vesselState.orbitalPosition;
+            vp = vesselState.orbitalVelocity;
+            iy = - orbit.SwappedOrbitNormal();
+            vgo = Vector3d.zero;
+            // kind of abusing the corrector, but this should work to share code
+            corrector();
+        }
+
         private void converge_vgo()
         {
-            /* we handle attitude directly here, because ascents are $COMPLICATED we do not in converge() */
-            core.attitude.attitudeTo(iF, AttitudeReference.INERTIAL, this);
+            /* we handle attitude directly here, unlike converge() because ascents are $COMPLICATED */
+            core.attitude.attitudeTo(vgo, AttitudeReference.INERTIAL, this);
             if ( core.attitude.attitudeAngleFromTarget() > 1 && status == PegStatus.SLEWING )
             {
                 vessel.ctrlState.Z = 0.0F;
@@ -359,6 +370,8 @@ namespace MuMech
 
             if ( last_call != 0 )
                 vgo -= dV_atom;
+
+            converge_vgo_corrector();
 
             double vgo_forward = Vector3d.Dot(vgo, vesselState.forward);
 
@@ -381,13 +394,7 @@ namespace MuMech
                 {
                     // finish remaining vgo on RCS
                     core.thrust.ThrustOff();
-                    // we have arrived near enough and all we can do is trim out velocity
-                    rp = vesselState.orbitalPosition;
-                    vp = vesselState.orbitalVelocity;
-                    iy = - orbit.SwappedOrbitNormal();
-                    vgo = Vector3d.zero;
-                    // kind of abusing the corrector, but this should work to share code
-                    corrector();
+                    converge_vgo_corrector();
                     TargetRcs(vgo);
                     return;
                 }
