@@ -43,6 +43,7 @@ namespace MuMech
         public EditableDouble pitchBias = new EditableDouble(0);
 
         private MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
+        private MechJebModuleAscentGuidance ascentGuidance { get { return core.GetComputerModule<MechJebModuleAscentGuidance>(); } }
 
         public override void OnModuleEnabled()
         {
@@ -86,12 +87,13 @@ namespace MuMech
 
         private void setTarget()
         {
+
             if (pegCoast)
                 peg.SetCoast(coastSecs, coastAfterStage);
             else
                 peg.SetCoast(-1, 0);
 
-            if ( core.target.NormalTargetExists )
+            if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
                 peg.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
                 // fix the desired inclination display for the user
