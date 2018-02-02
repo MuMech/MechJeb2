@@ -108,6 +108,13 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            if ( !HighLogic.LoadedSceneIsFlight )
+            {
+                // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
+                Debug.Log("MechJebModulePEGController [BUG]: PEG enabled in non-flight mode.  How does this happen?");
+                Done();
+            }
+
             if ( !enabled || status == PegStatus.ENABLED )
                 return;
 
@@ -808,6 +815,12 @@ namespace MuMech
         {
             if (enabled && status != PegStatus.FINISHED)
             {
+                if ( !HighLogic.LoadedSceneIsFlight )
+                {
+                    // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
+                    Debug.Log("MechJebModulePEGController [BUG]: PEG enabled in non-flight mode.  How does this happen?");
+                    Done();
+                }
                 var r = orbit.getRelativePositionAtUT(vesselState.time).xzy;
                 var p = mainBody.position;
                 Vector3d vpos = vessel.CoM + (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
