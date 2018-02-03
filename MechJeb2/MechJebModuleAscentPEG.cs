@@ -20,7 +20,7 @@ namespace MuMech
         public EditableDouble pitchRate = new EditableDouble(0.75);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pitchEndTime = new EditableDouble(55);
-        [Persistent(pass = (int)(Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool pitchEndToggle = false;
