@@ -111,8 +111,17 @@ namespace MuMech
             {
                 GUILayout.Label("Autopilot status: " + autopilot.status);
             }
-            if (GUILayout.Button("Force Disable PEG"))
-                peg.enabled = false;
+
+            if (peg.enabled)
+            {
+                if (GUILayout.Button("Force Disable PEG"))
+                    peg.enabled = false;
+            }
+            else
+            {
+                if (GUILayout.Button("Force Enable PEG"))
+                    peg.enabled = true;
+            }
 
 
             GUILayout.EndVertical();
