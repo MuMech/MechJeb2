@@ -358,7 +358,7 @@ namespace MuMech
         {
             /* we handle attitude directly here, unlike converge() because ascents are $COMPLICATED */
             core.attitude.attitudeTo(vgo, AttitudeReference.INERTIAL, this);
-            if ( core.attitude.attitudeAngleFromTarget() > 1 && status == PegStatus.SLEWING )
+            if ( ( core.attitude.attitudeAngleFromTarget() > 1 || core.vessel.angularVelocity.magnitude > 0.01 ) && status == PegStatus.SLEWING )
             {
                 vessel.ctrlState.Z = 0.0F;
                 core.thrust.ThrustOff();
