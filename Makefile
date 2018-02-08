@@ -14,7 +14,6 @@ else
 		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		GMCS ?= mcs
 		ifndef KSPDIR
 			KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
 		endif
@@ -22,12 +21,18 @@ else
 		MANAGED := ${KSPDIR}/KSP.app/Contents/Resources/Data/Managed/
 		endif
 	endif
+
+	# Check if mcs exists (Mono 2.11+) and fall back to gmcs (before Mono 2.11) for backwards compatibility
+	MCS_PATH := $(shell command -v mcs 2> /dev/null)
+	ifndef MCS_PATH
+		MCS ?= gmcs
+	endif
 endif
 
 MECHJEBFILES := $(shell find MechJeb2 -name "*.cs")
 
 RESGEN2 := resgen2
-GMCS    ?= gmcs
+MCS     ?= mcs
 GIT     := git
 TAR     := tar
 ZIP     := zip
@@ -39,7 +44,7 @@ all: build
 info:
 	@echo "== MechJeb2 Build Information =="
 	@echo "  resgen2: ${RESGEN2}"
-	@echo "  gmcs:    ${GMCS}"
+	@echo "  mcs:     ${MCS}"
 	@echo "  git:     ${GIT}"
 	@echo "  tar:     ${TAR}"
 	@echo "  zip:     ${ZIP}"
@@ -51,7 +56,7 @@ build: build/MechJeb2.dll
 build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${GMCS} -t:library -lib:"${MANAGED}" \
+	${MCS} -t:library -lib:"${MANAGED}" \
 		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI \
 		-out:$@ \
 		${MECHJEBFILES} \
