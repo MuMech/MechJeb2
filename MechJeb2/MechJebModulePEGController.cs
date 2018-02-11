@@ -2,6 +2,7 @@
 using UnityEngine;
 using KSP.UI.Screens;
 using System.Collections.Generic;
+using System.Reflection;
 
 /*
  * PEG algorithm references:
@@ -108,6 +109,11 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            if ( isLoadedPrincipia )
+            {
+                Debug.Log("FOUND PRINCIPIA!!!");
+            }
+
             if ( !HighLogic.LoadedSceneIsFlight )
             {
                 // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
@@ -1047,6 +1053,24 @@ namespace MuMech
             for ( int i = 0; i < stages.Count; i++ )
             {
                 Debug.Log(stages[i]);
+            }
+        }
+
+        public static bool isLoadedPrincipia = false;
+        public static MethodInfo principiaEGNPCDOF;
+
+        static MechJebModulePEGController()
+        {
+            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("ksp_plugin_adapter");
+            if (isLoadedPrincipia)
+            {
+                principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
+                if (principiaEGNPCDOF == null)
+                {
+                    Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
+                    isLoadedPrincipia = false;
+                    return;
+                }
             }
         }
     }
