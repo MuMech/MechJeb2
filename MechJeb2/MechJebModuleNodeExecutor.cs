@@ -93,7 +93,8 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            // principia likes to delete maneuver nodes, but once we're burning with PEG we don't care about them any more
+            // We do not check if we have a maneuver node here, because once PEG is burning it doesn't need one
+            // (and Principia likes to delete them when you're only half done).
             if (burnTriggered)
             {
                 burn();
