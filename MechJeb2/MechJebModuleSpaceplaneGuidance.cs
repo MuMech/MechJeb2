@@ -52,7 +52,9 @@ namespace MuMech
                 
                 GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope);
                 GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
+                GuiUtils.SimpleTextBox("Touchdown speed:", autoland.touchdownSpeed);
                 autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, "Reverse thrust upon touchdown");
+                autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, "Break As Soon As Landed");
 
                 if (autoland.enabled)
                 {
