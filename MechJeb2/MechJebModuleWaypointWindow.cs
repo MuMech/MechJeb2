@@ -684,7 +684,7 @@ namespace MuMech
 					}
 				}
 			}
-			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65)))
+			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65)) && selIndex >= 0 && ap.Waypoints.Count > 0)
 			{
 				if (alt)
 				{
@@ -696,37 +696,37 @@ namespace MuMech
 					ap.Waypoints.RemoveAt(selIndex);
 					if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
 				}
-				selIndex = -1;
+			    selIndex = -1;
 				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
-			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57)))
-			{
-				do {
-					if (selIndex > 0)
-					{
-						ap.Waypoints.Swap(selIndex, selIndex - 1);
-						selIndex--;
-					}
-					else {
-						break;
-					}
-				}
-				while (alt);
-			}
-			if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57)))
-			{
-				do {
-					if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1)
-					{
-						ap.Waypoints.Swap(selIndex, selIndex + 1);
-						selIndex++;
-					}
-					else {
-						break;
-					}
-				}
-				while (alt);
-			}
+			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57)) && selIndex > 0 && selIndex < ap.Waypoints.Count && ap.Waypoints.Count >= 2)
+            {
+                if (alt)
+                {
+                    var t = ap.Waypoints[selIndex];
+                    ap.Waypoints.RemoveAt(selIndex);
+                    ap.Waypoints.Insert(0, t);
+                    selIndex = 0;
+                }
+                else
+                {
+                    ap.Waypoints.Swap(selIndex, --selIndex);
+                }
+            }
+            if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57)) && selIndex >= 0 && selIndex < ap.Waypoints.Count - 1 && ap.Waypoints.Count >= 2)
+            {
+                if (alt)
+                {
+                    var t = ap.Waypoints[selIndex];
+                    ap.Waypoints.RemoveAt(selIndex);
+                    ap.Waypoints.Add(t);
+                    selIndex = ap.Waypoints.Count - 1;
+                }
+                else
+                {
+                    ap.Waypoints.Swap(selIndex, ++selIndex);
+                }
+            }
 			if (GUILayout.Button("Routes"))
 			{
 				showPage = pages.routes;
