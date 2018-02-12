@@ -107,7 +107,7 @@ namespace MuMech
 			if (autopilot.Waypoints.Count > 0) {
 				if (!autopilot.ControlHeading || !autopilot.ControlSpeed) {
 					if (GUILayout.Button("Drive")) {
-						autopilot.WaypointIndex = (alt ? 0 : autopilot.WaypointIndex);
+						autopilot.WaypointIndex = Mathf.Max(0, (alt ? 0 : autopilot.WaypointIndex));
 						autopilot.ControlHeading = autopilot.ControlSpeed = true;
 						// autopilot.LoopWaypoints = alt;
 					}
