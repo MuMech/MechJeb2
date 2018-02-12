@@ -87,6 +87,7 @@ namespace MuMech.AttitudeControllers
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            base.OnLoad(local, type, global);
             TfV = TfVec;
         }
 
