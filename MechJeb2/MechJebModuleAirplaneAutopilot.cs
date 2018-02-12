@@ -147,7 +147,7 @@ namespace MuMech
             if (speed > 600)
                 return 0.5;
             else
-                return speed * -0.00125 + 1.25;
+                return speed * -0.0015 + 1.5;
         }
 
         void UpdatePID ()

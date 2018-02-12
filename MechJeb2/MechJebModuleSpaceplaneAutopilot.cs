@@ -109,6 +109,11 @@ namespace MuMech
                 Autopilot.HeadingTarget = vesselState.vesselHeading;
             }
 
+            if (Autopilot.AltitudeHoldEnabled)
+            {
+                Autopilot.DisableAltitudeHold();
+            }
+
             if (!Autopilot.VertSpeedHoldEnabled)
             {
                 Autopilot.EnableVertSpeedHold();
@@ -132,9 +137,9 @@ namespace MuMech
                 double exponentPerMeter = (Math.Log(targetFlareAoA + 1) - Math.Log(1)) / startFlareAtAltitude;
                 double desiredAoA = Math.Exp((startFlareAtAltitude - vesselState.altitudeTrue) * exponentPerMeter) - 1;
 
-                core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Max(desiredAoA, flareStartAoA), 0, this, true, false, false);
+                //core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Max(desiredAoA, flareStartAoA), 0, this, true, false, false);
 
-                Autopilot.DisableVertSpeedHold();
+                //Autopilot.DisableVertSpeedHold();
             }
             else if (approachState == AutolandApproachState.TOUCHDOWN)
             {
@@ -142,6 +147,7 @@ namespace MuMech
             }
             else if (approachState == AutolandApproachState.ROLLOUT)
             {
+                Autopilot.DisableVertSpeedHold();
                 Autopilot.DisableSpeedHold();
                 RoverPilot.ControlHeading = true;
 
@@ -159,8 +165,17 @@ namespace MuMech
                 else
                     s.mainThrottle = 0;
 
-                // Apply brakes under 30 (if there are no reversers) otherwise under 10 m/s.
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, bEngagedReverseThrusters ? vesselState.speedSurfaceHorizontal < 10 : vesselState.speedSurfaceHorizontal < 30);
+                if (bBreakAsSoonAsLanded)
+                {
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                }
+                else
+                {
+                    // Apply brakes under 30 (if there are no reversers) otherwise under 10 m/s.
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, bEngagedReverseThrusters ? vesselState.speedSurfaceHorizontal < 10 : vesselState.speedSurfaceHorizontal < 30);
+
+                }
+
             }
         }
 
@@ -191,6 +206,9 @@ namespace MuMech
         /// Set to true if user wants reverse thrust upon touchdown.
         /// </summary>
         public bool bEngageReverseIfAvailable = true;
+
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public bool bBreakAsSoonAsLanded = false;
 
         /// <summary>
         /// The runway to land at.
@@ -246,7 +264,10 @@ namespace MuMech
         /// result in a decent approach and landing.
         /// </summary>
         [Persistent(pass = (int)(Pass.Global | Pass.Local))]
-        public EditableDouble approachSpeed = 60.0;
+        public EditableDouble approachSpeed = 80.0;
+
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble touchdownSpeed = 60.0;
 
         /// <summary>
         /// Maximum allowed bank angle.
@@ -293,7 +314,7 @@ namespace MuMech
         public double GetAutolandTargetVerticalSpeed(Vector3d vectorToWaypoint)
         {
             double timeToWaypoint = LateralDistance(vesselState.CoM, vectorToWaypoint) / vesselState.speedSurfaceHorizontal;
-            double deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - vesselState.altitudeASL;
+            double deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - 10 - vesselState.altitudeASL;
 
             double vertSpeed = deltaAlt / timeToWaypoint;
 
@@ -302,7 +323,7 @@ namespace MuMech
             if (approachState == AutolandApproachState.TOUCHDOWN || approachState == AutolandApproachState.FAP)
             {
                 Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()));
-                double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope);
+                double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope) - 10;
                 double deltaToCorrectAlt = desiredAlt - vesselState.altitudeTrue;
 
                 Debug.Assert(vertSpeed < 0);
@@ -316,6 +337,12 @@ namespace MuMech
 
                     vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -1 * adjustment;
                 }
+            }
+
+            if (approachState == AutolandApproachState.FLARE)
+            {
+                vertSpeed = deltaAlt / 8 - 0.2f;
+                vertSpeed = UtilMath.Clamp(vertSpeed, -4, 4);
             }
 
             return UtilMath.Clamp(vertSpeed, -maximumSafeVerticalSpeed, maximumSafeVerticalSpeed);
@@ -393,10 +420,20 @@ namespace MuMech
 
             switch (approachState)
             {
-                case AutolandApproachState.WAITINGFORFLARE:
                 case AutolandApproachState.ROLLOUT:
-                case AutolandApproachState.FLARE:
                     return 0;
+            }
+
+            switch (approachState)
+            {
+                case AutolandApproachState.WAITINGFORFLARE:
+                case AutolandApproachState.TOUCHDOWN:
+                case AutolandApproachState.FLARE:
+                    return touchdownSpeed;
+            }
+
+            if (approachState == AutolandApproachState.FAP){
+                return (touchdownSpeed + approachSpeed) / 2;
             }
 
             return approachSpeed;
