@@ -177,7 +177,7 @@ namespace MuMech
                     point = plot.hoveredPoint;
 
                 var p = worker.computed[point[0], point[1]];
-                if (p != null)
+                if (p > 0)
                 {
                     dv = MuUtils.ToSI(p) + "m/s";
                     if (worker.DateFromIndex(point[0]) < Planetarium.GetUniversalTime())
