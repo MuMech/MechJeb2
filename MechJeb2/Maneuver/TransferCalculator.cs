@@ -439,13 +439,6 @@ namespace MuMech
                     return;
                 }
 
-                // As of 0.25 CalculatePatch fails if the orbit does not change SoI
-                if (next_orbit.referenceBody == null)
-                {
-                    // XXX: is this ever hit in current KSP, with this code? should we just return the getTruePositionAtUT() miss here?
-                    next_orbit.UpdateFromOrbitAtUT(orbit, orbit.StartUT + orbit.period, orbit.referenceBody);
-                }
-
                 Orbit temp = orbit;
                 orbit = next_orbit;
                 next_orbit = temp;
