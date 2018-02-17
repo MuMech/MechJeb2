@@ -82,6 +82,11 @@ namespace MuMech
 
         public bool rssMode { get { return settings.rssMode; } }
 
+        public bool ShowGui
+        {
+            get { return showGui; }
+        }
+
         [KSPAction("Orbit Prograde")]
         public void OnOrbitProgradeAction(KSPActionParam param)
         {
@@ -450,8 +455,8 @@ namespace MuMech
                 OnLoad(null);
             }
 
-            GameEvents.onShowUI.Add(ShowGUI);
-            GameEvents.onHideUI.Add(HideGUI);
+            GameEvents.onShowUI.Add(OnShowGUI);
+            GameEvents.onHideUI.Add(OnHideGUI);
             GameEvents.onVesselChange.Add(UnlockControl);
 
             lastSettingsSaveTime = Time.time;
@@ -969,8 +974,8 @@ namespace MuMech
                 OnSave(null);
             }
 
-            GameEvents.onShowUI.Remove(ShowGUI);
-            GameEvents.onHideUI.Remove(HideGUI);
+            GameEvents.onShowUI.Remove(OnShowGUI);
+            GameEvents.onHideUI.Remove(OnHideGUI);
             GameEvents.onVesselChange.Remove(UnlockControl);
 
             if (weLockedInputs)
@@ -1052,11 +1057,11 @@ namespace MuMech
             s.Z = Mathf.Clamp(s.Z, -1, 1);
         }
 
-        private void ShowGUI()
+        private void OnShowGUI()
         {
             showGui = true;
         }
-        private void HideGUI()
+        private void OnHideGUI()
         {
             showGui = false;
         }

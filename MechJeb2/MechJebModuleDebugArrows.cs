@@ -152,28 +152,28 @@ namespace MuMech
                 ? instantCoM
                 : (Vector3d)vessel.ReferenceTransform.position;
 
-            comSphere.State(comSphereActive);
+            comSphere.State(comSphereActive && core.ShowGui);
             if (comSphereActive)
             {
                 comSphere.Set(instantCoM);
                 comSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            colSphere.State(colSphereActive && vesselState.CoLScalar > 0);
+            colSphere.State(colSphereActive && vesselState.CoLScalar > 0 && core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(vesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            cotSphere.State(cotSphereActive && vesselState.CoTScalar > 0);
+            cotSphere.State(cotSphereActive && vesselState.CoTScalar > 0 && core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(vesselState.CoT + frameVel);
                 cotSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            srfVelocityArrow.State(srfVelocityArrowActive);
+            srfVelocityArrow.State(srfVelocityArrowActive && core.ShowGui);
             if (srfVelocityArrowActive)
             {
                 srfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
@@ -181,7 +181,7 @@ namespace MuMech
                 srfVelocityArrow.SeeThrough(seeThrough);
             }
 
-            obtVelocityArrow.State(obtVelocityArrowActive);
+            obtVelocityArrow.State(obtVelocityArrowActive && core.ShowGui);
             if (obtVelocityArrowActive)
             {
                 obtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
@@ -189,7 +189,7 @@ namespace MuMech
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
             
-            dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0);
+            dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0 && core.ShowGui);
             if (dotArrowActive)
             {
                 dotArrow.Set(vesselState.CoT + frameVel, vesselState.DoT);
@@ -197,7 +197,7 @@ namespace MuMech
                 dotArrow.SeeThrough(seeThrough);
             }
             
-            forwardArrow.State(forwardArrowActive);
+            forwardArrow.State(forwardArrowActive && core.ShowGui);
             if (forwardArrowActive)
             {
                 forwardArrow.Set(arrowPos, vessel.GetTransform().up);
@@ -205,7 +205,7 @@ namespace MuMech
                 forwardArrow.SeeThrough(seeThrough);
             }
 
-            avgForwardArrow.State(avgForwardArrowActive);
+            avgForwardArrow.State(avgForwardArrowActive && core.ShowGui);
             if (avgForwardArrowActive)
             {
                 avgForwardArrow.Set(arrowPos, vesselState.forward);
@@ -213,7 +213,7 @@ namespace MuMech
                 avgForwardArrow.SeeThrough(seeThrough);
             }
 
-            requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled);
+            requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled && core.ShowGui);
             if (requestedAttitudeArrowActive && core.attitude.enabled)
             {
                 requestedAttitudeArrow.Set(arrowPos, core.attitude.RequestedAttitude);
@@ -221,7 +221,7 @@ namespace MuMech
                 requestedAttitudeArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow.State(debugArrowActive);
+            debugArrow.State(debugArrowActive && core.ShowGui);
             if (debugArrowActive)
             {
                 debugArrow.Set(vessel.ReferenceTransform.position, debugVector);
@@ -229,7 +229,7 @@ namespace MuMech
                 debugArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow2.State(debugArrow2Active);
+            debugArrow2.State(debugArrow2Active && core.ShowGui);
             if (debugArrow2Active)
             {
 
