@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using KSP.UI.Screens;
+using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
@@ -32,6 +32,9 @@ namespace MuMech
         public bool autostagingOnce = false;
 
         public bool waitingForFirstStaging = false;
+
+        private readonly List<ModuleEngines> activeModuleEngines = new List<ModuleEngines>();
+        private readonly List<int> burnedResources = new List<int>();
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -124,8 +127,8 @@ namespace MuMech
                 return;
 
             //don't decouple active or idle engines or tanks
-            List<ModuleEngines> activeModuleEngines = FindActiveModuleEngines();
-            List<int> burnedResources = FindBurnedResources(activeModuleEngines);
+            UpdateActiveModuleEngines();
+            UpdateBurnedResources();
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
                 return;
 
@@ -186,21 +189,34 @@ namespace MuMech
             }
             return false;
         }
-
-        public List<ModuleEngines> FindActiveModuleEngines()
+        
+        public void UpdateActiveModuleEngines()
         {
-            var activeEngines = vessel.parts.Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
+            activeModuleEngines.Clear();
+            var activeEngines = vessel.parts.Slinq().Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
                                                         !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
-            var engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
-            return engineModules.ToList();
+            
+            while (activeEngines.current.isSome)
+            {
+                Part p = activeEngines.current.value;
+
+                for (int i = 0; i < p.Modules.Count; i++)
+                {
+                    ModuleEngines eng = p.Modules[i] as ModuleEngines;
+                    if (eng != null && eng.isEnabled)
+                    {
+                        activeModuleEngines.Add(eng);
+                    }
+                }
+                activeEngines.Remove();
+            }
         }
 
         // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
-        public List<int> FindBurnedResources(List<ModuleEngines> activeModuleEngines)
+        public void UpdateBurnedResources()
         {
-            var burnedPropellants = activeModuleEngines.SelectMany(eng => eng.propellants);
-            List<int> propellantIDs = burnedPropellants.Select(prop => prop.id).ToList();
-            return propellantIDs;
+            burnedResources.Clear();
+            activeModuleEngines.Slinq().SelectMany(eng => eng.propellants.Slinq()).Select(prop => prop.id).AddTo(burnedResources);
         }
 
         //detect if a part is above an active or idle engine in the part tree
@@ -331,7 +347,9 @@ namespace MuMech
         // determine if there is a fairing to be deployed
         public static bool HasFairing(int inverseStage, Vessel v)
         {
-            return v.parts.Any(p => p.inverseStage == inverseStage && (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))));
+            return v.parts.Slinq().Any((p,_inverseStage) => 
+                p.inverseStage == _inverseStage && 
+                (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))), inverseStage);
         }
     }
 }

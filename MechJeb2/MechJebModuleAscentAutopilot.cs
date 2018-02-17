@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using KSP.UI.Screens;
 using UnityEngine;
 
@@ -292,7 +291,7 @@ namespace MuMech
 
             if (placedCircularizeNode)
             {
-                if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
                     MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
                     if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
