@@ -39,6 +39,7 @@ namespace MuMech
 
         public double minDV;
 
+        private static readonly PatchedConics.SolverParameters solverParameters = new PatchedConics.SolverParameters();
 
         public TransferCalculator(
                 Orbit o, Orbit target,
@@ -343,7 +344,7 @@ namespace MuMech
             double dtheta = 0.001;
             Orbit sample = new Orbit();
 
-            double theta_err = Double.MaxValue;
+            double theta_err = double.MaxValue;
 
             for (int iteration = 0 ; iteration < 50 ; ++iteration)
             {
@@ -396,8 +397,7 @@ namespace MuMech
             orbit.StartUT = t;
             orbit.EndUT = orbit.eccentricity >= 1.0 ? orbit.period : t + orbit.period;
             Orbit next_orbit = new Orbit();
-            var pars = new PatchedConics.SolverParameters();
-            PatchedConics.CalculatePatch(orbit, next_orbit, t, pars, null);
+            PatchedConics.CalculatePatch(orbit, next_orbit, t, solverParameters, null);
 
             while(true)
             {
@@ -445,16 +445,16 @@ namespace MuMech
                     // XXX: is this ever hit in current KSP, with this code? should we just return the getTruePositionAtUT() miss here?
                     next_orbit.UpdateFromOrbitAtUT(orbit, orbit.StartUT + orbit.period, orbit.referenceBody);
                 }
+
+                Orbit temp = orbit;
                 orbit = next_orbit;
-                next_orbit = new Orbit();
-                pars = new PatchedConics.SolverParameters();
-                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, pars, null);
+                next_orbit = temp;
+                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, solverParameters, null);
             }
         }
 
         public ManeuverParameters OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT)
         {
-
             int N = 0;
 
             while(true)
