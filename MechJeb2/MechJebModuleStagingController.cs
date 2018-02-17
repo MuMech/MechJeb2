@@ -195,7 +195,7 @@ namespace MuMech
             activeModuleEngines.Clear();
             var activeEngines = vessel.parts.Slinq().Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
                                                         !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
-            
+            // Part Modules lacks of List access shows the limits of slinq...
             while (activeEngines.current.isSome)
             {
                 Part p = activeEngines.current.value;
@@ -208,8 +208,9 @@ namespace MuMech
                         activeModuleEngines.Add(eng);
                     }
                 }
-                activeEngines.Remove();
+                activeEngines.Skip();
             }
+            activeEngines.Dispose();
         }
 
         // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
