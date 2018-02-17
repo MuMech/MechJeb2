@@ -393,6 +393,8 @@ namespace MuMech
 
             Orbit orbit = new Orbit();
             orbit.UpdateFromStateVectors(data.initial_orbit.getRelativePositionAtUT(t), data.initial_orbit.getOrbitalVelocityAtUT(t) + DV.xzy, data.initial_orbit.referenceBody, t);
+            orbit.StartUT = t;
+            orbit.EndUT = orbit.eccentricity >= 1.0 ? orbit.period : t + orbit.period;
             Orbit next_orbit = new Orbit();
             var pars = new PatchedConics.SolverParameters();
             PatchedConics.CalculatePatch(orbit, next_orbit, t, pars, null);
