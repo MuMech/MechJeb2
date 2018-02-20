@@ -33,12 +33,12 @@ else
     echo 'Expected $KSPDIR to point to a directory but it is not' >&2
     exit 1
   fi
-  if ! [ -d "${KSPDIR}/GameData" ] ; then
-    echo 'Expected $KSPDIR to contain a GameData subdirectory but it does not' >&2
+  if ! [ -d "${KSPDIR}/GameData/MechJeb2/Plugins" ] ; then
+    echo 'Expected $KSPDIR to contain a GameData/MechJeb2/Plugins subdirectory but it does not' >&2
     exit 1
   fi
   echo "Copying to '${KSPDIR}'"
-  cp "${TARGET_PATH}" "${KSPDIR}/GameData/"
-  test -f "${TARGET_DIR}/${TARGET_NAME}.pdb" && cp "${TARGET_DIR}/${TARGET_NAME}.pdb" "${KSPDIR}/GameData/"
-  test -f "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" && cp "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" "${KSPDIR}/GameData/"
+  cp "${TARGET_PATH}" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+  test -f "${TARGET_DIR}/${TARGET_NAME}.pdb" && cp "${TARGET_DIR}/${TARGET_NAME}.pdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+  test -f "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" && cp "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
 fi
