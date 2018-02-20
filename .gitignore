@@ -2,15 +2,11 @@
 
 /MechJeb2/MechJeb2.sln
 
-
-/MechJeb2/MechJeb2.csproj
 Thumbs.db
 
 /MechJeb2-Unity/Library/
 /MechJeb2-Unity/*.csproj
-
-*.sln
-
+/MechJeb2-Unity/*.sln
 
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
 [Bb]in/
