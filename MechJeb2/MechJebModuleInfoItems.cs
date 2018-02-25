@@ -1233,7 +1233,7 @@ namespace MuMech
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
-            return ScienceUtil.GetExperimentBiome(mainBody, vessel.latitude, vessel.longitude);
+            return mainBody.GetExperimentBiomeSafe(vessel.latitude, vessel.longitude);
         }
 
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]

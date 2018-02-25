@@ -76,7 +76,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("ASL: " + MuUtils.ToSI(ASL, -1, 4) + "m");
-                GUILayout.Label(ScienceUtil.GetExperimentBiome(core.target.targetBody, core.target.targetLatitude, core.target.targetLongitude));
+                GUILayout.Label(core.target.targetBody.GetExperimentBiomeSafe(core.target.targetLatitude, core.target.targetLongitude));
                 GUILayout.EndHorizontal();
             }
             else
@@ -199,7 +199,7 @@ namespace MuMech
                     case ReentrySimulation.Outcome.LANDED:
                         GUILayout.Label("Landing Predictions:");
                         GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + MuUtils.ToSI(result.endASL,-1, 4) + "m");
-                        GUILayout.Label(ScienceUtil.GetExperimentBiome(result.body, result.endPosition.latitude, result.endPosition.longitude));
+                        GUILayout.Label(result.body.GetExperimentBiomeSafe(result.endPosition.latitude, result.endPosition.longitude));
                         double error = Vector3d.Distance(mainBody.GetWorldSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0) - mainBody.position,
                                                          mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position);
                         GUILayout.Label("Target difference = " + MuUtils.ToSI(error, 0) + "m"
