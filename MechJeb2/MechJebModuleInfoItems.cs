@@ -606,7 +606,17 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
 
-            Orbit o = vessel.orbit;
+            Orbit o;
+            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+            {
+                ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.Last();
+                o = node.nextPatch;
+            }
+            else
+            {
+                o = vessel.orbit;
+            }
+
             while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
                 o = o.nextPatch;
 
