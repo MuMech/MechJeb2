@@ -209,8 +209,7 @@ namespace MuMech
 				}
 				switch(target)
 				{
-					case MechJebModuleSmartASS.Target.SURFACE_PROGRADE:
-					case MechJebModuleSmartASS.Target.SURFACE_RETROGRADE:
+				    case MechJebModuleSmartASS.Target.SURFACE:
 						GUILayout.Label("", GUI.skin.label, GUILayout.ExpandWidth(true));
 						forceYaw = GUILayout.Toggle(forceYaw, "Heading: ", GUILayout.ExpandWidth(false));
 						srfHdg.text = GUILayout.TextField(srfHdg.text, GUILayout.ExpandWidth(false), GUILayout.Width(37));
@@ -221,8 +220,9 @@ namespace MuMech
 						forceRol = GUILayout.Toggle(forceRol, "Roll: ", GUILayout.ExpandWidth(false));
 						srfRol.text = GUILayout.TextField(srfRol.text, GUILayout.ExpandWidth(false), GUILayout.Width(37));
 						GUILayout.Label("°", GUILayout.ExpandWidth(false));
-						break;
-					case MechJebModuleSmartASS.Target.SURFACE:
+				        break;
+					case MechJebModuleSmartASS.Target.SURFACE_PROGRADE:
+				    case MechJebModuleSmartASS.Target.SURFACE_RETROGRADE:
 						GUILayout.Label("", GUI.skin.label, GUILayout.ExpandWidth(true));
 						forcePitch = GUILayout.Toggle(forcePitch, "Pitch: ", GUILayout.ExpandWidth(false));
 						srfVelPit.text = GUILayout.TextField(srfVelPit.text, GUILayout.ExpandWidth(false), GUILayout.Width(37));
