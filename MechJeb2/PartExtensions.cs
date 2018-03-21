@@ -54,7 +54,7 @@ namespace MuMech
             return false;
         }
 
-        public static bool IsUnfiredDecoupler(this Part p)
+        public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
         {
             for (int i = 0; i < p.Modules.Count; i++)
             {
@@ -62,30 +62,54 @@ namespace MuMech
                 ModuleDecouple mDecouple = m as ModuleDecouple;
                 if (mDecouple != null)
                 {
-                    if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn) return true;
+                    if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn)
+                    {
+                        decoupledPart = mDecouple.ExplosiveNode.attachedPart;
+                        if (decoupledPart == p.parent)
+                            decoupledPart = p;
+                        return true;
+                    }
                     break;
                 }
 
                 ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
                 if (mAnchoredDecoupler != null)
                 {
-                    if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn) return true;
+                    if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
+                    {
+                        decoupledPart = mAnchoredDecoupler.ExplosiveNode.attachedPart;
+                        if (decoupledPart == p.parent)
+                            decoupledPart = p;
+                        return true;
+                    }
                     break;
                 }
 
                 ModuleDockingNode mDockingNode = m as ModuleDockingNode;
                 if (mDockingNode != null)
                 {
-                    if (mDockingNode.staged && mDockingNode.stagingEnabled  && p.stagingOn) return true;
+                    if (mDockingNode.staged && mDockingNode.stagingEnabled && p.stagingOn)
+                    {
+                        decoupledPart = mDockingNode.referenceNode.attachedPart;
+                        if (decoupledPart == p.parent)
+                            decoupledPart = p;
+                        return true;
+                    }
                     break;
                 }
 
                 if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler")
                 {
-                    if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn) return true;
+                    if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn)
+                    {
+                        // ProceduralFairingDecoupler always decouple from their parents
+                        decoupledPart = p;
+                        return true;
+                    }
                     break;
                 }
             }
+            decoupledPart = null;
             return false;
         }
 
@@ -131,8 +155,10 @@ namespace MuMech
 
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
-            if ((p.IsUnfiredDecoupler() || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
+            Part decoupledPart;
+            if (((p.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart) || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
             if (p.parent == null) return false;
+            if (p.parent.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart && p.parent.inverseStage == stage) return true;
             return p.parent.IsDecoupledInStage(stage);
         }
 

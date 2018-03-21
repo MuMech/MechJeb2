@@ -685,16 +685,7 @@ namespace MuMech
                         }
                         else
                         {
-                            AttachNode attach;
-                            if (mDecouple.explosiveNodeID != "srf")
-                            {
-                                attach = p.FindAttachNode(mDecouple.explosiveNodeID);
-                            }
-                            else
-                            {
-                                attach = p.srfAttachNode;
-                            }
-
+                            AttachNode attach = mDecouple.ExplosiveNode;
                             if (attach != null && attach.attachedPart != null)
                             {
                                 if (attach.attachedPart == p.parent)
@@ -731,16 +722,7 @@ namespace MuMech
                 {
                     if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
                     {
-                        AttachNode attach;
-                        if (mAnchoredDecoupler.explosiveNodeID != "srf")
-                        {
-                            attach = p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID);
-                        }
-                        else
-                        {
-                            attach = p.srfAttachNode;
-                        }
-
+                        AttachNode attach = mAnchoredDecoupler.ExplosiveNode;
                         if (attach != null && attach.attachedPart != null)
                         {
                             if (attach.attachedPart == p.parent)

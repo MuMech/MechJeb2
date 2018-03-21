@@ -182,10 +182,10 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasActiveOrIdleEngineOrTankDescendant(p, tankResources, activeModuleEngines))
-                {
+                Part decoupledPart;
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) &&
+                    HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
                     return true;
-                }
             }
             return false;
         }
@@ -260,7 +260,8 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler())
+                Part decoupled;
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupled))
                 {
                     return true;
                 }
@@ -288,7 +289,8 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler() && HasDeactivatedEngineOrTankDescendant(p))
+                Part decoupledPart;
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) && HasDeactivatedEngineOrTankDescendant(decoupledPart))
                 {
                     return true;
                 }
