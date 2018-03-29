@@ -78,7 +78,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
-                GUILayout.Label("|" + vessel.MOI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vessel.MOI), GUILayout.ExpandWidth(false));
+                GUILayout.Label("|" + vesselState.MoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(vesselState.MoI), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
