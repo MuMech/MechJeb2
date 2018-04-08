@@ -1166,16 +1166,15 @@ namespace MuMech
 			return renderer;
 		}
 		
-		public static bool NewLineRenderer(ref LineRenderer line)
+		public static bool NewLineRenderer(ref LineRenderer Line)
 		{
-			if (line != null) { return false; }
+			if (Line != null) { return false; }
 			GameObject obj = new GameObject("LineRenderer");
-			line = obj.AddComponent<LineRenderer>();
-			line.useWorldSpace = true;
-			line.material = material;
-		    line.startWidth = 10.0f;
-		    line.endWidth = 10.0f;
-		    line.positionCount = 2;
+			Line = obj.AddComponent<LineRenderer>();
+			Line.useWorldSpace = true;
+			Line.material = material;
+			Line.SetWidth(10.0f, 10.0f);
+			Line.SetVertexCount(2);
 			return true;
 		}
 
@@ -1207,10 +1206,10 @@ namespace MuMech
 		
 		public void OnPreRender()
 		{
-			if (NewLineRenderer(ref pastPath)) { pastPath.startColor = pastPathColor; pastPath.endColor=pastPathColor; }
-			if (NewLineRenderer(ref currPath)) { currPath.startColor = currPathColor; currPath.endColor=currPathColor; }
-			if (NewLineRenderer(ref nextPath)) { nextPath.startColor = nextPathColor; nextPath.endColor=nextPathColor; }
-			if (NewLineRenderer(ref selWP))    { selWP.startColor = selWPColor; selWP.endColor=selWPColor; }
+			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(pastPathColor, pastPathColor); }
+			if (NewLineRenderer(ref currPath)) { currPath.SetColors(currPathColor, currPathColor); }
+			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(nextPathColor, nextPathColor); }
+			if (NewLineRenderer(ref selWP)) { selWP.SetColors(selWPColor, selWPColor); }
 			
 			//Debug.Log(ap.vessel.vesselName);
 			var window = ap.core.GetComputerModule<MechJebModuleWaypointWindow>();
@@ -1242,12 +1241,9 @@ namespace MuMech
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 				
-				pastPath.startWidth = width;
-			    pastPath.endWidth = width;
-				currPath.startWidth = width;
-			    currPath.endWidth = width;
-				nextPath.startWidth = width;
-			    nextPath.endWidth = width;
+				pastPath.SetWidth(width, width);
+				currPath.SetWidth(width, width);
+				nextPath.SetWidth(width, width);
 				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 				
 				int sel = ap.core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
@@ -1255,8 +1251,7 @@ namespace MuMech
 				if (selWP.enabled)
 				{
 					float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Waypoints[sel].Position) / 600f + 0.1f;
-					selWP.startWidth = 0;
-				    selWP.endWidth = w * 10f;
+					selWP.SetWidth(0f, w * 10f);
 					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
 					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
 				}
@@ -1265,7 +1260,7 @@ namespace MuMech
 				{
 //					Debug.Log("drawing pastPath");
 					pastPath.enabled = true;
-				    pastPath.positionCount = ap.WaypointIndex + 1;
+					pastPath.SetVertexCount(ap.WaypointIndex + 1);
 					for (int i = 0; i < ap.WaypointIndex; i++)
 					{
 //						Debug.Log("vert " + i.ToString());
@@ -1299,7 +1294,7 @@ namespace MuMech
 				{
 //					Debug.Log("drawing nextPath of " + nextCount + " verts");
 					nextPath.enabled = true;
-				    nextPath.positionCount = nextCount;
+					nextPath.SetVertexCount(nextCount);
 					nextPath.SetPosition(0, RaisePositionOverTerrain((ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position), targetHeight));
 					for (int i = 0; i < nextCount - 1; i++)
 					{
