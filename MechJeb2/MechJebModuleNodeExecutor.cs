@@ -158,7 +158,7 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
             double timeToHalfBT = timeToNode - halfBurnTime;
-            double timeToPEGEnable = timeToHalfBT - 10.0; // enable PEG 10 secs before the burntime
+            double timeToPEGEnable = timeToHalfBT - 0.1; // enable PEG a few ticks before the burntime
 
             if (timeToPEGEnable <= 0)
             {
