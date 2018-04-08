@@ -24,7 +24,14 @@ using System.Reflection;
 /*
  *  Higher Priority / Nearer Term TODO list:
  *
- *  - Buttons in maneuver planner to execute nodes with/without PEG and with/without RCS
+ *  - UX overhaul
+ *    - move most of the ascent buttons into the main ascent menu.
+ *    - hide things like corrective steering when using PEG that do not apply.
+ *    - consider drop down for different kinds of PEG targets in the UX
+ *    - debug vector toggle button somewhere
+ *    - PEG details hidden by default
+ *    - bring back stock node executor and allow switching
+ *    - embed PEG details into maneuver planner when PEG is doing the node executor
  *
  *  Medium Priority / Medium Term TODO list:
  *
@@ -111,7 +118,7 @@ namespace MuMech
         {
             if ( isLoadedPrincipia )
             {
-                Debug.Log("FOUND PRINCIPIA!!!");
+                // Debug.Log("FOUND PRINCIPIA!!!");
             }
 
             if ( !HighLogic.LoadedSceneIsFlight )
@@ -362,12 +369,14 @@ namespace MuMech
 
         private void converge_vgo()
         {
+            Debug.Log("called converge_vgo()");
             /* we handle attitude directly here, unlike converge() because ascents are $COMPLICATED */
             core.attitude.attitudeTo(vgo, AttitudeReference.INERTIAL, this);
             if ( ( core.attitude.attitudeAngleFromTarget() > 1 || core.vessel.angularVelocity.magnitude > 0.01 ) && status == PegStatus.SLEWING )
             {
                 vessel.ctrlState.Z = 0.0F;
                 core.thrust.ThrustOff();
+                last_call = 0;
                 return;
             }
 
@@ -378,23 +387,37 @@ namespace MuMech
             // only use rcs for trim if its enabled and we have more than 10N of thrust
             bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
 
-            double dt = vesselState.time - last_call;
-            Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * dt;
+            Debug.Log("vgo = " + vgo);
+
+            Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * TimeWarp.fixedDeltaTime;
+
+            Debug.Log("dv_atom = " + dV_atom);
 
             if ( last_call != 0 )
+            {
+                Debug.Log("wat?");
                 vgo -= dV_atom;
+            }
+
+            Debug.Log("vgo = " + vgo);
 
             converge_vgo_corrector();
 
+            Debug.Log("vgo = " + vgo);
+
             double vgo_forward = Vector3d.Dot(vgo, vesselState.forward);
 
-            Vector3d next_dV_atom;
+            double next_accel;
             if (status == PegStatus.TERMINAL_RCS)
-                next_dV_atom = vesselState.rcsThrustAvailable.down / vesselState.mass * vesselState.forward * dt;
+                next_accel = vesselState.rcsThrustAvailable.down / vesselState.mass;
             else
-                next_dV_atom = vesselState.maxThrustAccel * vesselState.forward * dt;
+                next_accel = vesselState.maxThrustAccel;
 
-            tgo = vgo_forward / Vector3d.Dot(next_dV_atom, vesselState.forward) * TimeWarp.fixedDeltaTime;
+            Debug.Log("next accel = " + next_accel);
+
+            Debug.Log("tgo before = " + tgo);
+            tgo = vgo_forward / next_accel;
+            Debug.Log("tgo after = " + tgo);
 
             int tickstop = 1;
             // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
@@ -439,8 +462,12 @@ namespace MuMech
         private bool coastFinished;
         private double coastRemain;
 
+        // main PEG outer routine, more concerned with KSP issues than PEG itself
         private void converge()
         {
+            Debug.Log("called converge");
+            Debug.Log("tgo = " + tgo);
+
             oldstatus = status;
             oldlambda = lambda;
             oldlambdaDot = lambdaDot;
@@ -496,6 +523,7 @@ namespace MuMech
             if ( status == PegStatus.CONVERGED && tgo < 10 && status != PegStatus.COASTING )
             {
                 // go to VGO directly with same vgo/tgo/lambda/lambdaDot/t_lambda
+                last_call = 0;
                 status = PegStatus.TERMINAL;
                 return;
             }
@@ -504,12 +532,15 @@ namespace MuMech
 
             try {
                 for(int i = 0; i < 20 && !converged && status != PegStatus.FAILED; i++)
+                {
                     converged = update();
+                }
             }
             catch
             {
                 status = PegStatus.FAILED;
             }
+
 
             if (!converged)
                 status = PegStatus.FAILED;
@@ -819,8 +850,8 @@ namespace MuMech
 
         private void DrawCSE()
         {
-            if (enabled && status != PegStatus.FINISHED)
-            {
+            //if (enabled && status != PegStatus.FINISHED)
+            //{
                 if ( !HighLogic.LoadedSceneIsFlight )
                 {
                     // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
@@ -839,7 +870,7 @@ namespace MuMech
                 GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambdaDot * 100 }, Color.cyan, true, false, false);
                 // GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rthrust }, Color.magenta, true, false, false);
                 // GLUtils.DrawPath(mainBody, CSEPoints, Color.red, true, false, false);
-            }
+            //}
         }
 
         Orbit CSEorbit = new Orbit();
@@ -881,6 +912,7 @@ namespace MuMech
 
         private void Done()
         {
+            Debug.Log("PEG DONE: " + Environment.StackTrace);
             users.Clear();
             core.thrust.ThrustOff();
             vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
@@ -1067,7 +1099,7 @@ namespace MuMech
                 principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
                 if (principiaEGNPCDOF == null)
                 {
-                    Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
+                    // Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
                     isLoadedPrincipia = false;
                     return;
                 }
