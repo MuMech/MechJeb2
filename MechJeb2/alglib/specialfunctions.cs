@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,13 +18,14 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     Gamma function
 
@@ -47,11 +48,11 @@ public partial class alglib
     *************************************************************************/
     public static double gammafunction(double x)
     {
-
+    
         double result = gammafunc.gammafunction(x);
         return result;
     }
-
+    
     /*************************************************************************
     Natural logarithm of gamma function
 
@@ -95,7 +96,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     Error function
 
@@ -124,11 +125,11 @@ public partial class alglib
     *************************************************************************/
     public static double errorfunction(double x)
     {
-
+    
         double result = normaldistr.errorfunction(x);
         return result;
     }
-
+    
     /*************************************************************************
     Complementary error function
 
@@ -158,11 +159,11 @@ public partial class alglib
     *************************************************************************/
     public static double errorfunctionc(double x)
     {
-
+    
         double result = normaldistr.errorfunctionc(x);
         return result;
     }
-
+    
     /*************************************************************************
     Normal distribution function
 
@@ -195,11 +196,11 @@ public partial class alglib
     *************************************************************************/
     public static double normaldistribution(double x)
     {
-
+    
         double result = normaldistr.normaldistribution(x);
         return result;
     }
-
+    
     /*************************************************************************
     Inverse of the error function
 
@@ -208,11 +209,11 @@ public partial class alglib
     *************************************************************************/
     public static double inverf(double e)
     {
-
+    
         double result = normaldistr.inverf(e);
         return result;
     }
-
+    
     /*************************************************************************
     Inverse of Normal distribution function
 
@@ -240,7 +241,7 @@ public partial class alglib
     *************************************************************************/
     public static double invnormaldistribution(double y0)
     {
-
+    
         double result = normaldistr.invnormaldistribution(y0);
         return result;
     }
@@ -249,7 +250,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     Incomplete gamma integral
 
@@ -281,11 +282,11 @@ public partial class alglib
     *************************************************************************/
     public static double incompletegamma(double a, double x)
     {
-
+    
         double result = igammaf.incompletegamma(a, x);
         return result;
     }
-
+    
     /*************************************************************************
     Complemented incomplete gamma integral
 
@@ -321,11 +322,11 @@ public partial class alglib
     *************************************************************************/
     public static double incompletegammac(double a, double x)
     {
-
+    
         double result = igammaf.incompletegammac(a, x);
         return result;
     }
-
+    
     /*************************************************************************
     Inverse of complemented imcomplete gamma integral
 
@@ -364,7 +365,7 @@ public partial class alglib
     *************************************************************************/
     public static double invincompletegammac(double a, double y0)
     {
-
+    
         double result = igammaf.invincompletegammac(a, y0);
         return result;
     }
@@ -373,46 +374,254 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
-    Airy function
+    Complete elliptic integral of the first kind
 
-    Solution of the differential equation
+    Approximates the integral
 
-    y"(x) = xy.
 
-    The function returns the two independent solutions Ai, Bi
-    and their first derivatives Ai'(x), Bi'(x).
 
-    Evaluation is by power series summation for small x,
-    by rational minimax approximations for large x.
+               pi/2
+                -
+               | |
+               |           dt
+    K(m)  =    |    ------------------
+               |                   2
+             | |    sqrt( 1 - m sin t )
+              -
+               0
+
+    using the approximation
+
+        P(x)  -  log x Q(x).
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE       0,1        30000       2.5e-16     6.8e-17
+
+    Cephes Math Library, Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double ellipticintegralk(double m)
+    {
+    
+        double result = elliptic.ellipticintegralk(m);
+        return result;
+    }
+    
+    /*************************************************************************
+    Complete elliptic integral of the first kind
+
+    Approximates the integral
+
+
+
+               pi/2
+                -
+               | |
+               |           dt
+    K(m)  =    |    ------------------
+               |                   2
+             | |    sqrt( 1 - m sin t )
+              -
+               0
+
+    where m = 1 - m1, using the approximation
+
+        P(x)  -  log x Q(x).
+
+    The argument m1 is used rather than m so that the logarithmic
+    singularity at m = 1 will be shifted to the origin; this
+    preserves maximum accuracy.
+
+    K(0) = pi/2.
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE       0,1        30000       2.5e-16     6.8e-17
+
+    Cephes Math Library, Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double ellipticintegralkhighprecision(double m1)
+    {
+    
+        double result = elliptic.ellipticintegralkhighprecision(m1);
+        return result;
+    }
+    
+    /*************************************************************************
+    Incomplete elliptic integral of the first kind F(phi|m)
+
+    Approximates the integral
+
+
+
+                   phi
+                    -
+                   | |
+                   |           dt
+    F(phi_\m)  =    |    ------------------
+                   |                   2
+                 | |    sqrt( 1 - m sin t )
+                  -
+                   0
+
+    of amplitude phi and modulus m, using the arithmetic -
+    geometric mean algorithm.
+
 
 
 
     ACCURACY:
-    Error criterion is absolute when function <= 1, relative
-    when function > 1, except * denotes relative error criterion.
-    For large negative x, the absolute error increases as x^1.5.
-    For large positive x, the relative error increases as x^1.5.
 
-    Arithmetic  domain   function  # trials      peak         rms
-    IEEE        -10, 0     Ai        10000       1.6e-15     2.7e-16
-    IEEE          0, 10    Ai        10000       2.3e-14*    1.8e-15*
-    IEEE        -10, 0     Ai'       10000       4.6e-15     7.6e-16
-    IEEE          0, 10    Ai'       10000       1.8e-14*    1.5e-15*
-    IEEE        -10, 10    Bi        30000       4.2e-15     5.3e-16
-    IEEE        -10, 10    Bi'       30000       4.9e-15     7.3e-16
+    Tested at random points with m in [0, 1] and phi as indicated.
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE     -10,10       200000      7.4e-16     1.0e-16
 
     Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double incompleteellipticintegralk(double phi, double m)
+    {
+    
+        double result = elliptic.incompleteellipticintegralk(phi, m);
+        return result;
+    }
+    
+    /*************************************************************************
+    Complete elliptic integral of the second kind
+
+    Approximates the integral
+
+
+               pi/2
+                -
+               | |                 2
+    E(m)  =    |    sqrt( 1 - m sin t ) dt
+             | |
+              -
+               0
+
+    using the approximation
+
+         P(x)  -  x log x Q(x).
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE       0, 1       10000       2.1e-16     7.3e-17
+
+    Cephes Math Library, Release 2.8: June, 2000
     Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
     *************************************************************************/
-    public static void airy(double x, out double ai, out double aip, out double bi, out double bip)
+    public static double ellipticintegrale(double m)
     {
-        ai = 0;
-        aip = 0;
-        bi = 0;
-        bip = 0;
-        airyf.airy(x, ref ai, ref aip, ref bi, ref bip);
+    
+        double result = elliptic.ellipticintegrale(m);
+        return result;
+    }
+    
+    /*************************************************************************
+    Incomplete elliptic integral of the second kind
+
+    Approximates the integral
+
+
+                   phi
+                    -
+                   | |
+                   |                   2
+    E(phi_\m)  =    |    sqrt( 1 - m sin t ) dt
+                   |
+                 | |
+                  -
+                   0
+
+    of amplitude phi and modulus m, using the arithmetic -
+    geometric mean algorithm.
+
+    ACCURACY:
+
+    Tested at random arguments with phi in [-10, 10] and m in
+    [0, 1].
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE     -10,10      150000       3.3e-15     1.4e-16
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1993, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double incompleteellipticintegrale(double phi, double m)
+    {
+    
+        double result = elliptic.incompleteellipticintegrale(phi, m);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Calculation of the value of the Hermite polynomial.
+
+    Parameters:
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Hermite polynomial Hn at x
+    *************************************************************************/
+    public static double hermitecalculate(int n, double x)
+    {
+    
+        double result = hermite.hermitecalculate(n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Summation of Hermite polynomials using Clenshaw's recurrence formula.
+
+    This routine calculates
+        c[0]*H0(x) + c[1]*H1(x) + ... + c[N]*HN(x)
+
+    Parameters:
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Hermite polynomial at x
+    *************************************************************************/
+    public static double hermitesum(double[] c, int n, double x)
+    {
+    
+        double result = hermite.hermitesum(c, n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Representation of Hn as C[0] + C[1]*X + ... + C[N]*X^N
+
+    Input parameters:
+        N   -   polynomial degree, n>=0
+
+    Output parameters:
+        C   -   coefficients
+    *************************************************************************/
+    public static void hermitecoefficients(int n, out double[] c)
+    {
+        c = new double[0];
+        hermite.hermitecoefficients(n, ref c);
         return;
     }
 
@@ -420,7 +629,240 @@ public partial class alglib
 public partial class alglib
 {
 
+    
+    /*************************************************************************
+    Dawson's Integral
 
+    Approximates the integral
+
+                                x
+                                -
+                         2     | |        2
+     dawsn(x)  =  exp( -x  )   |    exp( t  ) dt
+                             | |
+                              -
+                              0
+
+    Three different rational approximations are employed, for
+    the intervals 0 to 3.25; 3.25 to 6.25; and 6.25 up.
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE      0,10        10000       6.9e-16     1.0e-16
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double dawsonintegral(double x)
+    {
+    
+        double result = dawson.dawsonintegral(x);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Sine and cosine integrals
+
+    Evaluates the integrals
+
+                             x
+                             -
+                            |  cos t - 1
+      Ci(x) = eul + ln x +  |  --------- dt,
+                            |      t
+                           -
+                            0
+                x
+                -
+               |  sin t
+      Si(x) =  |  ----- dt
+               |    t
+              -
+               0
+
+    where eul = 0.57721566490153286061 is Euler's constant.
+    The integrals are approximated by rational functions.
+    For x > 8 auxiliary functions f(x) and g(x) are employed
+    such that
+
+    Ci(x) = f(x) sin(x) - g(x) cos(x)
+    Si(x) = pi/2 - f(x) cos(x) - g(x) sin(x)
+
+
+    ACCURACY:
+       Test interval = [0,50].
+    Absolute error, except relative when > 1:
+    arithmetic   function   # trials      peak         rms
+       IEEE        Si        30000       4.4e-16     7.3e-17
+       IEEE        Ci        30000       6.9e-16     5.1e-17
+
+    Cephes Math Library Release 2.1:  January, 1989
+    Copyright 1984, 1987, 1989 by Stephen L. Moshier
+    *************************************************************************/
+    public static void sinecosineintegrals(double x, out double si, out double ci)
+    {
+        si = 0;
+        ci = 0;
+        trigintegrals.sinecosineintegrals(x, ref si, ref ci);
+        return;
+    }
+    
+    /*************************************************************************
+    Hyperbolic sine and cosine integrals
+
+    Approximates the integrals
+
+                               x
+                               -
+                              | |   cosh t - 1
+      Chi(x) = eul + ln x +   |    -----------  dt,
+                            | |          t
+                             -
+                             0
+
+                  x
+                  -
+                 | |  sinh t
+      Shi(x) =   |    ------  dt
+               | |       t
+                -
+                0
+
+    where eul = 0.57721566490153286061 is Euler's constant.
+    The integrals are evaluated by power series for x < 8
+    and by Chebyshev expansions for x between 8 and 88.
+    For large x, both functions approach exp(x)/2x.
+    Arguments greater than 88 in magnitude return MAXNUM.
+
+
+    ACCURACY:
+
+    Test interval 0 to 88.
+                         Relative error:
+    arithmetic   function  # trials      peak         rms
+       IEEE         Shi      30000       6.9e-16     1.6e-16
+           Absolute error, except relative when |Chi| > 1:
+       IEEE         Chi      30000       8.4e-16     1.4e-16
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static void hyperbolicsinecosineintegrals(double x, out double shi, out double chi)
+    {
+        shi = 0;
+        chi = 0;
+        trigintegrals.hyperbolicsinecosineintegrals(x, ref shi, ref chi);
+        return;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Poisson distribution
+
+    Returns the sum of the first k+1 terms of the Poisson
+    distribution:
+
+      k         j
+      --   -m  m
+      >   e    --
+      --       j!
+     j=0
+
+    The terms are not summed directly; instead the incomplete
+    gamma integral is employed, according to the relation
+
+    y = pdtr( k, m ) = igamc( k+1, m ).
+
+    The arguments must both be positive.
+    ACCURACY:
+
+    See incomplete gamma function
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double poissondistribution(int k, double m)
+    {
+    
+        double result = poissondistr.poissondistribution(k, m);
+        return result;
+    }
+    
+    /*************************************************************************
+    Complemented Poisson distribution
+
+    Returns the sum of the terms k+1 to infinity of the Poisson
+    distribution:
+
+     inf.       j
+      --   -m  m
+      >   e    --
+      --       j!
+     j=k+1
+
+    The terms are not summed directly; instead the incomplete
+    gamma integral is employed, according to the formula
+
+    y = pdtrc( k, m ) = igam( k+1, m ).
+
+    The arguments must both be positive.
+
+    ACCURACY:
+
+    See incomplete gamma function
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double poissoncdistribution(int k, double m)
+    {
+    
+        double result = poissondistr.poissoncdistribution(k, m);
+        return result;
+    }
+    
+    /*************************************************************************
+    Inverse Poisson distribution
+
+    Finds the Poisson variable x such that the integral
+    from 0 to x of the Poisson density is equal to the
+    given probability y.
+
+    This is accomplished using the inverse gamma integral
+    function and the relation
+
+       m = igami( k+1, y ).
+
+    ACCURACY:
+
+    See inverse incomplete gamma function
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double invpoissondistribution(int k, double y)
+    {
+    
+        double result = poissondistr.invpoissondistribution(k, y);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
     /*************************************************************************
     Bessel function of order zero
 
@@ -453,11 +895,11 @@ public partial class alglib
     *************************************************************************/
     public static double besselj0(double x)
     {
-
+    
         double result = bessel.besselj0(x);
         return result;
     }
-
+    
     /*************************************************************************
     Bessel function of order one
 
@@ -480,11 +922,11 @@ public partial class alglib
     *************************************************************************/
     public static double besselj1(double x)
     {
-
+    
         double result = bessel.besselj1(x);
         return result;
     }
-
+    
     /*************************************************************************
     Bessel function of integer order
 
@@ -514,11 +956,11 @@ public partial class alglib
     *************************************************************************/
     public static double besseljn(int n, double x)
     {
-
+    
         double result = bessel.besseljn(n, x);
         return result;
     }
-
+    
     /*************************************************************************
     Bessel function of the second kind, order zero
 
@@ -549,11 +991,11 @@ public partial class alglib
     *************************************************************************/
     public static double bessely0(double x)
     {
-
+    
         double result = bessel.bessely0(x);
         return result;
     }
-
+    
     /*************************************************************************
     Bessel function of second kind of order one
 
@@ -577,11 +1019,11 @@ public partial class alglib
     *************************************************************************/
     public static double bessely1(double x)
     {
-
+    
         double result = bessel.bessely1(x);
         return result;
     }
-
+    
     /*************************************************************************
     Bessel function of second kind of integer order
 
@@ -606,11 +1048,11 @@ public partial class alglib
     *************************************************************************/
     public static double besselyn(int n, double x)
     {
-
+    
         double result = bessel.besselyn(n, x);
         return result;
     }
-
+    
     /*************************************************************************
     Modified Bessel function of order zero
 
@@ -634,11 +1076,11 @@ public partial class alglib
     *************************************************************************/
     public static double besseli0(double x)
     {
-
+    
         double result = bessel.besseli0(x);
         return result;
     }
-
+    
     /*************************************************************************
     Modified Bessel function of order one
 
@@ -662,11 +1104,11 @@ public partial class alglib
     *************************************************************************/
     public static double besseli1(double x)
     {
-
+    
         double result = bessel.besseli1(x);
         return result;
     }
-
+    
     /*************************************************************************
     Modified Bessel function, second kind, order zero
 
@@ -690,11 +1132,11 @@ public partial class alglib
     *************************************************************************/
     public static double besselk0(double x)
     {
-
+    
         double result = bessel.besselk0(x);
         return result;
     }
-
+    
     /*************************************************************************
     Modified Bessel function, second kind, order one
 
@@ -716,11 +1158,11 @@ public partial class alglib
     *************************************************************************/
     public static double besselk1(double x)
     {
-
+    
         double result = bessel.besselk1(x);
         return result;
     }
-
+    
     /*************************************************************************
     Modified Bessel function, second kind, integer order
 
@@ -745,7 +1187,7 @@ public partial class alglib
     *************************************************************************/
     public static double besselkn(int nn, double x)
     {
-
+    
         double result = bessel.besselkn(nn, x);
         return result;
     }
@@ -754,41 +1196,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
-    /*************************************************************************
-    Beta function
-
-
-                      -     -
-                     | (a) | (b)
-    beta( a, b )  =  -----------.
-                        -
-                       | (a+b)
-
-    For large arguments the logarithm of the function is
-    evaluated using lgam(), then exponentiated.
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE       0,30       30000       8.1e-14     1.1e-14
-
-    Cephes Math Library Release 2.0:  April, 1987
-    Copyright 1984, 1987 by Stephen L. Moshier
-    *************************************************************************/
-    public static double beta(double a, double b)
-    {
-
-        double result = betaf.beta(a, b);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
+    
     /*************************************************************************
     Incomplete beta integral
 
@@ -832,11 +1240,11 @@ public partial class alglib
     *************************************************************************/
     public static double incompletebeta(double a, double b, double x)
     {
-
+    
         double result = ibetaf.incompletebeta(a, b, x);
         return result;
     }
-
+    
     /*************************************************************************
     Inverse of imcomplete beta integral
 
@@ -867,7 +1275,7 @@ public partial class alglib
     *************************************************************************/
     public static double invincompletebeta(double a, double b, double y)
     {
-
+    
         double result = ibetaf.invincompletebeta(a, b, y);
         return result;
     }
@@ -876,628 +1284,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
-    /*************************************************************************
-    Binomial distribution
-
-    Returns the sum of the terms 0 through k of the Binomial
-    probability density:
-
-      k
-      --  ( n )   j      n-j
-      >   (   )  p  (1-p)
-      --  ( j )
-     j=0
-
-    The terms are not summed directly; instead the incomplete
-    beta integral is employed, according to the formula
-
-    y = bdtr( k, n, p ) = incbet( n-k, k+1, 1-p ).
-
-    The arguments must be positive, with p ranging from 0 to 1.
-
-    ACCURACY:
-
-    Tested at random points (a,b,p), with p between 0 and 1.
-
-                  a,b                     Relative error:
-    arithmetic  domain     # trials      peak         rms
-     For p between 0.001 and 1:
-       IEEE     0,100       100000      4.3e-15     2.6e-16
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double binomialdistribution(int k, int n, double p)
-    {
-
-        double result = binomialdistr.binomialdistribution(k, n, p);
-        return result;
-    }
-
-    /*************************************************************************
-    Complemented binomial distribution
-
-    Returns the sum of the terms k+1 through n of the Binomial
-    probability density:
-
-      n
-      --  ( n )   j      n-j
-      >   (   )  p  (1-p)
-      --  ( j )
-     j=k+1
-
-    The terms are not summed directly; instead the incomplete
-    beta integral is employed, according to the formula
-
-    y = bdtrc( k, n, p ) = incbet( k+1, n-k, p ).
-
-    The arguments must be positive, with p ranging from 0 to 1.
-
-    ACCURACY:
-
-    Tested at random points (a,b,p).
-
-                  a,b                     Relative error:
-    arithmetic  domain     # trials      peak         rms
-     For p between 0.001 and 1:
-       IEEE     0,100       100000      6.7e-15     8.2e-16
-     For p between 0 and .001:
-       IEEE     0,100       100000      1.5e-13     2.7e-15
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double binomialcdistribution(int k, int n, double p)
-    {
-
-        double result = binomialdistr.binomialcdistribution(k, n, p);
-        return result;
-    }
-
-    /*************************************************************************
-    Inverse binomial distribution
-
-    Finds the event probability p such that the sum of the
-    terms 0 through k of the Binomial probability density
-    is equal to the given cumulative probability y.
-
-    This is accomplished using the inverse beta integral
-    function and the relation
-
-    1 - p = incbi( n-k, k+1, y ).
-
-    ACCURACY:
-
-    Tested at random points (a,b,p).
-
-                  a,b                     Relative error:
-    arithmetic  domain     # trials      peak         rms
-     For p between 0.001 and 1:
-       IEEE     0,100       100000      2.3e-14     6.4e-16
-       IEEE     0,10000     100000      6.6e-12     1.2e-13
-     For p between 10^-6 and 0.001:
-       IEEE     0,100       100000      2.0e-12     1.3e-14
-       IEEE     0,10000     100000      1.5e-12     3.2e-14
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double invbinomialdistribution(int k, int n, double y)
-    {
-
-        double result = binomialdistr.invbinomialdistribution(k, n, y);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Calculation of the value of the Chebyshev polynomials of the
-    first and second kinds.
-
-    Parameters:
-        r   -   polynomial kind, either 1 or 2.
-        n   -   degree, n>=0
-        x   -   argument, -1 <= x <= 1
-
-    Result:
-        the value of the Chebyshev polynomial at x
-    *************************************************************************/
-    public static double chebyshevcalculate(int r, int n, double x)
-    {
-
-        double result = chebyshev.chebyshevcalculate(r, n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Summation of Chebyshev polynomials using Clenshaw’s recurrence formula.
-
-    This routine calculates
-        c[0]*T0(x) + c[1]*T1(x) + ... + c[N]*TN(x)
-    or
-        c[0]*U0(x) + c[1]*U1(x) + ... + c[N]*UN(x)
-    depending on the R.
-
-    Parameters:
-        r   -   polynomial kind, either 1 or 2.
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Chebyshev polynomial at x
-    *************************************************************************/
-    public static double chebyshevsum(double[] c, int r, int n, double x)
-    {
-
-        double result = chebyshev.chebyshevsum(c, r, n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Representation of Tn as C[0] + C[1]*X + ... + C[N]*X^N
-
-    Input parameters:
-        N   -   polynomial degree, n>=0
-
-    Output parameters:
-        C   -   coefficients
-    *************************************************************************/
-    public static void chebyshevcoefficients(int n, out double[] c)
-    {
-        c = new double[0];
-        chebyshev.chebyshevcoefficients(n, ref c);
-        return;
-    }
-
-    /*************************************************************************
-    Conversion of a series of Chebyshev polynomials to a power series.
-
-    Represents A[0]*T0(x) + A[1]*T1(x) + ... + A[N]*Tn(x) as
-    B[0] + B[1]*X + ... + B[N]*X^N.
-
-    Input parameters:
-        A   -   Chebyshev series coefficients
-        N   -   degree, N>=0
-
-    Output parameters
-        B   -   power series coefficients
-    *************************************************************************/
-    public static void fromchebyshev(double[] a, int n, out double[] b)
-    {
-        b = new double[0];
-        chebyshev.fromchebyshev(a, n, ref b);
-        return;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Chi-square distribution
-
-    Returns the area under the left hand tail (from 0 to x)
-    of the Chi square probability density function with
-    v degrees of freedom.
-
-
-                                      x
-                                       -
-                           1          | |  v/2-1  -t/2
-     P( x | v )   =   -----------     |   t      e     dt
-                       v/2  -       | |
-                      2    | (v/2)   -
-                                      0
-
-    where x is the Chi-square variable.
-
-    The incomplete gamma integral is used, according to the
-    formula
-
-    y = chdtr( v, x ) = igam( v/2.0, x/2.0 ).
-
-    The arguments must both be positive.
-
-    ACCURACY:
-
-    See incomplete gamma function
-
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double chisquaredistribution(double v, double x)
-    {
-
-        double result = chisquaredistr.chisquaredistribution(v, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Complemented Chi-square distribution
-
-    Returns the area under the right hand tail (from x to
-    infinity) of the Chi square probability density function
-    with v degrees of freedom:
-
-                                     inf.
-                                       -
-                           1          | |  v/2-1  -t/2
-     P( x | v )   =   -----------     |   t      e     dt
-                       v/2  -       | |
-                      2    | (v/2)   -
-                                      x
-
-    where x is the Chi-square variable.
-
-    The incomplete gamma integral is used, according to the
-    formula
-
-    y = chdtr( v, x ) = igamc( v/2.0, x/2.0 ).
-
-    The arguments must both be positive.
-
-    ACCURACY:
-
-    See incomplete gamma function
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double chisquarecdistribution(double v, double x)
-    {
-
-        double result = chisquaredistr.chisquarecdistribution(v, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Inverse of complemented Chi-square distribution
-
-    Finds the Chi-square argument x such that the integral
-    from x to infinity of the Chi-square density is equal
-    to the given cumulative probability y.
-
-    This is accomplished using the inverse gamma integral
-    function and the relation
-
-       x/2 = igami( df/2, y );
-
-    ACCURACY:
-
-    See inverse incomplete gamma function
-
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double invchisquaredistribution(double v, double y)
-    {
-
-        double result = chisquaredistr.invchisquaredistribution(v, y);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Dawson's Integral
-
-    Approximates the integral
-
-                                x
-                                -
-                         2     | |        2
-     dawsn(x)  =  exp( -x  )   |    exp( t  ) dt
-                             | |
-                              -
-                              0
-
-    Three different rational approximations are employed, for
-    the intervals 0 to 3.25; 3.25 to 6.25; and 6.25 up.
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE      0,10        10000       6.9e-16     1.0e-16
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double dawsonintegral(double x)
-    {
-
-        double result = dawson.dawsonintegral(x);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Complete elliptic integral of the first kind
-
-    Approximates the integral
-
-
-
-               pi/2
-                -
-               | |
-               |           dt
-    K(m)  =    |    ------------------
-               |                   2
-             | |    sqrt( 1 - m sin t )
-              -
-               0
-
-    using the approximation
-
-        P(x)  -  log x Q(x).
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE       0,1        30000       2.5e-16     6.8e-17
-
-    Cephes Math Library, Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double ellipticintegralk(double m)
-    {
-
-        double result = elliptic.ellipticintegralk(m);
-        return result;
-    }
-
-    /*************************************************************************
-    Complete elliptic integral of the first kind
-
-    Approximates the integral
-
-
-
-               pi/2
-                -
-               | |
-               |           dt
-    K(m)  =    |    ------------------
-               |                   2
-             | |    sqrt( 1 - m sin t )
-              -
-               0
-
-    where m = 1 - m1, using the approximation
-
-        P(x)  -  log x Q(x).
-
-    The argument m1 is used rather than m so that the logarithmic
-    singularity at m = 1 will be shifted to the origin; this
-    preserves maximum accuracy.
-
-    K(0) = pi/2.
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE       0,1        30000       2.5e-16     6.8e-17
-
-    Cephes Math Library, Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double ellipticintegralkhighprecision(double m1)
-    {
-
-        double result = elliptic.ellipticintegralkhighprecision(m1);
-        return result;
-    }
-
-    /*************************************************************************
-    Incomplete elliptic integral of the first kind F(phi|m)
-
-    Approximates the integral
-
-
-
-                   phi
-                    -
-                   | |
-                   |           dt
-    F(phi_\m)  =    |    ------------------
-                   |                   2
-                 | |    sqrt( 1 - m sin t )
-                  -
-                   0
-
-    of amplitude phi and modulus m, using the arithmetic -
-    geometric mean algorithm.
-
-
-
-
-    ACCURACY:
-
-    Tested at random points with m in [0, 1] and phi as indicated.
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE     -10,10       200000      7.4e-16     1.0e-16
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double incompleteellipticintegralk(double phi, double m)
-    {
-
-        double result = elliptic.incompleteellipticintegralk(phi, m);
-        return result;
-    }
-
-    /*************************************************************************
-    Complete elliptic integral of the second kind
-
-    Approximates the integral
-
-
-               pi/2
-                -
-               | |                 2
-    E(m)  =    |    sqrt( 1 - m sin t ) dt
-             | |
-              -
-               0
-
-    using the approximation
-
-         P(x)  -  x log x Q(x).
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE       0, 1       10000       2.1e-16     7.3e-17
-
-    Cephes Math Library, Release 2.8: June, 2000
-    Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double ellipticintegrale(double m)
-    {
-
-        double result = elliptic.ellipticintegrale(m);
-        return result;
-    }
-
-    /*************************************************************************
-    Incomplete elliptic integral of the second kind
-
-    Approximates the integral
-
-
-                   phi
-                    -
-                   | |
-                   |                   2
-    E(phi_\m)  =    |    sqrt( 1 - m sin t ) dt
-                   |
-                 | |
-                  -
-                   0
-
-    of amplitude phi and modulus m, using the arithmetic -
-    geometric mean algorithm.
-
-    ACCURACY:
-
-    Tested at random arguments with phi in [-10, 10] and m in
-    [0, 1].
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE     -10,10      150000       3.3e-15     1.4e-16
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1993, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double incompleteellipticintegrale(double phi, double m)
-    {
-
-        double result = elliptic.incompleteellipticintegrale(phi, m);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Exponential integral Ei(x)
-
-                  x
-                   -     t
-                  | |   e
-       Ei(x) =   -|-   ---  dt .
-                | |     t
-                 -
-                -inf
-
-    Not defined for x <= 0.
-    See also expn.c.
-
-
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE       0,100       50000      8.6e-16     1.3e-16
-
-    Cephes Math Library Release 2.8:  May, 1999
-    Copyright 1999 by Stephen L. Moshier
-    *************************************************************************/
-    public static double exponentialintegralei(double x)
-    {
-
-        double result = expintegrals.exponentialintegralei(x);
-        return result;
-    }
-
-    /*************************************************************************
-    Exponential integral En(x)
-
-    Evaluates the exponential integral
-
-                    inf.
-                      -
-                     | |   -xt
-                     |    e
-         E (x)  =    |    ----  dt.
-          n          |      n
-                   | |     t
-                    -
-                     1
-
-
-    Both n and x must be nonnegative.
-
-    The routine employs either a power series, a continued
-    fraction, or an asymptotic formula depending on the
-    relative values of n and x.
-
-    ACCURACY:
-
-                         Relative error:
-    arithmetic   domain     # trials      peak         rms
-       IEEE      0, 30       10000       1.7e-15     3.6e-16
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1985, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double exponentialintegralen(double x, int n)
-    {
-
-        double result = expintegrals.exponentialintegralen(x, n);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
+    
     /*************************************************************************
     F distribution
 
@@ -1532,11 +1319,11 @@ public partial class alglib
     *************************************************************************/
     public static double fdistribution(int a, int b, double x)
     {
-
+    
         double result = fdistr.fdistribution(a, b, x);
         return result;
     }
-
+    
     /*************************************************************************
     Complemented F distribution
 
@@ -1575,11 +1362,11 @@ public partial class alglib
     *************************************************************************/
     public static double fcdistribution(int a, int b, double x)
     {
-
+    
         double result = fdistr.fcdistribution(a, b, x);
         return result;
     }
-
+    
     /*************************************************************************
     Inverse of complemented F distribution
 
@@ -1617,7 +1404,7 @@ public partial class alglib
     *************************************************************************/
     public static double invfdistribution(int a, int b, double y)
     {
-
+    
         double result = fdistr.invfdistribution(a, b, y);
         return result;
     }
@@ -1626,7 +1413,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     Fresnel integral
 
@@ -1671,7 +1458,7 @@ public partial class alglib
     *************************************************************************/
     public static void fresnelintegral(double x, ref double c, ref double s)
     {
-
+    
         fresnel.fresnelintegral(x, ref c, ref s);
         return;
     }
@@ -1680,65 +1467,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
-    /*************************************************************************
-    Calculation of the value of the Hermite polynomial.
-
-    Parameters:
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Hermite polynomial Hn at x
-    *************************************************************************/
-    public static double hermitecalculate(int n, double x)
-    {
-
-        double result = hermite.hermitecalculate(n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Summation of Hermite polynomials using Clenshaw’s recurrence formula.
-
-    This routine calculates
-        c[0]*H0(x) + c[1]*H1(x) + ... + c[N]*HN(x)
-
-    Parameters:
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Hermite polynomial at x
-    *************************************************************************/
-    public static double hermitesum(double[] c, int n, double x)
-    {
-
-        double result = hermite.hermitesum(c, n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Representation of Hn as C[0] + C[1]*X + ... + C[N]*X^N
-
-    Input parameters:
-        N   -   polynomial degree, n>=0
-
-    Output parameters:
-        C   -   coefficients
-    *************************************************************************/
-    public static void hermitecoefficients(int n, out double[] c)
-    {
-        c = new double[0];
-        hermite.hermitecoefficients(n, ref c);
-        return;
-    }
-
-}
-public partial class alglib
-{
-
-
+    
     /*************************************************************************
     Jacobian Elliptic Functions
 
@@ -1793,218 +1522,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
-    /*************************************************************************
-    Calculation of the value of the Laguerre polynomial.
-
-    Parameters:
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Laguerre polynomial Ln at x
-    *************************************************************************/
-    public static double laguerrecalculate(int n, double x)
-    {
-
-        double result = laguerre.laguerrecalculate(n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Summation of Laguerre polynomials using Clenshaw’s recurrence formula.
-
-    This routine calculates c[0]*L0(x) + c[1]*L1(x) + ... + c[N]*LN(x)
-
-    Parameters:
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Laguerre polynomial at x
-    *************************************************************************/
-    public static double laguerresum(double[] c, int n, double x)
-    {
-
-        double result = laguerre.laguerresum(c, n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Representation of Ln as C[0] + C[1]*X + ... + C[N]*X^N
-
-    Input parameters:
-        N   -   polynomial degree, n>=0
-
-    Output parameters:
-        C   -   coefficients
-    *************************************************************************/
-    public static void laguerrecoefficients(int n, out double[] c)
-    {
-        c = new double[0];
-        laguerre.laguerrecoefficients(n, ref c);
-        return;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Calculation of the value of the Legendre polynomial Pn.
-
-    Parameters:
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Legendre polynomial Pn at x
-    *************************************************************************/
-    public static double legendrecalculate(int n, double x)
-    {
-
-        double result = legendre.legendrecalculate(n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Summation of Legendre polynomials using Clenshaw’s recurrence formula.
-
-    This routine calculates
-        c[0]*P0(x) + c[1]*P1(x) + ... + c[N]*PN(x)
-
-    Parameters:
-        n   -   degree, n>=0
-        x   -   argument
-
-    Result:
-        the value of the Legendre polynomial at x
-    *************************************************************************/
-    public static double legendresum(double[] c, int n, double x)
-    {
-
-        double result = legendre.legendresum(c, n, x);
-        return result;
-    }
-
-    /*************************************************************************
-    Representation of Pn as C[0] + C[1]*X + ... + C[N]*X^N
-
-    Input parameters:
-        N   -   polynomial degree, n>=0
-
-    Output parameters:
-        C   -   coefficients
-    *************************************************************************/
-    public static void legendrecoefficients(int n, out double[] c)
-    {
-        c = new double[0];
-        legendre.legendrecoefficients(n, ref c);
-        return;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    Poisson distribution
-
-    Returns the sum of the first k+1 terms of the Poisson
-    distribution:
-
-      k         j
-      --   -m  m
-      >   e    --
-      --       j!
-     j=0
-
-    The terms are not summed directly; instead the incomplete
-    gamma integral is employed, according to the relation
-
-    y = pdtr( k, m ) = igamc( k+1, m ).
-
-    The arguments must both be positive.
-    ACCURACY:
-
-    See incomplete gamma function
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double poissondistribution(int k, double m)
-    {
-
-        double result = poissondistr.poissondistribution(k, m);
-        return result;
-    }
-
-    /*************************************************************************
-    Complemented Poisson distribution
-
-    Returns the sum of the terms k+1 to infinity of the Poisson
-    distribution:
-
-     inf.       j
-      --   -m  m
-      >   e    --
-      --       j!
-     j=k+1
-
-    The terms are not summed directly; instead the incomplete
-    gamma integral is employed, according to the formula
-
-    y = pdtrc( k, m ) = igam( k+1, m ).
-
-    The arguments must both be positive.
-
-    ACCURACY:
-
-    See incomplete gamma function
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double poissoncdistribution(int k, double m)
-    {
-
-        double result = poissondistr.poissoncdistribution(k, m);
-        return result;
-    }
-
-    /*************************************************************************
-    Inverse Poisson distribution
-
-    Finds the Poisson variable x such that the integral
-    from 0 to x of the Poisson density is equal to the
-    given probability y.
-
-    This is accomplished using the inverse gamma integral
-    function and the relation
-
-       m = igami( k+1, y ).
-
-    ACCURACY:
-
-    See inverse incomplete gamma function
-
-    Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-    *************************************************************************/
-    public static double invpoissondistribution(int k, double y)
-    {
-
-        double result = poissondistr.invpoissondistribution(k, y);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
+    
     /*************************************************************************
     Psi (digamma) function
 
@@ -2046,7 +1564,7 @@ public partial class alglib
     *************************************************************************/
     public static double psi(double x)
     {
-
+    
         double result = psif.psi(x);
         return result;
     }
@@ -2055,7 +1573,425 @@ public partial class alglib
 public partial class alglib
 {
 
+    
+    /*************************************************************************
+    Exponential integral Ei(x)
 
+                  x
+                   -     t
+                  | |   e
+       Ei(x) =   -|-   ---  dt .
+                | |     t
+                 -
+                -inf
+
+    Not defined for x <= 0.
+    See also expn.c.
+
+
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE       0,100       50000      8.6e-16     1.3e-16
+
+    Cephes Math Library Release 2.8:  May, 1999
+    Copyright 1999 by Stephen L. Moshier
+    *************************************************************************/
+    public static double exponentialintegralei(double x)
+    {
+    
+        double result = expintegrals.exponentialintegralei(x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Exponential integral En(x)
+
+    Evaluates the exponential integral
+
+                    inf.
+                      -
+                     | |   -xt
+                     |    e
+         E (x)  =    |    ----  dt.
+          n          |      n
+                   | |     t
+                    -
+                     1
+
+
+    Both n and x must be nonnegative.
+
+    The routine employs either a power series, a continued
+    fraction, or an asymptotic formula depending on the
+    relative values of n and x.
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE      0, 30       10000       1.7e-15     3.6e-16
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1985, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double exponentialintegralen(double x, int n)
+    {
+    
+        double result = expintegrals.exponentialintegralen(x, n);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Calculation of the value of the Laguerre polynomial.
+
+    Parameters:
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Laguerre polynomial Ln at x
+    *************************************************************************/
+    public static double laguerrecalculate(int n, double x)
+    {
+    
+        double result = laguerre.laguerrecalculate(n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Summation of Laguerre polynomials using Clenshaw's recurrence formula.
+
+    This routine calculates c[0]*L0(x) + c[1]*L1(x) + ... + c[N]*LN(x)
+
+    Parameters:
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Laguerre polynomial at x
+    *************************************************************************/
+    public static double laguerresum(double[] c, int n, double x)
+    {
+    
+        double result = laguerre.laguerresum(c, n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Representation of Ln as C[0] + C[1]*X + ... + C[N]*X^N
+
+    Input parameters:
+        N   -   polynomial degree, n>=0
+
+    Output parameters:
+        C   -   coefficients
+    *************************************************************************/
+    public static void laguerrecoefficients(int n, out double[] c)
+    {
+        c = new double[0];
+        laguerre.laguerrecoefficients(n, ref c);
+        return;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Chi-square distribution
+
+    Returns the area under the left hand tail (from 0 to x)
+    of the Chi square probability density function with
+    v degrees of freedom.
+
+
+                                      x
+                                       -
+                           1          | |  v/2-1  -t/2
+     P( x | v )   =   -----------     |   t      e     dt
+                       v/2  -       | |
+                      2    | (v/2)   -
+                                      0
+
+    where x is the Chi-square variable.
+
+    The incomplete gamma integral is used, according to the
+    formula
+
+    y = chdtr( v, x ) = igam( v/2.0, x/2.0 ).
+
+    The arguments must both be positive.
+
+    ACCURACY:
+
+    See incomplete gamma function
+
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double chisquaredistribution(double v, double x)
+    {
+    
+        double result = chisquaredistr.chisquaredistribution(v, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Complemented Chi-square distribution
+
+    Returns the area under the right hand tail (from x to
+    infinity) of the Chi square probability density function
+    with v degrees of freedom:
+
+                                     inf.
+                                       -
+                           1          | |  v/2-1  -t/2
+     P( x | v )   =   -----------     |   t      e     dt
+                       v/2  -       | |
+                      2    | (v/2)   -
+                                      x
+
+    where x is the Chi-square variable.
+
+    The incomplete gamma integral is used, according to the
+    formula
+
+    y = chdtr( v, x ) = igamc( v/2.0, x/2.0 ).
+
+    The arguments must both be positive.
+
+    ACCURACY:
+
+    See incomplete gamma function
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double chisquarecdistribution(double v, double x)
+    {
+    
+        double result = chisquaredistr.chisquarecdistribution(v, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Inverse of complemented Chi-square distribution
+
+    Finds the Chi-square argument x such that the integral
+    from x to infinity of the Chi-square density is equal
+    to the given cumulative probability y.
+
+    This is accomplished using the inverse gamma integral
+    function and the relation
+
+       x/2 = igami( df/2, y );
+
+    ACCURACY:
+
+    See inverse incomplete gamma function
+
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double invchisquaredistribution(double v, double y)
+    {
+    
+        double result = chisquaredistr.invchisquaredistribution(v, y);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Calculation of the value of the Legendre polynomial Pn.
+
+    Parameters:
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Legendre polynomial Pn at x
+    *************************************************************************/
+    public static double legendrecalculate(int n, double x)
+    {
+    
+        double result = legendre.legendrecalculate(n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Summation of Legendre polynomials using Clenshaw's recurrence formula.
+
+    This routine calculates
+        c[0]*P0(x) + c[1]*P1(x) + ... + c[N]*PN(x)
+
+    Parameters:
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Legendre polynomial at x
+    *************************************************************************/
+    public static double legendresum(double[] c, int n, double x)
+    {
+    
+        double result = legendre.legendresum(c, n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Representation of Pn as C[0] + C[1]*X + ... + C[N]*X^N
+
+    Input parameters:
+        N   -   polynomial degree, n>=0
+
+    Output parameters:
+        C   -   coefficients
+    *************************************************************************/
+    public static void legendrecoefficients(int n, out double[] c)
+    {
+        c = new double[0];
+        legendre.legendrecoefficients(n, ref c);
+        return;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Beta function
+
+
+                      -     -
+                     | (a) | (b)
+    beta( a, b )  =  -----------.
+                        -
+                       | (a+b)
+
+    For large arguments the logarithm of the function is
+    evaluated using lgam(), then exponentiated.
+
+    ACCURACY:
+
+                         Relative error:
+    arithmetic   domain     # trials      peak         rms
+       IEEE       0,30       30000       8.1e-14     1.1e-14
+
+    Cephes Math Library Release 2.0:  April, 1987
+    Copyright 1984, 1987 by Stephen L. Moshier
+    *************************************************************************/
+    public static double beta(double a, double b)
+    {
+    
+        double result = betaf.beta(a, b);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Calculation of the value of the Chebyshev polynomials of the
+    first and second kinds.
+
+    Parameters:
+        r   -   polynomial kind, either 1 or 2.
+        n   -   degree, n>=0
+        x   -   argument, -1 <= x <= 1
+
+    Result:
+        the value of the Chebyshev polynomial at x
+    *************************************************************************/
+    public static double chebyshevcalculate(int r, int n, double x)
+    {
+    
+        double result = chebyshev.chebyshevcalculate(r, n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Summation of Chebyshev polynomials using Clenshaw's recurrence formula.
+
+    This routine calculates
+        c[0]*T0(x) + c[1]*T1(x) + ... + c[N]*TN(x)
+    or
+        c[0]*U0(x) + c[1]*U1(x) + ... + c[N]*UN(x)
+    depending on the R.
+
+    Parameters:
+        r   -   polynomial kind, either 1 or 2.
+        n   -   degree, n>=0
+        x   -   argument
+
+    Result:
+        the value of the Chebyshev polynomial at x
+    *************************************************************************/
+    public static double chebyshevsum(double[] c, int r, int n, double x)
+    {
+    
+        double result = chebyshev.chebyshevsum(c, r, n, x);
+        return result;
+    }
+    
+    /*************************************************************************
+    Representation of Tn as C[0] + C[1]*X + ... + C[N]*X^N
+
+    Input parameters:
+        N   -   polynomial degree, n>=0
+
+    Output parameters:
+        C   -   coefficients
+    *************************************************************************/
+    public static void chebyshevcoefficients(int n, out double[] c)
+    {
+        c = new double[0];
+        chebyshev.chebyshevcoefficients(n, ref c);
+        return;
+    }
+    
+    /*************************************************************************
+    Conversion of a series of Chebyshev polynomials to a power series.
+
+    Represents A[0]*T0(x) + A[1]*T1(x) + ... + A[N]*Tn(x) as
+    B[0] + B[1]*X + ... + B[N]*X^N.
+
+    Input parameters:
+        A   -   Chebyshev series coefficients
+        N   -   degree, N>=0
+
+    Output parameters
+        B   -   power series coefficients
+    *************************************************************************/
+    public static void fromchebyshev(double[] a, int n, out double[] b)
+    {
+        b = new double[0];
+        chebyshev.fromchebyshev(a, n, ref b);
+        return;
+    }
+
+}
+public partial class alglib
+{
+
+    
     /*************************************************************************
     Student's t distribution
 
@@ -2099,11 +2035,11 @@ public partial class alglib
     *************************************************************************/
     public static double studenttdistribution(int k, double t)
     {
-
+    
         double result = studenttdistr.studenttdistribution(k, t);
         return result;
     }
-
+    
     /*************************************************************************
     Functional inverse of Student's t distribution
 
@@ -2123,7 +2059,7 @@ public partial class alglib
     *************************************************************************/
     public static double invstudenttdistribution(int k, double p)
     {
-
+    
         double result = studenttdistr.invstudenttdistribution(k, p);
         return result;
     }
@@ -2132,99 +2068,164 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
-    Sine and cosine integrals
+    Binomial distribution
 
-    Evaluates the integrals
+    Returns the sum of the terms 0 through k of the Binomial
+    probability density:
 
-                             x
-                             -
-                            |  cos t - 1
-      Ci(x) = eul + ln x +  |  --------- dt,
-                            |      t
-                           -
-                            0
-                x
-                -
-               |  sin t
-      Si(x) =  |  ----- dt
-               |    t
-              -
-               0
+      k
+      --  ( n )   j      n-j
+      >   (   )  p  (1-p)
+      --  ( j )
+     j=0
 
-    where eul = 0.57721566490153286061 is Euler's constant.
-    The integrals are approximated by rational functions.
-    For x > 8 auxiliary functions f(x) and g(x) are employed
-    such that
+    The terms are not summed directly; instead the incomplete
+    beta integral is employed, according to the formula
 
-    Ci(x) = f(x) sin(x) - g(x) cos(x)
-    Si(x) = pi/2 - f(x) cos(x) - g(x) sin(x)
+    y = bdtr( k, n, p ) = incbet( n-k, k+1, 1-p ).
 
-
-    ACCURACY:
-       Test interval = [0,50].
-    Absolute error, except relative when > 1:
-    arithmetic   function   # trials      peak         rms
-       IEEE        Si        30000       4.4e-16     7.3e-17
-       IEEE        Ci        30000       6.9e-16     5.1e-17
-
-    Cephes Math Library Release 2.1:  January, 1989
-    Copyright 1984, 1987, 1989 by Stephen L. Moshier
-    *************************************************************************/
-    public static void sinecosineintegrals(double x, out double si, out double ci)
-    {
-        si = 0;
-        ci = 0;
-        trigintegrals.sinecosineintegrals(x, ref si, ref ci);
-        return;
-    }
-
-    /*************************************************************************
-    Hyperbolic sine and cosine integrals
-
-    Approximates the integrals
-
-                               x
-                               -
-                              | |   cosh t - 1
-      Chi(x) = eul + ln x +   |    -----------  dt,
-                            | |          t
-                             -
-                             0
-
-                  x
-                  -
-                 | |  sinh t
-      Shi(x) =   |    ------  dt
-               | |       t
-                -
-                0
-
-    where eul = 0.57721566490153286061 is Euler's constant.
-    The integrals are evaluated by power series for x < 8
-    and by Chebyshev expansions for x between 8 and 88.
-    For large x, both functions approach exp(x)/2x.
-    Arguments greater than 88 in magnitude return MAXNUM.
-
+    The arguments must be positive, with p ranging from 0 to 1.
 
     ACCURACY:
 
-    Test interval 0 to 88.
-                         Relative error:
-    arithmetic   function  # trials      peak         rms
-       IEEE         Shi      30000       6.9e-16     1.6e-16
-           Absolute error, except relative when |Chi| > 1:
-       IEEE         Chi      30000       8.4e-16     1.4e-16
+    Tested at random points (a,b,p), with p between 0 and 1.
+
+                  a,b                     Relative error:
+    arithmetic  domain     # trials      peak         rms
+     For p between 0.001 and 1:
+       IEEE     0,100       100000      4.3e-15     2.6e-16
 
     Cephes Math Library Release 2.8:  June, 2000
-    Copyright 1984, 1987, 2000 by Stephen L. Moshier
+    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
     *************************************************************************/
-    public static void hyperbolicsinecosineintegrals(double x, out double shi, out double chi)
+    public static double binomialdistribution(int k, int n, double p)
     {
-        shi = 0;
-        chi = 0;
-        trigintegrals.hyperbolicsinecosineintegrals(x, ref shi, ref chi);
+    
+        double result = binomialdistr.binomialdistribution(k, n, p);
+        return result;
+    }
+    
+    /*************************************************************************
+    Complemented binomial distribution
+
+    Returns the sum of the terms k+1 through n of the Binomial
+    probability density:
+
+      n
+      --  ( n )   j      n-j
+      >   (   )  p  (1-p)
+      --  ( j )
+     j=k+1
+
+    The terms are not summed directly; instead the incomplete
+    beta integral is employed, according to the formula
+
+    y = bdtrc( k, n, p ) = incbet( k+1, n-k, p ).
+
+    The arguments must be positive, with p ranging from 0 to 1.
+
+    ACCURACY:
+
+    Tested at random points (a,b,p).
+
+                  a,b                     Relative error:
+    arithmetic  domain     # trials      peak         rms
+     For p between 0.001 and 1:
+       IEEE     0,100       100000      6.7e-15     8.2e-16
+     For p between 0 and .001:
+       IEEE     0,100       100000      1.5e-13     2.7e-15
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double binomialcdistribution(int k, int n, double p)
+    {
+    
+        double result = binomialdistr.binomialcdistribution(k, n, p);
+        return result;
+    }
+    
+    /*************************************************************************
+    Inverse binomial distribution
+
+    Finds the event probability p such that the sum of the
+    terms 0 through k of the Binomial probability density
+    is equal to the given cumulative probability y.
+
+    This is accomplished using the inverse beta integral
+    function and the relation
+
+    1 - p = incbi( n-k, k+1, y ).
+
+    ACCURACY:
+
+    Tested at random points (a,b,p).
+
+                  a,b                     Relative error:
+    arithmetic  domain     # trials      peak         rms
+     For p between 0.001 and 1:
+       IEEE     0,100       100000      2.3e-14     6.4e-16
+       IEEE     0,10000     100000      6.6e-12     1.2e-13
+     For p between 10^-6 and 0.001:
+       IEEE     0,100       100000      2.0e-12     1.3e-14
+       IEEE     0,10000     100000      1.5e-12     3.2e-14
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double invbinomialdistribution(int k, int n, double y)
+    {
+    
+        double result = binomialdistr.invbinomialdistribution(k, n, y);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Airy function
+
+    Solution of the differential equation
+
+    y"(x) = xy.
+
+    The function returns the two independent solutions Ai, Bi
+    and their first derivatives Ai'(x), Bi'(x).
+
+    Evaluation is by power series summation for small x,
+    by rational minimax approximations for large x.
+
+
+
+    ACCURACY:
+    Error criterion is absolute when function <= 1, relative
+    when function > 1, except * denotes relative error criterion.
+    For large negative x, the absolute error increases as x^1.5.
+    For large positive x, the relative error increases as x^1.5.
+
+    Arithmetic  domain   function  # trials      peak         rms
+    IEEE        -10, 0     Ai        10000       1.6e-15     2.7e-16
+    IEEE          0, 10    Ai        10000       2.3e-14*    1.8e-15*
+    IEEE        -10, 0     Ai'       10000       4.6e-15     7.6e-16
+    IEEE          0, 10    Ai'       10000       1.8e-14*    1.5e-15*
+    IEEE        -10, 10    Bi        30000       4.2e-15     5.3e-16
+    IEEE        -10, 10    Bi'       30000       4.9e-15     7.3e-16
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static void airy(double x, out double ai, out double aip, out double bi, out double bip)
+    {
+        ai = 0;
+        aip = 0;
+        bi = 0;
+        bip = 0;
+        airyf.airy(x, ref ai, ref aip, ref bi, ref bip);
         return;
     }
 
@@ -3259,343 +3260,1266 @@ public partial class alglib
 
 
     }
-    public class airyf
+    public class elliptic
     {
         /*************************************************************************
-        Airy function
+        Complete elliptic integral of the first kind
 
-        Solution of the differential equation
+        Approximates the integral
 
-        y"(x) = xy.
 
-        The function returns the two independent solutions Ai, Bi
-        and their first derivatives Ai'(x), Bi'(x).
 
-        Evaluation is by power series summation for small x,
-        by rational minimax approximations for large x.
+                   pi/2
+                    -
+                   | |
+                   |           dt
+        K(m)  =    |    ------------------
+                   |                   2
+                 | |    sqrt( 1 - m sin t )
+                  -
+                   0
+
+        using the approximation
+
+            P(x)  -  log x Q(x).
+
+        ACCURACY:
+
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE       0,1        30000       2.5e-16     6.8e-17
+
+        Cephes Math Library, Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double ellipticintegralk(double m)
+        {
+            double result = 0;
+
+            result = ellipticintegralkhighprecision(1.0-m);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Complete elliptic integral of the first kind
+
+        Approximates the integral
+
+
+
+                   pi/2
+                    -
+                   | |
+                   |           dt
+        K(m)  =    |    ------------------
+                   |                   2
+                 | |    sqrt( 1 - m sin t )
+                  -
+                   0
+
+        where m = 1 - m1, using the approximation
+
+            P(x)  -  log x Q(x).
+
+        The argument m1 is used rather than m so that the logarithmic
+        singularity at m = 1 will be shifted to the origin; this
+        preserves maximum accuracy.
+
+        K(0) = pi/2.
+
+        ACCURACY:
+
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE       0,1        30000       2.5e-16     6.8e-17
+
+        Cephes Math Library, Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double ellipticintegralkhighprecision(double m1)
+        {
+            double result = 0;
+            double p = 0;
+            double q = 0;
+
+            if( (double)(m1)<=(double)(math.machineepsilon) )
+            {
+                result = 1.3862943611198906188E0-0.5*Math.Log(m1);
+            }
+            else
+            {
+                p = 1.37982864606273237150E-4;
+                p = p*m1+2.28025724005875567385E-3;
+                p = p*m1+7.97404013220415179367E-3;
+                p = p*m1+9.85821379021226008714E-3;
+                p = p*m1+6.87489687449949877925E-3;
+                p = p*m1+6.18901033637687613229E-3;
+                p = p*m1+8.79078273952743772254E-3;
+                p = p*m1+1.49380448916805252718E-2;
+                p = p*m1+3.08851465246711995998E-2;
+                p = p*m1+9.65735902811690126535E-2;
+                p = p*m1+1.38629436111989062502E0;
+                q = 2.94078955048598507511E-5;
+                q = q*m1+9.14184723865917226571E-4;
+                q = q*m1+5.94058303753167793257E-3;
+                q = q*m1+1.54850516649762399335E-2;
+                q = q*m1+2.39089602715924892727E-2;
+                q = q*m1+3.01204715227604046988E-2;
+                q = q*m1+3.73774314173823228969E-2;
+                q = q*m1+4.88280347570998239232E-2;
+                q = q*m1+7.03124996963957469739E-2;
+                q = q*m1+1.24999999999870820058E-1;
+                q = q*m1+4.99999999999999999821E-1;
+                result = p-q*Math.Log(m1);
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Incomplete elliptic integral of the first kind F(phi|m)
+
+        Approximates the integral
+
+
+
+                       phi
+                        -
+                       | |
+                       |           dt
+        F(phi_\m)  =    |    ------------------
+                       |                   2
+                     | |    sqrt( 1 - m sin t )
+                      -
+                       0
+
+        of amplitude phi and modulus m, using the arithmetic -
+        geometric mean algorithm.
+
 
 
 
         ACCURACY:
-        Error criterion is absolute when function <= 1, relative
-        when function > 1, except * denotes relative error criterion.
-        For large negative x, the absolute error increases as x^1.5.
-        For large positive x, the relative error increases as x^1.5.
 
-        Arithmetic  domain   function  # trials      peak         rms
-        IEEE        -10, 0     Ai        10000       1.6e-15     2.7e-16
-        IEEE          0, 10    Ai        10000       2.3e-14*    1.8e-15*
-        IEEE        -10, 0     Ai'       10000       4.6e-15     7.6e-16
-        IEEE          0, 10    Ai'       10000       1.8e-14*    1.5e-15*
-        IEEE        -10, 10    Bi        30000       4.2e-15     5.3e-16
-        IEEE        -10, 10    Bi'       30000       4.9e-15     7.3e-16
+        Tested at random points with m in [0, 1] and phi as indicated.
+
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE     -10,10       200000      7.4e-16     1.0e-16
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double incompleteellipticintegralk(double phi,
+            double m)
+        {
+            double result = 0;
+            double a = 0;
+            double b = 0;
+            double c = 0;
+            double e = 0;
+            double temp = 0;
+            double pio2 = 0;
+            double t = 0;
+            double k = 0;
+            int d = 0;
+            int md = 0;
+            int s = 0;
+            int npio2 = 0;
+
+            pio2 = 1.57079632679489661923;
+            if( (double)(m)==(double)(0) )
+            {
+                result = phi;
+                return result;
+            }
+            a = 1-m;
+            if( (double)(a)==(double)(0) )
+            {
+                result = Math.Log(Math.Tan(0.5*(pio2+phi)));
+                return result;
+            }
+            npio2 = (int)Math.Floor(phi/pio2);
+            if( npio2%2!=0 )
+            {
+                npio2 = npio2+1;
+            }
+            if( npio2!=0 )
+            {
+                k = ellipticintegralk(1-a);
+                phi = phi-npio2*pio2;
+            }
+            else
+            {
+                k = 0;
+            }
+            if( (double)(phi)<(double)(0) )
+            {
+                phi = -phi;
+                s = -1;
+            }
+            else
+            {
+                s = 0;
+            }
+            b = Math.Sqrt(a);
+            t = Math.Tan(phi);
+            if( (double)(Math.Abs(t))>(double)(10) )
+            {
+                e = 1.0/(b*t);
+                if( (double)(Math.Abs(e))<(double)(10) )
+                {
+                    e = Math.Atan(e);
+                    if( npio2==0 )
+                    {
+                        k = ellipticintegralk(1-a);
+                    }
+                    temp = k-incompleteellipticintegralk(e, m);
+                    if( s<0 )
+                    {
+                        temp = -temp;
+                    }
+                    result = temp+npio2*k;
+                    return result;
+                }
+            }
+            a = 1.0;
+            c = Math.Sqrt(m);
+            d = 1;
+            md = 0;
+            while( (double)(Math.Abs(c/a))>(double)(math.machineepsilon) )
+            {
+                temp = b/a;
+                phi = phi+Math.Atan(t*temp)+md*Math.PI;
+                md = (int)((phi+pio2)/Math.PI);
+                t = t*(1.0+temp)/(1.0-temp*t*t);
+                c = 0.5*(a-b);
+                temp = Math.Sqrt(a*b);
+                a = 0.5*(a+b);
+                b = temp;
+                d = d+d;
+            }
+            temp = (Math.Atan(t)+md*Math.PI)/(d*a);
+            if( s<0 )
+            {
+                temp = -temp;
+            }
+            result = temp+npio2*k;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Complete elliptic integral of the second kind
+
+        Approximates the integral
+
+
+                   pi/2
+                    -
+                   | |                 2
+        E(m)  =    |    sqrt( 1 - m sin t ) dt
+                 | |
+                  -
+                   0
+
+        using the approximation
+
+             P(x)  -  x log x Q(x).
+
+        ACCURACY:
+
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE       0, 1       10000       2.1e-16     7.3e-17
+
+        Cephes Math Library, Release 2.8: June, 2000
+        Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double ellipticintegrale(double m)
+        {
+            double result = 0;
+            double p = 0;
+            double q = 0;
+
+            alglib.ap.assert((double)(m)>=(double)(0) && (double)(m)<=(double)(1), "Domain error in EllipticIntegralE: m<0 or m>1");
+            m = 1-m;
+            if( (double)(m)==(double)(0) )
+            {
+                result = 1;
+                return result;
+            }
+            p = 1.53552577301013293365E-4;
+            p = p*m+2.50888492163602060990E-3;
+            p = p*m+8.68786816565889628429E-3;
+            p = p*m+1.07350949056076193403E-2;
+            p = p*m+7.77395492516787092951E-3;
+            p = p*m+7.58395289413514708519E-3;
+            p = p*m+1.15688436810574127319E-2;
+            p = p*m+2.18317996015557253103E-2;
+            p = p*m+5.68051945617860553470E-2;
+            p = p*m+4.43147180560990850618E-1;
+            p = p*m+1.00000000000000000299E0;
+            q = 3.27954898576485872656E-5;
+            q = q*m+1.00962792679356715133E-3;
+            q = q*m+6.50609489976927491433E-3;
+            q = q*m+1.68862163993311317300E-2;
+            q = q*m+2.61769742454493659583E-2;
+            q = q*m+3.34833904888224918614E-2;
+            q = q*m+4.27180926518931511717E-2;
+            q = q*m+5.85936634471101055642E-2;
+            q = q*m+9.37499997197644278445E-2;
+            q = q*m+2.49999999999888314361E-1;
+            result = p-q*m*Math.Log(m);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Incomplete elliptic integral of the second kind
+
+        Approximates the integral
+
+
+                       phi
+                        -
+                       | |
+                       |                   2
+        E(phi_\m)  =    |    sqrt( 1 - m sin t ) dt
+                       |
+                     | |
+                      -
+                       0
+
+        of amplitude phi and modulus m, using the arithmetic -
+        geometric mean algorithm.
+
+        ACCURACY:
+
+        Tested at random arguments with phi in [-10, 10] and m in
+        [0, 1].
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE     -10,10      150000       3.3e-15     1.4e-16
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1993, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double incompleteellipticintegrale(double phi,
+            double m)
+        {
+            double result = 0;
+            double pio2 = 0;
+            double a = 0;
+            double b = 0;
+            double c = 0;
+            double e = 0;
+            double temp = 0;
+            double lphi = 0;
+            double t = 0;
+            double ebig = 0;
+            int d = 0;
+            int md = 0;
+            int npio2 = 0;
+            int s = 0;
+
+            pio2 = 1.57079632679489661923;
+            if( (double)(m)==(double)(0) )
+            {
+                result = phi;
+                return result;
+            }
+            lphi = phi;
+            npio2 = (int)Math.Floor(lphi/pio2);
+            if( npio2%2!=0 )
+            {
+                npio2 = npio2+1;
+            }
+            lphi = lphi-npio2*pio2;
+            if( (double)(lphi)<(double)(0) )
+            {
+                lphi = -lphi;
+                s = -1;
+            }
+            else
+            {
+                s = 1;
+            }
+            a = 1.0-m;
+            ebig = ellipticintegrale(m);
+            if( (double)(a)==(double)(0) )
+            {
+                temp = Math.Sin(lphi);
+                if( s<0 )
+                {
+                    temp = -temp;
+                }
+                result = temp+npio2*ebig;
+                return result;
+            }
+            t = Math.Tan(lphi);
+            b = Math.Sqrt(a);
+            
+            //
+            // Thanks to Brian Fitzgerald <fitzgb@mml0.meche.rpi.edu>
+            // for pointing out an instability near odd multiples of pi/2
+            //
+            if( (double)(Math.Abs(t))>(double)(10) )
+            {
+                
+                //
+                // Transform the amplitude
+                //
+                e = 1.0/(b*t);
+                
+                //
+                // ... but avoid multiple recursions.
+                //
+                if( (double)(Math.Abs(e))<(double)(10) )
+                {
+                    e = Math.Atan(e);
+                    temp = ebig+m*Math.Sin(lphi)*Math.Sin(e)-incompleteellipticintegrale(e, m);
+                    if( s<0 )
+                    {
+                        temp = -temp;
+                    }
+                    result = temp+npio2*ebig;
+                    return result;
+                }
+            }
+            c = Math.Sqrt(m);
+            a = 1.0;
+            d = 1;
+            e = 0.0;
+            md = 0;
+            while( (double)(Math.Abs(c/a))>(double)(math.machineepsilon) )
+            {
+                temp = b/a;
+                lphi = lphi+Math.Atan(t*temp)+md*Math.PI;
+                md = (int)((lphi+pio2)/Math.PI);
+                t = t*(1.0+temp)/(1.0-temp*t*t);
+                c = 0.5*(a-b);
+                temp = Math.Sqrt(a*b);
+                a = 0.5*(a+b);
+                b = temp;
+                d = d+d;
+                e = e+c*Math.Sin(lphi);
+            }
+            temp = ebig/ellipticintegralk(m);
+            temp = temp*((Math.Atan(t)+md*Math.PI)/(d*a));
+            temp = temp+e;
+            if( s<0 )
+            {
+                temp = -temp;
+            }
+            result = temp+npio2*ebig;
+            return result;
+        }
+
+
+    }
+    public class hermite
+    {
+        /*************************************************************************
+        Calculation of the value of the Hermite polynomial.
+
+        Parameters:
+            n   -   degree, n>=0
+            x   -   argument
+
+        Result:
+            the value of the Hermite polynomial Hn at x
+        *************************************************************************/
+        public static double hermitecalculate(int n,
+            double x)
+        {
+            double result = 0;
+            int i = 0;
+            double a = 0;
+            double b = 0;
+
+            result = 0;
+            
+            //
+            // Prepare A and B
+            //
+            a = 1;
+            b = 2*x;
+            
+            //
+            // Special cases: N=0 or N=1
+            //
+            if( n==0 )
+            {
+                result = a;
+                return result;
+            }
+            if( n==1 )
+            {
+                result = b;
+                return result;
+            }
+            
+            //
+            // General case: N>=2
+            //
+            for(i=2; i<=n; i++)
+            {
+                result = 2*x*b-2*(i-1)*a;
+                a = b;
+                b = result;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Summation of Hermite polynomials using Clenshaw's recurrence formula.
+
+        This routine calculates
+            c[0]*H0(x) + c[1]*H1(x) + ... + c[N]*HN(x)
+
+        Parameters:
+            n   -   degree, n>=0
+            x   -   argument
+
+        Result:
+            the value of the Hermite polynomial at x
+        *************************************************************************/
+        public static double hermitesum(double[] c,
+            int n,
+            double x)
+        {
+            double result = 0;
+            double b1 = 0;
+            double b2 = 0;
+            int i = 0;
+
+            b1 = 0;
+            b2 = 0;
+            result = 0;
+            for(i=n; i>=0; i--)
+            {
+                result = 2*(x*b1-(i+1)*b2)+c[i];
+                b2 = b1;
+                b1 = result;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Representation of Hn as C[0] + C[1]*X + ... + C[N]*X^N
+
+        Input parameters:
+            N   -   polynomial degree, n>=0
+
+        Output parameters:
+            C   -   coefficients
+        *************************************************************************/
+        public static void hermitecoefficients(int n,
+            ref double[] c)
+        {
+            int i = 0;
+
+            c = new double[0];
+
+            c = new double[n+1];
+            for(i=0; i<=n; i++)
+            {
+                c[i] = 0;
+            }
+            c[n] = Math.Exp(n*Math.Log(2));
+            for(i=0; i<=n/2-1; i++)
+            {
+                c[n-2*(i+1)] = -(c[n-2*i]*(n-2*i)*(n-2*i-1)/4/(i+1));
+            }
+        }
+
+
+    }
+    public class dawson
+    {
+        /*************************************************************************
+        Dawson's Integral
+
+        Approximates the integral
+
+                                    x
+                                    -
+                             2     | |        2
+         dawsn(x)  =  exp( -x  )   |    exp( t  ) dt
+                                 | |
+                                  -
+                                  0
+
+        Three different rational approximations are employed, for
+        the intervals 0 to 3.25; 3.25 to 6.25; and 6.25 up.
+
+        ACCURACY:
+
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE      0,10        10000       6.9e-16     1.0e-16
 
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static void airy(double x,
-            ref double ai,
-            ref double aip,
-            ref double bi,
-            ref double bip)
+        public static double dawsonintegral(double x)
         {
-            double z = 0;
-            double zz = 0;
-            double t = 0;
-            double f = 0;
-            double g = 0;
-            double uf = 0;
-            double ug = 0;
-            double k = 0;
-            double zeta = 0;
-            double theta = 0;
-            int domflg = 0;
-            double c1 = 0;
-            double c2 = 0;
-            double sqrt3 = 0;
-            double sqpii = 0;
-            double afn = 0;
-            double afd = 0;
-            double agn = 0;
-            double agd = 0;
-            double apfn = 0;
-            double apfd = 0;
-            double apgn = 0;
-            double apgd = 0;
+            double result = 0;
+            double x2 = 0;
+            double y = 0;
+            int sg = 0;
             double an = 0;
             double ad = 0;
-            double apn = 0;
-            double apd = 0;
-            double bn16 = 0;
-            double bd16 = 0;
-            double bppn = 0;
-            double bppd = 0;
+            double bn = 0;
+            double bd = 0;
+            double cn = 0;
+            double cd = 0;
 
-            ai = 0;
-            aip = 0;
-            bi = 0;
-            bip = 0;
-
-            sqpii = 5.64189583547756286948E-1;
-            c1 = 0.35502805388781723926;
-            c2 = 0.258819403792806798405;
-            sqrt3 = 1.732050807568877293527;
-            domflg = 0;
-            if( (double)(x)>(double)(25.77) )
+            sg = 1;
+            if( (double)(x)<(double)(0) )
             {
-                ai = 0;
-                aip = 0;
-                bi = math.maxrealnumber;
-                bip = math.maxrealnumber;
+                sg = -1;
+                x = -x;
+            }
+            if( (double)(x)<(double)(3.25) )
+            {
+                x2 = x*x;
+                an = 1.13681498971755972054E-11;
+                an = an*x2+8.49262267667473811108E-10;
+                an = an*x2+1.94434204175553054283E-8;
+                an = an*x2+9.53151741254484363489E-7;
+                an = an*x2+3.07828309874913200438E-6;
+                an = an*x2+3.52513368520288738649E-4;
+                an = an*x2+-8.50149846724410912031E-4;
+                an = an*x2+4.22618223005546594270E-2;
+                an = an*x2+-9.17480371773452345351E-2;
+                an = an*x2+9.99999999999999994612E-1;
+                ad = 2.40372073066762605484E-11;
+                ad = ad*x2+1.48864681368493396752E-9;
+                ad = ad*x2+5.21265281010541664570E-8;
+                ad = ad*x2+1.27258478273186970203E-6;
+                ad = ad*x2+2.32490249820789513991E-5;
+                ad = ad*x2+3.25524741826057911661E-4;
+                ad = ad*x2+3.48805814657162590916E-3;
+                ad = ad*x2+2.79448531198828973716E-2;
+                ad = ad*x2+1.58874241960120565368E-1;
+                ad = ad*x2+5.74918629489320327824E-1;
+                ad = ad*x2+1.00000000000000000539E0;
+                y = x*an/ad;
+                result = sg*y;
+                return result;
+            }
+            x2 = 1.0/(x*x);
+            if( (double)(x)<(double)(6.25) )
+            {
+                bn = 5.08955156417900903354E-1;
+                bn = bn*x2-2.44754418142697847934E-1;
+                bn = bn*x2+9.41512335303534411857E-2;
+                bn = bn*x2-2.18711255142039025206E-2;
+                bn = bn*x2+3.66207612329569181322E-3;
+                bn = bn*x2-4.23209114460388756528E-4;
+                bn = bn*x2+3.59641304793896631888E-5;
+                bn = bn*x2-2.14640351719968974225E-6;
+                bn = bn*x2+9.10010780076391431042E-8;
+                bn = bn*x2-2.40274520828250956942E-9;
+                bn = bn*x2+3.59233385440928410398E-11;
+                bd = 1.00000000000000000000E0;
+                bd = bd*x2-6.31839869873368190192E-1;
+                bd = bd*x2+2.36706788228248691528E-1;
+                bd = bd*x2-5.31806367003223277662E-2;
+                bd = bd*x2+8.48041718586295374409E-3;
+                bd = bd*x2-9.47996768486665330168E-4;
+                bd = bd*x2+7.81025592944552338085E-5;
+                bd = bd*x2-4.55875153252442634831E-6;
+                bd = bd*x2+1.89100358111421846170E-7;
+                bd = bd*x2-4.91324691331920606875E-9;
+                bd = bd*x2+7.18466403235734541950E-11;
+                y = 1.0/x+x2*bn/(bd*x);
+                result = sg*0.5*y;
+                return result;
+            }
+            if( (double)(x)>(double)(1.0E9) )
+            {
+                result = sg*0.5/x;
+                return result;
+            }
+            cn = -5.90592860534773254987E-1;
+            cn = cn*x2+6.29235242724368800674E-1;
+            cn = cn*x2-1.72858975380388136411E-1;
+            cn = cn*x2+1.64837047825189632310E-2;
+            cn = cn*x2-4.86827613020462700845E-4;
+            cd = 1.00000000000000000000E0;
+            cd = cd*x2-2.69820057197544900361E0;
+            cd = cd*x2+1.73270799045947845857E0;
+            cd = cd*x2-3.93708582281939493482E-1;
+            cd = cd*x2+3.44278924041233391079E-2;
+            cd = cd*x2-9.73655226040941223894E-4;
+            y = 1.0/x+x2*cn/(cd*x);
+            result = sg*0.5*y;
+            return result;
+        }
+
+
+    }
+    public class trigintegrals
+    {
+        /*************************************************************************
+        Sine and cosine integrals
+
+        Evaluates the integrals
+
+                                 x
+                                 -
+                                |  cos t - 1
+          Ci(x) = eul + ln x +  |  --------- dt,
+                                |      t
+                               -
+                                0
+                    x
+                    -
+                   |  sin t
+          Si(x) =  |  ----- dt
+                   |    t
+                  -
+                   0
+
+        where eul = 0.57721566490153286061 is Euler's constant.
+        The integrals are approximated by rational functions.
+        For x > 8 auxiliary functions f(x) and g(x) are employed
+        such that
+
+        Ci(x) = f(x) sin(x) - g(x) cos(x)
+        Si(x) = pi/2 - f(x) cos(x) - g(x) sin(x)
+
+
+        ACCURACY:
+           Test interval = [0,50].
+        Absolute error, except relative when > 1:
+        arithmetic   function   # trials      peak         rms
+           IEEE        Si        30000       4.4e-16     7.3e-17
+           IEEE        Ci        30000       6.9e-16     5.1e-17
+
+        Cephes Math Library Release 2.1:  January, 1989
+        Copyright 1984, 1987, 1989 by Stephen L. Moshier
+        *************************************************************************/
+        public static void sinecosineintegrals(double x,
+            ref double si,
+            ref double ci)
+        {
+            double z = 0;
+            double c = 0;
+            double s = 0;
+            double f = 0;
+            double g = 0;
+            int sg = 0;
+            double sn = 0;
+            double sd = 0;
+            double cn = 0;
+            double cd = 0;
+            double fn = 0;
+            double fd = 0;
+            double gn = 0;
+            double gd = 0;
+
+            si = 0;
+            ci = 0;
+
+            if( (double)(x)<(double)(0) )
+            {
+                sg = -1;
+                x = -x;
+            }
+            else
+            {
+                sg = 0;
+            }
+            if( (double)(x)==(double)(0) )
+            {
+                si = 0;
+                ci = -math.maxrealnumber;
                 return;
             }
-            if( (double)(x)<(double)(-2.09) )
+            if( (double)(x)>(double)(1.0E9) )
             {
-                domflg = 15;
-                t = Math.Sqrt(-x);
-                zeta = -(2.0*x*t/3.0);
-                t = Math.Sqrt(t);
-                k = sqpii/t;
-                z = 1.0/zeta;
-                zz = z*z;
-                afn = -1.31696323418331795333E-1;
-                afn = afn*zz-6.26456544431912369773E-1;
-                afn = afn*zz-6.93158036036933542233E-1;
-                afn = afn*zz-2.79779981545119124951E-1;
-                afn = afn*zz-4.91900132609500318020E-2;
-                afn = afn*zz-4.06265923594885404393E-3;
-                afn = afn*zz-1.59276496239262096340E-4;
-                afn = afn*zz-2.77649108155232920844E-6;
-                afn = afn*zz-1.67787698489114633780E-8;
-                afd = 1.00000000000000000000E0;
-                afd = afd*zz+1.33560420706553243746E1;
-                afd = afd*zz+3.26825032795224613948E1;
-                afd = afd*zz+2.67367040941499554804E1;
-                afd = afd*zz+9.18707402907259625840E0;
-                afd = afd*zz+1.47529146771666414581E0;
-                afd = afd*zz+1.15687173795188044134E-1;
-                afd = afd*zz+4.40291641615211203805E-3;
-                afd = afd*zz+7.54720348287414296618E-5;
-                afd = afd*zz+4.51850092970580378464E-7;
-                uf = 1.0+zz*afn/afd;
-                agn = 1.97339932091685679179E-2;
-                agn = agn*zz+3.91103029615688277255E-1;
-                agn = agn*zz+1.06579897599595591108E0;
-                agn = agn*zz+9.39169229816650230044E-1;
-                agn = agn*zz+3.51465656105547619242E-1;
-                agn = agn*zz+6.33888919628925490927E-2;
-                agn = agn*zz+5.85804113048388458567E-3;
-                agn = agn*zz+2.82851600836737019778E-4;
-                agn = agn*zz+6.98793669997260967291E-6;
-                agn = agn*zz+8.11789239554389293311E-8;
-                agn = agn*zz+3.41551784765923618484E-10;
-                agd = 1.00000000000000000000E0;
-                agd = agd*zz+9.30892908077441974853E0;
-                agd = agd*zz+1.98352928718312140417E1;
-                agd = agd*zz+1.55646628932864612953E1;
-                agd = agd*zz+5.47686069422975497931E0;
-                agd = agd*zz+9.54293611618961883998E-1;
-                agd = agd*zz+8.64580826352392193095E-2;
-                agd = agd*zz+4.12656523824222607191E-3;
-                agd = agd*zz+1.01259085116509135510E-4;
-                agd = agd*zz+1.17166733214413521882E-6;
-                agd = agd*zz+4.91834570062930015649E-9;
-                ug = z*agn/agd;
-                theta = zeta+0.25*Math.PI;
-                f = Math.Sin(theta);
-                g = Math.Cos(theta);
-                ai = k*(f*uf-g*ug);
-                bi = k*(g*uf+f*ug);
-                apfn = 1.85365624022535566142E-1;
-                apfn = apfn*zz+8.86712188052584095637E-1;
-                apfn = apfn*zz+9.87391981747398547272E-1;
-                apfn = apfn*zz+4.01241082318003734092E-1;
-                apfn = apfn*zz+7.10304926289631174579E-2;
-                apfn = apfn*zz+5.90618657995661810071E-3;
-                apfn = apfn*zz+2.33051409401776799569E-4;
-                apfn = apfn*zz+4.08718778289035454598E-6;
-                apfn = apfn*zz+2.48379932900442457853E-8;
-                apfd = 1.00000000000000000000E0;
-                apfd = apfd*zz+1.47345854687502542552E1;
-                apfd = apfd*zz+3.75423933435489594466E1;
-                apfd = apfd*zz+3.14657751203046424330E1;
-                apfd = apfd*zz+1.09969125207298778536E1;
-                apfd = apfd*zz+1.78885054766999417817E0;
-                apfd = apfd*zz+1.41733275753662636873E-1;
-                apfd = apfd*zz+5.44066067017226003627E-3;
-                apfd = apfd*zz+9.39421290654511171663E-5;
-                apfd = apfd*zz+5.65978713036027009243E-7;
-                uf = 1.0+zz*apfn/apfd;
-                apgn = -3.55615429033082288335E-2;
-                apgn = apgn*zz-6.37311518129435504426E-1;
-                apgn = apgn*zz-1.70856738884312371053E0;
-                apgn = apgn*zz-1.50221872117316635393E0;
-                apgn = apgn*zz-5.63606665822102676611E-1;
-                apgn = apgn*zz-1.02101031120216891789E-1;
-                apgn = apgn*zz-9.48396695961445269093E-3;
-                apgn = apgn*zz-4.60325307486780994357E-4;
-                apgn = apgn*zz-1.14300836484517375919E-5;
-                apgn = apgn*zz-1.33415518685547420648E-7;
-                apgn = apgn*zz-5.63803833958893494476E-10;
-                apgd = 1.00000000000000000000E0;
-                apgd = apgd*zz+9.85865801696130355144E0;
-                apgd = apgd*zz+2.16401867356585941885E1;
-                apgd = apgd*zz+1.73130776389749389525E1;
-                apgd = apgd*zz+6.17872175280828766327E0;
-                apgd = apgd*zz+1.08848694396321495475E0;
-                apgd = apgd*zz+9.95005543440888479402E-2;
-                apgd = apgd*zz+4.78468199683886610842E-3;
-                apgd = apgd*zz+1.18159633322838625562E-4;
-                apgd = apgd*zz+1.37480673554219441465E-6;
-                apgd = apgd*zz+5.79912514929147598821E-9;
-                ug = z*apgn/apgd;
-                k = sqpii*t;
-                aip = -(k*(g*uf+f*ug));
-                bip = k*(f*uf-g*ug);
+                si = 1.570796326794896619-Math.Cos(x)/x;
+                ci = Math.Sin(x)/x;
                 return;
             }
-            if( (double)(x)>=(double)(2.09) )
+            if( (double)(x)<=(double)(4) )
             {
-                domflg = 5;
-                t = Math.Sqrt(x);
-                zeta = 2.0*x*t/3.0;
-                g = Math.Exp(zeta);
-                t = Math.Sqrt(t);
-                k = 2.0*t*g;
-                z = 1.0/zeta;
-                an = 3.46538101525629032477E-1;
-                an = an*z+1.20075952739645805542E1;
-                an = an*z+7.62796053615234516538E1;
-                an = an*z+1.68089224934630576269E2;
-                an = an*z+1.59756391350164413639E2;
-                an = an*z+7.05360906840444183113E1;
-                an = an*z+1.40264691163389668864E1;
-                an = an*z+9.99999999999999995305E-1;
-                ad = 5.67594532638770212846E-1;
-                ad = ad*z+1.47562562584847203173E1;
-                ad = ad*z+8.45138970141474626562E1;
-                ad = ad*z+1.77318088145400459522E2;
-                ad = ad*z+1.64234692871529701831E2;
-                ad = ad*z+7.14778400825575695274E1;
-                ad = ad*z+1.40959135607834029598E1;
-                ad = ad*z+1.00000000000000000470E0;
-                f = an/ad;
-                ai = sqpii*f/k;
-                k = -(0.5*sqpii*t/g);
-                apn = 6.13759184814035759225E-1;
-                apn = apn*z+1.47454670787755323881E1;
-                apn = apn*z+8.20584123476060982430E1;
-                apn = apn*z+1.71184781360976385540E2;
-                apn = apn*z+1.59317847137141783523E2;
-                apn = apn*z+6.99778599330103016170E1;
-                apn = apn*z+1.39470856980481566958E1;
-                apn = apn*z+1.00000000000000000550E0;
-                apd = 3.34203677749736953049E-1;
-                apd = apd*z+1.11810297306158156705E1;
-                apd = apd*z+7.11727352147859965283E1;
-                apd = apd*z+1.58778084372838313640E2;
-                apd = apd*z+1.53206427475809220834E2;
-                apd = apd*z+6.86752304592780337944E1;
-                apd = apd*z+1.38498634758259442477E1;
-                apd = apd*z+9.99999999999999994502E-1;
-                f = apn/apd;
-                aip = f*k;
-                if( (double)(x)>(double)(8.3203353) )
+                z = x*x;
+                sn = -8.39167827910303881427E-11;
+                sn = sn*z+4.62591714427012837309E-8;
+                sn = sn*z-9.75759303843632795789E-6;
+                sn = sn*z+9.76945438170435310816E-4;
+                sn = sn*z-4.13470316229406538752E-2;
+                sn = sn*z+1.00000000000000000302E0;
+                sd = 2.03269266195951942049E-12;
+                sd = sd*z+1.27997891179943299903E-9;
+                sd = sd*z+4.41827842801218905784E-7;
+                sd = sd*z+9.96412122043875552487E-5;
+                sd = sd*z+1.42085239326149893930E-2;
+                sd = sd*z+9.99999999999999996984E-1;
+                s = x*sn/sd;
+                cn = 2.02524002389102268789E-11;
+                cn = cn*z-1.35249504915790756375E-8;
+                cn = cn*z+3.59325051419993077021E-6;
+                cn = cn*z-4.74007206873407909465E-4;
+                cn = cn*z+2.89159652607555242092E-2;
+                cn = cn*z-1.00000000000000000080E0;
+                cd = 4.07746040061880559506E-12;
+                cd = cd*z+3.06780997581887812692E-9;
+                cd = cd*z+1.23210355685883423679E-6;
+                cd = cd*z+3.17442024775032769882E-4;
+                cd = cd*z+5.10028056236446052392E-2;
+                cd = cd*z+4.00000000000000000080E0;
+                c = z*cn/cd;
+                if( sg!=0 )
                 {
-                    bn16 = -2.53240795869364152689E-1;
-                    bn16 = bn16*z+5.75285167332467384228E-1;
-                    bn16 = bn16*z-3.29907036873225371650E-1;
-                    bn16 = bn16*z+6.44404068948199951727E-2;
-                    bn16 = bn16*z-3.82519546641336734394E-3;
-                    bd16 = 1.00000000000000000000E0;
-                    bd16 = bd16*z-7.15685095054035237902E0;
-                    bd16 = bd16*z+1.06039580715664694291E1;
-                    bd16 = bd16*z-5.23246636471251500874E0;
-                    bd16 = bd16*z+9.57395864378383833152E-1;
-                    bd16 = bd16*z-5.50828147163549611107E-2;
-                    f = z*bn16/bd16;
-                    k = sqpii*g;
-                    bi = k*(1.0+f)/t;
-                    bppn = 4.65461162774651610328E-1;
-                    bppn = bppn*z-1.08992173800493920734E0;
-                    bppn = bppn*z+6.38800117371827987759E-1;
-                    bppn = bppn*z-1.26844349553102907034E-1;
-                    bppn = bppn*z+7.62487844342109852105E-3;
-                    bppd = 1.00000000000000000000E0;
-                    bppd = bppd*z-8.70622787633159124240E0;
-                    bppd = bppd*z+1.38993162704553213172E1;
-                    bppd = bppd*z-7.14116144616431159572E0;
-                    bppd = bppd*z+1.34008595960680518666E0;
-                    bppd = bppd*z-7.84273211323341930448E-2;
-                    f = z*bppn/bppd;
-                    bip = k*t*(1.0+f);
-                    return;
+                    s = -s;
+                }
+                si = s;
+                ci = 0.57721566490153286061+Math.Log(x)+c;
+                return;
+            }
+            s = Math.Sin(x);
+            c = Math.Cos(x);
+            z = 1.0/(x*x);
+            if( (double)(x)<(double)(8) )
+            {
+                fn = 4.23612862892216586994E0;
+                fn = fn*z+5.45937717161812843388E0;
+                fn = fn*z+1.62083287701538329132E0;
+                fn = fn*z+1.67006611831323023771E-1;
+                fn = fn*z+6.81020132472518137426E-3;
+                fn = fn*z+1.08936580650328664411E-4;
+                fn = fn*z+5.48900223421373614008E-7;
+                fd = 1.00000000000000000000E0;
+                fd = fd*z+8.16496634205391016773E0;
+                fd = fd*z+7.30828822505564552187E0;
+                fd = fd*z+1.86792257950184183883E0;
+                fd = fd*z+1.78792052963149907262E-1;
+                fd = fd*z+7.01710668322789753610E-3;
+                fd = fd*z+1.10034357153915731354E-4;
+                fd = fd*z+5.48900252756255700982E-7;
+                f = fn/(x*fd);
+                gn = 8.71001698973114191777E-2;
+                gn = gn*z+6.11379109952219284151E-1;
+                gn = gn*z+3.97180296392337498885E-1;
+                gn = gn*z+7.48527737628469092119E-2;
+                gn = gn*z+5.38868681462177273157E-3;
+                gn = gn*z+1.61999794598934024525E-4;
+                gn = gn*z+1.97963874140963632189E-6;
+                gn = gn*z+7.82579040744090311069E-9;
+                gd = 1.00000000000000000000E0;
+                gd = gd*z+1.64402202413355338886E0;
+                gd = gd*z+6.66296701268987968381E-1;
+                gd = gd*z+9.88771761277688796203E-2;
+                gd = gd*z+6.22396345441768420760E-3;
+                gd = gd*z+1.73221081474177119497E-4;
+                gd = gd*z+2.02659182086343991969E-6;
+                gd = gd*z+7.82579218933534490868E-9;
+                g = z*gn/gd;
+            }
+            else
+            {
+                fn = 4.55880873470465315206E-1;
+                fn = fn*z+7.13715274100146711374E-1;
+                fn = fn*z+1.60300158222319456320E-1;
+                fn = fn*z+1.16064229408124407915E-2;
+                fn = fn*z+3.49556442447859055605E-4;
+                fn = fn*z+4.86215430826454749482E-6;
+                fn = fn*z+3.20092790091004902806E-8;
+                fn = fn*z+9.41779576128512936592E-11;
+                fn = fn*z+9.70507110881952024631E-14;
+                fd = 1.00000000000000000000E0;
+                fd = fd*z+9.17463611873684053703E-1;
+                fd = fd*z+1.78685545332074536321E-1;
+                fd = fd*z+1.22253594771971293032E-2;
+                fd = fd*z+3.58696481881851580297E-4;
+                fd = fd*z+4.92435064317881464393E-6;
+                fd = fd*z+3.21956939101046018377E-8;
+                fd = fd*z+9.43720590350276732376E-11;
+                fd = fd*z+9.70507110881952025725E-14;
+                f = fn/(x*fd);
+                gn = 6.97359953443276214934E-1;
+                gn = gn*z+3.30410979305632063225E-1;
+                gn = gn*z+3.84878767649974295920E-2;
+                gn = gn*z+1.71718239052347903558E-3;
+                gn = gn*z+3.48941165502279436777E-5;
+                gn = gn*z+3.47131167084116673800E-7;
+                gn = gn*z+1.70404452782044526189E-9;
+                gn = gn*z+3.85945925430276600453E-12;
+                gn = gn*z+3.14040098946363334640E-15;
+                gd = 1.00000000000000000000E0;
+                gd = gd*z+1.68548898811011640017E0;
+                gd = gd*z+4.87852258695304967486E-1;
+                gd = gd*z+4.67913194259625806320E-2;
+                gd = gd*z+1.90284426674399523638E-3;
+                gd = gd*z+3.68475504442561108162E-5;
+                gd = gd*z+3.57043223443740838771E-7;
+                gd = gd*z+1.72693748966316146736E-9;
+                gd = gd*z+3.87830166023954706752E-12;
+                gd = gd*z+3.14040098946363335242E-15;
+                g = z*gn/gd;
+            }
+            si = 1.570796326794896619-f*c-g*s;
+            if( sg!=0 )
+            {
+                si = -si;
+            }
+            ci = f*s-g*c;
+        }
+
+
+        /*************************************************************************
+        Hyperbolic sine and cosine integrals
+
+        Approximates the integrals
+
+                                   x
+                                   -
+                                  | |   cosh t - 1
+          Chi(x) = eul + ln x +   |    -----------  dt,
+                                | |          t
+                                 -
+                                 0
+
+                      x
+                      -
+                     | |  sinh t
+          Shi(x) =   |    ------  dt
+                   | |       t
+                    -
+                    0
+
+        where eul = 0.57721566490153286061 is Euler's constant.
+        The integrals are evaluated by power series for x < 8
+        and by Chebyshev expansions for x between 8 and 88.
+        For large x, both functions approach exp(x)/2x.
+        Arguments greater than 88 in magnitude return MAXNUM.
+
+
+        ACCURACY:
+
+        Test interval 0 to 88.
+                             Relative error:
+        arithmetic   function  # trials      peak         rms
+           IEEE         Shi      30000       6.9e-16     1.6e-16
+               Absolute error, except relative when |Chi| > 1:
+           IEEE         Chi      30000       8.4e-16     1.4e-16
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static void hyperbolicsinecosineintegrals(double x,
+            ref double shi,
+            ref double chi)
+        {
+            double k = 0;
+            double z = 0;
+            double c = 0;
+            double s = 0;
+            double a = 0;
+            int sg = 0;
+            double b0 = 0;
+            double b1 = 0;
+            double b2 = 0;
+
+            shi = 0;
+            chi = 0;
+
+            if( (double)(x)<(double)(0) )
+            {
+                sg = -1;
+                x = -x;
+            }
+            else
+            {
+                sg = 0;
+            }
+            if( (double)(x)==(double)(0) )
+            {
+                shi = 0;
+                chi = -math.maxrealnumber;
+                return;
+            }
+            if( (double)(x)<(double)(8.0) )
+            {
+                z = x*x;
+                a = 1.0;
+                s = 1.0;
+                c = 0.0;
+                k = 2.0;
+                do
+                {
+                    a = a*z/k;
+                    c = c+a/k;
+                    k = k+1.0;
+                    a = a/k;
+                    s = s+a/k;
+                    k = k+1.0;
+                }
+                while( (double)(Math.Abs(a/s))>=(double)(math.machineepsilon) );
+                s = s*x;
+            }
+            else
+            {
+                if( (double)(x)<(double)(18.0) )
+                {
+                    a = (576.0/x-52.0)/10.0;
+                    k = Math.Exp(x)/x;
+                    b0 = 1.83889230173399459482E-17;
+                    b1 = 0.0;
+                    chebiterationshichi(a, -9.55485532279655569575E-17, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 2.04326105980879882648E-16, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.09896949074905343022E-15, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.31313534344092599234E-14, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 5.93976226264314278932E-14, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -3.47197010497749154755E-14, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.40059764613117131000E-12, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 9.49044626224223543299E-12, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.61596181145435454033E-11, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.77899784436430310321E-10, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.35455469767246947469E-9, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.03257121792819495123E-9, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -3.56699611114982536845E-8, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.44818877384267342057E-7, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 7.82018215184051295296E-7, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -5.39919118403805073710E-6, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -3.12458202168959833422E-5, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 8.90136741950727517826E-5, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 2.02558474743846862168E-3, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 2.96064440855633256972E-2, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.11847751047257036625E0, ref b0, ref b1, ref b2);
+                    s = k*0.5*(b0-b2);
+                    b0 = -8.12435385225864036372E-18;
+                    b1 = 0.0;
+                    chebiterationshichi(a, 2.17586413290339214377E-17, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 5.22624394924072204667E-17, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -9.48812110591690559363E-16, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 5.35546311647465209166E-15, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.21009970113732918701E-14, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -6.00865178553447437951E-14, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 7.16339649156028587775E-13, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -2.93496072607599856104E-12, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.40359438136491256904E-12, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 8.76302288609054966081E-11, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -4.40092476213282340617E-10, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -1.87992075640569295479E-10, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.31458150989474594064E-8, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -4.75513930924765465590E-8, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -2.21775018801848880741E-7, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.94635531373272490962E-6, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 4.33505889257316408893E-6, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -6.13387001076494349496E-5, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -3.13085477492997465138E-4, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 4.97164789823116062801E-4, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 2.64347496031374526641E-2, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 1.11446150876699213025E0, ref b0, ref b1, ref b2);
+                    c = k*0.5*(b0-b2);
+                }
+                else
+                {
+                    if( (double)(x)<=(double)(88.0) )
+                    {
+                        a = (6336.0/x-212.0)/70.0;
+                        k = Math.Exp(x)/x;
+                        b0 = -1.05311574154850938805E-17;
+                        b1 = 0.0;
+                        chebiterationshichi(a, 2.62446095596355225821E-17, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 8.82090135625368160657E-17, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -3.38459811878103047136E-16, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -8.30608026366935789136E-16, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 3.93397875437050071776E-15, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.01765565969729044505E-14, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -4.21128170307640802703E-14, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -1.60818204519802480035E-13, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 3.34714954175994481761E-13, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 2.72600352129153073807E-12, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.66894954752839083608E-12, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -3.49278141024730899554E-11, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -1.58580661666482709598E-10, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -1.79289437183355633342E-10, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.76281629144264523277E-9, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.69050228879421288846E-8, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.25391771228487041649E-7, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.16229947068677338732E-6, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.61038260117376323993E-5, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 3.49810375601053973070E-4, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.28478065259647610779E-2, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.03665722588798326712E0, ref b0, ref b1, ref b2);
+                        s = k*0.5*(b0-b2);
+                        b0 = 8.06913408255155572081E-18;
+                        b1 = 0.0;
+                        chebiterationshichi(a, -2.08074168180148170312E-17, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -5.98111329658272336816E-17, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 2.68533951085945765591E-16, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 4.52313941698904694774E-16, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -3.10734917335299464535E-15, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -4.42823207332531972288E-15, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 3.49639695410806959872E-14, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 6.63406731718911586609E-14, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -3.71902448093119218395E-13, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -1.27135418132338309016E-12, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 2.74851141935315395333E-12, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 2.33781843985453438400E-11, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 2.71436006377612442764E-11, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -2.56600180000355990529E-10, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -1.61021375163803438552E-9, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -4.72543064876271773512E-9, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -3.00095178028681682282E-9, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 7.79387474390914922337E-8, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.06942765566401507066E-6, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.59503164802313196374E-5, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 3.49592575153777996871E-4, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.28475387530065247392E-2, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 1.03665693917934275131E0, ref b0, ref b1, ref b2);
+                        c = k*0.5*(b0-b2);
+                    }
+                    else
+                    {
+                        if( sg!=0 )
+                        {
+                            shi = -math.maxrealnumber;
+                        }
+                        else
+                        {
+                            shi = math.maxrealnumber;
+                        }
+                        chi = math.maxrealnumber;
+                        return;
+                    }
                 }
             }
-            f = 1.0;
-            g = x;
-            t = 1.0;
-            uf = 1.0;
-            ug = x;
-            k = 1.0;
-            z = x*x*x;
-            while( (double)(t)>(double)(math.machineepsilon) )
+            if( sg!=0 )
             {
-                uf = uf*z;
-                k = k+1.0;
-                uf = uf/k;
-                ug = ug*z;
-                k = k+1.0;
-                ug = ug/k;
-                uf = uf/k;
-                f = f+uf;
-                k = k+1.0;
-                ug = ug/k;
-                g = g+ug;
-                t = Math.Abs(uf/f);
+                s = -s;
             }
-            uf = c1*f;
-            ug = c2*g;
-            if( domflg%2==0 )
-            {
-                ai = uf-ug;
-            }
-            if( domflg/2%2==0 )
-            {
-                bi = sqrt3*(uf+ug);
-            }
-            k = 4.0;
-            uf = x*x/2.0;
-            ug = z/3.0;
-            f = uf;
-            g = 1.0+ug;
-            uf = uf/3.0;
-            t = 1.0;
-            while( (double)(t)>(double)(math.machineepsilon) )
-            {
-                uf = uf*z;
-                ug = ug/k;
-                k = k+1.0;
-                ug = ug*z;
-                uf = uf/k;
-                f = f+uf;
-                k = k+1.0;
-                ug = ug/k;
-                uf = uf/k;
-                g = g+ug;
-                k = k+1.0;
-                t = Math.Abs(ug/g);
-            }
-            uf = c1*f;
-            ug = c2*g;
-            if( domflg/4%2==0 )
-            {
-                aip = uf-ug;
-            }
-            if( domflg/8%2==0 )
-            {
-                bip = sqrt3*(uf+ug);
-            }
+            shi = s;
+            chi = 0.57721566490153286061+Math.Log(x)+c;
+        }
+
+
+        private static void chebiterationshichi(double x,
+            double c,
+            ref double b0,
+            ref double b1,
+            ref double b2)
+        {
+            b2 = b1;
+            b1 = b0;
+            b0 = x*b1-b2+c;
+        }
+
+
+    }
+    public class poissondistr
+    {
+        /*************************************************************************
+        Poisson distribution
+
+        Returns the sum of the first k+1 terms of the Poisson
+        distribution:
+
+          k         j
+          --   -m  m
+          >   e    --
+          --       j!
+         j=0
+
+        The terms are not summed directly; instead the incomplete
+        gamma integral is employed, according to the relation
+
+        y = pdtr( k, m ) = igamc( k+1, m ).
+
+        The arguments must both be positive.
+        ACCURACY:
+
+        See incomplete gamma function
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double poissondistribution(int k,
+            double m)
+        {
+            double result = 0;
+
+            alglib.ap.assert(k>=0 && (double)(m)>(double)(0), "Domain error in PoissonDistribution");
+            result = igammaf.incompletegammac(k+1, m);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Complemented Poisson distribution
+
+        Returns the sum of the terms k+1 to infinity of the Poisson
+        distribution:
+
+         inf.       j
+          --   -m  m
+          >   e    --
+          --       j!
+         j=k+1
+
+        The terms are not summed directly; instead the incomplete
+        gamma integral is employed, according to the formula
+
+        y = pdtrc( k, m ) = igam( k+1, m ).
+
+        The arguments must both be positive.
+
+        ACCURACY:
+
+        See incomplete gamma function
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double poissoncdistribution(int k,
+            double m)
+        {
+            double result = 0;
+
+            alglib.ap.assert(k>=0 && (double)(m)>(double)(0), "Domain error in PoissonDistributionC");
+            result = igammaf.incompletegamma(k+1, m);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Inverse Poisson distribution
+
+        Finds the Poisson variable x such that the integral
+        from 0 to x of the Poisson density is equal to the
+        given probability y.
+
+        This is accomplished using the inverse gamma integral
+        function and the relation
+
+           m = igami( k+1, y ).
+
+        ACCURACY:
+
+        See inverse incomplete gamma function
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double invpoissondistribution(int k,
+            double y)
+        {
+            double result = 0;
+
+            alglib.ap.assert((k>=0 && (double)(y)>=(double)(0)) && (double)(y)<(double)(1), "Domain error in InvPoissonDistribution");
+            result = igammaf.invincompletegammac(k+1, y);
+            return result;
         }
 
 
@@ -4786,72 +5710,6 @@ public partial class alglib
 
 
     }
-    public class betaf
-    {
-        /*************************************************************************
-        Beta function
-
-
-                          -     -
-                         | (a) | (b)
-        beta( a, b )  =  -----------.
-                            -
-                           | (a+b)
-
-        For large arguments the logarithm of the function is
-        evaluated using lgam(), then exponentiated.
-
-        ACCURACY:
-
-                             Relative error:
-        arithmetic   domain     # trials      peak         rms
-           IEEE       0,30       30000       8.1e-14     1.1e-14
-
-        Cephes Math Library Release 2.0:  April, 1987
-        Copyright 1984, 1987 by Stephen L. Moshier
-        *************************************************************************/
-        public static double beta(double a,
-            double b)
-        {
-            double result = 0;
-            double y = 0;
-            double sg = 0;
-            double s = 0;
-
-            sg = 1;
-            alglib.ap.assert((double)(a)>(double)(0) || (double)(a)!=(double)((int)Math.Floor(a)), "Overflow in Beta");
-            alglib.ap.assert((double)(b)>(double)(0) || (double)(b)!=(double)((int)Math.Floor(b)), "Overflow in Beta");
-            y = a+b;
-            if( (double)(Math.Abs(y))>(double)(171.624376956302725) )
-            {
-                y = gammafunc.lngamma(y, ref s);
-                sg = sg*s;
-                y = gammafunc.lngamma(b, ref s)-y;
-                sg = sg*s;
-                y = gammafunc.lngamma(a, ref s)+y;
-                sg = sg*s;
-                alglib.ap.assert((double)(y)<=(double)(Math.Log(math.maxrealnumber)), "Overflow in Beta");
-                result = sg*Math.Exp(y);
-                return result;
-            }
-            y = gammafunc.gammafunction(y);
-            alglib.ap.assert((double)(y)!=(double)(0), "Overflow in Beta");
-            if( (double)(a)>(double)(b) )
-            {
-                y = gammafunc.gammafunction(a)/y;
-                y = y*gammafunc.gammafunction(b);
-            }
-            else
-            {
-                y = gammafunc.gammafunction(b)/y;
-                y = y*gammafunc.gammafunction(a);
-            }
-            result = y;
-            return result;
-        }
-
-
-    }
     public class ibetaf
     {
         /*************************************************************************
@@ -5794,1140 +6652,603 @@ public partial class alglib
 
 
     }
-    public class binomialdistr
+    public class fdistr
     {
         /*************************************************************************
-        Binomial distribution
+        F distribution
 
-        Returns the sum of the terms 0 through k of the Binomial
-        probability density:
+        Returns the area from zero to x under the F density
+        function (also known as Snedcor's density or the
+        variance ratio density).  This is the density
+        of x = (u1/df1)/(u2/df2), where u1 and u2 are random
+        variables having Chi square distributions with df1
+        and df2 degrees of freedom, respectively.
+        The incomplete beta integral is used, according to the
+        formula
 
-          k
-          --  ( n )   j      n-j
-          >   (   )  p  (1-p)
-          --  ( j )
-         j=0
+        P(x) = incbet( df1/2, df2/2, (df1*x/(df2 + df1*x) ).
 
-        The terms are not summed directly; instead the incomplete
-        beta integral is employed, according to the formula
 
-        y = bdtr( k, n, p ) = incbet( n-k, k+1, 1-p ).
-
-        The arguments must be positive, with p ranging from 0 to 1.
+        The arguments a and b are greater than zero, and x is
+        nonnegative.
 
         ACCURACY:
 
-        Tested at random points (a,b,p), with p between 0 and 1.
+        Tested at random points (a,b,x).
 
-                      a,b                     Relative error:
-        arithmetic  domain     # trials      peak         rms
-         For p between 0.001 and 1:
-           IEEE     0,100       100000      4.3e-15     2.6e-16
+                       x     a,b                     Relative error:
+        arithmetic  domain  domain     # trials      peak         rms
+           IEEE      0,1    0,100       100000      9.8e-15     1.7e-15
+           IEEE      1,5    0,100       100000      6.5e-15     3.5e-16
+           IEEE      0,1    1,10000     100000      2.2e-11     3.3e-12
+           IEEE      1,5    1,10000     100000      1.1e-11     1.7e-13
 
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double binomialdistribution(int k,
-            int n,
-            double p)
+        public static double fdistribution(int a,
+            int b,
+            double x)
         {
             double result = 0;
-            double dk = 0;
-            double dn = 0;
+            double w = 0;
 
-            alglib.ap.assert((double)(p)>=(double)(0) && (double)(p)<=(double)(1), "Domain error in BinomialDistribution");
-            alglib.ap.assert(k>=-1 && k<=n, "Domain error in BinomialDistribution");
-            if( k==-1 )
-            {
-                result = 0;
-                return result;
-            }
-            if( k==n )
-            {
-                result = 1;
-                return result;
-            }
-            dn = n-k;
-            if( k==0 )
-            {
-                dk = Math.Pow(1.0-p, dn);
-            }
-            else
-            {
-                dk = k+1;
-                dk = ibetaf.incompletebeta(dn, dk, 1.0-p);
-            }
-            result = dk;
+            alglib.ap.assert((a>=1 && b>=1) && (double)(x)>=(double)(0), "Domain error in FDistribution");
+            w = a*x;
+            w = w/(b+w);
+            result = ibetaf.incompletebeta(0.5*a, 0.5*b, w);
             return result;
         }
 
 
         /*************************************************************************
-        Complemented binomial distribution
+        Complemented F distribution
 
-        Returns the sum of the terms k+1 through n of the Binomial
-        probability density:
+        Returns the area from x to infinity under the F density
+        function (also known as Snedcor's density or the
+        variance ratio density).
 
-          n
-          --  ( n )   j      n-j
-          >   (   )  p  (1-p)
-          --  ( j )
-         j=k+1
 
-        The terms are not summed directly; instead the incomplete
-        beta integral is employed, according to the formula
+                             inf.
+                              -
+                     1       | |  a-1      b-1
+        1-P(x)  =  ------    |   t    (1-t)    dt
+                   B(a,b)  | |
+                            -
+                             x
 
-        y = bdtrc( k, n, p ) = incbet( k+1, n-k, p ).
 
-        The arguments must be positive, with p ranging from 0 to 1.
+        The incomplete beta integral is used, according to the
+        formula
+
+        P(x) = incbet( df2/2, df1/2, (df2/(df2 + df1*x) ).
+
 
         ACCURACY:
 
-        Tested at random points (a,b,p).
-
-                      a,b                     Relative error:
-        arithmetic  domain     # trials      peak         rms
-         For p between 0.001 and 1:
-           IEEE     0,100       100000      6.7e-15     8.2e-16
-         For p between 0 and .001:
-           IEEE     0,100       100000      1.5e-13     2.7e-15
+        Tested at random points (a,b,x) in the indicated intervals.
+                       x     a,b                     Relative error:
+        arithmetic  domain  domain     # trials      peak         rms
+           IEEE      0,1    1,100       100000      3.7e-14     5.9e-16
+           IEEE      1,5    1,100       100000      8.0e-15     1.6e-15
+           IEEE      0,1    1,10000     100000      1.8e-11     3.5e-13
+           IEEE      1,5    1,10000     100000      2.0e-11     3.0e-12
 
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double binomialcdistribution(int k,
-            int n,
-            double p)
+        public static double fcdistribution(int a,
+            int b,
+            double x)
         {
             double result = 0;
-            double dk = 0;
-            double dn = 0;
+            double w = 0;
 
-            alglib.ap.assert((double)(p)>=(double)(0) && (double)(p)<=(double)(1), "Domain error in BinomialDistributionC");
-            alglib.ap.assert(k>=-1 && k<=n, "Domain error in BinomialDistributionC");
-            if( k==-1 )
-            {
-                result = 1;
-                return result;
-            }
-            if( k==n )
-            {
-                result = 0;
-                return result;
-            }
-            dn = n-k;
-            if( k==0 )
-            {
-                if( (double)(p)<(double)(0.01) )
-                {
-                    dk = -nearunityunit.nuexpm1(dn*nearunityunit.nulog1p(-p));
-                }
-                else
-                {
-                    dk = 1.0-Math.Pow(1.0-p, dn);
-                }
-            }
-            else
-            {
-                dk = k+1;
-                dk = ibetaf.incompletebeta(dk, dn, p);
-            }
-            result = dk;
+            alglib.ap.assert((a>=1 && b>=1) && (double)(x)>=(double)(0), "Domain error in FCDistribution");
+            w = b/(b+a*x);
+            result = ibetaf.incompletebeta(0.5*b, 0.5*a, w);
             return result;
         }
 
 
         /*************************************************************************
-        Inverse binomial distribution
+        Inverse of complemented F distribution
 
-        Finds the event probability p such that the sum of the
-        terms 0 through k of the Binomial probability density
-        is equal to the given cumulative probability y.
+        Finds the F density argument x such that the integral
+        from x to infinity of the F density is equal to the
+        given probability p.
 
         This is accomplished using the inverse beta integral
-        function and the relation
+        function and the relations
 
-        1 - p = incbi( n-k, k+1, y ).
+             z = incbi( df2/2, df1/2, p )
+             x = df2 (1-z) / (df1 z).
+
+        Note: the following relations hold for the inverse of
+        the uncomplemented F distribution:
+
+             z = incbi( df1/2, df2/2, p )
+             x = df2 z / (df1 (1-z)).
 
         ACCURACY:
 
         Tested at random points (a,b,p).
 
-                      a,b                     Relative error:
+                     a,b                     Relative error:
         arithmetic  domain     # trials      peak         rms
-         For p between 0.001 and 1:
-           IEEE     0,100       100000      2.3e-14     6.4e-16
-           IEEE     0,10000     100000      6.6e-12     1.2e-13
-         For p between 10^-6 and 0.001:
-           IEEE     0,100       100000      2.0e-12     1.3e-14
-           IEEE     0,10000     100000      1.5e-12     3.2e-14
+         For p between .001 and 1:
+           IEEE     1,100       100000      8.3e-15     4.7e-16
+           IEEE     1,10000     100000      2.1e-11     1.4e-13
+         For p between 10^-6 and 10^-3:
+           IEEE     1,100        50000      1.3e-12     8.4e-15
+           IEEE     1,10000      50000      3.0e-12     4.8e-14
 
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double invbinomialdistribution(int k,
-            int n,
+        public static double invfdistribution(int a,
+            int b,
             double y)
         {
             double result = 0;
-            double dk = 0;
-            double dn = 0;
-            double p = 0;
+            double w = 0;
 
-            alglib.ap.assert(k>=0 && k<n, "Domain error in InvBinomialDistribution");
-            dn = n-k;
-            if( k==0 )
+            alglib.ap.assert(((a>=1 && b>=1) && (double)(y)>(double)(0)) && (double)(y)<=(double)(1), "Domain error in InvFDistribution");
+            
+            //
+            // Compute probability for x = 0.5
+            //
+            w = ibetaf.incompletebeta(0.5*b, 0.5*a, 0.5);
+            
+            //
+            // If that is greater than y, then the solution w < .5
+            // Otherwise, solve at 1-y to remove cancellation in (b - b*w)
+            //
+            if( (double)(w)>(double)(y) || (double)(y)<(double)(0.001) )
             {
-                if( (double)(y)>(double)(0.8) )
-                {
-                    p = -nearunityunit.nuexpm1(nearunityunit.nulog1p(y-1.0)/dn);
-                }
-                else
-                {
-                    p = 1.0-Math.Pow(y, 1.0/dn);
-                }
+                w = ibetaf.invincompletebeta(0.5*b, 0.5*a, y);
+                result = (b-b*w)/(a*w);
             }
             else
             {
-                dk = k+1;
-                p = ibetaf.incompletebeta(dn, dk, 0.5);
-                if( (double)(p)>(double)(0.5) )
-                {
-                    p = ibetaf.invincompletebeta(dk, dn, 1.0-y);
-                }
-                else
-                {
-                    p = 1.0-ibetaf.invincompletebeta(dn, dk, y);
-                }
+                w = ibetaf.invincompletebeta(0.5*a, 0.5*b, 1.0-y);
+                result = b*w/(a*(1.0-w));
             }
-            result = p;
             return result;
         }
 
 
     }
-    public class chebyshev
+    public class fresnel
     {
         /*************************************************************************
-        Calculation of the value of the Chebyshev polynomials of the
-        first and second kinds.
+        Fresnel integral
 
-        Parameters:
-            r   -   polynomial kind, either 1 or 2.
-            n   -   degree, n>=0
-            x   -   argument, -1 <= x <= 1
+        Evaluates the Fresnel integrals
 
-        Result:
-            the value of the Chebyshev polynomial at x
-        *************************************************************************/
-        public static double chebyshevcalculate(int r,
-            int n,
-            double x)
-        {
-            double result = 0;
-            int i = 0;
-            double a = 0;
-            double b = 0;
+                  x
+                  -
+                 | |
+        C(x) =   |   cos(pi/2 t**2) dt,
+               | |
+                -
+                 0
 
-            result = 0;
-            
-            //
-            // Prepare A and B
-            //
-            if( r==1 )
-            {
-                a = 1;
-                b = x;
-            }
-            else
-            {
-                a = 1;
-                b = 2*x;
-            }
-            
-            //
-            // Special cases: N=0 or N=1
-            //
-            if( n==0 )
-            {
-                result = a;
-                return result;
-            }
-            if( n==1 )
-            {
-                result = b;
-                return result;
-            }
-            
-            //
-            // General case: N>=2
-            //
-            for(i=2; i<=n; i++)
-            {
-                result = 2*x*b-a;
-                a = b;
-                b = result;
-            }
-            return result;
-        }
+                  x
+                  -
+                 | |
+        S(x) =   |   sin(pi/2 t**2) dt.
+               | |
+                -
+                 0
 
 
-        /*************************************************************************
-        Summation of Chebyshev polynomials using Clenshaw’s recurrence formula.
+        The integrals are evaluated by a power series for x < 1.
+        For x >= 1 auxiliary functions f(x) and g(x) are employed
+        such that
 
-        This routine calculates
-            c[0]*T0(x) + c[1]*T1(x) + ... + c[N]*TN(x)
-        or
-            c[0]*U0(x) + c[1]*U1(x) + ... + c[N]*UN(x)
-        depending on the R.
-
-        Parameters:
-            r   -   polynomial kind, either 1 or 2.
-            n   -   degree, n>=0
-            x   -   argument
-
-        Result:
-            the value of the Chebyshev polynomial at x
-        *************************************************************************/
-        public static double chebyshevsum(double[] c,
-            int r,
-            int n,
-            double x)
-        {
-            double result = 0;
-            double b1 = 0;
-            double b2 = 0;
-            int i = 0;
-
-            b1 = 0;
-            b2 = 0;
-            for(i=n; i>=1; i--)
-            {
-                result = 2*x*b1-b2+c[i];
-                b2 = b1;
-                b1 = result;
-            }
-            if( r==1 )
-            {
-                result = -b2+x*b1+c[0];
-            }
-            else
-            {
-                result = -b2+2*x*b1+c[0];
-            }
-            return result;
-        }
+        C(x) = 0.5 + f(x) sin( pi/2 x**2 ) - g(x) cos( pi/2 x**2 )
+        S(x) = 0.5 - f(x) cos( pi/2 x**2 ) - g(x) sin( pi/2 x**2 )
 
 
-        /*************************************************************************
-        Representation of Tn as C[0] + C[1]*X + ... + C[N]*X^N
-
-        Input parameters:
-            N   -   polynomial degree, n>=0
-
-        Output parameters:
-            C   -   coefficients
-        *************************************************************************/
-        public static void chebyshevcoefficients(int n,
-            ref double[] c)
-        {
-            int i = 0;
-
-            c = new double[0];
-
-            c = new double[n+1];
-            for(i=0; i<=n; i++)
-            {
-                c[i] = 0;
-            }
-            if( n==0 || n==1 )
-            {
-                c[n] = 1;
-            }
-            else
-            {
-                c[n] = Math.Exp((n-1)*Math.Log(2));
-                for(i=0; i<=n/2-1; i++)
-                {
-                    c[n-2*(i+1)] = -(c[n-2*i]*(n-2*i)*(n-2*i-1)/4/(i+1)/(n-i-1));
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Conversion of a series of Chebyshev polynomials to a power series.
-
-        Represents A[0]*T0(x) + A[1]*T1(x) + ... + A[N]*Tn(x) as
-        B[0] + B[1]*X + ... + B[N]*X^N.
-
-        Input parameters:
-            A   -   Chebyshev series coefficients
-            N   -   degree, N>=0
-            
-        Output parameters
-            B   -   power series coefficients
-        *************************************************************************/
-        public static void fromchebyshev(double[] a,
-            int n,
-            ref double[] b)
-        {
-            int i = 0;
-            int k = 0;
-            double e = 0;
-            double d = 0;
-
-            b = new double[0];
-
-            b = new double[n+1];
-            for(i=0; i<=n; i++)
-            {
-                b[i] = 0;
-            }
-            d = 0;
-            i = 0;
-            do
-            {
-                k = i;
-                do
-                {
-                    e = b[k];
-                    b[k] = 0;
-                    if( i<=1 && k==i )
-                    {
-                        b[k] = 1;
-                    }
-                    else
-                    {
-                        if( i!=0 )
-                        {
-                            b[k] = 2*d;
-                        }
-                        if( k>i+1 )
-                        {
-                            b[k] = b[k]-b[k-2];
-                        }
-                    }
-                    d = e;
-                    k = k+1;
-                }
-                while( k<=n );
-                d = b[i];
-                e = 0;
-                k = i;
-                while( k<=n )
-                {
-                    e = e+b[k]*a[k];
-                    k = k+2;
-                }
-                b[i] = e;
-                i = i+1;
-            }
-            while( i<=n );
-        }
-
-
-    }
-    public class chisquaredistr
-    {
-        /*************************************************************************
-        Chi-square distribution
-
-        Returns the area under the left hand tail (from 0 to x)
-        of the Chi square probability density function with
-        v degrees of freedom.
-
-
-                                          x
-                                           -
-                               1          | |  v/2-1  -t/2
-         P( x | v )   =   -----------     |   t      e     dt
-                           v/2  -       | |
-                          2    | (v/2)   -
-                                          0
-
-        where x is the Chi-square variable.
-
-        The incomplete gamma integral is used, according to the
-        formula
-
-        y = chdtr( v, x ) = igam( v/2.0, x/2.0 ).
-
-        The arguments must both be positive.
 
         ACCURACY:
 
-        See incomplete gamma function
+         Relative error.
 
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double chisquaredistribution(double v,
-            double x)
-        {
-            double result = 0;
-
-            alglib.ap.assert((double)(x)>=(double)(0) && (double)(v)>=(double)(1), "Domain error in ChiSquareDistribution");
-            result = igammaf.incompletegamma(v/2.0, x/2.0);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Complemented Chi-square distribution
-
-        Returns the area under the right hand tail (from x to
-        infinity) of the Chi square probability density function
-        with v degrees of freedom:
-
-                                         inf.
-                                           -
-                               1          | |  v/2-1  -t/2
-         P( x | v )   =   -----------     |   t      e     dt
-                           v/2  -       | |
-                          2    | (v/2)   -
-                                          x
-
-        where x is the Chi-square variable.
-
-        The incomplete gamma integral is used, according to the
-        formula
-
-        y = chdtr( v, x ) = igamc( v/2.0, x/2.0 ).
-
-        The arguments must both be positive.
-
-        ACCURACY:
-
-        See incomplete gamma function
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double chisquarecdistribution(double v,
-            double x)
-        {
-            double result = 0;
-
-            alglib.ap.assert((double)(x)>=(double)(0) && (double)(v)>=(double)(1), "Domain error in ChiSquareDistributionC");
-            result = igammaf.incompletegammac(v/2.0, x/2.0);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Inverse of complemented Chi-square distribution
-
-        Finds the Chi-square argument x such that the integral
-        from x to infinity of the Chi-square density is equal
-        to the given cumulative probability y.
-
-        This is accomplished using the inverse gamma integral
-        function and the relation
-
-           x/2 = igami( df/2, y );
-
-        ACCURACY:
-
-        See inverse incomplete gamma function
-
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double invchisquaredistribution(double v,
-            double y)
-        {
-            double result = 0;
-
-            alglib.ap.assert(((double)(y)>=(double)(0) && (double)(y)<=(double)(1)) && (double)(v)>=(double)(1), "Domain error in InvChiSquareDistribution");
-            result = 2*igammaf.invincompletegammac(0.5*v, y);
-            return result;
-        }
-
-
-    }
-    public class dawson
-    {
-        /*************************************************************************
-        Dawson's Integral
-
-        Approximates the integral
-
-                                    x
-                                    -
-                             2     | |        2
-         dawsn(x)  =  exp( -x  )   |    exp( t  ) dt
-                                 | |
-                                  -
-                                  0
-
-        Three different rational approximations are employed, for
-        the intervals 0 to 3.25; 3.25 to 6.25; and 6.25 up.
-
-        ACCURACY:
-
-                             Relative error:
-        arithmetic   domain     # trials      peak         rms
-           IEEE      0,10        10000       6.9e-16     1.0e-16
+        Arithmetic  function   domain     # trials      peak         rms
+          IEEE       S(x)      0, 10       10000       2.0e-15     3.2e-16
+          IEEE       C(x)      0, 10       10000       1.8e-15     3.3e-16
 
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double dawsonintegral(double x)
+        public static void fresnelintegral(double x,
+            ref double c,
+            ref double s)
         {
-            double result = 0;
+            double xxa = 0;
+            double f = 0;
+            double g = 0;
+            double cc = 0;
+            double ss = 0;
+            double t = 0;
+            double u = 0;
             double x2 = 0;
-            double y = 0;
-            int sg = 0;
-            double an = 0;
-            double ad = 0;
-            double bn = 0;
-            double bd = 0;
+            double sn = 0;
+            double sd = 0;
             double cn = 0;
             double cd = 0;
+            double fn = 0;
+            double fd = 0;
+            double gn = 0;
+            double gd = 0;
+            double mpi = 0;
+            double mpio2 = 0;
 
-            sg = 1;
-            if( (double)(x)<(double)(0) )
+            mpi = 3.14159265358979323846;
+            mpio2 = 1.57079632679489661923;
+            xxa = x;
+            x = Math.Abs(xxa);
+            x2 = x*x;
+            if( (double)(x2)<(double)(2.5625) )
             {
-                sg = -1;
-                x = -x;
+                t = x2*x2;
+                sn = -2.99181919401019853726E3;
+                sn = sn*t+7.08840045257738576863E5;
+                sn = sn*t-6.29741486205862506537E7;
+                sn = sn*t+2.54890880573376359104E9;
+                sn = sn*t-4.42979518059697779103E10;
+                sn = sn*t+3.18016297876567817986E11;
+                sd = 1.00000000000000000000E0;
+                sd = sd*t+2.81376268889994315696E2;
+                sd = sd*t+4.55847810806532581675E4;
+                sd = sd*t+5.17343888770096400730E6;
+                sd = sd*t+4.19320245898111231129E8;
+                sd = sd*t+2.24411795645340920940E10;
+                sd = sd*t+6.07366389490084639049E11;
+                cn = -4.98843114573573548651E-8;
+                cn = cn*t+9.50428062829859605134E-6;
+                cn = cn*t-6.45191435683965050962E-4;
+                cn = cn*t+1.88843319396703850064E-2;
+                cn = cn*t-2.05525900955013891793E-1;
+                cn = cn*t+9.99999999999999998822E-1;
+                cd = 3.99982968972495980367E-12;
+                cd = cd*t+9.15439215774657478799E-10;
+                cd = cd*t+1.25001862479598821474E-7;
+                cd = cd*t+1.22262789024179030997E-5;
+                cd = cd*t+8.68029542941784300606E-4;
+                cd = cd*t+4.12142090722199792936E-2;
+                cd = cd*t+1.00000000000000000118E0;
+                s = Math.Sign(xxa)*x*x2*sn/sd;
+                c = Math.Sign(xxa)*x*cn/cd;
+                return;
             }
-            if( (double)(x)<(double)(3.25) )
+            if( (double)(x)>(double)(36974.0) )
             {
-                x2 = x*x;
-                an = 1.13681498971755972054E-11;
-                an = an*x2+8.49262267667473811108E-10;
-                an = an*x2+1.94434204175553054283E-8;
-                an = an*x2+9.53151741254484363489E-7;
-                an = an*x2+3.07828309874913200438E-6;
-                an = an*x2+3.52513368520288738649E-4;
-                an = an*x2+-8.50149846724410912031E-4;
-                an = an*x2+4.22618223005546594270E-2;
-                an = an*x2+-9.17480371773452345351E-2;
-                an = an*x2+9.99999999999999994612E-1;
-                ad = 2.40372073066762605484E-11;
-                ad = ad*x2+1.48864681368493396752E-9;
-                ad = ad*x2+5.21265281010541664570E-8;
-                ad = ad*x2+1.27258478273186970203E-6;
-                ad = ad*x2+2.32490249820789513991E-5;
-                ad = ad*x2+3.25524741826057911661E-4;
-                ad = ad*x2+3.48805814657162590916E-3;
-                ad = ad*x2+2.79448531198828973716E-2;
-                ad = ad*x2+1.58874241960120565368E-1;
-                ad = ad*x2+5.74918629489320327824E-1;
-                ad = ad*x2+1.00000000000000000539E0;
-                y = x*an/ad;
-                result = sg*y;
-                return result;
+                c = Math.Sign(xxa)*0.5;
+                s = Math.Sign(xxa)*0.5;
+                return;
             }
-            x2 = 1.0/(x*x);
-            if( (double)(x)<(double)(6.25) )
-            {
-                bn = 5.08955156417900903354E-1;
-                bn = bn*x2-2.44754418142697847934E-1;
-                bn = bn*x2+9.41512335303534411857E-2;
-                bn = bn*x2-2.18711255142039025206E-2;
-                bn = bn*x2+3.66207612329569181322E-3;
-                bn = bn*x2-4.23209114460388756528E-4;
-                bn = bn*x2+3.59641304793896631888E-5;
-                bn = bn*x2-2.14640351719968974225E-6;
-                bn = bn*x2+9.10010780076391431042E-8;
-                bn = bn*x2-2.40274520828250956942E-9;
-                bn = bn*x2+3.59233385440928410398E-11;
-                bd = 1.00000000000000000000E0;
-                bd = bd*x2-6.31839869873368190192E-1;
-                bd = bd*x2+2.36706788228248691528E-1;
-                bd = bd*x2-5.31806367003223277662E-2;
-                bd = bd*x2+8.48041718586295374409E-3;
-                bd = bd*x2-9.47996768486665330168E-4;
-                bd = bd*x2+7.81025592944552338085E-5;
-                bd = bd*x2-4.55875153252442634831E-6;
-                bd = bd*x2+1.89100358111421846170E-7;
-                bd = bd*x2-4.91324691331920606875E-9;
-                bd = bd*x2+7.18466403235734541950E-11;
-                y = 1.0/x+x2*bn/(bd*x);
-                result = sg*0.5*y;
-                return result;
-            }
-            if( (double)(x)>(double)(1.0E9) )
-            {
-                result = sg*0.5/x;
-                return result;
-            }
-            cn = -5.90592860534773254987E-1;
-            cn = cn*x2+6.29235242724368800674E-1;
-            cn = cn*x2-1.72858975380388136411E-1;
-            cn = cn*x2+1.64837047825189632310E-2;
-            cn = cn*x2-4.86827613020462700845E-4;
-            cd = 1.00000000000000000000E0;
-            cd = cd*x2-2.69820057197544900361E0;
-            cd = cd*x2+1.73270799045947845857E0;
-            cd = cd*x2-3.93708582281939493482E-1;
-            cd = cd*x2+3.44278924041233391079E-2;
-            cd = cd*x2-9.73655226040941223894E-4;
-            y = 1.0/x+x2*cn/(cd*x);
-            result = sg*0.5*y;
-            return result;
+            x2 = x*x;
+            t = mpi*x2;
+            u = 1/(t*t);
+            t = 1/t;
+            fn = 4.21543555043677546506E-1;
+            fn = fn*u+1.43407919780758885261E-1;
+            fn = fn*u+1.15220955073585758835E-2;
+            fn = fn*u+3.45017939782574027900E-4;
+            fn = fn*u+4.63613749287867322088E-6;
+            fn = fn*u+3.05568983790257605827E-8;
+            fn = fn*u+1.02304514164907233465E-10;
+            fn = fn*u+1.72010743268161828879E-13;
+            fn = fn*u+1.34283276233062758925E-16;
+            fn = fn*u+3.76329711269987889006E-20;
+            fd = 1.00000000000000000000E0;
+            fd = fd*u+7.51586398353378947175E-1;
+            fd = fd*u+1.16888925859191382142E-1;
+            fd = fd*u+6.44051526508858611005E-3;
+            fd = fd*u+1.55934409164153020873E-4;
+            fd = fd*u+1.84627567348930545870E-6;
+            fd = fd*u+1.12699224763999035261E-8;
+            fd = fd*u+3.60140029589371370404E-11;
+            fd = fd*u+5.88754533621578410010E-14;
+            fd = fd*u+4.52001434074129701496E-17;
+            fd = fd*u+1.25443237090011264384E-20;
+            gn = 5.04442073643383265887E-1;
+            gn = gn*u+1.97102833525523411709E-1;
+            gn = gn*u+1.87648584092575249293E-2;
+            gn = gn*u+6.84079380915393090172E-4;
+            gn = gn*u+1.15138826111884280931E-5;
+            gn = gn*u+9.82852443688422223854E-8;
+            gn = gn*u+4.45344415861750144738E-10;
+            gn = gn*u+1.08268041139020870318E-12;
+            gn = gn*u+1.37555460633261799868E-15;
+            gn = gn*u+8.36354435630677421531E-19;
+            gn = gn*u+1.86958710162783235106E-22;
+            gd = 1.00000000000000000000E0;
+            gd = gd*u+1.47495759925128324529E0;
+            gd = gd*u+3.37748989120019970451E-1;
+            gd = gd*u+2.53603741420338795122E-2;
+            gd = gd*u+8.14679107184306179049E-4;
+            gd = gd*u+1.27545075667729118702E-5;
+            gd = gd*u+1.04314589657571990585E-7;
+            gd = gd*u+4.60680728146520428211E-10;
+            gd = gd*u+1.10273215066240270757E-12;
+            gd = gd*u+1.38796531259578871258E-15;
+            gd = gd*u+8.39158816283118707363E-19;
+            gd = gd*u+1.86958710162783236342E-22;
+            f = 1-u*fn/fd;
+            g = t*gn/gd;
+            t = mpio2*x2;
+            cc = Math.Cos(t);
+            ss = Math.Sin(t);
+            t = mpi*x;
+            c = 0.5+(f*ss-g*cc)/t;
+            s = 0.5-(f*cc+g*ss)/t;
+            c = c*Math.Sign(xxa);
+            s = s*Math.Sign(xxa);
         }
 
 
     }
-    public class elliptic
+    public class jacobianelliptic
     {
         /*************************************************************************
-        Complete elliptic integral of the first kind
+        Jacobian Elliptic Functions
 
-        Approximates the integral
+        Evaluates the Jacobian elliptic functions sn(u|m), cn(u|m),
+        and dn(u|m) of parameter m between 0 and 1, and real
+        argument u.
 
+        These functions are periodic, with quarter-period on the
+        real axis equal to the complete elliptic integral
+        ellpk(1.0-m).
 
+        Relation to incomplete elliptic integral:
+        If u = ellik(phi,m), then sn(u|m) = sin(phi),
+        and cn(u|m) = cos(phi).  Phi is called the amplitude of u.
 
-                   pi/2
-                    -
-                   | |
-                   |           dt
-        K(m)  =    |    ------------------
-                   |                   2
-                 | |    sqrt( 1 - m sin t )
-                  -
-                   0
-
-        using the approximation
-
-            P(x)  -  log x Q(x).
-
-        ACCURACY:
-
-                             Relative error:
-        arithmetic   domain     # trials      peak         rms
-           IEEE       0,1        30000       2.5e-16     6.8e-17
-
-        Cephes Math Library, Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double ellipticintegralk(double m)
-        {
-            double result = 0;
-
-            result = ellipticintegralkhighprecision(1.0-m);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Complete elliptic integral of the first kind
-
-        Approximates the integral
-
-
-
-                   pi/2
-                    -
-                   | |
-                   |           dt
-        K(m)  =    |    ------------------
-                   |                   2
-                 | |    sqrt( 1 - m sin t )
-                  -
-                   0
-
-        where m = 1 - m1, using the approximation
-
-            P(x)  -  log x Q(x).
-
-        The argument m1 is used rather than m so that the logarithmic
-        singularity at m = 1 will be shifted to the origin; this
-        preserves maximum accuracy.
-
-        K(0) = pi/2.
+        Computation is by means of the arithmetic-geometric mean
+        algorithm, except when m is within 1e-9 of 0 or 1.  In the
+        latter case with m close to 1, the approximation applies
+        only for phi < pi/2.
 
         ACCURACY:
 
-                             Relative error:
-        arithmetic   domain     # trials      peak         rms
-           IEEE       0,1        30000       2.5e-16     6.8e-17
+        Tested at random points with u between 0 and 10, m between
+        0 and 1.
 
-        Cephes Math Library, Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double ellipticintegralkhighprecision(double m1)
-        {
-            double result = 0;
-            double p = 0;
-            double q = 0;
+                   Absolute error (* = relative error):
+        arithmetic   function   # trials      peak         rms
+           IEEE      phi         10000       9.2e-16*    1.4e-16*
+           IEEE      sn          50000       4.1e-15     4.6e-16
+           IEEE      cn          40000       3.6e-15     4.4e-16
+           IEEE      dn          10000       1.3e-12     1.8e-14
 
-            if( (double)(m1)<=(double)(math.machineepsilon) )
-            {
-                result = 1.3862943611198906188E0-0.5*Math.Log(m1);
-            }
-            else
-            {
-                p = 1.37982864606273237150E-4;
-                p = p*m1+2.28025724005875567385E-3;
-                p = p*m1+7.97404013220415179367E-3;
-                p = p*m1+9.85821379021226008714E-3;
-                p = p*m1+6.87489687449949877925E-3;
-                p = p*m1+6.18901033637687613229E-3;
-                p = p*m1+8.79078273952743772254E-3;
-                p = p*m1+1.49380448916805252718E-2;
-                p = p*m1+3.08851465246711995998E-2;
-                p = p*m1+9.65735902811690126535E-2;
-                p = p*m1+1.38629436111989062502E0;
-                q = 2.94078955048598507511E-5;
-                q = q*m1+9.14184723865917226571E-4;
-                q = q*m1+5.94058303753167793257E-3;
-                q = q*m1+1.54850516649762399335E-2;
-                q = q*m1+2.39089602715924892727E-2;
-                q = q*m1+3.01204715227604046988E-2;
-                q = q*m1+3.73774314173823228969E-2;
-                q = q*m1+4.88280347570998239232E-2;
-                q = q*m1+7.03124996963957469739E-2;
-                q = q*m1+1.24999999999870820058E-1;
-                q = q*m1+4.99999999999999999821E-1;
-                result = p-q*Math.Log(m1);
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        Incomplete elliptic integral of the first kind F(phi|m)
-
-        Approximates the integral
-
-
-
-                       phi
-                        -
-                       | |
-                       |           dt
-        F(phi_\m)  =    |    ------------------
-                       |                   2
-                     | |    sqrt( 1 - m sin t )
-                      -
-                       0
-
-        of amplitude phi and modulus m, using the arithmetic -
-        geometric mean algorithm.
-
-
-
-
-        ACCURACY:
-
-        Tested at random points with m in [0, 1] and phi as indicated.
-
-                             Relative error:
-        arithmetic   domain     # trials      peak         rms
-           IEEE     -10,10       200000      7.4e-16     1.0e-16
+         Peak error observed in consistency check using addition
+        theorem for sn(u+v) was 4e-16 (absolute).  Also tested by
+        the above relation to the incomplete elliptic integral.
+        Accuracy deteriorates when u is large.
 
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double incompleteellipticintegralk(double phi,
-            double m)
+        public static void jacobianellipticfunctions(double u,
+            double m,
+            ref double sn,
+            ref double cn,
+            ref double dn,
+            ref double ph)
         {
-            double result = 0;
-            double a = 0;
+            double ai = 0;
             double b = 0;
-            double c = 0;
-            double e = 0;
-            double temp = 0;
-            double pio2 = 0;
+            double phi = 0;
             double t = 0;
-            double k = 0;
-            int d = 0;
-            int md = 0;
-            int s = 0;
-            int npio2 = 0;
+            double twon = 0;
+            double[] a = new double[0];
+            double[] c = new double[0];
+            int i = 0;
 
-            pio2 = 1.57079632679489661923;
-            if( (double)(m)==(double)(0) )
+            sn = 0;
+            cn = 0;
+            dn = 0;
+            ph = 0;
+
+            alglib.ap.assert((double)(m)>=(double)(0) && (double)(m)<=(double)(1), "Domain error in JacobianEllipticFunctions: m<0 or m>1");
+            a = new double[8+1];
+            c = new double[8+1];
+            if( (double)(m)<(double)(1.0e-9) )
             {
-                result = phi;
-                return result;
+                t = Math.Sin(u);
+                b = Math.Cos(u);
+                ai = 0.25*m*(u-t*b);
+                sn = t-ai*b;
+                cn = b+ai*t;
+                ph = u-ai;
+                dn = 1.0-0.5*m*t*t;
+                return;
             }
-            a = 1-m;
-            if( (double)(a)==(double)(0) )
+            if( (double)(m)>=(double)(0.9999999999) )
             {
-                result = Math.Log(Math.Tan(0.5*(pio2+phi)));
-                return result;
+                ai = 0.25*(1.0-m);
+                b = Math.Cosh(u);
+                t = Math.Tanh(u);
+                phi = 1.0/b;
+                twon = b*Math.Sinh(u);
+                sn = t+ai*(twon-u)/(b*b);
+                ph = 2.0*Math.Atan(Math.Exp(u))-1.57079632679489661923+ai*(twon-u)/b;
+                ai = ai*t*phi;
+                cn = phi-ai*(twon-u);
+                dn = phi+ai*(twon+u);
+                return;
             }
-            npio2 = (int)Math.Floor(phi/pio2);
-            if( npio2%2!=0 )
+            a[0] = 1.0;
+            b = Math.Sqrt(1.0-m);
+            c[0] = Math.Sqrt(m);
+            twon = 1.0;
+            i = 0;
+            while( (double)(Math.Abs(c[i]/a[i]))>(double)(math.machineepsilon) )
             {
-                npio2 = npio2+1;
-            }
-            if( npio2!=0 )
-            {
-                k = ellipticintegralk(1-a);
-                phi = phi-npio2*pio2;
-            }
-            else
-            {
-                k = 0;
-            }
-            if( (double)(phi)<(double)(0) )
-            {
-                phi = -phi;
-                s = -1;
-            }
-            else
-            {
-                s = 0;
-            }
-            b = Math.Sqrt(a);
-            t = Math.Tan(phi);
-            if( (double)(Math.Abs(t))>(double)(10) )
-            {
-                e = 1.0/(b*t);
-                if( (double)(Math.Abs(e))<(double)(10) )
+                if( i>7 )
                 {
-                    e = Math.Atan(e);
-                    if( npio2==0 )
-                    {
-                        k = ellipticintegralk(1-a);
-                    }
-                    temp = k-incompleteellipticintegralk(e, m);
-                    if( s<0 )
-                    {
-                        temp = -temp;
-                    }
-                    result = temp+npio2*k;
-                    return result;
+                    alglib.ap.assert(false, "Overflow in JacobianEllipticFunctions");
+                    break;
                 }
+                ai = a[i];
+                i = i+1;
+                c[i] = 0.5*(ai-b);
+                t = Math.Sqrt(ai*b);
+                a[i] = 0.5*(ai+b);
+                b = t;
+                twon = twon*2.0;
             }
-            a = 1.0;
-            c = Math.Sqrt(m);
-            d = 1;
-            md = 0;
-            while( (double)(Math.Abs(c/a))>(double)(math.machineepsilon) )
+            phi = twon*a[i]*u;
+            do
             {
-                temp = b/a;
-                phi = phi+Math.Atan(t*temp)+md*Math.PI;
-                md = (int)((phi+pio2)/Math.PI);
-                t = t*(1.0+temp)/(1.0-temp*t*t);
-                c = 0.5*(a-b);
-                temp = Math.Sqrt(a*b);
-                a = 0.5*(a+b);
-                b = temp;
-                d = d+d;
+                t = c[i]*Math.Sin(phi)/a[i];
+                b = phi;
+                phi = (Math.Asin(t)+phi)/2.0;
+                i = i-1;
             }
-            temp = (Math.Atan(t)+md*Math.PI)/(d*a);
-            if( s<0 )
-            {
-                temp = -temp;
-            }
-            result = temp+npio2*k;
-            return result;
+            while( i!=0 );
+            sn = Math.Sin(phi);
+            t = Math.Cos(phi);
+            cn = t;
+            dn = t/Math.Cos(phi-b);
+            ph = phi;
         }
 
 
+    }
+    public class psif
+    {
         /*************************************************************************
-        Complete elliptic integral of the second kind
+        Psi (digamma) function
 
-        Approximates the integral
+                     d      -
+          psi(x)  =  -- ln | (x)
+                     dx
 
+        is the logarithmic derivative of the gamma function.
+        For integer x,
+                          n-1
+                           -
+        psi(n) = -EUL  +   >  1/k.
+                           -
+                          k=1
 
-                   pi/2
-                    -
-                   | |                 2
-        E(m)  =    |    sqrt( 1 - m sin t ) dt
-                 | |
-                  -
-                   0
+        This formula is used for 0 < n <= 10.  If x is negative, it
+        is transformed to a positive argument by the reflection
+        formula  psi(1-x) = psi(x) + pi cot(pi x).
+        For general positive x, the argument is made greater than 10
+        using the recurrence  psi(x+1) = psi(x) + 1/x.
+        Then the following asymptotic expansion is applied:
 
-        using the approximation
+                                  inf.   B
+                                   -      2k
+        psi(x) = log(x) - 1/2x -   >   -------
+                                   -        2k
+                                  k=1   2k x
 
-             P(x)  -  x log x Q(x).
+        where the B2k are Bernoulli numbers.
 
         ACCURACY:
-
-                             Relative error:
+           Relative error (except absolute when |psi| < 1):
         arithmetic   domain     # trials      peak         rms
-           IEEE       0, 1       10000       2.1e-16     7.3e-17
+           IEEE      0,30        30000       1.3e-15     1.4e-16
+           IEEE      -30,0       40000       1.5e-15     2.2e-16
 
-        Cephes Math Library, Release 2.8: June, 2000
-        Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double ellipticintegrale(double m)
+        public static double psi(double x)
         {
             double result = 0;
             double p = 0;
             double q = 0;
+            double nz = 0;
+            double s = 0;
+            double w = 0;
+            double y = 0;
+            double z = 0;
+            double polv = 0;
+            int i = 0;
+            int n = 0;
+            int negative = 0;
 
-            alglib.ap.assert((double)(m)>=(double)(0) && (double)(m)<=(double)(1), "Domain error in EllipticIntegralE: m<0 or m>1");
-            m = 1-m;
-            if( (double)(m)==(double)(0) )
+            negative = 0;
+            nz = 0.0;
+            if( (double)(x)<=(double)(0) )
             {
-                result = 1;
-                return result;
+                negative = 1;
+                q = x;
+                p = (int)Math.Floor(q);
+                if( (double)(p)==(double)(q) )
+                {
+                    alglib.ap.assert(false, "Singularity in Psi(x)");
+                    result = math.maxrealnumber;
+                    return result;
+                }
+                nz = q-p;
+                if( (double)(nz)!=(double)(0.5) )
+                {
+                    if( (double)(nz)>(double)(0.5) )
+                    {
+                        p = p+1.0;
+                        nz = q-p;
+                    }
+                    nz = Math.PI/Math.Tan(Math.PI*nz);
+                }
+                else
+                {
+                    nz = 0.0;
+                }
+                x = 1.0-x;
             }
-            p = 1.53552577301013293365E-4;
-            p = p*m+2.50888492163602060990E-3;
-            p = p*m+8.68786816565889628429E-3;
-            p = p*m+1.07350949056076193403E-2;
-            p = p*m+7.77395492516787092951E-3;
-            p = p*m+7.58395289413514708519E-3;
-            p = p*m+1.15688436810574127319E-2;
-            p = p*m+2.18317996015557253103E-2;
-            p = p*m+5.68051945617860553470E-2;
-            p = p*m+4.43147180560990850618E-1;
-            p = p*m+1.00000000000000000299E0;
-            q = 3.27954898576485872656E-5;
-            q = q*m+1.00962792679356715133E-3;
-            q = q*m+6.50609489976927491433E-3;
-            q = q*m+1.68862163993311317300E-2;
-            q = q*m+2.61769742454493659583E-2;
-            q = q*m+3.34833904888224918614E-2;
-            q = q*m+4.27180926518931511717E-2;
-            q = q*m+5.85936634471101055642E-2;
-            q = q*m+9.37499997197644278445E-2;
-            q = q*m+2.49999999999888314361E-1;
-            result = p-q*m*Math.Log(m);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Incomplete elliptic integral of the second kind
-
-        Approximates the integral
-
-
-                       phi
-                        -
-                       | |
-                       |                   2
-        E(phi_\m)  =    |    sqrt( 1 - m sin t ) dt
-                       |
-                     | |
-                      -
-                       0
-
-        of amplitude phi and modulus m, using the arithmetic -
-        geometric mean algorithm.
-
-        ACCURACY:
-
-        Tested at random arguments with phi in [-10, 10] and m in
-        [0, 1].
-                             Relative error:
-        arithmetic   domain     # trials      peak         rms
-           IEEE     -10,10      150000       3.3e-15     1.4e-16
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1993, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double incompleteellipticintegrale(double phi,
-            double m)
-        {
-            double result = 0;
-            double pio2 = 0;
-            double a = 0;
-            double b = 0;
-            double c = 0;
-            double e = 0;
-            double temp = 0;
-            double lphi = 0;
-            double t = 0;
-            double ebig = 0;
-            int d = 0;
-            int md = 0;
-            int npio2 = 0;
-            int s = 0;
-
-            pio2 = 1.57079632679489661923;
-            if( (double)(m)==(double)(0) )
+            if( (double)(x)<=(double)(10.0) && (double)(x)==(double)((int)Math.Floor(x)) )
             {
-                result = phi;
-                return result;
-            }
-            lphi = phi;
-            npio2 = (int)Math.Floor(lphi/pio2);
-            if( npio2%2!=0 )
-            {
-                npio2 = npio2+1;
-            }
-            lphi = lphi-npio2*pio2;
-            if( (double)(lphi)<(double)(0) )
-            {
-                lphi = -lphi;
-                s = -1;
+                y = 0.0;
+                n = (int)Math.Floor(x);
+                for(i=1; i<=n-1; i++)
+                {
+                    w = i;
+                    y = y+1.0/w;
+                }
+                y = y-0.57721566490153286061;
             }
             else
             {
-                s = 1;
-            }
-            a = 1.0-m;
-            ebig = ellipticintegrale(m);
-            if( (double)(a)==(double)(0) )
-            {
-                temp = Math.Sin(lphi);
-                if( s<0 )
+                s = x;
+                w = 0.0;
+                while( (double)(s)<(double)(10.0) )
                 {
-                    temp = -temp;
+                    w = w+1.0/s;
+                    s = s+1.0;
                 }
-                result = temp+npio2*ebig;
-                return result;
-            }
-            t = Math.Tan(lphi);
-            b = Math.Sqrt(a);
-            
-            //
-            // Thanks to Brian Fitzgerald <fitzgb@mml0.meche.rpi.edu>
-            // for pointing out an instability near odd multiples of pi/2
-            //
-            if( (double)(Math.Abs(t))>(double)(10) )
-            {
-                
-                //
-                // Transform the amplitude
-                //
-                e = 1.0/(b*t);
-                
-                //
-                // ... but avoid multiple recursions.
-                //
-                if( (double)(Math.Abs(e))<(double)(10) )
+                if( (double)(s)<(double)(1.0E17) )
                 {
-                    e = Math.Atan(e);
-                    temp = ebig+m*Math.Sin(lphi)*Math.Sin(e)-incompleteellipticintegrale(e, m);
-                    if( s<0 )
-                    {
-                        temp = -temp;
-                    }
-                    result = temp+npio2*ebig;
-                    return result;
+                    z = 1.0/(s*s);
+                    polv = 8.33333333333333333333E-2;
+                    polv = polv*z-2.10927960927960927961E-2;
+                    polv = polv*z+7.57575757575757575758E-3;
+                    polv = polv*z-4.16666666666666666667E-3;
+                    polv = polv*z+3.96825396825396825397E-3;
+                    polv = polv*z-8.33333333333333333333E-3;
+                    polv = polv*z+8.33333333333333333333E-2;
+                    y = z*polv;
                 }
+                else
+                {
+                    y = 0.0;
+                }
+                y = Math.Log(s)-0.5/s-y-w;
             }
-            c = Math.Sqrt(m);
-            a = 1.0;
-            d = 1;
-            e = 0.0;
-            md = 0;
-            while( (double)(Math.Abs(c/a))>(double)(math.machineepsilon) )
+            if( negative!=0 )
             {
-                temp = b/a;
-                lphi = lphi+Math.Atan(t*temp)+md*Math.PI;
-                md = (int)((lphi+pio2)/Math.PI);
-                t = t*(1.0+temp)/(1.0-temp*t*t);
-                c = 0.5*(a-b);
-                temp = Math.Sqrt(a*b);
-                a = 0.5*(a+b);
-                b = temp;
-                d = d+d;
-                e = e+c*Math.Sin(lphi);
+                y = y-nz;
             }
-            temp = ebig/ellipticintegralk(m);
-            temp = temp*((Math.Atan(t)+md*Math.PI)/(d*a));
-            temp = temp+e;
-            if( s<0 )
-            {
-                temp = -temp;
-            }
-            result = temp+npio2*ebig;
+            result = y;
             return result;
         }
 
@@ -7316,595 +7637,6 @@ public partial class alglib
 
 
     }
-    public class fdistr
-    {
-        /*************************************************************************
-        F distribution
-
-        Returns the area from zero to x under the F density
-        function (also known as Snedcor's density or the
-        variance ratio density).  This is the density
-        of x = (u1/df1)/(u2/df2), where u1 and u2 are random
-        variables having Chi square distributions with df1
-        and df2 degrees of freedom, respectively.
-        The incomplete beta integral is used, according to the
-        formula
-
-        P(x) = incbet( df1/2, df2/2, (df1*x/(df2 + df1*x) ).
-
-
-        The arguments a and b are greater than zero, and x is
-        nonnegative.
-
-        ACCURACY:
-
-        Tested at random points (a,b,x).
-
-                       x     a,b                     Relative error:
-        arithmetic  domain  domain     # trials      peak         rms
-           IEEE      0,1    0,100       100000      9.8e-15     1.7e-15
-           IEEE      1,5    0,100       100000      6.5e-15     3.5e-16
-           IEEE      0,1    1,10000     100000      2.2e-11     3.3e-12
-           IEEE      1,5    1,10000     100000      1.1e-11     1.7e-13
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double fdistribution(int a,
-            int b,
-            double x)
-        {
-            double result = 0;
-            double w = 0;
-
-            alglib.ap.assert((a>=1 && b>=1) && (double)(x)>=(double)(0), "Domain error in FDistribution");
-            w = a*x;
-            w = w/(b+w);
-            result = ibetaf.incompletebeta(0.5*a, 0.5*b, w);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Complemented F distribution
-
-        Returns the area from x to infinity under the F density
-        function (also known as Snedcor's density or the
-        variance ratio density).
-
-
-                             inf.
-                              -
-                     1       | |  a-1      b-1
-        1-P(x)  =  ------    |   t    (1-t)    dt
-                   B(a,b)  | |
-                            -
-                             x
-
-
-        The incomplete beta integral is used, according to the
-        formula
-
-        P(x) = incbet( df2/2, df1/2, (df2/(df2 + df1*x) ).
-
-
-        ACCURACY:
-
-        Tested at random points (a,b,x) in the indicated intervals.
-                       x     a,b                     Relative error:
-        arithmetic  domain  domain     # trials      peak         rms
-           IEEE      0,1    1,100       100000      3.7e-14     5.9e-16
-           IEEE      1,5    1,100       100000      8.0e-15     1.6e-15
-           IEEE      0,1    1,10000     100000      1.8e-11     3.5e-13
-           IEEE      1,5    1,10000     100000      2.0e-11     3.0e-12
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double fcdistribution(int a,
-            int b,
-            double x)
-        {
-            double result = 0;
-            double w = 0;
-
-            alglib.ap.assert((a>=1 && b>=1) && (double)(x)>=(double)(0), "Domain error in FCDistribution");
-            w = b/(b+a*x);
-            result = ibetaf.incompletebeta(0.5*b, 0.5*a, w);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Inverse of complemented F distribution
-
-        Finds the F density argument x such that the integral
-        from x to infinity of the F density is equal to the
-        given probability p.
-
-        This is accomplished using the inverse beta integral
-        function and the relations
-
-             z = incbi( df2/2, df1/2, p )
-             x = df2 (1-z) / (df1 z).
-
-        Note: the following relations hold for the inverse of
-        the uncomplemented F distribution:
-
-             z = incbi( df1/2, df2/2, p )
-             x = df2 z / (df1 (1-z)).
-
-        ACCURACY:
-
-        Tested at random points (a,b,p).
-
-                     a,b                     Relative error:
-        arithmetic  domain     # trials      peak         rms
-         For p between .001 and 1:
-           IEEE     1,100       100000      8.3e-15     4.7e-16
-           IEEE     1,10000     100000      2.1e-11     1.4e-13
-         For p between 10^-6 and 10^-3:
-           IEEE     1,100        50000      1.3e-12     8.4e-15
-           IEEE     1,10000      50000      3.0e-12     4.8e-14
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double invfdistribution(int a,
-            int b,
-            double y)
-        {
-            double result = 0;
-            double w = 0;
-
-            alglib.ap.assert(((a>=1 && b>=1) && (double)(y)>(double)(0)) && (double)(y)<=(double)(1), "Domain error in InvFDistribution");
-            
-            //
-            // Compute probability for x = 0.5
-            //
-            w = ibetaf.incompletebeta(0.5*b, 0.5*a, 0.5);
-            
-            //
-            // If that is greater than y, then the solution w < .5
-            // Otherwise, solve at 1-y to remove cancellation in (b - b*w)
-            //
-            if( (double)(w)>(double)(y) || (double)(y)<(double)(0.001) )
-            {
-                w = ibetaf.invincompletebeta(0.5*b, 0.5*a, y);
-                result = (b-b*w)/(a*w);
-            }
-            else
-            {
-                w = ibetaf.invincompletebeta(0.5*a, 0.5*b, 1.0-y);
-                result = b*w/(a*(1.0-w));
-            }
-            return result;
-        }
-
-
-    }
-    public class fresnel
-    {
-        /*************************************************************************
-        Fresnel integral
-
-        Evaluates the Fresnel integrals
-
-                  x
-                  -
-                 | |
-        C(x) =   |   cos(pi/2 t**2) dt,
-               | |
-                -
-                 0
-
-                  x
-                  -
-                 | |
-        S(x) =   |   sin(pi/2 t**2) dt.
-               | |
-                -
-                 0
-
-
-        The integrals are evaluated by a power series for x < 1.
-        For x >= 1 auxiliary functions f(x) and g(x) are employed
-        such that
-
-        C(x) = 0.5 + f(x) sin( pi/2 x**2 ) - g(x) cos( pi/2 x**2 )
-        S(x) = 0.5 - f(x) cos( pi/2 x**2 ) - g(x) sin( pi/2 x**2 )
-
-
-
-        ACCURACY:
-
-         Relative error.
-
-        Arithmetic  function   domain     # trials      peak         rms
-          IEEE       S(x)      0, 10       10000       2.0e-15     3.2e-16
-          IEEE       C(x)      0, 10       10000       1.8e-15     3.3e-16
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static void fresnelintegral(double x,
-            ref double c,
-            ref double s)
-        {
-            double xxa = 0;
-            double f = 0;
-            double g = 0;
-            double cc = 0;
-            double ss = 0;
-            double t = 0;
-            double u = 0;
-            double x2 = 0;
-            double sn = 0;
-            double sd = 0;
-            double cn = 0;
-            double cd = 0;
-            double fn = 0;
-            double fd = 0;
-            double gn = 0;
-            double gd = 0;
-            double mpi = 0;
-            double mpio2 = 0;
-
-            mpi = 3.14159265358979323846;
-            mpio2 = 1.57079632679489661923;
-            xxa = x;
-            x = Math.Abs(xxa);
-            x2 = x*x;
-            if( (double)(x2)<(double)(2.5625) )
-            {
-                t = x2*x2;
-                sn = -2.99181919401019853726E3;
-                sn = sn*t+7.08840045257738576863E5;
-                sn = sn*t-6.29741486205862506537E7;
-                sn = sn*t+2.54890880573376359104E9;
-                sn = sn*t-4.42979518059697779103E10;
-                sn = sn*t+3.18016297876567817986E11;
-                sd = 1.00000000000000000000E0;
-                sd = sd*t+2.81376268889994315696E2;
-                sd = sd*t+4.55847810806532581675E4;
-                sd = sd*t+5.17343888770096400730E6;
-                sd = sd*t+4.19320245898111231129E8;
-                sd = sd*t+2.24411795645340920940E10;
-                sd = sd*t+6.07366389490084639049E11;
-                cn = -4.98843114573573548651E-8;
-                cn = cn*t+9.50428062829859605134E-6;
-                cn = cn*t-6.45191435683965050962E-4;
-                cn = cn*t+1.88843319396703850064E-2;
-                cn = cn*t-2.05525900955013891793E-1;
-                cn = cn*t+9.99999999999999998822E-1;
-                cd = 3.99982968972495980367E-12;
-                cd = cd*t+9.15439215774657478799E-10;
-                cd = cd*t+1.25001862479598821474E-7;
-                cd = cd*t+1.22262789024179030997E-5;
-                cd = cd*t+8.68029542941784300606E-4;
-                cd = cd*t+4.12142090722199792936E-2;
-                cd = cd*t+1.00000000000000000118E0;
-                s = Math.Sign(xxa)*x*x2*sn/sd;
-                c = Math.Sign(xxa)*x*cn/cd;
-                return;
-            }
-            if( (double)(x)>(double)(36974.0) )
-            {
-                c = Math.Sign(xxa)*0.5;
-                s = Math.Sign(xxa)*0.5;
-                return;
-            }
-            x2 = x*x;
-            t = mpi*x2;
-            u = 1/(t*t);
-            t = 1/t;
-            fn = 4.21543555043677546506E-1;
-            fn = fn*u+1.43407919780758885261E-1;
-            fn = fn*u+1.15220955073585758835E-2;
-            fn = fn*u+3.45017939782574027900E-4;
-            fn = fn*u+4.63613749287867322088E-6;
-            fn = fn*u+3.05568983790257605827E-8;
-            fn = fn*u+1.02304514164907233465E-10;
-            fn = fn*u+1.72010743268161828879E-13;
-            fn = fn*u+1.34283276233062758925E-16;
-            fn = fn*u+3.76329711269987889006E-20;
-            fd = 1.00000000000000000000E0;
-            fd = fd*u+7.51586398353378947175E-1;
-            fd = fd*u+1.16888925859191382142E-1;
-            fd = fd*u+6.44051526508858611005E-3;
-            fd = fd*u+1.55934409164153020873E-4;
-            fd = fd*u+1.84627567348930545870E-6;
-            fd = fd*u+1.12699224763999035261E-8;
-            fd = fd*u+3.60140029589371370404E-11;
-            fd = fd*u+5.88754533621578410010E-14;
-            fd = fd*u+4.52001434074129701496E-17;
-            fd = fd*u+1.25443237090011264384E-20;
-            gn = 5.04442073643383265887E-1;
-            gn = gn*u+1.97102833525523411709E-1;
-            gn = gn*u+1.87648584092575249293E-2;
-            gn = gn*u+6.84079380915393090172E-4;
-            gn = gn*u+1.15138826111884280931E-5;
-            gn = gn*u+9.82852443688422223854E-8;
-            gn = gn*u+4.45344415861750144738E-10;
-            gn = gn*u+1.08268041139020870318E-12;
-            gn = gn*u+1.37555460633261799868E-15;
-            gn = gn*u+8.36354435630677421531E-19;
-            gn = gn*u+1.86958710162783235106E-22;
-            gd = 1.00000000000000000000E0;
-            gd = gd*u+1.47495759925128324529E0;
-            gd = gd*u+3.37748989120019970451E-1;
-            gd = gd*u+2.53603741420338795122E-2;
-            gd = gd*u+8.14679107184306179049E-4;
-            gd = gd*u+1.27545075667729118702E-5;
-            gd = gd*u+1.04314589657571990585E-7;
-            gd = gd*u+4.60680728146520428211E-10;
-            gd = gd*u+1.10273215066240270757E-12;
-            gd = gd*u+1.38796531259578871258E-15;
-            gd = gd*u+8.39158816283118707363E-19;
-            gd = gd*u+1.86958710162783236342E-22;
-            f = 1-u*fn/fd;
-            g = t*gn/gd;
-            t = mpio2*x2;
-            cc = Math.Cos(t);
-            ss = Math.Sin(t);
-            t = mpi*x;
-            c = 0.5+(f*ss-g*cc)/t;
-            s = 0.5-(f*cc+g*ss)/t;
-            c = c*Math.Sign(xxa);
-            s = s*Math.Sign(xxa);
-        }
-
-
-    }
-    public class hermite
-    {
-        /*************************************************************************
-        Calculation of the value of the Hermite polynomial.
-
-        Parameters:
-            n   -   degree, n>=0
-            x   -   argument
-
-        Result:
-            the value of the Hermite polynomial Hn at x
-        *************************************************************************/
-        public static double hermitecalculate(int n,
-            double x)
-        {
-            double result = 0;
-            int i = 0;
-            double a = 0;
-            double b = 0;
-
-            result = 0;
-            
-            //
-            // Prepare A and B
-            //
-            a = 1;
-            b = 2*x;
-            
-            //
-            // Special cases: N=0 or N=1
-            //
-            if( n==0 )
-            {
-                result = a;
-                return result;
-            }
-            if( n==1 )
-            {
-                result = b;
-                return result;
-            }
-            
-            //
-            // General case: N>=2
-            //
-            for(i=2; i<=n; i++)
-            {
-                result = 2*x*b-2*(i-1)*a;
-                a = b;
-                b = result;
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        Summation of Hermite polynomials using Clenshaw’s recurrence formula.
-
-        This routine calculates
-            c[0]*H0(x) + c[1]*H1(x) + ... + c[N]*HN(x)
-
-        Parameters:
-            n   -   degree, n>=0
-            x   -   argument
-
-        Result:
-            the value of the Hermite polynomial at x
-        *************************************************************************/
-        public static double hermitesum(double[] c,
-            int n,
-            double x)
-        {
-            double result = 0;
-            double b1 = 0;
-            double b2 = 0;
-            int i = 0;
-
-            b1 = 0;
-            b2 = 0;
-            result = 0;
-            for(i=n; i>=0; i--)
-            {
-                result = 2*(x*b1-(i+1)*b2)+c[i];
-                b2 = b1;
-                b1 = result;
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        Representation of Hn as C[0] + C[1]*X + ... + C[N]*X^N
-
-        Input parameters:
-            N   -   polynomial degree, n>=0
-
-        Output parameters:
-            C   -   coefficients
-        *************************************************************************/
-        public static void hermitecoefficients(int n,
-            ref double[] c)
-        {
-            int i = 0;
-
-            c = new double[0];
-
-            c = new double[n+1];
-            for(i=0; i<=n; i++)
-            {
-                c[i] = 0;
-            }
-            c[n] = Math.Exp(n*Math.Log(2));
-            for(i=0; i<=n/2-1; i++)
-            {
-                c[n-2*(i+1)] = -(c[n-2*i]*(n-2*i)*(n-2*i-1)/4/(i+1));
-            }
-        }
-
-
-    }
-    public class jacobianelliptic
-    {
-        /*************************************************************************
-        Jacobian Elliptic Functions
-
-        Evaluates the Jacobian elliptic functions sn(u|m), cn(u|m),
-        and dn(u|m) of parameter m between 0 and 1, and real
-        argument u.
-
-        These functions are periodic, with quarter-period on the
-        real axis equal to the complete elliptic integral
-        ellpk(1.0-m).
-
-        Relation to incomplete elliptic integral:
-        If u = ellik(phi,m), then sn(u|m) = sin(phi),
-        and cn(u|m) = cos(phi).  Phi is called the amplitude of u.
-
-        Computation is by means of the arithmetic-geometric mean
-        algorithm, except when m is within 1e-9 of 0 or 1.  In the
-        latter case with m close to 1, the approximation applies
-        only for phi < pi/2.
-
-        ACCURACY:
-
-        Tested at random points with u between 0 and 10, m between
-        0 and 1.
-
-                   Absolute error (* = relative error):
-        arithmetic   function   # trials      peak         rms
-           IEEE      phi         10000       9.2e-16*    1.4e-16*
-           IEEE      sn          50000       4.1e-15     4.6e-16
-           IEEE      cn          40000       3.6e-15     4.4e-16
-           IEEE      dn          10000       1.3e-12     1.8e-14
-
-         Peak error observed in consistency check using addition
-        theorem for sn(u+v) was 4e-16 (absolute).  Also tested by
-        the above relation to the incomplete elliptic integral.
-        Accuracy deteriorates when u is large.
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static void jacobianellipticfunctions(double u,
-            double m,
-            ref double sn,
-            ref double cn,
-            ref double dn,
-            ref double ph)
-        {
-            double ai = 0;
-            double b = 0;
-            double phi = 0;
-            double t = 0;
-            double twon = 0;
-            double[] a = new double[0];
-            double[] c = new double[0];
-            int i = 0;
-
-            sn = 0;
-            cn = 0;
-            dn = 0;
-            ph = 0;
-
-            alglib.ap.assert((double)(m)>=(double)(0) && (double)(m)<=(double)(1), "Domain error in JacobianEllipticFunctions: m<0 or m>1");
-            a = new double[8+1];
-            c = new double[8+1];
-            if( (double)(m)<(double)(1.0e-9) )
-            {
-                t = Math.Sin(u);
-                b = Math.Cos(u);
-                ai = 0.25*m*(u-t*b);
-                sn = t-ai*b;
-                cn = b+ai*t;
-                ph = u-ai;
-                dn = 1.0-0.5*m*t*t;
-                return;
-            }
-            if( (double)(m)>=(double)(0.9999999999) )
-            {
-                ai = 0.25*(1.0-m);
-                b = Math.Cosh(u);
-                t = Math.Tanh(u);
-                phi = 1.0/b;
-                twon = b*Math.Sinh(u);
-                sn = t+ai*(twon-u)/(b*b);
-                ph = 2.0*Math.Atan(Math.Exp(u))-1.57079632679489661923+ai*(twon-u)/b;
-                ai = ai*t*phi;
-                cn = phi-ai*(twon-u);
-                dn = phi+ai*(twon+u);
-                return;
-            }
-            a[0] = 1.0;
-            b = Math.Sqrt(1.0-m);
-            c[0] = Math.Sqrt(m);
-            twon = 1.0;
-            i = 0;
-            while( (double)(Math.Abs(c[i]/a[i]))>(double)(math.machineepsilon) )
-            {
-                if( i>7 )
-                {
-                    alglib.ap.assert(false, "Overflow in JacobianEllipticFunctions");
-                    break;
-                }
-                ai = a[i];
-                i = i+1;
-                c[i] = 0.5*(ai-b);
-                t = Math.Sqrt(ai*b);
-                a[i] = 0.5*(ai+b);
-                b = t;
-                twon = twon*2.0;
-            }
-            phi = twon*a[i]*u;
-            do
-            {
-                t = c[i]*Math.Sin(phi)/a[i];
-                b = phi;
-                phi = (Math.Asin(t)+phi)/2.0;
-                i = i-1;
-            }
-            while( i!=0 );
-            sn = Math.Sin(phi);
-            t = Math.Cos(phi);
-            cn = t;
-            dn = t/Math.Cos(phi-b);
-            ph = phi;
-        }
-
-
-    }
     public class laguerre
     {
         /*************************************************************************
@@ -7945,7 +7677,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        Summation of Laguerre polynomials using Clenshaw’s recurrence formula.
+        Summation of Laguerre polynomials using Clenshaw's recurrence formula.
 
         This routine calculates c[0]*L0(x) + c[1]*L1(x) + ... + c[N]*LN(x)
 
@@ -8004,6 +7736,126 @@ public partial class alglib
 
 
     }
+    public class chisquaredistr
+    {
+        /*************************************************************************
+        Chi-square distribution
+
+        Returns the area under the left hand tail (from 0 to x)
+        of the Chi square probability density function with
+        v degrees of freedom.
+
+
+                                          x
+                                           -
+                               1          | |  v/2-1  -t/2
+         P( x | v )   =   -----------     |   t      e     dt
+                           v/2  -       | |
+                          2    | (v/2)   -
+                                          0
+
+        where x is the Chi-square variable.
+
+        The incomplete gamma integral is used, according to the
+        formula
+
+        y = chdtr( v, x ) = igam( v/2.0, x/2.0 ).
+
+        The arguments must both be positive.
+
+        ACCURACY:
+
+        See incomplete gamma function
+
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double chisquaredistribution(double v,
+            double x)
+        {
+            double result = 0;
+
+            alglib.ap.assert((double)(x)>=(double)(0) && (double)(v)>=(double)(1), "Domain error in ChiSquareDistribution");
+            result = igammaf.incompletegamma(v/2.0, x/2.0);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Complemented Chi-square distribution
+
+        Returns the area under the right hand tail (from x to
+        infinity) of the Chi square probability density function
+        with v degrees of freedom:
+
+                                         inf.
+                                           -
+                               1          | |  v/2-1  -t/2
+         P( x | v )   =   -----------     |   t      e     dt
+                           v/2  -       | |
+                          2    | (v/2)   -
+                                          x
+
+        where x is the Chi-square variable.
+
+        The incomplete gamma integral is used, according to the
+        formula
+
+        y = chdtr( v, x ) = igamc( v/2.0, x/2.0 ).
+
+        The arguments must both be positive.
+
+        ACCURACY:
+
+        See incomplete gamma function
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double chisquarecdistribution(double v,
+            double x)
+        {
+            double result = 0;
+
+            alglib.ap.assert((double)(x)>=(double)(0) && (double)(v)>=(double)(1), "Domain error in ChiSquareDistributionC");
+            result = igammaf.incompletegammac(v/2.0, x/2.0);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Inverse of complemented Chi-square distribution
+
+        Finds the Chi-square argument x such that the integral
+        from x to infinity of the Chi-square density is equal
+        to the given cumulative probability y.
+
+        This is accomplished using the inverse gamma integral
+        function and the relation
+
+           x/2 = igami( df/2, y );
+
+        ACCURACY:
+
+        See inverse incomplete gamma function
+
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double invchisquaredistribution(double v,
+            double y)
+        {
+            double result = 0;
+
+            alglib.ap.assert(((double)(y)>=(double)(0) && (double)(y)<=(double)(1)) && (double)(v)>=(double)(1), "Domain error in InvChiSquareDistribution");
+            result = 2*igammaf.invincompletegammac(0.5*v, y);
+            return result;
+        }
+
+
+    }
     public class legendre
     {
         /*************************************************************************
@@ -8048,7 +7900,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        Summation of Legendre polynomials using Clenshaw’s recurrence formula.
+        Summation of Legendre polynomials using Clenshaw's recurrence formula.
 
         This routine calculates
             c[0]*P0(x) + c[1]*P1(x) + ... + c[N]*PN(x)
@@ -8116,241 +7968,290 @@ public partial class alglib
 
 
     }
-    public class poissondistr
+    public class betaf
     {
         /*************************************************************************
-        Poisson distribution
-
-        Returns the sum of the first k+1 terms of the Poisson
-        distribution:
-
-          k         j
-          --   -m  m
-          >   e    --
-          --       j!
-         j=0
-
-        The terms are not summed directly; instead the incomplete
-        gamma integral is employed, according to the relation
-
-        y = pdtr( k, m ) = igamc( k+1, m ).
-
-        The arguments must both be positive.
-        ACCURACY:
-
-        See incomplete gamma function
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double poissondistribution(int k,
-            double m)
-        {
-            double result = 0;
-
-            alglib.ap.assert(k>=0 && (double)(m)>(double)(0), "Domain error in PoissonDistribution");
-            result = igammaf.incompletegammac(k+1, m);
-            return result;
-        }
+        Beta function
 
 
-        /*************************************************************************
-        Complemented Poisson distribution
+                          -     -
+                         | (a) | (b)
+        beta( a, b )  =  -----------.
+                            -
+                           | (a+b)
 
-        Returns the sum of the terms k+1 to infinity of the Poisson
-        distribution:
-
-         inf.       j
-          --   -m  m
-          >   e    --
-          --       j!
-         j=k+1
-
-        The terms are not summed directly; instead the incomplete
-        gamma integral is employed, according to the formula
-
-        y = pdtrc( k, m ) = igam( k+1, m ).
-
-        The arguments must both be positive.
+        For large arguments the logarithm of the function is
+        evaluated using lgam(), then exponentiated.
 
         ACCURACY:
 
-        See incomplete gamma function
+                             Relative error:
+        arithmetic   domain     # trials      peak         rms
+           IEEE       0,30       30000       8.1e-14     1.1e-14
 
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+        Cephes Math Library Release 2.0:  April, 1987
+        Copyright 1984, 1987 by Stephen L. Moshier
         *************************************************************************/
-        public static double poissoncdistribution(int k,
-            double m)
+        public static double beta(double a,
+            double b)
         {
             double result = 0;
+            double y = 0;
+            double sg = 0;
+            double s = 0;
 
-            alglib.ap.assert(k>=0 && (double)(m)>(double)(0), "Domain error in PoissonDistributionC");
-            result = igammaf.incompletegamma(k+1, m);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Inverse Poisson distribution
-
-        Finds the Poisson variable x such that the integral
-        from 0 to x of the Poisson density is equal to the
-        given probability y.
-
-        This is accomplished using the inverse gamma integral
-        function and the relation
-
-           m = igami( k+1, y ).
-
-        ACCURACY:
-
-        See inverse incomplete gamma function
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
-        *************************************************************************/
-        public static double invpoissondistribution(int k,
-            double y)
-        {
-            double result = 0;
-
-            alglib.ap.assert((k>=0 && (double)(y)>=(double)(0)) && (double)(y)<(double)(1), "Domain error in InvPoissonDistribution");
-            result = igammaf.invincompletegammac(k+1, y);
+            sg = 1;
+            alglib.ap.assert((double)(a)>(double)(0) || (double)(a)!=(double)((int)Math.Floor(a)), "Overflow in Beta");
+            alglib.ap.assert((double)(b)>(double)(0) || (double)(b)!=(double)((int)Math.Floor(b)), "Overflow in Beta");
+            y = a+b;
+            if( (double)(Math.Abs(y))>(double)(171.624376956302725) )
+            {
+                y = gammafunc.lngamma(y, ref s);
+                sg = sg*s;
+                y = gammafunc.lngamma(b, ref s)-y;
+                sg = sg*s;
+                y = gammafunc.lngamma(a, ref s)+y;
+                sg = sg*s;
+                alglib.ap.assert((double)(y)<=(double)(Math.Log(math.maxrealnumber)), "Overflow in Beta");
+                result = sg*Math.Exp(y);
+                return result;
+            }
+            y = gammafunc.gammafunction(y);
+            alglib.ap.assert((double)(y)!=(double)(0), "Overflow in Beta");
+            if( (double)(a)>(double)(b) )
+            {
+                y = gammafunc.gammafunction(a)/y;
+                y = y*gammafunc.gammafunction(b);
+            }
+            else
+            {
+                y = gammafunc.gammafunction(b)/y;
+                y = y*gammafunc.gammafunction(a);
+            }
+            result = y;
             return result;
         }
 
 
     }
-    public class psif
+    public class chebyshev
     {
         /*************************************************************************
-        Psi (digamma) function
+        Calculation of the value of the Chebyshev polynomials of the
+        first and second kinds.
 
-                     d      -
-          psi(x)  =  -- ln | (x)
-                     dx
+        Parameters:
+            r   -   polynomial kind, either 1 or 2.
+            n   -   degree, n>=0
+            x   -   argument, -1 <= x <= 1
 
-        is the logarithmic derivative of the gamma function.
-        For integer x,
-                          n-1
-                           -
-        psi(n) = -EUL  +   >  1/k.
-                           -
-                          k=1
-
-        This formula is used for 0 < n <= 10.  If x is negative, it
-        is transformed to a positive argument by the reflection
-        formula  psi(1-x) = psi(x) + pi cot(pi x).
-        For general positive x, the argument is made greater than 10
-        using the recurrence  psi(x+1) = psi(x) + 1/x.
-        Then the following asymptotic expansion is applied:
-
-                                  inf.   B
-                                   -      2k
-        psi(x) = log(x) - 1/2x -   >   -------
-                                   -        2k
-                                  k=1   2k x
-
-        where the B2k are Bernoulli numbers.
-
-        ACCURACY:
-           Relative error (except absolute when |psi| < 1):
-        arithmetic   domain     # trials      peak         rms
-           IEEE      0,30        30000       1.3e-15     1.4e-16
-           IEEE      -30,0       40000       1.5e-15     2.2e-16
-
-        Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 1992, 2000 by Stephen L. Moshier
+        Result:
+            the value of the Chebyshev polynomial at x
         *************************************************************************/
-        public static double psi(double x)
+        public static double chebyshevcalculate(int r,
+            int n,
+            double x)
         {
             double result = 0;
-            double p = 0;
-            double q = 0;
-            double nz = 0;
-            double s = 0;
-            double w = 0;
-            double y = 0;
-            double z = 0;
-            double polv = 0;
             int i = 0;
-            int n = 0;
-            int negative = 0;
+            double a = 0;
+            double b = 0;
 
-            negative = 0;
-            nz = 0.0;
-            if( (double)(x)<=(double)(0) )
+            result = 0;
+            
+            //
+            // Prepare A and B
+            //
+            if( r==1 )
             {
-                negative = 1;
-                q = x;
-                p = (int)Math.Floor(q);
-                if( (double)(p)==(double)(q) )
-                {
-                    alglib.ap.assert(false, "Singularity in Psi(x)");
-                    result = math.maxrealnumber;
-                    return result;
-                }
-                nz = q-p;
-                if( (double)(nz)!=(double)(0.5) )
-                {
-                    if( (double)(nz)>(double)(0.5) )
-                    {
-                        p = p+1.0;
-                        nz = q-p;
-                    }
-                    nz = Math.PI/Math.Tan(Math.PI*nz);
-                }
-                else
-                {
-                    nz = 0.0;
-                }
-                x = 1.0-x;
-            }
-            if( (double)(x)<=(double)(10.0) && (double)(x)==(double)((int)Math.Floor(x)) )
-            {
-                y = 0.0;
-                n = (int)Math.Floor(x);
-                for(i=1; i<=n-1; i++)
-                {
-                    w = i;
-                    y = y+1.0/w;
-                }
-                y = y-0.57721566490153286061;
+                a = 1;
+                b = x;
             }
             else
             {
-                s = x;
-                w = 0.0;
-                while( (double)(s)<(double)(10.0) )
-                {
-                    w = w+1.0/s;
-                    s = s+1.0;
-                }
-                if( (double)(s)<(double)(1.0E17) )
-                {
-                    z = 1.0/(s*s);
-                    polv = 8.33333333333333333333E-2;
-                    polv = polv*z-2.10927960927960927961E-2;
-                    polv = polv*z+7.57575757575757575758E-3;
-                    polv = polv*z-4.16666666666666666667E-3;
-                    polv = polv*z+3.96825396825396825397E-3;
-                    polv = polv*z-8.33333333333333333333E-3;
-                    polv = polv*z+8.33333333333333333333E-2;
-                    y = z*polv;
-                }
-                else
-                {
-                    y = 0.0;
-                }
-                y = Math.Log(s)-0.5/s-y-w;
+                a = 1;
+                b = 2*x;
             }
-            if( negative!=0 )
+            
+            //
+            // Special cases: N=0 or N=1
+            //
+            if( n==0 )
             {
-                y = y-nz;
+                result = a;
+                return result;
             }
-            result = y;
+            if( n==1 )
+            {
+                result = b;
+                return result;
+            }
+            
+            //
+            // General case: N>=2
+            //
+            for(i=2; i<=n; i++)
+            {
+                result = 2*x*b-a;
+                a = b;
+                b = result;
+            }
             return result;
+        }
+
+
+        /*************************************************************************
+        Summation of Chebyshev polynomials using Clenshaw's recurrence formula.
+
+        This routine calculates
+            c[0]*T0(x) + c[1]*T1(x) + ... + c[N]*TN(x)
+        or
+            c[0]*U0(x) + c[1]*U1(x) + ... + c[N]*UN(x)
+        depending on the R.
+
+        Parameters:
+            r   -   polynomial kind, either 1 or 2.
+            n   -   degree, n>=0
+            x   -   argument
+
+        Result:
+            the value of the Chebyshev polynomial at x
+        *************************************************************************/
+        public static double chebyshevsum(double[] c,
+            int r,
+            int n,
+            double x)
+        {
+            double result = 0;
+            double b1 = 0;
+            double b2 = 0;
+            int i = 0;
+
+            b1 = 0;
+            b2 = 0;
+            for(i=n; i>=1; i--)
+            {
+                result = 2*x*b1-b2+c[i];
+                b2 = b1;
+                b1 = result;
+            }
+            if( r==1 )
+            {
+                result = -b2+x*b1+c[0];
+            }
+            else
+            {
+                result = -b2+2*x*b1+c[0];
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Representation of Tn as C[0] + C[1]*X + ... + C[N]*X^N
+
+        Input parameters:
+            N   -   polynomial degree, n>=0
+
+        Output parameters:
+            C   -   coefficients
+        *************************************************************************/
+        public static void chebyshevcoefficients(int n,
+            ref double[] c)
+        {
+            int i = 0;
+
+            c = new double[0];
+
+            c = new double[n+1];
+            for(i=0; i<=n; i++)
+            {
+                c[i] = 0;
+            }
+            if( n==0 || n==1 )
+            {
+                c[n] = 1;
+            }
+            else
+            {
+                c[n] = Math.Exp((n-1)*Math.Log(2));
+                for(i=0; i<=n/2-1; i++)
+                {
+                    c[n-2*(i+1)] = -(c[n-2*i]*(n-2*i)*(n-2*i-1)/4/(i+1)/(n-i-1));
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Conversion of a series of Chebyshev polynomials to a power series.
+
+        Represents A[0]*T0(x) + A[1]*T1(x) + ... + A[N]*Tn(x) as
+        B[0] + B[1]*X + ... + B[N]*X^N.
+
+        Input parameters:
+            A   -   Chebyshev series coefficients
+            N   -   degree, N>=0
+            
+        Output parameters
+            B   -   power series coefficients
+        *************************************************************************/
+        public static void fromchebyshev(double[] a,
+            int n,
+            ref double[] b)
+        {
+            int i = 0;
+            int k = 0;
+            double e = 0;
+            double d = 0;
+
+            b = new double[0];
+
+            b = new double[n+1];
+            for(i=0; i<=n; i++)
+            {
+                b[i] = 0;
+            }
+            d = 0;
+            i = 0;
+            do
+            {
+                k = i;
+                do
+                {
+                    e = b[k];
+                    b[k] = 0;
+                    if( i<=1 && k==i )
+                    {
+                        b[k] = 1;
+                    }
+                    else
+                    {
+                        if( i!=0 )
+                        {
+                            b[k] = 2*d;
+                        }
+                        if( k>i+1 )
+                        {
+                            b[k] = b[k]-b[k-2];
+                        }
+                    }
+                    d = e;
+                    k = k+1;
+                }
+                while( k<=n );
+                d = b[i];
+                e = 0;
+                k = i;
+                while( k<=n )
+                {
+                    e = e+b[k]*a[k];
+                    k = k+2;
+                }
+                b[i] = e;
+                i = i+1;
+            }
+            while( i<=n );
         }
 
 
@@ -8539,455 +8440,555 @@ public partial class alglib
 
 
     }
-    public class trigintegrals
+    public class binomialdistr
     {
         /*************************************************************************
-        Sine and cosine integrals
+        Binomial distribution
 
-        Evaluates the integrals
+        Returns the sum of the terms 0 through k of the Binomial
+        probability density:
 
-                                 x
-                                 -
-                                |  cos t - 1
-          Ci(x) = eul + ln x +  |  --------- dt,
-                                |      t
-                               -
-                                0
-                    x
-                    -
-                   |  sin t
-          Si(x) =  |  ----- dt
-                   |    t
-                  -
-                   0
+          k
+          --  ( n )   j      n-j
+          >   (   )  p  (1-p)
+          --  ( j )
+         j=0
 
-        where eul = 0.57721566490153286061 is Euler's constant.
-        The integrals are approximated by rational functions.
-        For x > 8 auxiliary functions f(x) and g(x) are employed
-        such that
+        The terms are not summed directly; instead the incomplete
+        beta integral is employed, according to the formula
 
-        Ci(x) = f(x) sin(x) - g(x) cos(x)
-        Si(x) = pi/2 - f(x) cos(x) - g(x) sin(x)
+        y = bdtr( k, n, p ) = incbet( n-k, k+1, 1-p ).
 
+        The arguments must be positive, with p ranging from 0 to 1.
 
         ACCURACY:
-           Test interval = [0,50].
-        Absolute error, except relative when > 1:
-        arithmetic   function   # trials      peak         rms
-           IEEE        Si        30000       4.4e-16     7.3e-17
-           IEEE        Ci        30000       6.9e-16     5.1e-17
 
-        Cephes Math Library Release 2.1:  January, 1989
-        Copyright 1984, 1987, 1989 by Stephen L. Moshier
+        Tested at random points (a,b,p), with p between 0 and 1.
+
+                      a,b                     Relative error:
+        arithmetic  domain     # trials      peak         rms
+         For p between 0.001 and 1:
+           IEEE     0,100       100000      4.3e-15     2.6e-16
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static void sinecosineintegrals(double x,
-            ref double si,
-            ref double ci)
+        public static double binomialdistribution(int k,
+            int n,
+            double p)
         {
-            double z = 0;
-            double c = 0;
-            double s = 0;
-            double f = 0;
-            double g = 0;
-            int sg = 0;
-            double sn = 0;
-            double sd = 0;
-            double cn = 0;
-            double cd = 0;
-            double fn = 0;
-            double fd = 0;
-            double gn = 0;
-            double gd = 0;
+            double result = 0;
+            double dk = 0;
+            double dn = 0;
 
-            si = 0;
-            ci = 0;
-
-            if( (double)(x)<(double)(0) )
+            alglib.ap.assert((double)(p)>=(double)(0) && (double)(p)<=(double)(1), "Domain error in BinomialDistribution");
+            alglib.ap.assert(k>=-1 && k<=n, "Domain error in BinomialDistribution");
+            if( k==-1 )
             {
-                sg = -1;
-                x = -x;
+                result = 0;
+                return result;
+            }
+            if( k==n )
+            {
+                result = 1;
+                return result;
+            }
+            dn = n-k;
+            if( k==0 )
+            {
+                dk = Math.Pow(1.0-p, dn);
             }
             else
             {
-                sg = 0;
+                dk = k+1;
+                dk = ibetaf.incompletebeta(dn, dk, 1.0-p);
             }
-            if( (double)(x)==(double)(0) )
-            {
-                si = 0;
-                ci = -math.maxrealnumber;
-                return;
-            }
-            if( (double)(x)>(double)(1.0E9) )
-            {
-                si = 1.570796326794896619-Math.Cos(x)/x;
-                ci = Math.Sin(x)/x;
-                return;
-            }
-            if( (double)(x)<=(double)(4) )
-            {
-                z = x*x;
-                sn = -8.39167827910303881427E-11;
-                sn = sn*z+4.62591714427012837309E-8;
-                sn = sn*z-9.75759303843632795789E-6;
-                sn = sn*z+9.76945438170435310816E-4;
-                sn = sn*z-4.13470316229406538752E-2;
-                sn = sn*z+1.00000000000000000302E0;
-                sd = 2.03269266195951942049E-12;
-                sd = sd*z+1.27997891179943299903E-9;
-                sd = sd*z+4.41827842801218905784E-7;
-                sd = sd*z+9.96412122043875552487E-5;
-                sd = sd*z+1.42085239326149893930E-2;
-                sd = sd*z+9.99999999999999996984E-1;
-                s = x*sn/sd;
-                cn = 2.02524002389102268789E-11;
-                cn = cn*z-1.35249504915790756375E-8;
-                cn = cn*z+3.59325051419993077021E-6;
-                cn = cn*z-4.74007206873407909465E-4;
-                cn = cn*z+2.89159652607555242092E-2;
-                cn = cn*z-1.00000000000000000080E0;
-                cd = 4.07746040061880559506E-12;
-                cd = cd*z+3.06780997581887812692E-9;
-                cd = cd*z+1.23210355685883423679E-6;
-                cd = cd*z+3.17442024775032769882E-4;
-                cd = cd*z+5.10028056236446052392E-2;
-                cd = cd*z+4.00000000000000000080E0;
-                c = z*cn/cd;
-                if( sg!=0 )
-                {
-                    s = -s;
-                }
-                si = s;
-                ci = 0.57721566490153286061+Math.Log(x)+c;
-                return;
-            }
-            s = Math.Sin(x);
-            c = Math.Cos(x);
-            z = 1.0/(x*x);
-            if( (double)(x)<(double)(8) )
-            {
-                fn = 4.23612862892216586994E0;
-                fn = fn*z+5.45937717161812843388E0;
-                fn = fn*z+1.62083287701538329132E0;
-                fn = fn*z+1.67006611831323023771E-1;
-                fn = fn*z+6.81020132472518137426E-3;
-                fn = fn*z+1.08936580650328664411E-4;
-                fn = fn*z+5.48900223421373614008E-7;
-                fd = 1.00000000000000000000E0;
-                fd = fd*z+8.16496634205391016773E0;
-                fd = fd*z+7.30828822505564552187E0;
-                fd = fd*z+1.86792257950184183883E0;
-                fd = fd*z+1.78792052963149907262E-1;
-                fd = fd*z+7.01710668322789753610E-3;
-                fd = fd*z+1.10034357153915731354E-4;
-                fd = fd*z+5.48900252756255700982E-7;
-                f = fn/(x*fd);
-                gn = 8.71001698973114191777E-2;
-                gn = gn*z+6.11379109952219284151E-1;
-                gn = gn*z+3.97180296392337498885E-1;
-                gn = gn*z+7.48527737628469092119E-2;
-                gn = gn*z+5.38868681462177273157E-3;
-                gn = gn*z+1.61999794598934024525E-4;
-                gn = gn*z+1.97963874140963632189E-6;
-                gn = gn*z+7.82579040744090311069E-9;
-                gd = 1.00000000000000000000E0;
-                gd = gd*z+1.64402202413355338886E0;
-                gd = gd*z+6.66296701268987968381E-1;
-                gd = gd*z+9.88771761277688796203E-2;
-                gd = gd*z+6.22396345441768420760E-3;
-                gd = gd*z+1.73221081474177119497E-4;
-                gd = gd*z+2.02659182086343991969E-6;
-                gd = gd*z+7.82579218933534490868E-9;
-                g = z*gn/gd;
-            }
-            else
-            {
-                fn = 4.55880873470465315206E-1;
-                fn = fn*z+7.13715274100146711374E-1;
-                fn = fn*z+1.60300158222319456320E-1;
-                fn = fn*z+1.16064229408124407915E-2;
-                fn = fn*z+3.49556442447859055605E-4;
-                fn = fn*z+4.86215430826454749482E-6;
-                fn = fn*z+3.20092790091004902806E-8;
-                fn = fn*z+9.41779576128512936592E-11;
-                fn = fn*z+9.70507110881952024631E-14;
-                fd = 1.00000000000000000000E0;
-                fd = fd*z+9.17463611873684053703E-1;
-                fd = fd*z+1.78685545332074536321E-1;
-                fd = fd*z+1.22253594771971293032E-2;
-                fd = fd*z+3.58696481881851580297E-4;
-                fd = fd*z+4.92435064317881464393E-6;
-                fd = fd*z+3.21956939101046018377E-8;
-                fd = fd*z+9.43720590350276732376E-11;
-                fd = fd*z+9.70507110881952025725E-14;
-                f = fn/(x*fd);
-                gn = 6.97359953443276214934E-1;
-                gn = gn*z+3.30410979305632063225E-1;
-                gn = gn*z+3.84878767649974295920E-2;
-                gn = gn*z+1.71718239052347903558E-3;
-                gn = gn*z+3.48941165502279436777E-5;
-                gn = gn*z+3.47131167084116673800E-7;
-                gn = gn*z+1.70404452782044526189E-9;
-                gn = gn*z+3.85945925430276600453E-12;
-                gn = gn*z+3.14040098946363334640E-15;
-                gd = 1.00000000000000000000E0;
-                gd = gd*z+1.68548898811011640017E0;
-                gd = gd*z+4.87852258695304967486E-1;
-                gd = gd*z+4.67913194259625806320E-2;
-                gd = gd*z+1.90284426674399523638E-3;
-                gd = gd*z+3.68475504442561108162E-5;
-                gd = gd*z+3.57043223443740838771E-7;
-                gd = gd*z+1.72693748966316146736E-9;
-                gd = gd*z+3.87830166023954706752E-12;
-                gd = gd*z+3.14040098946363335242E-15;
-                g = z*gn/gd;
-            }
-            si = 1.570796326794896619-f*c-g*s;
-            if( sg!=0 )
-            {
-                si = -si;
-            }
-            ci = f*s-g*c;
+            result = dk;
+            return result;
         }
 
 
         /*************************************************************************
-        Hyperbolic sine and cosine integrals
+        Complemented binomial distribution
 
-        Approximates the integrals
+        Returns the sum of the terms k+1 through n of the Binomial
+        probability density:
 
-                                   x
-                                   -
-                                  | |   cosh t - 1
-          Chi(x) = eul + ln x +   |    -----------  dt,
-                                | |          t
-                                 -
-                                 0
+          n
+          --  ( n )   j      n-j
+          >   (   )  p  (1-p)
+          --  ( j )
+         j=k+1
 
-                      x
-                      -
-                     | |  sinh t
-          Shi(x) =   |    ------  dt
-                   | |       t
-                    -
-                    0
+        The terms are not summed directly; instead the incomplete
+        beta integral is employed, according to the formula
 
-        where eul = 0.57721566490153286061 is Euler's constant.
-        The integrals are evaluated by power series for x < 8
-        and by Chebyshev expansions for x between 8 and 88.
-        For large x, both functions approach exp(x)/2x.
-        Arguments greater than 88 in magnitude return MAXNUM.
+        y = bdtrc( k, n, p ) = incbet( k+1, n-k, p ).
 
+        The arguments must be positive, with p ranging from 0 to 1.
 
         ACCURACY:
 
-        Test interval 0 to 88.
-                             Relative error:
-        arithmetic   function  # trials      peak         rms
-           IEEE         Shi      30000       6.9e-16     1.6e-16
-               Absolute error, except relative when |Chi| > 1:
-           IEEE         Chi      30000       8.4e-16     1.4e-16
+        Tested at random points (a,b,p).
+
+                      a,b                     Relative error:
+        arithmetic  domain     # trials      peak         rms
+         For p between 0.001 and 1:
+           IEEE     0,100       100000      6.7e-15     8.2e-16
+         For p between 0 and .001:
+           IEEE     0,100       100000      1.5e-13     2.7e-15
 
         Cephes Math Library Release 2.8:  June, 2000
-        Copyright 1984, 1987, 2000 by Stephen L. Moshier
+        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static void hyperbolicsinecosineintegrals(double x,
-            ref double shi,
-            ref double chi)
+        public static double binomialcdistribution(int k,
+            int n,
+            double p)
         {
-            double k = 0;
-            double z = 0;
-            double c = 0;
-            double s = 0;
-            double a = 0;
-            int sg = 0;
-            double b0 = 0;
-            double b1 = 0;
-            double b2 = 0;
+            double result = 0;
+            double dk = 0;
+            double dn = 0;
 
-            shi = 0;
-            chi = 0;
-
-            if( (double)(x)<(double)(0) )
+            alglib.ap.assert((double)(p)>=(double)(0) && (double)(p)<=(double)(1), "Domain error in BinomialDistributionC");
+            alglib.ap.assert(k>=-1 && k<=n, "Domain error in BinomialDistributionC");
+            if( k==-1 )
             {
-                sg = -1;
-                x = -x;
+                result = 1;
+                return result;
             }
-            else
+            if( k==n )
             {
-                sg = 0;
+                result = 0;
+                return result;
             }
-            if( (double)(x)==(double)(0) )
+            dn = n-k;
+            if( k==0 )
             {
-                shi = 0;
-                chi = -math.maxrealnumber;
-                return;
-            }
-            if( (double)(x)<(double)(8.0) )
-            {
-                z = x*x;
-                a = 1.0;
-                s = 1.0;
-                c = 0.0;
-                k = 2.0;
-                do
+                if( (double)(p)<(double)(0.01) )
                 {
-                    a = a*z/k;
-                    c = c+a/k;
-                    k = k+1.0;
-                    a = a/k;
-                    s = s+a/k;
-                    k = k+1.0;
-                }
-                while( (double)(Math.Abs(a/s))>=(double)(math.machineepsilon) );
-                s = s*x;
-            }
-            else
-            {
-                if( (double)(x)<(double)(18.0) )
-                {
-                    a = (576.0/x-52.0)/10.0;
-                    k = Math.Exp(x)/x;
-                    b0 = 1.83889230173399459482E-17;
-                    b1 = 0.0;
-                    chebiterationshichi(a, -9.55485532279655569575E-17, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.04326105980879882648E-16, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.09896949074905343022E-15, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.31313534344092599234E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 5.93976226264314278932E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.47197010497749154755E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.40059764613117131000E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 9.49044626224223543299E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.61596181145435454033E-11, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.77899784436430310321E-10, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.35455469767246947469E-9, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.03257121792819495123E-9, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.56699611114982536845E-8, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.44818877384267342057E-7, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 7.82018215184051295296E-7, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -5.39919118403805073710E-6, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.12458202168959833422E-5, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 8.90136741950727517826E-5, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.02558474743846862168E-3, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.96064440855633256972E-2, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.11847751047257036625E0, ref b0, ref b1, ref b2);
-                    s = k*0.5*(b0-b2);
-                    b0 = -8.12435385225864036372E-18;
-                    b1 = 0.0;
-                    chebiterationshichi(a, 2.17586413290339214377E-17, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 5.22624394924072204667E-17, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -9.48812110591690559363E-16, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 5.35546311647465209166E-15, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.21009970113732918701E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -6.00865178553447437951E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 7.16339649156028587775E-13, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -2.93496072607599856104E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.40359438136491256904E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 8.76302288609054966081E-11, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -4.40092476213282340617E-10, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.87992075640569295479E-10, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.31458150989474594064E-8, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -4.75513930924765465590E-8, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -2.21775018801848880741E-7, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.94635531373272490962E-6, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 4.33505889257316408893E-6, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -6.13387001076494349496E-5, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.13085477492997465138E-4, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 4.97164789823116062801E-4, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.64347496031374526641E-2, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.11446150876699213025E0, ref b0, ref b1, ref b2);
-                    c = k*0.5*(b0-b2);
+                    dk = -nearunityunit.nuexpm1(dn*nearunityunit.nulog1p(-p));
                 }
                 else
                 {
-                    if( (double)(x)<=(double)(88.0) )
-                    {
-                        a = (6336.0/x-212.0)/70.0;
-                        k = Math.Exp(x)/x;
-                        b0 = -1.05311574154850938805E-17;
-                        b1 = 0.0;
-                        chebiterationshichi(a, 2.62446095596355225821E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 8.82090135625368160657E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.38459811878103047136E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -8.30608026366935789136E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.93397875437050071776E-15, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.01765565969729044505E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -4.21128170307640802703E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.60818204519802480035E-13, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.34714954175994481761E-13, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.72600352129153073807E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.66894954752839083608E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.49278141024730899554E-11, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.58580661666482709598E-10, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.79289437183355633342E-10, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.76281629144264523277E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.69050228879421288846E-8, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.25391771228487041649E-7, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.16229947068677338732E-6, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.61038260117376323993E-5, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.49810375601053973070E-4, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.28478065259647610779E-2, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.03665722588798326712E0, ref b0, ref b1, ref b2);
-                        s = k*0.5*(b0-b2);
-                        b0 = 8.06913408255155572081E-18;
-                        b1 = 0.0;
-                        chebiterationshichi(a, -2.08074168180148170312E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -5.98111329658272336816E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.68533951085945765591E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 4.52313941698904694774E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.10734917335299464535E-15, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -4.42823207332531972288E-15, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.49639695410806959872E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 6.63406731718911586609E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.71902448093119218395E-13, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.27135418132338309016E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.74851141935315395333E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.33781843985453438400E-11, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.71436006377612442764E-11, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -2.56600180000355990529E-10, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.61021375163803438552E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -4.72543064876271773512E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.00095178028681682282E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 7.79387474390914922337E-8, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.06942765566401507066E-6, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.59503164802313196374E-5, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.49592575153777996871E-4, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.28475387530065247392E-2, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.03665693917934275131E0, ref b0, ref b1, ref b2);
-                        c = k*0.5*(b0-b2);
-                    }
-                    else
-                    {
-                        if( sg!=0 )
-                        {
-                            shi = -math.maxrealnumber;
-                        }
-                        else
-                        {
-                            shi = math.maxrealnumber;
-                        }
-                        chi = math.maxrealnumber;
-                        return;
-                    }
+                    dk = 1.0-Math.Pow(1.0-p, dn);
                 }
             }
-            if( sg!=0 )
+            else
             {
-                s = -s;
+                dk = k+1;
+                dk = ibetaf.incompletebeta(dk, dn, p);
             }
-            shi = s;
-            chi = 0.57721566490153286061+Math.Log(x)+c;
+            result = dk;
+            return result;
         }
 
 
-        private static void chebiterationshichi(double x,
-            double c,
-            ref double b0,
-            ref double b1,
-            ref double b2)
+        /*************************************************************************
+        Inverse binomial distribution
+
+        Finds the event probability p such that the sum of the
+        terms 0 through k of the Binomial probability density
+        is equal to the given cumulative probability y.
+
+        This is accomplished using the inverse beta integral
+        function and the relation
+
+        1 - p = incbi( n-k, k+1, y ).
+
+        ACCURACY:
+
+        Tested at random points (a,b,p).
+
+                      a,b                     Relative error:
+        arithmetic  domain     # trials      peak         rms
+         For p between 0.001 and 1:
+           IEEE     0,100       100000      2.3e-14     6.4e-16
+           IEEE     0,10000     100000      6.6e-12     1.2e-13
+         For p between 10^-6 and 0.001:
+           IEEE     0,100       100000      2.0e-12     1.3e-14
+           IEEE     0,10000     100000      1.5e-12     3.2e-14
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double invbinomialdistribution(int k,
+            int n,
+            double y)
         {
-            b2 = b1;
-            b1 = b0;
-            b0 = x*b1-b2+c;
+            double result = 0;
+            double dk = 0;
+            double dn = 0;
+            double p = 0;
+
+            alglib.ap.assert(k>=0 && k<n, "Domain error in InvBinomialDistribution");
+            dn = n-k;
+            if( k==0 )
+            {
+                if( (double)(y)>(double)(0.8) )
+                {
+                    p = -nearunityunit.nuexpm1(nearunityunit.nulog1p(y-1.0)/dn);
+                }
+                else
+                {
+                    p = 1.0-Math.Pow(y, 1.0/dn);
+                }
+            }
+            else
+            {
+                dk = k+1;
+                p = ibetaf.incompletebeta(dn, dk, 0.5);
+                if( (double)(p)>(double)(0.5) )
+                {
+                    p = ibetaf.invincompletebeta(dk, dn, 1.0-y);
+                }
+                else
+                {
+                    p = 1.0-ibetaf.invincompletebeta(dn, dk, y);
+                }
+            }
+            result = p;
+            return result;
+        }
+
+
+    }
+    public class airyf
+    {
+        /*************************************************************************
+        Airy function
+
+        Solution of the differential equation
+
+        y"(x) = xy.
+
+        The function returns the two independent solutions Ai, Bi
+        and their first derivatives Ai'(x), Bi'(x).
+
+        Evaluation is by power series summation for small x,
+        by rational minimax approximations for large x.
+
+
+
+        ACCURACY:
+        Error criterion is absolute when function <= 1, relative
+        when function > 1, except * denotes relative error criterion.
+        For large negative x, the absolute error increases as x^1.5.
+        For large positive x, the relative error increases as x^1.5.
+
+        Arithmetic  domain   function  # trials      peak         rms
+        IEEE        -10, 0     Ai        10000       1.6e-15     2.7e-16
+        IEEE          0, 10    Ai        10000       2.3e-14*    1.8e-15*
+        IEEE        -10, 0     Ai'       10000       4.6e-15     7.6e-16
+        IEEE          0, 10    Ai'       10000       1.8e-14*    1.5e-15*
+        IEEE        -10, 10    Bi        30000       4.2e-15     5.3e-16
+        IEEE        -10, 10    Bi'       30000       4.9e-15     7.3e-16
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static void airy(double x,
+            ref double ai,
+            ref double aip,
+            ref double bi,
+            ref double bip)
+        {
+            double z = 0;
+            double zz = 0;
+            double t = 0;
+            double f = 0;
+            double g = 0;
+            double uf = 0;
+            double ug = 0;
+            double k = 0;
+            double zeta = 0;
+            double theta = 0;
+            int domflg = 0;
+            double c1 = 0;
+            double c2 = 0;
+            double sqrt3 = 0;
+            double sqpii = 0;
+            double afn = 0;
+            double afd = 0;
+            double agn = 0;
+            double agd = 0;
+            double apfn = 0;
+            double apfd = 0;
+            double apgn = 0;
+            double apgd = 0;
+            double an = 0;
+            double ad = 0;
+            double apn = 0;
+            double apd = 0;
+            double bn16 = 0;
+            double bd16 = 0;
+            double bppn = 0;
+            double bppd = 0;
+
+            ai = 0;
+            aip = 0;
+            bi = 0;
+            bip = 0;
+
+            sqpii = 5.64189583547756286948E-1;
+            c1 = 0.35502805388781723926;
+            c2 = 0.258819403792806798405;
+            sqrt3 = 1.732050807568877293527;
+            domflg = 0;
+            if( (double)(x)>(double)(25.77) )
+            {
+                ai = 0;
+                aip = 0;
+                bi = math.maxrealnumber;
+                bip = math.maxrealnumber;
+                return;
+            }
+            if( (double)(x)<(double)(-2.09) )
+            {
+                domflg = 15;
+                t = Math.Sqrt(-x);
+                zeta = -(2.0*x*t/3.0);
+                t = Math.Sqrt(t);
+                k = sqpii/t;
+                z = 1.0/zeta;
+                zz = z*z;
+                afn = -1.31696323418331795333E-1;
+                afn = afn*zz-6.26456544431912369773E-1;
+                afn = afn*zz-6.93158036036933542233E-1;
+                afn = afn*zz-2.79779981545119124951E-1;
+                afn = afn*zz-4.91900132609500318020E-2;
+                afn = afn*zz-4.06265923594885404393E-3;
+                afn = afn*zz-1.59276496239262096340E-4;
+                afn = afn*zz-2.77649108155232920844E-6;
+                afn = afn*zz-1.67787698489114633780E-8;
+                afd = 1.00000000000000000000E0;
+                afd = afd*zz+1.33560420706553243746E1;
+                afd = afd*zz+3.26825032795224613948E1;
+                afd = afd*zz+2.67367040941499554804E1;
+                afd = afd*zz+9.18707402907259625840E0;
+                afd = afd*zz+1.47529146771666414581E0;
+                afd = afd*zz+1.15687173795188044134E-1;
+                afd = afd*zz+4.40291641615211203805E-3;
+                afd = afd*zz+7.54720348287414296618E-5;
+                afd = afd*zz+4.51850092970580378464E-7;
+                uf = 1.0+zz*afn/afd;
+                agn = 1.97339932091685679179E-2;
+                agn = agn*zz+3.91103029615688277255E-1;
+                agn = agn*zz+1.06579897599595591108E0;
+                agn = agn*zz+9.39169229816650230044E-1;
+                agn = agn*zz+3.51465656105547619242E-1;
+                agn = agn*zz+6.33888919628925490927E-2;
+                agn = agn*zz+5.85804113048388458567E-3;
+                agn = agn*zz+2.82851600836737019778E-4;
+                agn = agn*zz+6.98793669997260967291E-6;
+                agn = agn*zz+8.11789239554389293311E-8;
+                agn = agn*zz+3.41551784765923618484E-10;
+                agd = 1.00000000000000000000E0;
+                agd = agd*zz+9.30892908077441974853E0;
+                agd = agd*zz+1.98352928718312140417E1;
+                agd = agd*zz+1.55646628932864612953E1;
+                agd = agd*zz+5.47686069422975497931E0;
+                agd = agd*zz+9.54293611618961883998E-1;
+                agd = agd*zz+8.64580826352392193095E-2;
+                agd = agd*zz+4.12656523824222607191E-3;
+                agd = agd*zz+1.01259085116509135510E-4;
+                agd = agd*zz+1.17166733214413521882E-6;
+                agd = agd*zz+4.91834570062930015649E-9;
+                ug = z*agn/agd;
+                theta = zeta+0.25*Math.PI;
+                f = Math.Sin(theta);
+                g = Math.Cos(theta);
+                ai = k*(f*uf-g*ug);
+                bi = k*(g*uf+f*ug);
+                apfn = 1.85365624022535566142E-1;
+                apfn = apfn*zz+8.86712188052584095637E-1;
+                apfn = apfn*zz+9.87391981747398547272E-1;
+                apfn = apfn*zz+4.01241082318003734092E-1;
+                apfn = apfn*zz+7.10304926289631174579E-2;
+                apfn = apfn*zz+5.90618657995661810071E-3;
+                apfn = apfn*zz+2.33051409401776799569E-4;
+                apfn = apfn*zz+4.08718778289035454598E-6;
+                apfn = apfn*zz+2.48379932900442457853E-8;
+                apfd = 1.00000000000000000000E0;
+                apfd = apfd*zz+1.47345854687502542552E1;
+                apfd = apfd*zz+3.75423933435489594466E1;
+                apfd = apfd*zz+3.14657751203046424330E1;
+                apfd = apfd*zz+1.09969125207298778536E1;
+                apfd = apfd*zz+1.78885054766999417817E0;
+                apfd = apfd*zz+1.41733275753662636873E-1;
+                apfd = apfd*zz+5.44066067017226003627E-3;
+                apfd = apfd*zz+9.39421290654511171663E-5;
+                apfd = apfd*zz+5.65978713036027009243E-7;
+                uf = 1.0+zz*apfn/apfd;
+                apgn = -3.55615429033082288335E-2;
+                apgn = apgn*zz-6.37311518129435504426E-1;
+                apgn = apgn*zz-1.70856738884312371053E0;
+                apgn = apgn*zz-1.50221872117316635393E0;
+                apgn = apgn*zz-5.63606665822102676611E-1;
+                apgn = apgn*zz-1.02101031120216891789E-1;
+                apgn = apgn*zz-9.48396695961445269093E-3;
+                apgn = apgn*zz-4.60325307486780994357E-4;
+                apgn = apgn*zz-1.14300836484517375919E-5;
+                apgn = apgn*zz-1.33415518685547420648E-7;
+                apgn = apgn*zz-5.63803833958893494476E-10;
+                apgd = 1.00000000000000000000E0;
+                apgd = apgd*zz+9.85865801696130355144E0;
+                apgd = apgd*zz+2.16401867356585941885E1;
+                apgd = apgd*zz+1.73130776389749389525E1;
+                apgd = apgd*zz+6.17872175280828766327E0;
+                apgd = apgd*zz+1.08848694396321495475E0;
+                apgd = apgd*zz+9.95005543440888479402E-2;
+                apgd = apgd*zz+4.78468199683886610842E-3;
+                apgd = apgd*zz+1.18159633322838625562E-4;
+                apgd = apgd*zz+1.37480673554219441465E-6;
+                apgd = apgd*zz+5.79912514929147598821E-9;
+                ug = z*apgn/apgd;
+                k = sqpii*t;
+                aip = -(k*(g*uf+f*ug));
+                bip = k*(f*uf-g*ug);
+                return;
+            }
+            if( (double)(x)>=(double)(2.09) )
+            {
+                domflg = 5;
+                t = Math.Sqrt(x);
+                zeta = 2.0*x*t/3.0;
+                g = Math.Exp(zeta);
+                t = Math.Sqrt(t);
+                k = 2.0*t*g;
+                z = 1.0/zeta;
+                an = 3.46538101525629032477E-1;
+                an = an*z+1.20075952739645805542E1;
+                an = an*z+7.62796053615234516538E1;
+                an = an*z+1.68089224934630576269E2;
+                an = an*z+1.59756391350164413639E2;
+                an = an*z+7.05360906840444183113E1;
+                an = an*z+1.40264691163389668864E1;
+                an = an*z+9.99999999999999995305E-1;
+                ad = 5.67594532638770212846E-1;
+                ad = ad*z+1.47562562584847203173E1;
+                ad = ad*z+8.45138970141474626562E1;
+                ad = ad*z+1.77318088145400459522E2;
+                ad = ad*z+1.64234692871529701831E2;
+                ad = ad*z+7.14778400825575695274E1;
+                ad = ad*z+1.40959135607834029598E1;
+                ad = ad*z+1.00000000000000000470E0;
+                f = an/ad;
+                ai = sqpii*f/k;
+                k = -(0.5*sqpii*t/g);
+                apn = 6.13759184814035759225E-1;
+                apn = apn*z+1.47454670787755323881E1;
+                apn = apn*z+8.20584123476060982430E1;
+                apn = apn*z+1.71184781360976385540E2;
+                apn = apn*z+1.59317847137141783523E2;
+                apn = apn*z+6.99778599330103016170E1;
+                apn = apn*z+1.39470856980481566958E1;
+                apn = apn*z+1.00000000000000000550E0;
+                apd = 3.34203677749736953049E-1;
+                apd = apd*z+1.11810297306158156705E1;
+                apd = apd*z+7.11727352147859965283E1;
+                apd = apd*z+1.58778084372838313640E2;
+                apd = apd*z+1.53206427475809220834E2;
+                apd = apd*z+6.86752304592780337944E1;
+                apd = apd*z+1.38498634758259442477E1;
+                apd = apd*z+9.99999999999999994502E-1;
+                f = apn/apd;
+                aip = f*k;
+                if( (double)(x)>(double)(8.3203353) )
+                {
+                    bn16 = -2.53240795869364152689E-1;
+                    bn16 = bn16*z+5.75285167332467384228E-1;
+                    bn16 = bn16*z-3.29907036873225371650E-1;
+                    bn16 = bn16*z+6.44404068948199951727E-2;
+                    bn16 = bn16*z-3.82519546641336734394E-3;
+                    bd16 = 1.00000000000000000000E0;
+                    bd16 = bd16*z-7.15685095054035237902E0;
+                    bd16 = bd16*z+1.06039580715664694291E1;
+                    bd16 = bd16*z-5.23246636471251500874E0;
+                    bd16 = bd16*z+9.57395864378383833152E-1;
+                    bd16 = bd16*z-5.50828147163549611107E-2;
+                    f = z*bn16/bd16;
+                    k = sqpii*g;
+                    bi = k*(1.0+f)/t;
+                    bppn = 4.65461162774651610328E-1;
+                    bppn = bppn*z-1.08992173800493920734E0;
+                    bppn = bppn*z+6.38800117371827987759E-1;
+                    bppn = bppn*z-1.26844349553102907034E-1;
+                    bppn = bppn*z+7.62487844342109852105E-3;
+                    bppd = 1.00000000000000000000E0;
+                    bppd = bppd*z-8.70622787633159124240E0;
+                    bppd = bppd*z+1.38993162704553213172E1;
+                    bppd = bppd*z-7.14116144616431159572E0;
+                    bppd = bppd*z+1.34008595960680518666E0;
+                    bppd = bppd*z-7.84273211323341930448E-2;
+                    f = z*bppn/bppd;
+                    bip = k*t*(1.0+f);
+                    return;
+                }
+            }
+            f = 1.0;
+            g = x;
+            t = 1.0;
+            uf = 1.0;
+            ug = x;
+            k = 1.0;
+            z = x*x*x;
+            while( (double)(t)>(double)(math.machineepsilon) )
+            {
+                uf = uf*z;
+                k = k+1.0;
+                uf = uf/k;
+                ug = ug*z;
+                k = k+1.0;
+                ug = ug/k;
+                uf = uf/k;
+                f = f+uf;
+                k = k+1.0;
+                ug = ug/k;
+                g = g+ug;
+                t = Math.Abs(uf/f);
+            }
+            uf = c1*f;
+            ug = c2*g;
+            if( domflg%2==0 )
+            {
+                ai = uf-ug;
+            }
+            if( domflg/2%2==0 )
+            {
+                bi = sqrt3*(uf+ug);
+            }
+            k = 4.0;
+            uf = x*x/2.0;
+            ug = z/3.0;
+            f = uf;
+            g = 1.0+ug;
+            uf = uf/3.0;
+            t = 1.0;
+            while( (double)(t)>(double)(math.machineepsilon) )
+            {
+                uf = uf*z;
+                ug = ug/k;
+                k = k+1.0;
+                ug = ug*z;
+                uf = uf/k;
+                f = f+uf;
+                k = k+1.0;
+                ug = ug/k;
+                uf = uf/k;
+                g = g+ug;
+                k = k+1.0;
+                t = Math.Abs(ug/g);
+            }
+            uf = c1*f;
+            ug = c2*g;
+            if( domflg/4%2==0 )
+            {
+                aip = uf-ug;
+            }
+            if( domflg/8%2==0 )
+            {
+                bip = sqrt3*(uf+ug);
+            }
         }
 
 

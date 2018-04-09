@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,6 +18,7 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
@@ -35,24 +36,24 @@ public partial class alglib
         //
         public double r1 { get { return _innerobj.r1; } set { _innerobj.r1 = value; } }
         public double rinf { get { return _innerobj.rinf; } set { _innerobj.rinf = value; } }
-
+    
         public densesolverreport()
         {
-            _innerobj = new densesolver.densesolverreport();
+            _innerobj = new directdensesolvers.densesolverreport();
         }
         
         public override alglib.alglibobject make_copy()
         {
-            return new densesolverreport((densesolver.densesolverreport)_innerobj.make_copy());
+            return new densesolverreport((directdensesolvers.densesolverreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private densesolver.densesolverreport _innerobj;
-        public densesolver.densesolverreport innerobj { get { return _innerobj; } }
-        public densesolverreport(densesolver.densesolverreport obj)
+        private directdensesolvers.densesolverreport _innerobj;
+        public directdensesolvers.densesolverreport innerobj { get { return _innerobj; } }
+        public densesolverreport(directdensesolvers.densesolverreport obj)
         {
             _innerobj = obj;
         }
@@ -71,29 +72,29 @@ public partial class alglib
         public double[,] cx { get { return _innerobj.cx; } set { _innerobj.cx = value; } }
         public int n { get { return _innerobj.n; } set { _innerobj.n = value; } }
         public int k { get { return _innerobj.k; } set { _innerobj.k = value; } }
-
+    
         public densesolverlsreport()
         {
-            _innerobj = new densesolver.densesolverlsreport();
+            _innerobj = new directdensesolvers.densesolverlsreport();
         }
         
         public override alglib.alglibobject make_copy()
         {
-            return new densesolverlsreport((densesolver.densesolverlsreport)_innerobj.make_copy());
+            return new densesolverlsreport((directdensesolvers.densesolverlsreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private densesolver.densesolverlsreport _innerobj;
-        public densesolver.densesolverlsreport innerobj { get { return _innerobj; } }
-        public densesolverlsreport(densesolver.densesolverlsreport obj)
+        private directdensesolvers.densesolverlsreport _innerobj;
+        public directdensesolvers.densesolverlsreport innerobj { get { return _innerobj; } }
+        public densesolverlsreport(directdensesolvers.densesolverlsreport obj)
         {
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b with N*N real matrix A and N*1 real vectorx  x  and
     b. This is "slow-but-feature rich" version of the  linear  solver.  Faster
@@ -183,20 +184,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver._pexec_rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -269,18 +270,18 @@ public partial class alglib
     public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info)
     {
         info = 0;
-        densesolver.rmatrixsolvefast(a, n, b, ref info);
+        directdensesolvers.rmatrixsolvefast(a, n, b, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info)
     {
         info = 0;
-        densesolver._pexec_rmatrixsolvefast(a, n, b, ref info);
+        directdensesolvers._pexec_rmatrixsolvefast(a, n, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -381,20 +382,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver._pexec_rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -475,18 +476,18 @@ public partial class alglib
     public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.rmatrixsolvemfast(a, n, b, m, ref info);
+        directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_rmatrixsolvemfast(a, n, b, m, ref info);
+        directdensesolvers._pexec_rmatrixsolvemfast(a, n, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -546,10 +547,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -585,10 +586,10 @@ public partial class alglib
     public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info)
     {
         info = 0;
-        densesolver.rmatrixlusolvefast(lua, p, n, b, ref info);
+        directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -685,20 +686,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver._pexec_rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -769,18 +770,18 @@ public partial class alglib
     public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.rmatrixlusolvemfast(lua, p, n, b, m, ref info);
+        directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_rmatrixlusolvemfast(lua, p, n, b, m, ref info);
+        directdensesolvers._pexec_rmatrixlusolvemfast(lua, p, n, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -822,10 +823,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -867,10 +868,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Complex dense solver for A*X=B with N*N  complex  matrix  A,  N*M  complex
     matrices  X  and  B.  "Slow-but-feature-rich"   version   which   provides
@@ -968,20 +969,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver._pexec_cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Complex dense solver for A*X=B with N*N  complex  matrix  A,  N*M  complex
     matrices  X  and  B.  "Fast-but-lightweight" version which  provides  just
@@ -1050,18 +1051,18 @@ public partial class alglib
     public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.cmatrixsolvemfast(a, n, b, m, ref info);
+        directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_cmatrixsolvemfast(a, n, b, m, ref info);
+        directdensesolvers._pexec_cmatrixsolvemfast(a, n, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Complex dense solver for A*x=B with N*N complex matrix A and  N*1  complex
     vectors x and b. "Slow-but-feature-rich" version of the solver.
@@ -1150,20 +1151,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver._pexec_cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Complex dense solver for A*x=B with N*N complex matrix A and  N*1  complex
     vectors x and b. "Fast-but-lightweight" version of the solver.
@@ -1229,18 +1230,18 @@ public partial class alglib
     public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info)
     {
         info = 0;
-        densesolver.cmatrixsolvefast(a, n, b, ref info);
+        directdensesolvers.cmatrixsolvefast(a, n, b, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info)
     {
         info = 0;
-        densesolver._pexec_cmatrixsolvefast(a, n, b, ref info);
+        directdensesolvers._pexec_cmatrixsolvefast(a, n, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N complex A given by its  LU  decomposition,
     and N*M matrices X and B (multiple right sides).   "Slow-but-feature-rich"
@@ -1331,20 +1332,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver._pexec_cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N complex A given by its  LU  decomposition,
     and N*M matrices X and B (multiple  right  sides).  "Fast-but-lightweight"
@@ -1412,18 +1413,18 @@ public partial class alglib
     public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.cmatrixlusolvemfast(lua, p, n, b, m, ref info);
+        directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_cmatrixlusolvemfast(lua, p, n, b, m, ref info);
+        directdensesolvers._pexec_cmatrixlusolvemfast(lua, p, n, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Complex dense linear solver for A*x=b with complex N*N A  given  by its LU
     decomposition and N*1 vectors x and b. This is  "slow-but-robust"  version
@@ -1481,10 +1482,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Complex dense linear solver for A*x=b with N*N complex A given by  its  LU
     decomposition and N*1 vectors x and b. This is  fast  lightweight  version
@@ -1523,10 +1524,10 @@ public partial class alglib
     public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info)
     {
         info = 0;
-        densesolver.cmatrixlusolvefast(lua, p, n, b, ref info);
+        directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver. Same as RMatrixMixedSolveM(), but for complex matrices.
 
@@ -1565,10 +1566,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver. Same as RMatrixMixedSolve(), but for complex matrices.
 
@@ -1606,10 +1607,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N symmetric positive definite matrix A,  and
     N*M vectors X and B. It is "slow-but-feature-rich" version of the solver.
@@ -1703,20 +1704,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver._pexec_spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N symmetric positive definite matrix A,  and
     N*M vectors X and B. It is "fast-but-lightweight" version of the solver.
@@ -1783,18 +1784,18 @@ public partial class alglib
     public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.spdmatrixsolvemfast(a, n, isupper, b, m, ref info);
+        directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_spdmatrixsolvemfast(a, n, isupper, b, m, ref info);
+        directdensesolvers._pexec_spdmatrixsolvemfast(a, n, isupper, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense linear solver for A*x=b with N*N real  symmetric  positive  definite
     matrix A,  N*1 vectors x and b.  "Slow-but-feature-rich"  version  of  the
@@ -1888,20 +1889,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver._pexec_spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense linear solver for A*x=b with N*N real  symmetric  positive  definite
     matrix A,  N*1 vectors x and  b.  "Fast-but-lightweight"  version  of  the
@@ -1968,18 +1969,18 @@ public partial class alglib
     public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info)
     {
         info = 0;
-        densesolver.spdmatrixsolvefast(a, n, isupper, b, ref info);
+        directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info)
     {
         info = 0;
-        densesolver._pexec_spdmatrixsolvefast(a, n, isupper, b, ref info);
+        directdensesolvers._pexec_spdmatrixsolvefast(a, n, isupper, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N symmetric positive definite matrix A given
     by its Cholesky decomposition, and N*M vectors X and B. It  is  "slow-but-
@@ -2042,20 +2043,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        densesolver._pexec_spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N symmetric positive definite matrix A given
     by its Cholesky decomposition, and N*M vectors X and B. It  is  "fast-but-
@@ -2091,18 +2092,18 @@ public partial class alglib
     public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
+        directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
+        directdensesolvers._pexec_spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b with N*N symmetric positive definite matrix A given
     by its Cholesky decomposition, and N*1 real vectors x and b. This is "slow-
@@ -2162,10 +2163,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        densesolver.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b with N*N symmetric positive definite matrix A given
     by its Cholesky decomposition, and N*1 real vectors x and b. This is "fast-
@@ -2199,10 +2200,10 @@ public partial class alglib
     public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info)
     {
         info = 0;
-        densesolver.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info);
+        directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B, with N*N Hermitian positive definite matrix A  and
     N*M  complex  matrices  X  and  B.  "Slow-but-feature-rich" version of the
@@ -2289,20 +2290,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver._pexec_hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B, with N*N Hermitian positive definite matrix A  and
     N*M complex matrices X and B. "Fast-but-lightweight" version of the solver.
@@ -2370,18 +2371,18 @@ public partial class alglib
     public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info);
+        directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_hpdmatrixsolvemfast(a, n, isupper, b, m, ref info);
+        directdensesolvers._pexec_hpdmatrixsolvemfast(a, n, isupper, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b, with N*N Hermitian positive definite matrix A, and
     N*1 complex vectors  x  and  b.  "Slow-but-feature-rich"  version  of  the
@@ -2468,20 +2469,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver._pexec_hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b, with N*N Hermitian positive definite matrix A, and
     N*1 complex vectors  x  and  b.  "Fast-but-lightweight"  version  of   the
@@ -2550,18 +2551,18 @@ public partial class alglib
     public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info)
     {
         info = 0;
-        densesolver.hpdmatrixsolvefast(a, n, isupper, b, ref info);
+        directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info)
     {
         info = 0;
-        densesolver._pexec_hpdmatrixsolvefast(a, n, isupper, b, ref info);
+        directdensesolvers._pexec_hpdmatrixsolvefast(a, n, isupper, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N Hermitian positive definite matrix A given
     by its Cholesky decomposition and N*M complex matrices X  and  B.  This is
@@ -2625,20 +2626,20 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        densesolver._pexec_hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*X=B with N*N Hermitian positive definite matrix A given
     by its Cholesky decomposition and N*M complex matrices X  and  B.  This is
@@ -2673,18 +2674,18 @@ public partial class alglib
     public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
+        directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
         return;
     }
-
-
+    
+    
     public static void smp_hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        densesolver._pexec_hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
+        directdensesolvers._pexec_hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b with N*N Hermitian positive definite matrix A given
     by its Cholesky decomposition, and N*1 complex vectors x and  b.  This  is
@@ -2744,10 +2745,10 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        densesolver.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x);
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver for A*x=b with N*N Hermitian positive definite matrix A given
     by its Cholesky decomposition, and N*1 complex vectors x and  b.  This  is
@@ -2781,10 +2782,10 @@ public partial class alglib
     public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info)
     {
         info = 0;
-        densesolver.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info);
+        directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info);
         return;
     }
-
+    
     /*************************************************************************
     Dense solver.
 
@@ -2856,17 +2857,17 @@ public partial class alglib
         info = 0;
         rep = new densesolverlsreport();
         x = new double[0];
-        densesolver.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x);
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x);
         return;
     }
-
-
+    
+    
     public static void smp_rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x)
     {
         info = 0;
         rep = new densesolverlsreport();
         x = new double[0];
-        densesolver._pexec_rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x);
+        directdensesolvers._pexec_rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x);
         return;
     }
 
@@ -2885,7 +2886,7 @@ public partial class alglib
         //
         // Public declarations
         //
-
+    
         public linlsqrstate()
         {
             _innerobj = new linlsqr.linlsqrstate();
@@ -2895,7 +2896,7 @@ public partial class alglib
         {
             return new linlsqrstate((linlsqr.linlsqrstate)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -2920,7 +2921,7 @@ public partial class alglib
         public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
         public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
         public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
-
+    
         public linlsqrreport()
         {
             _innerobj = new linlsqr.linlsqrreport();
@@ -2930,7 +2931,7 @@ public partial class alglib
         {
             return new linlsqrreport((linlsqr.linlsqrreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -2942,7 +2943,7 @@ public partial class alglib
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
     This function initializes linear LSQR Solver. This solver is used to solve
     non-symmetric (and, possibly, non-square) problems. Least squares solution
@@ -2974,7 +2975,7 @@ public partial class alglib
         linlsqr.linlsqrcreate(m, n, state.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
     function. By default, SolveSparse() uses diagonal preconditioner,  but  if
@@ -2989,11 +2990,11 @@ public partial class alglib
     *************************************************************************/
     public static void linlsqrsetprecunit(linlsqrstate state)
     {
-
+    
         linlsqr.linlsqrsetprecunit(state.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
     function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
@@ -3007,11 +3008,11 @@ public partial class alglib
     *************************************************************************/
     public static void linlsqrsetprecdiag(linlsqrstate state)
     {
-
+    
         linlsqr.linlsqrsetprecdiag(state.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This function sets optional Tikhonov regularization coefficient.
     It is zero by default.
@@ -3027,11 +3028,11 @@ public partial class alglib
     *************************************************************************/
     public static void linlsqrsetlambdai(linlsqrstate state, double lambdai)
     {
-
+    
         linlsqr.linlsqrsetlambdai(state.innerobj, lambdai);
         return;
     }
-
+    
     /*************************************************************************
     Procedure for solution of A*x=b with sparse A.
 
@@ -3057,11 +3058,11 @@ public partial class alglib
     *************************************************************************/
     public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b)
     {
-
+    
         linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b);
         return;
     }
-
+    
     /*************************************************************************
     This function sets stopping criteria.
 
@@ -3082,11 +3083,11 @@ public partial class alglib
     *************************************************************************/
     public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits)
     {
-
+    
         linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits);
         return;
     }
-
+    
     /*************************************************************************
     LSQR solver: results.
 
@@ -3118,7 +3119,7 @@ public partial class alglib
         linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This function turns on/off reporting.
 
@@ -3134,7 +3135,7 @@ public partial class alglib
     *************************************************************************/
     public static void linlsqrsetxrep(linlsqrstate state, bool needxrep)
     {
-
+    
         linlsqr.linlsqrsetxrep(state.innerobj, needxrep);
         return;
     }
@@ -3145,315 +3146,82 @@ public partial class alglib
 
 
     /*************************************************************************
-    This object stores state of the linear CG method.
 
-    You should use ALGLIB functions to work with this object.
-    Never try to access its fields directly!
     *************************************************************************/
-    public class lincgstate : alglibobject
+    public class polynomialsolverreport : alglibobject
     {
         //
         // Public declarations
         //
-
-        public lincgstate()
+        public double maxerr { get { return _innerobj.maxerr; } set { _innerobj.maxerr = value; } }
+    
+        public polynomialsolverreport()
         {
-            _innerobj = new lincg.lincgstate();
+            _innerobj = new polynomialsolver.polynomialsolverreport();
         }
         
         public override alglib.alglibobject make_copy()
         {
-            return new lincgstate((lincg.lincgstate)_innerobj.make_copy());
+            return new polynomialsolverreport((polynomialsolver.polynomialsolverreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lincg.lincgstate _innerobj;
-        public lincg.lincgstate innerobj { get { return _innerobj; } }
-        public lincgstate(lincg.lincgstate obj)
+        private polynomialsolver.polynomialsolverreport _innerobj;
+        public polynomialsolver.polynomialsolverreport innerobj { get { return _innerobj; } }
+        public polynomialsolverreport(polynomialsolver.polynomialsolverreport obj)
         {
             _innerobj = obj;
         }
     }
-
-
+    
     /*************************************************************************
+    Polynomial root finding.
 
-    *************************************************************************/
-    public class lincgreport : alglibobject
-    {
-        //
-        // Public declarations
-        //
-        public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
-        public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
-        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
-        public double r2 { get { return _innerobj.r2; } set { _innerobj.r2 = value; } }
-
-        public lincgreport()
-        {
-            _innerobj = new lincg.lincgreport();
-        }
-        
-        public override alglib.alglibobject make_copy()
-        {
-            return new lincgreport((lincg.lincgreport)_innerobj.make_copy());
-        }
-
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private lincg.lincgreport _innerobj;
-        public lincg.lincgreport innerobj { get { return _innerobj; } }
-        public lincgreport(lincg.lincgreport obj)
-        {
-            _innerobj = obj;
-        }
-    }
-
-    /*************************************************************************
-    This function initializes linear CG Solver. This solver is used  to  solve
-    symmetric positive definite problems. If you want  to  solve  nonsymmetric
-    (or non-positive definite) problem you may use LinLSQR solver provided  by
-    ALGLIB.
-
-    USAGE:
-    1. User initializes algorithm state with LinCGCreate() call
-    2. User tunes solver parameters with  LinCGSetCond() and other functions
-    3. Optionally, user sets starting point with LinCGSetStartingPoint()
-    4. User  calls LinCGSolveSparse() function which takes algorithm state and
-       SparseMatrix object.
-    5. User calls LinCGResults() to get solution
-    6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
-       problem  with different matrix and/or right part without reinitializing
-       LinCGState structure.
+    This function returns all roots of the polynomial
+        P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
+    Both real and complex roots are returned (see below).
 
     INPUT PARAMETERS:
-        N       -   problem dimension, N>0
+        A       -   array[N+1], polynomial coefficients:
+                    * A[0] is constant term
+                    * A[N] is a coefficient of X^N
+        N       -   polynomial degree
 
     OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
+        X       -   array of complex roots:
+                    * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
+                    * complex roots are always returned in pairs - roots occupy
+                      positions I and I+1, with:
+                      * X[I+1]=Conj(X[I])
+                      * IMAGE(X[I]) > 0
+                      * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
+                    * multiple real roots may have non-zero imaginary part due
+                      to roundoff errors. There is no reliable way to distinguish
+                      real root of multiplicity 2 from two  complex  roots  in
+                      the presence of roundoff errors.
+        Rep     -   report, additional information, following fields are set:
+                    * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
+                      allows to quickly estimate "quality" of the roots  being
+                      returned.
+
+    NOTE:   this function uses companion matrix method to find roots. In  case
+            internal EVD  solver  fails  do  find  eigenvalues,  exception  is
+            generated.
+
+    NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
+            for them.
 
       -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
+         Copyright 24.02.2014 by Bochkanov Sergey
     *************************************************************************/
-    public static void lincgcreate(int n, out lincgstate state)
+    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep)
     {
-        state = new lincgstate();
-        lincg.lincgcreate(n, state.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function sets starting point.
-    By default, zero starting point is used.
-
-    INPUT PARAMETERS:
-        X       -   starting point, array[N]
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetstartingpoint(lincgstate state, double[] x)
-    {
-
-        lincg.lincgsetstartingpoint(state.innerobj, x);
-        return;
-    }
-
-    /*************************************************************************
-    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-    function. By default, SolveSparse() uses diagonal preconditioner,  but  if
-    you want to use solver without preconditioning, you can call this function
-    which forces solver to use unit matrix for preconditioning.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 19.11.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetprecunit(lincgstate state)
-    {
-
-        lincg.lincgsetprecunit(state.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-    function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
-    preconditioner. This preconditioning mode is active by default.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 19.11.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetprecdiag(lincgstate state)
-    {
-
-        lincg.lincgsetprecdiag(state.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function sets stopping criteria.
-
-    INPUT PARAMETERS:
-        EpsF    -   algorithm will be stopped if norm of residual is less than
-                    EpsF*||b||.
-        MaxIts  -   algorithm will be stopped if number of iterations is  more
-                    than MaxIts.
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-    NOTES:
-    If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small
-    value.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetcond(lincgstate state, double epsf, int maxits)
-    {
-
-        lincg.lincgsetcond(state.innerobj, epsf, maxits);
-        return;
-    }
-
-    /*************************************************************************
-    Procedure for solution of A*x=b with sparse A.
-
-    INPUT PARAMETERS:
-        State   -   algorithm state
-        A       -   sparse matrix in the CRS format (you MUST contvert  it  to
-                    CRS format by calling SparseConvertToCRS() function).
-        IsUpper -   whether upper or lower triangle of A is used:
-                    * IsUpper=True  => only upper triangle is used and lower
-                                       triangle is not referenced at all
-                    * IsUpper=False => only lower triangle is used and upper
-                                       triangle is not referenced at all
-        B       -   right part, array[N]
-
-    RESULT:
-        This function returns no result.
-        You can get solution by calling LinCGResults()
-
-    NOTE: this function uses lightweight preconditioning -  multiplication  by
-          inverse of diag(A). If you want, you can turn preconditioning off by
-          calling LinCGSetPrecUnit(). However, preconditioning cost is low and
-          preconditioner  is  very  important  for  solution  of  badly scaled
-          problems.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b)
-    {
-
-        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b);
-        return;
-    }
-
-    /*************************************************************************
-    CG-solver: results.
-
-    This function must be called after LinCGSolve
-
-    INPUT PARAMETERS:
-        State   -   algorithm state
-
-    OUTPUT PARAMETERS:
-        X       -   array[N], solution
-        Rep     -   optimization report:
-                    * Rep.TerminationType completetion code:
-                        * -5    input matrix is either not positive definite,
-                                too large or too small
-                        * -4    overflow/underflow during solution
-                                (ill conditioned problem)
-                        *  1    ||residual||<=EpsF*||b||
-                        *  5    MaxIts steps was taken
-                        *  7    rounding errors prevent further progress,
-                                best point found is returned
-                    * Rep.IterationsCount contains iterations count
-                    * NMV countains number of matrix-vector calculations
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep)
-    {
-        x = new double[0];
-        rep = new lincgreport();
-        lincg.lincgresults(state.innerobj, ref x, rep.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function sets restart frequency. By default, algorithm  is  restarted
-    after N subsequent iterations.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetrestartfreq(lincgstate state, int srf)
-    {
-
-        lincg.lincgsetrestartfreq(state.innerobj, srf);
-        return;
-    }
-
-    /*************************************************************************
-    This function sets frequency of residual recalculations.
-
-    Algorithm updates residual r_k using iterative formula,  but  recalculates
-    it from scratch after each 10 iterations. It is done to avoid accumulation
-    of numerical errors and to stop algorithm when r_k starts to grow.
-
-    Such low update frequence (1/10) gives very  little  overhead,  but  makes
-    algorithm a bit more robust against numerical errors. However, you may
-    change it
-
-    INPUT PARAMETERS:
-        Freq    -   desired update frequency, Freq>=0.
-                    Zero value means that no updates will be done.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetrupdatefreq(lincgstate state, int freq)
-    {
-
-        lincg.lincgsetrupdatefreq(state.innerobj, freq);
-        return;
-    }
-
-    /*************************************************************************
-    This function turns on/off reporting.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-        NeedXRep-   whether iteration reports are needed or not
-
-    If NeedXRep is True, algorithm will call rep() callback function if  it is
-    provided to MinCGOptimize().
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetxrep(lincgstate state, bool needxrep)
-    {
-
-        lincg.lincgsetxrep(state.innerobj, needxrep);
+        x = new complex[0];
+        rep = new polynomialsolverreport();
+        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj);
         return;
     }
 
@@ -3477,7 +3245,7 @@ public partial class alglib
         public double[] fi { get { return _innerobj.fi; } }
         public double[,] j { get { return _innerobj.j; } }
         public double[] x { get { return _innerobj.x; } }
-
+    
         public nleqstate()
         {
             _innerobj = new nleq.nleqstate();
@@ -3487,7 +3255,7 @@ public partial class alglib
         {
             return new nleqstate((nleq.nleqstate)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -3513,7 +3281,7 @@ public partial class alglib
         public int nfunc { get { return _innerobj.nfunc; } set { _innerobj.nfunc = value; } }
         public int njac { get { return _innerobj.njac; } set { _innerobj.njac = value; } }
         public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
-
+    
         public nleqreport()
         {
             _innerobj = new nleq.nleqreport();
@@ -3523,7 +3291,7 @@ public partial class alglib
         {
             return new nleqreport((nleq.nleqreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -3535,7 +3303,7 @@ public partial class alglib
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
                     LEVENBERG-MARQUARDT-LIKE NONLINEAR SOLVER
 
@@ -3615,14 +3383,14 @@ public partial class alglib
     public static void nleqcreatelm(int m, double[] x, out nleqstate state)
     {
         int n;
-
+    
         state = new nleqstate();
         n = ap.len(x);
         nleq.nleqcreatelm(n, m, x, state.innerobj);
-
+    
         return;
     }
-
+    
     /*************************************************************************
     This function sets stopping conditions for the nonlinear solver
 
@@ -3644,11 +3412,11 @@ public partial class alglib
     *************************************************************************/
     public static void nleqsetcond(nleqstate state, double epsf, int maxits)
     {
-
+    
         nleq.nleqsetcond(state.innerobj, epsf, maxits);
         return;
     }
-
+    
     /*************************************************************************
     This function turns on/off reporting.
 
@@ -3664,11 +3432,11 @@ public partial class alglib
     *************************************************************************/
     public static void nleqsetxrep(nleqstate state, bool needxrep)
     {
-
+    
         nleq.nleqsetxrep(state.innerobj, needxrep);
         return;
     }
-
+    
     /*************************************************************************
     This function sets maximum step length
 
@@ -3688,11 +3456,11 @@ public partial class alglib
     *************************************************************************/
     public static void nleqsetstpmax(nleqstate state, double stpmax)
     {
-
+    
         nleq.nleqsetstpmax(state.innerobj, stpmax);
         return;
     }
-
+    
     /*************************************************************************
     This function provides reverse communication interface
     Reverse communication interface is not documented or recommended to use.
@@ -3700,7 +3468,7 @@ public partial class alglib
     *************************************************************************/
     public static bool nleqiteration(nleqstate state)
     {
-
+    
         bool result = nleq.nleqiteration(state.innerobj);
         return result;
     }
@@ -3751,7 +3519,7 @@ public partial class alglib
     }
 
 
-
+    
     /*************************************************************************
     NLEQ solver results
 
@@ -3784,7 +3552,7 @@ public partial class alglib
         nleq.nleqresults(state.innerobj, ref x, rep.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     NLEQ solver results
 
@@ -3798,11 +3566,11 @@ public partial class alglib
     *************************************************************************/
     public static void nleqresultsbuf(nleqstate state, ref double[] x, nleqreport rep)
     {
-
+    
         nleq.nleqresultsbuf(state.innerobj, ref x, rep.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This  subroutine  restarts  CG  algorithm from new point. All optimization
     parameters are left unchanged.
@@ -3822,7 +3590,7 @@ public partial class alglib
     *************************************************************************/
     public static void nleqrestartfrom(nleqstate state, double[] x)
     {
-
+    
         nleq.nleqrestartfrom(state.innerobj, x);
         return;
     }
@@ -3833,89 +3601,428 @@ public partial class alglib
 
 
     /*************************************************************************
+    This structure is a sparse solver report.
 
+    Following fields can be accessed by users:
     *************************************************************************/
-    public class polynomialsolverreport : alglibobject
+    public class sparsesolverreport : alglibobject
     {
         //
         // Public declarations
         //
-        public double maxerr { get { return _innerobj.maxerr; } set { _innerobj.maxerr = value; } }
-
-        public polynomialsolverreport()
+        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
+    
+        public sparsesolverreport()
         {
-            _innerobj = new polynomialsolver.polynomialsolverreport();
+            _innerobj = new directsparsesolvers.sparsesolverreport();
         }
         
         public override alglib.alglibobject make_copy()
         {
-            return new polynomialsolverreport((polynomialsolver.polynomialsolverreport)_innerobj.make_copy());
+            return new sparsesolverreport((directsparsesolvers.sparsesolverreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private polynomialsolver.polynomialsolverreport _innerobj;
-        public polynomialsolver.polynomialsolverreport innerobj { get { return _innerobj; } }
-        public polynomialsolverreport(polynomialsolver.polynomialsolverreport obj)
+        private directsparsesolvers.sparsesolverreport _innerobj;
+        public directsparsesolvers.sparsesolverreport innerobj { get { return _innerobj; } }
+        public sparsesolverreport(directsparsesolvers.sparsesolverreport obj)
         {
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
-    Polynomial root finding.
+    Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+    definite matrix A, N*1 vectors x and b.
 
-    This function returns all roots of the polynomial
-        P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
-    Both real and complex roots are returned (see below).
+    This solver  converts  input  matrix  to  SKS  format,  performs  Cholesky
+    factorization using  SKS  Cholesky  subroutine  (works  well  for  limited
+    bandwidth matrices) and uses sparse triangular solvers to get solution  of
+    the original system.
 
-    INPUT PARAMETERS:
-        A       -   array[N+1], polynomial coefficients:
-                    * A[0] is constant term
-                    * A[N] is a coefficient of X^N
-        N       -   polynomial degree
+    INPUT PARAMETERS
+        A       -   sparse matrix, must be NxN exactly
+        N       -   size of A, N>0
+        IsUpper -   which half of A is provided (another half is ignored)
+        B       -   array[0..N-1], right part
 
-    OUTPUT PARAMETERS:
-        X       -   array of complex roots:
-                    * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
-                    * complex roots are always returned in pairs - roots occupy
-                      positions I and I+1, with:
-                      * X[I+1]=Conj(X[I])
-                      * IMAGE(X[I]) > 0
-                      * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
-                    * multiple real roots may have non-zero imaginary part due
-                      to roundoff errors. There is no reliable way to distinguish
-                      real root of multiplicity 2 from two  complex  roots  in
-                      the presence of roundoff errors.
-        Rep     -   report, additional information, following fields are set:
-                    * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
-                      allows to quickly estimate "quality" of the roots  being
-                      returned.
-
-    NOTE:   this function uses companion matrix method to find roots. In  case
-            internal EVD  solver  fails  do  find  eigenvalues,  exception  is
-            generated.
-
-    NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
-            for them.
+    OUTPUT PARAMETERS
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
 
       -- ALGLIB --
-         Copyright 24.02.2014 by Bochkanov Sergey
+         Copyright 26.12.2017 by Bochkanov Sergey
     *************************************************************************/
-    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep)
+    public static void sparsesolvesks(sparsematrix a, int n, bool isupper, double[] b, out sparsesolverreport rep, out double[] x)
     {
-        x = new complex[0];
-        rep = new polynomialsolverreport();
-        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj);
+        rep = new sparsesolverreport();
+        x = new double[0];
+        directsparsesolvers.sparsesolvesks(a.innerobj, n, isupper, b, rep.innerobj, ref x);
+        return;
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
+    matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
+
+    IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
+               sparse storage format. An exception will be  generated  if  you
+               pass matrix in some other format (HASH or CRS).
+
+    INPUT PARAMETERS
+        A       -   sparse NxN matrix stored in SKS format, must be NxN exactly
+        N       -   size of A, N>0
+        IsUpper -   which half of A is provided (another half is ignored)
+        B       -   array[N], right part
+
+    OUTPUT PARAMETERS
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecholeskysolvesks(sparsematrix a, int n, bool isupper, double[] b, out sparsesolverreport rep, out double[] x)
+    {
+        rep = new sparsesolverreport();
+        x = new double[0];
+        directsparsesolvers.sparsecholeskysolvesks(a.innerobj, n, isupper, b, rep.innerobj, ref x);
         return;
     }
 
 }
 public partial class alglib
 {
-    public class densesolver
+
+
+    /*************************************************************************
+    This object stores state of the linear CG method.
+
+    You should use ALGLIB functions to work with this object.
+    Never try to access its fields directly!
+    *************************************************************************/
+    public class lincgstate : alglibobject
+    {
+        //
+        // Public declarations
+        //
+    
+        public lincgstate()
+        {
+            _innerobj = new lincg.lincgstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new lincgstate((lincg.lincgstate)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private lincg.lincgstate _innerobj;
+        public lincg.lincgstate innerobj { get { return _innerobj; } }
+        public lincgstate(lincg.lincgstate obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+
+    /*************************************************************************
+
+    *************************************************************************/
+    public class lincgreport : alglibobject
+    {
+        //
+        // Public declarations
+        //
+        public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
+        public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
+        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
+        public double r2 { get { return _innerobj.r2; } set { _innerobj.r2 = value; } }
+    
+        public lincgreport()
+        {
+            _innerobj = new lincg.lincgreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new lincgreport((lincg.lincgreport)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private lincg.lincgreport _innerobj;
+        public lincg.lincgreport innerobj { get { return _innerobj; } }
+        public lincgreport(lincg.lincgreport obj)
+        {
+            _innerobj = obj;
+        }
+    }
+    
+    /*************************************************************************
+    This function initializes linear CG Solver. This solver is used  to  solve
+    symmetric positive definite problems. If you want  to  solve  nonsymmetric
+    (or non-positive definite) problem you may use LinLSQR solver provided  by
+    ALGLIB.
+
+    USAGE:
+    1. User initializes algorithm state with LinCGCreate() call
+    2. User tunes solver parameters with  LinCGSetCond() and other functions
+    3. Optionally, user sets starting point with LinCGSetStartingPoint()
+    4. User  calls LinCGSolveSparse() function which takes algorithm state and
+       SparseMatrix object.
+    5. User calls LinCGResults() to get solution
+    6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
+       problem  with different matrix and/or right part without reinitializing
+       LinCGState structure.
+
+    INPUT PARAMETERS:
+        N       -   problem dimension, N>0
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgcreate(int n, out lincgstate state)
+    {
+        state = new lincgstate();
+        lincg.lincgcreate(n, state.innerobj);
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets starting point.
+    By default, zero starting point is used.
+
+    INPUT PARAMETERS:
+        X       -   starting point, array[N]
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetstartingpoint(lincgstate state, double[] x)
+    {
+    
+        lincg.lincgsetstartingpoint(state.innerobj, x);
+        return;
+    }
+    
+    /*************************************************************************
+    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+    function. By default, SolveSparse() uses diagonal preconditioner,  but  if
+    you want to use solver without preconditioning, you can call this function
+    which forces solver to use unit matrix for preconditioning.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 19.11.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetprecunit(lincgstate state)
+    {
+    
+        lincg.lincgsetprecunit(state.innerobj);
+        return;
+    }
+    
+    /*************************************************************************
+    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+    function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
+    preconditioner. This preconditioning mode is active by default.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 19.11.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetprecdiag(lincgstate state)
+    {
+    
+        lincg.lincgsetprecdiag(state.innerobj);
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets stopping criteria.
+
+    INPUT PARAMETERS:
+        EpsF    -   algorithm will be stopped if norm of residual is less than
+                    EpsF*||b||.
+        MaxIts  -   algorithm will be stopped if number of iterations is  more
+                    than MaxIts.
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+    NOTES:
+    If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small
+    value.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetcond(lincgstate state, double epsf, int maxits)
+    {
+    
+        lincg.lincgsetcond(state.innerobj, epsf, maxits);
+        return;
+    }
+    
+    /*************************************************************************
+    Procedure for solution of A*x=b with sparse A.
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+        A       -   sparse matrix in the CRS format (you MUST contvert  it  to
+                    CRS format by calling SparseConvertToCRS() function).
+        IsUpper -   whether upper or lower triangle of A is used:
+                    * IsUpper=True  => only upper triangle is used and lower
+                                       triangle is not referenced at all
+                    * IsUpper=False => only lower triangle is used and upper
+                                       triangle is not referenced at all
+        B       -   right part, array[N]
+
+    RESULT:
+        This function returns no result.
+        You can get solution by calling LinCGResults()
+
+    NOTE: this function uses lightweight preconditioning -  multiplication  by
+          inverse of diag(A). If you want, you can turn preconditioning off by
+          calling LinCGSetPrecUnit(). However, preconditioning cost is low and
+          preconditioner  is  very  important  for  solution  of  badly scaled
+          problems.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b)
+    {
+    
+        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b);
+        return;
+    }
+    
+    /*************************************************************************
+    CG-solver: results.
+
+    This function must be called after LinCGSolve
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+
+    OUTPUT PARAMETERS:
+        X       -   array[N], solution
+        Rep     -   optimization report:
+                    * Rep.TerminationType completetion code:
+                        * -5    input matrix is either not positive definite,
+                                too large or too small
+                        * -4    overflow/underflow during solution
+                                (ill conditioned problem)
+                        *  1    ||residual||<=EpsF*||b||
+                        *  5    MaxIts steps was taken
+                        *  7    rounding errors prevent further progress,
+                                best point found is returned
+                    * Rep.IterationsCount contains iterations count
+                    * NMV countains number of matrix-vector calculations
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep)
+    {
+        x = new double[0];
+        rep = new lincgreport();
+        lincg.lincgresults(state.innerobj, ref x, rep.innerobj);
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets restart frequency. By default, algorithm  is  restarted
+    after N subsequent iterations.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetrestartfreq(lincgstate state, int srf)
+    {
+    
+        lincg.lincgsetrestartfreq(state.innerobj, srf);
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets frequency of residual recalculations.
+
+    Algorithm updates residual r_k using iterative formula,  but  recalculates
+    it from scratch after each 10 iterations. It is done to avoid accumulation
+    of numerical errors and to stop algorithm when r_k starts to grow.
+
+    Such low update frequence (1/10) gives very  little  overhead,  but  makes
+    algorithm a bit more robust against numerical errors. However, you may
+    change it
+
+    INPUT PARAMETERS:
+        Freq    -   desired update frequency, Freq>=0.
+                    Zero value means that no updates will be done.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetrupdatefreq(lincgstate state, int freq)
+    {
+    
+        lincg.lincgsetrupdatefreq(state.innerobj, freq);
+        return;
+    }
+    
+    /*************************************************************************
+    This function turns on/off reporting.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+        NeedXRep-   whether iteration reports are needed or not
+
+    If NeedXRep is True, algorithm will call rep() callback function if  it is
+    provided to MinCGOptimize().
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetxrep(lincgstate state, bool needxrep)
+    {
+    
+        lincg.lincgsetxrep(state.innerobj, needxrep);
+        return;
+    }
+
+}
+public partial class alglib
+{
+    public class directdensesolvers
     {
         public class densesolverreport : apobject
         {
@@ -9512,9 +9619,9 @@ public partial class alglib
             }
             else
             {
-                summn = -983;
-                i = -989;
-                bnorm = -834;
+                summn = 359;
+                i = -58;
+                bnorm = -919;
             }
             if( state.rstate.stage==0 )
             {
@@ -10236,6 +10343,1169 @@ public partial class alglib
 
 
     }
+    public class polynomialsolver
+    {
+        public class polynomialsolverreport : apobject
+        {
+            public double maxerr;
+            public polynomialsolverreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                polynomialsolverreport _result = new polynomialsolverreport();
+                _result.maxerr = maxerr;
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        Polynomial root finding.
+
+        This function returns all roots of the polynomial
+            P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
+        Both real and complex roots are returned (see below).
+
+        INPUT PARAMETERS:
+            A       -   array[N+1], polynomial coefficients:
+                        * A[0] is constant term
+                        * A[N] is a coefficient of X^N
+            N       -   polynomial degree
+
+        OUTPUT PARAMETERS:
+            X       -   array of complex roots:
+                        * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
+                        * complex roots are always returned in pairs - roots occupy
+                          positions I and I+1, with:
+                          * X[I+1]=Conj(X[I])
+                          * IMAGE(X[I]) > 0
+                          * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
+                        * multiple real roots may have non-zero imaginary part due
+                          to roundoff errors. There is no reliable way to distinguish
+                          real root of multiplicity 2 from two  complex  roots  in
+                          the presence of roundoff errors.
+            Rep     -   report, additional information, following fields are set:
+                        * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
+                          allows to quickly estimate "quality" of the roots  being
+                          returned.
+
+        NOTE:   this function uses companion matrix method to find roots. In  case
+                internal EVD  solver  fails  do  find  eigenvalues,  exception  is
+                generated.
+
+        NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
+                for them.
+
+          -- ALGLIB --
+             Copyright 24.02.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void polynomialsolve(double[] a,
+            int n,
+            ref complex[] x,
+            polynomialsolverreport rep)
+        {
+            double[,] c = new double[0,0];
+            double[,] vl = new double[0,0];
+            double[,] vr = new double[0,0];
+            double[] wr = new double[0];
+            double[] wi = new double[0];
+            int i = 0;
+            int j = 0;
+            bool status = new bool();
+            int nz = 0;
+            int ne = 0;
+            complex v = 0;
+            complex vv = 0;
+
+            a = (double[])a.Clone();
+            x = new complex[0];
+
+            alglib.ap.assert(n>0, "PolynomialSolve: N<=0");
+            alglib.ap.assert(alglib.ap.len(a)>=n+1, "PolynomialSolve: Length(A)<N+1");
+            alglib.ap.assert(apserv.isfinitevector(a, n+1), "PolynomialSolve: A contains infitite numbers");
+            alglib.ap.assert((double)(a[n])!=(double)(0), "PolynomialSolve: A[N]=0");
+            
+            //
+            // Prepare
+            //
+            x = new complex[n];
+            
+            //
+            // Normalize A:
+            // * analytically determine NZ zero roots
+            // * quick exit for NZ=N
+            // * make residual NE-th degree polynomial monic
+            //   (here NE=N-NZ)
+            //
+            nz = 0;
+            while( nz<n && (double)(a[nz])==(double)(0) )
+            {
+                nz = nz+1;
+            }
+            ne = n-nz;
+            for(i=nz; i<=n; i++)
+            {
+                a[i-nz] = a[i]/a[n];
+            }
+            
+            //
+            // For NZ<N, build companion matrix and find NE non-zero roots
+            //
+            if( ne>0 )
+            {
+                c = new double[ne, ne];
+                for(i=0; i<=ne-1; i++)
+                {
+                    for(j=0; j<=ne-1; j++)
+                    {
+                        c[i,j] = 0;
+                    }
+                }
+                c[0,ne-1] = -a[0];
+                for(i=1; i<=ne-1; i++)
+                {
+                    c[i,i-1] = 1;
+                    c[i,ne-1] = -a[i];
+                }
+                status = evd.rmatrixevd(c, ne, 0, ref wr, ref wi, ref vl, ref vr);
+                alglib.ap.assert(status, "PolynomialSolve: inernal error - EVD solver failed");
+                for(i=0; i<=ne-1; i++)
+                {
+                    x[i].x = wr[i];
+                    x[i].y = wi[i];
+                }
+            }
+            
+            //
+            // Remaining NZ zero roots
+            //
+            for(i=ne; i<=n-1; i++)
+            {
+                x[i] = 0;
+            }
+            
+            //
+            // Rep
+            //
+            rep.maxerr = 0;
+            for(i=0; i<=ne-1; i++)
+            {
+                v = 0;
+                vv = 1;
+                for(j=0; j<=ne; j++)
+                {
+                    v = v+a[j]*vv;
+                    vv = vv*x[i];
+                }
+                rep.maxerr = Math.Max(rep.maxerr, math.abscomplex(v));
+            }
+        }
+
+
+    }
+    public class nleq
+    {
+        public class nleqstate : apobject
+        {
+            public int n;
+            public int m;
+            public double epsf;
+            public int maxits;
+            public bool xrep;
+            public double stpmax;
+            public double[] x;
+            public double f;
+            public double[] fi;
+            public double[,] j;
+            public bool needf;
+            public bool needfij;
+            public bool xupdated;
+            public rcommstate rstate;
+            public int repiterationscount;
+            public int repnfunc;
+            public int repnjac;
+            public int repterminationtype;
+            public double[] xbase;
+            public double fbase;
+            public double fprev;
+            public double[] candstep;
+            public double[] rightpart;
+            public double[] cgbuf;
+            public nleqstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                x = new double[0];
+                fi = new double[0];
+                j = new double[0,0];
+                rstate = new rcommstate();
+                xbase = new double[0];
+                candstep = new double[0];
+                rightpart = new double[0];
+                cgbuf = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                nleqstate _result = new nleqstate();
+                _result.n = n;
+                _result.m = m;
+                _result.epsf = epsf;
+                _result.maxits = maxits;
+                _result.xrep = xrep;
+                _result.stpmax = stpmax;
+                _result.x = (double[])x.Clone();
+                _result.f = f;
+                _result.fi = (double[])fi.Clone();
+                _result.j = (double[,])j.Clone();
+                _result.needf = needf;
+                _result.needfij = needfij;
+                _result.xupdated = xupdated;
+                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.repiterationscount = repiterationscount;
+                _result.repnfunc = repnfunc;
+                _result.repnjac = repnjac;
+                _result.repterminationtype = repterminationtype;
+                _result.xbase = (double[])xbase.Clone();
+                _result.fbase = fbase;
+                _result.fprev = fprev;
+                _result.candstep = (double[])candstep.Clone();
+                _result.rightpart = (double[])rightpart.Clone();
+                _result.cgbuf = (double[])cgbuf.Clone();
+                return _result;
+            }
+        };
+
+
+        public class nleqreport : apobject
+        {
+            public int iterationscount;
+            public int nfunc;
+            public int njac;
+            public int terminationtype;
+            public nleqreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                nleqreport _result = new nleqreport();
+                _result.iterationscount = iterationscount;
+                _result.nfunc = nfunc;
+                _result.njac = njac;
+                _result.terminationtype = terminationtype;
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+                        LEVENBERG-MARQUARDT-LIKE NONLINEAR SOLVER
+
+        DESCRIPTION:
+        This algorithm solves system of nonlinear equations
+            F[0](x[0], ..., x[n-1])   = 0
+            F[1](x[0], ..., x[n-1])   = 0
+            ...
+            F[M-1](x[0], ..., x[n-1]) = 0
+        with M/N do not necessarily coincide.  Algorithm  converges  quadratically
+        under following conditions:
+            * the solution set XS is nonempty
+            * for some xs in XS there exist such neighbourhood N(xs) that:
+              * vector function F(x) and its Jacobian J(x) are continuously
+                differentiable on N
+              * ||F(x)|| provides local error bound on N, i.e. there  exists  such
+                c1, that ||F(x)||>c1*distance(x,XS)
+        Note that these conditions are much more weaker than usual non-singularity
+        conditions. For example, algorithm will converge for any  affine  function
+        F (whether its Jacobian singular or not).
+
+
+        REQUIREMENTS:
+        Algorithm will request following information during its operation:
+        * function vector F[] and Jacobian matrix at given point X
+        * value of merit function f(x)=F[0]^2(x)+...+F[M-1]^2(x) at given point X
+
+
+        USAGE:
+        1. User initializes algorithm state with NLEQCreateLM() call
+        2. User tunes solver parameters with  NLEQSetCond(),  NLEQSetStpMax()  and
+           other functions
+        3. User  calls  NLEQSolve()  function  which  takes  algorithm  state  and
+           pointers (delegates, etc.) to callback functions which calculate  merit
+           function value and Jacobian.
+        4. User calls NLEQResults() to get solution
+        5. Optionally, user may call NLEQRestartFrom() to  solve  another  problem
+           with same parameters (N/M) but another starting  point  and/or  another
+           function vector. NLEQRestartFrom() allows to reuse already  initialized
+           structure.
+
+
+        INPUT PARAMETERS:
+            N       -   space dimension, N>1:
+                        * if provided, only leading N elements of X are used
+                        * if not provided, determined automatically from size of X
+            M       -   system size
+            X       -   starting point
+
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+
+        NOTES:
+        1. you may tune stopping conditions with NLEQSetCond() function
+        2. if target function contains exp() or other fast growing functions,  and
+           optimization algorithm makes too large steps which leads  to  overflow,
+           use NLEQSetStpMax() function to bound algorithm's steps.
+        3. this  algorithm  is  a  slightly  modified implementation of the method
+           described  in  'Levenberg-Marquardt  method  for constrained  nonlinear
+           equations with strong local convergence properties' by Christian Kanzow
+           Nobuo Yamashita and Masao Fukushima and further  developed  in  'On the
+           convergence of a New Levenberg-Marquardt Method'  by  Jin-yan  Fan  and
+           Ya-Xiang Yuan.
+
+
+          -- ALGLIB --
+             Copyright 20.08.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqcreatelm(int n,
+            int m,
+            double[] x,
+            nleqstate state)
+        {
+            alglib.ap.assert(n>=1, "NLEQCreateLM: N<1!");
+            alglib.ap.assert(m>=1, "NLEQCreateLM: M<1!");
+            alglib.ap.assert(alglib.ap.len(x)>=n, "NLEQCreateLM: Length(X)<N!");
+            alglib.ap.assert(apserv.isfinitevector(x, n), "NLEQCreateLM: X contains infinite or NaN values!");
+            
+            //
+            // Initialize
+            //
+            state.n = n;
+            state.m = m;
+            nleqsetcond(state, 0, 0);
+            nleqsetxrep(state, false);
+            nleqsetstpmax(state, 0);
+            state.x = new double[n];
+            state.xbase = new double[n];
+            state.j = new double[m, n];
+            state.fi = new double[m];
+            state.rightpart = new double[n];
+            state.candstep = new double[n];
+            nleqrestartfrom(state, x);
+        }
+
+
+        /*************************************************************************
+        This function sets stopping conditions for the nonlinear solver
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            EpsF    -   >=0
+                        The subroutine finishes  its work if on k+1-th iteration
+                        the condition ||F||<=EpsF is satisfied
+            MaxIts  -   maximum number of iterations. If MaxIts=0, the  number  of
+                        iterations is unlimited.
+
+        Passing EpsF=0 and MaxIts=0 simultaneously will lead to  automatic
+        stopping criterion selection (small EpsF).
+
+        NOTES:
+
+          -- ALGLIB --
+             Copyright 20.08.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqsetcond(nleqstate state,
+            double epsf,
+            int maxits)
+        {
+            alglib.ap.assert(math.isfinite(epsf), "NLEQSetCond: EpsF is not finite number!");
+            alglib.ap.assert((double)(epsf)>=(double)(0), "NLEQSetCond: negative EpsF!");
+            alglib.ap.assert(maxits>=0, "NLEQSetCond: negative MaxIts!");
+            if( (double)(epsf)==(double)(0) && maxits==0 )
+            {
+                epsf = 1.0E-6;
+            }
+            state.epsf = epsf;
+            state.maxits = maxits;
+        }
+
+
+        /*************************************************************************
+        This function turns on/off reporting.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            NeedXRep-   whether iteration reports are needed or not
+
+        If NeedXRep is True, algorithm will call rep() callback function if  it is
+        provided to NLEQSolve().
+
+          -- ALGLIB --
+             Copyright 20.08.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqsetxrep(nleqstate state,
+            bool needxrep)
+        {
+            state.xrep = needxrep;
+        }
+
+
+        /*************************************************************************
+        This function sets maximum step length
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            StpMax  -   maximum step length, >=0. Set StpMax to 0.0,  if you don't
+                        want to limit step length.
+
+        Use this subroutine when target function  contains  exp()  or  other  fast
+        growing functions, and algorithm makes  too  large  steps  which  lead  to
+        overflow. This function allows us to reject steps that are too large  (and
+        therefore expose us to the possible overflow) without actually calculating
+        function value at the x+stp*d.
+
+          -- ALGLIB --
+             Copyright 20.08.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqsetstpmax(nleqstate state,
+            double stpmax)
+        {
+            alglib.ap.assert(math.isfinite(stpmax), "NLEQSetStpMax: StpMax is not finite!");
+            alglib.ap.assert((double)(stpmax)>=(double)(0), "NLEQSetStpMax: StpMax<0!");
+            state.stpmax = stpmax;
+        }
+
+
+        /*************************************************************************
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool nleqiteration(nleqstate state)
+        {
+            bool result = new bool();
+            int n = 0;
+            int m = 0;
+            int i = 0;
+            double lambdaup = 0;
+            double lambdadown = 0;
+            double lambdav = 0;
+            double rho = 0;
+            double mu = 0;
+            double stepnorm = 0;
+            bool b = new bool();
+            int i_ = 0;
+
+            
+            //
+            // Reverse communication preparations
+            // I know it looks ugly, but it works the same way
+            // anywhere from C++ to Python.
+            //
+            // This code initializes locals by:
+            // * random values determined during code
+            //   generation - on first subroutine call
+            // * values from previous call - on subsequent calls
+            //
+            if( state.rstate.stage>=0 )
+            {
+                n = state.rstate.ia[0];
+                m = state.rstate.ia[1];
+                i = state.rstate.ia[2];
+                b = state.rstate.ba[0];
+                lambdaup = state.rstate.ra[0];
+                lambdadown = state.rstate.ra[1];
+                lambdav = state.rstate.ra[2];
+                rho = state.rstate.ra[3];
+                mu = state.rstate.ra[4];
+                stepnorm = state.rstate.ra[5];
+            }
+            else
+            {
+                n = 359;
+                m = -58;
+                i = -919;
+                b = true;
+                lambdaup = 81;
+                lambdadown = 255;
+                lambdav = 74;
+                rho = -788;
+                mu = 809;
+                stepnorm = 205;
+            }
+            if( state.rstate.stage==0 )
+            {
+                goto lbl_0;
+            }
+            if( state.rstate.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rstate.stage==2 )
+            {
+                goto lbl_2;
+            }
+            if( state.rstate.stage==3 )
+            {
+                goto lbl_3;
+            }
+            if( state.rstate.stage==4 )
+            {
+                goto lbl_4;
+            }
+            
+            //
+            // Routine body
+            //
+            
+            //
+            // Prepare
+            //
+            n = state.n;
+            m = state.m;
+            state.repterminationtype = 0;
+            state.repiterationscount = 0;
+            state.repnfunc = 0;
+            state.repnjac = 0;
+            
+            //
+            // Calculate F/G, initialize algorithm
+            //
+            clearrequestfields(state);
+            state.needf = true;
+            state.rstate.stage = 0;
+            goto lbl_rcomm;
+        lbl_0:
+            state.needf = false;
+            state.repnfunc = state.repnfunc+1;
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.xbase[i_] = state.x[i_];
+            }
+            state.fbase = state.f;
+            state.fprev = math.maxrealnumber;
+            if( !state.xrep )
+            {
+                goto lbl_5;
+            }
+            
+            //
+            // progress report
+            //
+            clearrequestfields(state);
+            state.xupdated = true;
+            state.rstate.stage = 1;
+            goto lbl_rcomm;
+        lbl_1:
+            state.xupdated = false;
+        lbl_5:
+            if( (double)(state.f)<=(double)(math.sqr(state.epsf)) )
+            {
+                state.repterminationtype = 1;
+                result = false;
+                return result;
+            }
+            
+            //
+            // Main cycle
+            //
+            lambdaup = 10;
+            lambdadown = 0.3;
+            lambdav = 0.001;
+            rho = 1;
+        lbl_7:
+            if( false )
+            {
+                goto lbl_8;
+            }
+            
+            //
+            // Get Jacobian;
+            // before we get to this point we already have State.XBase filled
+            // with current point and State.FBase filled with function value
+            // at XBase
+            //
+            clearrequestfields(state);
+            state.needfij = true;
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x[i_] = state.xbase[i_];
+            }
+            state.rstate.stage = 2;
+            goto lbl_rcomm;
+        lbl_2:
+            state.needfij = false;
+            state.repnfunc = state.repnfunc+1;
+            state.repnjac = state.repnjac+1;
+            ablas.rmatrixmv(n, m, state.j, 0, 0, 1, state.fi, 0, ref state.rightpart, 0);
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.rightpart[i_] = -1*state.rightpart[i_];
+            }
+            
+            //
+            // Inner cycle: find good lambda
+            //
+        lbl_9:
+            if( false )
+            {
+                goto lbl_10;
+            }
+            
+            //
+            // Solve (J^T*J + (Lambda+Mu)*I)*y = J^T*F
+            // to get step d=-y where:
+            // * Mu=||F|| - is damping parameter for nonlinear system
+            // * Lambda   - is additional Levenberg-Marquardt parameter
+            //              for better convergence when far away from minimum
+            //
+            for(i=0; i<=n-1; i++)
+            {
+                state.candstep[i] = 0;
+            }
+            fbls.fblssolvecgx(state.j, m, n, lambdav, state.rightpart, ref state.candstep, ref state.cgbuf);
+            
+            //
+            // Normalize step (it must be no more than StpMax)
+            //
+            stepnorm = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(state.candstep[i])!=(double)(0) )
+                {
+                    stepnorm = 1;
+                    break;
+                }
+            }
+            linmin.linminnormalized(ref state.candstep, ref stepnorm, n);
+            if( (double)(state.stpmax)!=(double)(0) )
+            {
+                stepnorm = Math.Min(stepnorm, state.stpmax);
+            }
+            
+            //
+            // Test new step - is it good enough?
+            // * if not, Lambda is increased and we try again.
+            // * if step is good, we decrease Lambda and move on.
+            //
+            // We can break this cycle on two occasions:
+            // * step is so small that x+step==x (in floating point arithmetics)
+            // * lambda is so large
+            //
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x[i_] = state.xbase[i_];
+            }
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x[i_] = state.x[i_] + stepnorm*state.candstep[i_];
+            }
+            b = true;
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(state.x[i])!=(double)(state.xbase[i]) )
+                {
+                    b = false;
+                    break;
+                }
+            }
+            if( b )
+            {
+                
+                //
+                // Step is too small, force zero step and break
+                //
+                stepnorm = 0;
+                for(i_=0; i_<=n-1;i_++)
+                {
+                    state.x[i_] = state.xbase[i_];
+                }
+                state.f = state.fbase;
+                goto lbl_10;
+            }
+            clearrequestfields(state);
+            state.needf = true;
+            state.rstate.stage = 3;
+            goto lbl_rcomm;
+        lbl_3:
+            state.needf = false;
+            state.repnfunc = state.repnfunc+1;
+            if( (double)(state.f)<(double)(state.fbase) )
+            {
+                
+                //
+                // function value decreased, move on
+                //
+                decreaselambda(ref lambdav, ref rho, lambdadown);
+                goto lbl_10;
+            }
+            if( !increaselambda(ref lambdav, ref rho, lambdaup) )
+            {
+                
+                //
+                // Lambda is too large (near overflow), force zero step and break
+                //
+                stepnorm = 0;
+                for(i_=0; i_<=n-1;i_++)
+                {
+                    state.x[i_] = state.xbase[i_];
+                }
+                state.f = state.fbase;
+                goto lbl_10;
+            }
+            goto lbl_9;
+        lbl_10:
+            
+            //
+            // Accept step:
+            // * new position
+            // * new function value
+            //
+            state.fbase = state.f;
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.xbase[i_] = state.xbase[i_] + stepnorm*state.candstep[i_];
+            }
+            state.repiterationscount = state.repiterationscount+1;
+            
+            //
+            // Report new iteration
+            //
+            if( !state.xrep )
+            {
+                goto lbl_11;
+            }
+            clearrequestfields(state);
+            state.xupdated = true;
+            state.f = state.fbase;
+            for(i_=0; i_<=n-1;i_++)
+            {
+                state.x[i_] = state.xbase[i_];
+            }
+            state.rstate.stage = 4;
+            goto lbl_rcomm;
+        lbl_4:
+            state.xupdated = false;
+        lbl_11:
+            
+            //
+            // Test stopping conditions on F, step (zero/non-zero) and MaxIts;
+            // If one of the conditions is met, RepTerminationType is changed.
+            //
+            if( (double)(Math.Sqrt(state.f))<=(double)(state.epsf) )
+            {
+                state.repterminationtype = 1;
+            }
+            if( (double)(stepnorm)==(double)(0) && state.repterminationtype==0 )
+            {
+                state.repterminationtype = -4;
+            }
+            if( state.repiterationscount>=state.maxits && state.maxits>0 )
+            {
+                state.repterminationtype = 5;
+            }
+            if( state.repterminationtype!=0 )
+            {
+                goto lbl_8;
+            }
+            
+            //
+            // Now, iteration is finally over
+            //
+            goto lbl_7;
+        lbl_8:
+            result = false;
+            return result;
+            
+            //
+            // Saving state
+            //
+        lbl_rcomm:
+            result = true;
+            state.rstate.ia[0] = n;
+            state.rstate.ia[1] = m;
+            state.rstate.ia[2] = i;
+            state.rstate.ba[0] = b;
+            state.rstate.ra[0] = lambdaup;
+            state.rstate.ra[1] = lambdadown;
+            state.rstate.ra[2] = lambdav;
+            state.rstate.ra[3] = rho;
+            state.rstate.ra[4] = mu;
+            state.rstate.ra[5] = stepnorm;
+            return result;
+        }
+
+
+        /*************************************************************************
+        NLEQ solver results
+
+        INPUT PARAMETERS:
+            State   -   algorithm state.
+
+        OUTPUT PARAMETERS:
+            X       -   array[0..N-1], solution
+            Rep     -   optimization report:
+                        * Rep.TerminationType completetion code:
+                            * -4    ERROR:  algorithm   has   converged   to   the
+                                    stationary point Xf which is local minimum  of
+                                    f=F[0]^2+...+F[m-1]^2, but is not solution  of
+                                    nonlinear system.
+                            *  1    sqrt(f)<=EpsF.
+                            *  5    MaxIts steps was taken
+                            *  7    stopping conditions are too stringent,
+                                    further improvement is impossible
+                        * Rep.IterationsCount contains iterations count
+                        * NFEV countains number of function calculations
+                        * ActiveConstraints contains number of active constraints
+
+          -- ALGLIB --
+             Copyright 20.08.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqresults(nleqstate state,
+            ref double[] x,
+            nleqreport rep)
+        {
+            x = new double[0];
+
+            nleqresultsbuf(state, ref x, rep);
+        }
+
+
+        /*************************************************************************
+        NLEQ solver results
+
+        Buffered implementation of NLEQResults(), which uses pre-allocated  buffer
+        to store X[]. If buffer size is  too  small,  it  resizes  buffer.  It  is
+        intended to be used in the inner cycles of performance critical algorithms
+        where array reallocation penalty is too large to be ignored.
+
+          -- ALGLIB --
+             Copyright 20.08.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqresultsbuf(nleqstate state,
+            ref double[] x,
+            nleqreport rep)
+        {
+            int i_ = 0;
+
+            if( alglib.ap.len(x)<state.n )
+            {
+                x = new double[state.n];
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                x[i_] = state.xbase[i_];
+            }
+            rep.iterationscount = state.repiterationscount;
+            rep.nfunc = state.repnfunc;
+            rep.njac = state.repnjac;
+            rep.terminationtype = state.repterminationtype;
+        }
+
+
+        /*************************************************************************
+        This  subroutine  restarts  CG  algorithm from new point. All optimization
+        parameters are left unchanged.
+
+        This  function  allows  to  solve multiple  optimization  problems  (which
+        must have same number of dimensions) without object reallocation penalty.
+
+        INPUT PARAMETERS:
+            State   -   structure used for reverse communication previously
+                        allocated with MinCGCreate call.
+            X       -   new starting point.
+            BndL    -   new lower bounds
+            BndU    -   new upper bounds
+
+          -- ALGLIB --
+             Copyright 30.07.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void nleqrestartfrom(nleqstate state,
+            double[] x)
+        {
+            int i_ = 0;
+
+            alglib.ap.assert(alglib.ap.len(x)>=state.n, "NLEQRestartFrom: Length(X)<N!");
+            alglib.ap.assert(apserv.isfinitevector(x, state.n), "NLEQRestartFrom: X contains infinite or NaN values!");
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = x[i_];
+            }
+            state.rstate.ia = new int[2+1];
+            state.rstate.ba = new bool[0+1];
+            state.rstate.ra = new double[5+1];
+            state.rstate.stage = -1;
+            clearrequestfields(state);
+        }
+
+
+        /*************************************************************************
+        Clears request fileds (to be sure that we don't forgot to clear something)
+        *************************************************************************/
+        private static void clearrequestfields(nleqstate state)
+        {
+            state.needf = false;
+            state.needfij = false;
+            state.xupdated = false;
+        }
+
+
+        /*************************************************************************
+        Increases lambda, returns False when there is a danger of overflow
+        *************************************************************************/
+        private static bool increaselambda(ref double lambdav,
+            ref double nu,
+            double lambdaup)
+        {
+            bool result = new bool();
+            double lnlambda = 0;
+            double lnnu = 0;
+            double lnlambdaup = 0;
+            double lnmax = 0;
+
+            result = false;
+            lnlambda = Math.Log(lambdav);
+            lnlambdaup = Math.Log(lambdaup);
+            lnnu = Math.Log(nu);
+            lnmax = 0.5*Math.Log(math.maxrealnumber);
+            if( (double)(lnlambda+lnlambdaup+lnnu)>(double)(lnmax) )
+            {
+                return result;
+            }
+            if( (double)(lnnu+Math.Log(2))>(double)(lnmax) )
+            {
+                return result;
+            }
+            lambdav = lambdav*lambdaup*nu;
+            nu = nu*2;
+            result = true;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Decreases lambda, but leaves it unchanged when there is danger of underflow.
+        *************************************************************************/
+        private static void decreaselambda(ref double lambdav,
+            ref double nu,
+            double lambdadown)
+        {
+            nu = 1;
+            if( (double)(Math.Log(lambdav)+Math.Log(lambdadown))<(double)(Math.Log(math.minrealnumber)) )
+            {
+                lambdav = math.minrealnumber;
+            }
+            else
+            {
+                lambdav = lambdav*lambdadown;
+            }
+        }
+
+
+    }
+    public class directsparsesolvers
+    {
+        /*************************************************************************
+        This structure is a sparse solver report.
+
+        Following fields can be accessed by users:
+        *************************************************************************/
+        public class sparsesolverreport : apobject
+        {
+            public int terminationtype;
+            public sparsesolverreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                sparsesolverreport _result = new sparsesolverreport();
+                _result.terminationtype = terminationtype;
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+        definite matrix A, N*1 vectors x and b.
+
+        This solver  converts  input  matrix  to  SKS  format,  performs  Cholesky
+        factorization using  SKS  Cholesky  subroutine  (works  well  for  limited
+        bandwidth matrices) and uses sparse triangular solvers to get solution  of
+        the original system.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, must be NxN exactly
+            N       -   size of A, N>0
+            IsUpper -   which half of A is provided (another half is ignored)
+            B       -   array[0..N-1], right part
+
+        OUTPUT PARAMETERS
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesolvesks(sparse.sparsematrix a,
+            int n,
+            bool isupper,
+            double[] b,
+            sparsesolverreport rep,
+            ref double[] x)
+        {
+            int i = 0;
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+
+            x = new double[0];
+
+            alglib.ap.assert(n>0, "SparseSolveSKS: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a)==n, "SparseSolveSKS: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a)==n, "SparseSolveSKS: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolveSKS: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n), "SparseSolveSKS: B contains infinities or NANs");
+            initreport(rep);
+            x = new double[n];
+            sparse.sparsecopytosks(a, a2);
+            if( !trfac.sparsecholeskyskyline(a2, n, isupper) )
+            {
+                rep.terminationtype = -3;
+                for(i=0; i<=n-1; i++)
+                {
+                    x[i] = 0;
+                }
+                return;
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            if( isupper )
+            {
+                sparse.sparsetrsv(a2, isupper, false, 1, x);
+                sparse.sparsetrsv(a2, isupper, false, 0, x);
+            }
+            else
+            {
+                sparse.sparsetrsv(a2, isupper, false, 0, x);
+                sparse.sparsetrsv(a2, isupper, false, 1, x);
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
+        matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
+
+        IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
+                   sparse storage format. An exception will be  generated  if  you
+                   pass matrix in some other format (HASH or CRS).
+
+        INPUT PARAMETERS
+            A       -   sparse NxN matrix stored in SKS format, must be NxN exactly
+            N       -   size of A, N>0
+            IsUpper -   which half of A is provided (another half is ignored)
+            B       -   array[N], right part
+
+        OUTPUT PARAMETERS
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecholeskysolvesks(sparse.sparsematrix a,
+            int n,
+            bool isupper,
+            double[] b,
+            sparsesolverreport rep,
+            ref double[] x)
+        {
+            int i = 0;
+
+            x = new double[0];
+
+            alglib.ap.assert(n>0, "SparseSolveSKS: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a)==n, "SparseSolveSKS: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a)==n, "SparseSolveSKS: cols(A)!=N");
+            alglib.ap.assert(sparse.sparseissks(a), "SparseSolveSKS: A is not an SKS matrix");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolveSKS: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n), "SparseSolveSKS: B contains infinities or NANs");
+            initreport(rep);
+            x = new double[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(sparse.sparseget(a, i, i))==(double)(0.0) )
+                {
+                    rep.terminationtype = -3;
+                    for(i=0; i<=n-1; i++)
+                    {
+                        x[i] = 0;
+                    }
+                    return;
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            if( isupper )
+            {
+                sparse.sparsetrsv(a, isupper, false, 1, x);
+                sparse.sparsetrsv(a, isupper, false, 0, x);
+            }
+            else
+            {
+                sparse.sparsetrsv(a, isupper, false, 0, x);
+                sparse.sparsetrsv(a, isupper, false, 1, x);
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Reset report fields
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        private static void initreport(sparsesolverreport rep)
+        {
+            rep.terminationtype = 0;
+        }
+
+
+    }
     public class lincg
     {
         /*************************************************************************
@@ -10618,10 +11888,10 @@ public partial class alglib
             }
             else
             {
-                i = -983;
-                uvar = -989;
-                bnorm = -834;
-                v = 900;
+                i = 359;
+                uvar = -58;
+                bnorm = -919;
+                v = -909;
             }
             if( state.rstate.stage==0 )
             {
@@ -11352,981 +12622,6 @@ public partial class alglib
             state.repiterationscount = 0;
             state.repnmv = 0;
             state.repterminationtype = 0;
-        }
-
-
-    }
-    public class nleq
-    {
-        public class nleqstate : apobject
-        {
-            public int n;
-            public int m;
-            public double epsf;
-            public int maxits;
-            public bool xrep;
-            public double stpmax;
-            public double[] x;
-            public double f;
-            public double[] fi;
-            public double[,] j;
-            public bool needf;
-            public bool needfij;
-            public bool xupdated;
-            public rcommstate rstate;
-            public int repiterationscount;
-            public int repnfunc;
-            public int repnjac;
-            public int repterminationtype;
-            public double[] xbase;
-            public double fbase;
-            public double fprev;
-            public double[] candstep;
-            public double[] rightpart;
-            public double[] cgbuf;
-            public nleqstate()
-            {
-                init();
-            }
-            public override void init()
-            {
-                x = new double[0];
-                fi = new double[0];
-                j = new double[0,0];
-                rstate = new rcommstate();
-                xbase = new double[0];
-                candstep = new double[0];
-                rightpart = new double[0];
-                cgbuf = new double[0];
-            }
-            public override alglib.apobject make_copy()
-            {
-                nleqstate _result = new nleqstate();
-                _result.n = n;
-                _result.m = m;
-                _result.epsf = epsf;
-                _result.maxits = maxits;
-                _result.xrep = xrep;
-                _result.stpmax = stpmax;
-                _result.x = (double[])x.Clone();
-                _result.f = f;
-                _result.fi = (double[])fi.Clone();
-                _result.j = (double[,])j.Clone();
-                _result.needf = needf;
-                _result.needfij = needfij;
-                _result.xupdated = xupdated;
-                _result.rstate = (rcommstate)rstate.make_copy();
-                _result.repiterationscount = repiterationscount;
-                _result.repnfunc = repnfunc;
-                _result.repnjac = repnjac;
-                _result.repterminationtype = repterminationtype;
-                _result.xbase = (double[])xbase.Clone();
-                _result.fbase = fbase;
-                _result.fprev = fprev;
-                _result.candstep = (double[])candstep.Clone();
-                _result.rightpart = (double[])rightpart.Clone();
-                _result.cgbuf = (double[])cgbuf.Clone();
-                return _result;
-            }
-        };
-
-
-        public class nleqreport : apobject
-        {
-            public int iterationscount;
-            public int nfunc;
-            public int njac;
-            public int terminationtype;
-            public nleqreport()
-            {
-                init();
-            }
-            public override void init()
-            {
-            }
-            public override alglib.apobject make_copy()
-            {
-                nleqreport _result = new nleqreport();
-                _result.iterationscount = iterationscount;
-                _result.nfunc = nfunc;
-                _result.njac = njac;
-                _result.terminationtype = terminationtype;
-                return _result;
-            }
-        };
-
-
-
-
-        /*************************************************************************
-                        LEVENBERG-MARQUARDT-LIKE NONLINEAR SOLVER
-
-        DESCRIPTION:
-        This algorithm solves system of nonlinear equations
-            F[0](x[0], ..., x[n-1])   = 0
-            F[1](x[0], ..., x[n-1])   = 0
-            ...
-            F[M-1](x[0], ..., x[n-1]) = 0
-        with M/N do not necessarily coincide.  Algorithm  converges  quadratically
-        under following conditions:
-            * the solution set XS is nonempty
-            * for some xs in XS there exist such neighbourhood N(xs) that:
-              * vector function F(x) and its Jacobian J(x) are continuously
-                differentiable on N
-              * ||F(x)|| provides local error bound on N, i.e. there  exists  such
-                c1, that ||F(x)||>c1*distance(x,XS)
-        Note that these conditions are much more weaker than usual non-singularity
-        conditions. For example, algorithm will converge for any  affine  function
-        F (whether its Jacobian singular or not).
-
-
-        REQUIREMENTS:
-        Algorithm will request following information during its operation:
-        * function vector F[] and Jacobian matrix at given point X
-        * value of merit function f(x)=F[0]^2(x)+...+F[M-1]^2(x) at given point X
-
-
-        USAGE:
-        1. User initializes algorithm state with NLEQCreateLM() call
-        2. User tunes solver parameters with  NLEQSetCond(),  NLEQSetStpMax()  and
-           other functions
-        3. User  calls  NLEQSolve()  function  which  takes  algorithm  state  and
-           pointers (delegates, etc.) to callback functions which calculate  merit
-           function value and Jacobian.
-        4. User calls NLEQResults() to get solution
-        5. Optionally, user may call NLEQRestartFrom() to  solve  another  problem
-           with same parameters (N/M) but another starting  point  and/or  another
-           function vector. NLEQRestartFrom() allows to reuse already  initialized
-           structure.
-
-
-        INPUT PARAMETERS:
-            N       -   space dimension, N>1:
-                        * if provided, only leading N elements of X are used
-                        * if not provided, determined automatically from size of X
-            M       -   system size
-            X       -   starting point
-
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-
-        NOTES:
-        1. you may tune stopping conditions with NLEQSetCond() function
-        2. if target function contains exp() or other fast growing functions,  and
-           optimization algorithm makes too large steps which leads  to  overflow,
-           use NLEQSetStpMax() function to bound algorithm's steps.
-        3. this  algorithm  is  a  slightly  modified implementation of the method
-           described  in  'Levenberg-Marquardt  method  for constrained  nonlinear
-           equations with strong local convergence properties' by Christian Kanzow
-           Nobuo Yamashita and Masao Fukushima and further  developed  in  'On the
-           convergence of a New Levenberg-Marquardt Method'  by  Jin-yan  Fan  and
-           Ya-Xiang Yuan.
-
-
-          -- ALGLIB --
-             Copyright 20.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqcreatelm(int n,
-            int m,
-            double[] x,
-            nleqstate state)
-        {
-            alglib.ap.assert(n>=1, "NLEQCreateLM: N<1!");
-            alglib.ap.assert(m>=1, "NLEQCreateLM: M<1!");
-            alglib.ap.assert(alglib.ap.len(x)>=n, "NLEQCreateLM: Length(X)<N!");
-            alglib.ap.assert(apserv.isfinitevector(x, n), "NLEQCreateLM: X contains infinite or NaN values!");
-            
-            //
-            // Initialize
-            //
-            state.n = n;
-            state.m = m;
-            nleqsetcond(state, 0, 0);
-            nleqsetxrep(state, false);
-            nleqsetstpmax(state, 0);
-            state.x = new double[n];
-            state.xbase = new double[n];
-            state.j = new double[m, n];
-            state.fi = new double[m];
-            state.rightpart = new double[n];
-            state.candstep = new double[n];
-            nleqrestartfrom(state, x);
-        }
-
-
-        /*************************************************************************
-        This function sets stopping conditions for the nonlinear solver
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            EpsF    -   >=0
-                        The subroutine finishes  its work if on k+1-th iteration
-                        the condition ||F||<=EpsF is satisfied
-            MaxIts  -   maximum number of iterations. If MaxIts=0, the  number  of
-                        iterations is unlimited.
-
-        Passing EpsF=0 and MaxIts=0 simultaneously will lead to  automatic
-        stopping criterion selection (small EpsF).
-
-        NOTES:
-
-          -- ALGLIB --
-             Copyright 20.08.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqsetcond(nleqstate state,
-            double epsf,
-            int maxits)
-        {
-            alglib.ap.assert(math.isfinite(epsf), "NLEQSetCond: EpsF is not finite number!");
-            alglib.ap.assert((double)(epsf)>=(double)(0), "NLEQSetCond: negative EpsF!");
-            alglib.ap.assert(maxits>=0, "NLEQSetCond: negative MaxIts!");
-            if( (double)(epsf)==(double)(0) && maxits==0 )
-            {
-                epsf = 1.0E-6;
-            }
-            state.epsf = epsf;
-            state.maxits = maxits;
-        }
-
-
-        /*************************************************************************
-        This function turns on/off reporting.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            NeedXRep-   whether iteration reports are needed or not
-
-        If NeedXRep is True, algorithm will call rep() callback function if  it is
-        provided to NLEQSolve().
-
-          -- ALGLIB --
-             Copyright 20.08.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqsetxrep(nleqstate state,
-            bool needxrep)
-        {
-            state.xrep = needxrep;
-        }
-
-
-        /*************************************************************************
-        This function sets maximum step length
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            StpMax  -   maximum step length, >=0. Set StpMax to 0.0,  if you don't
-                        want to limit step length.
-
-        Use this subroutine when target function  contains  exp()  or  other  fast
-        growing functions, and algorithm makes  too  large  steps  which  lead  to
-        overflow. This function allows us to reject steps that are too large  (and
-        therefore expose us to the possible overflow) without actually calculating
-        function value at the x+stp*d.
-
-          -- ALGLIB --
-             Copyright 20.08.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqsetstpmax(nleqstate state,
-            double stpmax)
-        {
-            alglib.ap.assert(math.isfinite(stpmax), "NLEQSetStpMax: StpMax is not finite!");
-            alglib.ap.assert((double)(stpmax)>=(double)(0), "NLEQSetStpMax: StpMax<0!");
-            state.stpmax = stpmax;
-        }
-
-
-        /*************************************************************************
-
-          -- ALGLIB --
-             Copyright 20.03.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool nleqiteration(nleqstate state)
-        {
-            bool result = new bool();
-            int n = 0;
-            int m = 0;
-            int i = 0;
-            double lambdaup = 0;
-            double lambdadown = 0;
-            double lambdav = 0;
-            double rho = 0;
-            double mu = 0;
-            double stepnorm = 0;
-            bool b = new bool();
-            int i_ = 0;
-
-            
-            //
-            // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
-            //
-            // This code initializes locals by:
-            // * random values determined during code
-            //   generation - on first subroutine call
-            // * values from previous call - on subsequent calls
-            //
-            if( state.rstate.stage>=0 )
-            {
-                n = state.rstate.ia[0];
-                m = state.rstate.ia[1];
-                i = state.rstate.ia[2];
-                b = state.rstate.ba[0];
-                lambdaup = state.rstate.ra[0];
-                lambdadown = state.rstate.ra[1];
-                lambdav = state.rstate.ra[2];
-                rho = state.rstate.ra[3];
-                mu = state.rstate.ra[4];
-                stepnorm = state.rstate.ra[5];
-            }
-            else
-            {
-                n = -983;
-                m = -989;
-                i = -834;
-                b = false;
-                lambdaup = -287;
-                lambdadown = 364;
-                lambdav = 214;
-                rho = -338;
-                mu = -686;
-                stepnorm = 912;
-            }
-            if( state.rstate.stage==0 )
-            {
-                goto lbl_0;
-            }
-            if( state.rstate.stage==1 )
-            {
-                goto lbl_1;
-            }
-            if( state.rstate.stage==2 )
-            {
-                goto lbl_2;
-            }
-            if( state.rstate.stage==3 )
-            {
-                goto lbl_3;
-            }
-            if( state.rstate.stage==4 )
-            {
-                goto lbl_4;
-            }
-            
-            //
-            // Routine body
-            //
-            
-            //
-            // Prepare
-            //
-            n = state.n;
-            m = state.m;
-            state.repterminationtype = 0;
-            state.repiterationscount = 0;
-            state.repnfunc = 0;
-            state.repnjac = 0;
-            
-            //
-            // Calculate F/G, initialize algorithm
-            //
-            clearrequestfields(state);
-            state.needf = true;
-            state.rstate.stage = 0;
-            goto lbl_rcomm;
-        lbl_0:
-            state.needf = false;
-            state.repnfunc = state.repnfunc+1;
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.xbase[i_] = state.x[i_];
-            }
-            state.fbase = state.f;
-            state.fprev = math.maxrealnumber;
-            if( !state.xrep )
-            {
-                goto lbl_5;
-            }
-            
-            //
-            // progress report
-            //
-            clearrequestfields(state);
-            state.xupdated = true;
-            state.rstate.stage = 1;
-            goto lbl_rcomm;
-        lbl_1:
-            state.xupdated = false;
-        lbl_5:
-            if( (double)(state.f)<=(double)(math.sqr(state.epsf)) )
-            {
-                state.repterminationtype = 1;
-                result = false;
-                return result;
-            }
-            
-            //
-            // Main cycle
-            //
-            lambdaup = 10;
-            lambdadown = 0.3;
-            lambdav = 0.001;
-            rho = 1;
-        lbl_7:
-            if( false )
-            {
-                goto lbl_8;
-            }
-            
-            //
-            // Get Jacobian;
-            // before we get to this point we already have State.XBase filled
-            // with current point and State.FBase filled with function value
-            // at XBase
-            //
-            clearrequestfields(state);
-            state.needfij = true;
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.x[i_] = state.xbase[i_];
-            }
-            state.rstate.stage = 2;
-            goto lbl_rcomm;
-        lbl_2:
-            state.needfij = false;
-            state.repnfunc = state.repnfunc+1;
-            state.repnjac = state.repnjac+1;
-            ablas.rmatrixmv(n, m, state.j, 0, 0, 1, state.fi, 0, ref state.rightpart, 0);
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.rightpart[i_] = -1*state.rightpart[i_];
-            }
-            
-            //
-            // Inner cycle: find good lambda
-            //
-        lbl_9:
-            if( false )
-            {
-                goto lbl_10;
-            }
-            
-            //
-            // Solve (J^T*J + (Lambda+Mu)*I)*y = J^T*F
-            // to get step d=-y where:
-            // * Mu=||F|| - is damping parameter for nonlinear system
-            // * Lambda   - is additional Levenberg-Marquardt parameter
-            //              for better convergence when far away from minimum
-            //
-            for(i=0; i<=n-1; i++)
-            {
-                state.candstep[i] = 0;
-            }
-            fbls.fblssolvecgx(state.j, m, n, lambdav, state.rightpart, ref state.candstep, ref state.cgbuf);
-            
-            //
-            // Normalize step (it must be no more than StpMax)
-            //
-            stepnorm = 0;
-            for(i=0; i<=n-1; i++)
-            {
-                if( (double)(state.candstep[i])!=(double)(0) )
-                {
-                    stepnorm = 1;
-                    break;
-                }
-            }
-            linmin.linminnormalized(ref state.candstep, ref stepnorm, n);
-            if( (double)(state.stpmax)!=(double)(0) )
-            {
-                stepnorm = Math.Min(stepnorm, state.stpmax);
-            }
-            
-            //
-            // Test new step - is it good enough?
-            // * if not, Lambda is increased and we try again.
-            // * if step is good, we decrease Lambda and move on.
-            //
-            // We can break this cycle on two occasions:
-            // * step is so small that x+step==x (in floating point arithmetics)
-            // * lambda is so large
-            //
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.x[i_] = state.xbase[i_];
-            }
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.x[i_] = state.x[i_] + stepnorm*state.candstep[i_];
-            }
-            b = true;
-            for(i=0; i<=n-1; i++)
-            {
-                if( (double)(state.x[i])!=(double)(state.xbase[i]) )
-                {
-                    b = false;
-                    break;
-                }
-            }
-            if( b )
-            {
-                
-                //
-                // Step is too small, force zero step and break
-                //
-                stepnorm = 0;
-                for(i_=0; i_<=n-1;i_++)
-                {
-                    state.x[i_] = state.xbase[i_];
-                }
-                state.f = state.fbase;
-                goto lbl_10;
-            }
-            clearrequestfields(state);
-            state.needf = true;
-            state.rstate.stage = 3;
-            goto lbl_rcomm;
-        lbl_3:
-            state.needf = false;
-            state.repnfunc = state.repnfunc+1;
-            if( (double)(state.f)<(double)(state.fbase) )
-            {
-                
-                //
-                // function value decreased, move on
-                //
-                decreaselambda(ref lambdav, ref rho, lambdadown);
-                goto lbl_10;
-            }
-            if( !increaselambda(ref lambdav, ref rho, lambdaup) )
-            {
-                
-                //
-                // Lambda is too large (near overflow), force zero step and break
-                //
-                stepnorm = 0;
-                for(i_=0; i_<=n-1;i_++)
-                {
-                    state.x[i_] = state.xbase[i_];
-                }
-                state.f = state.fbase;
-                goto lbl_10;
-            }
-            goto lbl_9;
-        lbl_10:
-            
-            //
-            // Accept step:
-            // * new position
-            // * new function value
-            //
-            state.fbase = state.f;
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.xbase[i_] = state.xbase[i_] + stepnorm*state.candstep[i_];
-            }
-            state.repiterationscount = state.repiterationscount+1;
-            
-            //
-            // Report new iteration
-            //
-            if( !state.xrep )
-            {
-                goto lbl_11;
-            }
-            clearrequestfields(state);
-            state.xupdated = true;
-            state.f = state.fbase;
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.x[i_] = state.xbase[i_];
-            }
-            state.rstate.stage = 4;
-            goto lbl_rcomm;
-        lbl_4:
-            state.xupdated = false;
-        lbl_11:
-            
-            //
-            // Test stopping conditions on F, step (zero/non-zero) and MaxIts;
-            // If one of the conditions is met, RepTerminationType is changed.
-            //
-            if( (double)(Math.Sqrt(state.f))<=(double)(state.epsf) )
-            {
-                state.repterminationtype = 1;
-            }
-            if( (double)(stepnorm)==(double)(0) && state.repterminationtype==0 )
-            {
-                state.repterminationtype = -4;
-            }
-            if( state.repiterationscount>=state.maxits && state.maxits>0 )
-            {
-                state.repterminationtype = 5;
-            }
-            if( state.repterminationtype!=0 )
-            {
-                goto lbl_8;
-            }
-            
-            //
-            // Now, iteration is finally over
-            //
-            goto lbl_7;
-        lbl_8:
-            result = false;
-            return result;
-            
-            //
-            // Saving state
-            //
-        lbl_rcomm:
-            result = true;
-            state.rstate.ia[0] = n;
-            state.rstate.ia[1] = m;
-            state.rstate.ia[2] = i;
-            state.rstate.ba[0] = b;
-            state.rstate.ra[0] = lambdaup;
-            state.rstate.ra[1] = lambdadown;
-            state.rstate.ra[2] = lambdav;
-            state.rstate.ra[3] = rho;
-            state.rstate.ra[4] = mu;
-            state.rstate.ra[5] = stepnorm;
-            return result;
-        }
-
-
-        /*************************************************************************
-        NLEQ solver results
-
-        INPUT PARAMETERS:
-            State   -   algorithm state.
-
-        OUTPUT PARAMETERS:
-            X       -   array[0..N-1], solution
-            Rep     -   optimization report:
-                        * Rep.TerminationType completetion code:
-                            * -4    ERROR:  algorithm   has   converged   to   the
-                                    stationary point Xf which is local minimum  of
-                                    f=F[0]^2+...+F[m-1]^2, but is not solution  of
-                                    nonlinear system.
-                            *  1    sqrt(f)<=EpsF.
-                            *  5    MaxIts steps was taken
-                            *  7    stopping conditions are too stringent,
-                                    further improvement is impossible
-                        * Rep.IterationsCount contains iterations count
-                        * NFEV countains number of function calculations
-                        * ActiveConstraints contains number of active constraints
-
-          -- ALGLIB --
-             Copyright 20.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqresults(nleqstate state,
-            ref double[] x,
-            nleqreport rep)
-        {
-            x = new double[0];
-
-            nleqresultsbuf(state, ref x, rep);
-        }
-
-
-        /*************************************************************************
-        NLEQ solver results
-
-        Buffered implementation of NLEQResults(), which uses pre-allocated  buffer
-        to store X[]. If buffer size is  too  small,  it  resizes  buffer.  It  is
-        intended to be used in the inner cycles of performance critical algorithms
-        where array reallocation penalty is too large to be ignored.
-
-          -- ALGLIB --
-             Copyright 20.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqresultsbuf(nleqstate state,
-            ref double[] x,
-            nleqreport rep)
-        {
-            int i_ = 0;
-
-            if( alglib.ap.len(x)<state.n )
-            {
-                x = new double[state.n];
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                x[i_] = state.xbase[i_];
-            }
-            rep.iterationscount = state.repiterationscount;
-            rep.nfunc = state.repnfunc;
-            rep.njac = state.repnjac;
-            rep.terminationtype = state.repterminationtype;
-        }
-
-
-        /*************************************************************************
-        This  subroutine  restarts  CG  algorithm from new point. All optimization
-        parameters are left unchanged.
-
-        This  function  allows  to  solve multiple  optimization  problems  (which
-        must have same number of dimensions) without object reallocation penalty.
-
-        INPUT PARAMETERS:
-            State   -   structure used for reverse communication previously
-                        allocated with MinCGCreate call.
-            X       -   new starting point.
-            BndL    -   new lower bounds
-            BndU    -   new upper bounds
-
-          -- ALGLIB --
-             Copyright 30.07.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void nleqrestartfrom(nleqstate state,
-            double[] x)
-        {
-            int i_ = 0;
-
-            alglib.ap.assert(alglib.ap.len(x)>=state.n, "NLEQRestartFrom: Length(X)<N!");
-            alglib.ap.assert(apserv.isfinitevector(x, state.n), "NLEQRestartFrom: X contains infinite or NaN values!");
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = x[i_];
-            }
-            state.rstate.ia = new int[2+1];
-            state.rstate.ba = new bool[0+1];
-            state.rstate.ra = new double[5+1];
-            state.rstate.stage = -1;
-            clearrequestfields(state);
-        }
-
-
-        /*************************************************************************
-        Clears request fileds (to be sure that we don't forgot to clear something)
-        *************************************************************************/
-        private static void clearrequestfields(nleqstate state)
-        {
-            state.needf = false;
-            state.needfij = false;
-            state.xupdated = false;
-        }
-
-
-        /*************************************************************************
-        Increases lambda, returns False when there is a danger of overflow
-        *************************************************************************/
-        private static bool increaselambda(ref double lambdav,
-            ref double nu,
-            double lambdaup)
-        {
-            bool result = new bool();
-            double lnlambda = 0;
-            double lnnu = 0;
-            double lnlambdaup = 0;
-            double lnmax = 0;
-
-            result = false;
-            lnlambda = Math.Log(lambdav);
-            lnlambdaup = Math.Log(lambdaup);
-            lnnu = Math.Log(nu);
-            lnmax = 0.5*Math.Log(math.maxrealnumber);
-            if( (double)(lnlambda+lnlambdaup+lnnu)>(double)(lnmax) )
-            {
-                return result;
-            }
-            if( (double)(lnnu+Math.Log(2))>(double)(lnmax) )
-            {
-                return result;
-            }
-            lambdav = lambdav*lambdaup*nu;
-            nu = nu*2;
-            result = true;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Decreases lambda, but leaves it unchanged when there is danger of underflow.
-        *************************************************************************/
-        private static void decreaselambda(ref double lambdav,
-            ref double nu,
-            double lambdadown)
-        {
-            nu = 1;
-            if( (double)(Math.Log(lambdav)+Math.Log(lambdadown))<(double)(Math.Log(math.minrealnumber)) )
-            {
-                lambdav = math.minrealnumber;
-            }
-            else
-            {
-                lambdav = lambdav*lambdadown;
-            }
-        }
-
-
-    }
-    public class polynomialsolver
-    {
-        public class polynomialsolverreport : apobject
-        {
-            public double maxerr;
-            public polynomialsolverreport()
-            {
-                init();
-            }
-            public override void init()
-            {
-            }
-            public override alglib.apobject make_copy()
-            {
-                polynomialsolverreport _result = new polynomialsolverreport();
-                _result.maxerr = maxerr;
-                return _result;
-            }
-        };
-
-
-
-
-        /*************************************************************************
-        Polynomial root finding.
-
-        This function returns all roots of the polynomial
-            P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
-        Both real and complex roots are returned (see below).
-
-        INPUT PARAMETERS:
-            A       -   array[N+1], polynomial coefficients:
-                        * A[0] is constant term
-                        * A[N] is a coefficient of X^N
-            N       -   polynomial degree
-
-        OUTPUT PARAMETERS:
-            X       -   array of complex roots:
-                        * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
-                        * complex roots are always returned in pairs - roots occupy
-                          positions I and I+1, with:
-                          * X[I+1]=Conj(X[I])
-                          * IMAGE(X[I]) > 0
-                          * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
-                        * multiple real roots may have non-zero imaginary part due
-                          to roundoff errors. There is no reliable way to distinguish
-                          real root of multiplicity 2 from two  complex  roots  in
-                          the presence of roundoff errors.
-            Rep     -   report, additional information, following fields are set:
-                        * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
-                          allows to quickly estimate "quality" of the roots  being
-                          returned.
-
-        NOTE:   this function uses companion matrix method to find roots. In  case
-                internal EVD  solver  fails  do  find  eigenvalues,  exception  is
-                generated.
-
-        NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
-                for them.
-
-          -- ALGLIB --
-             Copyright 24.02.2014 by Bochkanov Sergey
-        *************************************************************************/
-        public static void polynomialsolve(double[] a,
-            int n,
-            ref complex[] x,
-            polynomialsolverreport rep)
-        {
-            double[,] c = new double[0,0];
-            double[,] vl = new double[0,0];
-            double[,] vr = new double[0,0];
-            double[] wr = new double[0];
-            double[] wi = new double[0];
-            int i = 0;
-            int j = 0;
-            bool status = new bool();
-            int nz = 0;
-            int ne = 0;
-            complex v = 0;
-            complex vv = 0;
-
-            a = (double[])a.Clone();
-            x = new complex[0];
-
-            alglib.ap.assert(n>0, "PolynomialSolve: N<=0");
-            alglib.ap.assert(alglib.ap.len(a)>=n+1, "PolynomialSolve: Length(A)<N+1");
-            alglib.ap.assert(apserv.isfinitevector(a, n+1), "PolynomialSolve: A contains infitite numbers");
-            alglib.ap.assert((double)(a[n])!=(double)(0), "PolynomialSolve: A[N]=0");
-            
-            //
-            // Prepare
-            //
-            x = new complex[n];
-            
-            //
-            // Normalize A:
-            // * analytically determine NZ zero roots
-            // * quick exit for NZ=N
-            // * make residual NE-th degree polynomial monic
-            //   (here NE=N-NZ)
-            //
-            nz = 0;
-            while( nz<n && (double)(a[nz])==(double)(0) )
-            {
-                nz = nz+1;
-            }
-            ne = n-nz;
-            for(i=nz; i<=n; i++)
-            {
-                a[i-nz] = a[i]/a[n];
-            }
-            
-            //
-            // For NZ<N, build companion matrix and find NE non-zero roots
-            //
-            if( ne>0 )
-            {
-                c = new double[ne, ne];
-                for(i=0; i<=ne-1; i++)
-                {
-                    for(j=0; j<=ne-1; j++)
-                    {
-                        c[i,j] = 0;
-                    }
-                }
-                c[0,ne-1] = -a[0];
-                for(i=1; i<=ne-1; i++)
-                {
-                    c[i,i-1] = 1;
-                    c[i,ne-1] = -a[i];
-                }
-                status = evd.rmatrixevd(c, ne, 0, ref wr, ref wi, ref vl, ref vr);
-                alglib.ap.assert(status, "PolynomialSolve: inernal error - EVD solver failed");
-                for(i=0; i<=ne-1; i++)
-                {
-                    x[i].x = wr[i];
-                    x[i].y = wi[i];
-                }
-            }
-            
-            //
-            // Remaining NZ zero roots
-            //
-            for(i=ne; i<=n-1; i++)
-            {
-                x[i] = 0;
-            }
-            
-            //
-            // Rep
-            //
-            rep.maxerr = 0;
-            for(i=0; i<=ne-1; i++)
-            {
-                v = 0;
-                vv = 1;
-                for(j=0; j<=ne; j++)
-                {
-                    v = v+a[j]*vv;
-                    vv = vv*x[i];
-                }
-                rep.maxerr = Math.Max(rep.maxerr, math.abscomplex(v));
-            }
         }
 
 
