@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,6 +18,7 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
@@ -37,7 +38,7 @@ public partial class alglib
         public double[] y { get { return _innerobj.y; } }
         public double[] dy { get { return _innerobj.dy; } }
         public double x { get { return _innerobj.x; } set { _innerobj.x = value; } }
-
+    
         public odesolverstate()
         {
             _innerobj = new odesolver.odesolverstate();
@@ -47,7 +48,7 @@ public partial class alglib
         {
             return new odesolverstate((odesolver.odesolverstate)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -71,7 +72,7 @@ public partial class alglib
         //
         public int nfev { get { return _innerobj.nfev; } set { _innerobj.nfev = value; } }
         public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
-
+    
         public odesolverreport()
         {
             _innerobj = new odesolver.odesolverreport();
@@ -81,7 +82,7 @@ public partial class alglib
         {
             return new odesolverreport((odesolver.odesolverreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -93,7 +94,7 @@ public partial class alglib
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
     Cash-Karp adaptive ODE solver.
 
@@ -151,15 +152,15 @@ public partial class alglib
     {
         int n;
         int m;
-
+    
         state = new odesolverstate();
         n = ap.len(y);
         m = ap.len(x);
         odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj);
-
+    
         return;
     }
-
+    
     /*************************************************************************
     This function provides reverse communication interface
     Reverse communication interface is not documented or recommended to use.
@@ -167,7 +168,7 @@ public partial class alglib
     *************************************************************************/
     public static bool odesolveriteration(odesolverstate state)
     {
-
+    
         bool result = odesolver.odesolveriteration(state.innerobj);
         return result;
     }
@@ -199,7 +200,7 @@ public partial class alglib
     }
 
 
-
+    
     /*************************************************************************
     ODE solver results
 
@@ -466,19 +467,19 @@ public partial class alglib
             }
             else
             {
-                n = -983;
-                m = -989;
-                i = -834;
-                j = 900;
-                k = -287;
-                klimit = 364;
+                n = 359;
+                m = -58;
+                i = -919;
+                j = -909;
+                k = 81;
+                klimit = 255;
                 gridpoint = false;
-                xc = -338;
-                v = -686;
-                h = 912;
-                h2 = 585;
-                err = 497;
-                maxgrowpow = -271;
+                xc = -788;
+                v = 809;
+                h = 205;
+                h2 = -838;
+                err = 939;
+                maxgrowpow = -526;
             }
             if( state.rstate.stage==0 )
             {

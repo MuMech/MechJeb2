@@ -479,7 +479,7 @@ namespace MuMech
                 data.failed = true;
 
                 alglib.minlmcreatev(4, 3, x, 0.001, out state);
-                alglib.minlmsetcond(state, 0, 0, 0, 200);
+                alglib.minlmsetcond(state, 0, 0);
                 alglib.minlmsetscale(state, scale);
                 alglib.minlmoptimize(state, DistanceToTarget, null, data);
                 alglib.minlmresults(state, out x, out rep);
