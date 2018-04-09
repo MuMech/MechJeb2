@@ -216,9 +216,7 @@ namespace MuMech
         {
             core.thrust.targetThrottle = 0;
 
-            double circularSpeed = OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, orbit.ApR);
             double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
-            double circularizeBurnTime = (circularSpeed - apoapsisSpeed) / vesselState.limitedMaxThrustAccel;
 
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
