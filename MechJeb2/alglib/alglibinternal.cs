@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,6 +18,7 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
@@ -29,6 +30,54 @@ public partial class alglib
 }
 public partial class alglib
 {
+    public class scodes
+    {
+        public static int getrdfserializationcode()
+        {
+            int result = 0;
+
+            result = 1;
+            return result;
+        }
+
+
+        public static int getkdtreeserializationcode()
+        {
+            int result = 0;
+
+            result = 2;
+            return result;
+        }
+
+
+        public static int getmlpserializationcode()
+        {
+            int result = 0;
+
+            result = 3;
+            return result;
+        }
+
+
+        public static int getmlpeserializationcode()
+        {
+            int result = 0;
+
+            result = 4;
+            return result;
+        }
+
+
+        public static int getrbfserializationcode()
+        {
+            int result = 0;
+
+            result = 5;
+            return result;
+        }
+
+
+    }
     public class apserv
     {
         /*************************************************************************
@@ -355,6 +404,22 @@ public partial class alglib
 
 
         /*************************************************************************
+        The function always returns False.
+        It may be used sometimes to prevent spurious warnings.
+
+          -- ALGLIB --
+             Copyright 17.09.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool alwaysfalse()
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
         The function "touches" integer - it is used  to  avoid  compiler  messages
         about unused variables (in rare cases when we do NOT want to remove  these
         variables).
@@ -403,6 +468,28 @@ public partial class alglib
 
 
         /*************************************************************************
+        The function performs zero-coalescing on integer value.
+
+        NOTE: no check is performed for B<>0
+
+          -- ALGLIB --
+             Copyright 18.05.2015 by Bochkanov Sergey
+        *************************************************************************/
+        public static int coalescei(int a,
+            int b)
+        {
+            int result = 0;
+
+            result = a;
+            if( a==0 )
+            {
+                result = b;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
         The function convert integer value to real value.
 
           -- ALGLIB --
@@ -430,6 +517,25 @@ public partial class alglib
             double result = 0;
 
             result = Math.Log(x)/Math.Log(2);
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function compares two numbers for approximate equality, with tolerance
+        to errors as large as tol.
+
+
+          -- ALGLIB --
+             Copyright 02.12.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool approxequal(double a,
+            double b,
+            double tol)
+        {
+            bool result = new bool();
+
+            result = (double)(Math.Abs(a-b))<=(double)(tol);
             return result;
         }
 
@@ -777,6 +883,172 @@ public partial class alglib
                 if( alglib.ap.rows(x)<m || alglib.ap.cols(x)<n )
                 {
                     x = new double[m, n];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Grows X, i.e. changes its size in such a way that:
+        a) contents is preserved
+        b) new size is at least N
+        c) new size can be larger than N, so subsequent grow() calls can return
+           without reallocation
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void ivectorgrowto(ref int[] x,
+            int n)
+        {
+            int[] oldx = new int[0];
+            int i = 0;
+            int n2 = 0;
+
+            
+            //
+            // Enough place
+            //
+            if( alglib.ap.len(x)>=n )
+            {
+                return;
+            }
+            
+            //
+            // Choose new size
+            //
+            n = Math.Max(n, (int)Math.Round(1.8*alglib.ap.len(x)+1));
+            
+            //
+            // Grow
+            //
+            n2 = alglib.ap.len(x);
+            alglib.ap.swap(ref x, ref oldx);
+            x = new int[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( i<n2 )
+                {
+                    x[i] = oldx[i];
+                }
+                else
+                {
+                    x[i] = 0;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Grows X, i.e. changes its size in such a way that:
+        a) contents is preserved
+        b) new size is at least N
+        c) new size can be larger than N, so subsequent grow() calls can return
+           without reallocation
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rvectorgrowto(ref double[] x,
+            int n)
+        {
+            double[] oldx = new double[0];
+            int i = 0;
+            int n2 = 0;
+
+            
+            //
+            // Enough place
+            //
+            if( alglib.ap.len(x)>=n )
+            {
+                return;
+            }
+            
+            //
+            // Choose new size
+            //
+            n = Math.Max(n, (int)Math.Round(1.8*alglib.ap.len(x)+1));
+            
+            //
+            // Grow
+            //
+            n2 = alglib.ap.len(x);
+            alglib.ap.swap(ref x, ref oldx);
+            x = new double[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( i<n2 )
+                {
+                    x[i] = oldx[i];
+                }
+                else
+                {
+                    x[i] = 0;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Resizes X and:
+        * preserves old contents of X
+        * fills new elements by zeros
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void ivectorresize(ref int[] x,
+            int n)
+        {
+            int[] oldx = new int[0];
+            int i = 0;
+            int n2 = 0;
+
+            n2 = alglib.ap.len(x);
+            alglib.ap.swap(ref x, ref oldx);
+            x = new int[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( i<n2 )
+                {
+                    x[i] = oldx[i];
+                }
+                else
+                {
+                    x[i] = 0;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Resizes X and:
+        * preserves old contents of X
+        * fills new elements by zeros
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rvectorresize(ref double[] x,
+            int n)
+        {
+            double[] oldx = new double[0];
+            int i = 0;
+            int n2 = 0;
+
+            n2 = alglib.ap.len(x);
+            alglib.ap.swap(ref x, ref oldx);
+            x = new double[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( i<n2 )
+                {
+                    x[i] = oldx[i];
+                }
+                else
+                {
+                    x[i] = 0;
                 }
             }
         }
@@ -1482,6 +1754,73 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function is used to swap two rows of the matrix; if NCols<0, automatically
+        determined from the matrix size.
+        *************************************************************************/
+        public static void swaprows(double[,] a,
+            int i0,
+            int i1,
+            int ncols)
+        {
+            int j = 0;
+            double v = 0;
+
+            if( i0==i1 )
+            {
+                return;
+            }
+            if( ncols<0 )
+            {
+                ncols = alglib.ap.cols(a);
+            }
+            for(j=0; j<=ncols-1; j++)
+            {
+                v = a[i0,j];
+                a[i0,j] = a[i1,j];
+                a[i1,j] = v;
+            }
+        }
+
+
+        /*************************************************************************
+        This function is used to swap two elements of the vector
+        *************************************************************************/
+        public static void swapelements(double[] a,
+            int i0,
+            int i1)
+        {
+            double v = 0;
+
+            if( i0==i1 )
+            {
+                return;
+            }
+            v = a[i0];
+            a[i0] = a[i1];
+            a[i1] = v;
+        }
+
+
+        /*************************************************************************
+        This function is used to swap two elements of the vector
+        *************************************************************************/
+        public static void swapelementsi(int[] a,
+            int i0,
+            int i1)
+        {
+            int v = 0;
+
+            if( i0==i1 )
+            {
+                return;
+            }
+            v = a[i0];
+            a[i0] = a[i1];
+            a[i1] = v;
+        }
+
+
+        /*************************************************************************
         This function is used to return maximum of three real values
         *************************************************************************/
         public static double maxreal3(double v0,
@@ -1537,6 +1876,20 @@ public partial class alglib
             {
                 v = 0;
             }
+        }
+
+
+        /*************************************************************************
+        This function returns product of two real numbers. It is convenient when
+        you have to perform typecast-and-product of two INTEGERS.
+        *************************************************************************/
+        public static double rmul2(double v0,
+            double v1)
+        {
+            double result = 0;
+
+            result = v0*v1;
+            return result;
         }
 
 
@@ -1900,6 +2253,36 @@ public partial class alglib
 
 
         /*************************************************************************
+        Clears integer array
+        *************************************************************************/
+        public static void unsetintegerarray(ref int[] a)
+        {
+            a = new int[0];
+
+        }
+
+
+        /*************************************************************************
+        Clears real array
+        *************************************************************************/
+        public static void unsetrealarray(ref double[] a)
+        {
+            a = new double[0];
+
+        }
+
+
+        /*************************************************************************
+        Clears real matrix
+        *************************************************************************/
+        public static void unsetrealmatrix(ref double[,] a)
+        {
+            a = new double[0,0];
+
+        }
+
+
+        /*************************************************************************
         This function searches integer array. Elements in this array are actually
         records, each NRec elements wide. Each record has unique header - NHeader
         integer values, which identify it. Records are lexicographically sorted by
@@ -2081,54 +2464,6 @@ public partial class alglib
             {
                 result = result+1;
             }
-            return result;
-        }
-
-
-    }
-    public class scodes
-    {
-        public static int getrdfserializationcode()
-        {
-            int result = 0;
-
-            result = 1;
-            return result;
-        }
-
-
-        public static int getkdtreeserializationcode()
-        {
-            int result = 0;
-
-            result = 2;
-            return result;
-        }
-
-
-        public static int getmlpserializationcode()
-        {
-            int result = 0;
-
-            result = 3;
-            return result;
-        }
-
-
-        public static int getmlpeserializationcode()
-        {
-            int result = 0;
-
-            result = 4;
-            return result;
-        }
-
-
-        public static int getrbfserializationcode()
-        {
-            int result = 0;
-
-            result = 5;
             return result;
         }
 
@@ -3508,126 +3843,33 @@ public partial class alglib
 
 
     }
-    public class basicstatops
+    public class ablasf
     {
         /*************************************************************************
-        Internal ranking subroutine.
+        Fast kernel
 
-        INPUT PARAMETERS:
-            X       -   array to rank
-            N       -   array size
-            IsCentered- whether ranks are centered or not:
-                        * True      -   ranks are centered in such way that  their
-                                        sum is zero
-                        * False     -   ranks are not centered
-            Buf     -   temporary buffers
-            
-        NOTE: when IsCentered is True and all X[] are equal, this  function  fills
-              X by zeros (exact zeros are used, not sum which is only approximately
-              equal to zero).
+          -- ALGLIB routine --
+             19.01.2010
+             Bochkanov Sergey
         *************************************************************************/
-        public static void rankx(double[] x,
+        public static bool rmatrixgerf(int m,
             int n,
-            bool iscentered,
-            apserv.apbuffers buf)
+            double[,] a,
+            int ia,
+            int ja,
+            double ralpha,
+            double[] u,
+            int iu,
+            double[] v,
+            int iv)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            double tmp = 0;
-            double voffs = 0;
+            bool result = new bool();
 
-            
-            //
-            // Prepare
-            //
-            if( n<1 )
-            {
-                return;
-            }
-            if( n==1 )
-            {
-                x[0] = 0;
-                return;
-            }
-            if( alglib.ap.len(buf.ra1)<n )
-            {
-                buf.ra1 = new double[n];
-            }
-            if( alglib.ap.len(buf.ia1)<n )
-            {
-                buf.ia1 = new int[n];
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                buf.ra1[i] = x[i];
-                buf.ia1[i] = i;
-            }
-            tsort.tagsortfasti(ref buf.ra1, ref buf.ia1, ref buf.ra2, ref buf.ia2, n);
-            
-            //
-            // Special test for all values being equal
-            //
-            if( (double)(buf.ra1[0])==(double)(buf.ra1[n-1]) )
-            {
-                if( iscentered )
-                {
-                    tmp = 0.0;
-                }
-                else
-                {
-                    tmp = (double)(n-1)/(double)2;
-                }
-                for(i=0; i<=n-1; i++)
-                {
-                    x[i] = tmp;
-                }
-                return;
-            }
-            
-            //
-            // compute tied ranks
-            //
-            i = 0;
-            while( i<=n-1 )
-            {
-                j = i+1;
-                while( j<=n-1 )
-                {
-                    if( (double)(buf.ra1[j])!=(double)(buf.ra1[i]) )
-                    {
-                        break;
-                    }
-                    j = j+1;
-                }
-                for(k=i; k<=j-1; k++)
-                {
-                    buf.ra1[k] = (double)(i+j-1)/(double)2;
-                }
-                i = j;
-            }
-            
-            //
-            // back to x
-            //
-            if( iscentered )
-            {
-                voffs = (double)(n-1)/(double)2;
-            }
-            else
-            {
-                voffs = 0.0;
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                x[buf.ia1[i]] = buf.ra1[i]-voffs;
-            }
+            result = false;
+            return result;
         }
 
 
-    }
-    public class ablasf
-    {
         /*************************************************************************
         Fast kernel
 
@@ -3668,56 +3910,6 @@ public partial class alglib
             int iu,
             ref double[] v,
             int iv)
-        {
-            bool result = new bool();
-
-            result = false;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Fast kernel
-
-          -- ALGLIB routine --
-             19.01.2010
-             Bochkanov Sergey
-        *************************************************************************/
-        public static bool cmatrixmvf(int m,
-            int n,
-            complex[,] a,
-            int ia,
-            int ja,
-            int opa,
-            complex[] x,
-            int ix,
-            ref complex[] y,
-            int iy)
-        {
-            bool result = new bool();
-
-            result = false;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Fast kernel
-
-          -- ALGLIB routine --
-             19.01.2010
-             Bochkanov Sergey
-        *************************************************************************/
-        public static bool rmatrixmvf(int m,
-            int n,
-            double[,] a,
-            int ia,
-            int ja,
-            int opa,
-            double[] x,
-            int ix,
-            ref double[] y,
-            int iy)
         {
             bool result = new bool();
 
@@ -4069,9 +4261,9 @@ public partial class alglib
             }
             
             //
-            // if K=0, then C=Beta*C
+            // if K=0 or Alpha=0, then C=Beta*C
             //
-            if( k==0 )
+            if( k==0 || alpha==0 )
             {
                 if( beta!=1 )
                 {
@@ -4455,7 +4647,7 @@ public partial class alglib
             }
             
             //
-            // if K=0, then C=Beta*C
+            // if K=0 or Alpha=0, then C=Beta*C
             //
             if( k==0 || (double)(alpha)==(double)(0) )
             {
@@ -5584,6 +5776,180 @@ public partial class alglib
         MKL-based kernel
 
           -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixgermkl(int m,
+            int n,
+            double[,] a,
+            int ia,
+            int ja,
+            double alpha,
+            double[] u,
+            int iu,
+            double[] v,
+            int iv)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool cmatrixrank1mkl(int m,
+            int n,
+            ref complex[,] a,
+            int ia,
+            int ja,
+            ref complex[] u,
+            int iu,
+            ref complex[] v,
+            int iv)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixrank1mkl(int m,
+            int n,
+            double[,] a,
+            int ia,
+            int ja,
+            double[] u,
+            int iu,
+            double[] v,
+            int iv)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool cmatrixmvmkl(int m,
+            int n,
+            complex[,] a,
+            int ia,
+            int ja,
+            int opa,
+            complex[] x,
+            int ix,
+            ref complex[] y,
+            int iy)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixmvmkl(int m,
+            int n,
+            double[,] a,
+            int ia,
+            int ja,
+            int opa,
+            double[] x,
+            int ix,
+            ref double[] y,
+            int iy)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixgemvmkl(int m,
+            int n,
+            double alpha,
+            double[,] a,
+            int ia,
+            int ja,
+            int opa,
+            double[] x,
+            int ix,
+            double beta,
+            double[] y,
+            int iy)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             12.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixtrsvmkl(int n,
+            double[,] a,
+            int ia,
+            int ja,
+            bool isupper,
+            bool isunit,
+            int optype,
+            double[] x,
+            int ix)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
              01.10.2013
              Bochkanov Sergey
         *************************************************************************/
@@ -5657,6 +6023,32 @@ public partial class alglib
             double[,] c,
             int ic,
             int jc)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        MKL-based kernel
+
+          -- ALGLIB routine --
+             01.10.2017
+             Bochkanov Sergey
+        *************************************************************************/
+        public static bool rmatrixsymvmkl(int n,
+            double alpha,
+            double[,] a,
+            int ia,
+            int ja,
+            bool isupper,
+            double[] x,
+            int ix,
+            double beta,
+            double[] y,
+            int iy)
         {
             bool result = new bool();
 
@@ -6159,1113 +6551,6 @@ public partial class alglib
 
 
     }
-    public class blas
-    {
-        public static double vectornorm2(double[] x,
-            int i1,
-            int i2)
-        {
-            double result = 0;
-            int n = 0;
-            int ix = 0;
-            double absxi = 0;
-            double scl = 0;
-            double ssq = 0;
-
-            n = i2-i1+1;
-            if( n<1 )
-            {
-                result = 0;
-                return result;
-            }
-            if( n==1 )
-            {
-                result = Math.Abs(x[i1]);
-                return result;
-            }
-            scl = 0;
-            ssq = 1;
-            for(ix=i1; ix<=i2; ix++)
-            {
-                if( (double)(x[ix])!=(double)(0) )
-                {
-                    absxi = Math.Abs(x[ix]);
-                    if( (double)(scl)<(double)(absxi) )
-                    {
-                        ssq = 1+ssq*math.sqr(scl/absxi);
-                        scl = absxi;
-                    }
-                    else
-                    {
-                        ssq = ssq+math.sqr(absxi/scl);
-                    }
-                }
-            }
-            result = scl*Math.Sqrt(ssq);
-            return result;
-        }
-
-
-        public static int vectoridxabsmax(double[] x,
-            int i1,
-            int i2)
-        {
-            int result = 0;
-            int i = 0;
-
-            result = i1;
-            for(i=i1+1; i<=i2; i++)
-            {
-                if( (double)(Math.Abs(x[i]))>(double)(Math.Abs(x[result])) )
-                {
-                    result = i;
-                }
-            }
-            return result;
-        }
-
-
-        public static int columnidxabsmax(double[,] x,
-            int i1,
-            int i2,
-            int j)
-        {
-            int result = 0;
-            int i = 0;
-
-            result = i1;
-            for(i=i1+1; i<=i2; i++)
-            {
-                if( (double)(Math.Abs(x[i,j]))>(double)(Math.Abs(x[result,j])) )
-                {
-                    result = i;
-                }
-            }
-            return result;
-        }
-
-
-        public static int rowidxabsmax(double[,] x,
-            int j1,
-            int j2,
-            int i)
-        {
-            int result = 0;
-            int j = 0;
-
-            result = j1;
-            for(j=j1+1; j<=j2; j++)
-            {
-                if( (double)(Math.Abs(x[i,j]))>(double)(Math.Abs(x[i,result])) )
-                {
-                    result = j;
-                }
-            }
-            return result;
-        }
-
-
-        public static double upperhessenberg1norm(double[,] a,
-            int i1,
-            int i2,
-            int j1,
-            int j2,
-            ref double[] work)
-        {
-            double result = 0;
-            int i = 0;
-            int j = 0;
-
-            alglib.ap.assert(i2-i1==j2-j1, "UpperHessenberg1Norm: I2-I1<>J2-J1!");
-            for(j=j1; j<=j2; j++)
-            {
-                work[j] = 0;
-            }
-            for(i=i1; i<=i2; i++)
-            {
-                for(j=Math.Max(j1, j1+i-i1-1); j<=j2; j++)
-                {
-                    work[j] = work[j]+Math.Abs(a[i,j]);
-                }
-            }
-            result = 0;
-            for(j=j1; j<=j2; j++)
-            {
-                result = Math.Max(result, work[j]);
-            }
-            return result;
-        }
-
-
-        public static void copymatrix(double[,] a,
-            int is1,
-            int is2,
-            int js1,
-            int js2,
-            ref double[,] b,
-            int id1,
-            int id2,
-            int jd1,
-            int jd2)
-        {
-            int isrc = 0;
-            int idst = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( is1>is2 || js1>js2 )
-            {
-                return;
-            }
-            alglib.ap.assert(is2-is1==id2-id1, "CopyMatrix: different sizes!");
-            alglib.ap.assert(js2-js1==jd2-jd1, "CopyMatrix: different sizes!");
-            for(isrc=is1; isrc<=is2; isrc++)
-            {
-                idst = isrc-is1+id1;
-                i1_ = (js1) - (jd1);
-                for(i_=jd1; i_<=jd2;i_++)
-                {
-                    b[idst,i_] = a[isrc,i_+i1_];
-                }
-            }
-        }
-
-
-        public static void inplacetranspose(ref double[,] a,
-            int i1,
-            int i2,
-            int j1,
-            int j2,
-            ref double[] work)
-        {
-            int i = 0;
-            int j = 0;
-            int ips = 0;
-            int jps = 0;
-            int l = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( i1>i2 || j1>j2 )
-            {
-                return;
-            }
-            alglib.ap.assert(i1-i2==j1-j2, "InplaceTranspose error: incorrect array size!");
-            for(i=i1; i<=i2-1; i++)
-            {
-                j = j1+i-i1;
-                ips = i+1;
-                jps = j1+ips-i1;
-                l = i2-i;
-                i1_ = (ips) - (1);
-                for(i_=1; i_<=l;i_++)
-                {
-                    work[i_] = a[i_+i1_,j];
-                }
-                i1_ = (jps) - (ips);
-                for(i_=ips; i_<=i2;i_++)
-                {
-                    a[i_,j] = a[i,i_+i1_];
-                }
-                i1_ = (1) - (jps);
-                for(i_=jps; i_<=j2;i_++)
-                {
-                    a[i,i_] = work[i_+i1_];
-                }
-            }
-        }
-
-
-        public static void copyandtranspose(double[,] a,
-            int is1,
-            int is2,
-            int js1,
-            int js2,
-            ref double[,] b,
-            int id1,
-            int id2,
-            int jd1,
-            int jd2)
-        {
-            int isrc = 0;
-            int jdst = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( is1>is2 || js1>js2 )
-            {
-                return;
-            }
-            alglib.ap.assert(is2-is1==jd2-jd1, "CopyAndTranspose: different sizes!");
-            alglib.ap.assert(js2-js1==id2-id1, "CopyAndTranspose: different sizes!");
-            for(isrc=is1; isrc<=is2; isrc++)
-            {
-                jdst = isrc-is1+jd1;
-                i1_ = (js1) - (id1);
-                for(i_=id1; i_<=id2;i_++)
-                {
-                    b[i_,jdst] = a[isrc,i_+i1_];
-                }
-            }
-        }
-
-
-        public static void matrixvectormultiply(double[,] a,
-            int i1,
-            int i2,
-            int j1,
-            int j2,
-            bool trans,
-            double[] x,
-            int ix1,
-            int ix2,
-            double alpha,
-            ref double[] y,
-            int iy1,
-            int iy2,
-            double beta)
-        {
-            int i = 0;
-            double v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( !trans )
-            {
-                
-                //
-                // y := alpha*A*x + beta*y;
-                //
-                if( i1>i2 || j1>j2 )
-                {
-                    return;
-                }
-                alglib.ap.assert(j2-j1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
-                alglib.ap.assert(i2-i1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
-                
-                //
-                // beta*y
-                //
-                if( (double)(beta)==(double)(0) )
-                {
-                    for(i=iy1; i<=iy2; i++)
-                    {
-                        y[i] = 0;
-                    }
-                }
-                else
-                {
-                    for(i_=iy1; i_<=iy2;i_++)
-                    {
-                        y[i_] = beta*y[i_];
-                    }
-                }
-                
-                //
-                // alpha*A*x
-                //
-                for(i=i1; i<=i2; i++)
-                {
-                    i1_ = (ix1)-(j1);
-                    v = 0.0;
-                    for(i_=j1; i_<=j2;i_++)
-                    {
-                        v += a[i,i_]*x[i_+i1_];
-                    }
-                    y[iy1+i-i1] = y[iy1+i-i1]+alpha*v;
-                }
-            }
-            else
-            {
-                
-                //
-                // y := alpha*A'*x + beta*y;
-                //
-                if( i1>i2 || j1>j2 )
-                {
-                    return;
-                }
-                alglib.ap.assert(i2-i1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
-                alglib.ap.assert(j2-j1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
-                
-                //
-                // beta*y
-                //
-                if( (double)(beta)==(double)(0) )
-                {
-                    for(i=iy1; i<=iy2; i++)
-                    {
-                        y[i] = 0;
-                    }
-                }
-                else
-                {
-                    for(i_=iy1; i_<=iy2;i_++)
-                    {
-                        y[i_] = beta*y[i_];
-                    }
-                }
-                
-                //
-                // alpha*A'*x
-                //
-                for(i=i1; i<=i2; i++)
-                {
-                    v = alpha*x[ix1+i-i1];
-                    i1_ = (j1) - (iy1);
-                    for(i_=iy1; i_<=iy2;i_++)
-                    {
-                        y[i_] = y[i_] + v*a[i,i_+i1_];
-                    }
-                }
-            }
-        }
-
-
-        public static double pythag2(double x,
-            double y)
-        {
-            double result = 0;
-            double w = 0;
-            double xabs = 0;
-            double yabs = 0;
-            double z = 0;
-
-            xabs = Math.Abs(x);
-            yabs = Math.Abs(y);
-            w = Math.Max(xabs, yabs);
-            z = Math.Min(xabs, yabs);
-            if( (double)(z)==(double)(0) )
-            {
-                result = w;
-            }
-            else
-            {
-                result = w*Math.Sqrt(1+math.sqr(z/w));
-            }
-            return result;
-        }
-
-
-        public static void matrixmatrixmultiply(double[,] a,
-            int ai1,
-            int ai2,
-            int aj1,
-            int aj2,
-            bool transa,
-            double[,] b,
-            int bi1,
-            int bi2,
-            int bj1,
-            int bj2,
-            bool transb,
-            double alpha,
-            ref double[,] c,
-            int ci1,
-            int ci2,
-            int cj1,
-            int cj2,
-            double beta,
-            ref double[] work)
-        {
-            int arows = 0;
-            int acols = 0;
-            int brows = 0;
-            int bcols = 0;
-            int crows = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int l = 0;
-            int r = 0;
-            double v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            
-            //
-            // Setup
-            //
-            if( !transa )
-            {
-                arows = ai2-ai1+1;
-                acols = aj2-aj1+1;
-            }
-            else
-            {
-                arows = aj2-aj1+1;
-                acols = ai2-ai1+1;
-            }
-            if( !transb )
-            {
-                brows = bi2-bi1+1;
-                bcols = bj2-bj1+1;
-            }
-            else
-            {
-                brows = bj2-bj1+1;
-                bcols = bi2-bi1+1;
-            }
-            alglib.ap.assert(acols==brows, "MatrixMatrixMultiply: incorrect matrix sizes!");
-            if( ((arows<=0 || acols<=0) || brows<=0) || bcols<=0 )
-            {
-                return;
-            }
-            crows = arows;
-            
-            //
-            // Test WORK
-            //
-            i = Math.Max(arows, acols);
-            i = Math.Max(brows, i);
-            i = Math.Max(i, bcols);
-            work[1] = 0;
-            work[i] = 0;
-            
-            //
-            // Prepare C
-            //
-            if( (double)(beta)==(double)(0) )
-            {
-                for(i=ci1; i<=ci2; i++)
-                {
-                    for(j=cj1; j<=cj2; j++)
-                    {
-                        c[i,j] = 0;
-                    }
-                }
-            }
-            else
-            {
-                for(i=ci1; i<=ci2; i++)
-                {
-                    for(i_=cj1; i_<=cj2;i_++)
-                    {
-                        c[i,i_] = beta*c[i,i_];
-                    }
-                }
-            }
-            
-            //
-            // A*B
-            //
-            if( !transa && !transb )
-            {
-                for(l=ai1; l<=ai2; l++)
-                {
-                    for(r=bi1; r<=bi2; r++)
-                    {
-                        v = alpha*a[l,aj1+r-bi1];
-                        k = ci1+l-ai1;
-                        i1_ = (bj1) - (cj1);
-                        for(i_=cj1; i_<=cj2;i_++)
-                        {
-                            c[k,i_] = c[k,i_] + v*b[r,i_+i1_];
-                        }
-                    }
-                }
-                return;
-            }
-            
-            //
-            // A*B'
-            //
-            if( !transa && transb )
-            {
-                if( arows*acols<brows*bcols )
-                {
-                    for(r=bi1; r<=bi2; r++)
-                    {
-                        for(l=ai1; l<=ai2; l++)
-                        {
-                            i1_ = (bj1)-(aj1);
-                            v = 0.0;
-                            for(i_=aj1; i_<=aj2;i_++)
-                            {
-                                v += a[l,i_]*b[r,i_+i1_];
-                            }
-                            c[ci1+l-ai1,cj1+r-bi1] = c[ci1+l-ai1,cj1+r-bi1]+alpha*v;
-                        }
-                    }
-                    return;
-                }
-                else
-                {
-                    for(l=ai1; l<=ai2; l++)
-                    {
-                        for(r=bi1; r<=bi2; r++)
-                        {
-                            i1_ = (bj1)-(aj1);
-                            v = 0.0;
-                            for(i_=aj1; i_<=aj2;i_++)
-                            {
-                                v += a[l,i_]*b[r,i_+i1_];
-                            }
-                            c[ci1+l-ai1,cj1+r-bi1] = c[ci1+l-ai1,cj1+r-bi1]+alpha*v;
-                        }
-                    }
-                    return;
-                }
-            }
-            
-            //
-            // A'*B
-            //
-            if( transa && !transb )
-            {
-                for(l=aj1; l<=aj2; l++)
-                {
-                    for(r=bi1; r<=bi2; r++)
-                    {
-                        v = alpha*a[ai1+r-bi1,l];
-                        k = ci1+l-aj1;
-                        i1_ = (bj1) - (cj1);
-                        for(i_=cj1; i_<=cj2;i_++)
-                        {
-                            c[k,i_] = c[k,i_] + v*b[r,i_+i1_];
-                        }
-                    }
-                }
-                return;
-            }
-            
-            //
-            // A'*B'
-            //
-            if( transa && transb )
-            {
-                if( arows*acols<brows*bcols )
-                {
-                    for(r=bi1; r<=bi2; r++)
-                    {
-                        k = cj1+r-bi1;
-                        for(i=1; i<=crows; i++)
-                        {
-                            work[i] = 0.0;
-                        }
-                        for(l=ai1; l<=ai2; l++)
-                        {
-                            v = alpha*b[r,bj1+l-ai1];
-                            i1_ = (aj1) - (1);
-                            for(i_=1; i_<=crows;i_++)
-                            {
-                                work[i_] = work[i_] + v*a[l,i_+i1_];
-                            }
-                        }
-                        i1_ = (1) - (ci1);
-                        for(i_=ci1; i_<=ci2;i_++)
-                        {
-                            c[i_,k] = c[i_,k] + work[i_+i1_];
-                        }
-                    }
-                    return;
-                }
-                else
-                {
-                    for(l=aj1; l<=aj2; l++)
-                    {
-                        k = ai2-ai1+1;
-                        i1_ = (ai1) - (1);
-                        for(i_=1; i_<=k;i_++)
-                        {
-                            work[i_] = a[i_+i1_,l];
-                        }
-                        for(r=bi1; r<=bi2; r++)
-                        {
-                            i1_ = (bj1)-(1);
-                            v = 0.0;
-                            for(i_=1; i_<=k;i_++)
-                            {
-                                v += work[i_]*b[r,i_+i1_];
-                            }
-                            c[ci1+l-aj1,cj1+r-bi1] = c[ci1+l-aj1,cj1+r-bi1]+alpha*v;
-                        }
-                    }
-                    return;
-                }
-            }
-        }
-
-
-    }
-    public class hblas
-    {
-        public static void hermitianmatrixvectormultiply(complex[,] a,
-            bool isupper,
-            int i1,
-            int i2,
-            complex[] x,
-            complex alpha,
-            ref complex[] y)
-        {
-            int i = 0;
-            int ba1 = 0;
-            int by1 = 0;
-            int by2 = 0;
-            int bx1 = 0;
-            int bx2 = 0;
-            int n = 0;
-            complex v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            n = i2-i1+1;
-            if( n<=0 )
-            {
-                return;
-            }
-            
-            //
-            // Let A = L + D + U, where
-            //  L is strictly lower triangular (main diagonal is zero)
-            //  D is diagonal
-            //  U is strictly upper triangular (main diagonal is zero)
-            //
-            // A*x = L*x + D*x + U*x
-            //
-            // Calculate D*x first
-            //
-            for(i=i1; i<=i2; i++)
-            {
-                y[i-i1+1] = a[i,i]*x[i-i1+1];
-            }
-            
-            //
-            // Add L*x + U*x
-            //
-            if( isupper )
-            {
-                for(i=i1; i<=i2-1; i++)
-                {
-                    
-                    //
-                    // Add L*x to the result
-                    //
-                    v = x[i-i1+1];
-                    by1 = i-i1+2;
-                    by2 = n;
-                    ba1 = i+1;
-                    i1_ = (ba1) - (by1);
-                    for(i_=by1; i_<=by2;i_++)
-                    {
-                        y[i_] = y[i_] + v*math.conj(a[i,i_+i1_]);
-                    }
-                    
-                    //
-                    // Add U*x to the result
-                    //
-                    bx1 = i-i1+2;
-                    bx2 = n;
-                    ba1 = i+1;
-                    i1_ = (ba1)-(bx1);
-                    v = 0.0;
-                    for(i_=bx1; i_<=bx2;i_++)
-                    {
-                        v += x[i_]*a[i,i_+i1_];
-                    }
-                    y[i-i1+1] = y[i-i1+1]+v;
-                }
-            }
-            else
-            {
-                for(i=i1+1; i<=i2; i++)
-                {
-                    
-                    //
-                    // Add L*x to the result
-                    //
-                    bx1 = 1;
-                    bx2 = i-i1;
-                    ba1 = i1;
-                    i1_ = (ba1)-(bx1);
-                    v = 0.0;
-                    for(i_=bx1; i_<=bx2;i_++)
-                    {
-                        v += x[i_]*a[i,i_+i1_];
-                    }
-                    y[i-i1+1] = y[i-i1+1]+v;
-                    
-                    //
-                    // Add U*x to the result
-                    //
-                    v = x[i-i1+1];
-                    by1 = 1;
-                    by2 = i-i1;
-                    ba1 = i1;
-                    i1_ = (ba1) - (by1);
-                    for(i_=by1; i_<=by2;i_++)
-                    {
-                        y[i_] = y[i_] + v*math.conj(a[i,i_+i1_]);
-                    }
-                }
-            }
-            for(i_=1; i_<=n;i_++)
-            {
-                y[i_] = alpha*y[i_];
-            }
-        }
-
-
-        public static void hermitianrank2update(ref complex[,] a,
-            bool isupper,
-            int i1,
-            int i2,
-            complex[] x,
-            complex[] y,
-            ref complex[] t,
-            complex alpha)
-        {
-            int i = 0;
-            int tp1 = 0;
-            int tp2 = 0;
-            complex v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( isupper )
-            {
-                for(i=i1; i<=i2; i++)
-                {
-                    tp1 = i+1-i1;
-                    tp2 = i2-i1+1;
-                    v = alpha*x[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = v*math.conj(y[i_]);
-                    }
-                    v = math.conj(alpha)*y[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = t[i_] + v*math.conj(x[i_]);
-                    }
-                    i1_ = (tp1) - (i);
-                    for(i_=i; i_<=i2;i_++)
-                    {
-                        a[i,i_] = a[i,i_] + t[i_+i1_];
-                    }
-                }
-            }
-            else
-            {
-                for(i=i1; i<=i2; i++)
-                {
-                    tp1 = 1;
-                    tp2 = i+1-i1;
-                    v = alpha*x[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = v*math.conj(y[i_]);
-                    }
-                    v = math.conj(alpha)*y[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = t[i_] + v*math.conj(x[i_]);
-                    }
-                    i1_ = (tp1) - (i1);
-                    for(i_=i1; i_<=i;i_++)
-                    {
-                        a[i,i_] = a[i,i_] + t[i_+i1_];
-                    }
-                }
-            }
-        }
-
-
-    }
-    public class reflections
-    {
-        /*************************************************************************
-        Generation of an elementary reflection transformation
-
-        The subroutine generates elementary reflection H of order N, so that, for
-        a given X, the following equality holds true:
-
-            ( X(1) )   ( Beta )
-        H * (  ..  ) = (  0   )
-            ( X(n) )   (  0   )
-
-        where
-                      ( V(1) )
-        H = 1 - Tau * (  ..  ) * ( V(1), ..., V(n) )
-                      ( V(n) )
-
-        where the first component of vector V equals 1.
-
-        Input parameters:
-            X   -   vector. Array whose index ranges within [1..N].
-            N   -   reflection order.
-
-        Output parameters:
-            X   -   components from 2 to N are replaced with vector V.
-                    The first component is replaced with parameter Beta.
-            Tau -   scalar value Tau. If X is a null vector, Tau equals 0,
-                    otherwise 1 <= Tau <= 2.
-
-        This subroutine is the modification of the DLARFG subroutines from
-        the LAPACK library.
-
-        MODIFICATIONS:
-            24.12.2005 sign(Alpha) was replaced with an analogous to the Fortran SIGN code.
-
-          -- LAPACK auxiliary routine (version 3.0) --
-             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-             Courant Institute, Argonne National Lab, and Rice University
-             September 30, 1994
-        *************************************************************************/
-        public static void generatereflection(ref double[] x,
-            int n,
-            ref double tau)
-        {
-            int j = 0;
-            double alpha = 0;
-            double xnorm = 0;
-            double v = 0;
-            double beta = 0;
-            double mx = 0;
-            double s = 0;
-            int i_ = 0;
-
-            tau = 0;
-
-            if( n<=1 )
-            {
-                tau = 0;
-                return;
-            }
-            
-            //
-            // Scale if needed (to avoid overflow/underflow during intermediate
-            // calculations).
-            //
-            mx = 0;
-            for(j=1; j<=n; j++)
-            {
-                mx = Math.Max(Math.Abs(x[j]), mx);
-            }
-            s = 1;
-            if( (double)(mx)!=(double)(0) )
-            {
-                if( (double)(mx)<=(double)(math.minrealnumber/math.machineepsilon) )
-                {
-                    s = math.minrealnumber/math.machineepsilon;
-                    v = 1/s;
-                    for(i_=1; i_<=n;i_++)
-                    {
-                        x[i_] = v*x[i_];
-                    }
-                    mx = mx*v;
-                }
-                else
-                {
-                    if( (double)(mx)>=(double)(math.maxrealnumber*math.machineepsilon) )
-                    {
-                        s = math.maxrealnumber*math.machineepsilon;
-                        v = 1/s;
-                        for(i_=1; i_<=n;i_++)
-                        {
-                            x[i_] = v*x[i_];
-                        }
-                        mx = mx*v;
-                    }
-                }
-            }
-            
-            //
-            // XNORM = DNRM2( N-1, X, INCX )
-            //
-            alpha = x[1];
-            xnorm = 0;
-            if( (double)(mx)!=(double)(0) )
-            {
-                for(j=2; j<=n; j++)
-                {
-                    xnorm = xnorm+math.sqr(x[j]/mx);
-                }
-                xnorm = Math.Sqrt(xnorm)*mx;
-            }
-            if( (double)(xnorm)==(double)(0) )
-            {
-                
-                //
-                // H  =  I
-                //
-                tau = 0;
-                x[1] = x[1]*s;
-                return;
-            }
-            
-            //
-            // general case
-            //
-            mx = Math.Max(Math.Abs(alpha), Math.Abs(xnorm));
-            beta = -(mx*Math.Sqrt(math.sqr(alpha/mx)+math.sqr(xnorm/mx)));
-            if( (double)(alpha)<(double)(0) )
-            {
-                beta = -beta;
-            }
-            tau = (beta-alpha)/beta;
-            v = 1/(alpha-beta);
-            for(i_=2; i_<=n;i_++)
-            {
-                x[i_] = v*x[i_];
-            }
-            x[1] = beta;
-            
-            //
-            // Scale back outputs
-            //
-            x[1] = x[1]*s;
-        }
-
-
-        /*************************************************************************
-        Application of an elementary reflection to a rectangular matrix of size MxN
-
-        The algorithm pre-multiplies the matrix by an elementary reflection transformation
-        which is given by column V and scalar Tau (see the description of the
-        GenerateReflection procedure). Not the whole matrix but only a part of it
-        is transformed (rows from M1 to M2, columns from N1 to N2). Only the elements
-        of this submatrix are changed.
-
-        Input parameters:
-            C       -   matrix to be transformed.
-            Tau     -   scalar defining the transformation.
-            V       -   column defining the transformation.
-                        Array whose index ranges within [1..M2-M1+1].
-            M1, M2  -   range of rows to be transformed.
-            N1, N2  -   range of columns to be transformed.
-            WORK    -   working array whose indexes goes from N1 to N2.
-
-        Output parameters:
-            C       -   the result of multiplying the input matrix C by the
-                        transformation matrix which is given by Tau and V.
-                        If N1>N2 or M1>M2, C is not modified.
-
-          -- LAPACK auxiliary routine (version 3.0) --
-             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-             Courant Institute, Argonne National Lab, and Rice University
-             September 30, 1994
-        *************************************************************************/
-        public static void applyreflectionfromtheleft(ref double[,] c,
-            double tau,
-            double[] v,
-            int m1,
-            int m2,
-            int n1,
-            int n2,
-            ref double[] work)
-        {
-            double t = 0;
-            int i = 0;
-            int i_ = 0;
-
-            if( ((double)(tau)==(double)(0) || n1>n2) || m1>m2 )
-            {
-                return;
-            }
-            
-            //
-            // w := C' * v
-            //
-            for(i=n1; i<=n2; i++)
-            {
-                work[i] = 0;
-            }
-            for(i=m1; i<=m2; i++)
-            {
-                t = v[i+1-m1];
-                for(i_=n1; i_<=n2;i_++)
-                {
-                    work[i_] = work[i_] + t*c[i,i_];
-                }
-            }
-            
-            //
-            // C := C - tau * v * w'
-            //
-            for(i=m1; i<=m2; i++)
-            {
-                t = v[i-m1+1]*tau;
-                for(i_=n1; i_<=n2;i_++)
-                {
-                    c[i,i_] = c[i,i_] - t*work[i_];
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Application of an elementary reflection to a rectangular matrix of size MxN
-
-        The algorithm post-multiplies the matrix by an elementary reflection transformation
-        which is given by column V and scalar Tau (see the description of the
-        GenerateReflection procedure). Not the whole matrix but only a part of it
-        is transformed (rows from M1 to M2, columns from N1 to N2). Only the
-        elements of this submatrix are changed.
-
-        Input parameters:
-            C       -   matrix to be transformed.
-            Tau     -   scalar defining the transformation.
-            V       -   column defining the transformation.
-                        Array whose index ranges within [1..N2-N1+1].
-            M1, M2  -   range of rows to be transformed.
-            N1, N2  -   range of columns to be transformed.
-            WORK    -   working array whose indexes goes from M1 to M2.
-
-        Output parameters:
-            C       -   the result of multiplying the input matrix C by the
-                        transformation matrix which is given by Tau and V.
-                        If N1>N2 or M1>M2, C is not modified.
-
-          -- LAPACK auxiliary routine (version 3.0) --
-             Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-             Courant Institute, Argonne National Lab, and Rice University
-             September 30, 1994
-        *************************************************************************/
-        public static void applyreflectionfromtheright(ref double[,] c,
-            double tau,
-            double[] v,
-            int m1,
-            int m2,
-            int n1,
-            int n2,
-            ref double[] work)
-        {
-            double t = 0;
-            int i = 0;
-            int vm = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( ((double)(tau)==(double)(0) || n1>n2) || m1>m2 )
-            {
-                return;
-            }
-            vm = n2-n1+1;
-            for(i=m1; i<=m2; i++)
-            {
-                i1_ = (1)-(n1);
-                t = 0.0;
-                for(i_=n1; i_<=n2;i_++)
-                {
-                    t += c[i,i_]*v[i_+i1_];
-                }
-                t = t*tau;
-                i1_ = (1) - (n1);
-                for(i_=n1; i_<=n2;i_++)
-                {
-                    c[i,i_] = c[i,i_] - t*v[i_+i1_];
-                }
-            }
-            
-            //
-            // This line is necessary to avoid spurious compiler warnings
-            //
-            apserv.touchint(ref vm);
-        }
-
-
-    }
     public class creflections
     {
         /*************************************************************************
@@ -7296,7 +6581,7 @@ public partial class alglib
             Tau -   scalar value Tau.
 
         This subroutine is the modification of CLARFG subroutines  from the LAPACK
-        library. It has similar functionality except for the fact that it  doesn’t
+        library. It has similar functionality except for the fact that it  doesn't
         handle errors when intermediate results cause an overflow.
 
           -- LAPACK auxiliary routine (version 3.0) --
@@ -7575,204 +6860,6 @@ public partial class alglib
             for(i_=1; i_<=vm;i_++)
             {
                 v[i_] = math.conj(v[i_]);
-            }
-        }
-
-
-    }
-    public class sblas
-    {
-        public static void symmetricmatrixvectormultiply(double[,] a,
-            bool isupper,
-            int i1,
-            int i2,
-            double[] x,
-            double alpha,
-            ref double[] y)
-        {
-            int i = 0;
-            int ba1 = 0;
-            int ba2 = 0;
-            int by1 = 0;
-            int by2 = 0;
-            int bx1 = 0;
-            int bx2 = 0;
-            int n = 0;
-            double v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            n = i2-i1+1;
-            if( n<=0 )
-            {
-                return;
-            }
-            
-            //
-            // Let A = L + D + U, where
-            //  L is strictly lower triangular (main diagonal is zero)
-            //  D is diagonal
-            //  U is strictly upper triangular (main diagonal is zero)
-            //
-            // A*x = L*x + D*x + U*x
-            //
-            // Calculate D*x first
-            //
-            for(i=i1; i<=i2; i++)
-            {
-                y[i-i1+1] = a[i,i]*x[i-i1+1];
-            }
-            
-            //
-            // Add L*x + U*x
-            //
-            if( isupper )
-            {
-                for(i=i1; i<=i2-1; i++)
-                {
-                    
-                    //
-                    // Add L*x to the result
-                    //
-                    v = x[i-i1+1];
-                    by1 = i-i1+2;
-                    by2 = n;
-                    ba1 = i+1;
-                    ba2 = i2;
-                    i1_ = (ba1) - (by1);
-                    for(i_=by1; i_<=by2;i_++)
-                    {
-                        y[i_] = y[i_] + v*a[i,i_+i1_];
-                    }
-                    
-                    //
-                    // Add U*x to the result
-                    //
-                    bx1 = i-i1+2;
-                    bx2 = n;
-                    ba1 = i+1;
-                    ba2 = i2;
-                    i1_ = (ba1)-(bx1);
-                    v = 0.0;
-                    for(i_=bx1; i_<=bx2;i_++)
-                    {
-                        v += x[i_]*a[i,i_+i1_];
-                    }
-                    y[i-i1+1] = y[i-i1+1]+v;
-                }
-            }
-            else
-            {
-                for(i=i1+1; i<=i2; i++)
-                {
-                    
-                    //
-                    // Add L*x to the result
-                    //
-                    bx1 = 1;
-                    bx2 = i-i1;
-                    ba1 = i1;
-                    ba2 = i-1;
-                    i1_ = (ba1)-(bx1);
-                    v = 0.0;
-                    for(i_=bx1; i_<=bx2;i_++)
-                    {
-                        v += x[i_]*a[i,i_+i1_];
-                    }
-                    y[i-i1+1] = y[i-i1+1]+v;
-                    
-                    //
-                    // Add U*x to the result
-                    //
-                    v = x[i-i1+1];
-                    by1 = 1;
-                    by2 = i-i1;
-                    ba1 = i1;
-                    ba2 = i-1;
-                    i1_ = (ba1) - (by1);
-                    for(i_=by1; i_<=by2;i_++)
-                    {
-                        y[i_] = y[i_] + v*a[i,i_+i1_];
-                    }
-                }
-            }
-            for(i_=1; i_<=n;i_++)
-            {
-                y[i_] = alpha*y[i_];
-            }
-            apserv.touchint(ref ba2);
-        }
-
-
-        public static void symmetricrank2update(ref double[,] a,
-            bool isupper,
-            int i1,
-            int i2,
-            double[] x,
-            double[] y,
-            ref double[] t,
-            double alpha)
-        {
-            int i = 0;
-            int tp1 = 0;
-            int tp2 = 0;
-            double v = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( isupper )
-            {
-                for(i=i1; i<=i2; i++)
-                {
-                    tp1 = i+1-i1;
-                    tp2 = i2-i1+1;
-                    v = x[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = v*y[i_];
-                    }
-                    v = y[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = t[i_] + v*x[i_];
-                    }
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = alpha*t[i_];
-                    }
-                    i1_ = (tp1) - (i);
-                    for(i_=i; i_<=i2;i_++)
-                    {
-                        a[i,i_] = a[i,i_] + t[i_+i1_];
-                    }
-                }
-            }
-            else
-            {
-                for(i=i1; i<=i2; i++)
-                {
-                    tp1 = 1;
-                    tp2 = i+1-i1;
-                    v = x[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = v*y[i_];
-                    }
-                    v = y[i+1-i1];
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = t[i_] + v*x[i_];
-                    }
-                    for(i_=tp1; i_<=tp2;i_++)
-                    {
-                        t[i_] = alpha*t[i_];
-                    }
-                    i1_ = (tp1) - (i1);
-                    for(i_=i1; i_<=i;i_++)
-                    {
-                        a[i,i_] = a[i,i_] + t[i_+i1_];
-                    }
-                }
             }
         }
 
@@ -8167,1360 +7254,6 @@ public partial class alglib
                     }
                 }
             }
-        }
-
-
-    }
-    public class hsschur
-    {
-        public static void rmatrixinternalschurdecomposition(double[,] h,
-            int n,
-            int tneeded,
-            int zneeded,
-            ref double[] wr,
-            ref double[] wi,
-            ref double[,] z,
-            ref int info)
-        {
-            int i = 0;
-            int j = 0;
-            double[,] h1 = new double[0,0];
-            double[,] z1 = new double[0,0];
-            double[] wr1 = new double[0];
-            double[] wi1 = new double[0];
-
-            wr = new double[0];
-            wi = new double[0];
-            info = 0;
-
-            
-            //
-            // Allocate space
-            //
-            wr = new double[n];
-            wi = new double[n];
-            if( zneeded==2 )
-            {
-                apserv.rmatrixsetlengthatleast(ref z, n, n);
-            }
-            
-            //
-            // MKL version
-            //
-            if( ablasmkl.rmatrixinternalschurdecompositionmkl(h, n, tneeded, zneeded, wr, wi, z, ref info) )
-            {
-                return;
-            }
-            
-            //
-            // ALGLIB version
-            //
-            h1 = new double[n+1, n+1];
-            for(i=0; i<=n-1; i++)
-            {
-                for(j=0; j<=n-1; j++)
-                {
-                    h1[1+i,1+j] = h[i,j];
-                }
-            }
-            if( zneeded==1 )
-            {
-                z1 = new double[n+1, n+1];
-                for(i=0; i<=n-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        z1[1+i,1+j] = z[i,j];
-                    }
-                }
-            }
-            internalschurdecomposition(ref h1, n, tneeded, zneeded, ref wr1, ref wi1, ref z1, ref info);
-            for(i=0; i<=n-1; i++)
-            {
-                wr[i] = wr1[i+1];
-                wi[i] = wi1[i+1];
-            }
-            if( tneeded!=0 )
-            {
-                for(i=0; i<=n-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        h[i,j] = h1[1+i,1+j];
-                    }
-                }
-            }
-            if( zneeded!=0 )
-            {
-                apserv.rmatrixsetlengthatleast(ref z, n, n);
-                for(i=0; i<=n-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        z[i,j] = z1[1+i,1+j];
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Subroutine performing  the  Schur  decomposition  of  a  matrix  in  upper
-        Hessenberg form using the QR algorithm with multiple shifts.
-
-        The  source matrix  H  is  represented as  S'*H*S = T, where H - matrix in
-        upper Hessenberg form,  S - orthogonal matrix (Schur vectors),   T - upper
-        quasi-triangular matrix (with blocks of sizes  1x1  and  2x2  on  the main
-        diagonal).
-
-        Input parameters:
-            H   -   matrix to be decomposed.
-                    Array whose indexes range within [1..N, 1..N].
-            N   -   size of H, N>=0.
-
-
-        Output parameters:
-            H   –   contains the matrix T.
-                    Array whose indexes range within [1..N, 1..N].
-                    All elements below the blocks on the main diagonal are equal
-                    to 0.
-            S   -   contains Schur vectors.
-                    Array whose indexes range within [1..N, 1..N].
-
-        Note 1:
-            The block structure of matrix T could be easily recognized: since  all
-            the elements  below  the blocks are zeros, the elements a[i+1,i] which
-            are equal to 0 show the block border.
-
-        Note 2:
-            the algorithm  performance  depends  on  the  value  of  the  internal
-            parameter NS of InternalSchurDecomposition  subroutine  which  defines
-            the number of shifts in the QR algorithm (analog of  the  block  width
-            in block matrix algorithms in linear algebra). If you require  maximum
-            performance  on  your  machine,  it  is  recommended  to  adjust  this
-            parameter manually.
-
-        Result:
-            True, if the algorithm has converged and the parameters H and S contain
-                the result.
-            False, if the algorithm has not converged.
-
-        Algorithm implemented on the basis of subroutine DHSEQR (LAPACK 3.0 library).
-        *************************************************************************/
-        public static bool upperhessenbergschurdecomposition(ref double[,] h,
-            int n,
-            ref double[,] s)
-        {
-            bool result = new bool();
-            double[] wi = new double[0];
-            double[] wr = new double[0];
-            int info = 0;
-
-            s = new double[0,0];
-
-            internalschurdecomposition(ref h, n, 1, 2, ref wr, ref wi, ref s, ref info);
-            result = info==0;
-            return result;
-        }
-
-
-        public static void internalschurdecomposition(ref double[,] h,
-            int n,
-            int tneeded,
-            int zneeded,
-            ref double[] wr,
-            ref double[] wi,
-            ref double[,] z,
-            ref int info)
-        {
-            double[] work = new double[0];
-            int i = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int ierr = 0;
-            int ii = 0;
-            int itemp = 0;
-            int itn = 0;
-            int its = 0;
-            int j = 0;
-            int k = 0;
-            int l = 0;
-            int maxb = 0;
-            int nr = 0;
-            int ns = 0;
-            int nv = 0;
-            double absw = 0;
-            double smlnum = 0;
-            double tau = 0;
-            double temp = 0;
-            double tst1 = 0;
-            double ulp = 0;
-            double unfl = 0;
-            double[,] s = new double[0,0];
-            double[] v = new double[0];
-            double[] vv = new double[0];
-            double[] workc1 = new double[0];
-            double[] works1 = new double[0];
-            double[] workv3 = new double[0];
-            double[] tmpwr = new double[0];
-            double[] tmpwi = new double[0];
-            bool initz = new bool();
-            bool wantt = new bool();
-            bool wantz = new bool();
-            double cnst = 0;
-            bool failflag = new bool();
-            int p1 = 0;
-            int p2 = 0;
-            double vt = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            wr = new double[0];
-            wi = new double[0];
-            info = 0;
-
-            
-            //
-            // Set the order of the multi-shift QR algorithm to be used.
-            // If you want to tune algorithm, change this values
-            //
-            ns = 12;
-            maxb = 50;
-            
-            //
-            // Now 2 < NS <= MAXB < NH.
-            //
-            maxb = Math.Max(3, maxb);
-            ns = Math.Min(maxb, ns);
-            
-            //
-            // Initialize
-            //
-            cnst = 1.5;
-            work = new double[Math.Max(n, 1)+1];
-            s = new double[ns+1, ns+1];
-            v = new double[ns+1+1];
-            vv = new double[ns+1+1];
-            wr = new double[Math.Max(n, 1)+1];
-            wi = new double[Math.Max(n, 1)+1];
-            workc1 = new double[1+1];
-            works1 = new double[1+1];
-            workv3 = new double[3+1];
-            tmpwr = new double[Math.Max(n, 1)+1];
-            tmpwi = new double[Math.Max(n, 1)+1];
-            alglib.ap.assert(n>=0, "InternalSchurDecomposition: incorrect N!");
-            alglib.ap.assert(tneeded==0 || tneeded==1, "InternalSchurDecomposition: incorrect TNeeded!");
-            alglib.ap.assert((zneeded==0 || zneeded==1) || zneeded==2, "InternalSchurDecomposition: incorrect ZNeeded!");
-            wantt = tneeded==1;
-            initz = zneeded==2;
-            wantz = zneeded!=0;
-            info = 0;
-            
-            //
-            // Initialize Z, if necessary
-            //
-            if( initz )
-            {
-                apserv.rmatrixsetlengthatleast(ref z, n+1, n+1);
-                for(i=1; i<=n; i++)
-                {
-                    for(j=1; j<=n; j++)
-                    {
-                        if( i==j )
-                        {
-                            z[i,j] = 1;
-                        }
-                        else
-                        {
-                            z[i,j] = 0;
-                        }
-                    }
-                }
-            }
-            
-            //
-            // Quick return if possible
-            //
-            if( n==0 )
-            {
-                return;
-            }
-            if( n==1 )
-            {
-                wr[1] = h[1,1];
-                wi[1] = 0;
-                return;
-            }
-            
-            //
-            // Set rows and columns 1 to N to zero below the first
-            // subdiagonal.
-            //
-            for(j=1; j<=n-2; j++)
-            {
-                for(i=j+2; i<=n; i++)
-                {
-                    h[i,j] = 0;
-                }
-            }
-            
-            //
-            // Test if N is sufficiently small
-            //
-            if( (ns<=2 || ns>n) || maxb>=n )
-            {
-                
-                //
-                // Use the standard double-shift algorithm
-                //
-                internalauxschur(wantt, wantz, n, 1, n, ref h, ref wr, ref wi, 1, n, ref z, ref work, ref workv3, ref workc1, ref works1, ref info);
-                
-                //
-                // fill entries under diagonal blocks of T with zeros
-                //
-                if( wantt )
-                {
-                    j = 1;
-                    while( j<=n )
-                    {
-                        if( (double)(wi[j])==(double)(0) )
-                        {
-                            for(i=j+1; i<=n; i++)
-                            {
-                                h[i,j] = 0;
-                            }
-                            j = j+1;
-                        }
-                        else
-                        {
-                            for(i=j+2; i<=n; i++)
-                            {
-                                h[i,j] = 0;
-                                h[i,j+1] = 0;
-                            }
-                            j = j+2;
-                        }
-                    }
-                }
-                return;
-            }
-            unfl = math.minrealnumber;
-            ulp = 2*math.machineepsilon;
-            smlnum = unfl*(n/ulp);
-            
-            //
-            // I1 and I2 are the indices of the first row and last column of H
-            // to which transformations must be applied. If eigenvalues only are
-            // being computed, I1 and I2 are set inside the main loop.
-            //
-            i1 = 1;
-            i2 = n;
-            
-            //
-            // ITN is the total number of multiple-shift QR iterations allowed.
-            //
-            itn = 30*n;
-            
-            //
-            // The main loop begins here. I is the loop index and decreases from
-            // IHI to ILO in steps of at most MAXB. Each iteration of the loop
-            // works with the active submatrix in rows and columns L to I.
-            // Eigenvalues I+1 to IHI have already converged. Either L = ILO or
-            // H(L,L-1) is negligible so that the matrix splits.
-            //
-            i = n;
-            while( true )
-            {
-                l = 1;
-                if( i<1 )
-                {
-                    
-                    //
-                    // fill entries under diagonal blocks of T with zeros
-                    //
-                    if( wantt )
-                    {
-                        j = 1;
-                        while( j<=n )
-                        {
-                            if( (double)(wi[j])==(double)(0) )
-                            {
-                                for(i=j+1; i<=n; i++)
-                                {
-                                    h[i,j] = 0;
-                                }
-                                j = j+1;
-                            }
-                            else
-                            {
-                                for(i=j+2; i<=n; i++)
-                                {
-                                    h[i,j] = 0;
-                                    h[i,j+1] = 0;
-                                }
-                                j = j+2;
-                            }
-                        }
-                    }
-                    
-                    //
-                    // Exit
-                    //
-                    return;
-                }
-                
-                //
-                // Perform multiple-shift QR iterations on rows and columns ILO to I
-                // until a submatrix of order at most MAXB splits off at the bottom
-                // because a subdiagonal element has become negligible.
-                //
-                failflag = true;
-                for(its=0; its<=itn; its++)
-                {
-                    
-                    //
-                    // Look for a single small subdiagonal element.
-                    //
-                    for(k=i; k>=l+1; k--)
-                    {
-                        tst1 = Math.Abs(h[k-1,k-1])+Math.Abs(h[k,k]);
-                        if( (double)(tst1)==(double)(0) )
-                        {
-                            tst1 = blas.upperhessenberg1norm(h, l, i, l, i, ref work);
-                        }
-                        if( (double)(Math.Abs(h[k,k-1]))<=(double)(Math.Max(ulp*tst1, smlnum)) )
-                        {
-                            break;
-                        }
-                    }
-                    l = k;
-                    if( l>1 )
-                    {
-                        
-                        //
-                        // H(L,L-1) is negligible.
-                        //
-                        h[l,l-1] = 0;
-                    }
-                    
-                    //
-                    // Exit from loop if a submatrix of order <= MAXB has split off.
-                    //
-                    if( l>=i-maxb+1 )
-                    {
-                        failflag = false;
-                        break;
-                    }
-                    
-                    //
-                    // Now the active submatrix is in rows and columns L to I. If
-                    // eigenvalues only are being computed, only the active submatrix
-                    // need be transformed.
-                    //
-                    if( its==20 || its==30 )
-                    {
-                        
-                        //
-                        // Exceptional shifts.
-                        //
-                        for(ii=i-ns+1; ii<=i; ii++)
-                        {
-                            wr[ii] = cnst*(Math.Abs(h[ii,ii-1])+Math.Abs(h[ii,ii]));
-                            wi[ii] = 0;
-                        }
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Use eigenvalues of trailing submatrix of order NS as shifts.
-                        //
-                        blas.copymatrix(h, i-ns+1, i, i-ns+1, i, ref s, 1, ns, 1, ns);
-                        internalauxschur(false, false, ns, 1, ns, ref s, ref tmpwr, ref tmpwi, 1, ns, ref z, ref work, ref workv3, ref workc1, ref works1, ref ierr);
-                        for(p1=1; p1<=ns; p1++)
-                        {
-                            wr[i-ns+p1] = tmpwr[p1];
-                            wi[i-ns+p1] = tmpwi[p1];
-                        }
-                        if( ierr>0 )
-                        {
-                            
-                            //
-                            // If DLAHQR failed to compute all NS eigenvalues, use the
-                            // unconverged diagonal elements as the remaining shifts.
-                            //
-                            for(ii=1; ii<=ierr; ii++)
-                            {
-                                wr[i-ns+ii] = s[ii,ii];
-                                wi[i-ns+ii] = 0;
-                            }
-                        }
-                    }
-                    
-                    //
-                    // Form the first column of (G-w(1)) (G-w(2)) . . . (G-w(ns))
-                    // where G is the Hessenberg submatrix H(L:I,L:I) and w is
-                    // the vector of shifts (stored in WR and WI). The result is
-                    // stored in the local array V.
-                    //
-                    v[1] = 1;
-                    for(ii=2; ii<=ns+1; ii++)
-                    {
-                        v[ii] = 0;
-                    }
-                    nv = 1;
-                    for(j=i-ns+1; j<=i; j++)
-                    {
-                        if( (double)(wi[j])>=(double)(0) )
-                        {
-                            if( (double)(wi[j])==(double)(0) )
-                            {
-                                
-                                //
-                                // real shift
-                                //
-                                p1 = nv+1;
-                                for(i_=1; i_<=p1;i_++)
-                                {
-                                    vv[i_] = v[i_];
-                                }
-                                blas.matrixvectormultiply(h, l, l+nv, l, l+nv-1, false, vv, 1, nv, 1.0, ref v, 1, nv+1, -wr[j]);
-                                nv = nv+1;
-                            }
-                            else
-                            {
-                                if( (double)(wi[j])>(double)(0) )
-                                {
-                                    
-                                    //
-                                    // complex conjugate pair of shifts
-                                    //
-                                    p1 = nv+1;
-                                    for(i_=1; i_<=p1;i_++)
-                                    {
-                                        vv[i_] = v[i_];
-                                    }
-                                    blas.matrixvectormultiply(h, l, l+nv, l, l+nv-1, false, v, 1, nv, 1.0, ref vv, 1, nv+1, -(2*wr[j]));
-                                    itemp = blas.vectoridxabsmax(vv, 1, nv+1);
-                                    temp = 1/Math.Max(Math.Abs(vv[itemp]), smlnum);
-                                    p1 = nv+1;
-                                    for(i_=1; i_<=p1;i_++)
-                                    {
-                                        vv[i_] = temp*vv[i_];
-                                    }
-                                    absw = blas.pythag2(wr[j], wi[j]);
-                                    temp = temp*absw*absw;
-                                    blas.matrixvectormultiply(h, l, l+nv+1, l, l+nv, false, vv, 1, nv+1, 1.0, ref v, 1, nv+2, temp);
-                                    nv = nv+2;
-                                }
-                            }
-                            
-                            //
-                            // Scale V(1:NV) so that max(abs(V(i))) = 1. If V is zero,
-                            // reset it to the unit vector.
-                            //
-                            itemp = blas.vectoridxabsmax(v, 1, nv);
-                            temp = Math.Abs(v[itemp]);
-                            if( (double)(temp)==(double)(0) )
-                            {
-                                v[1] = 1;
-                                for(ii=2; ii<=nv; ii++)
-                                {
-                                    v[ii] = 0;
-                                }
-                            }
-                            else
-                            {
-                                temp = Math.Max(temp, smlnum);
-                                vt = 1/temp;
-                                for(i_=1; i_<=nv;i_++)
-                                {
-                                    v[i_] = vt*v[i_];
-                                }
-                            }
-                        }
-                    }
-                    
-                    //
-                    // Multiple-shift QR step
-                    //
-                    for(k=l; k<=i-1; k++)
-                    {
-                        
-                        //
-                        // The first iteration of this loop determines a reflection G
-                        // from the vector V and applies it from left and right to H,
-                        // thus creating a nonzero bulge below the subdiagonal.
-                        //
-                        // Each subsequent iteration determines a reflection G to
-                        // restore the Hessenberg form in the (K-1)th column, and thus
-                        // chases the bulge one step toward the bottom of the active
-                        // submatrix. NR is the order of G.
-                        //
-                        nr = Math.Min(ns+1, i-k+1);
-                        if( k>l )
-                        {
-                            p1 = k-1;
-                            p2 = k+nr-1;
-                            i1_ = (k) - (1);
-                            for(i_=1; i_<=nr;i_++)
-                            {
-                                v[i_] = h[i_+i1_,p1];
-                            }
-                            apserv.touchint(ref p2);
-                        }
-                        reflections.generatereflection(ref v, nr, ref tau);
-                        if( k>l )
-                        {
-                            h[k,k-1] = v[1];
-                            for(ii=k+1; ii<=i; ii++)
-                            {
-                                h[ii,k-1] = 0;
-                            }
-                        }
-                        v[1] = 1;
-                        
-                        //
-                        // Apply G from the left to transform the rows of the matrix in
-                        // columns K to I2.
-                        //
-                        reflections.applyreflectionfromtheleft(ref h, tau, v, k, k+nr-1, k, i2, ref work);
-                        
-                        //
-                        // Apply G from the right to transform the columns of the
-                        // matrix in rows I1 to min(K+NR,I).
-                        //
-                        reflections.applyreflectionfromtheright(ref h, tau, v, i1, Math.Min(k+nr, i), k, k+nr-1, ref work);
-                        if( wantz )
-                        {
-                            
-                            //
-                            // Accumulate transformations in the matrix Z
-                            //
-                            reflections.applyreflectionfromtheright(ref z, tau, v, 1, n, k, k+nr-1, ref work);
-                        }
-                    }
-                }
-                
-                //
-                // Failure to converge in remaining number of iterations
-                //
-                if( failflag )
-                {
-                    info = i;
-                    return;
-                }
-                
-                //
-                // A submatrix of order <= MAXB in rows and columns L to I has split
-                // off. Use the double-shift QR algorithm to handle it.
-                //
-                internalauxschur(wantt, wantz, n, l, i, ref h, ref wr, ref wi, 1, n, ref z, ref work, ref workv3, ref workc1, ref works1, ref info);
-                if( info>0 )
-                {
-                    return;
-                }
-                
-                //
-                // Decrement number of remaining iterations, and return to start of
-                // the main loop with a new value of I.
-                //
-                itn = itn-its;
-                i = l-1;
-            }
-        }
-
-
-        private static void internalauxschur(bool wantt,
-            bool wantz,
-            int n,
-            int ilo,
-            int ihi,
-            ref double[,] h,
-            ref double[] wr,
-            ref double[] wi,
-            int iloz,
-            int ihiz,
-            ref double[,] z,
-            ref double[] work,
-            ref double[] workv3,
-            ref double[] workc1,
-            ref double[] works1,
-            ref int info)
-        {
-            int i = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int itn = 0;
-            int its = 0;
-            int j = 0;
-            int k = 0;
-            int l = 0;
-            int m = 0;
-            int nh = 0;
-            int nr = 0;
-            int nz = 0;
-            double ave = 0;
-            double cs = 0;
-            double disc = 0;
-            double h00 = 0;
-            double h10 = 0;
-            double h11 = 0;
-            double h12 = 0;
-            double h21 = 0;
-            double h22 = 0;
-            double h33 = 0;
-            double h33s = 0;
-            double h43h34 = 0;
-            double h44 = 0;
-            double h44s = 0;
-            double s = 0;
-            double smlnum = 0;
-            double sn = 0;
-            double sum = 0;
-            double t1 = 0;
-            double t2 = 0;
-            double t3 = 0;
-            double tst1 = 0;
-            double unfl = 0;
-            double v1 = 0;
-            double v2 = 0;
-            double v3 = 0;
-            bool failflag = new bool();
-            double dat1 = 0;
-            double dat2 = 0;
-            int p1 = 0;
-            double him1im1 = 0;
-            double him1i = 0;
-            double hiim1 = 0;
-            double hii = 0;
-            double wrim1 = 0;
-            double wri = 0;
-            double wiim1 = 0;
-            double wii = 0;
-            double ulp = 0;
-
-            info = 0;
-
-            info = 0;
-            dat1 = 0.75;
-            dat2 = -0.4375;
-            ulp = math.machineepsilon;
-            
-            //
-            // Quick return if possible
-            //
-            if( n==0 )
-            {
-                return;
-            }
-            if( ilo==ihi )
-            {
-                wr[ilo] = h[ilo,ilo];
-                wi[ilo] = 0;
-                return;
-            }
-            nh = ihi-ilo+1;
-            nz = ihiz-iloz+1;
-            
-            //
-            // Set machine-dependent constants for the stopping criterion.
-            // If norm(H) <= sqrt(MaxRealNumber), overflow should not occur.
-            //
-            unfl = math.minrealnumber;
-            smlnum = unfl*(nh/ulp);
-            
-            //
-            // I1 and I2 are the indices of the first row and last column of H
-            // to which transformations must be applied. If eigenvalues only are
-            // being computed, I1 and I2 are set inside the main loop.
-            //
-            i1 = 1;
-            i2 = n;
-            
-            //
-            // ITN is the total number of QR iterations allowed.
-            //
-            itn = 30*nh;
-            
-            //
-            // The main loop begins here. I is the loop index and decreases from
-            // IHI to ILO in steps of 1 or 2. Each iteration of the loop works
-            // with the active submatrix in rows and columns L to I.
-            // Eigenvalues I+1 to IHI have already converged. Either L = ILO or
-            // H(L,L-1) is negligible so that the matrix splits.
-            //
-            i = ihi;
-            while( true )
-            {
-                l = ilo;
-                if( i<ilo )
-                {
-                    return;
-                }
-                
-                //
-                // Perform QR iterations on rows and columns ILO to I until a
-                // submatrix of order 1 or 2 splits off at the bottom because a
-                // subdiagonal element has become negligible.
-                //
-                failflag = true;
-                for(its=0; its<=itn; its++)
-                {
-                    
-                    //
-                    // Look for a single small subdiagonal element.
-                    //
-                    for(k=i; k>=l+1; k--)
-                    {
-                        tst1 = Math.Abs(h[k-1,k-1])+Math.Abs(h[k,k]);
-                        if( (double)(tst1)==(double)(0) )
-                        {
-                            tst1 = blas.upperhessenberg1norm(h, l, i, l, i, ref work);
-                        }
-                        if( (double)(Math.Abs(h[k,k-1]))<=(double)(Math.Max(ulp*tst1, smlnum)) )
-                        {
-                            break;
-                        }
-                    }
-                    l = k;
-                    if( l>ilo )
-                    {
-                        
-                        //
-                        // H(L,L-1) is negligible
-                        //
-                        h[l,l-1] = 0;
-                    }
-                    
-                    //
-                    // Exit from loop if a submatrix of order 1 or 2 has split off.
-                    //
-                    if( l>=i-1 )
-                    {
-                        failflag = false;
-                        break;
-                    }
-                    
-                    //
-                    // Now the active submatrix is in rows and columns L to I. If
-                    // eigenvalues only are being computed, only the active submatrix
-                    // need be transformed.
-                    //
-                    if( its==10 || its==20 )
-                    {
-                        
-                        //
-                        // Exceptional shift.
-                        //
-                        s = Math.Abs(h[i,i-1])+Math.Abs(h[i-1,i-2]);
-                        h44 = dat1*s+h[i,i];
-                        h33 = h44;
-                        h43h34 = dat2*s*s;
-                    }
-                    else
-                    {
-                        
-                        //
-                        // Prepare to use Francis' double shift
-                        // (i.e. 2nd degree generalized Rayleigh quotient)
-                        //
-                        h44 = h[i,i];
-                        h33 = h[i-1,i-1];
-                        h43h34 = h[i,i-1]*h[i-1,i];
-                        s = h[i-1,i-2]*h[i-1,i-2];
-                        disc = (h33-h44)*0.5;
-                        disc = disc*disc+h43h34;
-                        if( (double)(disc)>(double)(0) )
-                        {
-                            
-                            //
-                            // Real roots: use Wilkinson's shift twice
-                            //
-                            disc = Math.Sqrt(disc);
-                            ave = 0.5*(h33+h44);
-                            if( (double)(Math.Abs(h33)-Math.Abs(h44))>(double)(0) )
-                            {
-                                h33 = h33*h44-h43h34;
-                                h44 = h33/(extschursign(disc, ave)+ave);
-                            }
-                            else
-                            {
-                                h44 = extschursign(disc, ave)+ave;
-                            }
-                            h33 = h44;
-                            h43h34 = 0;
-                        }
-                    }
-                    
-                    //
-                    // Look for two consecutive small subdiagonal elements.
-                    //
-                    for(m=i-2; m>=l; m--)
-                    {
-                        
-                        //
-                        // Determine the effect of starting the double-shift QR
-                        // iteration at row M, and see if this would make H(M,M-1)
-                        // negligible.
-                        //
-                        h11 = h[m,m];
-                        h22 = h[m+1,m+1];
-                        h21 = h[m+1,m];
-                        h12 = h[m,m+1];
-                        h44s = h44-h11;
-                        h33s = h33-h11;
-                        v1 = (h33s*h44s-h43h34)/h21+h12;
-                        v2 = h22-h11-h33s-h44s;
-                        v3 = h[m+2,m+1];
-                        s = Math.Abs(v1)+Math.Abs(v2)+Math.Abs(v3);
-                        v1 = v1/s;
-                        v2 = v2/s;
-                        v3 = v3/s;
-                        workv3[1] = v1;
-                        workv3[2] = v2;
-                        workv3[3] = v3;
-                        if( m==l )
-                        {
-                            break;
-                        }
-                        h00 = h[m-1,m-1];
-                        h10 = h[m,m-1];
-                        tst1 = Math.Abs(v1)*(Math.Abs(h00)+Math.Abs(h11)+Math.Abs(h22));
-                        if( (double)(Math.Abs(h10)*(Math.Abs(v2)+Math.Abs(v3)))<=(double)(ulp*tst1) )
-                        {
-                            break;
-                        }
-                    }
-                    
-                    //
-                    // Double-shift QR step
-                    //
-                    for(k=m; k<=i-1; k++)
-                    {
-                        
-                        //
-                        // The first iteration of this loop determines a reflection G
-                        // from the vector V and applies it from left and right to H,
-                        // thus creating a nonzero bulge below the subdiagonal.
-                        //
-                        // Each subsequent iteration determines a reflection G to
-                        // restore the Hessenberg form in the (K-1)th column, and thus
-                        // chases the bulge one step toward the bottom of the active
-                        // submatrix. NR is the order of G.
-                        //
-                        nr = Math.Min(3, i-k+1);
-                        if( k>m )
-                        {
-                            for(p1=1; p1<=nr; p1++)
-                            {
-                                workv3[p1] = h[k+p1-1,k-1];
-                            }
-                        }
-                        reflections.generatereflection(ref workv3, nr, ref t1);
-                        if( k>m )
-                        {
-                            h[k,k-1] = workv3[1];
-                            h[k+1,k-1] = 0;
-                            if( k<i-1 )
-                            {
-                                h[k+2,k-1] = 0;
-                            }
-                        }
-                        else
-                        {
-                            if( m>l )
-                            {
-                                h[k,k-1] = -h[k,k-1];
-                            }
-                        }
-                        v2 = workv3[2];
-                        t2 = t1*v2;
-                        if( nr==3 )
-                        {
-                            v3 = workv3[3];
-                            t3 = t1*v3;
-                            
-                            //
-                            // Apply G from the left to transform the rows of the matrix
-                            // in columns K to I2.
-                            //
-                            for(j=k; j<=i2; j++)
-                            {
-                                sum = h[k,j]+v2*h[k+1,j]+v3*h[k+2,j];
-                                h[k,j] = h[k,j]-sum*t1;
-                                h[k+1,j] = h[k+1,j]-sum*t2;
-                                h[k+2,j] = h[k+2,j]-sum*t3;
-                            }
-                            
-                            //
-                            // Apply G from the right to transform the columns of the
-                            // matrix in rows I1 to min(K+3,I).
-                            //
-                            for(j=i1; j<=Math.Min(k+3, i); j++)
-                            {
-                                sum = h[j,k]+v2*h[j,k+1]+v3*h[j,k+2];
-                                h[j,k] = h[j,k]-sum*t1;
-                                h[j,k+1] = h[j,k+1]-sum*t2;
-                                h[j,k+2] = h[j,k+2]-sum*t3;
-                            }
-                            if( wantz )
-                            {
-                                
-                                //
-                                // Accumulate transformations in the matrix Z
-                                //
-                                for(j=iloz; j<=ihiz; j++)
-                                {
-                                    sum = z[j,k]+v2*z[j,k+1]+v3*z[j,k+2];
-                                    z[j,k] = z[j,k]-sum*t1;
-                                    z[j,k+1] = z[j,k+1]-sum*t2;
-                                    z[j,k+2] = z[j,k+2]-sum*t3;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if( nr==2 )
-                            {
-                                
-                                //
-                                // Apply G from the left to transform the rows of the matrix
-                                // in columns K to I2.
-                                //
-                                for(j=k; j<=i2; j++)
-                                {
-                                    sum = h[k,j]+v2*h[k+1,j];
-                                    h[k,j] = h[k,j]-sum*t1;
-                                    h[k+1,j] = h[k+1,j]-sum*t2;
-                                }
-                                
-                                //
-                                // Apply G from the right to transform the columns of the
-                                // matrix in rows I1 to min(K+3,I).
-                                //
-                                for(j=i1; j<=i; j++)
-                                {
-                                    sum = h[j,k]+v2*h[j,k+1];
-                                    h[j,k] = h[j,k]-sum*t1;
-                                    h[j,k+1] = h[j,k+1]-sum*t2;
-                                }
-                                if( wantz )
-                                {
-                                    
-                                    //
-                                    // Accumulate transformations in the matrix Z
-                                    //
-                                    for(j=iloz; j<=ihiz; j++)
-                                    {
-                                        sum = z[j,k]+v2*z[j,k+1];
-                                        z[j,k] = z[j,k]-sum*t1;
-                                        z[j,k+1] = z[j,k+1]-sum*t2;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if( failflag )
-                {
-                    
-                    //
-                    // Failure to converge in remaining number of iterations
-                    //
-                    info = i;
-                    return;
-                }
-                if( l==i )
-                {
-                    
-                    //
-                    // H(I,I-1) is negligible: one eigenvalue has converged.
-                    //
-                    wr[i] = h[i,i];
-                    wi[i] = 0;
-                }
-                else
-                {
-                    if( l==i-1 )
-                    {
-                        
-                        //
-                        // H(I-1,I-2) is negligible: a pair of eigenvalues have converged.
-                        //
-                        //        Transform the 2-by-2 submatrix to standard Schur form,
-                        //        and compute and store the eigenvalues.
-                        //
-                        him1im1 = h[i-1,i-1];
-                        him1i = h[i-1,i];
-                        hiim1 = h[i,i-1];
-                        hii = h[i,i];
-                        aux2x2schur(ref him1im1, ref him1i, ref hiim1, ref hii, ref wrim1, ref wiim1, ref wri, ref wii, ref cs, ref sn);
-                        wr[i-1] = wrim1;
-                        wi[i-1] = wiim1;
-                        wr[i] = wri;
-                        wi[i] = wii;
-                        h[i-1,i-1] = him1im1;
-                        h[i-1,i] = him1i;
-                        h[i,i-1] = hiim1;
-                        h[i,i] = hii;
-                        if( wantt )
-                        {
-                            
-                            //
-                            // Apply the transformation to the rest of H.
-                            //
-                            if( i2>i )
-                            {
-                                workc1[1] = cs;
-                                works1[1] = sn;
-                                rotations.applyrotationsfromtheleft(true, i-1, i, i+1, i2, workc1, works1, h, work);
-                            }
-                            workc1[1] = cs;
-                            works1[1] = sn;
-                            rotations.applyrotationsfromtheright(true, i1, i-2, i-1, i, workc1, works1, h, work);
-                        }
-                        if( wantz )
-                        {
-                            
-                            //
-                            // Apply the transformation to Z.
-                            //
-                            workc1[1] = cs;
-                            works1[1] = sn;
-                            rotations.applyrotationsfromtheright(true, iloz, iloz+nz-1, i-1, i, workc1, works1, z, work);
-                        }
-                    }
-                }
-                
-                //
-                // Decrement number of remaining iterations, and return to start of
-                // the main loop with new value of I.
-                //
-                itn = itn-its;
-                i = l-1;
-            }
-        }
-
-
-        private static void aux2x2schur(ref double a,
-            ref double b,
-            ref double c,
-            ref double d,
-            ref double rt1r,
-            ref double rt1i,
-            ref double rt2r,
-            ref double rt2i,
-            ref double cs,
-            ref double sn)
-        {
-            double multpl = 0;
-            double aa = 0;
-            double bb = 0;
-            double bcmax = 0;
-            double bcmis = 0;
-            double cc = 0;
-            double cs1 = 0;
-            double dd = 0;
-            double eps = 0;
-            double p = 0;
-            double sab = 0;
-            double sac = 0;
-            double scl = 0;
-            double sigma = 0;
-            double sn1 = 0;
-            double tau = 0;
-            double temp = 0;
-            double z = 0;
-
-            rt1r = 0;
-            rt1i = 0;
-            rt2r = 0;
-            rt2i = 0;
-            cs = 0;
-            sn = 0;
-
-            multpl = 4.0;
-            eps = math.machineepsilon;
-            if( (double)(c)==(double)(0) )
-            {
-                cs = 1;
-                sn = 0;
-            }
-            else
-            {
-                if( (double)(b)==(double)(0) )
-                {
-                    
-                    //
-                    // Swap rows and columns
-                    //
-                    cs = 0;
-                    sn = 1;
-                    temp = d;
-                    d = a;
-                    a = temp;
-                    b = -c;
-                    c = 0;
-                }
-                else
-                {
-                    if( (double)(a-d)==(double)(0) && extschursigntoone(b)!=extschursigntoone(c) )
-                    {
-                        cs = 1;
-                        sn = 0;
-                    }
-                    else
-                    {
-                        temp = a-d;
-                        p = 0.5*temp;
-                        bcmax = Math.Max(Math.Abs(b), Math.Abs(c));
-                        bcmis = Math.Min(Math.Abs(b), Math.Abs(c))*extschursigntoone(b)*extschursigntoone(c);
-                        scl = Math.Max(Math.Abs(p), bcmax);
-                        z = p/scl*p+bcmax/scl*bcmis;
-                        
-                        //
-                        // If Z is of the order of the machine accuracy, postpone the
-                        // decision on the nature of eigenvalues
-                        //
-                        if( (double)(z)>=(double)(multpl*eps) )
-                        {
-                            
-                            //
-                            // Real eigenvalues. Compute A and D.
-                            //
-                            z = p+extschursign(Math.Sqrt(scl)*Math.Sqrt(z), p);
-                            a = d+z;
-                            d = d-bcmax/z*bcmis;
-                            
-                            //
-                            // Compute B and the rotation matrix
-                            //
-                            tau = blas.pythag2(c, z);
-                            cs = z/tau;
-                            sn = c/tau;
-                            b = b-c;
-                            c = 0;
-                        }
-                        else
-                        {
-                            
-                            //
-                            // Complex eigenvalues, or real (almost) equal eigenvalues.
-                            // Make diagonal elements equal.
-                            //
-                            sigma = b+c;
-                            tau = blas.pythag2(sigma, temp);
-                            cs = Math.Sqrt(0.5*(1+Math.Abs(sigma)/tau));
-                            sn = -(p/(tau*cs)*extschursign(1, sigma));
-                            
-                            //
-                            // Compute [ AA  BB ] = [ A  B ] [ CS -SN ]
-                            //         [ CC  DD ]   [ C  D ] [ SN  CS ]
-                            //
-                            aa = a*cs+b*sn;
-                            bb = -(a*sn)+b*cs;
-                            cc = c*cs+d*sn;
-                            dd = -(c*sn)+d*cs;
-                            
-                            //
-                            // Compute [ A  B ] = [ CS  SN ] [ AA  BB ]
-                            //         [ C  D ]   [-SN  CS ] [ CC  DD ]
-                            //
-                            a = aa*cs+cc*sn;
-                            b = bb*cs+dd*sn;
-                            c = -(aa*sn)+cc*cs;
-                            d = -(bb*sn)+dd*cs;
-                            temp = 0.5*(a+d);
-                            a = temp;
-                            d = temp;
-                            if( (double)(c)!=(double)(0) )
-                            {
-                                if( (double)(b)!=(double)(0) )
-                                {
-                                    if( extschursigntoone(b)==extschursigntoone(c) )
-                                    {
-                                        
-                                        //
-                                        // Real eigenvalues: reduce to upper triangular form
-                                        //
-                                        sab = Math.Sqrt(Math.Abs(b));
-                                        sac = Math.Sqrt(Math.Abs(c));
-                                        p = extschursign(sab*sac, c);
-                                        tau = 1/Math.Sqrt(Math.Abs(b+c));
-                                        a = temp+p;
-                                        d = temp-p;
-                                        b = b-c;
-                                        c = 0;
-                                        cs1 = sab*tau;
-                                        sn1 = sac*tau;
-                                        temp = cs*cs1-sn*sn1;
-                                        sn = cs*sn1+sn*cs1;
-                                        cs = temp;
-                                    }
-                                }
-                                else
-                                {
-                                    b = -c;
-                                    c = 0;
-                                    temp = cs;
-                                    cs = -sn;
-                                    sn = temp;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            //
-            // Store eigenvalues in (RT1R,RT1I) and (RT2R,RT2I).
-            //
-            rt1r = a;
-            rt2r = d;
-            if( (double)(c)==(double)(0) )
-            {
-                rt1i = 0;
-                rt2i = 0;
-            }
-            else
-            {
-                rt1i = Math.Sqrt(Math.Abs(b))*Math.Sqrt(Math.Abs(c));
-                rt2i = -rt1i;
-            }
-        }
-
-
-        private static double extschursign(double a,
-            double b)
-        {
-            double result = 0;
-
-            if( (double)(b)>=(double)(0) )
-            {
-                result = Math.Abs(a);
-            }
-            else
-            {
-                result = -Math.Abs(a);
-            }
-            return result;
-        }
-
-
-        private static int extschursigntoone(double b)
-        {
-            int result = 0;
-
-            if( (double)(b)>=(double)(0) )
-            {
-                result = 1;
-            }
-            else
-            {
-                result = -1;
-            }
-            return result;
         }
 
 
@@ -11240,603 +8973,1013 @@ public partial class alglib
 
 
     }
-    public class hpccores
+    public class hblas
     {
-        /*************************************************************************
-        This structure stores  temporary  buffers  used  by  gradient  calculation
-        functions for neural networks.
-        *************************************************************************/
-        public class mlpbuffers : apobject
-        {
-            public int chunksize;
-            public int ntotal;
-            public int nin;
-            public int nout;
-            public int wcount;
-            public double[] batch4buf;
-            public double[] hpcbuf;
-            public double[,] xy;
-            public double[,] xy2;
-            public double[] xyrow;
-            public double[] x;
-            public double[] y;
-            public double[] desiredy;
-            public double e;
-            public double[] g;
-            public double[] tmp0;
-            public mlpbuffers()
-            {
-                init();
-            }
-            public override void init()
-            {
-                batch4buf = new double[0];
-                hpcbuf = new double[0];
-                xy = new double[0,0];
-                xy2 = new double[0,0];
-                xyrow = new double[0];
-                x = new double[0];
-                y = new double[0];
-                desiredy = new double[0];
-                g = new double[0];
-                tmp0 = new double[0];
-            }
-            public override alglib.apobject make_copy()
-            {
-                mlpbuffers _result = new mlpbuffers();
-                _result.chunksize = chunksize;
-                _result.ntotal = ntotal;
-                _result.nin = nin;
-                _result.nout = nout;
-                _result.wcount = wcount;
-                _result.batch4buf = (double[])batch4buf.Clone();
-                _result.hpcbuf = (double[])hpcbuf.Clone();
-                _result.xy = (double[,])xy.Clone();
-                _result.xy2 = (double[,])xy2.Clone();
-                _result.xyrow = (double[])xyrow.Clone();
-                _result.x = (double[])x.Clone();
-                _result.y = (double[])y.Clone();
-                _result.desiredy = (double[])desiredy.Clone();
-                _result.e = e;
-                _result.g = (double[])g.Clone();
-                _result.tmp0 = (double[])tmp0.Clone();
-                return _result;
-            }
-        };
-
-
-
-
-        /*************************************************************************
-        Prepares HPC compuations  of  chunked  gradient with HPCChunkedGradient().
-        You  have to call this function  before  calling  HPCChunkedGradient() for
-        a new set of weights. You have to call it only once, see example below:
-
-        HOW TO PROCESS DATASET WITH THIS FUNCTION:
-            Grad:=0
-            HPCPrepareChunkedGradient(Weights, WCount, NTotal, NOut, Buf)
-            foreach chunk-of-dataset do
-                HPCChunkedGradient(...)
-            HPCFinalizeChunkedGradient(Buf, Grad)
-
-        *************************************************************************/
-        public static void hpcpreparechunkedgradient(double[] weights,
-            int wcount,
-            int ntotal,
-            int nin,
-            int nout,
-            mlpbuffers buf)
+        public static void hermitianmatrixvectormultiply(complex[,] a,
+            bool isupper,
+            int i1,
+            int i2,
+            complex[] x,
+            complex alpha,
+            ref complex[] y)
         {
             int i = 0;
-            int batch4size = 0;
-            int chunksize = 0;
+            int ba1 = 0;
+            int by1 = 0;
+            int by2 = 0;
+            int bx1 = 0;
+            int bx2 = 0;
+            int n = 0;
+            complex v = 0;
+            int i_ = 0;
+            int i1_ = 0;
 
-            chunksize = 4;
-            batch4size = 3*chunksize*ntotal+chunksize*(2*nout+1);
-            if( alglib.ap.rows(buf.xy)<chunksize || alglib.ap.cols(buf.xy)<nin+nout )
+            n = i2-i1+1;
+            if( n<=0 )
             {
-                buf.xy = new double[chunksize, nin+nout];
+                return;
             }
-            if( alglib.ap.rows(buf.xy2)<chunksize || alglib.ap.cols(buf.xy2)<nin+nout )
+            
+            //
+            // Let A = L + D + U, where
+            //  L is strictly lower triangular (main diagonal is zero)
+            //  D is diagonal
+            //  U is strictly upper triangular (main diagonal is zero)
+            //
+            // A*x = L*x + D*x + U*x
+            //
+            // Calculate D*x first
+            //
+            for(i=i1; i<=i2; i++)
             {
-                buf.xy2 = new double[chunksize, nin+nout];
+                y[i-i1+1] = a[i,i]*x[i-i1+1];
             }
-            if( alglib.ap.len(buf.xyrow)<nin+nout )
+            
+            //
+            // Add L*x + U*x
+            //
+            if( isupper )
             {
-                buf.xyrow = new double[nin+nout];
-            }
-            if( alglib.ap.len(buf.x)<nin )
-            {
-                buf.x = new double[nin];
-            }
-            if( alglib.ap.len(buf.y)<nout )
-            {
-                buf.y = new double[nout];
-            }
-            if( alglib.ap.len(buf.desiredy)<nout )
-            {
-                buf.desiredy = new double[nout];
-            }
-            if( alglib.ap.len(buf.batch4buf)<batch4size )
-            {
-                buf.batch4buf = new double[batch4size];
-            }
-            if( alglib.ap.len(buf.hpcbuf)<wcount )
-            {
-                buf.hpcbuf = new double[wcount];
-            }
-            if( alglib.ap.len(buf.g)<wcount )
-            {
-                buf.g = new double[wcount];
-            }
-            if( !hpcpreparechunkedgradientx(weights, wcount, buf.hpcbuf) )
-            {
-                for(i=0; i<=wcount-1; i++)
+                for(i=i1; i<=i2-1; i++)
                 {
-                    buf.hpcbuf[i] = 0.0;
+                    
+                    //
+                    // Add L*x to the result
+                    //
+                    v = x[i-i1+1];
+                    by1 = i-i1+2;
+                    by2 = n;
+                    ba1 = i+1;
+                    i1_ = (ba1) - (by1);
+                    for(i_=by1; i_<=by2;i_++)
+                    {
+                        y[i_] = y[i_] + v*math.conj(a[i,i_+i1_]);
+                    }
+                    
+                    //
+                    // Add U*x to the result
+                    //
+                    bx1 = i-i1+2;
+                    bx2 = n;
+                    ba1 = i+1;
+                    i1_ = (ba1)-(bx1);
+                    v = 0.0;
+                    for(i_=bx1; i_<=bx2;i_++)
+                    {
+                        v += x[i_]*a[i,i_+i1_];
+                    }
+                    y[i-i1+1] = y[i-i1+1]+v;
                 }
             }
-            buf.wcount = wcount;
-            buf.ntotal = ntotal;
-            buf.nin = nin;
-            buf.nout = nout;
-            buf.chunksize = chunksize;
+            else
+            {
+                for(i=i1+1; i<=i2; i++)
+                {
+                    
+                    //
+                    // Add L*x to the result
+                    //
+                    bx1 = 1;
+                    bx2 = i-i1;
+                    ba1 = i1;
+                    i1_ = (ba1)-(bx1);
+                    v = 0.0;
+                    for(i_=bx1; i_<=bx2;i_++)
+                    {
+                        v += x[i_]*a[i,i_+i1_];
+                    }
+                    y[i-i1+1] = y[i-i1+1]+v;
+                    
+                    //
+                    // Add U*x to the result
+                    //
+                    v = x[i-i1+1];
+                    by1 = 1;
+                    by2 = i-i1;
+                    ba1 = i1;
+                    i1_ = (ba1) - (by1);
+                    for(i_=by1; i_<=by2;i_++)
+                    {
+                        y[i_] = y[i_] + v*math.conj(a[i,i_+i1_]);
+                    }
+                }
+            }
+            for(i_=1; i_<=n;i_++)
+            {
+                y[i_] = alpha*y[i_];
+            }
         }
 
 
-        /*************************************************************************
-        Finalizes HPC compuations  of  chunked gradient with HPCChunkedGradient().
-        You  have to call this function  after  calling  HPCChunkedGradient()  for
-        a new set of weights. You have to call it only once, see example below:
-
-        HOW TO PROCESS DATASET WITH THIS FUNCTION:
-            Grad:=0
-            HPCPrepareChunkedGradient(Weights, WCount, NTotal, NOut, Buf)
-            foreach chunk-of-dataset do
-                HPCChunkedGradient(...)
-            HPCFinalizeChunkedGradient(Buf, Grad)
-
-        *************************************************************************/
-        public static void hpcfinalizechunkedgradient(mlpbuffers buf,
-            double[] grad)
+        public static void hermitianrank2update(ref complex[,] a,
+            bool isupper,
+            int i1,
+            int i2,
+            complex[] x,
+            complex[] y,
+            ref complex[] t,
+            complex alpha)
         {
             int i = 0;
+            int tp1 = 0;
+            int tp2 = 0;
+            complex v = 0;
+            int i_ = 0;
+            int i1_ = 0;
 
-            if( !hpcfinalizechunkedgradientx(buf.hpcbuf, buf.wcount, grad) )
+            if( isupper )
             {
-                for(i=0; i<=buf.wcount-1; i++)
+                for(i=i1; i<=i2; i++)
                 {
-                    grad[i] = grad[i]+buf.hpcbuf[i];
+                    tp1 = i+1-i1;
+                    tp2 = i2-i1+1;
+                    v = alpha*x[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = v*math.conj(y[i_]);
+                    }
+                    v = math.conj(alpha)*y[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = t[i_] + v*math.conj(x[i_]);
+                    }
+                    i1_ = (tp1) - (i);
+                    for(i_=i; i_<=i2;i_++)
+                    {
+                        a[i,i_] = a[i,i_] + t[i_+i1_];
+                    }
                 }
             }
-        }
-
-
-        /*************************************************************************
-        Fast kernel for chunked gradient.
-
-        *************************************************************************/
-        public static bool hpcchunkedgradient(double[] weights,
-            int[] structinfo,
-            double[] columnmeans,
-            double[] columnsigmas,
-            double[,] xy,
-            int cstart,
-            int csize,
-            double[] batch4buf,
-            double[] hpcbuf,
-            ref double e,
-            bool naturalerrorfunc)
-        {
-            bool result = new bool();
-
-            result = false;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Fast kernel for chunked processing.
-
-        *************************************************************************/
-        public static bool hpcchunkedprocess(double[] weights,
-            int[] structinfo,
-            double[] columnmeans,
-            double[] columnsigmas,
-            double[,] xy,
-            int cstart,
-            int csize,
-            double[] batch4buf,
-            double[] hpcbuf)
-        {
-            bool result = new bool();
-
-            result = false;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Stub function.
-
-          -- ALGLIB routine --
-             14.06.2013
-             Bochkanov Sergey
-        *************************************************************************/
-        private static bool hpcpreparechunkedgradientx(double[] weights,
-            int wcount,
-            double[] hpcbuf)
-        {
-            bool result = new bool();
-
-            result = false;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Stub function.
-
-          -- ALGLIB routine --
-             14.06.2013
-             Bochkanov Sergey
-        *************************************************************************/
-        private static bool hpcfinalizechunkedgradientx(double[] buf,
-            int wcount,
-            double[] grad)
-        {
-            bool result = new bool();
-
-            result = false;
-            return result;
+            else
+            {
+                for(i=i1; i<=i2; i++)
+                {
+                    tp1 = 1;
+                    tp2 = i+1-i1;
+                    v = alpha*x[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = v*math.conj(y[i_]);
+                    }
+                    v = math.conj(alpha)*y[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = t[i_] + v*math.conj(x[i_]);
+                    }
+                    i1_ = (tp1) - (i1);
+                    for(i_=i1; i_<=i;i_++)
+                    {
+                        a[i,i_] = a[i,i_] + t[i_+i1_];
+                    }
+                }
+            }
         }
 
 
     }
-    public class xblas
+    public class sblas
     {
-        /*************************************************************************
-        More precise dot-product. Absolute error of  subroutine  result  is  about
-        1 ulp of max(MX,V), where:
-            MX = max( |a[i]*b[i]| )
-            V  = |(a,b)|
-
-        INPUT PARAMETERS
-            A       -   array[0..N-1], vector 1
-            B       -   array[0..N-1], vector 2
-            N       -   vectors length, N<2^29.
-            Temp    -   array[0..N-1], pre-allocated temporary storage
-
-        OUTPUT PARAMETERS
-            R       -   (A,B)
-            RErr    -   estimate of error. This estimate accounts for both  errors
-                        during  calculation  of  (A,B)  and  errors  introduced by
-                        rounding of A and B to fit in double (about 1 ulp).
-
-          -- ALGLIB --
-             Copyright 24.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void xdot(double[] a,
-            double[] b,
-            int n,
-            ref double[] temp,
-            ref double r,
-            ref double rerr)
+        public static void symmetricmatrixvectormultiply(double[,] a,
+            bool isupper,
+            int i1,
+            int i2,
+            double[] x,
+            double alpha,
+            ref double[] y)
         {
             int i = 0;
-            double mx = 0;
+            int ba1 = 0;
+            int ba2 = 0;
+            int by1 = 0;
+            int by2 = 0;
+            int bx1 = 0;
+            int bx2 = 0;
+            int n = 0;
             double v = 0;
-
-            r = 0;
-            rerr = 0;
-
-            
-            //
-            // special cases:
-            // * N=0
-            //
-            if( n==0 )
-            {
-                r = 0;
-                rerr = 0;
-                return;
-            }
-            mx = 0;
-            for(i=0; i<=n-1; i++)
-            {
-                v = a[i]*b[i];
-                temp[i] = v;
-                mx = Math.Max(mx, Math.Abs(v));
-            }
-            if( (double)(mx)==(double)(0) )
-            {
-                r = 0;
-                rerr = 0;
-                return;
-            }
-            xsum(ref temp, mx, n, ref r, ref rerr);
-        }
-
-
-        /*************************************************************************
-        More precise complex dot-product. Absolute error of  subroutine  result is
-        about 1 ulp of max(MX,V), where:
-            MX = max( |a[i]*b[i]| )
-            V  = |(a,b)|
-
-        INPUT PARAMETERS
-            A       -   array[0..N-1], vector 1
-            B       -   array[0..N-1], vector 2
-            N       -   vectors length, N<2^29.
-            Temp    -   array[0..2*N-1], pre-allocated temporary storage
-
-        OUTPUT PARAMETERS
-            R       -   (A,B)
-            RErr    -   estimate of error. This estimate accounts for both  errors
-                        during  calculation  of  (A,B)  and  errors  introduced by
-                        rounding of A and B to fit in double (about 1 ulp).
-
-          -- ALGLIB --
-             Copyright 27.01.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void xcdot(complex[] a,
-            complex[] b,
-            int n,
-            ref double[] temp,
-            ref complex r,
-            ref double rerr)
-        {
-            int i = 0;
-            double mx = 0;
-            double v = 0;
-            double rerrx = 0;
-            double rerry = 0;
-
-            r = 0;
-            rerr = 0;
-
-            
-            //
-            // special cases:
-            // * N=0
-            //
-            if( n==0 )
-            {
-                r = 0;
-                rerr = 0;
-                return;
-            }
-            
-            //
-            // calculate real part
-            //
-            mx = 0;
-            for(i=0; i<=n-1; i++)
-            {
-                v = a[i].x*b[i].x;
-                temp[2*i+0] = v;
-                mx = Math.Max(mx, Math.Abs(v));
-                v = -(a[i].y*b[i].y);
-                temp[2*i+1] = v;
-                mx = Math.Max(mx, Math.Abs(v));
-            }
-            if( (double)(mx)==(double)(0) )
-            {
-                r.x = 0;
-                rerrx = 0;
-            }
-            else
-            {
-                xsum(ref temp, mx, 2*n, ref r.x, ref rerrx);
-            }
-            
-            //
-            // calculate imaginary part
-            //
-            mx = 0;
-            for(i=0; i<=n-1; i++)
-            {
-                v = a[i].x*b[i].y;
-                temp[2*i+0] = v;
-                mx = Math.Max(mx, Math.Abs(v));
-                v = a[i].y*b[i].x;
-                temp[2*i+1] = v;
-                mx = Math.Max(mx, Math.Abs(v));
-            }
-            if( (double)(mx)==(double)(0) )
-            {
-                r.y = 0;
-                rerry = 0;
-            }
-            else
-            {
-                xsum(ref temp, mx, 2*n, ref r.y, ref rerry);
-            }
-            
-            //
-            // total error
-            //
-            if( (double)(rerrx)==(double)(0) && (double)(rerry)==(double)(0) )
-            {
-                rerr = 0;
-            }
-            else
-            {
-                rerr = Math.Max(rerrx, rerry)*Math.Sqrt(1+math.sqr(Math.Min(rerrx, rerry)/Math.Max(rerrx, rerry)));
-            }
-        }
-
-
-        /*************************************************************************
-        Internal subroutine for extra-precise calculation of SUM(w[i]).
-
-        INPUT PARAMETERS:
-            W   -   array[0..N-1], values to be added
-                    W is modified during calculations.
-            MX  -   max(W[i])
-            N   -   array size
-            
-        OUTPUT PARAMETERS:
-            R   -   SUM(w[i])
-            RErr-   error estimate for R
-
-          -- ALGLIB --
-             Copyright 24.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        private static void xsum(ref double[] w,
-            double mx,
-            int n,
-            ref double r,
-            ref double rerr)
-        {
-            int i = 0;
-            int k = 0;
-            int ks = 0;
-            double v = 0;
-            double s = 0;
-            double ln2 = 0;
-            double chunk = 0;
-            double invchunk = 0;
-            bool allzeros = new bool();
             int i_ = 0;
+            int i1_ = 0;
 
-            r = 0;
-            rerr = 0;
-
-            
-            //
-            // special cases:
-            // * N=0
-            // * N is too large to use integer arithmetics
-            //
-            if( n==0 )
+            n = i2-i1+1;
+            if( n<=0 )
             {
-                r = 0;
-                rerr = 0;
                 return;
             }
-            if( (double)(mx)==(double)(0) )
-            {
-                r = 0;
-                rerr = 0;
-                return;
-            }
-            alglib.ap.assert(n<536870912, "XDot: N is too large!");
             
             //
-            // Prepare
+            // Let A = L + D + U, where
+            //  L is strictly lower triangular (main diagonal is zero)
+            //  D is diagonal
+            //  U is strictly upper triangular (main diagonal is zero)
             //
-            ln2 = Math.Log(2);
-            rerr = mx*math.machineepsilon;
+            // A*x = L*x + D*x + U*x
+            //
+            // Calculate D*x first
+            //
+            for(i=i1; i<=i2; i++)
+            {
+                y[i-i1+1] = a[i,i]*x[i-i1+1];
+            }
             
             //
-            // 1. find S such that 0.5<=S*MX<1
-            // 2. multiply W by S, so task is normalized in some sense
-            // 3. S:=1/S so we can obtain original vector multiplying by S
+            // Add L*x + U*x
             //
-            k = (int)Math.Round(Math.Log(mx)/ln2);
-            s = xfastpow(2, -k);
-            while( (double)(s*mx)>=(double)(1) )
+            if( isupper )
             {
-                s = 0.5*s;
-            }
-            while( (double)(s*mx)<(double)(0.5) )
-            {
-                s = 2*s;
-            }
-            for(i_=0; i_<=n-1;i_++)
-            {
-                w[i_] = s*w[i_];
-            }
-            s = 1/s;
-            
-            //
-            // find Chunk=2^M such that N*Chunk<2^29
-            //
-            // we have chosen upper limit (2^29) with enough space left
-            // to tolerate possible problems with rounding and N's close
-            // to the limit, so we don't want to be very strict here.
-            //
-            k = (int)(Math.Log((double)536870912/(double)n)/ln2);
-            chunk = xfastpow(2, k);
-            if( (double)(chunk)<(double)(2) )
-            {
-                chunk = 2;
-            }
-            invchunk = 1/chunk;
-            
-            //
-            // calculate result
-            //
-            r = 0;
-            for(i_=0; i_<=n-1;i_++)
-            {
-                w[i_] = chunk*w[i_];
-            }
-            while( true )
-            {
-                s = s*invchunk;
-                allzeros = true;
-                ks = 0;
-                for(i=0; i<=n-1; i++)
+                for(i=i1; i<=i2-1; i++)
                 {
-                    v = w[i];
-                    k = (int)(v);
-                    if( (double)(v)!=(double)(k) )
+                    
+                    //
+                    // Add L*x to the result
+                    //
+                    v = x[i-i1+1];
+                    by1 = i-i1+2;
+                    by2 = n;
+                    ba1 = i+1;
+                    ba2 = i2;
+                    i1_ = (ba1) - (by1);
+                    for(i_=by1; i_<=by2;i_++)
                     {
-                        allzeros = false;
+                        y[i_] = y[i_] + v*a[i,i_+i1_];
                     }
-                    w[i] = chunk*(v-k);
-                    ks = ks+k;
-                }
-                r = r+s*ks;
-                v = Math.Abs(r);
-                if( allzeros || (double)(s*n+mx)==(double)(mx) )
-                {
-                    break;
+                    
+                    //
+                    // Add U*x to the result
+                    //
+                    bx1 = i-i1+2;
+                    bx2 = n;
+                    ba1 = i+1;
+                    ba2 = i2;
+                    i1_ = (ba1)-(bx1);
+                    v = 0.0;
+                    for(i_=bx1; i_<=bx2;i_++)
+                    {
+                        v += x[i_]*a[i,i_+i1_];
+                    }
+                    y[i-i1+1] = y[i-i1+1]+v;
                 }
             }
-            
-            //
-            // correct error
-            //
-            rerr = Math.Max(rerr, Math.Abs(r)*math.machineepsilon);
+            else
+            {
+                for(i=i1+1; i<=i2; i++)
+                {
+                    
+                    //
+                    // Add L*x to the result
+                    //
+                    bx1 = 1;
+                    bx2 = i-i1;
+                    ba1 = i1;
+                    ba2 = i-1;
+                    i1_ = (ba1)-(bx1);
+                    v = 0.0;
+                    for(i_=bx1; i_<=bx2;i_++)
+                    {
+                        v += x[i_]*a[i,i_+i1_];
+                    }
+                    y[i-i1+1] = y[i-i1+1]+v;
+                    
+                    //
+                    // Add U*x to the result
+                    //
+                    v = x[i-i1+1];
+                    by1 = 1;
+                    by2 = i-i1;
+                    ba1 = i1;
+                    ba2 = i-1;
+                    i1_ = (ba1) - (by1);
+                    for(i_=by1; i_<=by2;i_++)
+                    {
+                        y[i_] = y[i_] + v*a[i,i_+i1_];
+                    }
+                }
+            }
+            for(i_=1; i_<=n;i_++)
+            {
+                y[i_] = alpha*y[i_];
+            }
+            apserv.touchint(ref ba2);
         }
 
 
-        /*************************************************************************
-        Fast Pow
+        public static void symmetricrank2update(ref double[,] a,
+            bool isupper,
+            int i1,
+            int i2,
+            double[] x,
+            double[] y,
+            ref double[] t,
+            double alpha)
+        {
+            int i = 0;
+            int tp1 = 0;
+            int tp2 = 0;
+            double v = 0;
+            int i_ = 0;
+            int i1_ = 0;
 
-          -- ALGLIB --
-             Copyright 24.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        private static double xfastpow(double r,
-            int n)
+            if( isupper )
+            {
+                for(i=i1; i<=i2; i++)
+                {
+                    tp1 = i+1-i1;
+                    tp2 = i2-i1+1;
+                    v = x[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = v*y[i_];
+                    }
+                    v = y[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = t[i_] + v*x[i_];
+                    }
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = alpha*t[i_];
+                    }
+                    i1_ = (tp1) - (i);
+                    for(i_=i; i_<=i2;i_++)
+                    {
+                        a[i,i_] = a[i,i_] + t[i_+i1_];
+                    }
+                }
+            }
+            else
+            {
+                for(i=i1; i<=i2; i++)
+                {
+                    tp1 = 1;
+                    tp2 = i+1-i1;
+                    v = x[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = v*y[i_];
+                    }
+                    v = y[i+1-i1];
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = t[i_] + v*x[i_];
+                    }
+                    for(i_=tp1; i_<=tp2;i_++)
+                    {
+                        t[i_] = alpha*t[i_];
+                    }
+                    i1_ = (tp1) - (i1);
+                    for(i_=i1; i_<=i;i_++)
+                    {
+                        a[i,i_] = a[i,i_] + t[i_+i1_];
+                    }
+                }
+            }
+        }
+
+
+    }
+    public class blas
+    {
+        public static double vectornorm2(double[] x,
+            int i1,
+            int i2)
         {
             double result = 0;
+            int n = 0;
+            int ix = 0;
+            double absxi = 0;
+            double scl = 0;
+            double ssq = 0;
 
-            result = 0;
-            if( n>0 )
+            n = i2-i1+1;
+            if( n<1 )
             {
-                if( n%2==0 )
+                result = 0;
+                return result;
+            }
+            if( n==1 )
+            {
+                result = Math.Abs(x[i1]);
+                return result;
+            }
+            scl = 0;
+            ssq = 1;
+            for(ix=i1; ix<=i2; ix++)
+            {
+                if( (double)(x[ix])!=(double)(0) )
                 {
-                    result = math.sqr(xfastpow(r, n/2));
+                    absxi = Math.Abs(x[ix]);
+                    if( (double)(scl)<(double)(absxi) )
+                    {
+                        ssq = 1+ssq*math.sqr(scl/absxi);
+                        scl = absxi;
+                    }
+                    else
+                    {
+                        ssq = ssq+math.sqr(absxi/scl);
+                    }
+                }
+            }
+            result = scl*Math.Sqrt(ssq);
+            return result;
+        }
+
+
+        public static int vectoridxabsmax(double[] x,
+            int i1,
+            int i2)
+        {
+            int result = 0;
+            int i = 0;
+
+            result = i1;
+            for(i=i1+1; i<=i2; i++)
+            {
+                if( (double)(Math.Abs(x[i]))>(double)(Math.Abs(x[result])) )
+                {
+                    result = i;
+                }
+            }
+            return result;
+        }
+
+
+        public static int columnidxabsmax(double[,] x,
+            int i1,
+            int i2,
+            int j)
+        {
+            int result = 0;
+            int i = 0;
+
+            result = i1;
+            for(i=i1+1; i<=i2; i++)
+            {
+                if( (double)(Math.Abs(x[i,j]))>(double)(Math.Abs(x[result,j])) )
+                {
+                    result = i;
+                }
+            }
+            return result;
+        }
+
+
+        public static int rowidxabsmax(double[,] x,
+            int j1,
+            int j2,
+            int i)
+        {
+            int result = 0;
+            int j = 0;
+
+            result = j1;
+            for(j=j1+1; j<=j2; j++)
+            {
+                if( (double)(Math.Abs(x[i,j]))>(double)(Math.Abs(x[i,result])) )
+                {
+                    result = j;
+                }
+            }
+            return result;
+        }
+
+
+        public static double upperhessenberg1norm(double[,] a,
+            int i1,
+            int i2,
+            int j1,
+            int j2,
+            ref double[] work)
+        {
+            double result = 0;
+            int i = 0;
+            int j = 0;
+
+            alglib.ap.assert(i2-i1==j2-j1, "UpperHessenberg1Norm: I2-I1<>J2-J1!");
+            for(j=j1; j<=j2; j++)
+            {
+                work[j] = 0;
+            }
+            for(i=i1; i<=i2; i++)
+            {
+                for(j=Math.Max(j1, j1+i-i1-1); j<=j2; j++)
+                {
+                    work[j] = work[j]+Math.Abs(a[i,j]);
+                }
+            }
+            result = 0;
+            for(j=j1; j<=j2; j++)
+            {
+                result = Math.Max(result, work[j]);
+            }
+            return result;
+        }
+
+
+        public static void copymatrix(double[,] a,
+            int is1,
+            int is2,
+            int js1,
+            int js2,
+            ref double[,] b,
+            int id1,
+            int id2,
+            int jd1,
+            int jd2)
+        {
+            int isrc = 0;
+            int idst = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( is1>is2 || js1>js2 )
+            {
+                return;
+            }
+            alglib.ap.assert(is2-is1==id2-id1, "CopyMatrix: different sizes!");
+            alglib.ap.assert(js2-js1==jd2-jd1, "CopyMatrix: different sizes!");
+            for(isrc=is1; isrc<=is2; isrc++)
+            {
+                idst = isrc-is1+id1;
+                i1_ = (js1) - (jd1);
+                for(i_=jd1; i_<=jd2;i_++)
+                {
+                    b[idst,i_] = a[isrc,i_+i1_];
+                }
+            }
+        }
+
+
+        public static void inplacetranspose(ref double[,] a,
+            int i1,
+            int i2,
+            int j1,
+            int j2,
+            ref double[] work)
+        {
+            int i = 0;
+            int j = 0;
+            int ips = 0;
+            int jps = 0;
+            int l = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( i1>i2 || j1>j2 )
+            {
+                return;
+            }
+            alglib.ap.assert(i1-i2==j1-j2, "InplaceTranspose error: incorrect array size!");
+            for(i=i1; i<=i2-1; i++)
+            {
+                j = j1+i-i1;
+                ips = i+1;
+                jps = j1+ips-i1;
+                l = i2-i;
+                i1_ = (ips) - (1);
+                for(i_=1; i_<=l;i_++)
+                {
+                    work[i_] = a[i_+i1_,j];
+                }
+                i1_ = (jps) - (ips);
+                for(i_=ips; i_<=i2;i_++)
+                {
+                    a[i_,j] = a[i,i_+i1_];
+                }
+                i1_ = (1) - (jps);
+                for(i_=jps; i_<=j2;i_++)
+                {
+                    a[i,i_] = work[i_+i1_];
+                }
+            }
+        }
+
+
+        public static void copyandtranspose(double[,] a,
+            int is1,
+            int is2,
+            int js1,
+            int js2,
+            ref double[,] b,
+            int id1,
+            int id2,
+            int jd1,
+            int jd2)
+        {
+            int isrc = 0;
+            int jdst = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( is1>is2 || js1>js2 )
+            {
+                return;
+            }
+            alglib.ap.assert(is2-is1==jd2-jd1, "CopyAndTranspose: different sizes!");
+            alglib.ap.assert(js2-js1==id2-id1, "CopyAndTranspose: different sizes!");
+            for(isrc=is1; isrc<=is2; isrc++)
+            {
+                jdst = isrc-is1+jd1;
+                i1_ = (js1) - (id1);
+                for(i_=id1; i_<=id2;i_++)
+                {
+                    b[i_,jdst] = a[isrc,i_+i1_];
+                }
+            }
+        }
+
+
+        public static void matrixvectormultiply(double[,] a,
+            int i1,
+            int i2,
+            int j1,
+            int j2,
+            bool trans,
+            double[] x,
+            int ix1,
+            int ix2,
+            double alpha,
+            ref double[] y,
+            int iy1,
+            int iy2,
+            double beta)
+        {
+            int i = 0;
+            double v = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( !trans )
+            {
+                
+                //
+                // y := alpha*A*x + beta*y;
+                //
+                if( i1>i2 || j1>j2 )
+                {
+                    return;
+                }
+                alglib.ap.assert(j2-j1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
+                alglib.ap.assert(i2-i1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
+                
+                //
+                // beta*y
+                //
+                if( (double)(beta)==(double)(0) )
+                {
+                    for(i=iy1; i<=iy2; i++)
+                    {
+                        y[i] = 0;
+                    }
                 }
                 else
                 {
-                    result = r*xfastpow(r, n-1);
+                    for(i_=iy1; i_<=iy2;i_++)
+                    {
+                        y[i_] = beta*y[i_];
+                    }
                 }
-                return result;
+                
+                //
+                // alpha*A*x
+                //
+                for(i=i1; i<=i2; i++)
+                {
+                    i1_ = (ix1)-(j1);
+                    v = 0.0;
+                    for(i_=j1; i_<=j2;i_++)
+                    {
+                        v += a[i,i_]*x[i_+i1_];
+                    }
+                    y[iy1+i-i1] = y[iy1+i-i1]+alpha*v;
+                }
             }
-            if( n==0 )
+            else
             {
-                result = 1;
+                
+                //
+                // y := alpha*A'*x + beta*y;
+                //
+                if( i1>i2 || j1>j2 )
+                {
+                    return;
+                }
+                alglib.ap.assert(i2-i1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!");
+                alglib.ap.assert(j2-j1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!");
+                
+                //
+                // beta*y
+                //
+                if( (double)(beta)==(double)(0) )
+                {
+                    for(i=iy1; i<=iy2; i++)
+                    {
+                        y[i] = 0;
+                    }
+                }
+                else
+                {
+                    for(i_=iy1; i_<=iy2;i_++)
+                    {
+                        y[i_] = beta*y[i_];
+                    }
+                }
+                
+                //
+                // alpha*A'*x
+                //
+                for(i=i1; i<=i2; i++)
+                {
+                    v = alpha*x[ix1+i-i1];
+                    i1_ = (j1) - (iy1);
+                    for(i_=iy1; i_<=iy2;i_++)
+                    {
+                        y[i_] = y[i_] + v*a[i,i_+i1_];
+                    }
+                }
             }
-            if( n<0 )
+        }
+
+
+        public static double pythag2(double x,
+            double y)
+        {
+            double result = 0;
+            double w = 0;
+            double xabs = 0;
+            double yabs = 0;
+            double z = 0;
+
+            xabs = Math.Abs(x);
+            yabs = Math.Abs(y);
+            w = Math.Max(xabs, yabs);
+            z = Math.Min(xabs, yabs);
+            if( (double)(z)==(double)(0) )
             {
-                result = xfastpow(1/r, -n);
+                result = w;
+            }
+            else
+            {
+                result = w*Math.Sqrt(1+math.sqr(z/w));
             }
             return result;
+        }
+
+
+        public static void matrixmatrixmultiply(double[,] a,
+            int ai1,
+            int ai2,
+            int aj1,
+            int aj2,
+            bool transa,
+            double[,] b,
+            int bi1,
+            int bi2,
+            int bj1,
+            int bj2,
+            bool transb,
+            double alpha,
+            ref double[,] c,
+            int ci1,
+            int ci2,
+            int cj1,
+            int cj2,
+            double beta,
+            ref double[] work)
+        {
+            int arows = 0;
+            int acols = 0;
+            int brows = 0;
+            int bcols = 0;
+            int crows = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int l = 0;
+            int r = 0;
+            double v = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            
+            //
+            // Setup
+            //
+            if( !transa )
+            {
+                arows = ai2-ai1+1;
+                acols = aj2-aj1+1;
+            }
+            else
+            {
+                arows = aj2-aj1+1;
+                acols = ai2-ai1+1;
+            }
+            if( !transb )
+            {
+                brows = bi2-bi1+1;
+                bcols = bj2-bj1+1;
+            }
+            else
+            {
+                brows = bj2-bj1+1;
+                bcols = bi2-bi1+1;
+            }
+            alglib.ap.assert(acols==brows, "MatrixMatrixMultiply: incorrect matrix sizes!");
+            if( ((arows<=0 || acols<=0) || brows<=0) || bcols<=0 )
+            {
+                return;
+            }
+            crows = arows;
+            
+            //
+            // Test WORK
+            //
+            i = Math.Max(arows, acols);
+            i = Math.Max(brows, i);
+            i = Math.Max(i, bcols);
+            work[1] = 0;
+            work[i] = 0;
+            
+            //
+            // Prepare C
+            //
+            if( (double)(beta)==(double)(0) )
+            {
+                for(i=ci1; i<=ci2; i++)
+                {
+                    for(j=cj1; j<=cj2; j++)
+                    {
+                        c[i,j] = 0;
+                    }
+                }
+            }
+            else
+            {
+                for(i=ci1; i<=ci2; i++)
+                {
+                    for(i_=cj1; i_<=cj2;i_++)
+                    {
+                        c[i,i_] = beta*c[i,i_];
+                    }
+                }
+            }
+            
+            //
+            // A*B
+            //
+            if( !transa && !transb )
+            {
+                for(l=ai1; l<=ai2; l++)
+                {
+                    for(r=bi1; r<=bi2; r++)
+                    {
+                        v = alpha*a[l,aj1+r-bi1];
+                        k = ci1+l-ai1;
+                        i1_ = (bj1) - (cj1);
+                        for(i_=cj1; i_<=cj2;i_++)
+                        {
+                            c[k,i_] = c[k,i_] + v*b[r,i_+i1_];
+                        }
+                    }
+                }
+                return;
+            }
+            
+            //
+            // A*B'
+            //
+            if( !transa && transb )
+            {
+                if( arows*acols<brows*bcols )
+                {
+                    for(r=bi1; r<=bi2; r++)
+                    {
+                        for(l=ai1; l<=ai2; l++)
+                        {
+                            i1_ = (bj1)-(aj1);
+                            v = 0.0;
+                            for(i_=aj1; i_<=aj2;i_++)
+                            {
+                                v += a[l,i_]*b[r,i_+i1_];
+                            }
+                            c[ci1+l-ai1,cj1+r-bi1] = c[ci1+l-ai1,cj1+r-bi1]+alpha*v;
+                        }
+                    }
+                    return;
+                }
+                else
+                {
+                    for(l=ai1; l<=ai2; l++)
+                    {
+                        for(r=bi1; r<=bi2; r++)
+                        {
+                            i1_ = (bj1)-(aj1);
+                            v = 0.0;
+                            for(i_=aj1; i_<=aj2;i_++)
+                            {
+                                v += a[l,i_]*b[r,i_+i1_];
+                            }
+                            c[ci1+l-ai1,cj1+r-bi1] = c[ci1+l-ai1,cj1+r-bi1]+alpha*v;
+                        }
+                    }
+                    return;
+                }
+            }
+            
+            //
+            // A'*B
+            //
+            if( transa && !transb )
+            {
+                for(l=aj1; l<=aj2; l++)
+                {
+                    for(r=bi1; r<=bi2; r++)
+                    {
+                        v = alpha*a[ai1+r-bi1,l];
+                        k = ci1+l-aj1;
+                        i1_ = (bj1) - (cj1);
+                        for(i_=cj1; i_<=cj2;i_++)
+                        {
+                            c[k,i_] = c[k,i_] + v*b[r,i_+i1_];
+                        }
+                    }
+                }
+                return;
+            }
+            
+            //
+            // A'*B'
+            //
+            if( transa && transb )
+            {
+                if( arows*acols<brows*bcols )
+                {
+                    for(r=bi1; r<=bi2; r++)
+                    {
+                        k = cj1+r-bi1;
+                        for(i=1; i<=crows; i++)
+                        {
+                            work[i] = 0.0;
+                        }
+                        for(l=ai1; l<=ai2; l++)
+                        {
+                            v = alpha*b[r,bj1+l-ai1];
+                            i1_ = (aj1) - (1);
+                            for(i_=1; i_<=crows;i_++)
+                            {
+                                work[i_] = work[i_] + v*a[l,i_+i1_];
+                            }
+                        }
+                        i1_ = (1) - (ci1);
+                        for(i_=ci1; i_<=ci2;i_++)
+                        {
+                            c[i_,k] = c[i_,k] + work[i_+i1_];
+                        }
+                    }
+                    return;
+                }
+                else
+                {
+                    for(l=aj1; l<=aj2; l++)
+                    {
+                        k = ai2-ai1+1;
+                        i1_ = (ai1) - (1);
+                        for(i_=1; i_<=k;i_++)
+                        {
+                            work[i_] = a[i_+i1_,l];
+                        }
+                        for(r=bi1; r<=bi2; r++)
+                        {
+                            i1_ = (bj1)-(1);
+                            v = 0.0;
+                            for(i_=1; i_<=k;i_++)
+                            {
+                                v += work[i_]*b[r,i_+i1_];
+                            }
+                            c[ci1+l-aj1,cj1+r-bi1] = c[ci1+l-aj1,cj1+r-bi1]+alpha*v;
+                        }
+                    }
+                    return;
+                }
+            }
         }
 
 
@@ -12569,8 +10712,8 @@ public partial class alglib
             }
             else
             {
-                n = -983;
-                v = -989;
+                n = 359;
+                v = -58;
             }
             if( state.rstate.stage==0 )
             {
@@ -13092,6 +11235,789 @@ public partial class alglib
                     stp = Math.Max(stx+0.66*(sty-stx), stp);
                 }
             }
+        }
+
+
+    }
+    public class xblas
+    {
+        /*************************************************************************
+        More precise dot-product. Absolute error of  subroutine  result  is  about
+        1 ulp of max(MX,V), where:
+            MX = max( |a[i]*b[i]| )
+            V  = |(a,b)|
+
+        INPUT PARAMETERS
+            A       -   array[0..N-1], vector 1
+            B       -   array[0..N-1], vector 2
+            N       -   vectors length, N<2^29.
+            Temp    -   array[0..N-1], pre-allocated temporary storage
+
+        OUTPUT PARAMETERS
+            R       -   (A,B)
+            RErr    -   estimate of error. This estimate accounts for both  errors
+                        during  calculation  of  (A,B)  and  errors  introduced by
+                        rounding of A and B to fit in double (about 1 ulp).
+
+          -- ALGLIB --
+             Copyright 24.08.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xdot(double[] a,
+            double[] b,
+            int n,
+            ref double[] temp,
+            ref double r,
+            ref double rerr)
+        {
+            int i = 0;
+            double mx = 0;
+            double v = 0;
+
+            r = 0;
+            rerr = 0;
+
+            
+            //
+            // special cases:
+            // * N=0
+            //
+            if( n==0 )
+            {
+                r = 0;
+                rerr = 0;
+                return;
+            }
+            mx = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = a[i]*b[i];
+                temp[i] = v;
+                mx = Math.Max(mx, Math.Abs(v));
+            }
+            if( (double)(mx)==(double)(0) )
+            {
+                r = 0;
+                rerr = 0;
+                return;
+            }
+            xsum(ref temp, mx, n, ref r, ref rerr);
+        }
+
+
+        /*************************************************************************
+        More precise complex dot-product. Absolute error of  subroutine  result is
+        about 1 ulp of max(MX,V), where:
+            MX = max( |a[i]*b[i]| )
+            V  = |(a,b)|
+
+        INPUT PARAMETERS
+            A       -   array[0..N-1], vector 1
+            B       -   array[0..N-1], vector 2
+            N       -   vectors length, N<2^29.
+            Temp    -   array[0..2*N-1], pre-allocated temporary storage
+
+        OUTPUT PARAMETERS
+            R       -   (A,B)
+            RErr    -   estimate of error. This estimate accounts for both  errors
+                        during  calculation  of  (A,B)  and  errors  introduced by
+                        rounding of A and B to fit in double (about 1 ulp).
+
+          -- ALGLIB --
+             Copyright 27.01.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void xcdot(complex[] a,
+            complex[] b,
+            int n,
+            ref double[] temp,
+            ref complex r,
+            ref double rerr)
+        {
+            int i = 0;
+            double mx = 0;
+            double v = 0;
+            double rerrx = 0;
+            double rerry = 0;
+
+            r = 0;
+            rerr = 0;
+
+            
+            //
+            // special cases:
+            // * N=0
+            //
+            if( n==0 )
+            {
+                r = 0;
+                rerr = 0;
+                return;
+            }
+            
+            //
+            // calculate real part
+            //
+            mx = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = a[i].x*b[i].x;
+                temp[2*i+0] = v;
+                mx = Math.Max(mx, Math.Abs(v));
+                v = -(a[i].y*b[i].y);
+                temp[2*i+1] = v;
+                mx = Math.Max(mx, Math.Abs(v));
+            }
+            if( (double)(mx)==(double)(0) )
+            {
+                r.x = 0;
+                rerrx = 0;
+            }
+            else
+            {
+                xsum(ref temp, mx, 2*n, ref r.x, ref rerrx);
+            }
+            
+            //
+            // calculate imaginary part
+            //
+            mx = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = a[i].x*b[i].y;
+                temp[2*i+0] = v;
+                mx = Math.Max(mx, Math.Abs(v));
+                v = a[i].y*b[i].x;
+                temp[2*i+1] = v;
+                mx = Math.Max(mx, Math.Abs(v));
+            }
+            if( (double)(mx)==(double)(0) )
+            {
+                r.y = 0;
+                rerry = 0;
+            }
+            else
+            {
+                xsum(ref temp, mx, 2*n, ref r.y, ref rerry);
+            }
+            
+            //
+            // total error
+            //
+            if( (double)(rerrx)==(double)(0) && (double)(rerry)==(double)(0) )
+            {
+                rerr = 0;
+            }
+            else
+            {
+                rerr = Math.Max(rerrx, rerry)*Math.Sqrt(1+math.sqr(Math.Min(rerrx, rerry)/Math.Max(rerrx, rerry)));
+            }
+        }
+
+
+        /*************************************************************************
+        Internal subroutine for extra-precise calculation of SUM(w[i]).
+
+        INPUT PARAMETERS:
+            W   -   array[0..N-1], values to be added
+                    W is modified during calculations.
+            MX  -   max(W[i])
+            N   -   array size
+            
+        OUTPUT PARAMETERS:
+            R   -   SUM(w[i])
+            RErr-   error estimate for R
+
+          -- ALGLIB --
+             Copyright 24.08.2009 by Bochkanov Sergey
+        *************************************************************************/
+        private static void xsum(ref double[] w,
+            double mx,
+            int n,
+            ref double r,
+            ref double rerr)
+        {
+            int i = 0;
+            int k = 0;
+            int ks = 0;
+            double v = 0;
+            double s = 0;
+            double ln2 = 0;
+            double chunk = 0;
+            double invchunk = 0;
+            bool allzeros = new bool();
+            int i_ = 0;
+
+            r = 0;
+            rerr = 0;
+
+            
+            //
+            // special cases:
+            // * N=0
+            // * N is too large to use integer arithmetics
+            //
+            if( n==0 )
+            {
+                r = 0;
+                rerr = 0;
+                return;
+            }
+            if( (double)(mx)==(double)(0) )
+            {
+                r = 0;
+                rerr = 0;
+                return;
+            }
+            alglib.ap.assert(n<536870912, "XDot: N is too large!");
+            
+            //
+            // Prepare
+            //
+            ln2 = Math.Log(2);
+            rerr = mx*math.machineepsilon;
+            
+            //
+            // 1. find S such that 0.5<=S*MX<1
+            // 2. multiply W by S, so task is normalized in some sense
+            // 3. S:=1/S so we can obtain original vector multiplying by S
+            //
+            k = (int)Math.Round(Math.Log(mx)/ln2);
+            s = xfastpow(2, -k);
+            if( !math.isfinite(s) )
+            {
+                
+                //
+                // Overflow or underflow during evaluation of S; fallback low-precision code
+                //
+                r = 0;
+                rerr = mx*math.machineepsilon;
+                for(i=0; i<=n-1; i++)
+                {
+                    r = r+w[i];
+                }
+                return;
+            }
+            while( (double)(s*mx)>=(double)(1) )
+            {
+                s = 0.5*s;
+            }
+            while( (double)(s*mx)<(double)(0.5) )
+            {
+                s = 2*s;
+            }
+            for(i_=0; i_<=n-1;i_++)
+            {
+                w[i_] = s*w[i_];
+            }
+            s = 1/s;
+            
+            //
+            // find Chunk=2^M such that N*Chunk<2^29
+            //
+            // we have chosen upper limit (2^29) with enough space left
+            // to tolerate possible problems with rounding and N's close
+            // to the limit, so we don't want to be very strict here.
+            //
+            k = (int)(Math.Log((double)536870912/(double)n)/ln2);
+            chunk = xfastpow(2, k);
+            if( (double)(chunk)<(double)(2) )
+            {
+                chunk = 2;
+            }
+            invchunk = 1/chunk;
+            
+            //
+            // calculate result
+            //
+            r = 0;
+            for(i_=0; i_<=n-1;i_++)
+            {
+                w[i_] = chunk*w[i_];
+            }
+            while( true )
+            {
+                s = s*invchunk;
+                allzeros = true;
+                ks = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    v = w[i];
+                    k = (int)(v);
+                    if( (double)(v)!=(double)(k) )
+                    {
+                        allzeros = false;
+                    }
+                    w[i] = chunk*(v-k);
+                    ks = ks+k;
+                }
+                r = r+s*ks;
+                v = Math.Abs(r);
+                if( allzeros || (double)(s*n+mx)==(double)(mx) )
+                {
+                    break;
+                }
+            }
+            
+            //
+            // correct error
+            //
+            rerr = Math.Max(rerr, Math.Abs(r)*math.machineepsilon);
+        }
+
+
+        /*************************************************************************
+        Fast Pow
+
+          -- ALGLIB --
+             Copyright 24.08.2009 by Bochkanov Sergey
+        *************************************************************************/
+        private static double xfastpow(double r,
+            int n)
+        {
+            double result = 0;
+
+            result = 0;
+            if( n>0 )
+            {
+                if( n%2==0 )
+                {
+                    result = math.sqr(xfastpow(r, n/2));
+                }
+                else
+                {
+                    result = r*xfastpow(r, n-1);
+                }
+                return result;
+            }
+            if( n==0 )
+            {
+                result = 1;
+            }
+            if( n<0 )
+            {
+                result = xfastpow(1/r, -n);
+            }
+            return result;
+        }
+
+
+    }
+    public class basicstatops
+    {
+        /*************************************************************************
+        Internal tied ranking subroutine.
+
+        INPUT PARAMETERS:
+            X       -   array to rank
+            N       -   array size
+            IsCentered- whether ranks are centered or not:
+                        * True      -   ranks are centered in such way that  their
+                                        sum is zero
+                        * False     -   ranks are not centered
+            Buf     -   temporary buffers
+            
+        NOTE: when IsCentered is True and all X[] are equal, this  function  fills
+              X by zeros (exact zeros are used, not sum which is only approximately
+              equal to zero).
+        *************************************************************************/
+        public static void rankx(double[] x,
+            int n,
+            bool iscentered,
+            apserv.apbuffers buf)
+        {
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            double tmp = 0;
+            double voffs = 0;
+
+            
+            //
+            // Prepare
+            //
+            if( n<1 )
+            {
+                return;
+            }
+            if( n==1 )
+            {
+                x[0] = 0;
+                return;
+            }
+            if( alglib.ap.len(buf.ra1)<n )
+            {
+                buf.ra1 = new double[n];
+            }
+            if( alglib.ap.len(buf.ia1)<n )
+            {
+                buf.ia1 = new int[n];
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                buf.ra1[i] = x[i];
+                buf.ia1[i] = i;
+            }
+            tsort.tagsortfasti(ref buf.ra1, ref buf.ia1, ref buf.ra2, ref buf.ia2, n);
+            
+            //
+            // Special test for all values being equal
+            //
+            if( (double)(buf.ra1[0])==(double)(buf.ra1[n-1]) )
+            {
+                if( iscentered )
+                {
+                    tmp = 0.0;
+                }
+                else
+                {
+                    tmp = (double)(n-1)/(double)2;
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    x[i] = tmp;
+                }
+                return;
+            }
+            
+            //
+            // compute tied ranks
+            //
+            i = 0;
+            while( i<=n-1 )
+            {
+                j = i+1;
+                while( j<=n-1 )
+                {
+                    if( (double)(buf.ra1[j])!=(double)(buf.ra1[i]) )
+                    {
+                        break;
+                    }
+                    j = j+1;
+                }
+                for(k=i; k<=j-1; k++)
+                {
+                    buf.ra1[k] = (double)(i+j-1)/(double)2;
+                }
+                i = j;
+            }
+            
+            //
+            // back to x
+            //
+            if( iscentered )
+            {
+                voffs = (double)(n-1)/(double)2;
+            }
+            else
+            {
+                voffs = 0.0;
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[buf.ia1[i]] = buf.ra1[i]-voffs;
+            }
+        }
+
+
+        /*************************************************************************
+        Internal untied ranking subroutine.
+
+        INPUT PARAMETERS:
+            X       -   array to rank
+            N       -   array size
+            Buf     -   temporary buffers
+
+        Returns untied ranks (in case of a tie ranks are resolved arbitrarily).
+        *************************************************************************/
+        public static void rankxuntied(double[] x,
+            int n,
+            apserv.apbuffers buf)
+        {
+            int i = 0;
+
+            
+            //
+            // Prepare
+            //
+            if( n<1 )
+            {
+                return;
+            }
+            if( n==1 )
+            {
+                x[0] = 0;
+                return;
+            }
+            if( alglib.ap.len(buf.ra1)<n )
+            {
+                buf.ra1 = new double[n];
+            }
+            if( alglib.ap.len(buf.ia1)<n )
+            {
+                buf.ia1 = new int[n];
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                buf.ra1[i] = x[i];
+                buf.ia1[i] = i;
+            }
+            tsort.tagsortfasti(ref buf.ra1, ref buf.ia1, ref buf.ra2, ref buf.ia2, n);
+            for(i=0; i<=n-1; i++)
+            {
+                x[buf.ia1[i]] = i;
+            }
+        }
+
+
+    }
+    public class hpccores
+    {
+        /*************************************************************************
+        This structure stores  temporary  buffers  used  by  gradient  calculation
+        functions for neural networks.
+        *************************************************************************/
+        public class mlpbuffers : apobject
+        {
+            public int chunksize;
+            public int ntotal;
+            public int nin;
+            public int nout;
+            public int wcount;
+            public double[] batch4buf;
+            public double[] hpcbuf;
+            public double[,] xy;
+            public double[,] xy2;
+            public double[] xyrow;
+            public double[] x;
+            public double[] y;
+            public double[] desiredy;
+            public double e;
+            public double[] g;
+            public double[] tmp0;
+            public mlpbuffers()
+            {
+                init();
+            }
+            public override void init()
+            {
+                batch4buf = new double[0];
+                hpcbuf = new double[0];
+                xy = new double[0,0];
+                xy2 = new double[0,0];
+                xyrow = new double[0];
+                x = new double[0];
+                y = new double[0];
+                desiredy = new double[0];
+                g = new double[0];
+                tmp0 = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                mlpbuffers _result = new mlpbuffers();
+                _result.chunksize = chunksize;
+                _result.ntotal = ntotal;
+                _result.nin = nin;
+                _result.nout = nout;
+                _result.wcount = wcount;
+                _result.batch4buf = (double[])batch4buf.Clone();
+                _result.hpcbuf = (double[])hpcbuf.Clone();
+                _result.xy = (double[,])xy.Clone();
+                _result.xy2 = (double[,])xy2.Clone();
+                _result.xyrow = (double[])xyrow.Clone();
+                _result.x = (double[])x.Clone();
+                _result.y = (double[])y.Clone();
+                _result.desiredy = (double[])desiredy.Clone();
+                _result.e = e;
+                _result.g = (double[])g.Clone();
+                _result.tmp0 = (double[])tmp0.Clone();
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        Prepares HPC compuations  of  chunked  gradient with HPCChunkedGradient().
+        You  have to call this function  before  calling  HPCChunkedGradient() for
+        a new set of weights. You have to call it only once, see example below:
+
+        HOW TO PROCESS DATASET WITH THIS FUNCTION:
+            Grad:=0
+            HPCPrepareChunkedGradient(Weights, WCount, NTotal, NOut, Buf)
+            foreach chunk-of-dataset do
+                HPCChunkedGradient(...)
+            HPCFinalizeChunkedGradient(Buf, Grad)
+
+        *************************************************************************/
+        public static void hpcpreparechunkedgradient(double[] weights,
+            int wcount,
+            int ntotal,
+            int nin,
+            int nout,
+            mlpbuffers buf)
+        {
+            int i = 0;
+            int batch4size = 0;
+            int chunksize = 0;
+
+            chunksize = 4;
+            batch4size = 3*chunksize*ntotal+chunksize*(2*nout+1);
+            if( alglib.ap.rows(buf.xy)<chunksize || alglib.ap.cols(buf.xy)<nin+nout )
+            {
+                buf.xy = new double[chunksize, nin+nout];
+            }
+            if( alglib.ap.rows(buf.xy2)<chunksize || alglib.ap.cols(buf.xy2)<nin+nout )
+            {
+                buf.xy2 = new double[chunksize, nin+nout];
+            }
+            if( alglib.ap.len(buf.xyrow)<nin+nout )
+            {
+                buf.xyrow = new double[nin+nout];
+            }
+            if( alglib.ap.len(buf.x)<nin )
+            {
+                buf.x = new double[nin];
+            }
+            if( alglib.ap.len(buf.y)<nout )
+            {
+                buf.y = new double[nout];
+            }
+            if( alglib.ap.len(buf.desiredy)<nout )
+            {
+                buf.desiredy = new double[nout];
+            }
+            if( alglib.ap.len(buf.batch4buf)<batch4size )
+            {
+                buf.batch4buf = new double[batch4size];
+            }
+            if( alglib.ap.len(buf.hpcbuf)<wcount )
+            {
+                buf.hpcbuf = new double[wcount];
+            }
+            if( alglib.ap.len(buf.g)<wcount )
+            {
+                buf.g = new double[wcount];
+            }
+            if( !hpcpreparechunkedgradientx(weights, wcount, buf.hpcbuf) )
+            {
+                for(i=0; i<=wcount-1; i++)
+                {
+                    buf.hpcbuf[i] = 0.0;
+                }
+            }
+            buf.wcount = wcount;
+            buf.ntotal = ntotal;
+            buf.nin = nin;
+            buf.nout = nout;
+            buf.chunksize = chunksize;
+        }
+
+
+        /*************************************************************************
+        Finalizes HPC compuations  of  chunked gradient with HPCChunkedGradient().
+        You  have to call this function  after  calling  HPCChunkedGradient()  for
+        a new set of weights. You have to call it only once, see example below:
+
+        HOW TO PROCESS DATASET WITH THIS FUNCTION:
+            Grad:=0
+            HPCPrepareChunkedGradient(Weights, WCount, NTotal, NOut, Buf)
+            foreach chunk-of-dataset do
+                HPCChunkedGradient(...)
+            HPCFinalizeChunkedGradient(Buf, Grad)
+
+        *************************************************************************/
+        public static void hpcfinalizechunkedgradient(mlpbuffers buf,
+            double[] grad)
+        {
+            int i = 0;
+
+            if( !hpcfinalizechunkedgradientx(buf.hpcbuf, buf.wcount, grad) )
+            {
+                for(i=0; i<=buf.wcount-1; i++)
+                {
+                    grad[i] = grad[i]+buf.hpcbuf[i];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Fast kernel for chunked gradient.
+
+        *************************************************************************/
+        public static bool hpcchunkedgradient(double[] weights,
+            int[] structinfo,
+            double[] columnmeans,
+            double[] columnsigmas,
+            double[,] xy,
+            int cstart,
+            int csize,
+            double[] batch4buf,
+            double[] hpcbuf,
+            ref double e,
+            bool naturalerrorfunc)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Fast kernel for chunked processing.
+
+        *************************************************************************/
+        public static bool hpcchunkedprocess(double[] weights,
+            int[] structinfo,
+            double[] columnmeans,
+            double[] columnsigmas,
+            double[,] xy,
+            int cstart,
+            int csize,
+            double[] batch4buf,
+            double[] hpcbuf)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Stub function.
+
+          -- ALGLIB routine --
+             14.06.2013
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool hpcpreparechunkedgradientx(double[] weights,
+            int wcount,
+            double[] hpcbuf)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Stub function.
+
+          -- ALGLIB routine --
+             14.06.2013
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool hpcfinalizechunkedgradientx(double[] buf,
+            int wcount,
+            double[] grad)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
         }
 
 

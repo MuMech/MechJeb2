@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,6 +18,7 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
@@ -26,236 +27,49 @@ public partial class alglib
 
 
     /*************************************************************************
-    Portable high quality random number generator state.
-    Initialized with HQRNDRandomize() or HQRNDSeed().
+    Buffer object which is used to perform nearest neighbor  requests  in  the
+    multithreaded mode (multiple threads working with same KD-tree object).
 
-    Fields:
-        S1, S2      -   seed values
-        V           -   precomputed value
-        MagicV      -   'magic' value used to determine whether State structure
-                        was correctly initialized.
+    This object should be created with KDTreeCreateBuffer().
     *************************************************************************/
-    public class hqrndstate : alglibobject
+    public class kdtreerequestbuffer : alglibobject
     {
         //
         // Public declarations
         //
-
-        public hqrndstate()
+    
+        public kdtreerequestbuffer()
         {
-            _innerobj = new hqrnd.hqrndstate();
+            _innerobj = new nearestneighbor.kdtreerequestbuffer();
         }
         
         public override alglib.alglibobject make_copy()
         {
-            return new hqrndstate((hqrnd.hqrndstate)_innerobj.make_copy());
+            return new kdtreerequestbuffer((nearestneighbor.kdtreerequestbuffer)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private hqrnd.hqrndstate _innerobj;
-        public hqrnd.hqrndstate innerobj { get { return _innerobj; } }
-        public hqrndstate(hqrnd.hqrndstate obj)
+        private nearestneighbor.kdtreerequestbuffer _innerobj;
+        public nearestneighbor.kdtreerequestbuffer innerobj { get { return _innerobj; } }
+        public kdtreerequestbuffer(nearestneighbor.kdtreerequestbuffer obj)
         {
             _innerobj = obj;
         }
     }
 
-    /*************************************************************************
-    HQRNDState  initialization  with  random  values  which come from standard
-    RNG.
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void hqrndrandomize(out hqrndstate state)
-    {
-        state = new hqrndstate();
-        hqrnd.hqrndrandomize(state.innerobj);
-        return;
-    }
 
     /*************************************************************************
-    HQRNDState initialization with seed values
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void hqrndseed(int s1, int s2, out hqrndstate state)
-    {
-        state = new hqrndstate();
-        hqrnd.hqrndseed(s1, s2, state.innerobj);
-        return;
-    }
-
-    /*************************************************************************
-    This function generates random real number in (0,1),
-    not including interval boundaries
-
-    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static double hqrnduniformr(hqrndstate state)
-    {
-
-        double result = hqrnd.hqrnduniformr(state.innerobj);
-        return result;
-    }
-
-    /*************************************************************************
-    This function generates random integer number in [0, N)
-
-    1. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()
-    2. N can be any positive number except for very large numbers:
-       * close to 2^31 on 32-bit systems
-       * close to 2^62 on 64-bit systems
-       An exception will be generated if N is too large.
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static int hqrnduniformi(hqrndstate state, int n)
-    {
-
-        int result = hqrnd.hqrnduniformi(state.innerobj, n);
-        return result;
-    }
-
-    /*************************************************************************
-    Random number generator: normal numbers
-
-    This function generates one random number from normal distribution.
-    Its performance is equal to that of HQRNDNormal2()
-
-    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static double hqrndnormal(hqrndstate state)
-    {
-
-        double result = hqrnd.hqrndnormal(state.innerobj);
-        return result;
-    }
-
-    /*************************************************************************
-    Random number generator: random X and Y such that X^2+Y^2=1
-
-    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void hqrndunit2(hqrndstate state, out double x, out double y)
-    {
-        x = 0;
-        y = 0;
-        hqrnd.hqrndunit2(state.innerobj, ref x, ref y);
-        return;
-    }
-
-    /*************************************************************************
-    Random number generator: normal numbers
-
-    This function generates two independent random numbers from normal
-    distribution. Its performance is equal to that of HQRNDNormal()
-
-    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
-
-      -- ALGLIB --
-         Copyright 02.12.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void hqrndnormal2(hqrndstate state, out double x1, out double x2)
-    {
-        x1 = 0;
-        x2 = 0;
-        hqrnd.hqrndnormal2(state.innerobj, ref x1, ref x2);
-        return;
-    }
-
-    /*************************************************************************
-    Random number generator: exponential distribution
-
-    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
-
-      -- ALGLIB --
-         Copyright 11.08.2007 by Bochkanov Sergey
-    *************************************************************************/
-    public static double hqrndexponential(hqrndstate state, double lambdav)
-    {
-
-        double result = hqrnd.hqrndexponential(state.innerobj, lambdav);
-        return result;
-    }
-
-    /*************************************************************************
-    This function generates  random number from discrete distribution given by
-    finite sample X.
-
-    INPUT PARAMETERS
-        State   -   high quality random number generator, must be
-                    initialized with HQRNDRandomize() or HQRNDSeed().
-            X   -   finite sample
-            N   -   number of elements to use, N>=1
-
-    RESULT
-        this function returns one of the X[i] for random i=0..N-1
-
-      -- ALGLIB --
-         Copyright 08.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static double hqrnddiscrete(hqrndstate state, double[] x, int n)
-    {
-
-        double result = hqrnd.hqrnddiscrete(state.innerobj, x, n);
-        return result;
-    }
-
-    /*************************************************************************
-    This function generates random number from continuous  distribution  given
-    by finite sample X.
-
-    INPUT PARAMETERS
-        State   -   high quality random number generator, must be
-                    initialized with HQRNDRandomize() or HQRNDSeed().
-            X   -   finite sample, array[N] (can be larger, in this  case only
-                    leading N elements are used). THIS ARRAY MUST BE SORTED BY
-                    ASCENDING.
-            N   -   number of elements to use, N>=1
-
-    RESULT
-        this function returns random number from continuous distribution which
-        tries to approximate X as mush as possible. min(X)<=Result<=max(X).
-
-      -- ALGLIB --
-         Copyright 08.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static double hqrndcontinuous(hqrndstate state, double[] x, int n)
-    {
-
-        double result = hqrnd.hqrndcontinuous(state.innerobj, x, n);
-        return result;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-
+    KD-tree object.
     *************************************************************************/
     public class kdtree : alglibobject
     {
         //
         // Public declarations
         //
-
+    
         public kdtree()
         {
             _innerobj = new nearestneighbor.kdtree();
@@ -265,7 +79,7 @@ public partial class alglib
         {
             return new kdtree((nearestneighbor.kdtree)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -281,7 +95,7 @@ public partial class alglib
 
     /*************************************************************************
     This function serializes data structure to string.
-
+    
     Important properties of s_out:
     * it contains alphanumeric characters, dots, underscores, minus signs
     * these symbols are grouped into words, which are separated by spaces
@@ -323,6 +137,41 @@ public partial class alglib
         s.stop();
     }
 
+
+    /*************************************************************************
+    This function serializes data structure to stream.
+    
+    Data stream generated by this function is same as  string  representation
+    generated  by  string  version  of  serializer - alphanumeric characters,
+    dots, underscores, minus signs, which are grouped into words separated by
+    spaces and CR+LF.
+    
+    We recommend you to read comments on string version of serializer to find
+    out more about serialization of AlGLIB objects.
+    *************************************************************************/
+    public static void kdtreeserialize(kdtree obj, System.IO.Stream stream_out)
+    {
+        alglib.serializer s = new alglib.serializer();
+        s.alloc_start();
+        nearestneighbor.kdtreealloc(s, obj.innerobj);
+        s.sstart_stream(stream_out);
+        nearestneighbor.kdtreeserialize(s, obj.innerobj);
+        s.stop();
+    }
+
+
+    /*************************************************************************
+    This function unserializes data structure from stream.
+    *************************************************************************/
+    public static void kdtreeunserialize(System.IO.Stream stream_in, out kdtree obj)
+    {
+        alglib.serializer s = new alglib.serializer();
+        obj = new kdtree();
+        s.ustart_stream(stream_in);
+        nearestneighbor.kdtreeunserialize(s, obj.innerobj);
+        s.stop();
+    }
+    
     /*************************************************************************
     KD-tree creation
 
@@ -367,14 +216,14 @@ public partial class alglib
     public static void kdtreebuild(double[,] xy, int nx, int ny, int normtype, out kdtree kdt)
     {
         int n;
-
+    
         kdt = new kdtree();
         n = ap.rows(xy);
         nearestneighbor.kdtreebuild(xy, n, nx, ny, normtype, kdt.innerobj);
-
+    
         return;
     }
-
+    
     /*************************************************************************
     KD-tree creation
 
@@ -426,12 +275,52 @@ public partial class alglib
         kdt = new kdtree();
         n = ap.rows(xy);
         nearestneighbor.kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt.innerobj);
-
+    
         return;
     }
+    
+    /*************************************************************************
+    This function creates buffer  structure  which  can  be  used  to  perform
+    parallel KD-tree requests.
 
+    KD-tree subpackage provides two sets of request functions - ones which use
+    internal buffer of KD-tree object  (these  functions  are  single-threaded
+    because they use same buffer, which can not shared between  threads),  and
+    ones which use external buffer.
+
+    This function is used to initialize external buffer.
+
+    INPUT PARAMETERS
+        KDT         -   KD-tree which is associated with newly created buffer
+
+    OUTPUT PARAMETERS
+        Buf         -   external buffer.
+
+
+    IMPORTANT: KD-tree buffer should be used only with  KD-tree  object  which
+               was used to initialize buffer. Any attempt to use biffer   with
+               different object is dangerous - you  may  get  integrity  check
+               failure (exception) because sizes of internal arrays do not fit
+               to dimensions of KD-tree structure.
+
+      -- ALGLIB --
+         Copyright 18.03.2016 by Bochkanov Sergey
+    *************************************************************************/
+    public static void kdtreecreaterequestbuffer(kdtree kdt, out kdtreerequestbuffer buf)
+    {
+        buf = new kdtreerequestbuffer();
+        nearestneighbor.kdtreecreaterequestbuffer(kdt.innerobj, buf.innerobj);
+        return;
+    }
+    
     /*************************************************************************
     K-NN query: K nearest neighbors
+
+    IMPORTANT: this function can not be used in multithreaded code because  it
+               uses internal temporary buffer of kd-tree object, which can not
+               be shared between multiple threads.  If  you  want  to  perform
+               parallel requests, use function  which  uses  external  request
+               buffer: KDTreeTsQueryKNN() ("Ts" stands for "thread-safe").
 
     INPUT PARAMETERS
         KDT         -   KD-tree
@@ -460,23 +349,87 @@ public partial class alglib
     *************************************************************************/
     public static int kdtreequeryknn(kdtree kdt, double[] x, int k, bool selfmatch)
     {
-
+    
         int result = nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch);
         return result;
     }
     public static int kdtreequeryknn(kdtree kdt, double[] x, int k)
     {
         bool selfmatch;
-
-
+    
+    
         selfmatch = true;
         int result = nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch);
-
+    
         return result;
     }
+    
+    /*************************************************************************
+    K-NN query: K nearest neighbors, using external thread-local buffer.
 
+    You can call this function from multiple threads for same kd-tree instance,
+    assuming that different instances of buffer object are passed to different
+    threads.
+
+    INPUT PARAMETERS
+        KDT         -   kd-tree
+        Buf         -   request buffer  object  created  for  this  particular
+                        instance of kd-tree structure with kdtreecreaterequestbuffer()
+                        function.
+        X           -   point, array[0..NX-1].
+        K           -   number of neighbors to return, K>=1
+        SelfMatch   -   whether self-matches are allowed:
+                        * if True, nearest neighbor may be the point itself
+                          (if it exists in original dataset)
+                        * if False, then only points with non-zero distance
+                          are returned
+                        * if not given, considered True
+
+    RESULT
+        number of actual neighbors found (either K or N, if K>N).
+
+    This  subroutine  performs  query  and  stores  its result in the internal
+    structures  of  the  buffer object. You can use following  subroutines  to
+    obtain these results (pay attention to "buf" in their names):
+    * KDTreeTsQueryResultsX() to get X-values
+    * KDTreeTsQueryResultsXY() to get X- and Y-values
+    * KDTreeTsQueryResultsTags() to get tag values
+    * KDTreeTsQueryResultsDistances() to get distances
+
+    IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+               was used to initialize buffer. Any attempt to use biffer   with
+               different object is dangerous - you  may  get  integrity  check
+               failure (exception) because sizes of internal arrays do not fit
+               to dimensions of KD-tree structure.
+
+      -- ALGLIB --
+         Copyright 18.03.2016 by Bochkanov Sergey
+    *************************************************************************/
+    public static int kdtreetsqueryknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, bool selfmatch)
+    {
+    
+        int result = nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch);
+        return result;
+    }
+    public static int kdtreetsqueryknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k)
+    {
+        bool selfmatch;
+    
+    
+        selfmatch = true;
+        int result = nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch);
+    
+        return result;
+    }
+    
     /*************************************************************************
     R-NN query: all points within R-sphere centered at X
+
+    IMPORTANT: this function can not be used in multithreaded code because  it
+               uses internal temporary buffer of kd-tree object, which can not
+               be shared between multiple threads.  If  you  want  to  perform
+               parallel requests, use function  which  uses  external  request
+               buffer: KDTreeTsQueryRNN() ("Ts" stands for "thread-safe").
 
     INPUT PARAMETERS
         KDT         -   KD-tree
@@ -505,23 +458,88 @@ public partial class alglib
     *************************************************************************/
     public static int kdtreequeryrnn(kdtree kdt, double[] x, double r, bool selfmatch)
     {
-
+    
         int result = nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch);
         return result;
     }
     public static int kdtreequeryrnn(kdtree kdt, double[] x, double r)
     {
         bool selfmatch;
-
-
+    
+    
         selfmatch = true;
         int result = nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch);
-
+    
         return result;
     }
+    
+    /*************************************************************************
+    R-NN query: all points within  R-sphere  centered  at  X,  using  external
+    thread-local buffer.
 
+    You can call this function from multiple threads for same kd-tree instance,
+    assuming that different instances of buffer object are passed to different
+    threads.
+
+    INPUT PARAMETERS
+        KDT         -   KD-tree
+        Buf         -   request buffer  object  created  for  this  particular
+                        instance of kd-tree structure with kdtreecreaterequestbuffer()
+                        function.
+        X           -   point, array[0..NX-1].
+        R           -   radius of sphere (in corresponding norm), R>0
+        SelfMatch   -   whether self-matches are allowed:
+                        * if True, nearest neighbor may be the point itself
+                          (if it exists in original dataset)
+                        * if False, then only points with non-zero distance
+                          are returned
+                        * if not given, considered True
+
+    RESULT
+        number of neighbors found, >=0
+
+    This  subroutine  performs  query  and  stores  its result in the internal
+    structures  of  the  buffer object. You can use following  subroutines  to
+    obtain these results (pay attention to "buf" in their names):
+    * KDTreeTsQueryResultsX() to get X-values
+    * KDTreeTsQueryResultsXY() to get X- and Y-values
+    * KDTreeTsQueryResultsTags() to get tag values
+    * KDTreeTsQueryResultsDistances() to get distances
+
+    IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+               was used to initialize buffer. Any attempt to use biffer   with
+               different object is dangerous - you  may  get  integrity  check
+               failure (exception) because sizes of internal arrays do not fit
+               to dimensions of KD-tree structure.
+
+      -- ALGLIB --
+         Copyright 18.03.2016 by Bochkanov Sergey
+    *************************************************************************/
+    public static int kdtreetsqueryrnn(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, bool selfmatch)
+    {
+    
+        int result = nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch);
+        return result;
+    }
+    public static int kdtreetsqueryrnn(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r)
+    {
+        bool selfmatch;
+    
+    
+        selfmatch = true;
+        int result = nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch);
+    
+        return result;
+    }
+    
     /*************************************************************************
     K-NN query: approximate K nearest neighbors
+
+    IMPORTANT: this function can not be used in multithreaded code because  it
+               uses internal temporary buffer of kd-tree object, which can not
+               be shared between multiple threads.  If  you  want  to  perform
+               parallel requests, use function  which  uses  external  request
+               buffer: KDTreeTsQueryAKNN() ("Ts" stands for "thread-safe").
 
     INPUT PARAMETERS
         KDT         -   KD-tree
@@ -557,23 +575,181 @@ public partial class alglib
     *************************************************************************/
     public static int kdtreequeryaknn(kdtree kdt, double[] x, int k, bool selfmatch, double eps)
     {
-
+    
         int result = nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps);
         return result;
     }
     public static int kdtreequeryaknn(kdtree kdt, double[] x, int k, double eps)
     {
         bool selfmatch;
-
-
+    
+    
         selfmatch = true;
         int result = nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps);
-
+    
         return result;
     }
-
+    
     /*************************************************************************
-    X-values from last query
+    K-NN query: approximate K nearest neighbors, using thread-local buffer.
+
+    You can call this function from multiple threads for same kd-tree instance,
+    assuming that different instances of buffer object are passed to different
+    threads.
+
+    INPUT PARAMETERS
+        KDT         -   KD-tree
+        Buf         -   request buffer  object  created  for  this  particular
+                        instance of kd-tree structure with kdtreecreaterequestbuffer()
+                        function.
+        X           -   point, array[0..NX-1].
+        K           -   number of neighbors to return, K>=1
+        SelfMatch   -   whether self-matches are allowed:
+                        * if True, nearest neighbor may be the point itself
+                          (if it exists in original dataset)
+                        * if False, then only points with non-zero distance
+                          are returned
+                        * if not given, considered True
+        Eps         -   approximation factor, Eps>=0. eps-approximate  nearest
+                        neighbor  is  a  neighbor  whose distance from X is at
+                        most (1+eps) times distance of true nearest neighbor.
+
+    RESULT
+        number of actual neighbors found (either K or N, if K>N).
+
+    NOTES
+        significant performance gain may be achieved only when Eps  is  is  on
+        the order of magnitude of 1 or larger.
+
+    This  subroutine  performs  query  and  stores  its result in the internal
+    structures  of  the  buffer object. You can use following  subroutines  to
+    obtain these results (pay attention to "buf" in their names):
+    * KDTreeTsQueryResultsX() to get X-values
+    * KDTreeTsQueryResultsXY() to get X- and Y-values
+    * KDTreeTsQueryResultsTags() to get tag values
+    * KDTreeTsQueryResultsDistances() to get distances
+
+    IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+               was used to initialize buffer. Any attempt to use biffer   with
+               different object is dangerous - you  may  get  integrity  check
+               failure (exception) because sizes of internal arrays do not fit
+               to dimensions of KD-tree structure.
+
+      -- ALGLIB --
+         Copyright 18.03.2016 by Bochkanov Sergey
+    *************************************************************************/
+    public static int kdtreetsqueryaknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, bool selfmatch, double eps)
+    {
+    
+        int result = nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps);
+        return result;
+    }
+    public static int kdtreetsqueryaknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, double eps)
+    {
+        bool selfmatch;
+    
+    
+        selfmatch = true;
+        int result = nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps);
+    
+        return result;
+    }
+    
+    /*************************************************************************
+    Box query: all points within user-specified box.
+
+    IMPORTANT: this function can not be used in multithreaded code because  it
+               uses internal temporary buffer of kd-tree object, which can not
+               be shared between multiple threads.  If  you  want  to  perform
+               parallel requests, use function  which  uses  external  request
+               buffer: KDTreeTsQueryBox() ("Ts" stands for "thread-safe").
+
+    INPUT PARAMETERS
+        KDT         -   KD-tree
+        BoxMin      -   lower bounds, array[0..NX-1].
+        BoxMax      -   upper bounds, array[0..NX-1].
+
+
+    RESULT
+        number of actual neighbors found (in [0,N]).
+
+    This  subroutine  performs  query  and  stores  its result in the internal
+    structures of the KD-tree. You can use  following  subroutines  to  obtain
+    these results:
+    * KDTreeQueryResultsX() to get X-values
+    * KDTreeQueryResultsXY() to get X- and Y-values
+    * KDTreeQueryResultsTags() to get tag values
+    * KDTreeQueryResultsDistances() returns zeros for this request
+
+    NOTE: this particular query returns unordered results, because there is no
+          meaningful way of  ordering  points.  Furthermore,  no 'distance' is
+          associated with points - it is either INSIDE  or OUTSIDE (so request
+          for distances will return zeros).
+
+      -- ALGLIB --
+         Copyright 14.05.2016 by Bochkanov Sergey
+    *************************************************************************/
+    public static int kdtreequerybox(kdtree kdt, double[] boxmin, double[] boxmax)
+    {
+    
+        int result = nearestneighbor.kdtreequerybox(kdt.innerobj, boxmin, boxmax);
+        return result;
+    }
+    
+    /*************************************************************************
+    Box query: all points within user-specified box, using thread-local buffer.
+
+    You can call this function from multiple threads for same kd-tree instance,
+    assuming that different instances of buffer object are passed to different
+    threads.
+
+    INPUT PARAMETERS
+        KDT         -   KD-tree
+        Buf         -   request buffer  object  created  for  this  particular
+                        instance of kd-tree structure with kdtreecreaterequestbuffer()
+                        function.
+        BoxMin      -   lower bounds, array[0..NX-1].
+        BoxMax      -   upper bounds, array[0..NX-1].
+
+    RESULT
+        number of actual neighbors found (in [0,N]).
+
+    This  subroutine  performs  query  and  stores  its result in the internal
+    structures  of  the  buffer object. You can use following  subroutines  to
+    obtain these results (pay attention to "ts" in their names):
+    * KDTreeTsQueryResultsX() to get X-values
+    * KDTreeTsQueryResultsXY() to get X- and Y-values
+    * KDTreeTsQueryResultsTags() to get tag values
+    * KDTreeTsQueryResultsDistances() returns zeros for this query
+
+    NOTE: this particular query returns unordered results, because there is no
+          meaningful way of  ordering  points.  Furthermore,  no 'distance' is
+          associated with points - it is either INSIDE  or OUTSIDE (so request
+          for distances will return zeros).
+
+    IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+               was used to initialize buffer. Any attempt to use biffer   with
+               different object is dangerous - you  may  get  integrity  check
+               failure (exception) because sizes of internal arrays do not fit
+               to dimensions of KD-tree structure.
+
+      -- ALGLIB --
+         Copyright 14.05.2016 by Bochkanov Sergey
+    *************************************************************************/
+    public static int kdtreetsquerybox(kdtree kdt, kdtreerequestbuffer buf, double[] boxmin, double[] boxmax)
+    {
+    
+        int result = nearestneighbor.kdtreetsquerybox(kdt.innerobj, buf.innerobj, boxmin, boxmax);
+        return result;
+    }
+    
+    /*************************************************************************
+    X-values from last query.
+
+    This function retuns results stored in  the  internal  buffer  of  kd-tree
+    object. If you performed buffered requests (ones which  use  instances  of
+    kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+    function - kdtreetsqueryresultsx().
 
     INPUT PARAMETERS
         KDT     -   KD-tree
@@ -603,13 +779,18 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreequeryresultsx(kdtree kdt, ref double[,] x)
     {
-
+    
         nearestneighbor.kdtreequeryresultsx(kdt.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     X- and Y-values from last query
+
+    This function retuns results stored in  the  internal  buffer  of  kd-tree
+    object. If you performed buffered requests (ones which  use  instances  of
+    kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+    function - kdtreetsqueryresultsxy().
 
     INPUT PARAMETERS
         KDT     -   KD-tree
@@ -640,13 +821,18 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreequeryresultsxy(kdtree kdt, ref double[,] xy)
     {
-
+    
         nearestneighbor.kdtreequeryresultsxy(kdt.innerobj, ref xy);
         return;
     }
-
+    
     /*************************************************************************
     Tags from last query
+
+    This function retuns results stored in  the  internal  buffer  of  kd-tree
+    object. If you performed buffered requests (ones which  use  instances  of
+    kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+    function - kdtreetsqueryresultstags().
 
     INPUT PARAMETERS
         KDT     -   KD-tree
@@ -677,13 +863,18 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreequeryresultstags(kdtree kdt, ref int[] tags)
     {
-
+    
         nearestneighbor.kdtreequeryresultstags(kdt.innerobj, ref tags);
         return;
     }
-
+    
     /*************************************************************************
     Distances from last query
+
+    This function retuns results stored in  the  internal  buffer  of  kd-tree
+    object. If you performed buffered requests (ones which  use  instances  of
+    kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+    function - kdtreetsqueryresultsdistances().
 
     INPUT PARAMETERS
         KDT     -   KD-tree
@@ -713,11 +904,175 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreequeryresultsdistances(kdtree kdt, ref double[] r)
     {
-
+    
         nearestneighbor.kdtreequeryresultsdistances(kdt.innerobj, ref r);
         return;
     }
+    
+    /*************************************************************************
+    X-values from last query associated with kdtreerequestbuffer object.
 
+    INPUT PARAMETERS
+        KDT     -   KD-tree
+        Buf     -   request  buffer  object  created   for   this   particular
+                    instance of kd-tree structure.
+        X       -   possibly pre-allocated buffer. If X is too small to store
+                    result, it is resized. If size(X) is enough to store
+                    result, it is left unchanged.
+
+    OUTPUT PARAMETERS
+        X       -   rows are filled with X-values
+
+    NOTES
+    1. points are ordered by distance from the query point (first = closest)
+    2. if  XY is larger than required to store result, only leading part  will
+       be overwritten; trailing part will be left unchanged. So  if  on  input
+       XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+       XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+       you want function  to  resize  array  according  to  result  size,  use
+       function with same name and suffix 'I'.
+
+    SEE ALSO
+    * KDTreeQueryResultsXY()            X- and Y-values
+    * KDTreeQueryResultsTags()          tag values
+    * KDTreeQueryResultsDistances()     distances
+
+      -- ALGLIB --
+         Copyright 28.02.2010 by Bochkanov Sergey
+    *************************************************************************/
+    public static void kdtreetsqueryresultsx(kdtree kdt, kdtreerequestbuffer buf, ref double[,] x)
+    {
+    
+        nearestneighbor.kdtreetsqueryresultsx(kdt.innerobj, buf.innerobj, ref x);
+        return;
+    }
+    
+    /*************************************************************************
+    X- and Y-values from last query associated with kdtreerequestbuffer object.
+
+    INPUT PARAMETERS
+        KDT     -   KD-tree
+        Buf     -   request  buffer  object  created   for   this   particular
+                    instance of kd-tree structure.
+        XY      -   possibly pre-allocated buffer. If XY is too small to store
+                    result, it is resized. If size(XY) is enough to store
+                    result, it is left unchanged.
+
+    OUTPUT PARAMETERS
+        XY      -   rows are filled with points: first NX columns with
+                    X-values, next NY columns - with Y-values.
+
+    NOTES
+    1. points are ordered by distance from the query point (first = closest)
+    2. if  XY is larger than required to store result, only leading part  will
+       be overwritten; trailing part will be left unchanged. So  if  on  input
+       XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+       XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+       you want function  to  resize  array  according  to  result  size,  use
+       function with same name and suffix 'I'.
+
+    SEE ALSO
+    * KDTreeQueryResultsX()             X-values
+    * KDTreeQueryResultsTags()          tag values
+    * KDTreeQueryResultsDistances()     distances
+
+      -- ALGLIB --
+         Copyright 28.02.2010 by Bochkanov Sergey
+    *************************************************************************/
+    public static void kdtreetsqueryresultsxy(kdtree kdt, kdtreerequestbuffer buf, ref double[,] xy)
+    {
+    
+        nearestneighbor.kdtreetsqueryresultsxy(kdt.innerobj, buf.innerobj, ref xy);
+        return;
+    }
+    
+    /*************************************************************************
+    Tags from last query associated with kdtreerequestbuffer object.
+
+    This function retuns results stored in  the  internal  buffer  of  kd-tree
+    object. If you performed buffered requests (ones which  use  instances  of
+    kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+    function - KDTreeTsqueryresultstags().
+
+    INPUT PARAMETERS
+        KDT     -   KD-tree
+        Buf     -   request  buffer  object  created   for   this   particular
+                    instance of kd-tree structure.
+        Tags    -   possibly pre-allocated buffer. If X is too small to store
+                    result, it is resized. If size(X) is enough to store
+                    result, it is left unchanged.
+
+    OUTPUT PARAMETERS
+        Tags    -   filled with tags associated with points,
+                    or, when no tags were supplied, with zeros
+
+    NOTES
+    1. points are ordered by distance from the query point (first = closest)
+    2. if  XY is larger than required to store result, only leading part  will
+       be overwritten; trailing part will be left unchanged. So  if  on  input
+       XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+       XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+       you want function  to  resize  array  according  to  result  size,  use
+       function with same name and suffix 'I'.
+
+    SEE ALSO
+    * KDTreeQueryResultsX()             X-values
+    * KDTreeQueryResultsXY()            X- and Y-values
+    * KDTreeQueryResultsDistances()     distances
+
+      -- ALGLIB --
+         Copyright 28.02.2010 by Bochkanov Sergey
+    *************************************************************************/
+    public static void kdtreetsqueryresultstags(kdtree kdt, kdtreerequestbuffer buf, ref int[] tags)
+    {
+    
+        nearestneighbor.kdtreetsqueryresultstags(kdt.innerobj, buf.innerobj, ref tags);
+        return;
+    }
+    
+    /*************************************************************************
+    Distances from last query associated with kdtreerequestbuffer object.
+
+    This function retuns results stored in  the  internal  buffer  of  kd-tree
+    object. If you performed buffered requests (ones which  use  instances  of
+    kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+    function - KDTreeTsqueryresultsdistances().
+
+    INPUT PARAMETERS
+        KDT     -   KD-tree
+        Buf     -   request  buffer  object  created   for   this   particular
+                    instance of kd-tree structure.
+        R       -   possibly pre-allocated buffer. If X is too small to store
+                    result, it is resized. If size(X) is enough to store
+                    result, it is left unchanged.
+
+    OUTPUT PARAMETERS
+        R       -   filled with distances (in corresponding norm)
+
+    NOTES
+    1. points are ordered by distance from the query point (first = closest)
+    2. if  XY is larger than required to store result, only leading part  will
+       be overwritten; trailing part will be left unchanged. So  if  on  input
+       XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+       XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+       you want function  to  resize  array  according  to  result  size,  use
+       function with same name and suffix 'I'.
+
+    SEE ALSO
+    * KDTreeQueryResultsX()             X-values
+    * KDTreeQueryResultsXY()            X- and Y-values
+    * KDTreeQueryResultsTags()          tag values
+
+      -- ALGLIB --
+         Copyright 28.02.2010 by Bochkanov Sergey
+    *************************************************************************/
+    public static void kdtreetsqueryresultsdistances(kdtree kdt, kdtreerequestbuffer buf, ref double[] r)
+    {
+    
+        nearestneighbor.kdtreetsqueryresultsdistances(kdt.innerobj, buf.innerobj, ref r);
+        return;
+    }
+    
     /*************************************************************************
     X-values from last query; 'interactive' variant for languages like  Python
     which   support    constructs   like  "X = KDTreeQueryResultsXI(KDT)"  and
@@ -736,7 +1091,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsxi(kdt.innerobj, ref x);
         return;
     }
-
+    
     /*************************************************************************
     XY-values from last query; 'interactive' variant for languages like Python
     which   support    constructs   like "XY = KDTreeQueryResultsXYI(KDT)" and
@@ -755,7 +1110,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsxyi(kdt.innerobj, ref xy);
         return;
     }
-
+    
     /*************************************************************************
     Tags  from  last  query;  'interactive' variant for languages like  Python
     which  support  constructs  like "Tags = KDTreeQueryResultsTagsI(KDT)" and
@@ -774,7 +1129,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultstagsi(kdt.innerobj, ref tags);
         return;
     }
-
+    
     /*************************************************************************
     Distances from last query; 'interactive' variant for languages like Python
     which  support  constructs   like  "R = KDTreeQueryResultsDistancesI(KDT)"
@@ -800,6 +1155,228 @@ public partial class alglib
 
 
     /*************************************************************************
+    Portable high quality random number generator state.
+    Initialized with HQRNDRandomize() or HQRNDSeed().
+
+    Fields:
+        S1, S2      -   seed values
+        V           -   precomputed value
+        MagicV      -   'magic' value used to determine whether State structure
+                        was correctly initialized.
+    *************************************************************************/
+    public class hqrndstate : alglibobject
+    {
+        //
+        // Public declarations
+        //
+    
+        public hqrndstate()
+        {
+            _innerobj = new hqrnd.hqrndstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new hqrndstate((hqrnd.hqrndstate)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private hqrnd.hqrndstate _innerobj;
+        public hqrnd.hqrndstate innerobj { get { return _innerobj; } }
+        public hqrndstate(hqrnd.hqrndstate obj)
+        {
+            _innerobj = obj;
+        }
+    }
+    
+    /*************************************************************************
+    HQRNDState  initialization  with  random  values  which come from standard
+    RNG.
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void hqrndrandomize(out hqrndstate state)
+    {
+        state = new hqrndstate();
+        hqrnd.hqrndrandomize(state.innerobj);
+        return;
+    }
+    
+    /*************************************************************************
+    HQRNDState initialization with seed values
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void hqrndseed(int s1, int s2, out hqrndstate state)
+    {
+        state = new hqrndstate();
+        hqrnd.hqrndseed(s1, s2, state.innerobj);
+        return;
+    }
+    
+    /*************************************************************************
+    This function generates random real number in (0,1),
+    not including interval boundaries
+
+    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrnduniformr(hqrndstate state)
+    {
+    
+        double result = hqrnd.hqrnduniformr(state.innerobj);
+        return result;
+    }
+    
+    /*************************************************************************
+    This function generates random integer number in [0, N)
+
+    1. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()
+    2. N can be any positive number except for very large numbers:
+       * close to 2^31 on 32-bit systems
+       * close to 2^62 on 64-bit systems
+       An exception will be generated if N is too large.
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static int hqrnduniformi(hqrndstate state, int n)
+    {
+    
+        int result = hqrnd.hqrnduniformi(state.innerobj, n);
+        return result;
+    }
+    
+    /*************************************************************************
+    Random number generator: normal numbers
+
+    This function generates one random number from normal distribution.
+    Its performance is equal to that of HQRNDNormal2()
+
+    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrndnormal(hqrndstate state)
+    {
+    
+        double result = hqrnd.hqrndnormal(state.innerobj);
+        return result;
+    }
+    
+    /*************************************************************************
+    Random number generator: random X and Y such that X^2+Y^2=1
+
+    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void hqrndunit2(hqrndstate state, out double x, out double y)
+    {
+        x = 0;
+        y = 0;
+        hqrnd.hqrndunit2(state.innerobj, ref x, ref y);
+        return;
+    }
+    
+    /*************************************************************************
+    Random number generator: normal numbers
+
+    This function generates two independent random numbers from normal
+    distribution. Its performance is equal to that of HQRNDNormal()
+
+    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
+
+      -- ALGLIB --
+         Copyright 02.12.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void hqrndnormal2(hqrndstate state, out double x1, out double x2)
+    {
+        x1 = 0;
+        x2 = 0;
+        hqrnd.hqrndnormal2(state.innerobj, ref x1, ref x2);
+        return;
+    }
+    
+    /*************************************************************************
+    Random number generator: exponential distribution
+
+    State structure must be initialized with HQRNDRandomize() or HQRNDSeed().
+
+      -- ALGLIB --
+         Copyright 11.08.2007 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrndexponential(hqrndstate state, double lambdav)
+    {
+    
+        double result = hqrnd.hqrndexponential(state.innerobj, lambdav);
+        return result;
+    }
+    
+    /*************************************************************************
+    This function generates  random number from discrete distribution given by
+    finite sample X.
+
+    INPUT PARAMETERS
+        State   -   high quality random number generator, must be
+                    initialized with HQRNDRandomize() or HQRNDSeed().
+            X   -   finite sample
+            N   -   number of elements to use, N>=1
+
+    RESULT
+        this function returns one of the X[i] for random i=0..N-1
+
+      -- ALGLIB --
+         Copyright 08.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrnddiscrete(hqrndstate state, double[] x, int n)
+    {
+    
+        double result = hqrnd.hqrnddiscrete(state.innerobj, x, n);
+        return result;
+    }
+    
+    /*************************************************************************
+    This function generates random number from continuous  distribution  given
+    by finite sample X.
+
+    INPUT PARAMETERS
+        State   -   high quality random number generator, must be
+                    initialized with HQRNDRandomize() or HQRNDSeed().
+            X   -   finite sample, array[N] (can be larger, in this  case only
+                    leading N elements are used). THIS ARRAY MUST BE SORTED BY
+                    ASCENDING.
+            N   -   number of elements to use, N>=1
+
+    RESULT
+        this function returns random number from continuous distribution which
+        tries to approximate X as mush as possible. min(X)<=Result<=max(X).
+
+      -- ALGLIB --
+         Copyright 08.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static double hqrndcontinuous(hqrndstate state, double[] x, int n)
+    {
+    
+        double result = hqrnd.hqrndcontinuous(state.innerobj, x, n);
+        return result;
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
 
     *************************************************************************/
     public class xdebugrecord1 : alglibobject
@@ -810,7 +1387,7 @@ public partial class alglib
         public int i { get { return _innerobj.i; } set { _innerobj.i = value; } }
         public complex c { get { return _innerobj.c; } set { _innerobj.c = value; } }
         public double[] a { get { return _innerobj.a; } set { _innerobj.a = value; } }
-
+    
         public xdebugrecord1()
         {
             _innerobj = new xdebug.xdebugrecord1();
@@ -820,7 +1397,7 @@ public partial class alglib
         {
             return new xdebugrecord1((xdebug.xdebugrecord1)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -832,7 +1409,7 @@ public partial class alglib
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -850,7 +1427,7 @@ public partial class alglib
         xdebug.xdebuginitrecord1(rec1.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -862,11 +1439,11 @@ public partial class alglib
     *************************************************************************/
     public static int xdebugb1count(bool[] a)
     {
-
+    
         int result = xdebug.xdebugb1count(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -879,11 +1456,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugb1not(ref bool[] a)
     {
-
+    
         xdebug.xdebugb1not(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -896,11 +1473,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugb1appendcopy(ref bool[] a)
     {
-
+    
         xdebug.xdebugb1appendcopy(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -917,7 +1494,7 @@ public partial class alglib
         xdebug.xdebugb1outeven(n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -929,11 +1506,11 @@ public partial class alglib
     *************************************************************************/
     public static int xdebugi1sum(int[] a)
     {
-
+    
         int result = xdebug.xdebugi1sum(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -946,11 +1523,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugi1neg(ref int[] a)
     {
-
+    
         xdebug.xdebugi1neg(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -963,11 +1540,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugi1appendcopy(ref int[] a)
     {
-
+    
         xdebug.xdebugi1appendcopy(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -986,7 +1563,7 @@ public partial class alglib
         xdebug.xdebugi1outeven(n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -998,11 +1575,11 @@ public partial class alglib
     *************************************************************************/
     public static double xdebugr1sum(double[] a)
     {
-
+    
         double result = xdebug.xdebugr1sum(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1015,11 +1592,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugr1neg(ref double[] a)
     {
-
+    
         xdebug.xdebugr1neg(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1032,11 +1609,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugr1appendcopy(ref double[] a)
     {
-
+    
         xdebug.xdebugr1appendcopy(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1055,7 +1632,7 @@ public partial class alglib
         xdebug.xdebugr1outeven(n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1067,11 +1644,11 @@ public partial class alglib
     *************************************************************************/
     public static complex xdebugc1sum(complex[] a)
     {
-
+    
         complex result = xdebug.xdebugc1sum(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1084,11 +1661,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugc1neg(ref complex[] a)
     {
-
+    
         xdebug.xdebugc1neg(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1101,11 +1678,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugc1appendcopy(ref complex[] a)
     {
-
+    
         xdebug.xdebugc1appendcopy(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1124,7 +1701,7 @@ public partial class alglib
         xdebug.xdebugc1outeven(n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1136,11 +1713,11 @@ public partial class alglib
     *************************************************************************/
     public static int xdebugb2count(bool[,] a)
     {
-
+    
         int result = xdebug.xdebugb2count(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1153,11 +1730,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugb2not(ref bool[,] a)
     {
-
+    
         xdebug.xdebugb2not(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1170,11 +1747,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugb2transpose(ref bool[,] a)
     {
-
+    
         xdebug.xdebugb2transpose(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1191,7 +1768,7 @@ public partial class alglib
         xdebug.xdebugb2outsin(m, n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1203,11 +1780,11 @@ public partial class alglib
     *************************************************************************/
     public static int xdebugi2sum(int[,] a)
     {
-
+    
         int result = xdebug.xdebugi2sum(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1220,11 +1797,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugi2neg(ref int[,] a)
     {
-
+    
         xdebug.xdebugi2neg(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1237,11 +1814,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugi2transpose(ref int[,] a)
     {
-
+    
         xdebug.xdebugi2transpose(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1258,7 +1835,7 @@ public partial class alglib
         xdebug.xdebugi2outsin(m, n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1270,11 +1847,11 @@ public partial class alglib
     *************************************************************************/
     public static double xdebugr2sum(double[,] a)
     {
-
+    
         double result = xdebug.xdebugr2sum(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1287,11 +1864,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugr2neg(ref double[,] a)
     {
-
+    
         xdebug.xdebugr2neg(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1304,11 +1881,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugr2transpose(ref double[,] a)
     {
-
+    
         xdebug.xdebugr2transpose(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1325,7 +1902,7 @@ public partial class alglib
         xdebug.xdebugr2outsin(m, n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1337,11 +1914,11 @@ public partial class alglib
     *************************************************************************/
     public static complex xdebugc2sum(complex[,] a)
     {
-
+    
         complex result = xdebug.xdebugc2sum(a);
         return result;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1354,11 +1931,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugc2neg(ref complex[,] a)
     {
-
+    
         xdebug.xdebugc2neg(a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1371,11 +1948,11 @@ public partial class alglib
     *************************************************************************/
     public static void xdebugc2transpose(ref complex[,] a)
     {
-
+    
         xdebug.xdebugc2transpose(ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1392,7 +1969,7 @@ public partial class alglib
         xdebug.xdebugc2outsincos(m, n, ref a);
         return;
     }
-
+    
     /*************************************************************************
     This is debug function intended for testing ALGLIB interface generator.
     Never use it in any real life project.
@@ -1404,7 +1981,7 @@ public partial class alglib
     *************************************************************************/
     public static double xdebugmaskedbiasedproductsum(int m, int n, double[,] a, double[,] b, bool[,] c)
     {
-
+    
         double result = xdebug.xdebugmaskedbiasedproductsum(m, n, a, b, c);
         return result;
     }
@@ -1412,6 +1989,2611 @@ public partial class alglib
 }
 public partial class alglib
 {
+    public class nearestneighbor
+    {
+        /*************************************************************************
+        Buffer object which is used to perform nearest neighbor  requests  in  the
+        multithreaded mode (multiple threads working with same KD-tree object).
+
+        This object should be created with KDTreeCreateBuffer().
+        *************************************************************************/
+        public class kdtreerequestbuffer : apobject
+        {
+            public double[] x;
+            public double[] boxmin;
+            public double[] boxmax;
+            public int kneeded;
+            public double rneeded;
+            public bool selfmatch;
+            public double approxf;
+            public int kcur;
+            public int[] idx;
+            public double[] r;
+            public double[] buf;
+            public double[] curboxmin;
+            public double[] curboxmax;
+            public double curdist;
+            public kdtreerequestbuffer()
+            {
+                init();
+            }
+            public override void init()
+            {
+                x = new double[0];
+                boxmin = new double[0];
+                boxmax = new double[0];
+                idx = new int[0];
+                r = new double[0];
+                buf = new double[0];
+                curboxmin = new double[0];
+                curboxmax = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                kdtreerequestbuffer _result = new kdtreerequestbuffer();
+                _result.x = (double[])x.Clone();
+                _result.boxmin = (double[])boxmin.Clone();
+                _result.boxmax = (double[])boxmax.Clone();
+                _result.kneeded = kneeded;
+                _result.rneeded = rneeded;
+                _result.selfmatch = selfmatch;
+                _result.approxf = approxf;
+                _result.kcur = kcur;
+                _result.idx = (int[])idx.Clone();
+                _result.r = (double[])r.Clone();
+                _result.buf = (double[])buf.Clone();
+                _result.curboxmin = (double[])curboxmin.Clone();
+                _result.curboxmax = (double[])curboxmax.Clone();
+                _result.curdist = curdist;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        KD-tree object.
+        *************************************************************************/
+        public class kdtree : apobject
+        {
+            public int n;
+            public int nx;
+            public int ny;
+            public int normtype;
+            public double[,] xy;
+            public int[] tags;
+            public double[] boxmin;
+            public double[] boxmax;
+            public int[] nodes;
+            public double[] splits;
+            public kdtreerequestbuffer innerbuf;
+            public int debugcounter;
+            public kdtree()
+            {
+                init();
+            }
+            public override void init()
+            {
+                xy = new double[0,0];
+                tags = new int[0];
+                boxmin = new double[0];
+                boxmax = new double[0];
+                nodes = new int[0];
+                splits = new double[0];
+                innerbuf = new kdtreerequestbuffer();
+            }
+            public override alglib.apobject make_copy()
+            {
+                kdtree _result = new kdtree();
+                _result.n = n;
+                _result.nx = nx;
+                _result.ny = ny;
+                _result.normtype = normtype;
+                _result.xy = (double[,])xy.Clone();
+                _result.tags = (int[])tags.Clone();
+                _result.boxmin = (double[])boxmin.Clone();
+                _result.boxmax = (double[])boxmax.Clone();
+                _result.nodes = (int[])nodes.Clone();
+                _result.splits = (double[])splits.Clone();
+                _result.innerbuf = (kdtreerequestbuffer)innerbuf.make_copy();
+                _result.debugcounter = debugcounter;
+                return _result;
+            }
+        };
+
+
+
+
+        public const int splitnodesize = 6;
+        public const int kdtreefirstversion = 0;
+
+
+        /*************************************************************************
+        KD-tree creation
+
+        This subroutine creates KD-tree from set of X-values and optional Y-values
+
+        INPUT PARAMETERS
+            XY      -   dataset, array[0..N-1,0..NX+NY-1].
+                        one row corresponds to one point.
+                        first NX columns contain X-values, next NY (NY may be zero)
+                        columns may contain associated Y-values
+            N       -   number of points, N>=0.
+            NX      -   space dimension, NX>=1.
+            NY      -   number of optional Y-values, NY>=0.
+            NormType-   norm type:
+                        * 0 denotes infinity-norm
+                        * 1 denotes 1-norm
+                        * 2 denotes 2-norm (Euclidean norm)
+                        
+        OUTPUT PARAMETERS
+            KDT     -   KD-tree
+            
+            
+        NOTES
+
+        1. KD-tree  creation  have O(N*logN) complexity and O(N*(2*NX+NY))  memory
+           requirements.
+        2. Although KD-trees may be used with any combination of N  and  NX,  they
+           are more efficient than brute-force search only when N >> 4^NX. So they
+           are most useful in low-dimensional tasks (NX=2, NX=3). NX=1  is another
+           inefficient case, because  simple  binary  search  (without  additional
+           structures) is much more efficient in such tasks than KD-trees.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreebuild(double[,] xy,
+            int n,
+            int nx,
+            int ny,
+            int normtype,
+            kdtree kdt)
+        {
+            int[] tags = new int[0];
+            int i = 0;
+
+            alglib.ap.assert(n>=0, "KDTreeBuild: N<0");
+            alglib.ap.assert(nx>=1, "KDTreeBuild: NX<1");
+            alglib.ap.assert(ny>=0, "KDTreeBuild: NY<0");
+            alglib.ap.assert(normtype>=0 && normtype<=2, "KDTreeBuild: incorrect NormType");
+            alglib.ap.assert(alglib.ap.rows(xy)>=n, "KDTreeBuild: rows(X)<N");
+            alglib.ap.assert(alglib.ap.cols(xy)>=nx+ny || n==0, "KDTreeBuild: cols(X)<NX+NY");
+            alglib.ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuild: XY contains infinite or NaN values");
+            if( n>0 )
+            {
+                tags = new int[n];
+                for(i=0; i<=n-1; i++)
+                {
+                    tags[i] = 0;
+                }
+            }
+            kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt);
+        }
+
+
+        /*************************************************************************
+        KD-tree creation
+
+        This  subroutine  creates  KD-tree  from set of X-values, integer tags and
+        optional Y-values
+
+        INPUT PARAMETERS
+            XY      -   dataset, array[0..N-1,0..NX+NY-1].
+                        one row corresponds to one point.
+                        first NX columns contain X-values, next NY (NY may be zero)
+                        columns may contain associated Y-values
+            Tags    -   tags, array[0..N-1], contains integer tags associated
+                        with points.
+            N       -   number of points, N>=0
+            NX      -   space dimension, NX>=1.
+            NY      -   number of optional Y-values, NY>=0.
+            NormType-   norm type:
+                        * 0 denotes infinity-norm
+                        * 1 denotes 1-norm
+                        * 2 denotes 2-norm (Euclidean norm)
+
+        OUTPUT PARAMETERS
+            KDT     -   KD-tree
+
+        NOTES
+
+        1. KD-tree  creation  have O(N*logN) complexity and O(N*(2*NX+NY))  memory
+           requirements.
+        2. Although KD-trees may be used with any combination of N  and  NX,  they
+           are more efficient than brute-force search only when N >> 4^NX. So they
+           are most useful in low-dimensional tasks (NX=2, NX=3). NX=1  is another
+           inefficient case, because  simple  binary  search  (without  additional
+           structures) is much more efficient in such tasks than KD-trees.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreebuildtagged(double[,] xy,
+            int[] tags,
+            int n,
+            int nx,
+            int ny,
+            int normtype,
+            kdtree kdt)
+        {
+            int i = 0;
+            int j = 0;
+            int maxnodes = 0;
+            int nodesoffs = 0;
+            int splitsoffs = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(n>=0, "KDTreeBuildTagged: N<0");
+            alglib.ap.assert(nx>=1, "KDTreeBuildTagged: NX<1");
+            alglib.ap.assert(ny>=0, "KDTreeBuildTagged: NY<0");
+            alglib.ap.assert(normtype>=0 && normtype<=2, "KDTreeBuildTagged: incorrect NormType");
+            alglib.ap.assert(alglib.ap.rows(xy)>=n, "KDTreeBuildTagged: rows(X)<N");
+            alglib.ap.assert(alglib.ap.cols(xy)>=nx+ny || n==0, "KDTreeBuildTagged: cols(X)<NX+NY");
+            alglib.ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuildTagged: XY contains infinite or NaN values");
+            
+            //
+            // initialize
+            //
+            kdt.n = n;
+            kdt.nx = nx;
+            kdt.ny = ny;
+            kdt.normtype = normtype;
+            kdt.innerbuf.kcur = 0;
+            
+            //
+            // N=0 => quick exit
+            //
+            if( n==0 )
+            {
+                return;
+            }
+            
+            //
+            // Allocate
+            //
+            kdtreeallocdatasetindependent(kdt, nx, ny);
+            kdtreeallocdatasetdependent(kdt, n, nx, ny);
+            kdtreecreaterequestbuffer(kdt, kdt.innerbuf);
+            
+            //
+            // Initial fill
+            //
+            for(i=0; i<=n-1; i++)
+            {
+                for(i_=0; i_<=nx-1;i_++)
+                {
+                    kdt.xy[i,i_] = xy[i,i_];
+                }
+                i1_ = (0) - (nx);
+                for(i_=nx; i_<=2*nx+ny-1;i_++)
+                {
+                    kdt.xy[i,i_] = xy[i,i_+i1_];
+                }
+                kdt.tags[i] = tags[i];
+            }
+            
+            //
+            // Determine bounding box
+            //
+            for(i_=0; i_<=nx-1;i_++)
+            {
+                kdt.boxmin[i_] = kdt.xy[0,i_];
+            }
+            for(i_=0; i_<=nx-1;i_++)
+            {
+                kdt.boxmax[i_] = kdt.xy[0,i_];
+            }
+            for(i=1; i<=n-1; i++)
+            {
+                for(j=0; j<=nx-1; j++)
+                {
+                    kdt.boxmin[j] = Math.Min(kdt.boxmin[j], kdt.xy[i,j]);
+                    kdt.boxmax[j] = Math.Max(kdt.boxmax[j], kdt.xy[i,j]);
+                }
+            }
+            
+            //
+            // prepare tree structure
+            // * MaxNodes=N because we guarantee no trivial splits, i.e.
+            //   every split will generate two non-empty boxes
+            //
+            maxnodes = n;
+            kdt.nodes = new int[splitnodesize*2*maxnodes];
+            kdt.splits = new double[2*maxnodes];
+            nodesoffs = 0;
+            splitsoffs = 0;
+            for(i_=0; i_<=nx-1;i_++)
+            {
+                kdt.innerbuf.curboxmin[i_] = kdt.boxmin[i_];
+            }
+            for(i_=0; i_<=nx-1;i_++)
+            {
+                kdt.innerbuf.curboxmax[i_] = kdt.boxmax[i_];
+            }
+            kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, 0, n, 8);
+        }
+
+
+        /*************************************************************************
+        This function creates buffer  structure  which  can  be  used  to  perform
+        parallel KD-tree requests.
+
+        KD-tree subpackage provides two sets of request functions - ones which use
+        internal buffer of KD-tree object  (these  functions  are  single-threaded
+        because they use same buffer, which can not shared between  threads),  and
+        ones which use external buffer.
+
+        This function is used to initialize external buffer.
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree which is associated with newly created buffer
+
+        OUTPUT PARAMETERS
+            Buf         -   external buffer.
+            
+            
+        IMPORTANT: KD-tree buffer should be used only with  KD-tree  object  which
+                   was used to initialize buffer. Any attempt to use biffer   with
+                   different object is dangerous - you  may  get  integrity  check
+                   failure (exception) because sizes of internal arrays do not fit
+                   to dimensions of KD-tree structure.
+
+          -- ALGLIB --
+             Copyright 18.03.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreecreaterequestbuffer(kdtree kdt,
+            kdtreerequestbuffer buf)
+        {
+            buf.x = new double[kdt.nx];
+            buf.boxmin = new double[kdt.nx];
+            buf.boxmax = new double[kdt.nx];
+            buf.idx = new int[kdt.n];
+            buf.r = new double[kdt.n];
+            buf.buf = new double[Math.Max(kdt.n, kdt.nx)];
+            buf.curboxmin = new double[kdt.nx];
+            buf.curboxmax = new double[kdt.nx];
+            buf.kcur = 0;
+        }
+
+
+        /*************************************************************************
+        K-NN query: K nearest neighbors
+
+        IMPORTANT: this function can not be used in multithreaded code because  it
+                   uses internal temporary buffer of kd-tree object, which can not
+                   be shared between multiple threads.  If  you  want  to  perform
+                   parallel requests, use function  which  uses  external  request
+                   buffer: KDTreeTsQueryKNN() ("Ts" stands for "thread-safe").
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            X           -   point, array[0..NX-1].
+            K           -   number of neighbors to return, K>=1
+            SelfMatch   -   whether self-matches are allowed:
+                            * if True, nearest neighbor may be the point itself
+                              (if it exists in original dataset)
+                            * if False, then only points with non-zero distance
+                              are returned
+                            * if not given, considered True
+
+        RESULT
+            number of actual neighbors found (either K or N, if K>N).
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures of the KD-tree. You can use  following  subroutines  to  obtain
+        these results:
+        * KDTreeQueryResultsX() to get X-values
+        * KDTreeQueryResultsXY() to get X- and Y-values
+        * KDTreeQueryResultsTags() to get tag values
+        * KDTreeQueryResultsDistances() to get distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreequeryknn(kdtree kdt,
+            double[] x,
+            int k,
+            bool selfmatch)
+        {
+            int result = 0;
+
+            alglib.ap.assert(k>=1, "KDTreeQueryKNN: K<1!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryKNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryKNN: X contains infinite or NaN values!");
+            result = kdtreetsqueryaknn(kdt, kdt.innerbuf, x, k, selfmatch, 0.0);
+            return result;
+        }
+
+
+        /*************************************************************************
+        K-NN query: K nearest neighbors, using external thread-local buffer.
+
+        You can call this function from multiple threads for same kd-tree instance,
+        assuming that different instances of buffer object are passed to different
+        threads.
+
+        INPUT PARAMETERS
+            KDT         -   kd-tree
+            Buf         -   request buffer  object  created  for  this  particular
+                            instance of kd-tree structure with kdtreecreaterequestbuffer()
+                            function.
+            X           -   point, array[0..NX-1].
+            K           -   number of neighbors to return, K>=1
+            SelfMatch   -   whether self-matches are allowed:
+                            * if True, nearest neighbor may be the point itself
+                              (if it exists in original dataset)
+                            * if False, then only points with non-zero distance
+                              are returned
+                            * if not given, considered True
+
+        RESULT
+            number of actual neighbors found (either K or N, if K>N).
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures  of  the  buffer object. You can use following  subroutines  to
+        obtain these results (pay attention to "buf" in their names):
+        * KDTreeTsQueryResultsX() to get X-values
+        * KDTreeTsQueryResultsXY() to get X- and Y-values
+        * KDTreeTsQueryResultsTags() to get tag values
+        * KDTreeTsQueryResultsDistances() to get distances
+            
+        IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+                   was used to initialize buffer. Any attempt to use biffer   with
+                   different object is dangerous - you  may  get  integrity  check
+                   failure (exception) because sizes of internal arrays do not fit
+                   to dimensions of KD-tree structure.
+
+          -- ALGLIB --
+             Copyright 18.03.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreetsqueryknn(kdtree kdt,
+            kdtreerequestbuffer buf,
+            double[] x,
+            int k,
+            bool selfmatch)
+        {
+            int result = 0;
+
+            alglib.ap.assert(k>=1, "KDTreeTsQueryKNN: K<1!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeTsQueryKNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeTsQueryKNN: X contains infinite or NaN values!");
+            result = kdtreetsqueryaknn(kdt, buf, x, k, selfmatch, 0.0);
+            return result;
+        }
+
+
+        /*************************************************************************
+        R-NN query: all points within R-sphere centered at X
+
+        IMPORTANT: this function can not be used in multithreaded code because  it
+                   uses internal temporary buffer of kd-tree object, which can not
+                   be shared between multiple threads.  If  you  want  to  perform
+                   parallel requests, use function  which  uses  external  request
+                   buffer: KDTreeTsQueryRNN() ("Ts" stands for "thread-safe").
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            X           -   point, array[0..NX-1].
+            R           -   radius of sphere (in corresponding norm), R>0
+            SelfMatch   -   whether self-matches are allowed:
+                            * if True, nearest neighbor may be the point itself
+                              (if it exists in original dataset)
+                            * if False, then only points with non-zero distance
+                              are returned
+                            * if not given, considered True
+
+        RESULT
+            number of neighbors found, >=0
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures of the KD-tree. You can use  following  subroutines  to  obtain
+        actual results:
+        * KDTreeQueryResultsX() to get X-values
+        * KDTreeQueryResultsXY() to get X- and Y-values
+        * KDTreeQueryResultsTags() to get tag values
+        * KDTreeQueryResultsDistances() to get distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreequeryrnn(kdtree kdt,
+            double[] x,
+            double r,
+            bool selfmatch)
+        {
+            int result = 0;
+
+            alglib.ap.assert((double)(r)>(double)(0), "KDTreeQueryRNN: incorrect R!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryRNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryRNN: X contains infinite or NaN values!");
+            result = kdtreetsqueryrnn(kdt, kdt.innerbuf, x, r, selfmatch);
+            return result;
+        }
+
+
+        /*************************************************************************
+        R-NN query: all points within  R-sphere  centered  at  X,  using  external
+        thread-local buffer.
+
+        You can call this function from multiple threads for same kd-tree instance,
+        assuming that different instances of buffer object are passed to different
+        threads.
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            Buf         -   request buffer  object  created  for  this  particular
+                            instance of kd-tree structure with kdtreecreaterequestbuffer()
+                            function.
+            X           -   point, array[0..NX-1].
+            R           -   radius of sphere (in corresponding norm), R>0
+            SelfMatch   -   whether self-matches are allowed:
+                            * if True, nearest neighbor may be the point itself
+                              (if it exists in original dataset)
+                            * if False, then only points with non-zero distance
+                              are returned
+                            * if not given, considered True
+
+        RESULT
+            number of neighbors found, >=0
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures  of  the  buffer object. You can use following  subroutines  to
+        obtain these results (pay attention to "buf" in their names):
+        * KDTreeTsQueryResultsX() to get X-values
+        * KDTreeTsQueryResultsXY() to get X- and Y-values
+        * KDTreeTsQueryResultsTags() to get tag values
+        * KDTreeTsQueryResultsDistances() to get distances
+            
+        IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+                   was used to initialize buffer. Any attempt to use biffer   with
+                   different object is dangerous - you  may  get  integrity  check
+                   failure (exception) because sizes of internal arrays do not fit
+                   to dimensions of KD-tree structure.
+
+          -- ALGLIB --
+             Copyright 18.03.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreetsqueryrnn(kdtree kdt,
+            kdtreerequestbuffer buf,
+            double[] x,
+            double r,
+            bool selfmatch)
+        {
+            int result = 0;
+            int i = 0;
+            int j = 0;
+
+            alglib.ap.assert((double)(r)>(double)(0), "KDTreeTsQueryRNN: incorrect R!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeTsQueryRNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeTsQueryRNN: X contains infinite or NaN values!");
+            
+            //
+            // Handle special case: KDT.N=0
+            //
+            if( kdt.n==0 )
+            {
+                buf.kcur = 0;
+                result = 0;
+                return result;
+            }
+            
+            //
+            // Check consistency of request buffer
+            //
+            checkrequestbufferconsistency(kdt, buf);
+            
+            //
+            // Prepare parameters
+            //
+            buf.kneeded = 0;
+            if( kdt.normtype!=2 )
+            {
+                buf.rneeded = r;
+            }
+            else
+            {
+                buf.rneeded = math.sqr(r);
+            }
+            buf.selfmatch = selfmatch;
+            buf.approxf = 1;
+            buf.kcur = 0;
+            
+            //
+            // calculate distance from point to current bounding box
+            //
+            kdtreeinitbox(kdt, x, buf);
+            
+            //
+            // call recursive search
+            // results are returned as heap
+            //
+            kdtreequerynnrec(kdt, buf, 0);
+            
+            //
+            // pop from heap to generate ordered representation
+            //
+            // last element is not pop'ed because it is already in
+            // its place
+            //
+            result = buf.kcur;
+            j = buf.kcur;
+            for(i=buf.kcur; i>=2; i--)
+            {
+                tsort.tagheappopi(ref buf.r, ref buf.idx, ref j);
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        K-NN query: approximate K nearest neighbors
+
+        IMPORTANT: this function can not be used in multithreaded code because  it
+                   uses internal temporary buffer of kd-tree object, which can not
+                   be shared between multiple threads.  If  you  want  to  perform
+                   parallel requests, use function  which  uses  external  request
+                   buffer: KDTreeTsQueryAKNN() ("Ts" stands for "thread-safe").
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            X           -   point, array[0..NX-1].
+            K           -   number of neighbors to return, K>=1
+            SelfMatch   -   whether self-matches are allowed:
+                            * if True, nearest neighbor may be the point itself
+                              (if it exists in original dataset)
+                            * if False, then only points with non-zero distance
+                              are returned
+                            * if not given, considered True
+            Eps         -   approximation factor, Eps>=0. eps-approximate  nearest
+                            neighbor  is  a  neighbor  whose distance from X is at
+                            most (1+eps) times distance of true nearest neighbor.
+
+        RESULT
+            number of actual neighbors found (either K or N, if K>N).
+            
+        NOTES
+            significant performance gain may be achieved only when Eps  is  is  on
+            the order of magnitude of 1 or larger.
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures of the KD-tree. You can use  following  subroutines  to  obtain
+        these results:
+        * KDTreeQueryResultsX() to get X-values
+        * KDTreeQueryResultsXY() to get X- and Y-values
+        * KDTreeQueryResultsTags() to get tag values
+        * KDTreeQueryResultsDistances() to get distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreequeryaknn(kdtree kdt,
+            double[] x,
+            int k,
+            bool selfmatch,
+            double eps)
+        {
+            int result = 0;
+
+            result = kdtreetsqueryaknn(kdt, kdt.innerbuf, x, k, selfmatch, eps);
+            return result;
+        }
+
+
+        /*************************************************************************
+        K-NN query: approximate K nearest neighbors, using thread-local buffer.
+
+        You can call this function from multiple threads for same kd-tree instance,
+        assuming that different instances of buffer object are passed to different
+        threads.
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            Buf         -   request buffer  object  created  for  this  particular
+                            instance of kd-tree structure with kdtreecreaterequestbuffer()
+                            function.
+            X           -   point, array[0..NX-1].
+            K           -   number of neighbors to return, K>=1
+            SelfMatch   -   whether self-matches are allowed:
+                            * if True, nearest neighbor may be the point itself
+                              (if it exists in original dataset)
+                            * if False, then only points with non-zero distance
+                              are returned
+                            * if not given, considered True
+            Eps         -   approximation factor, Eps>=0. eps-approximate  nearest
+                            neighbor  is  a  neighbor  whose distance from X is at
+                            most (1+eps) times distance of true nearest neighbor.
+
+        RESULT
+            number of actual neighbors found (either K or N, if K>N).
+            
+        NOTES
+            significant performance gain may be achieved only when Eps  is  is  on
+            the order of magnitude of 1 or larger.
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures  of  the  buffer object. You can use following  subroutines  to
+        obtain these results (pay attention to "buf" in their names):
+        * KDTreeTsQueryResultsX() to get X-values
+        * KDTreeTsQueryResultsXY() to get X- and Y-values
+        * KDTreeTsQueryResultsTags() to get tag values
+        * KDTreeTsQueryResultsDistances() to get distances
+            
+        IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+                   was used to initialize buffer. Any attempt to use biffer   with
+                   different object is dangerous - you  may  get  integrity  check
+                   failure (exception) because sizes of internal arrays do not fit
+                   to dimensions of KD-tree structure.
+
+          -- ALGLIB --
+             Copyright 18.03.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreetsqueryaknn(kdtree kdt,
+            kdtreerequestbuffer buf,
+            double[] x,
+            int k,
+            bool selfmatch,
+            double eps)
+        {
+            int result = 0;
+            int i = 0;
+            int j = 0;
+
+            alglib.ap.assert(k>0, "KDTreeTsQueryAKNN: incorrect K!");
+            alglib.ap.assert((double)(eps)>=(double)(0), "KDTreeTsQueryAKNN: incorrect Eps!");
+            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeTsQueryAKNN: Length(X)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeTsQueryAKNN: X contains infinite or NaN values!");
+            
+            //
+            // Handle special case: KDT.N=0
+            //
+            if( kdt.n==0 )
+            {
+                buf.kcur = 0;
+                result = 0;
+                return result;
+            }
+            
+            //
+            // Check consistency of request buffer
+            //
+            checkrequestbufferconsistency(kdt, buf);
+            
+            //
+            // Prepare parameters
+            //
+            k = Math.Min(k, kdt.n);
+            buf.kneeded = k;
+            buf.rneeded = 0;
+            buf.selfmatch = selfmatch;
+            if( kdt.normtype==2 )
+            {
+                buf.approxf = 1/math.sqr(1+eps);
+            }
+            else
+            {
+                buf.approxf = 1/(1+eps);
+            }
+            buf.kcur = 0;
+            
+            //
+            // calculate distance from point to current bounding box
+            //
+            kdtreeinitbox(kdt, x, buf);
+            
+            //
+            // call recursive search
+            // results are returned as heap
+            //
+            kdtreequerynnrec(kdt, buf, 0);
+            
+            //
+            // pop from heap to generate ordered representation
+            //
+            // last element is non pop'ed because it is already in
+            // its place
+            //
+            result = buf.kcur;
+            j = buf.kcur;
+            for(i=buf.kcur; i>=2; i--)
+            {
+                tsort.tagheappopi(ref buf.r, ref buf.idx, ref j);
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Box query: all points within user-specified box.
+
+        IMPORTANT: this function can not be used in multithreaded code because  it
+                   uses internal temporary buffer of kd-tree object, which can not
+                   be shared between multiple threads.  If  you  want  to  perform
+                   parallel requests, use function  which  uses  external  request
+                   buffer: KDTreeTsQueryBox() ("Ts" stands for "thread-safe").
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            BoxMin      -   lower bounds, array[0..NX-1].
+            BoxMax      -   upper bounds, array[0..NX-1].
+
+
+        RESULT
+            number of actual neighbors found (in [0,N]).
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures of the KD-tree. You can use  following  subroutines  to  obtain
+        these results:
+        * KDTreeQueryResultsX() to get X-values
+        * KDTreeQueryResultsXY() to get X- and Y-values
+        * KDTreeQueryResultsTags() to get tag values
+        * KDTreeQueryResultsDistances() returns zeros for this request
+            
+        NOTE: this particular query returns unordered results, because there is no
+              meaningful way of  ordering  points.  Furthermore,  no 'distance' is
+              associated with points - it is either INSIDE  or OUTSIDE (so request
+              for distances will return zeros).
+
+          -- ALGLIB --
+             Copyright 14.05.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreequerybox(kdtree kdt,
+            double[] boxmin,
+            double[] boxmax)
+        {
+            int result = 0;
+
+            result = kdtreetsquerybox(kdt, kdt.innerbuf, boxmin, boxmax);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Box query: all points within user-specified box, using thread-local buffer.
+
+        You can call this function from multiple threads for same kd-tree instance,
+        assuming that different instances of buffer object are passed to different
+        threads.
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            Buf         -   request buffer  object  created  for  this  particular
+                            instance of kd-tree structure with kdtreecreaterequestbuffer()
+                            function.
+            BoxMin      -   lower bounds, array[0..NX-1].
+            BoxMax      -   upper bounds, array[0..NX-1].
+
+        RESULT
+            number of actual neighbors found (in [0,N]).
+
+        This  subroutine  performs  query  and  stores  its result in the internal
+        structures  of  the  buffer object. You can use following  subroutines  to
+        obtain these results (pay attention to "ts" in their names):
+        * KDTreeTsQueryResultsX() to get X-values
+        * KDTreeTsQueryResultsXY() to get X- and Y-values
+        * KDTreeTsQueryResultsTags() to get tag values
+        * KDTreeTsQueryResultsDistances() returns zeros for this query
+            
+        NOTE: this particular query returns unordered results, because there is no
+              meaningful way of  ordering  points.  Furthermore,  no 'distance' is
+              associated with points - it is either INSIDE  or OUTSIDE (so request
+              for distances will return zeros).
+            
+        IMPORTANT: kd-tree buffer should be used only with  KD-tree  object  which
+                   was used to initialize buffer. Any attempt to use biffer   with
+                   different object is dangerous - you  may  get  integrity  check
+                   failure (exception) because sizes of internal arrays do not fit
+                   to dimensions of KD-tree structure.
+
+          -- ALGLIB --
+             Copyright 14.05.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static int kdtreetsquerybox(kdtree kdt,
+            kdtreerequestbuffer buf,
+            double[] boxmin,
+            double[] boxmax)
+        {
+            int result = 0;
+            int j = 0;
+
+            alglib.ap.assert(alglib.ap.len(boxmin)>=kdt.nx, "KDTreeTsQueryBox: Length(BoxMin)<NX!");
+            alglib.ap.assert(alglib.ap.len(boxmax)>=kdt.nx, "KDTreeTsQueryBox: Length(BoxMax)<NX!");
+            alglib.ap.assert(apserv.isfinitevector(boxmin, kdt.nx), "KDTreeTsQueryBox: BoxMin contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(boxmax, kdt.nx), "KDTreeTsQueryBox: BoxMax contains infinite or NaN values!");
+            
+            //
+            // Check consistency of request buffer
+            //
+            checkrequestbufferconsistency(kdt, buf);
+            
+            //
+            // Quick exit for degenerate boxes
+            //
+            for(j=0; j<=kdt.nx-1; j++)
+            {
+                if( (double)(boxmin[j])>(double)(boxmax[j]) )
+                {
+                    buf.kcur = 0;
+                    result = 0;
+                    return result;
+                }
+            }
+            
+            //
+            // Prepare parameters
+            //
+            for(j=0; j<=kdt.nx-1; j++)
+            {
+                buf.boxmin[j] = boxmin[j];
+                buf.boxmax[j] = boxmax[j];
+                buf.curboxmin[j] = boxmin[j];
+                buf.curboxmax[j] = boxmax[j];
+            }
+            buf.kcur = 0;
+            
+            //
+            // call recursive search
+            //
+            kdtreequeryboxrec(kdt, buf, 0);
+            result = buf.kcur;
+            return result;
+        }
+
+
+        /*************************************************************************
+        X-values from last query.
+
+        This function retuns results stored in  the  internal  buffer  of  kd-tree
+        object. If you performed buffered requests (ones which  use  instances  of
+        kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+        function - kdtreetsqueryresultsx().
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            X       -   possibly pre-allocated buffer. If X is too small to store
+                        result, it is resized. If size(X) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            X       -   rows are filled with X-values
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsXY()            X- and Y-values
+        * KDTreeQueryResultsTags()          tag values
+        * KDTreeQueryResultsDistances()     distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultsx(kdtree kdt,
+            ref double[,] x)
+        {
+            kdtreetsqueryresultsx(kdt, kdt.innerbuf, ref x);
+        }
+
+
+        /*************************************************************************
+        X- and Y-values from last query
+
+        This function retuns results stored in  the  internal  buffer  of  kd-tree
+        object. If you performed buffered requests (ones which  use  instances  of
+        kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+        function - kdtreetsqueryresultsxy().
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            XY      -   possibly pre-allocated buffer. If XY is too small to store
+                        result, it is resized. If size(XY) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            XY      -   rows are filled with points: first NX columns with
+                        X-values, next NY columns - with Y-values.
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsX()             X-values
+        * KDTreeQueryResultsTags()          tag values
+        * KDTreeQueryResultsDistances()     distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultsxy(kdtree kdt,
+            ref double[,] xy)
+        {
+            kdtreetsqueryresultsxy(kdt, kdt.innerbuf, ref xy);
+        }
+
+
+        /*************************************************************************
+        Tags from last query
+
+        This function retuns results stored in  the  internal  buffer  of  kd-tree
+        object. If you performed buffered requests (ones which  use  instances  of
+        kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+        function - kdtreetsqueryresultstags().
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            Tags    -   possibly pre-allocated buffer. If X is too small to store
+                        result, it is resized. If size(X) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            Tags    -   filled with tags associated with points,
+                        or, when no tags were supplied, with zeros
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsX()             X-values
+        * KDTreeQueryResultsXY()            X- and Y-values
+        * KDTreeQueryResultsDistances()     distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultstags(kdtree kdt,
+            ref int[] tags)
+        {
+            kdtreetsqueryresultstags(kdt, kdt.innerbuf, ref tags);
+        }
+
+
+        /*************************************************************************
+        Distances from last query
+
+        This function retuns results stored in  the  internal  buffer  of  kd-tree
+        object. If you performed buffered requests (ones which  use  instances  of
+        kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+        function - kdtreetsqueryresultsdistances().
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            R       -   possibly pre-allocated buffer. If X is too small to store
+                        result, it is resized. If size(X) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            R       -   filled with distances (in corresponding norm)
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsX()             X-values
+        * KDTreeQueryResultsXY()            X- and Y-values
+        * KDTreeQueryResultsTags()          tag values
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultsdistances(kdtree kdt,
+            ref double[] r)
+        {
+            kdtreetsqueryresultsdistances(kdt, kdt.innerbuf, ref r);
+        }
+
+
+        /*************************************************************************
+        X-values from last query associated with kdtreerequestbuffer object.
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            Buf     -   request  buffer  object  created   for   this   particular
+                        instance of kd-tree structure.
+            X       -   possibly pre-allocated buffer. If X is too small to store
+                        result, it is resized. If size(X) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            X       -   rows are filled with X-values
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsXY()            X- and Y-values
+        * KDTreeQueryResultsTags()          tag values
+        * KDTreeQueryResultsDistances()     distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreetsqueryresultsx(kdtree kdt,
+            kdtreerequestbuffer buf,
+            ref double[,] x)
+        {
+            int i = 0;
+            int k = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( buf.kcur==0 )
+            {
+                return;
+            }
+            if( alglib.ap.rows(x)<buf.kcur || alglib.ap.cols(x)<kdt.nx )
+            {
+                x = new double[buf.kcur, kdt.nx];
+            }
+            k = buf.kcur;
+            for(i=0; i<=k-1; i++)
+            {
+                i1_ = (kdt.nx) - (0);
+                for(i_=0; i_<=kdt.nx-1;i_++)
+                {
+                    x[i,i_] = kdt.xy[buf.idx[i],i_+i1_];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        X- and Y-values from last query associated with kdtreerequestbuffer object.
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            Buf     -   request  buffer  object  created   for   this   particular
+                        instance of kd-tree structure.
+            XY      -   possibly pre-allocated buffer. If XY is too small to store
+                        result, it is resized. If size(XY) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            XY      -   rows are filled with points: first NX columns with
+                        X-values, next NY columns - with Y-values.
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsX()             X-values
+        * KDTreeQueryResultsTags()          tag values
+        * KDTreeQueryResultsDistances()     distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreetsqueryresultsxy(kdtree kdt,
+            kdtreerequestbuffer buf,
+            ref double[,] xy)
+        {
+            int i = 0;
+            int k = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            if( buf.kcur==0 )
+            {
+                return;
+            }
+            if( alglib.ap.rows(xy)<buf.kcur || alglib.ap.cols(xy)<kdt.nx+kdt.ny )
+            {
+                xy = new double[buf.kcur, kdt.nx+kdt.ny];
+            }
+            k = buf.kcur;
+            for(i=0; i<=k-1; i++)
+            {
+                i1_ = (kdt.nx) - (0);
+                for(i_=0; i_<=kdt.nx+kdt.ny-1;i_++)
+                {
+                    xy[i,i_] = kdt.xy[buf.idx[i],i_+i1_];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Tags from last query associated with kdtreerequestbuffer object.
+
+        This function retuns results stored in  the  internal  buffer  of  kd-tree
+        object. If you performed buffered requests (ones which  use  instances  of
+        kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+        function - KDTreeTsqueryresultstags().
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            Buf     -   request  buffer  object  created   for   this   particular
+                        instance of kd-tree structure.
+            Tags    -   possibly pre-allocated buffer. If X is too small to store
+                        result, it is resized. If size(X) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            Tags    -   filled with tags associated with points,
+                        or, when no tags were supplied, with zeros
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsX()             X-values
+        * KDTreeQueryResultsXY()            X- and Y-values
+        * KDTreeQueryResultsDistances()     distances
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreetsqueryresultstags(kdtree kdt,
+            kdtreerequestbuffer buf,
+            ref int[] tags)
+        {
+            int i = 0;
+            int k = 0;
+
+            if( buf.kcur==0 )
+            {
+                return;
+            }
+            if( alglib.ap.len(tags)<buf.kcur )
+            {
+                tags = new int[buf.kcur];
+            }
+            k = buf.kcur;
+            for(i=0; i<=k-1; i++)
+            {
+                tags[i] = kdt.tags[buf.idx[i]];
+            }
+        }
+
+
+        /*************************************************************************
+        Distances from last query associated with kdtreerequestbuffer object.
+
+        This function retuns results stored in  the  internal  buffer  of  kd-tree
+        object. If you performed buffered requests (ones which  use  instances  of
+        kdtreerequestbuffer class), you  should  call  buffered  version  of  this
+        function - KDTreeTsqueryresultsdistances().
+
+        INPUT PARAMETERS
+            KDT     -   KD-tree
+            Buf     -   request  buffer  object  created   for   this   particular
+                        instance of kd-tree structure.
+            R       -   possibly pre-allocated buffer. If X is too small to store
+                        result, it is resized. If size(X) is enough to store
+                        result, it is left unchanged.
+
+        OUTPUT PARAMETERS
+            R       -   filled with distances (in corresponding norm)
+
+        NOTES
+        1. points are ordered by distance from the query point (first = closest)
+        2. if  XY is larger than required to store result, only leading part  will
+           be overwritten; trailing part will be left unchanged. So  if  on  input
+           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
+           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
+           you want function  to  resize  array  according  to  result  size,  use
+           function with same name and suffix 'I'.
+
+        SEE ALSO
+        * KDTreeQueryResultsX()             X-values
+        * KDTreeQueryResultsXY()            X- and Y-values
+        * KDTreeQueryResultsTags()          tag values
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreetsqueryresultsdistances(kdtree kdt,
+            kdtreerequestbuffer buf,
+            ref double[] r)
+        {
+            int i = 0;
+            int k = 0;
+
+            if( buf.kcur==0 )
+            {
+                return;
+            }
+            if( alglib.ap.len(r)<buf.kcur )
+            {
+                r = new double[buf.kcur];
+            }
+            k = buf.kcur;
+            
+            //
+            // unload norms
+            //
+            // Abs() call is used to handle cases with negative norms
+            // (generated during KFN requests)
+            //
+            if( kdt.normtype==0 )
+            {
+                for(i=0; i<=k-1; i++)
+                {
+                    r[i] = Math.Abs(buf.r[i]);
+                }
+            }
+            if( kdt.normtype==1 )
+            {
+                for(i=0; i<=k-1; i++)
+                {
+                    r[i] = Math.Abs(buf.r[i]);
+                }
+            }
+            if( kdt.normtype==2 )
+            {
+                for(i=0; i<=k-1; i++)
+                {
+                    r[i] = Math.Sqrt(Math.Abs(buf.r[i]));
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        X-values from last query; 'interactive' variant for languages like  Python
+        which   support    constructs   like  "X = KDTreeQueryResultsXI(KDT)"  and
+        interactive mode of interpreter.
+
+        This function allocates new array on each call,  so  it  is  significantly
+        slower than its 'non-interactive' counterpart, but it is  more  convenient
+        when you call it from command line.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultsxi(kdtree kdt,
+            ref double[,] x)
+        {
+            x = new double[0,0];
+
+            kdtreequeryresultsx(kdt, ref x);
+        }
+
+
+        /*************************************************************************
+        XY-values from last query; 'interactive' variant for languages like Python
+        which   support    constructs   like "XY = KDTreeQueryResultsXYI(KDT)" and
+        interactive mode of interpreter.
+
+        This function allocates new array on each call,  so  it  is  significantly
+        slower than its 'non-interactive' counterpart, but it is  more  convenient
+        when you call it from command line.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultsxyi(kdtree kdt,
+            ref double[,] xy)
+        {
+            xy = new double[0,0];
+
+            kdtreequeryresultsxy(kdt, ref xy);
+        }
+
+
+        /*************************************************************************
+        Tags  from  last  query;  'interactive' variant for languages like  Python
+        which  support  constructs  like "Tags = KDTreeQueryResultsTagsI(KDT)" and
+        interactive mode of interpreter.
+
+        This function allocates new array on each call,  so  it  is  significantly
+        slower than its 'non-interactive' counterpart, but it is  more  convenient
+        when you call it from command line.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultstagsi(kdtree kdt,
+            ref int[] tags)
+        {
+            tags = new int[0];
+
+            kdtreequeryresultstags(kdt, ref tags);
+        }
+
+
+        /*************************************************************************
+        Distances from last query; 'interactive' variant for languages like Python
+        which  support  constructs   like  "R = KDTreeQueryResultsDistancesI(KDT)"
+        and interactive mode of interpreter.
+
+        This function allocates new array on each call,  so  it  is  significantly
+        slower than its 'non-interactive' counterpart, but it is  more  convenient
+        when you call it from command line.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreequeryresultsdistancesi(kdtree kdt,
+            ref double[] r)
+        {
+            r = new double[0];
+
+            kdtreequeryresultsdistances(kdt, ref r);
+        }
+
+
+        /*************************************************************************
+        It is informational function which returns bounding box for entire dataset.
+        This function is not visible to ALGLIB users, only ALGLIB itself  may  use
+        it.
+
+        This function assumes that output buffers are preallocated by caller.
+
+          -- ALGLIB --
+             Copyright 20.06.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreeexplorebox(kdtree kdt,
+            ref double[] boxmin,
+            ref double[] boxmax)
+        {
+            int i = 0;
+
+            apserv.rvectorsetlengthatleast(ref boxmin, kdt.nx);
+            apserv.rvectorsetlengthatleast(ref boxmax, kdt.nx);
+            for(i=0; i<=kdt.nx-1; i++)
+            {
+                boxmin[i] = kdt.boxmin[i];
+                boxmax[i] = kdt.boxmax[i];
+            }
+        }
+
+
+        /*************************************************************************
+        It is informational function which allows to get  information  about  node
+        type. Node index is given by integer value, with 0  corresponding  to root
+        node and other node indexes obtained via exploration.
+
+        You should not expect that serialization/unserialization will retain  node
+        indexes. You should keep in  mind  that  future  versions  of  ALGLIB  may
+        introduce new node types.
+
+        OUTPUT VALUES:
+            NodeType    -   node type:
+                            * 0 corresponds to leaf node, which can be explored by
+                              kdtreeexploreleaf() function
+                            * 1 corresponds to split node, which can  be  explored
+                              by kdtreeexploresplit() function
+
+          -- ALGLIB --
+             Copyright 20.06.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreeexplorenodetype(kdtree kdt,
+            int node,
+            ref int nodetype)
+        {
+            nodetype = 0;
+
+            alglib.ap.assert(node>=0, "KDTreeExploreNodeType: incorrect node");
+            alglib.ap.assert(node<alglib.ap.len(kdt.nodes), "KDTreeExploreNodeType: incorrect node");
+            if( kdt.nodes[node]>0 )
+            {
+                
+                //
+                // Leaf node
+                //
+                nodetype = 0;
+                return;
+            }
+            if( kdt.nodes[node]==0 )
+            {
+                
+                //
+                // Split node
+                //
+                nodetype = 1;
+                return;
+            }
+            alglib.ap.assert(false, "KDTreeExploreNodeType: integrity check failure");
+        }
+
+
+        /*************************************************************************
+        It is informational function which allows to get  information  about  leaf
+        node. Node index is given by integer value, with 0  corresponding  to root
+        node and other node indexes obtained via exploration.
+
+        You should not expect that serialization/unserialization will retain  node
+        indexes. You should keep in  mind  that  future  versions  of  ALGLIB  may
+        introduce new node types.
+
+        OUTPUT VALUES:
+            XT      -   output buffer is reallocated (if too small) and filled by
+                        XY values
+            K       -   number of rows in XY
+
+          -- ALGLIB --
+             Copyright 20.06.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreeexploreleaf(kdtree kdt,
+            int node,
+            ref double[,] xy,
+            ref int k)
+        {
+            int offs = 0;
+            int i = 0;
+            int j = 0;
+
+            k = 0;
+
+            alglib.ap.assert(node>=0, "KDTreeExploreLeaf: incorrect node index");
+            alglib.ap.assert(node+1<alglib.ap.len(kdt.nodes), "KDTreeExploreLeaf: incorrect node index");
+            alglib.ap.assert(kdt.nodes[node]>0, "KDTreeExploreLeaf: incorrect node index");
+            k = kdt.nodes[node];
+            offs = kdt.nodes[node+1];
+            alglib.ap.assert(offs>=0, "KDTreeExploreLeaf: integrity error");
+            alglib.ap.assert(offs+k-1<alglib.ap.rows(kdt.xy), "KDTreeExploreLeaf: integrity error");
+            apserv.rmatrixsetlengthatleast(ref xy, k, kdt.nx+kdt.ny);
+            for(i=0; i<=k-1; i++)
+            {
+                for(j=0; j<=kdt.nx+kdt.ny-1; j++)
+                {
+                    xy[i,j] = kdt.xy[offs+i,kdt.nx+j];
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        It is informational function which allows to get  information  about split
+        node. Node index is given by integer value, with 0  corresponding  to root
+        node and other node indexes obtained via exploration.
+
+        You should not expect that serialization/unserialization will retain  node
+        indexes. You should keep in  mind  that  future  versions  of  ALGLIB  may
+        introduce new node types.
+
+        OUTPUT VALUES:
+            XT      -   output buffer is reallocated (if too small) and filled by
+                        XY values
+            K       -   number of rows in XY
+
+            //      Nodes[idx+1]=dim    dimension to split
+            //      Nodes[idx+2]=offs   offset of splitting point in Splits[]
+            //      Nodes[idx+3]=left   position of left child in Nodes[]
+            //      Nodes[idx+4]=right  position of right child in Nodes[]
+            
+          -- ALGLIB --
+             Copyright 20.06.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreeexploresplit(kdtree kdt,
+            int node,
+            ref int d,
+            ref double s,
+            ref int nodele,
+            ref int nodege)
+        {
+            d = 0;
+            s = 0;
+            nodele = 0;
+            nodege = 0;
+
+            alglib.ap.assert(node>=0, "KDTreeExploreSplit: incorrect node index");
+            alglib.ap.assert(node+4<alglib.ap.len(kdt.nodes), "KDTreeExploreSplit: incorrect node index");
+            alglib.ap.assert(kdt.nodes[node]==0, "KDTreeExploreSplit: incorrect node index");
+            d = kdt.nodes[node+1];
+            s = kdt.splits[kdt.nodes[node+2]];
+            nodele = kdt.nodes[node+3];
+            nodege = kdt.nodes[node+4];
+            alglib.ap.assert(d>=0, "KDTreeExploreSplit: integrity failure");
+            alglib.ap.assert(d<kdt.nx, "KDTreeExploreSplit: integrity failure");
+            alglib.ap.assert(math.isfinite(s), "KDTreeExploreSplit: integrity failure");
+            alglib.ap.assert(nodele>=0, "KDTreeExploreSplit: integrity failure");
+            alglib.ap.assert(nodele<alglib.ap.len(kdt.nodes), "KDTreeExploreSplit: integrity failure");
+            alglib.ap.assert(nodege>=0, "KDTreeExploreSplit: integrity failure");
+            alglib.ap.assert(nodege<alglib.ap.len(kdt.nodes), "KDTreeExploreSplit: integrity failure");
+        }
+
+
+        /*************************************************************************
+        Serializer: allocation
+
+          -- ALGLIB --
+             Copyright 14.03.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreealloc(alglib.serializer s,
+            kdtree tree)
+        {
+            
+            //
+            // Header
+            //
+            s.alloc_entry();
+            s.alloc_entry();
+            
+            //
+            // Data
+            //
+            s.alloc_entry();
+            s.alloc_entry();
+            s.alloc_entry();
+            s.alloc_entry();
+            apserv.allocrealmatrix(s, tree.xy, -1, -1);
+            apserv.allocintegerarray(s, tree.tags, -1);
+            apserv.allocrealarray(s, tree.boxmin, -1);
+            apserv.allocrealarray(s, tree.boxmax, -1);
+            apserv.allocintegerarray(s, tree.nodes, -1);
+            apserv.allocrealarray(s, tree.splits, -1);
+        }
+
+
+        /*************************************************************************
+        Serializer: serialization
+
+          -- ALGLIB --
+             Copyright 14.03.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreeserialize(alglib.serializer s,
+            kdtree tree)
+        {
+            
+            //
+            // Header
+            //
+            s.serialize_int(scodes.getkdtreeserializationcode());
+            s.serialize_int(kdtreefirstversion);
+            
+            //
+            // Data
+            //
+            s.serialize_int(tree.n);
+            s.serialize_int(tree.nx);
+            s.serialize_int(tree.ny);
+            s.serialize_int(tree.normtype);
+            apserv.serializerealmatrix(s, tree.xy, -1, -1);
+            apserv.serializeintegerarray(s, tree.tags, -1);
+            apserv.serializerealarray(s, tree.boxmin, -1);
+            apserv.serializerealarray(s, tree.boxmax, -1);
+            apserv.serializeintegerarray(s, tree.nodes, -1);
+            apserv.serializerealarray(s, tree.splits, -1);
+        }
+
+
+        /*************************************************************************
+        Serializer: unserialization
+
+          -- ALGLIB --
+             Copyright 14.03.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void kdtreeunserialize(alglib.serializer s,
+            kdtree tree)
+        {
+            int i0 = 0;
+            int i1 = 0;
+
+            
+            //
+            // check correctness of header
+            //
+            i0 = s.unserialize_int();
+            alglib.ap.assert(i0==scodes.getkdtreeserializationcode(), "KDTreeUnserialize: stream header corrupted");
+            i1 = s.unserialize_int();
+            alglib.ap.assert(i1==kdtreefirstversion, "KDTreeUnserialize: stream header corrupted");
+            
+            //
+            // Unserialize data
+            //
+            tree.n = s.unserialize_int();
+            tree.nx = s.unserialize_int();
+            tree.ny = s.unserialize_int();
+            tree.normtype = s.unserialize_int();
+            apserv.unserializerealmatrix(s, ref tree.xy);
+            apserv.unserializeintegerarray(s, ref tree.tags);
+            apserv.unserializerealarray(s, ref tree.boxmin);
+            apserv.unserializerealarray(s, ref tree.boxmax);
+            apserv.unserializeintegerarray(s, ref tree.nodes);
+            apserv.unserializerealarray(s, ref tree.splits);
+            kdtreecreaterequestbuffer(tree, tree.innerbuf);
+        }
+
+
+        /*************************************************************************
+        Rearranges nodes [I1,I2) using partition in D-th dimension with S as threshold.
+        Returns split position I3: [I1,I3) and [I3,I2) are created as result.
+
+        This subroutine doesn't create tree structures, just rearranges nodes.
+        *************************************************************************/
+        private static void kdtreesplit(kdtree kdt,
+            int i1,
+            int i2,
+            int d,
+            double s,
+            ref int i3)
+        {
+            int i = 0;
+            int j = 0;
+            int ileft = 0;
+            int iright = 0;
+            double v = 0;
+
+            i3 = 0;
+
+            alglib.ap.assert(kdt.n>0, "KDTreeSplit: internal error");
+            
+            //
+            // split XY/Tags in two parts:
+            // * [ILeft,IRight] is non-processed part of XY/Tags
+            //
+            // After cycle is done, we have Ileft=IRight. We deal with
+            // this element separately.
+            //
+            // After this, [I1,ILeft) contains left part, and [ILeft,I2)
+            // contains right part.
+            //
+            ileft = i1;
+            iright = i2-1;
+            while( ileft<iright )
+            {
+                if( (double)(kdt.xy[ileft,d])<=(double)(s) )
+                {
+                    
+                    //
+                    // XY[ILeft] is on its place.
+                    // Advance ILeft.
+                    //
+                    ileft = ileft+1;
+                }
+                else
+                {
+                    
+                    //
+                    // XY[ILeft,..] must be at IRight.
+                    // Swap and advance IRight.
+                    //
+                    for(i=0; i<=2*kdt.nx+kdt.ny-1; i++)
+                    {
+                        v = kdt.xy[ileft,i];
+                        kdt.xy[ileft,i] = kdt.xy[iright,i];
+                        kdt.xy[iright,i] = v;
+                    }
+                    j = kdt.tags[ileft];
+                    kdt.tags[ileft] = kdt.tags[iright];
+                    kdt.tags[iright] = j;
+                    iright = iright-1;
+                }
+            }
+            if( (double)(kdt.xy[ileft,d])<=(double)(s) )
+            {
+                ileft = ileft+1;
+            }
+            else
+            {
+                iright = iright-1;
+            }
+            i3 = ileft;
+        }
+
+
+        /*************************************************************************
+        Recursive kd-tree generation subroutine.
+
+        PARAMETERS
+            KDT         tree
+            NodesOffs   unused part of Nodes[] which must be filled by tree
+            SplitsOffs  unused part of Splits[]
+            I1, I2      points from [I1,I2) are processed
+            
+        NodesOffs[] and SplitsOffs[] must be large enough.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        private static void kdtreegeneratetreerec(kdtree kdt,
+            ref int nodesoffs,
+            ref int splitsoffs,
+            int i1,
+            int i2,
+            int maxleafsize)
+        {
+            int n = 0;
+            int nx = 0;
+            int ny = 0;
+            int i = 0;
+            int j = 0;
+            int oldoffs = 0;
+            int i3 = 0;
+            int cntless = 0;
+            int cntgreater = 0;
+            double minv = 0;
+            double maxv = 0;
+            int minidx = 0;
+            int maxidx = 0;
+            int d = 0;
+            double ds = 0;
+            double s = 0;
+            double v = 0;
+            double v0 = 0;
+            double v1 = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(kdt.n>0, "KDTreeGenerateTreeRec: internal error");
+            alglib.ap.assert(i2>i1, "KDTreeGenerateTreeRec: internal error");
+            
+            //
+            // Generate leaf if needed
+            //
+            if( i2-i1<=maxleafsize )
+            {
+                kdt.nodes[nodesoffs+0] = i2-i1;
+                kdt.nodes[nodesoffs+1] = i1;
+                nodesoffs = nodesoffs+2;
+                return;
+            }
+            
+            //
+            // Load values for easier access
+            //
+            nx = kdt.nx;
+            ny = kdt.ny;
+            
+            //
+            // Select dimension to split:
+            // * D is a dimension number
+            // In case bounding box has zero size, we enforce creation of the leaf node.
+            //
+            d = 0;
+            ds = kdt.innerbuf.curboxmax[0]-kdt.innerbuf.curboxmin[0];
+            for(i=1; i<=nx-1; i++)
+            {
+                v = kdt.innerbuf.curboxmax[i]-kdt.innerbuf.curboxmin[i];
+                if( (double)(v)>(double)(ds) )
+                {
+                    ds = v;
+                    d = i;
+                }
+            }
+            if( (double)(ds)==(double)(0) )
+            {
+                kdt.nodes[nodesoffs+0] = i2-i1;
+                kdt.nodes[nodesoffs+1] = i1;
+                nodesoffs = nodesoffs+2;
+                return;
+            }
+            
+            //
+            // Select split position S using sliding midpoint rule,
+            // rearrange points into [I1,I3) and [I3,I2).
+            //
+            // In case all points has same value of D-th component
+            // (MinV=MaxV) we enforce D-th dimension of bounding
+            // box to become exactly zero and repeat tree construction.
+            //
+            s = kdt.innerbuf.curboxmin[d]+0.5*ds;
+            i1_ = (i1) - (0);
+            for(i_=0; i_<=i2-i1-1;i_++)
+            {
+                kdt.innerbuf.buf[i_] = kdt.xy[i_+i1_,d];
+            }
+            n = i2-i1;
+            cntless = 0;
+            cntgreater = 0;
+            minv = kdt.innerbuf.buf[0];
+            maxv = kdt.innerbuf.buf[0];
+            minidx = i1;
+            maxidx = i1;
+            for(i=0; i<=n-1; i++)
+            {
+                v = kdt.innerbuf.buf[i];
+                if( (double)(v)<(double)(minv) )
+                {
+                    minv = v;
+                    minidx = i1+i;
+                }
+                if( (double)(v)>(double)(maxv) )
+                {
+                    maxv = v;
+                    maxidx = i1+i;
+                }
+                if( (double)(v)<(double)(s) )
+                {
+                    cntless = cntless+1;
+                }
+                if( (double)(v)>(double)(s) )
+                {
+                    cntgreater = cntgreater+1;
+                }
+            }
+            if( (double)(minv)==(double)(maxv) )
+            {
+                
+                //
+                // In case all points has same value of D-th component
+                // (MinV=MaxV) we enforce D-th dimension of bounding
+                // box to become exactly zero and repeat tree construction.
+                //
+                v0 = kdt.innerbuf.curboxmin[d];
+                v1 = kdt.innerbuf.curboxmax[d];
+                kdt.innerbuf.curboxmin[d] = minv;
+                kdt.innerbuf.curboxmax[d] = maxv;
+                kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i1, i2, maxleafsize);
+                kdt.innerbuf.curboxmin[d] = v0;
+                kdt.innerbuf.curboxmax[d] = v1;
+                return;
+            }
+            if( cntless>0 && cntgreater>0 )
+            {
+                
+                //
+                // normal midpoint split
+                //
+                kdtreesplit(kdt, i1, i2, d, s, ref i3);
+            }
+            else
+            {
+                
+                //
+                // sliding midpoint
+                //
+                if( cntless==0 )
+                {
+                    
+                    //
+                    // 1. move split to MinV,
+                    // 2. place one point to the left bin (move to I1),
+                    //    others - to the right bin
+                    //
+                    s = minv;
+                    if( minidx!=i1 )
+                    {
+                        for(i=0; i<=2*nx+ny-1; i++)
+                        {
+                            v = kdt.xy[minidx,i];
+                            kdt.xy[minidx,i] = kdt.xy[i1,i];
+                            kdt.xy[i1,i] = v;
+                        }
+                        j = kdt.tags[minidx];
+                        kdt.tags[minidx] = kdt.tags[i1];
+                        kdt.tags[i1] = j;
+                    }
+                    i3 = i1+1;
+                }
+                else
+                {
+                    
+                    //
+                    // 1. move split to MaxV,
+                    // 2. place one point to the right bin (move to I2-1),
+                    //    others - to the left bin
+                    //
+                    s = maxv;
+                    if( maxidx!=i2-1 )
+                    {
+                        for(i=0; i<=2*nx+ny-1; i++)
+                        {
+                            v = kdt.xy[maxidx,i];
+                            kdt.xy[maxidx,i] = kdt.xy[i2-1,i];
+                            kdt.xy[i2-1,i] = v;
+                        }
+                        j = kdt.tags[maxidx];
+                        kdt.tags[maxidx] = kdt.tags[i2-1];
+                        kdt.tags[i2-1] = j;
+                    }
+                    i3 = i2-1;
+                }
+            }
+            
+            //
+            // Generate 'split' node
+            //
+            kdt.nodes[nodesoffs+0] = 0;
+            kdt.nodes[nodesoffs+1] = d;
+            kdt.nodes[nodesoffs+2] = splitsoffs;
+            kdt.splits[splitsoffs+0] = s;
+            oldoffs = nodesoffs;
+            nodesoffs = nodesoffs+splitnodesize;
+            splitsoffs = splitsoffs+1;
+            
+            //
+            // Recirsive generation:
+            // * update CurBox
+            // * call subroutine
+            // * restore CurBox
+            //
+            kdt.nodes[oldoffs+3] = nodesoffs;
+            v = kdt.innerbuf.curboxmax[d];
+            kdt.innerbuf.curboxmax[d] = s;
+            kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i1, i3, maxleafsize);
+            kdt.innerbuf.curboxmax[d] = v;
+            kdt.nodes[oldoffs+4] = nodesoffs;
+            v = kdt.innerbuf.curboxmin[d];
+            kdt.innerbuf.curboxmin[d] = s;
+            kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i3, i2, maxleafsize);
+            kdt.innerbuf.curboxmin[d] = v;
+        }
+
+
+        /*************************************************************************
+        Recursive subroutine for NN queries.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        private static void kdtreequerynnrec(kdtree kdt,
+            kdtreerequestbuffer buf,
+            int offs)
+        {
+            double ptdist = 0;
+            int i = 0;
+            int j = 0;
+            int nx = 0;
+            int i1 = 0;
+            int i2 = 0;
+            int d = 0;
+            double s = 0;
+            double v = 0;
+            double t1 = 0;
+            int childbestoffs = 0;
+            int childworstoffs = 0;
+            int childoffs = 0;
+            double prevdist = 0;
+            bool todive = new bool();
+            bool bestisleft = new bool();
+            bool updatemin = new bool();
+
+            alglib.ap.assert(kdt.n>0, "KDTreeQueryNNRec: internal error");
+            
+            //
+            // Leaf node.
+            // Process points.
+            //
+            if( kdt.nodes[offs]>0 )
+            {
+                i1 = kdt.nodes[offs+1];
+                i2 = i1+kdt.nodes[offs];
+                for(i=i1; i<=i2-1; i++)
+                {
+                    
+                    //
+                    // Calculate distance
+                    //
+                    ptdist = 0;
+                    nx = kdt.nx;
+                    if( kdt.normtype==0 )
+                    {
+                        for(j=0; j<=nx-1; j++)
+                        {
+                            ptdist = Math.Max(ptdist, Math.Abs(kdt.xy[i,j]-buf.x[j]));
+                        }
+                    }
+                    if( kdt.normtype==1 )
+                    {
+                        for(j=0; j<=nx-1; j++)
+                        {
+                            ptdist = ptdist+Math.Abs(kdt.xy[i,j]-buf.x[j]);
+                        }
+                    }
+                    if( kdt.normtype==2 )
+                    {
+                        for(j=0; j<=nx-1; j++)
+                        {
+                            ptdist = ptdist+math.sqr(kdt.xy[i,j]-buf.x[j]);
+                        }
+                    }
+                    
+                    //
+                    // Skip points with zero distance if self-matches are turned off
+                    //
+                    if( (double)(ptdist)==(double)(0) && !buf.selfmatch )
+                    {
+                        continue;
+                    }
+                    
+                    //
+                    // We CAN'T process point if R-criterion isn't satisfied,
+                    // i.e. (RNeeded<>0) AND (PtDist>R).
+                    //
+                    if( (double)(buf.rneeded)==(double)(0) || (double)(ptdist)<=(double)(buf.rneeded) )
+                    {
+                        
+                        //
+                        // R-criterion is satisfied, we must either:
+                        // * replace worst point, if (KNeeded<>0) AND (KCur=KNeeded)
+                        //   (or skip, if worst point is better)
+                        // * add point without replacement otherwise
+                        //
+                        if( buf.kcur<buf.kneeded || buf.kneeded==0 )
+                        {
+                            
+                            //
+                            // add current point to heap without replacement
+                            //
+                            tsort.tagheappushi(ref buf.r, ref buf.idx, ref buf.kcur, ptdist, i);
+                        }
+                        else
+                        {
+                            
+                            //
+                            // New points are added or not, depending on their distance.
+                            // If added, they replace element at the top of the heap
+                            //
+                            if( (double)(ptdist)<(double)(buf.r[0]) )
+                            {
+                                if( buf.kneeded==1 )
+                                {
+                                    buf.idx[0] = i;
+                                    buf.r[0] = ptdist;
+                                }
+                                else
+                                {
+                                    tsort.tagheapreplacetopi(ref buf.r, ref buf.idx, buf.kneeded, ptdist, i);
+                                }
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+            
+            //
+            // Simple split
+            //
+            if( kdt.nodes[offs]==0 )
+            {
+                
+                //
+                // Load:
+                // * D  dimension to split
+                // * S  split position
+                //
+                d = kdt.nodes[offs+1];
+                s = kdt.splits[kdt.nodes[offs+2]];
+                
+                //
+                // Calculate:
+                // * ChildBestOffs      child box with best chances
+                // * ChildWorstOffs     child box with worst chances
+                //
+                if( (double)(buf.x[d])<=(double)(s) )
+                {
+                    childbestoffs = kdt.nodes[offs+3];
+                    childworstoffs = kdt.nodes[offs+4];
+                    bestisleft = true;
+                }
+                else
+                {
+                    childbestoffs = kdt.nodes[offs+4];
+                    childworstoffs = kdt.nodes[offs+3];
+                    bestisleft = false;
+                }
+                
+                //
+                // Navigate through childs
+                //
+                for(i=0; i<=1; i++)
+                {
+                    
+                    //
+                    // Select child to process:
+                    // * ChildOffs      current child offset in Nodes[]
+                    // * UpdateMin      whether minimum or maximum value
+                    //                  of bounding box is changed on update
+                    //
+                    if( i==0 )
+                    {
+                        childoffs = childbestoffs;
+                        updatemin = !bestisleft;
+                    }
+                    else
+                    {
+                        updatemin = bestisleft;
+                        childoffs = childworstoffs;
+                    }
+                    
+                    //
+                    // Update bounding box and current distance
+                    //
+                    if( updatemin )
+                    {
+                        prevdist = buf.curdist;
+                        t1 = buf.x[d];
+                        v = buf.curboxmin[d];
+                        if( (double)(t1)<=(double)(s) )
+                        {
+                            if( kdt.normtype==0 )
+                            {
+                                buf.curdist = Math.Max(buf.curdist, s-t1);
+                            }
+                            if( kdt.normtype==1 )
+                            {
+                                buf.curdist = buf.curdist-Math.Max(v-t1, 0)+s-t1;
+                            }
+                            if( kdt.normtype==2 )
+                            {
+                                buf.curdist = buf.curdist-math.sqr(Math.Max(v-t1, 0))+math.sqr(s-t1);
+                            }
+                        }
+                        buf.curboxmin[d] = s;
+                    }
+                    else
+                    {
+                        prevdist = buf.curdist;
+                        t1 = buf.x[d];
+                        v = buf.curboxmax[d];
+                        if( (double)(t1)>=(double)(s) )
+                        {
+                            if( kdt.normtype==0 )
+                            {
+                                buf.curdist = Math.Max(buf.curdist, t1-s);
+                            }
+                            if( kdt.normtype==1 )
+                            {
+                                buf.curdist = buf.curdist-Math.Max(t1-v, 0)+t1-s;
+                            }
+                            if( kdt.normtype==2 )
+                            {
+                                buf.curdist = buf.curdist-math.sqr(Math.Max(t1-v, 0))+math.sqr(t1-s);
+                            }
+                        }
+                        buf.curboxmax[d] = s;
+                    }
+                    
+                    //
+                    // Decide: to dive into cell or not to dive
+                    //
+                    if( (double)(buf.rneeded)!=(double)(0) && (double)(buf.curdist)>(double)(buf.rneeded) )
+                    {
+                        todive = false;
+                    }
+                    else
+                    {
+                        if( buf.kcur<buf.kneeded || buf.kneeded==0 )
+                        {
+                            
+                            //
+                            // KCur<KNeeded (i.e. not all points are found)
+                            //
+                            todive = true;
+                        }
+                        else
+                        {
+                            
+                            //
+                            // KCur=KNeeded, decide to dive or not to dive
+                            // using point position relative to bounding box.
+                            //
+                            todive = (double)(buf.curdist)<=(double)(buf.r[0]*buf.approxf);
+                        }
+                    }
+                    if( todive )
+                    {
+                        kdtreequerynnrec(kdt, buf, childoffs);
+                    }
+                    
+                    //
+                    // Restore bounding box and distance
+                    //
+                    if( updatemin )
+                    {
+                        buf.curboxmin[d] = v;
+                    }
+                    else
+                    {
+                        buf.curboxmax[d] = v;
+                    }
+                    buf.curdist = prevdist;
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        Recursive subroutine for box queries.
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        private static void kdtreequeryboxrec(kdtree kdt,
+            kdtreerequestbuffer buf,
+            int offs)
+        {
+            bool inbox = new bool();
+            int nx = 0;
+            int i1 = 0;
+            int i2 = 0;
+            int i = 0;
+            int j = 0;
+            int d = 0;
+            double s = 0;
+            double v = 0;
+
+            alglib.ap.assert(kdt.n>0, "KDTreeQueryBoxRec: internal error");
+            nx = kdt.nx;
+            
+            //
+            // Check that intersection of query box with bounding box is non-empty.
+            // This check is performed once for Offs=0 (tree root).
+            //
+            if( offs==0 )
+            {
+                for(j=0; j<=nx-1; j++)
+                {
+                    if( (double)(buf.boxmin[j])>(double)(buf.curboxmax[j]) )
+                    {
+                        return;
+                    }
+                    if( (double)(buf.boxmax[j])<(double)(buf.curboxmin[j]) )
+                    {
+                        return;
+                    }
+                }
+            }
+            
+            //
+            // Leaf node.
+            // Process points.
+            //
+            if( kdt.nodes[offs]>0 )
+            {
+                i1 = kdt.nodes[offs+1];
+                i2 = i1+kdt.nodes[offs];
+                for(i=i1; i<=i2-1; i++)
+                {
+                    
+                    //
+                    // Check whether point is in box or not
+                    //
+                    inbox = true;
+                    for(j=0; j<=nx-1; j++)
+                    {
+                        inbox = inbox && (double)(kdt.xy[i,j])>=(double)(buf.boxmin[j]);
+                        inbox = inbox && (double)(kdt.xy[i,j])<=(double)(buf.boxmax[j]);
+                    }
+                    if( !inbox )
+                    {
+                        continue;
+                    }
+                    
+                    //
+                    // Add point to unordered list
+                    //
+                    buf.r[buf.kcur] = 0.0;
+                    buf.idx[buf.kcur] = i;
+                    buf.kcur = buf.kcur+1;
+                }
+                return;
+            }
+            
+            //
+            // Simple split
+            //
+            if( kdt.nodes[offs]==0 )
+            {
+                
+                //
+                // Load:
+                // * D  dimension to split
+                // * S  split position
+                //
+                d = kdt.nodes[offs+1];
+                s = kdt.splits[kdt.nodes[offs+2]];
+                
+                //
+                // Check lower split (S is upper bound of new bounding box)
+                //
+                if( (double)(s)>=(double)(buf.boxmin[d]) )
+                {
+                    v = buf.curboxmax[d];
+                    buf.curboxmax[d] = s;
+                    kdtreequeryboxrec(kdt, buf, kdt.nodes[offs+3]);
+                    buf.curboxmax[d] = v;
+                }
+                
+                //
+                // Check upper split (S is lower bound of new bounding box)
+                //
+                if( (double)(s)<=(double)(buf.boxmax[d]) )
+                {
+                    v = buf.curboxmin[d];
+                    buf.curboxmin[d] = s;
+                    kdtreequeryboxrec(kdt, buf, kdt.nodes[offs+4]);
+                    buf.curboxmin[d] = v;
+                }
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        Copies X[] to Buf.X[]
+        Loads distance from X[] to bounding box.
+        Initializes Buf.CurBox[].
+
+          -- ALGLIB --
+             Copyright 28.02.2010 by Bochkanov Sergey
+        *************************************************************************/
+        private static void kdtreeinitbox(kdtree kdt,
+            double[] x,
+            kdtreerequestbuffer buf)
+        {
+            int i = 0;
+            double vx = 0;
+            double vmin = 0;
+            double vmax = 0;
+
+            alglib.ap.assert(kdt.n>0, "KDTreeInitBox: internal error");
+            
+            //
+            // calculate distance from point to current bounding box
+            //
+            buf.curdist = 0;
+            if( kdt.normtype==0 )
+            {
+                for(i=0; i<=kdt.nx-1; i++)
+                {
+                    vx = x[i];
+                    vmin = kdt.boxmin[i];
+                    vmax = kdt.boxmax[i];
+                    buf.x[i] = vx;
+                    buf.curboxmin[i] = vmin;
+                    buf.curboxmax[i] = vmax;
+                    if( (double)(vx)<(double)(vmin) )
+                    {
+                        buf.curdist = Math.Max(buf.curdist, vmin-vx);
+                    }
+                    else
+                    {
+                        if( (double)(vx)>(double)(vmax) )
+                        {
+                            buf.curdist = Math.Max(buf.curdist, vx-vmax);
+                        }
+                    }
+                }
+            }
+            if( kdt.normtype==1 )
+            {
+                for(i=0; i<=kdt.nx-1; i++)
+                {
+                    vx = x[i];
+                    vmin = kdt.boxmin[i];
+                    vmax = kdt.boxmax[i];
+                    buf.x[i] = vx;
+                    buf.curboxmin[i] = vmin;
+                    buf.curboxmax[i] = vmax;
+                    if( (double)(vx)<(double)(vmin) )
+                    {
+                        buf.curdist = buf.curdist+vmin-vx;
+                    }
+                    else
+                    {
+                        if( (double)(vx)>(double)(vmax) )
+                        {
+                            buf.curdist = buf.curdist+vx-vmax;
+                        }
+                    }
+                }
+            }
+            if( kdt.normtype==2 )
+            {
+                for(i=0; i<=kdt.nx-1; i++)
+                {
+                    vx = x[i];
+                    vmin = kdt.boxmin[i];
+                    vmax = kdt.boxmax[i];
+                    buf.x[i] = vx;
+                    buf.curboxmin[i] = vmin;
+                    buf.curboxmax[i] = vmax;
+                    if( (double)(vx)<(double)(vmin) )
+                    {
+                        buf.curdist = buf.curdist+math.sqr(vmin-vx);
+                    }
+                    else
+                    {
+                        if( (double)(vx)>(double)(vmax) )
+                        {
+                            buf.curdist = buf.curdist+math.sqr(vx-vmax);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function allocates all dataset-independend array  fields  of  KDTree,
+        i.e.  such  array  fields  that  their dimensions do not depend on dataset
+        size.
+
+        This function do not sets KDT.NX or KDT.NY - it just allocates arrays
+
+          -- ALGLIB --
+             Copyright 14.03.2011 by Bochkanov Sergey
+        *************************************************************************/
+        private static void kdtreeallocdatasetindependent(kdtree kdt,
+            int nx,
+            int ny)
+        {
+            alglib.ap.assert(kdt.n>0, "KDTreeAllocDatasetIndependent: internal error");
+            kdt.boxmin = new double[nx];
+            kdt.boxmax = new double[nx];
+        }
+
+
+        /*************************************************************************
+        This function allocates all dataset-dependent array fields of KDTree, i.e.
+        such array fields that their dimensions depend on dataset size.
+
+        This function do not sets KDT.N, KDT.NX or KDT.NY -
+        it just allocates arrays.
+
+          -- ALGLIB --
+             Copyright 14.03.2011 by Bochkanov Sergey
+        *************************************************************************/
+        private static void kdtreeallocdatasetdependent(kdtree kdt,
+            int n,
+            int nx,
+            int ny)
+        {
+            alglib.ap.assert(n>0, "KDTreeAllocDatasetDependent: internal error");
+            kdt.xy = new double[n, 2*nx+ny];
+            kdt.tags = new int[n];
+            kdt.nodes = new int[splitnodesize*2*n];
+            kdt.splits = new double[2*n];
+        }
+
+
+        /*************************************************************************
+        This  function   checks  consistency  of  request  buffer  structure  with
+        dimensions of kd-tree object.
+
+          -- ALGLIB --
+             Copyright 02.04.2016 by Bochkanov Sergey
+        *************************************************************************/
+        private static void checkrequestbufferconsistency(kdtree kdt,
+            kdtreerequestbuffer buf)
+        {
+            alglib.ap.assert(alglib.ap.len(buf.x)>=kdt.nx, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
+            alglib.ap.assert(alglib.ap.len(buf.idx)>=kdt.n, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
+            alglib.ap.assert(alglib.ap.len(buf.r)>=kdt.n, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
+            alglib.ap.assert(alglib.ap.len(buf.buf)>=Math.Max(kdt.n, kdt.nx), "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
+            alglib.ap.assert(alglib.ap.len(buf.curboxmin)>=kdt.nx, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
+            alglib.ap.assert(alglib.ap.len(buf.curboxmax)>=kdt.nx, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
+        }
+
+
+    }
     public class hqrnd
     {
         /*************************************************************************
@@ -1875,1724 +5057,6 @@ public partial class alglib
             }
             result = result-1;
             return result;
-        }
-
-
-    }
-    public class nearestneighbor
-    {
-        public class kdtree : apobject
-        {
-            public int n;
-            public int nx;
-            public int ny;
-            public int normtype;
-            public double[,] xy;
-            public int[] tags;
-            public double[] boxmin;
-            public double[] boxmax;
-            public int[] nodes;
-            public double[] splits;
-            public double[] x;
-            public int kneeded;
-            public double rneeded;
-            public bool selfmatch;
-            public double approxf;
-            public int kcur;
-            public int[] idx;
-            public double[] r;
-            public double[] buf;
-            public double[] curboxmin;
-            public double[] curboxmax;
-            public double curdist;
-            public int debugcounter;
-            public kdtree()
-            {
-                init();
-            }
-            public override void init()
-            {
-                xy = new double[0,0];
-                tags = new int[0];
-                boxmin = new double[0];
-                boxmax = new double[0];
-                nodes = new int[0];
-                splits = new double[0];
-                x = new double[0];
-                idx = new int[0];
-                r = new double[0];
-                buf = new double[0];
-                curboxmin = new double[0];
-                curboxmax = new double[0];
-            }
-            public override alglib.apobject make_copy()
-            {
-                kdtree _result = new kdtree();
-                _result.n = n;
-                _result.nx = nx;
-                _result.ny = ny;
-                _result.normtype = normtype;
-                _result.xy = (double[,])xy.Clone();
-                _result.tags = (int[])tags.Clone();
-                _result.boxmin = (double[])boxmin.Clone();
-                _result.boxmax = (double[])boxmax.Clone();
-                _result.nodes = (int[])nodes.Clone();
-                _result.splits = (double[])splits.Clone();
-                _result.x = (double[])x.Clone();
-                _result.kneeded = kneeded;
-                _result.rneeded = rneeded;
-                _result.selfmatch = selfmatch;
-                _result.approxf = approxf;
-                _result.kcur = kcur;
-                _result.idx = (int[])idx.Clone();
-                _result.r = (double[])r.Clone();
-                _result.buf = (double[])buf.Clone();
-                _result.curboxmin = (double[])curboxmin.Clone();
-                _result.curboxmax = (double[])curboxmax.Clone();
-                _result.curdist = curdist;
-                _result.debugcounter = debugcounter;
-                return _result;
-            }
-        };
-
-
-
-
-        public const int splitnodesize = 6;
-        public const int kdtreefirstversion = 0;
-
-
-        /*************************************************************************
-        KD-tree creation
-
-        This subroutine creates KD-tree from set of X-values and optional Y-values
-
-        INPUT PARAMETERS
-            XY      -   dataset, array[0..N-1,0..NX+NY-1].
-                        one row corresponds to one point.
-                        first NX columns contain X-values, next NY (NY may be zero)
-                        columns may contain associated Y-values
-            N       -   number of points, N>=0.
-            NX      -   space dimension, NX>=1.
-            NY      -   number of optional Y-values, NY>=0.
-            NormType-   norm type:
-                        * 0 denotes infinity-norm
-                        * 1 denotes 1-norm
-                        * 2 denotes 2-norm (Euclidean norm)
-                        
-        OUTPUT PARAMETERS
-            KDT     -   KD-tree
-            
-            
-        NOTES
-
-        1. KD-tree  creation  have O(N*logN) complexity and O(N*(2*NX+NY))  memory
-           requirements.
-        2. Although KD-trees may be used with any combination of N  and  NX,  they
-           are more efficient than brute-force search only when N >> 4^NX. So they
-           are most useful in low-dimensional tasks (NX=2, NX=3). NX=1  is another
-           inefficient case, because  simple  binary  search  (without  additional
-           structures) is much more efficient in such tasks than KD-trees.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreebuild(double[,] xy,
-            int n,
-            int nx,
-            int ny,
-            int normtype,
-            kdtree kdt)
-        {
-            int[] tags = new int[0];
-            int i = 0;
-
-            alglib.ap.assert(n>=0, "KDTreeBuild: N<0");
-            alglib.ap.assert(nx>=1, "KDTreeBuild: NX<1");
-            alglib.ap.assert(ny>=0, "KDTreeBuild: NY<0");
-            alglib.ap.assert(normtype>=0 && normtype<=2, "KDTreeBuild: incorrect NormType");
-            alglib.ap.assert(alglib.ap.rows(xy)>=n, "KDTreeBuild: rows(X)<N");
-            alglib.ap.assert(alglib.ap.cols(xy)>=nx+ny || n==0, "KDTreeBuild: cols(X)<NX+NY");
-            alglib.ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuild: XY contains infinite or NaN values");
-            if( n>0 )
-            {
-                tags = new int[n];
-                for(i=0; i<=n-1; i++)
-                {
-                    tags[i] = 0;
-                }
-            }
-            kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt);
-        }
-
-
-        /*************************************************************************
-        KD-tree creation
-
-        This  subroutine  creates  KD-tree  from set of X-values, integer tags and
-        optional Y-values
-
-        INPUT PARAMETERS
-            XY      -   dataset, array[0..N-1,0..NX+NY-1].
-                        one row corresponds to one point.
-                        first NX columns contain X-values, next NY (NY may be zero)
-                        columns may contain associated Y-values
-            Tags    -   tags, array[0..N-1], contains integer tags associated
-                        with points.
-            N       -   number of points, N>=0
-            NX      -   space dimension, NX>=1.
-            NY      -   number of optional Y-values, NY>=0.
-            NormType-   norm type:
-                        * 0 denotes infinity-norm
-                        * 1 denotes 1-norm
-                        * 2 denotes 2-norm (Euclidean norm)
-
-        OUTPUT PARAMETERS
-            KDT     -   KD-tree
-
-        NOTES
-
-        1. KD-tree  creation  have O(N*logN) complexity and O(N*(2*NX+NY))  memory
-           requirements.
-        2. Although KD-trees may be used with any combination of N  and  NX,  they
-           are more efficient than brute-force search only when N >> 4^NX. So they
-           are most useful in low-dimensional tasks (NX=2, NX=3). NX=1  is another
-           inefficient case, because  simple  binary  search  (without  additional
-           structures) is much more efficient in such tasks than KD-trees.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreebuildtagged(double[,] xy,
-            int[] tags,
-            int n,
-            int nx,
-            int ny,
-            int normtype,
-            kdtree kdt)
-        {
-            int i = 0;
-            int j = 0;
-            int maxnodes = 0;
-            int nodesoffs = 0;
-            int splitsoffs = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            alglib.ap.assert(n>=0, "KDTreeBuildTagged: N<0");
-            alglib.ap.assert(nx>=1, "KDTreeBuildTagged: NX<1");
-            alglib.ap.assert(ny>=0, "KDTreeBuildTagged: NY<0");
-            alglib.ap.assert(normtype>=0 && normtype<=2, "KDTreeBuildTagged: incorrect NormType");
-            alglib.ap.assert(alglib.ap.rows(xy)>=n, "KDTreeBuildTagged: rows(X)<N");
-            alglib.ap.assert(alglib.ap.cols(xy)>=nx+ny || n==0, "KDTreeBuildTagged: cols(X)<NX+NY");
-            alglib.ap.assert(apserv.apservisfinitematrix(xy, n, nx+ny), "KDTreeBuildTagged: XY contains infinite or NaN values");
-            
-            //
-            // initialize
-            //
-            kdt.n = n;
-            kdt.nx = nx;
-            kdt.ny = ny;
-            kdt.normtype = normtype;
-            kdt.kcur = 0;
-            
-            //
-            // N=0 => quick exit
-            //
-            if( n==0 )
-            {
-                return;
-            }
-            
-            //
-            // Allocate
-            //
-            kdtreeallocdatasetindependent(kdt, nx, ny);
-            kdtreeallocdatasetdependent(kdt, n, nx, ny);
-            
-            //
-            // Initial fill
-            //
-            for(i=0; i<=n-1; i++)
-            {
-                for(i_=0; i_<=nx-1;i_++)
-                {
-                    kdt.xy[i,i_] = xy[i,i_];
-                }
-                i1_ = (0) - (nx);
-                for(i_=nx; i_<=2*nx+ny-1;i_++)
-                {
-                    kdt.xy[i,i_] = xy[i,i_+i1_];
-                }
-                kdt.tags[i] = tags[i];
-            }
-            
-            //
-            // Determine bounding box
-            //
-            for(i_=0; i_<=nx-1;i_++)
-            {
-                kdt.boxmin[i_] = kdt.xy[0,i_];
-            }
-            for(i_=0; i_<=nx-1;i_++)
-            {
-                kdt.boxmax[i_] = kdt.xy[0,i_];
-            }
-            for(i=1; i<=n-1; i++)
-            {
-                for(j=0; j<=nx-1; j++)
-                {
-                    kdt.boxmin[j] = Math.Min(kdt.boxmin[j], kdt.xy[i,j]);
-                    kdt.boxmax[j] = Math.Max(kdt.boxmax[j], kdt.xy[i,j]);
-                }
-            }
-            
-            //
-            // prepare tree structure
-            // * MaxNodes=N because we guarantee no trivial splits, i.e.
-            //   every split will generate two non-empty boxes
-            //
-            maxnodes = n;
-            kdt.nodes = new int[splitnodesize*2*maxnodes];
-            kdt.splits = new double[2*maxnodes];
-            nodesoffs = 0;
-            splitsoffs = 0;
-            for(i_=0; i_<=nx-1;i_++)
-            {
-                kdt.curboxmin[i_] = kdt.boxmin[i_];
-            }
-            for(i_=0; i_<=nx-1;i_++)
-            {
-                kdt.curboxmax[i_] = kdt.boxmax[i_];
-            }
-            kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, 0, n, 8);
-        }
-
-
-        /*************************************************************************
-        K-NN query: K nearest neighbors
-
-        INPUT PARAMETERS
-            KDT         -   KD-tree
-            X           -   point, array[0..NX-1].
-            K           -   number of neighbors to return, K>=1
-            SelfMatch   -   whether self-matches are allowed:
-                            * if True, nearest neighbor may be the point itself
-                              (if it exists in original dataset)
-                            * if False, then only points with non-zero distance
-                              are returned
-                            * if not given, considered True
-
-        RESULT
-            number of actual neighbors found (either K or N, if K>N).
-
-        This  subroutine  performs  query  and  stores  its result in the internal
-        structures of the KD-tree. You can use  following  subroutines  to  obtain
-        these results:
-        * KDTreeQueryResultsX() to get X-values
-        * KDTreeQueryResultsXY() to get X- and Y-values
-        * KDTreeQueryResultsTags() to get tag values
-        * KDTreeQueryResultsDistances() to get distances
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static int kdtreequeryknn(kdtree kdt,
-            double[] x,
-            int k,
-            bool selfmatch)
-        {
-            int result = 0;
-
-            alglib.ap.assert(k>=1, "KDTreeQueryKNN: K<1!");
-            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryKNN: Length(X)<NX!");
-            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryKNN: X contains infinite or NaN values!");
-            result = kdtreequeryaknn(kdt, x, k, selfmatch, 0.0);
-            return result;
-        }
-
-
-        /*************************************************************************
-        R-NN query: all points within R-sphere centered at X
-
-        INPUT PARAMETERS
-            KDT         -   KD-tree
-            X           -   point, array[0..NX-1].
-            R           -   radius of sphere (in corresponding norm), R>0
-            SelfMatch   -   whether self-matches are allowed:
-                            * if True, nearest neighbor may be the point itself
-                              (if it exists in original dataset)
-                            * if False, then only points with non-zero distance
-                              are returned
-                            * if not given, considered True
-
-        RESULT
-            number of neighbors found, >=0
-
-        This  subroutine  performs  query  and  stores  its result in the internal
-        structures of the KD-tree. You can use  following  subroutines  to  obtain
-        actual results:
-        * KDTreeQueryResultsX() to get X-values
-        * KDTreeQueryResultsXY() to get X- and Y-values
-        * KDTreeQueryResultsTags() to get tag values
-        * KDTreeQueryResultsDistances() to get distances
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static int kdtreequeryrnn(kdtree kdt,
-            double[] x,
-            double r,
-            bool selfmatch)
-        {
-            int result = 0;
-            int i = 0;
-            int j = 0;
-
-            alglib.ap.assert((double)(r)>(double)(0), "KDTreeQueryRNN: incorrect R!");
-            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryRNN: Length(X)<NX!");
-            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryRNN: X contains infinite or NaN values!");
-            
-            //
-            // Handle special case: KDT.N=0
-            //
-            if( kdt.n==0 )
-            {
-                kdt.kcur = 0;
-                result = 0;
-                return result;
-            }
-            
-            //
-            // Prepare parameters
-            //
-            kdt.kneeded = 0;
-            if( kdt.normtype!=2 )
-            {
-                kdt.rneeded = r;
-            }
-            else
-            {
-                kdt.rneeded = math.sqr(r);
-            }
-            kdt.selfmatch = selfmatch;
-            kdt.approxf = 1;
-            kdt.kcur = 0;
-            
-            //
-            // calculate distance from point to current bounding box
-            //
-            kdtreeinitbox(kdt, x);
-            
-            //
-            // call recursive search
-            // results are returned as heap
-            //
-            kdtreequerynnrec(kdt, 0);
-            
-            //
-            // pop from heap to generate ordered representation
-            //
-            // last element is not pop'ed because it is already in
-            // its place
-            //
-            result = kdt.kcur;
-            j = kdt.kcur;
-            for(i=kdt.kcur; i>=2; i--)
-            {
-                tsort.tagheappopi(ref kdt.r, ref kdt.idx, ref j);
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        K-NN query: approximate K nearest neighbors
-
-        INPUT PARAMETERS
-            KDT         -   KD-tree
-            X           -   point, array[0..NX-1].
-            K           -   number of neighbors to return, K>=1
-            SelfMatch   -   whether self-matches are allowed:
-                            * if True, nearest neighbor may be the point itself
-                              (if it exists in original dataset)
-                            * if False, then only points with non-zero distance
-                              are returned
-                            * if not given, considered True
-            Eps         -   approximation factor, Eps>=0. eps-approximate  nearest
-                            neighbor  is  a  neighbor  whose distance from X is at
-                            most (1+eps) times distance of true nearest neighbor.
-
-        RESULT
-            number of actual neighbors found (either K or N, if K>N).
-            
-        NOTES
-            significant performance gain may be achieved only when Eps  is  is  on
-            the order of magnitude of 1 or larger.
-
-        This  subroutine  performs  query  and  stores  its result in the internal
-        structures of the KD-tree. You can use  following  subroutines  to  obtain
-        these results:
-        * KDTreeQueryResultsX() to get X-values
-        * KDTreeQueryResultsXY() to get X- and Y-values
-        * KDTreeQueryResultsTags() to get tag values
-        * KDTreeQueryResultsDistances() to get distances
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static int kdtreequeryaknn(kdtree kdt,
-            double[] x,
-            int k,
-            bool selfmatch,
-            double eps)
-        {
-            int result = 0;
-            int i = 0;
-            int j = 0;
-
-            alglib.ap.assert(k>0, "KDTreeQueryAKNN: incorrect K!");
-            alglib.ap.assert((double)(eps)>=(double)(0), "KDTreeQueryAKNN: incorrect Eps!");
-            alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryAKNN: Length(X)<NX!");
-            alglib.ap.assert(apserv.isfinitevector(x, kdt.nx), "KDTreeQueryAKNN: X contains infinite or NaN values!");
-            
-            //
-            // Handle special case: KDT.N=0
-            //
-            if( kdt.n==0 )
-            {
-                kdt.kcur = 0;
-                result = 0;
-                return result;
-            }
-            
-            //
-            // Prepare parameters
-            //
-            k = Math.Min(k, kdt.n);
-            kdt.kneeded = k;
-            kdt.rneeded = 0;
-            kdt.selfmatch = selfmatch;
-            if( kdt.normtype==2 )
-            {
-                kdt.approxf = 1/math.sqr(1+eps);
-            }
-            else
-            {
-                kdt.approxf = 1/(1+eps);
-            }
-            kdt.kcur = 0;
-            
-            //
-            // calculate distance from point to current bounding box
-            //
-            kdtreeinitbox(kdt, x);
-            
-            //
-            // call recursive search
-            // results are returned as heap
-            //
-            kdtreequerynnrec(kdt, 0);
-            
-            //
-            // pop from heap to generate ordered representation
-            //
-            // last element is non pop'ed because it is already in
-            // its place
-            //
-            result = kdt.kcur;
-            j = kdt.kcur;
-            for(i=kdt.kcur; i>=2; i--)
-            {
-                tsort.tagheappopi(ref kdt.r, ref kdt.idx, ref j);
-            }
-            return result;
-        }
-
-
-        /*************************************************************************
-        X-values from last query
-
-        INPUT PARAMETERS
-            KDT     -   KD-tree
-            X       -   possibly pre-allocated buffer. If X is too small to store
-                        result, it is resized. If size(X) is enough to store
-                        result, it is left unchanged.
-
-        OUTPUT PARAMETERS
-            X       -   rows are filled with X-values
-
-        NOTES
-        1. points are ordered by distance from the query point (first = closest)
-        2. if  XY is larger than required to store result, only leading part  will
-           be overwritten; trailing part will be left unchanged. So  if  on  input
-           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
-           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
-           you want function  to  resize  array  according  to  result  size,  use
-           function with same name and suffix 'I'.
-
-        SEE ALSO
-        * KDTreeQueryResultsXY()            X- and Y-values
-        * KDTreeQueryResultsTags()          tag values
-        * KDTreeQueryResultsDistances()     distances
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultsx(kdtree kdt,
-            ref double[,] x)
-        {
-            int i = 0;
-            int k = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( kdt.kcur==0 )
-            {
-                return;
-            }
-            if( alglib.ap.rows(x)<kdt.kcur || alglib.ap.cols(x)<kdt.nx )
-            {
-                x = new double[kdt.kcur, kdt.nx];
-            }
-            k = kdt.kcur;
-            for(i=0; i<=k-1; i++)
-            {
-                i1_ = (kdt.nx) - (0);
-                for(i_=0; i_<=kdt.nx-1;i_++)
-                {
-                    x[i,i_] = kdt.xy[kdt.idx[i],i_+i1_];
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        X- and Y-values from last query
-
-        INPUT PARAMETERS
-            KDT     -   KD-tree
-            XY      -   possibly pre-allocated buffer. If XY is too small to store
-                        result, it is resized. If size(XY) is enough to store
-                        result, it is left unchanged.
-
-        OUTPUT PARAMETERS
-            XY      -   rows are filled with points: first NX columns with
-                        X-values, next NY columns - with Y-values.
-
-        NOTES
-        1. points are ordered by distance from the query point (first = closest)
-        2. if  XY is larger than required to store result, only leading part  will
-           be overwritten; trailing part will be left unchanged. So  if  on  input
-           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
-           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
-           you want function  to  resize  array  according  to  result  size,  use
-           function with same name and suffix 'I'.
-
-        SEE ALSO
-        * KDTreeQueryResultsX()             X-values
-        * KDTreeQueryResultsTags()          tag values
-        * KDTreeQueryResultsDistances()     distances
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultsxy(kdtree kdt,
-            ref double[,] xy)
-        {
-            int i = 0;
-            int k = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            if( kdt.kcur==0 )
-            {
-                return;
-            }
-            if( alglib.ap.rows(xy)<kdt.kcur || alglib.ap.cols(xy)<kdt.nx+kdt.ny )
-            {
-                xy = new double[kdt.kcur, kdt.nx+kdt.ny];
-            }
-            k = kdt.kcur;
-            for(i=0; i<=k-1; i++)
-            {
-                i1_ = (kdt.nx) - (0);
-                for(i_=0; i_<=kdt.nx+kdt.ny-1;i_++)
-                {
-                    xy[i,i_] = kdt.xy[kdt.idx[i],i_+i1_];
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Tags from last query
-
-        INPUT PARAMETERS
-            KDT     -   KD-tree
-            Tags    -   possibly pre-allocated buffer. If X is too small to store
-                        result, it is resized. If size(X) is enough to store
-                        result, it is left unchanged.
-
-        OUTPUT PARAMETERS
-            Tags    -   filled with tags associated with points,
-                        or, when no tags were supplied, with zeros
-
-        NOTES
-        1. points are ordered by distance from the query point (first = closest)
-        2. if  XY is larger than required to store result, only leading part  will
-           be overwritten; trailing part will be left unchanged. So  if  on  input
-           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
-           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
-           you want function  to  resize  array  according  to  result  size,  use
-           function with same name and suffix 'I'.
-
-        SEE ALSO
-        * KDTreeQueryResultsX()             X-values
-        * KDTreeQueryResultsXY()            X- and Y-values
-        * KDTreeQueryResultsDistances()     distances
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultstags(kdtree kdt,
-            ref int[] tags)
-        {
-            int i = 0;
-            int k = 0;
-
-            if( kdt.kcur==0 )
-            {
-                return;
-            }
-            if( alglib.ap.len(tags)<kdt.kcur )
-            {
-                tags = new int[kdt.kcur];
-            }
-            k = kdt.kcur;
-            for(i=0; i<=k-1; i++)
-            {
-                tags[i] = kdt.tags[kdt.idx[i]];
-            }
-        }
-
-
-        /*************************************************************************
-        Distances from last query
-
-        INPUT PARAMETERS
-            KDT     -   KD-tree
-            R       -   possibly pre-allocated buffer. If X is too small to store
-                        result, it is resized. If size(X) is enough to store
-                        result, it is left unchanged.
-
-        OUTPUT PARAMETERS
-            R       -   filled with distances (in corresponding norm)
-
-        NOTES
-        1. points are ordered by distance from the query point (first = closest)
-        2. if  XY is larger than required to store result, only leading part  will
-           be overwritten; trailing part will be left unchanged. So  if  on  input
-           XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get
-           XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if
-           you want function  to  resize  array  according  to  result  size,  use
-           function with same name and suffix 'I'.
-
-        SEE ALSO
-        * KDTreeQueryResultsX()             X-values
-        * KDTreeQueryResultsXY()            X- and Y-values
-        * KDTreeQueryResultsTags()          tag values
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultsdistances(kdtree kdt,
-            ref double[] r)
-        {
-            int i = 0;
-            int k = 0;
-
-            if( kdt.kcur==0 )
-            {
-                return;
-            }
-            if( alglib.ap.len(r)<kdt.kcur )
-            {
-                r = new double[kdt.kcur];
-            }
-            k = kdt.kcur;
-            
-            //
-            // unload norms
-            //
-            // Abs() call is used to handle cases with negative norms
-            // (generated during KFN requests)
-            //
-            if( kdt.normtype==0 )
-            {
-                for(i=0; i<=k-1; i++)
-                {
-                    r[i] = Math.Abs(kdt.r[i]);
-                }
-            }
-            if( kdt.normtype==1 )
-            {
-                for(i=0; i<=k-1; i++)
-                {
-                    r[i] = Math.Abs(kdt.r[i]);
-                }
-            }
-            if( kdt.normtype==2 )
-            {
-                for(i=0; i<=k-1; i++)
-                {
-                    r[i] = Math.Sqrt(Math.Abs(kdt.r[i]));
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        X-values from last query; 'interactive' variant for languages like  Python
-        which   support    constructs   like  "X = KDTreeQueryResultsXI(KDT)"  and
-        interactive mode of interpreter.
-
-        This function allocates new array on each call,  so  it  is  significantly
-        slower than its 'non-interactive' counterpart, but it is  more  convenient
-        when you call it from command line.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultsxi(kdtree kdt,
-            ref double[,] x)
-        {
-            x = new double[0,0];
-
-            kdtreequeryresultsx(kdt, ref x);
-        }
-
-
-        /*************************************************************************
-        XY-values from last query; 'interactive' variant for languages like Python
-        which   support    constructs   like "XY = KDTreeQueryResultsXYI(KDT)" and
-        interactive mode of interpreter.
-
-        This function allocates new array on each call,  so  it  is  significantly
-        slower than its 'non-interactive' counterpart, but it is  more  convenient
-        when you call it from command line.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultsxyi(kdtree kdt,
-            ref double[,] xy)
-        {
-            xy = new double[0,0];
-
-            kdtreequeryresultsxy(kdt, ref xy);
-        }
-
-
-        /*************************************************************************
-        Tags  from  last  query;  'interactive' variant for languages like  Python
-        which  support  constructs  like "Tags = KDTreeQueryResultsTagsI(KDT)" and
-        interactive mode of interpreter.
-
-        This function allocates new array on each call,  so  it  is  significantly
-        slower than its 'non-interactive' counterpart, but it is  more  convenient
-        when you call it from command line.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultstagsi(kdtree kdt,
-            ref int[] tags)
-        {
-            tags = new int[0];
-
-            kdtreequeryresultstags(kdt, ref tags);
-        }
-
-
-        /*************************************************************************
-        Distances from last query; 'interactive' variant for languages like Python
-        which  support  constructs   like  "R = KDTreeQueryResultsDistancesI(KDT)"
-        and interactive mode of interpreter.
-
-        This function allocates new array on each call,  so  it  is  significantly
-        slower than its 'non-interactive' counterpart, but it is  more  convenient
-        when you call it from command line.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreequeryresultsdistancesi(kdtree kdt,
-            ref double[] r)
-        {
-            r = new double[0];
-
-            kdtreequeryresultsdistances(kdt, ref r);
-        }
-
-
-        /*************************************************************************
-        Serializer: allocation
-
-          -- ALGLIB --
-             Copyright 14.03.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreealloc(alglib.serializer s,
-            kdtree tree)
-        {
-            
-            //
-            // Header
-            //
-            s.alloc_entry();
-            s.alloc_entry();
-            
-            //
-            // Data
-            //
-            s.alloc_entry();
-            s.alloc_entry();
-            s.alloc_entry();
-            s.alloc_entry();
-            apserv.allocrealmatrix(s, tree.xy, -1, -1);
-            apserv.allocintegerarray(s, tree.tags, -1);
-            apserv.allocrealarray(s, tree.boxmin, -1);
-            apserv.allocrealarray(s, tree.boxmax, -1);
-            apserv.allocintegerarray(s, tree.nodes, -1);
-            apserv.allocrealarray(s, tree.splits, -1);
-        }
-
-
-        /*************************************************************************
-        Serializer: serialization
-
-          -- ALGLIB --
-             Copyright 14.03.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreeserialize(alglib.serializer s,
-            kdtree tree)
-        {
-            
-            //
-            // Header
-            //
-            s.serialize_int(scodes.getkdtreeserializationcode());
-            s.serialize_int(kdtreefirstversion);
-            
-            //
-            // Data
-            //
-            s.serialize_int(tree.n);
-            s.serialize_int(tree.nx);
-            s.serialize_int(tree.ny);
-            s.serialize_int(tree.normtype);
-            apserv.serializerealmatrix(s, tree.xy, -1, -1);
-            apserv.serializeintegerarray(s, tree.tags, -1);
-            apserv.serializerealarray(s, tree.boxmin, -1);
-            apserv.serializerealarray(s, tree.boxmax, -1);
-            apserv.serializeintegerarray(s, tree.nodes, -1);
-            apserv.serializerealarray(s, tree.splits, -1);
-        }
-
-
-        /*************************************************************************
-        Serializer: unserialization
-
-          -- ALGLIB --
-             Copyright 14.03.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void kdtreeunserialize(alglib.serializer s,
-            kdtree tree)
-        {
-            int i0 = 0;
-            int i1 = 0;
-
-            
-            //
-            // check correctness of header
-            //
-            i0 = s.unserialize_int();
-            alglib.ap.assert(i0==scodes.getkdtreeserializationcode(), "KDTreeUnserialize: stream header corrupted");
-            i1 = s.unserialize_int();
-            alglib.ap.assert(i1==kdtreefirstversion, "KDTreeUnserialize: stream header corrupted");
-            
-            //
-            // Unserialize data
-            //
-            tree.n = s.unserialize_int();
-            tree.nx = s.unserialize_int();
-            tree.ny = s.unserialize_int();
-            tree.normtype = s.unserialize_int();
-            apserv.unserializerealmatrix(s, ref tree.xy);
-            apserv.unserializeintegerarray(s, ref tree.tags);
-            apserv.unserializerealarray(s, ref tree.boxmin);
-            apserv.unserializerealarray(s, ref tree.boxmax);
-            apserv.unserializeintegerarray(s, ref tree.nodes);
-            apserv.unserializerealarray(s, ref tree.splits);
-            kdtreealloctemporaries(tree, tree.n, tree.nx, tree.ny);
-        }
-
-
-        /*************************************************************************
-        Rearranges nodes [I1,I2) using partition in D-th dimension with S as threshold.
-        Returns split position I3: [I1,I3) and [I3,I2) are created as result.
-
-        This subroutine doesn't create tree structures, just rearranges nodes.
-        *************************************************************************/
-        private static void kdtreesplit(kdtree kdt,
-            int i1,
-            int i2,
-            int d,
-            double s,
-            ref int i3)
-        {
-            int i = 0;
-            int j = 0;
-            int ileft = 0;
-            int iright = 0;
-            double v = 0;
-
-            i3 = 0;
-
-            alglib.ap.assert(kdt.n>0, "KDTreeSplit: internal error");
-            
-            //
-            // split XY/Tags in two parts:
-            // * [ILeft,IRight] is non-processed part of XY/Tags
-            //
-            // After cycle is done, we have Ileft=IRight. We deal with
-            // this element separately.
-            //
-            // After this, [I1,ILeft) contains left part, and [ILeft,I2)
-            // contains right part.
-            //
-            ileft = i1;
-            iright = i2-1;
-            while( ileft<iright )
-            {
-                if( (double)(kdt.xy[ileft,d])<=(double)(s) )
-                {
-                    
-                    //
-                    // XY[ILeft] is on its place.
-                    // Advance ILeft.
-                    //
-                    ileft = ileft+1;
-                }
-                else
-                {
-                    
-                    //
-                    // XY[ILeft,..] must be at IRight.
-                    // Swap and advance IRight.
-                    //
-                    for(i=0; i<=2*kdt.nx+kdt.ny-1; i++)
-                    {
-                        v = kdt.xy[ileft,i];
-                        kdt.xy[ileft,i] = kdt.xy[iright,i];
-                        kdt.xy[iright,i] = v;
-                    }
-                    j = kdt.tags[ileft];
-                    kdt.tags[ileft] = kdt.tags[iright];
-                    kdt.tags[iright] = j;
-                    iright = iright-1;
-                }
-            }
-            if( (double)(kdt.xy[ileft,d])<=(double)(s) )
-            {
-                ileft = ileft+1;
-            }
-            else
-            {
-                iright = iright-1;
-            }
-            i3 = ileft;
-        }
-
-
-        /*************************************************************************
-        Recursive kd-tree generation subroutine.
-
-        PARAMETERS
-            KDT         tree
-            NodesOffs   unused part of Nodes[] which must be filled by tree
-            SplitsOffs  unused part of Splits[]
-            I1, I2      points from [I1,I2) are processed
-            
-        NodesOffs[] and SplitsOffs[] must be large enough.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        private static void kdtreegeneratetreerec(kdtree kdt,
-            ref int nodesoffs,
-            ref int splitsoffs,
-            int i1,
-            int i2,
-            int maxleafsize)
-        {
-            int n = 0;
-            int nx = 0;
-            int ny = 0;
-            int i = 0;
-            int j = 0;
-            int oldoffs = 0;
-            int i3 = 0;
-            int cntless = 0;
-            int cntgreater = 0;
-            double minv = 0;
-            double maxv = 0;
-            int minidx = 0;
-            int maxidx = 0;
-            int d = 0;
-            double ds = 0;
-            double s = 0;
-            double v = 0;
-            double v0 = 0;
-            double v1 = 0;
-            int i_ = 0;
-            int i1_ = 0;
-
-            alglib.ap.assert(kdt.n>0, "KDTreeGenerateTreeRec: internal error");
-            alglib.ap.assert(i2>i1, "KDTreeGenerateTreeRec: internal error");
-            
-            //
-            // Generate leaf if needed
-            //
-            if( i2-i1<=maxleafsize )
-            {
-                kdt.nodes[nodesoffs+0] = i2-i1;
-                kdt.nodes[nodesoffs+1] = i1;
-                nodesoffs = nodesoffs+2;
-                return;
-            }
-            
-            //
-            // Load values for easier access
-            //
-            nx = kdt.nx;
-            ny = kdt.ny;
-            
-            //
-            // Select dimension to split:
-            // * D is a dimension number
-            // In case bounding box has zero size, we enforce creation of the leaf node.
-            //
-            d = 0;
-            ds = kdt.curboxmax[0]-kdt.curboxmin[0];
-            for(i=1; i<=nx-1; i++)
-            {
-                v = kdt.curboxmax[i]-kdt.curboxmin[i];
-                if( (double)(v)>(double)(ds) )
-                {
-                    ds = v;
-                    d = i;
-                }
-            }
-            if( (double)(ds)==(double)(0) )
-            {
-                kdt.nodes[nodesoffs+0] = i2-i1;
-                kdt.nodes[nodesoffs+1] = i1;
-                nodesoffs = nodesoffs+2;
-                return;
-            }
-            
-            //
-            // Select split position S using sliding midpoint rule,
-            // rearrange points into [I1,I3) and [I3,I2).
-            //
-            // In case all points has same value of D-th component
-            // (MinV=MaxV) we enforce D-th dimension of bounding
-            // box to become exactly zero and repeat tree construction.
-            //
-            s = kdt.curboxmin[d]+0.5*ds;
-            i1_ = (i1) - (0);
-            for(i_=0; i_<=i2-i1-1;i_++)
-            {
-                kdt.buf[i_] = kdt.xy[i_+i1_,d];
-            }
-            n = i2-i1;
-            cntless = 0;
-            cntgreater = 0;
-            minv = kdt.buf[0];
-            maxv = kdt.buf[0];
-            minidx = i1;
-            maxidx = i1;
-            for(i=0; i<=n-1; i++)
-            {
-                v = kdt.buf[i];
-                if( (double)(v)<(double)(minv) )
-                {
-                    minv = v;
-                    minidx = i1+i;
-                }
-                if( (double)(v)>(double)(maxv) )
-                {
-                    maxv = v;
-                    maxidx = i1+i;
-                }
-                if( (double)(v)<(double)(s) )
-                {
-                    cntless = cntless+1;
-                }
-                if( (double)(v)>(double)(s) )
-                {
-                    cntgreater = cntgreater+1;
-                }
-            }
-            if( (double)(minv)==(double)(maxv) )
-            {
-                
-                //
-                // In case all points has same value of D-th component
-                // (MinV=MaxV) we enforce D-th dimension of bounding
-                // box to become exactly zero and repeat tree construction.
-                //
-                v0 = kdt.curboxmin[d];
-                v1 = kdt.curboxmax[d];
-                kdt.curboxmin[d] = minv;
-                kdt.curboxmax[d] = maxv;
-                kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i1, i2, maxleafsize);
-                kdt.curboxmin[d] = v0;
-                kdt.curboxmax[d] = v1;
-                return;
-            }
-            if( cntless>0 && cntgreater>0 )
-            {
-                
-                //
-                // normal midpoint split
-                //
-                kdtreesplit(kdt, i1, i2, d, s, ref i3);
-            }
-            else
-            {
-                
-                //
-                // sliding midpoint
-                //
-                if( cntless==0 )
-                {
-                    
-                    //
-                    // 1. move split to MinV,
-                    // 2. place one point to the left bin (move to I1),
-                    //    others - to the right bin
-                    //
-                    s = minv;
-                    if( minidx!=i1 )
-                    {
-                        for(i=0; i<=2*nx+ny-1; i++)
-                        {
-                            v = kdt.xy[minidx,i];
-                            kdt.xy[minidx,i] = kdt.xy[i1,i];
-                            kdt.xy[i1,i] = v;
-                        }
-                        j = kdt.tags[minidx];
-                        kdt.tags[minidx] = kdt.tags[i1];
-                        kdt.tags[i1] = j;
-                    }
-                    i3 = i1+1;
-                }
-                else
-                {
-                    
-                    //
-                    // 1. move split to MaxV,
-                    // 2. place one point to the right bin (move to I2-1),
-                    //    others - to the left bin
-                    //
-                    s = maxv;
-                    if( maxidx!=i2-1 )
-                    {
-                        for(i=0; i<=2*nx+ny-1; i++)
-                        {
-                            v = kdt.xy[maxidx,i];
-                            kdt.xy[maxidx,i] = kdt.xy[i2-1,i];
-                            kdt.xy[i2-1,i] = v;
-                        }
-                        j = kdt.tags[maxidx];
-                        kdt.tags[maxidx] = kdt.tags[i2-1];
-                        kdt.tags[i2-1] = j;
-                    }
-                    i3 = i2-1;
-                }
-            }
-            
-            //
-            // Generate 'split' node
-            //
-            kdt.nodes[nodesoffs+0] = 0;
-            kdt.nodes[nodesoffs+1] = d;
-            kdt.nodes[nodesoffs+2] = splitsoffs;
-            kdt.splits[splitsoffs+0] = s;
-            oldoffs = nodesoffs;
-            nodesoffs = nodesoffs+splitnodesize;
-            splitsoffs = splitsoffs+1;
-            
-            //
-            // Recirsive generation:
-            // * update CurBox
-            // * call subroutine
-            // * restore CurBox
-            //
-            kdt.nodes[oldoffs+3] = nodesoffs;
-            v = kdt.curboxmax[d];
-            kdt.curboxmax[d] = s;
-            kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i1, i3, maxleafsize);
-            kdt.curboxmax[d] = v;
-            kdt.nodes[oldoffs+4] = nodesoffs;
-            v = kdt.curboxmin[d];
-            kdt.curboxmin[d] = s;
-            kdtreegeneratetreerec(kdt, ref nodesoffs, ref splitsoffs, i3, i2, maxleafsize);
-            kdt.curboxmin[d] = v;
-        }
-
-
-        /*************************************************************************
-        Recursive subroutine for NN queries.
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        private static void kdtreequerynnrec(kdtree kdt,
-            int offs)
-        {
-            double ptdist = 0;
-            int i = 0;
-            int j = 0;
-            int nx = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int d = 0;
-            double s = 0;
-            double v = 0;
-            double t1 = 0;
-            int childbestoffs = 0;
-            int childworstoffs = 0;
-            int childoffs = 0;
-            double prevdist = 0;
-            bool todive = new bool();
-            bool bestisleft = new bool();
-            bool updatemin = new bool();
-
-            alglib.ap.assert(kdt.n>0, "KDTreeQueryNNRec: internal error");
-            
-            //
-            // Leaf node.
-            // Process points.
-            //
-            if( kdt.nodes[offs]>0 )
-            {
-                i1 = kdt.nodes[offs+1];
-                i2 = i1+kdt.nodes[offs];
-                for(i=i1; i<=i2-1; i++)
-                {
-                    
-                    //
-                    // Calculate distance
-                    //
-                    ptdist = 0;
-                    nx = kdt.nx;
-                    if( kdt.normtype==0 )
-                    {
-                        for(j=0; j<=nx-1; j++)
-                        {
-                            ptdist = Math.Max(ptdist, Math.Abs(kdt.xy[i,j]-kdt.x[j]));
-                        }
-                    }
-                    if( kdt.normtype==1 )
-                    {
-                        for(j=0; j<=nx-1; j++)
-                        {
-                            ptdist = ptdist+Math.Abs(kdt.xy[i,j]-kdt.x[j]);
-                        }
-                    }
-                    if( kdt.normtype==2 )
-                    {
-                        for(j=0; j<=nx-1; j++)
-                        {
-                            ptdist = ptdist+math.sqr(kdt.xy[i,j]-kdt.x[j]);
-                        }
-                    }
-                    
-                    //
-                    // Skip points with zero distance if self-matches are turned off
-                    //
-                    if( (double)(ptdist)==(double)(0) && !kdt.selfmatch )
-                    {
-                        continue;
-                    }
-                    
-                    //
-                    // We CAN'T process point if R-criterion isn't satisfied,
-                    // i.e. (RNeeded<>0) AND (PtDist>R).
-                    //
-                    if( (double)(kdt.rneeded)==(double)(0) || (double)(ptdist)<=(double)(kdt.rneeded) )
-                    {
-                        
-                        //
-                        // R-criterion is satisfied, we must either:
-                        // * replace worst point, if (KNeeded<>0) AND (KCur=KNeeded)
-                        //   (or skip, if worst point is better)
-                        // * add point without replacement otherwise
-                        //
-                        if( kdt.kcur<kdt.kneeded || kdt.kneeded==0 )
-                        {
-                            
-                            //
-                            // add current point to heap without replacement
-                            //
-                            tsort.tagheappushi(ref kdt.r, ref kdt.idx, ref kdt.kcur, ptdist, i);
-                        }
-                        else
-                        {
-                            
-                            //
-                            // New points are added or not, depending on their distance.
-                            // If added, they replace element at the top of the heap
-                            //
-                            if( (double)(ptdist)<(double)(kdt.r[0]) )
-                            {
-                                if( kdt.kneeded==1 )
-                                {
-                                    kdt.idx[0] = i;
-                                    kdt.r[0] = ptdist;
-                                }
-                                else
-                                {
-                                    tsort.tagheapreplacetopi(ref kdt.r, ref kdt.idx, kdt.kneeded, ptdist, i);
-                                }
-                            }
-                        }
-                    }
-                }
-                return;
-            }
-            
-            //
-            // Simple split
-            //
-            if( kdt.nodes[offs]==0 )
-            {
-                
-                //
-                // Load:
-                // * D  dimension to split
-                // * S  split position
-                //
-                d = kdt.nodes[offs+1];
-                s = kdt.splits[kdt.nodes[offs+2]];
-                
-                //
-                // Calculate:
-                // * ChildBestOffs      child box with best chances
-                // * ChildWorstOffs     child box with worst chances
-                //
-                if( (double)(kdt.x[d])<=(double)(s) )
-                {
-                    childbestoffs = kdt.nodes[offs+3];
-                    childworstoffs = kdt.nodes[offs+4];
-                    bestisleft = true;
-                }
-                else
-                {
-                    childbestoffs = kdt.nodes[offs+4];
-                    childworstoffs = kdt.nodes[offs+3];
-                    bestisleft = false;
-                }
-                
-                //
-                // Navigate through childs
-                //
-                for(i=0; i<=1; i++)
-                {
-                    
-                    //
-                    // Select child to process:
-                    // * ChildOffs      current child offset in Nodes[]
-                    // * UpdateMin      whether minimum or maximum value
-                    //                  of bounding box is changed on update
-                    //
-                    if( i==0 )
-                    {
-                        childoffs = childbestoffs;
-                        updatemin = !bestisleft;
-                    }
-                    else
-                    {
-                        updatemin = bestisleft;
-                        childoffs = childworstoffs;
-                    }
-                    
-                    //
-                    // Update bounding box and current distance
-                    //
-                    if( updatemin )
-                    {
-                        prevdist = kdt.curdist;
-                        t1 = kdt.x[d];
-                        v = kdt.curboxmin[d];
-                        if( (double)(t1)<=(double)(s) )
-                        {
-                            if( kdt.normtype==0 )
-                            {
-                                kdt.curdist = Math.Max(kdt.curdist, s-t1);
-                            }
-                            if( kdt.normtype==1 )
-                            {
-                                kdt.curdist = kdt.curdist-Math.Max(v-t1, 0)+s-t1;
-                            }
-                            if( kdt.normtype==2 )
-                            {
-                                kdt.curdist = kdt.curdist-math.sqr(Math.Max(v-t1, 0))+math.sqr(s-t1);
-                            }
-                        }
-                        kdt.curboxmin[d] = s;
-                    }
-                    else
-                    {
-                        prevdist = kdt.curdist;
-                        t1 = kdt.x[d];
-                        v = kdt.curboxmax[d];
-                        if( (double)(t1)>=(double)(s) )
-                        {
-                            if( kdt.normtype==0 )
-                            {
-                                kdt.curdist = Math.Max(kdt.curdist, t1-s);
-                            }
-                            if( kdt.normtype==1 )
-                            {
-                                kdt.curdist = kdt.curdist-Math.Max(t1-v, 0)+t1-s;
-                            }
-                            if( kdt.normtype==2 )
-                            {
-                                kdt.curdist = kdt.curdist-math.sqr(Math.Max(t1-v, 0))+math.sqr(t1-s);
-                            }
-                        }
-                        kdt.curboxmax[d] = s;
-                    }
-                    
-                    //
-                    // Decide: to dive into cell or not to dive
-                    //
-                    if( (double)(kdt.rneeded)!=(double)(0) && (double)(kdt.curdist)>(double)(kdt.rneeded) )
-                    {
-                        todive = false;
-                    }
-                    else
-                    {
-                        if( kdt.kcur<kdt.kneeded || kdt.kneeded==0 )
-                        {
-                            
-                            //
-                            // KCur<KNeeded (i.e. not all points are found)
-                            //
-                            todive = true;
-                        }
-                        else
-                        {
-                            
-                            //
-                            // KCur=KNeeded, decide to dive or not to dive
-                            // using point position relative to bounding box.
-                            //
-                            todive = (double)(kdt.curdist)<=(double)(kdt.r[0]*kdt.approxf);
-                        }
-                    }
-                    if( todive )
-                    {
-                        kdtreequerynnrec(kdt, childoffs);
-                    }
-                    
-                    //
-                    // Restore bounding box and distance
-                    //
-                    if( updatemin )
-                    {
-                        kdt.curboxmin[d] = v;
-                    }
-                    else
-                    {
-                        kdt.curboxmax[d] = v;
-                    }
-                    kdt.curdist = prevdist;
-                }
-                return;
-            }
-        }
-
-
-        /*************************************************************************
-        Copies X[] to KDT.X[]
-        Loads distance from X[] to bounding box.
-        Initializes CurBox[].
-
-          -- ALGLIB --
-             Copyright 28.02.2010 by Bochkanov Sergey
-        *************************************************************************/
-        private static void kdtreeinitbox(kdtree kdt,
-            double[] x)
-        {
-            int i = 0;
-            double vx = 0;
-            double vmin = 0;
-            double vmax = 0;
-
-            alglib.ap.assert(kdt.n>0, "KDTreeInitBox: internal error");
-            
-            //
-            // calculate distance from point to current bounding box
-            //
-            kdt.curdist = 0;
-            if( kdt.normtype==0 )
-            {
-                for(i=0; i<=kdt.nx-1; i++)
-                {
-                    vx = x[i];
-                    vmin = kdt.boxmin[i];
-                    vmax = kdt.boxmax[i];
-                    kdt.x[i] = vx;
-                    kdt.curboxmin[i] = vmin;
-                    kdt.curboxmax[i] = vmax;
-                    if( (double)(vx)<(double)(vmin) )
-                    {
-                        kdt.curdist = Math.Max(kdt.curdist, vmin-vx);
-                    }
-                    else
-                    {
-                        if( (double)(vx)>(double)(vmax) )
-                        {
-                            kdt.curdist = Math.Max(kdt.curdist, vx-vmax);
-                        }
-                    }
-                }
-            }
-            if( kdt.normtype==1 )
-            {
-                for(i=0; i<=kdt.nx-1; i++)
-                {
-                    vx = x[i];
-                    vmin = kdt.boxmin[i];
-                    vmax = kdt.boxmax[i];
-                    kdt.x[i] = vx;
-                    kdt.curboxmin[i] = vmin;
-                    kdt.curboxmax[i] = vmax;
-                    if( (double)(vx)<(double)(vmin) )
-                    {
-                        kdt.curdist = kdt.curdist+vmin-vx;
-                    }
-                    else
-                    {
-                        if( (double)(vx)>(double)(vmax) )
-                        {
-                            kdt.curdist = kdt.curdist+vx-vmax;
-                        }
-                    }
-                }
-            }
-            if( kdt.normtype==2 )
-            {
-                for(i=0; i<=kdt.nx-1; i++)
-                {
-                    vx = x[i];
-                    vmin = kdt.boxmin[i];
-                    vmax = kdt.boxmax[i];
-                    kdt.x[i] = vx;
-                    kdt.curboxmin[i] = vmin;
-                    kdt.curboxmax[i] = vmax;
-                    if( (double)(vx)<(double)(vmin) )
-                    {
-                        kdt.curdist = kdt.curdist+math.sqr(vmin-vx);
-                    }
-                    else
-                    {
-                        if( (double)(vx)>(double)(vmax) )
-                        {
-                            kdt.curdist = kdt.curdist+math.sqr(vx-vmax);
-                        }
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        This function allocates all dataset-independent array  fields  of  KDTree,
-        i.e.  such  array  fields  that  their dimensions do not depend on dataset
-        size.
-
-        This function do not sets KDT.NX or KDT.NY - it just allocates arrays
-
-          -- ALGLIB --
-             Copyright 14.03.2011 by Bochkanov Sergey
-        *************************************************************************/
-        private static void kdtreeallocdatasetindependent(kdtree kdt,
-            int nx,
-            int ny)
-        {
-            alglib.ap.assert(kdt.n>0, "KDTreeAllocDatasetIndependent: internal error");
-            kdt.x = new double[nx];
-            kdt.boxmin = new double[nx];
-            kdt.boxmax = new double[nx];
-            kdt.curboxmin = new double[nx];
-            kdt.curboxmax = new double[nx];
-        }
-
-
-        /*************************************************************************
-        This function allocates all dataset-dependent array fields of KDTree, i.e.
-        such array fields that their dimensions depend on dataset size.
-
-        This function do not sets KDT.N, KDT.NX or KDT.NY -
-        it just allocates arrays.
-
-          -- ALGLIB --
-             Copyright 14.03.2011 by Bochkanov Sergey
-        *************************************************************************/
-        private static void kdtreeallocdatasetdependent(kdtree kdt,
-            int n,
-            int nx,
-            int ny)
-        {
-            alglib.ap.assert(n>0, "KDTreeAllocDatasetDependent: internal error");
-            kdt.xy = new double[n, 2*nx+ny];
-            kdt.tags = new int[n];
-            kdt.idx = new int[n];
-            kdt.r = new double[n];
-            kdt.x = new double[nx];
-            kdt.buf = new double[Math.Max(n, nx)];
-            kdt.nodes = new int[splitnodesize*2*n];
-            kdt.splits = new double[2*n];
-        }
-
-
-        /*************************************************************************
-        This function allocates temporaries.
-
-        This function do not sets KDT.N, KDT.NX or KDT.NY -
-        it just allocates arrays.
-
-          -- ALGLIB --
-             Copyright 14.03.2011 by Bochkanov Sergey
-        *************************************************************************/
-        private static void kdtreealloctemporaries(kdtree kdt,
-            int n,
-            int nx,
-            int ny)
-        {
-            alglib.ap.assert(n>0, "KDTreeAllocTemporaries: internal error");
-            kdt.x = new double[nx];
-            kdt.idx = new int[n];
-            kdt.r = new double[n];
-            kdt.buf = new double[Math.Max(n, nx)];
-            kdt.curboxmin = new double[nx];
-            kdt.curboxmax = new double[nx];
         }
 
 
