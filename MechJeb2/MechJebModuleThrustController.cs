@@ -62,12 +62,12 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventOverheats = false;
 
-        [GeneralInfoItem("Prevent overheats", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("Prevent engine overheats", InfoItem.Category.Thrust)]
         public void LimitToPreventOverheatsInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
             if (limiter == LimitMode.Temperature) s.onHover.textColor = s.onNormal.textColor = Color.green;
-            limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, "Prevent overheats", s);
+            limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, "Prevent engine overheats", s);
         }
 
         [ToggleInfoItem("Smooth throttle", InfoItem.Category.Thrust)]
