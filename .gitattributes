@@ -18,4 +18,4 @@
 *.dll     binary
 *.bundle  binary
 
-bin/* binary
+bin/* text eol=lf
