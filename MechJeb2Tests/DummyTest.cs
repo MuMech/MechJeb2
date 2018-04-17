@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace B9PartSwitchTests
+namespace MechJeb2Tests
 {
     public class DummyTest
     {
