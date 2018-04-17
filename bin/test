@@ -2,8 +2,10 @@
 
 set -exuo pipefail
 
+KSPDIR=/Users/lamont/Library/Application\ Support/Steam/steamapps/common/Kerbal\ Space\ Program
+
 nuget restore MechJeb2.sln
-msbuild /p:Configuration=Release /p:ReferencePath="/Users/lamont/Library/Application Support/Steam/steamapps/common/Kerbal Space Program/KSP.app/Contents/Resources/Data/Managed" MechJeb2.sln
+msbuild /p:Configuration=Release /p:ReferencePath="${KSPDIR}/KSP.app/Contents/Resources/Data/Managed" MechJeb2.sln
 
 runtest="mono ./packages/xunit.runner.console.*/tools/*/xunit.console.exe"
 
@@ -12,4 +14,3 @@ echo "Running tests..."
 $runtest ./MechJeb2Tests/bin/Release/MechJeb2Tests.dll
 
 echo "Finished running tests"
-
