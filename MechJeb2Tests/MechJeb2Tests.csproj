@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C17BF82C-F906-4A92-8B9A-F8103CDB565C}</ProjectGuid>
+    <ProjectGuid>{F04CC01F-41F2-4016-AD6E-06750DB2F155}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MechJeb2Tests</RootNamespace>
