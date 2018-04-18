@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJeb2", "MechJeb2\MechJeb2.csproj", "{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}"
+Project("{7463AD31-7AA1-4C46-97BA-9C3823929E41}") = "MechJeb2", "MechJeb2\MechJeb2.csproj", "{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJeb2Tests", "MechJeb2Tests\MechJeb2Tests.csproj", "{C17BF82C-F906-4A92-8B9A-F8103CDB565C}"
+Project("{7463AD31-7AA1-4C46-97BA-9C3823929E41}") = "MechJeb2Tests", "MechJeb2Tests\MechJeb2Tests.csproj", "{F04CC01F-41F2-4016-AD6E-06750DB2F155}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,10 +16,10 @@ Global
 		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C17BF82C-F906-4A92-8B9A-F8103CDB565C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C17BF82C-F906-4A92-8B9A-F8103CDB565C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C17BF82C-F906-4A92-8B9A-F8103CDB565C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C17BF82C-F906-4A92-8B9A-F8103CDB565C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F04CC01F-41F2-4016-AD6E-06750DB2F155}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F04CC01F-41F2-4016-AD6E-06750DB2F155}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F04CC01F-41F2-4016-AD6E-06750DB2F155}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F04CC01F-41F2-4016-AD6E-06750DB2F155}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
