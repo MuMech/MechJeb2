@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Net.Compilers.2.7.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.2.7.0\build\Microsoft.Net.Compilers.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -11,8 +12,10 @@
     <AssemblyName>MechJeb2</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
+    <TargetFrameworkProfile />
     <RunPostBuildEvent>Always</RunPostBuildEvent>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -64,14 +67,38 @@
       <HintPath>UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VehiclesModule">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>UnityEngine.VehiclesModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>UnityEngine.AnimationModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="alglib\alglibinternal.cs" />
-    <Compile Include="alglib\alglibmisc.cs" />
-    <Compile Include="alglib\ap.cs" />
-    <Compile Include="alglib\diffequations.cs" />
-    <Compile Include="alglib\linalg.cs" />
-    <Compile Include="alglib\optimization.cs" />
     <Compile Include="AttitudeControllers\BaseAttitudeController.cs" />
     <Compile Include="AttitudeControllers\HybridController.cs" />
     <Compile Include="AttitudeControllers\KosAttitudeController.cs" />
@@ -82,10 +109,16 @@
     <Compile Include="CelestialBodyExtensions.cs" />
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="ComputerModule.cs" />
+    <Compile Include="DisplayModule.cs" />
     <Compile Include="FlyingSim\SimulatedParachute.cs" />
     <Compile Include="FlyingSim\SimulatedPart.cs" />
     <Compile Include="FlyingSim\SimulatedVessel.cs" />
+    <Compile Include="FuelFlowSimulation.cs" />
+    <Compile Include="GLUtils.cs" />
     <Compile Include="GoodingSolver.cs" />
+    <Compile Include="GuiUtils.cs" />
+    <Compile Include="InstallChecker.cs" />
+    <Compile Include="LambertSolver.cs" />
     <Compile Include="LandingAutopilot\CoastToDeceleration.cs" />
     <Compile Include="LandingAutopilot\CourseCorrection.cs" />
     <Compile Include="LandingAutopilot\DecelerationBurn.cs" />
@@ -95,23 +128,6 @@
     <Compile Include="LandingAutopilot\LowDeorbitBurn.cs" />
     <Compile Include="LandingAutopilot\PlaneChange.cs" />
     <Compile Include="LandingAutopilot\UntargetedDeorbit.cs" />
-    <Compile Include="MechjebBundlesManager.cs" />
-    <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
-    <Compile Include="MechJebModuleAirplaneGuidance.cs" />
-    <Compile Include="MechJebModuleAscentClassic.cs" />
-    <Compile Include="MechJebModuleAscentClassicMenu.cs" />
-    <Compile Include="MechJebModuleAscentGT.cs" />
-    <Compile Include="MechJebModuleAscentGTMenu.cs" />
-    <Compile Include="MechJebModuleAscentNavBall.cs" />
-    <Compile Include="MechJebModuleAscentPEG.cs" />
-    <Compile Include="MechJebModuleAscentPEGMenu.cs" />
-    <Compile Include="MechJebModuleDebugArrows.cs" />
-    <Compile Include="DisplayModule.cs" />
-    <Compile Include="FuelFlowSimulation.cs" />
-    <Compile Include="GLUtils.cs" />
-    <Compile Include="GuiUtils.cs" />
-    <Compile Include="InstallChecker.cs" />
-    <Compile Include="LambertSolver.cs" />
     <Compile Include="Maneuver\Operation.cs" />
     <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
     <Compile Include="Maneuver\OperationApoapsis.cs" />
@@ -137,11 +153,21 @@
     <Compile Include="MathExtensions.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
+    <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
+    <Compile Include="MechJebModuleAirplaneGuidance.cs" />
     <Compile Include="MechJebModuleAscentAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassic.cs" />
+    <Compile Include="MechJebModuleAscentClassicMenu.cs" />
+    <Compile Include="MechJebModuleAscentGT.cs" />
+    <Compile Include="MechJebModuleAscentGTMenu.cs" />
     <Compile Include="MechJebModuleAscentGuidance.cs" />
+    <Compile Include="MechJebModuleAscentNavBall.cs" />
+    <Compile Include="MechJebModuleAscentPEG.cs" />
+    <Compile Include="MechJebModuleAscentPEGMenu.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
     <Compile Include="MechJebModuleAttitudeController.cs" />
     <Compile Include="MechJebModuleCustomInfoWindow.cs" />
+    <Compile Include="MechJebModuleDebugArrows.cs" />
     <Compile Include="MechJebModuleDeployableAntennaController.cs" />
     <Compile Include="MechJebModuleDeployableController.cs" />
     <Compile Include="MechJebModuleDockingAutopilot.cs" />
@@ -156,7 +182,6 @@
     <Compile Include="MechJebModuleMenu.cs" />
     <Compile Include="MechJebModuleNodeEditor.cs" />
     <Compile Include="MechJebModuleNodeExecutor.cs" />
-    <Compile Include="MechJebModuleQuickTest.cs" />
     <Compile Include="MechJebModuleRCSBalancer.cs" />
     <Compile Include="MechJebModuleRCSBalancerWindow.cs" />
     <Compile Include="MechJebModuleRCSController.cs" />
@@ -182,15 +207,17 @@
     <Compile Include="MechJebModuleWarpHelper.cs" />
     <Compile Include="MechJebModuleWaypointWindow.cs" />
     <Compile Include="MechJebPod.cs" />
+    <Compile Include="MechjebBundlesManager.cs" />
+    <Compile Include="ModExtensionDemo.cs" />
     <Compile Include="MuUtils.cs" />
-    <Compile Include="OrbitalManeuverCalculator.cs" />
     <Compile Include="OrbitExtensions.cs" />
-    <Compile Include="PartExtensions.cs" />
+    <Compile Include="OrbitalManeuverCalculator.cs" />
     <Compile Include="PIDController.cs" />
+    <Compile Include="PartExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs" />
     <Compile Include="RCSSolver.cs" />
     <Compile Include="ReentrySimulation.cs" />
-    <Compile Include="Properties\Resources.Designer.cs" />
     <Compile Include="ScriptsModule\IMechJebModuleScriptActionContainer.cs" />
     <Compile Include="ScriptsModule\IMechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptAction.cs" />
@@ -204,8 +231,8 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionDockingShield.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionExecuteNode.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionFor.cs" />
-    <Compile Include="ScriptsModule\MechJebModuleScriptActionIf.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionIRSequencer.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionIf.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionKos.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionLanding.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionLoadScript.cs" />
@@ -217,7 +244,6 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionRendezvous.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionRendezvousAP.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionSAS.cs" />
-    <Compile Include="ScriptsModule\MechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionSmartASS.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionStaging.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionTarget.cs" />
@@ -230,14 +256,27 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionWaitFor.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionWarp.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionWhile.cs" />
+    <Compile Include="ScriptsModule\MechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptCondition.cs" />
-    <Compile Include="ModExtensionDemo.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
     <Compile Include="UnityToolbag\Future\Future.cs" />
     <Compile Include="Vector6.cs" />
     <Compile Include="VesselExtensions.cs" />
     <Compile Include="VesselState.cs" />
+    <Compile Include="alglib\alglibinternal.cs" />
+    <Compile Include="alglib\alglibmisc.cs" />
+    <Compile Include="alglib\ap.cs" />
+    <Compile Include="alglib\dataanalysis.cs" />
+    <Compile Include="alglib\diffequations.cs" />
+    <Compile Include="alglib\fasttransforms.cs" />
+    <Compile Include="alglib\integration.cs" />
+    <Compile Include="alglib\interpolation.cs" />
+    <Compile Include="alglib\linalg.cs" />
+    <Compile Include="alglib\optimization.cs" />
+    <Compile Include="alglib\solvers.cs" />
+    <Compile Include="alglib\specialfunctions.cs" />
+    <Compile Include="alglib\statistics.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx" />
@@ -249,27 +288,19 @@
     <None Include="UnityToolbag\Dispatcher\README.md" />
     <None Include="UnityToolbag\Future\README.md" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent Condition=" '$(OS)' == 'Windows_NT' ">call "$(ProjectDir)copy_build.bat" "$(TargetPath)" "$(TargetDir)" "$(TargetName)"</PostBuildEvent>
-    <PostBuildEvent Condition=" '$(OS)' != 'Windows_NT' ">sh -c "TARGET_PATH='$(TargetPath)' TARGET_DIR='$(TargetDir)' TARGET_NAME='$(TargetName)' sh '$(ProjectDir)/copy_build.sh'"</PostBuildEvent>
+    <PostBuildEvent>sh -c "mkdir -p '../build/' &amp;&amp; cp './MechJeb2.dll' '../build/'"</PostBuildEvent>
   </PropertyGroup>
-  <PropertyGroup>
-    <CodeAnalysisAdditionalOptions>/assemblyCompareMode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <BaseAddress>4194304</BaseAddress>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <StartAction>Project</StartAction>
-  </PropertyGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.2.7.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.2.7.0\build\Microsoft.Net.Compilers.props'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

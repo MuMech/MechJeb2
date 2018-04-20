@@ -1,15 +1,16 @@
-﻿using System.Reflection;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MuMechLib")]
+[assembly: AssemblyTitle("MechJeb2Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Multiversal Mechatronics")]
-[assembly: AssemblyProduct("MuMechLib")]
-[assembly: AssemblyCopyright("Copyright © Multiversal Mechatronics 2015")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("MechJeb2Tests")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a903d9fe-4604-47b8-b9d9-95728538f769")]
+[assembly: Guid("c17bf82c-f906-4a92-8b9a-f8103cdb565c")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -31,8 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.5.1.0")]     // We should not change it anymore. It break mods that links MJ ( cf http://support.microsoft.com/kb/556041 )
-[assembly: AssemblyFileVersion("2.7.2.0")] // this one we can change all we want
-[assembly: AssemblyInformationalVersion("")] // Displayed in the window title if not empty (used to display dev #)
-
-[assembly: KSPAssembly("MechJeb2", 2, 5)]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

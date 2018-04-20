@@ -17,3 +17,5 @@
 *.zip     binary
 *.dll     binary
 *.bundle  binary
+
+bin/* text eol=lf
