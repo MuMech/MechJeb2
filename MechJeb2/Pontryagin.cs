@@ -140,7 +140,7 @@ namespace MuMech {
 
             Console.WriteLine(t);
 
-            e = new Engine(25092.0703945434, 63136.1585987428);
+            e = new Engine(63136.1585987428, 25092.0703945434);
             singleIntegrate(y0, yf, 1, ref t, tb, e);
             Console.WriteLine(t);
         }
