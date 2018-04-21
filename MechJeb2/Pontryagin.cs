@@ -70,10 +70,8 @@ namespace MuMech {
         }
 
         // free attachment into the orbit defined by rT + vT
-        public static void terminal5constraint(double[] yT, double[] z, Problem o)
+        public static void terminal5constraint(double[] yT, double[] z, Vector3d rT, Vector3d vT)
         {
-            Vector3d rT = o.rT;
-            Vector3d vT = o.vT;
             Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
             Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
             Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
@@ -108,40 +106,43 @@ namespace MuMech {
             z[5] = trans;
         }
 
-        private void integrate(double[] y0, double[] yf)
+        public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, Engine e)
         {
-            alglib.odesolverstate s;
-            alglib.odesolverreport rep;
-            double eps = 0.001;
+            double eps = 0.00001;
             double h = 0;
-            Engine e = new Engine(0, 0);
             double[] y = new double[13];
-            int m;
+            double[] x = new double[2]{t, t+dt};
             double[] xtbl;
             double[,] ytbl;
+            int m;
+            alglib.odesolverstate s;
+            alglib.odesolverreport rep;
+            Array.Copy(y0, 13*n, y, 0, 13);
+            alglib.odesolverrkck(y, 13, x, 2, eps, h, out s);
+            alglib.odesolversolve(s, centralForceThrust, e);
+            alglib.odesolverresults(s, out m, out xtbl, out ytbl, out rep);
+            for(int i = 0; i < ytbl.GetLength(1); i++)
+            {
+                int j = 13*n+i;
+                yf[j] = ytbl[1,i];
+            }
+            t = t + dt;
+        }
 
+        public void multipleIntegrate(double[] y0, double[] yf, Problem p)
+        {
             double tc = y0[26];
             double tb = y0[27];
+            double t = 0;
 
-            double[] x = new double[2]{0, tc};
-            Array.Copy(y0, 0, y, 0, 13);
-            alglib.odesolverrkck(y, 13, x, 2, eps, h, out s);
-            alglib.odesolversolve(s, centralForceThrust, e);
-            alglib.odesolverresults(s, out m, out xtbl, out ytbl, out rep);
-            for(int i = 0; i < ytbl.GetLength(1); i++)
-            {
-                yf[i] = ytbl[1,i];
-            }
+            Engine e = new Engine(0, 0);
+            singleIntegrate(y0, yf, 0, ref t, tc, e);
+
+            Console.WriteLine(t);
+
             e = new Engine(25092.0703945434, 63136.1585987428);
-            x = new double[2]{tc, tc + tb};
-            Array.Copy(y0, 13, y, 0, 13);
-            alglib.odesolverrkck(y, 13, x, 2, eps, h, out s);
-            alglib.odesolversolve(s, centralForceThrust, e);
-            alglib.odesolverresults(s, out m, out xtbl, out ytbl, out rep);
-            for(int i = 0; i < ytbl.GetLength(1); i++)
-            {
-                yf[i+13] = ytbl[1,i];
-            }
+            singleIntegrate(y0, yf, 1, ref t, tb, e);
+            Console.WriteLine(t);
         }
 
         private void calculateZeros(double[] y0, double[] z, object o)
@@ -149,7 +150,7 @@ namespace MuMech {
             Problem p = (Problem)o;
 
             double[] yf = new double[26];
-            integrate(y0, yf);
+            multipleIntegrate(y0, yf, p);
 
             /* initial conditions */
             z[0] = y0[0] - p.r0[0];
@@ -164,7 +165,7 @@ namespace MuMech {
             double[] yT = new double[13];
             Array.Copy(yf, 13, yT, 0, 13);
             double[] zterm = new double[6];
-            terminal5constraint(yT, zterm, p);
+            //terminal5constraint(yT, zterm, p);
 
             z[7] = zterm[0];
             z[8] = zterm[1];
@@ -172,31 +173,6 @@ namespace MuMech {
             z[10] = zterm[3];
             z[11] = zterm[4];
             z[12] = zterm[5];
-        }
-
-        public void Solve()
-        {
-            Console.WriteLine("foo");
-            double[] y0 = new double[28]{0.92900115807, -0.37007681406, 0, 0.37007681406, 0.92900115807, 0, 0.00710556839, -0.64675896367, 0.67234670825, 0.12468793409, 0.21507773406, -0.26755748668, 32740, 0.92900115807, -0.37007681406, 0, 0.37007681406, 0.92900115807, 0, 0.00710556839, -0.64675896367, 0.67234670825, 0.12468793409, 0.21507773406, -0.26755748668, 32740, -0.25227, 0.50454};
-            double[] z = new double[28];
-            Vector3d r0;
-            /*Vector3d v0 = new Vector3d(0, 1, 0);
-            double m0 = 32740;
-            Vector3d rT = new Vector3d(1, 0, 0);
-            Vector3d vT = new Vector3d(0, 0, 1.0288);
-            Problem p = new Problem(r0, v0, m0, rT, vT);
-            calculateZeros(y0, z, p);
-            */
-        }
-    }
-
-    class TestClass
-    {
-        static void Main(string[] args)
-        {
-            Console.WriteLine(Environment.Version);
-            Pontryagin p = new Pontryagin();
-            p.Solve();
         }
     }
 }
