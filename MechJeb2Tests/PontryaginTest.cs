@@ -72,7 +72,7 @@ namespace MuMech
             for(int i = 0; i < 26; i++)
                 Console.WriteLine(yf[i] + " " + yfexp[i]);
             for(int i = 0; i < 26; i++)
-                Assert.Equal(0, ( yf[i] - yfexp[i] ) / 3.0, 3);
+                Assert.Equal(0, yf[i] - yfexp[i], 3);
         }
 
         [Fact]
