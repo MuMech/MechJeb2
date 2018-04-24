@@ -102,7 +102,7 @@ namespace MuMech
             else
             {
                 // now make sure we've got a node and do the preburn
-                if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
+                if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
                     Abort();
                     return;
@@ -126,14 +126,14 @@ namespace MuMech
             }
             else if (mode == Mode.ALL_NODES)
             {
-                if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
                     Abort();
                     return;
                 }
                 else
                 {
-                    node = vessel.patchedConicSolver.maneuverNodes.First();
+                    node = vessel.patchedConicSolver.maneuverNodes[0];
                 }
             }
         }
@@ -147,7 +147,7 @@ namespace MuMech
 
         private void preburn()
         {
-            node = vessel.patchedConicSolver.maneuverNodes.First();
+            node = vessel.patchedConicSolver.maneuverNodes[0];
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
             peg.TargetNode(node, true);
