@@ -369,7 +369,6 @@ namespace MuMech
 
         private void converge_vgo()
         {
-            Debug.Log("called converge_vgo()");
             /* we handle attitude directly here, unlike converge() because ascents are $COMPLICATED */
             core.attitude.attitudeTo(vgo, AttitudeReference.INERTIAL, this);
             if ( ( core.attitude.attitudeAngleFromTarget() > 1 || core.vessel.angularVelocity.magnitude > 0.01 ) && status == PegStatus.SLEWING )
@@ -387,23 +386,14 @@ namespace MuMech
             // only use rcs for trim if its enabled and we have more than 10N of thrust
             bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
 
-            Debug.Log("vgo = " + vgo);
-
             Vector3d dV_atom = ( vessel.acceleration_immediate - vessel.graviticAcceleration ) * TimeWarp.fixedDeltaTime;
-
-            Debug.Log("dv_atom = " + dV_atom);
 
             if ( last_call != 0 )
             {
-                Debug.Log("wat?");
                 vgo -= dV_atom;
             }
 
-            Debug.Log("vgo = " + vgo);
-
             converge_vgo_corrector();
-
-            Debug.Log("vgo = " + vgo);
 
             double vgo_forward = Vector3d.Dot(vgo, vesselState.forward);
 
@@ -413,11 +403,7 @@ namespace MuMech
             else
                 next_accel = vesselState.maxThrustAccel;
 
-            Debug.Log("next accel = " + next_accel);
-
-            Debug.Log("tgo before = " + tgo);
             tgo = vgo_forward / next_accel;
-            Debug.Log("tgo after = " + tgo);
 
             int tickstop = 1;
             // due to increasing accelleration due to high constant thrust we stop at 2 * tick rather than 1 * tick to always stop before
@@ -465,9 +451,6 @@ namespace MuMech
         // main PEG outer routine, more concerned with KSP issues than PEG itself
         private void converge()
         {
-            Debug.Log("called converge");
-            Debug.Log("tgo = " + tgo);
-
             oldstatus = status;
             oldlambda = lambda;
             oldlambdaDot = lambdaDot;
@@ -912,7 +895,6 @@ namespace MuMech
 
         private void Done()
         {
-            Debug.Log("PEG DONE: " + Environment.StackTrace);
             users.Clear();
             core.thrust.ThrustOff();
             vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
