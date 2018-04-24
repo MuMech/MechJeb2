@@ -20,16 +20,14 @@ namespace MuMech {
             public Vector3d r0;
             public Vector3d v0;
             public double m0;
-            public Vector3d rT;
-            public Vector3d vT;
+            public Action<double[], double[]> bcfun;
 
-            public Problem(Vector3d r0, Vector3d v0, double m0, Vector3d rT, Vector3d vT)
+            public Problem(Vector3d r0, Vector3d v0, double m0, Action<double[], double[]> bcfun)
             {
                 this.r0 = r0;
                 this.v0 = v0;
                 this.m0 = m0;
-                this.rT = rT;
-                this.vT = vT;
+                this.bcfun = bcfun;
             }
         }
 
@@ -37,7 +35,7 @@ namespace MuMech {
         {
         }
 
-        public static void centralForceThrust(double[] y, double x, double[] dy, object o)
+        public void centralForceThrust(double[] y, double x, double[] dy, object o)
         {
             Engine e = (Engine)o;
             double Fm = e.thrust / y[12];
@@ -70,7 +68,7 @@ namespace MuMech {
         }
 
         // free attachment into the orbit defined by rT + vT
-        public static void terminal5constraint(double[] yT, double[] z, Vector3d rT, Vector3d vT)
+        public void terminal5constraint(double[] yT, double[] z, Vector3d rT, Vector3d vT)
         {
             Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
             Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
@@ -138,14 +136,11 @@ namespace MuMech {
             Engine e = new Engine(0, 0);
             singleIntegrate(y0, yf, 0, ref t, tc, e);
 
-            Console.WriteLine(t);
-
             e = new Engine(63136.1585987428, 25092.0703945434);
             singleIntegrate(y0, yf, 1, ref t, tb, e);
-            Console.WriteLine(t);
         }
 
-        private void calculateZeros(double[] y0, double[] z, object o)
+        public void optimizationFunction(double[] y0, double[] z, object o)
         {
             Problem p = (Problem)o;
 
@@ -165,7 +160,7 @@ namespace MuMech {
             double[] yT = new double[13];
             Array.Copy(yf, 13, yT, 0, 13);
             double[] zterm = new double[6];
-            //terminal5constraint(yT, zterm, p);
+            p.bcfun(yT, zterm);
 
             z[7] = zterm[0];
             z[8] = zterm[1];
@@ -173,6 +168,50 @@ namespace MuMech {
             z[10] = zterm[3];
             z[11] = zterm[4];
             z[12] = zterm[5];
+
+            /* multiple shooting continuity */
+            for(int i = 0; i < 13; i++)
+                z[i+13] = y0[i+13] - yf[i];
+
+            Vector3d r1 = new Vector3d(yf[0], yf[1], yf[2]);
+            Vector3d v1 = new Vector3d(yf[3], yf[4], yf[5]);
+            Vector3d pv1 = new Vector3d(yf[6], yf[7], yf[8]);
+            Vector3d pr1 = new Vector3d(yf[9], yf[10], yf[11]);
+
+            /* switching condition for coast */
+            z[26] = Vector3d.Dot(pr1, v1) - Vector3d.Dot(pv1, r1) / ( r1.magnitude * r1.magnitude * r1.magnitude );  /* H0(t1) = 0 */
+
+            /* magnitude of initial costate vector = 1.0 (dummy constraint because BC is keplerian) */
+            z[27] = 0.0;
+            for(int i = 0; i < 6; i++)
+                z[27] = z[27] + y0[6+i] * y0[6+i];
+            z[27] = Math.Sqrt(z[27]) - 1.0;
+
+            /* construct sum of the squares of the residuals for levenberg marquardt */
+            for(int i = 0; i < 28; i++)
+                z[i] = z[i] * z[i];
+        }
+
+        public void Optimize(double[] y0, double[] yf, Problem p)
+        {
+            alglib.minlmstate state;
+            alglib.minlmreport rep = new alglib.minlmreport();
+            alglib.minlmcreatev(28, 28, y0, 0.001, out state);  /* TODO: what should diffstate be? */
+            alglib.minlmsetcond(state, 0.00001, 1000);
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            alglib.minlmoptimize(state, optimizationFunction, null, p);
+            alglib.minlmresultsbuf(state, ref yf, rep);
+            stopWatch.Stop();
+            Console.WriteLine("Report Code: " + rep.terminationtype);
+            Console.WriteLine("Iterations: " + rep.iterationscount);
+            Console.WriteLine("NFunc: " + rep.nfunc);
+            Console.WriteLine("NJac: " + rep.njac);
+            Console.WriteLine("NHess: " + rep.nhess);
+            Console.WriteLine("NCholesky: " + rep.ncholesky);
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
+            Console.WriteLine("RunTime " + elapsedTime);
         }
     }
 }
