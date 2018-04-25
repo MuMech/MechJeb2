@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace MuMech
 {
@@ -15,7 +16,15 @@ namespace MuMech
             if (assemblies.Any())
             {
                 var badPaths = assemblies.Select(a => a.path).Select(p => Uri.UnescapeDataString(new Uri(Path.GetFullPath(KSPUtil.ApplicationRootPath)).MakeRelativeUri(new Uri(p)).ToString().Replace('/', Path.DirectorySeparatorChar)));
-                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "InstallCheckerA", "Incorrect MechJeb2 Installation", "MechJeb2 has been installed incorrectly and will not function properly. All MechJeb2 files should be located in KSP like this \n<KSP>\n\tGameData\n\t\tMechJeb2\n\t\t\tParts\n\t\t\tPlugins\n\nDo not move any files from inside the MechJeb2 folder.\n\nIncorrect path(s):\n" + String.Join("\n", badPaths.ToArray()), "OK", false, HighLogic.UISkin);
+                PopupDialog.SpawnPopupDialog(
+                    new MultiOptionDialog("InstallCheckerA",
+                        null, "Incorrect MechJeb2 Installation",
+                        HighLogic.UISkin,
+                        new Rect(0.5f, 0.5f, 100f, 100f),
+                        new DialogGUIContentSizer(ContentSizeFitter.FitMode.PreferredSize, ContentSizeFitter.FitMode.MinSize),
+                        new DialogGUILabel("MechJeb2 has been installed incorrectly and will not function properly.\nAll MechJeb2 files should be located in KSP like this \n<KSP>\n\tGameData\n\t\tMechJeb2\n\t\t\tParts\n\t\t\tPlugins\n\nDo not move any files from inside the MechJeb2 folder.\n\nIncorrect path(s):\n" + String.Join("\n", badPaths.ToArray())),
+                        new DialogGUIButton("OK", () => { }, true)
+                    ), false, HighLogic.UISkin);
             }
             assemblies = AssemblyLoader.loadedAssemblies.Where(a=> a.assembly.GetName().Name == "MechJebMenuToolbar" );
             if (assemblies.Any())

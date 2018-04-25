@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace MuMech
 {
@@ -19,9 +18,9 @@ namespace MuMech
         [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
         public string NextNodeBurnTime()
         {
-            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
+            if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 return "-";
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
             double dV = node.GetBurnVector(orbit).magnitude;
             double halfBurnTIme;
             return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTIme));
@@ -30,9 +29,9 @@ namespace MuMech
         [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
         public string NextNodeCountdown()
         {
-            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
+            if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 return "-";
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
             double dV = node.GetBurnVector(orbit).magnitude;
             double halfBurnTIme;
             double burnTIme = BurnTime(dV, out halfBurnTIme);
@@ -82,14 +81,14 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any())
+            if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
                 Abort();
                 return;
             }
 
             //check if we've finished a node:
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
             if (dVLeft < tolerance && core.attitude.attitudeAngleFromTarget() > 5)
@@ -105,14 +104,14 @@ namespace MuMech
                 }
                 else if (mode == Mode.ALL_NODES)
                 {
-                    if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                    if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
                     {
                         Abort();
                         return;
                     }
                     else
                     {
-                        node = vessel.patchedConicSolver.maneuverNodes.First();
+                        node = vessel.patchedConicSolver.maneuverNodes[0];
                     }
                 }
             }
@@ -134,7 +133,7 @@ namespace MuMech
             //autowarp, but only if we're already aligned with the node
             if (autowarp && !burnTriggered)
             {
-                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularMomentum.magnitude < 0.05) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
                     core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }

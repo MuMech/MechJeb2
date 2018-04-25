@@ -830,18 +830,18 @@ namespace MuMech
                 // No point in copying those again if we already have them loaded
                 if (!loaded)
                 {
-                    dragCurveCd = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
-                    dragCurveCdPower = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
+                    dragCurveCd         = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
+                    dragCurveCdPower    = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
                     dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
 
-                    dragCurveSurface = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface .Curve.keys);
-                    dragCurveTail = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
-                    dragCurveTip = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
+                    dragCurveSurface    = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface .Curve.keys);
+                    dragCurveTail       = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
+                    dragCurveTip        = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
 
-                    liftCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
-                    liftMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
-                    dragCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
-                    dragMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    liftCurve           = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
+                    liftMachCurve       = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    dragCurve           = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
+                    dragMachCurve       = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragMachCurve.Curve.keys);
 
                     spaceTemperature = PhysicsGlobals.SpaceTemperature;
                     loaded = true;

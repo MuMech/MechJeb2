@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using KSP.IO;
 using System.Diagnostics;
+using UnityEngine.Profiling;
 using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
@@ -39,26 +40,22 @@ namespace MuMech
         public MechJebModuleRoverController rover;
         public MechJebModuleNodeExecutor node;
         public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleDeployableAntennaController antennaControl;
         public MechJebModuleLandingAutopilot landing;
         public MechJebModuleSettings settings;
         public MechJebModuleAirplaneAutopilot airplane;
 
         public VesselState vesselState = new VesselState();
-
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "Disabled", enabledText = "Enabled")]
         public bool running = true;
-
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
-
         public string version = "";
-
         private bool deactivateControl = false;
-
         public MechJebCore MasterMechJeb
         {
             get { return vessel.GetMasterMechJeb(); }
         }
-
+        
         // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
         public bool DeactivateControl
         {
@@ -85,6 +82,11 @@ namespace MuMech
         public bool eduMode = false;
 
         public bool rssMode { get { return settings.rssMode; } }
+
+        public bool ShowGui
+        {
+            get { return showGui; }
+        }
 
         [KSPAction("Orbit Prograde")]
         public void OnOrbitProgradeAction(KSPActionParam param)
@@ -479,8 +481,8 @@ namespace MuMech
                 OnLoad(null);
             }
 
-            GameEvents.onShowUI.Add(ShowGUI);
-            GameEvents.onHideUI.Add(HideGUI);
+            GameEvents.onShowUI.Add(OnShowGUI);
+            GameEvents.onHideUI.Add(OnHideGUI);
             GameEvents.onVesselChange.Add(UnlockControl);
 
             lastSettingsSaveTime = Time.time;
@@ -774,6 +776,7 @@ namespace MuMech
             rover = GetComputerModule<MechJebModuleRoverController>();
             node = GetComputerModule<MechJebModuleNodeExecutor>();
             solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            antennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
             landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             settings = GetComputerModule<MechJebModuleSettings>();
             airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
@@ -997,8 +1000,8 @@ namespace MuMech
                 OnSave(null);
             }
 
-            GameEvents.onShowUI.Remove(ShowGUI);
-            GameEvents.onHideUI.Remove(HideGUI);
+            GameEvents.onShowUI.Remove(OnShowGUI);
+            GameEvents.onHideUI.Remove(OnHideGUI);
             GameEvents.onVesselChange.Remove(UnlockControl);
 
             if (weLockedInputs)
@@ -1080,11 +1083,11 @@ namespace MuMech
             s.Z = Mathf.Clamp(s.Z, -1, 1);
         }
 
-        private void ShowGUI()
+        private void OnShowGUI()
         {
             showGui = true;
         }
-        private void HideGUI()
+        private void OnHideGUI()
         {
             showGui = false;
         }

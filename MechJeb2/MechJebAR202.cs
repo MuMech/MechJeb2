@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
@@ -17,7 +16,7 @@ namespace MuMech
 
         public override void OnStart(StartState state)
         {
-            core = part.Modules.OfType<MechJebCore>().FirstOrDefault();
+            core = part.Modules.GetModule<MechJebCore>();
 
             if (state != StartState.None && state != StartState.Editor)
             {

@@ -117,7 +117,7 @@ namespace MuMech
             return (a.SwappedAbsolutePositionAtUT(UT) - b.SwappedAbsolutePositionAtUT(UT)).magnitude;
         }
 
-        //Time during a's next orbit at which object a comes nearest to object b. 
+        //Time during a's next orbit at which object a comes nearest to object b.
         //If a is hyperbolic, the examined interval is the next 100 units of mean anomaly.
         //This is quite a large segment of the hyperbolic arc. However, for extremely high
         //hyperbolic eccentricity it may not find the actual closest approach.
@@ -215,7 +215,7 @@ namespace MuMech
             }
         }
 
-        //Gives the true anomaly (in a's orbit) at which a crosses its ascending node 
+        //Gives the true anomaly (in a's orbit) at which a crosses its ascending node
         //with b's orbit.
         //The returned value is always between 0 and 360.
         public static double AscendingNodeTrueAnomaly(this Orbit a, Orbit b)
@@ -224,7 +224,7 @@ namespace MuMech
             return a.TrueAnomalyFromVector(vectorToAN);
         }
 
-        //Gives the true anomaly (in a's orbit) at which a crosses its descending node 
+        //Gives the true anomaly (in a's orbit) at which a crosses its descending node
         //with b's orbit.
         //The returned value is always between 0 and 360.
         public static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b)
@@ -331,7 +331,7 @@ namespace MuMech
 
             //If the vector points to the infalling part of the orbit then we need to do 360 minus the
             //angle from Pe to get the true anomaly. Test this by taking the the cross product of the
-            //orbit normal and vector to the periapsis. This gives a vector that points to center of the 
+            //orbit normal and vector to the periapsis. This gives a vector that points to center of the
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
             if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
@@ -419,7 +419,7 @@ namespace MuMech
 
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
-        //For hyperbolic orbits this can be any time, including a time in the past if 
+        //For hyperbolic orbits this can be any time, including a time in the past if
         //the ascending node is in the past.
         //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "ascending node"
         //occurs at a true anomaly that a does not actually ever attain
@@ -430,7 +430,7 @@ namespace MuMech
 
         //Returns the next time at which a will cross its descending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
-        //For hyperbolic orbits this can be any time, including a time in the past if 
+        //For hyperbolic orbits this can be any time, including a time in the past if
         //the descending node is in the past.
         //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "descending node"
         //occurs at a true anomaly that a does not actually ever attain
@@ -440,9 +440,9 @@ namespace MuMech
         }
 
         //Returns the next time at which the orbiting object will cross the equator
-        //moving northward, if o is east-moving, or southward, if o is west-moving. 
+        //moving northward, if o is east-moving, or southward, if o is west-moving.
         //For elliptical orbits this is a time between UT and UT + o.period.
-        //For hyperbolic orbits this can by any time, including a time in the past if the 
+        //For hyperbolic orbits this can by any time, including a time in the past if the
         //ascending node is in the past.
         //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
         //"ascending node" occurs at a true anomaly that o does not actually ever attain.
@@ -452,9 +452,9 @@ namespace MuMech
         }
 
         //Returns the next time at which the orbiting object will cross the equator
-        //moving southward, if o is east-moving, or northward, if o is west-moving. 
+        //moving southward, if o is east-moving, or northward, if o is west-moving.
         //For elliptical orbits this is a time between UT and UT + o.period.
-        //For hyperbolic orbits this can by any time, including a time in the past if the 
+        //For hyperbolic orbits this can by any time, including a time in the past if the
         //descending node is in the past.
         //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
         //"descending node" occurs at a true anomaly that o does not actually ever attain.
@@ -474,7 +474,7 @@ namespace MuMech
             return Math.Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period)); //period after which the phase angle repeats
         }
 
-        //Computes the phase angle between two orbiting objects. 
+        //Computes the phase angle between two orbiting objects.
         //This only makes sence if a.referenceBody == b.referenceBody.
         public static double PhaseAngle(this Orbit a, Orbit b, double UT)
         {
@@ -498,7 +498,7 @@ namespace MuMech
         }
 
         //Finds the next time at which the orbiting object will achieve a given radius
-        //from the center of the primary. 
+        //from the center of the primary.
         //If the given radius is impossible for this orbit, an ArgumentException is thrown.
         //For elliptical orbits this will be a time between UT and UT + period
         //For hyperbolic orbits this can be any time. If the given radius will be achieved

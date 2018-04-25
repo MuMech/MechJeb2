@@ -112,7 +112,9 @@ namespace UnityToolbag
 
         public static void CreateDispatcher()
         {
-            Debug.Log("Starting the Dispatcher");
+            if (_instanceExists)
+                return;
+            Debug.Log("[MechJeb2] Starting the Dispatcher");
             new GameObject(typeof(Dispatcher).Name).AddComponent<Dispatcher>();
         }
     }

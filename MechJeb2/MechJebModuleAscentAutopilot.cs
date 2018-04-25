@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using KSP.UI.Screens;
 using UnityEngine;
 
@@ -37,6 +36,8 @@ namespace MuMech
         public EditableDouble turnRoll = new EditableDouble(90);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autodeploySolarPanels = true;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool autoDeployAntennas = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool skipCircularization = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -197,14 +198,26 @@ namespace MuMech
 
         }
 
-        void DriveSolarPanels(FlightCtrlState s)
+        void DriveDeployableComponents(FlightCtrlState s)
         {
             if (autodeploySolarPanels)
             {
                 if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                {
                     core.solarpanel.ExtendAll();
+                }
                 else
+                {
                     core.solarpanel.RetractAll();
+                }
+            }
+
+            if (autoDeployAntennas)
+            {
+                if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                    core.antennaControl.ExtendAll();
+                else
+                    core.antennaControl.RetractAll();
             }
         }
 
@@ -255,7 +268,7 @@ namespace MuMech
                 return;
             }
 
-            DriveSolarPanels(s);
+            DriveDeployableComponents(s);
 
             if ( ascentPath.DriveAscent(s) ) {
                 if (GameSettings.VERBOSE_DEBUG_LOG) { Debug.Log("Remaining in Ascent"); }
@@ -274,11 +287,11 @@ namespace MuMech
                 return;
             }
 
-            DriveSolarPanels(s);
+            DriveDeployableComponents(s);
 
             if (placedCircularizeNode)
             {
-                if (!vessel.patchedConicSolver.maneuverNodes.Any())
+                if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
                     MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
                     if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;

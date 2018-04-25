@@ -96,7 +96,8 @@ namespace MuMech
 				}
 			}
 
-            core.solarpanel.AutoDeploySolarPanelsInfoItem();
+            core.solarpanel.SolarPanelDeployButton();
+            core.antennaControl.AntennaDeployButton();
 
             Autostage();
 

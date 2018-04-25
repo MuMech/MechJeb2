@@ -109,7 +109,7 @@ namespace MuMech.AttitudeControllers
             phiVector = PhiVector();
             
             for(int i = 0; i < 3; i++) {
-                MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vessel.MOI[i];
+                MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
             }
 
             TargetOmega[0] = pitchRatePI.Update(-phiVector[0], 0, MaxOmega[0]);
@@ -121,9 +121,9 @@ namespace MuMech.AttitudeControllers
                 rollRatePI.ResetI();
             }
 
-            TargetTorque[0] = pitchPI.Update(Omega[0], TargetOmega[0], ac.vessel.MOI[0], ControlTorque[0]);
-            TargetTorque[1] = rollPI.Update(Omega[1], TargetOmega[1], ac.vessel.MOI[1], ControlTorque[1]);
-            TargetTorque[2] = yawPI.Update(Omega[2], TargetOmega[2], ac.vessel.MOI[2], ControlTorque[2]);
+            TargetTorque[0] = pitchPI.Update(Omega[0], TargetOmega[0], ac.vesselState.MoI[0], ControlTorque[0]);
+            TargetTorque[1] = rollPI.Update(Omega[1], TargetOmega[1], ac.vesselState.MoI[1], ControlTorque[1]);
+            TargetTorque[2] = yawPI.Update(Omega[2], TargetOmega[2], ac.vesselState.MoI[2], ControlTorque[2]);
         }
 
         public override void Reset()

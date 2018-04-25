@@ -4,6 +4,7 @@ using UniLinq;
 using KSP.UI.Screens;
 using Smooth.Pools;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace MuMech
 {
@@ -605,7 +606,17 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
 
-            Orbit o = vessel.orbit;
+            Orbit o;
+            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+            {
+                ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.Last();
+                o = node.nextPatch;
+            }
+            else
+            {
+                o = vessel.orbit;
+            }
+
             while (o != null && o.referenceBody != (CelestialBody) vessel.targetObject)
                 o = o.nextPatch;
 
@@ -1233,7 +1244,7 @@ namespace MuMech
         {
             if (vessel.landedAt != string.Empty)
                 return vessel.landedAt;
-            return ScienceUtil.GetExperimentBiome(mainBody, vessel.latitude, vessel.longitude);
+            return mainBody.GetExperimentBiomeSafe(vessel.latitude, vessel.longitude);
         }
 
         [ValueInfoItem("Current Biome", InfoItem.Category.Misc, showInEditor=false)]

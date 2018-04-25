@@ -684,7 +684,7 @@ namespace MuMech
 					}
 				}
 			}
-			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65)))
+			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65)) && selIndex >= 0 && ap.Waypoints.Count > 0)
 			{
 				if (alt)
 				{
@@ -696,37 +696,37 @@ namespace MuMech
 					ap.Waypoints.RemoveAt(selIndex);
 					if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
 				}
-				selIndex = -1;
+			    selIndex = -1;
 				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
-			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57)))
-			{
-				do {
-					if (selIndex > 0)
-					{
-						ap.Waypoints.Swap(selIndex, selIndex - 1);
-						selIndex--;
-					}
-					else {
-						break;
-					}
-				}
-				while (alt);
-			}
-			if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57)))
-			{
-				do {
-					if (selIndex > -1 && selIndex <= ap.Waypoints.Count - 1)
-					{
-						ap.Waypoints.Swap(selIndex, selIndex + 1);
-						selIndex++;
-					}
-					else {
-						break;
-					}
-				}
-				while (alt);
-			}
+			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57)) && selIndex > 0 && selIndex < ap.Waypoints.Count && ap.Waypoints.Count >= 2)
+            {
+                if (alt)
+                {
+                    var t = ap.Waypoints[selIndex];
+                    ap.Waypoints.RemoveAt(selIndex);
+                    ap.Waypoints.Insert(0, t);
+                    selIndex = 0;
+                }
+                else
+                {
+                    ap.Waypoints.Swap(selIndex, --selIndex);
+                }
+            }
+            if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57)) && selIndex >= 0 && selIndex < ap.Waypoints.Count - 1 && ap.Waypoints.Count >= 2)
+            {
+                if (alt)
+                {
+                    var t = ap.Waypoints[selIndex];
+                    ap.Waypoints.RemoveAt(selIndex);
+                    ap.Waypoints.Add(t);
+                    selIndex = ap.Waypoints.Count - 1;
+                }
+                else
+                {
+                    ap.Waypoints.Swap(selIndex, ++selIndex);
+                }
+            }
 			if (GUILayout.Button("Routes"))
 			{
 				showPage = pages.routes;
@@ -1166,15 +1166,16 @@ namespace MuMech
 			return renderer;
 		}
 		
-		public static bool NewLineRenderer(ref LineRenderer Line)
+		public static bool NewLineRenderer(ref LineRenderer line)
 		{
-			if (Line != null) { return false; }
+			if (line != null) { return false; }
 			GameObject obj = new GameObject("LineRenderer");
-			Line = obj.AddComponent<LineRenderer>();
-			Line.useWorldSpace = true;
-			Line.material = material;
-			Line.SetWidth(10.0f, 10.0f);
-			Line.SetVertexCount(2);
+			line = obj.AddComponent<LineRenderer>();
+			line.useWorldSpace = true;
+			line.material = material;
+		    line.startWidth = 10.0f;
+		    line.endWidth = 10.0f;
+		    line.positionCount = 2;
 			return true;
 		}
 
@@ -1206,10 +1207,10 @@ namespace MuMech
 		
 		public void OnPreRender()
 		{
-			if (NewLineRenderer(ref pastPath)) { pastPath.SetColors(pastPathColor, pastPathColor); }
-			if (NewLineRenderer(ref currPath)) { currPath.SetColors(currPathColor, currPathColor); }
-			if (NewLineRenderer(ref nextPath)) { nextPath.SetColors(nextPathColor, nextPathColor); }
-			if (NewLineRenderer(ref selWP)) { selWP.SetColors(selWPColor, selWPColor); }
+			if (NewLineRenderer(ref pastPath)) { pastPath.startColor = pastPathColor; pastPath.endColor=pastPathColor; }
+			if (NewLineRenderer(ref currPath)) { currPath.startColor = currPathColor; currPath.endColor=currPathColor; }
+			if (NewLineRenderer(ref nextPath)) { nextPath.startColor = nextPathColor; nextPath.endColor=nextPathColor; }
+			if (NewLineRenderer(ref selWP))    { selWP.startColor = selWPColor; selWP.endColor=selWPColor; }
 			
 			//Debug.Log(ap.vessel.vesselName);
 			var window = ap.core.GetComputerModule<MechJebModuleWaypointWindow>();
@@ -1241,9 +1242,12 @@ namespace MuMech
 				float width = (MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f);
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 				
-				pastPath.SetWidth(width, width);
-				currPath.SetWidth(width, width);
-				nextPath.SetWidth(width, width);
+				pastPath.startWidth = width;
+			    pastPath.endWidth = width;
+				currPath.startWidth = width;
+			    currPath.endWidth = width;
+				nextPath.startWidth = width;
+			    nextPath.endWidth = width;
 				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 				
 				int sel = ap.core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
@@ -1251,7 +1255,8 @@ namespace MuMech
 				if (selWP.enabled)
 				{
 					float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Waypoints[sel].Position) / 600f + 0.1f;
-					selWP.SetWidth(0f, w * 10f);
+					selWP.startWidth = 0;
+				    selWP.endWidth = w * 10f;
 					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
 					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
 				}
@@ -1260,7 +1265,7 @@ namespace MuMech
 				{
 //					Debug.Log("drawing pastPath");
 					pastPath.enabled = true;
-					pastPath.SetVertexCount(ap.WaypointIndex + 1);
+				    pastPath.positionCount = ap.WaypointIndex + 1;
 					for (int i = 0; i < ap.WaypointIndex; i++)
 					{
 //						Debug.Log("vert " + i.ToString());
@@ -1294,7 +1299,7 @@ namespace MuMech
 				{
 //					Debug.Log("drawing nextPath of " + nextCount + " verts");
 					nextPath.enabled = true;
-					nextPath.SetVertexCount(nextCount);
+				    nextPath.positionCount = nextCount;
 					nextPath.SetPosition(0, RaisePositionOverTerrain((ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position), targetHeight));
 					for (int i = 0; i < nextCount - 1; i++)
 					{
