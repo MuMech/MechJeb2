@@ -83,6 +83,7 @@ namespace MuMech {
         }
 
         public int numArcs { get { return arcs.Count; } }
+        private int timeIndex { get { return arcs.Count * 13; } }
 
         public void centralForceThrust(double[] y, double x, double[] dy, object o)
         {
@@ -117,7 +118,7 @@ namespace MuMech {
         }
 
         // free attachment into the orbit defined by rT + vT
-        public void terminal5constraint( Vector3d rT, Vector3d vT)
+        public void terminal5constraint(Vector3d rT, Vector3d vT)
         {
             bcfun = (double[] yT, double[] zterm) => terminal5constraint(yT, zterm, rT, vT);
         }
@@ -184,17 +185,16 @@ namespace MuMech {
             t = t + dt;
         }
 
-        public void multipleIntegrate(double[] y0, double[] yf) // , Problem p)
+        public void multipleIntegrate(double[] y0, double[] yf)
         {
-            double tc = y0[26];
-            double tb = y0[27];
             double t = 0;
 
-            Arc arc = new Arc(ArcType.COAST);
-            singleIntegrate(y0, yf, 0, ref t, tc, arc);
+            for(int i = 0; i < arcs.Count; i++)
+            {
+               singleIntegrate(y0, yf, i, ref t, y0[timeIndex + i], arcs[i]);
+            }
 
-            arc = new Arc(ArcType.BURN, mdot: 63136.1585987428, thrust: 25092.0703945434);
-            singleIntegrate(y0, yf, 1, ref t, tb, arc);
+            //arc = new Arc(ArcType.BURN, isp: 316, thrust: 232.7 * 1000);
         }
 
         public void optimizationFunction(double[] y0, double[] z, object o)
