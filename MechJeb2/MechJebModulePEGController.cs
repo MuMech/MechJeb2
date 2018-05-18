@@ -94,7 +94,7 @@ namespace MuMech
             coastDone = 0.0;
             SetCoast(0.0, -1);
             status = PegStatus.ENABLED;
-            core.AddToPostDrawQueue(DrawCSE);
+            // core.AddToPostDrawQueue(DrawCSE);
             core.attitude.users.Add(this);
         }
 
@@ -833,14 +833,14 @@ namespace MuMech
 
         private void DrawCSE()
         {
-            //if (enabled && status != PegStatus.FINISHED)
-            //{
-                if ( !HighLogic.LoadedSceneIsFlight )
-                {
-                    // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
-                    Debug.Log("MechJebModulePEGController [BUG]: PEG enabled in non-flight mode.  How does this happen?");
-                    Done();
-                }
+            if ( !HighLogic.LoadedSceneIsFlight )
+            {
+                // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
+                Debug.Log("MechJebModulePEGController [BUG]: PEG enabled in non-flight mode.  How does this happen?");
+                Done();
+            }
+            if (enabled && status != PegStatus.FINISHED)
+            {
                 var r = orbit.getRelativePositionAtUT(vesselState.time).xzy;
                 var p = mainBody.position;
                 Vector3d vpos = vessel.CoM + (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
@@ -853,7 +853,7 @@ namespace MuMech
                 GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + lambdaDot * 100 }, Color.cyan, true, false, false);
                 // GLUtils.DrawPath(mainBody, new List<Vector3d> { vpos, vpos + rthrust }, Color.magenta, true, false, false);
                 // GLUtils.DrawPath(mainBody, CSEPoints, Color.red, true, false, false);
-            //}
+            }
         }
 
         Orbit CSEorbit = new Orbit();
