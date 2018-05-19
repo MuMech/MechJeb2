@@ -91,16 +91,12 @@ namespace MuMech
                     // take into account desired landing speed:
                     core.thrust.trans_spd_act = (float)Math.Min(-core.landing.touchdownSpeed, core.thrust.trans_spd_act);
 
-//                    core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-//                    core.thrust.trans_kill_h = true;
-
-//                    if (Math.Abs(Vector3d.Angle(-vessel.surfaceVelocity, vesselState.up)) < 10)
                     if (vesselState.speedSurfaceHorizontal < 5)
                     {
                         // if we're falling more or less straight down, control vertical speed and 
                         // kill horizontal velocity
                         core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-                        core.thrust.trans_kill_h = true;
+                        core.thrust.trans_kill_h = false; // rockets are long, and will fall over if you attempt to do any manouvers to kill that last bit of horizontal speed
                     }
                     else
                     {
