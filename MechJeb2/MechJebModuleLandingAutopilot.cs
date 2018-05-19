@@ -163,8 +163,7 @@ namespace MuMech
             this.users.Clear();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            if (core.landing.rcsAdjustment)
-                core.rcs.enabled = false;
+            // Do not disable RCS, because it is still useful for stabilizing the rocket
             setStep(null);
         }
 
@@ -232,8 +231,7 @@ namespace MuMech
             predictor.descentSpeedPolicy = null;
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            if (core.landing.rcsAdjustment)
-                core.rcs.enabled = false;
+            // Do not disable RCS, because it is still useful for stabilizing the rocket
             setStep(null);
         }
 
