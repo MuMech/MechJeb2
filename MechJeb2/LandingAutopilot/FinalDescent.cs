@@ -97,6 +97,11 @@ namespace MuMech
                         // kill horizontal velocity
                         core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
                         core.thrust.trans_kill_h = false; // rockets are long, and will fall over if you attempt to do any manouvers to kill that last bit of horizontal speed
+                        if (core.landing.rcsAdjustment) // If allowed, use RCS to stablize the rocket
+                            core.rcs.enabled = true;
+                        // Turn on SAS because we are likely to have a bit of horizontal speed left that needs to stabilize
+                        // Use SmartASS, because Mechjeb doesn't expect SAS to be used (i.e. it is automatically turned off again)
+                        core.EngageSmartASSControl(MechJebModuleSmartASS.Mode.SURFACE, MechJebModuleSmartASS.Target.VERTICAL_PLUS);
                     }
                     else
                     {

@@ -144,16 +144,31 @@ namespace MuMech
             {
                 MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
 
-                if (masterSmartASS != null && !masterSmartASS.hidden)
+                if (!masterSmartASS.hidden)
                 {
-                    masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
+                    EngageSmartASSControl(MechJebModuleSmartASS.Mode.ORBITAL, target);
+                }
+            }
+        }
+
+        public void EngageSmartASSControl(MechJebModuleSmartASS.Mode mode, MechJebModuleSmartASS.Target target)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
+
+                if (masterSmartASS != null)
+                {
+                    masterSmartASS.mode = mode;
                     masterSmartASS.target = target;
 
                     masterSmartASS.Engage();
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control.");
                 }
             }
             else
