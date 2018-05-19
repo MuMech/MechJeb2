@@ -146,12 +146,12 @@ namespace MuMech
 
                 if (!masterSmartASS.hidden)
                 {
-                    EngageSmartASSControl(MechJebModuleSmartASS.Mode.ORBITAL, target);
+                    EngageSmartASSControl(MechJebModuleSmartASS.Mode.ORBITAL, target, false);
                 }
             }
         }
 
-        public void EngageSmartASSControl(MechJebModuleSmartASS.Mode mode, MechJebModuleSmartASS.Target target)
+        public void EngageSmartASSControl(MechJebModuleSmartASS.Mode mode, MechJebModuleSmartASS.Target target, bool forceEnable)
         {
             MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
 
@@ -161,6 +161,11 @@ namespace MuMech
 
                 if (masterSmartASS != null)
                 {
+                    if (forceEnable)
+                    {
+                        // Prevent that the presence of other attitude controllers disables SmartASS
+                        masterSmartASS.autoDisableSmartASS = false;
+                    }
                     masterSmartASS.mode = mode;
                     masterSmartASS.target = target;
 

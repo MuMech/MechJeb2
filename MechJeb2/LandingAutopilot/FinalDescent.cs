@@ -101,7 +101,7 @@ namespace MuMech
                             core.rcs.enabled = true;
                         // Turn on SAS because we are likely to have a bit of horizontal speed left that needs to stabilize
                         // Use SmartASS, because Mechjeb doesn't expect SAS to be used (i.e. it is automatically turned off again)
-                        core.EngageSmartASSControl(MechJebModuleSmartASS.Mode.SURFACE, MechJebModuleSmartASS.Target.VERTICAL_PLUS);
+                        core.EngageSmartASSControl(MechJebModuleSmartASS.Mode.SURFACE, MechJebModuleSmartASS.Target.VERTICAL_PLUS, true);
                     }
                     else
                     {
