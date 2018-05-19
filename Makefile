@@ -9,7 +9,7 @@ else
 			XDG_DATA_HOME := ${HOME}/.local/share
 		endif
 		ifndef KSPDIR
-			KSPDIR := ${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program
+			KSPDIR := ${XDG_DATA_HOME}/Steam/steamapps/common/Kerbal Space Program
 		endif
 		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 	endif
