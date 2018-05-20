@@ -208,7 +208,7 @@ namespace MuMech
             // Consider lowering the langing gear
             {
                 double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
-                if (deployGears && !deployedGears && (minalt < 1000))
+                if (deployGears && !deployedGears && (minalt < 2000))
                     DeployLandingGears();
             }
 
