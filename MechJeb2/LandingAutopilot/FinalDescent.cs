@@ -10,6 +10,7 @@ namespace MuMech
 
             private IDescentSpeedPolicy aggressivePolicy;
             private float thrustAt200Meters;
+            private bool forceVerticalMode = false;
 
             public FinalDescent(MechJebCore core) : base(core)
             {
@@ -99,7 +100,14 @@ namespace MuMech
                     // take into account desired landing speed:
                     core.thrust.trans_spd_act = (float)Math.Max(core.landing.touchdownSpeed, core.thrust.trans_spd_act);
 
+                    // Prevent that we switch back from Vertical mode to KeepSurface mode
+                    // When that happens the rocket will start tilting and end up falling over
                     if (vesselState.speedSurfaceHorizontal < 5)
+                    {
+                        forceVerticalMode = true;
+                    }
+
+                    if (forceVerticalMode)
                     {
                         // if we're falling more or less straight down, control vertical speed and 
                         // kill horizontal velocity
