@@ -85,8 +85,13 @@ namespace MuMech
                 }
                 else
                 {
+                    float previous_trans_spd_act = core.thrust.trans_spd_act;
+
                     // last 200 meters:
                     core.thrust.trans_spd_act = -Mathf.Lerp(0, (float)Math.Sqrt((vesselState.limitedMaxThrustAccel - vesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
+
+                    // Sometimes during the descent we end up going up a bit due to overthrusting during breaking, avoid thrusting up even more and destabilizing the rocket
+                    core.thrust.trans_spd_act = (float)Math.Max(previous_trans_spd_act, core.thrust.trans_spd_act);
 
                     // take into account desired landing speed:
                     core.thrust.trans_spd_act = (float)Math.Min(-core.landing.touchdownSpeed, core.thrust.trans_spd_act);
