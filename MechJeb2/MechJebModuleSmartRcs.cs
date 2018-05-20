@@ -10,9 +10,10 @@ namespace MuMech
         {
             OFF,
             ZERO_RVEL,
+            ZERO_VEL,
         }
 
-        public static readonly string[] TargetTexts = { "OFF", "ZERO RVEL"};
+        public static readonly string[] TargetTexts = { "OFF", "ZERO RELATIVE VELOCITY", "ZERO VELOCITY"};
 
         public Target target = Target.OFF;
 
@@ -80,6 +81,7 @@ namespace MuMech
 
                 TargetButton(Target.OFF);
                 TargetButton(Target.ZERO_RVEL);
+                TargetButton(Target.ZERO_VEL);
 
                 GUILayout.EndVertical();
             }
@@ -99,6 +101,10 @@ namespace MuMech
                 case Target.ZERO_RVEL:
                     core.rcs.users.Add(this);
                     core.rcs.SetTargetRelative(Vector3d.zero);
+                    break;
+                case Target.ZERO_VEL:
+                    core.rcs.users.Add(this);
+                    core.rcs.SetTargetWorldVelocity(Vector3d.zero);
                     break;
             }
         }

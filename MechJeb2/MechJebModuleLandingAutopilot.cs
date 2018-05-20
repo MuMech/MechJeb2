@@ -164,7 +164,7 @@ namespace MuMech
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
             // Do not disable RCS, because it is still useful for stabilizing the rocket
-            core.EngageSmartRcsControl(MechJebModuleSmartRcs.Target.ZERO_RVEL, true);
+            core.EngageSmartRcsControl(MechJebModuleSmartRcs.Target.ZERO_VEL, true);
             setStep(null);
         }
 
