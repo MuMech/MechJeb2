@@ -173,7 +173,37 @@ namespace MuMech
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control.");
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for control.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
+        public void EngageSmartRcsControl(MechJebModuleSmartRcs.Target target, bool forceEnable)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleSmartRcs masterSmartRcs = masterMechJeb.GetComputerModule<MechJebModuleSmartRcs>();
+
+                if (masterSmartRcs != null)
+                {
+                    if (forceEnable)
+                    {
+                        // Prevent that the presence of other rcs controllers disables SmartRcs
+                        masterSmartRcs.autoDisableSmartRCS = false;
+                    }
+                    masterSmartRcs.target = target;
+
+                    masterSmartRcs.Engage();
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartRcs for control.");
                 }
             }
             else

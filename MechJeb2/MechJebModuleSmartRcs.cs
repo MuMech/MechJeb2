@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    class MechJebModuleSmartRcs : DisplayModule
+    public class MechJebModuleSmartRcs : DisplayModule
     {
 
         public enum Target
