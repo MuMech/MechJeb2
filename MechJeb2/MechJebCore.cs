@@ -170,6 +170,7 @@ namespace MuMech
                     masterSmartASS.target = target;
 
                     masterSmartASS.Engage();
+                    masterSmartASS.enabled = true; // show GUI
                 }
                 else
                 {
@@ -200,6 +201,7 @@ namespace MuMech
                     masterSmartRcs.target = target;
 
                     masterSmartRcs.Engage();
+                    masterSmartRcs.enabled = true; // show GUI
                 }
                 else
                 {
