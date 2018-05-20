@@ -14,7 +14,7 @@ namespace MuMech
 
         public static readonly string[] TargetTexts = { "OFF", "ZERO RVEL"};
 
-        public Target target;
+        public Target target = Target.OFF;
 
         private static GUIStyle btNormal, btActive, btAuto;
 
@@ -74,17 +74,12 @@ namespace MuMech
                 }
                 GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }
-            else if (core.target.Target == null)
-            {
-                GUILayout.Label("Choose a target");
-            }
             else
             {
                 GUILayout.BeginVertical();
 
                 TargetButton(Target.OFF);
                 TargetButton(Target.ZERO_RVEL);
-                //TargetButton(Target.HOLD_RPOS);
 
                 GUILayout.EndVertical();
             }
