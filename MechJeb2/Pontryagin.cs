@@ -136,55 +136,40 @@ namespace MuMech {
         }
 
         public List<Arc> arcs;
-        public Vector3d r0, r0_bar;
-        public Vector3d v0, v0_bar;
-        public double m0;
         public double mu;
         public Action<double[], double[]> bcfun;
         public const double g0 = 9.80665;
         public ProbType type;
 
-        // this constructor is mostly intended for testing
-        public Pontryagin()
-        {
-        }
-
-        public Pontryagin(ProbType type, Vector3d r0, Vector3d v0, double m0, double mu)
+        public Pontryagin(ProbType type, double mu)
         {
             this.arcs = new List<Arc>();
-            this.r0 = r0;
-            this.v0 = v0;
-            this.m0 = m0;
             this.mu = mu;
             this.type = type;
         }
 
         public double g_bar, r_scale, v_scale, t_scale;  /* problem scaling */
 
+        public void NormalizeArc(int i)
+        {
+            arcs[i].c = g0 * arcs[i].isp / Math.Sqrt( r_scale / g_bar );
+            arcs[i].r0_bar = arcs[i].r0 / r_scale;
+            arcs[i].v0_bar = arcs[i].v0 / v_scale;
+            arcs[i].dt0_bar = arcs[i].dt0 / t_scale;
+            arcs[i].max_bt_bar = arcs[i].max_bt / t_scale;
+        }
+
         public void Normalize()
         {
+            Vector3d r0 = arcs[0].r0;
+            Vector3d v0 = arcs[0].v0;
             double r0m = r0.magnitude;
             g_bar = mu / ( r0m * r0m );
             r_scale = r0m;
             v_scale = Math.Sqrt( r0m * g_bar );
             t_scale = Math.Sqrt( r0m / g_bar );
-            r0_bar = r0 / r_scale;
-            v0_bar = v0 / v_scale;
             for(int i = 0; i < arcs.Count; i++)
-            {
-                arcs[i].c = g0 * arcs[i].isp / Math.Sqrt( r_scale / g_bar );
-                arcs[i].r0_bar = arcs[i].r0 / r_scale;
-                arcs[i].v0_bar = arcs[i].v0 / v_scale;
-                arcs[i].dt0_bar = arcs[i].dt0 / t_scale;
-                arcs[i].max_bt_bar = arcs[i].max_bt / t_scale;
-            }
-        }
-
-        public void UpdateCurrentState(Vector3d r0, Vector3d v0, double m0)
-        {
-            this.r0 = r0;
-            this.v0 = v0;
-            this.m0 = m0;
+                NormalizeArc(i);
         }
 
         public void AddArc(ArcType type, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double m0, double dt0, double isp = 0, double thrust = 0, double max_bt = 0)
@@ -426,13 +411,13 @@ namespace MuMech {
             multipleIntegrate(y0, yf);
 
             /* initial conditions */
-            z[0] = y0[0] - r0_bar[0];
-            z[1] = y0[1] - r0_bar[1];
-            z[2] = y0[2] - r0_bar[2];
-            z[3] = y0[3] - v0_bar[0];
-            z[4] = y0[4] - v0_bar[1];
-            z[5] = y0[5] - v0_bar[2];
-            z[6] = y0[12] - m0;
+            z[0] = y0[0] - arcs[0].r0_bar[0];
+            z[1] = y0[1] - arcs[0].r0_bar[1];
+            z[2] = y0[2] - arcs[0].r0_bar[2];
+            z[3] = y0[3] - arcs[0].v0_bar[0];
+            z[4] = y0[4] - arcs[0].v0_bar[1];
+            z[5] = y0[5] - arcs[0].v0_bar[2];
+            z[6] = y0[12] - arcs[0].m0;
 
             /* terminal constraints */
             double[] yT = new double[13];
@@ -517,7 +502,7 @@ namespace MuMech {
 
         public double[] y0;
 
-        public void UpdateY0Arc(int i)
+        public void UpdateY0Arc(int i, bool updatepv = true)
         {
             Arc a = arcs[i];
             y0[i*13] = a.r0_bar[0];
@@ -526,12 +511,15 @@ namespace MuMech {
             y0[i*13+3] = a.v0_bar[0];
             y0[i*13+4] = a.v0_bar[1];
             y0[i*13+5] = a.v0_bar[2];
-            y0[i*13+6] = a.pv0[0];
-            y0[i*13+7] = a.pv0[1];
-            y0[i*13+8] = a.pv0[2];
-            y0[i*13+9] = a.pr0[0];
-            y0[i*13+10] = a.pr0[1];
-            y0[i*13+11] = a.pr0[2];
+            if (updatepv)
+            {
+                y0[i*13+6] = a.pv0[0];
+                y0[i*13+7] = a.pv0[1];
+                y0[i*13+8] = a.pv0[2];
+                y0[i*13+9] = a.pr0[0];
+                y0[i*13+10] = a.pr0[1];
+                y0[i*13+11] = a.pr0[2];
+            }
             y0[i*13+12] = a.m0;
         }
 
@@ -542,19 +530,25 @@ namespace MuMech {
             int numTimes = (type == ProbType.MULTIBURN) ? 1 : numArcs;
 
             if (y0 == null)
+            {
                 y0 = new double[13*numArcs + numTimes];
 
-            Normalize();
+                Normalize();
 
-            for(int i = 0; i < numArcs; i++)
-            {
-                UpdateY0Arc(i);
-                if ( type == ProbType.COASTBURN )
-                    y0[numArcs*13+i] = arcs[i].dt0_bar;
+                for(int i = 0; i < numArcs; i++)
+                {
+                    UpdateY0Arc(i);
+                    if ( type == ProbType.COASTBURN )
+                        y0[numArcs*13+i] = arcs[i].dt0_bar;
+                }
+
+                if ( type == ProbType.MULTIBURN )
+                    y0[numArcs*13] = arcs[0].dt0_bar;
             }
-
-            if ( type == ProbType.MULTIBURN )
-                y0[numArcs*13] = arcs[0].dt0_bar;
+            else
+            {
+                UpdateY0Arc(0, false);
+            }
 
             runOptimizer();
 
@@ -567,15 +561,27 @@ namespace MuMech {
 
         private Thread thread;
 
-        public bool threadRunning()
+        public void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, Vector3d r0, Vector3d v0, Vector3d lambda, Vector3d lambdaDot)
         {
-            return thread.IsAlive;
+            if (thread.IsAlive)
+                return;
+
+            arcs.Clear();
+
+            for(int i = 0; i < kspstages.Count; i++)
+            {
+                AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: lambda, pr0: lambdaDot, m0: vacStats[i].startMass, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust, max_bt: vacStats[i].deltaTime);
+                NormalizeArc(i);
+            }
         }
 
-        public void threadStart(double t0)
+        public bool threadStart(double t0)
         {
+            if (thread.IsAlive)
+                return false;
             thread = new Thread(() => Optimize(t0));
             thread.Start();
+            return true;
         }
     }
 }
