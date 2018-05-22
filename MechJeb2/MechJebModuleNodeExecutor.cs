@@ -168,7 +168,8 @@ namespace MuMech
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
                     if (Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) < 1 && !burnTriggered)
                     {
-                        if (( peg.t_lambda >= node.UT && peg.phi < 40 * UtilMath.Deg2Rad ) || timeToHalfBT <= 0.0 )
+                        if ( peg.t_lambda >= node.UT || timeToHalfBT <= 0.0 )
+                        /* if (( peg.t_lambda >= node.UT && peg.phi < 40 * UtilMath.Deg2Rad ) || timeToHalfBT <= 0.0 ) */
                         {
                             core.thrust.targetThrottle = 1.0F;
                             peg.AssertStart(false);
