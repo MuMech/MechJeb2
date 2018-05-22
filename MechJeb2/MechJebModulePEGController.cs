@@ -220,7 +220,8 @@ namespace MuMech
 
             if (p == null) {
                 p = new Pontryagin(type: ProbType.MULTIBURN, mu: mainBody.gravParameter);
-                p.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
+                // p.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
+                p.terminal5constraint(vesselState.orbitalPosition.normalized * 6556000 , vesselState.orbitalVelocity.normalized * 7797.4);
             }
 
             UpdateStages();
