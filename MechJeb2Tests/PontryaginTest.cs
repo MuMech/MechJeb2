@@ -20,10 +20,10 @@ namespace MuMech
         [Fact]
             public void centralForceThrustComplex()
             {
-                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, mu: mu);
+                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, mu: mu);
                 double[] y = { 0.916851279873005, -0.399228920038652, -7.56664470074416e-27, 0.399228920038653, 0.916851279873009, -4.78371853721768e-27, 0.010574128246995, -0.853926456601413, 0.356322653686804, 0.18249592267875, 0.302938323862286, -0.15467163789007, 32740 };
                 double[] dy = new double[13];
-                p.AddArc(type: ArcType.BURN, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0, isp: 316, thrust: 232.7 * 1000);
+                p.AddArc(type: ArcType.BURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0, isp: 316, thrust: 232.7 * 1000);
                 p.Normalize();
                 Console.WriteLine(p.r_scale);
                 Console.WriteLine(p.v_scale);
@@ -47,10 +47,10 @@ namespace MuMech
         [Fact]
             public void singleIntegrateComplex()
             {
-                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, mu: mu);
+                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, mu: mu);
                 double[] y0 = { 0.916851279873005, -0.399228920038652, -7.56664470074416e-27, 0.399228920038653, 0.916851279873009, -4.78371853721768e-27, 0.010574128246995, -0.853926456601413, 0.356322653686804, 0.18249592267875, 0.302938323862286, -0.15467163789007, 32740 };
                 double[] yf = new double[13];
-                p.AddArc(type: ArcType.BURN, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0, isp: 316, thrust: 232.7 * 1000);
+                p.AddArc(type: ArcType.BURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0, isp: 316, thrust: 232.7 * 1000);
                 p.Normalize();
                 double t = -0.410675683157609;
                 p.singleIntegrate(y0, yf, 0, ref t, 0.514092715632044, p.arcs[0]);
@@ -66,11 +66,11 @@ namespace MuMech
         [Fact]
             public void multpleIntegrateComplex()
             {
-                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, mu: mu);
+                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, mu: mu);
                 double[] y0 = { 1, 0, 0, 0, 1, 0, -0.00794206131892028, -0.921437990960034, 0.388444272035955, -0.0249880816482411, -0.0079420613189204, 0.000443419057124364, 32740, 0.916851279873005, -0.399228920038652, -7.56664470074416e-27, 0.399228920038653, 0.916851279873009, -4.78371853721768e-27, 0.010574128246995, -0.853926456601413, 0.356322653686804, 0.18249592267875, 0.302938323862286, -0.15467163789007, 32740, -0.410675683157609, 0.514092715632044 };
                 double[] yf = new double[26];
-                p.AddArc(ArcType.COAST, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0);
-                p.AddArc(type: ArcType.BURN, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0, isp: 316, thrust: 232.7 * 1000);
+                p.AddArc(ArcType.COAST, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0);
+                p.AddArc(type: ArcType.BURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0, isp: 316, thrust: 232.7 * 1000);
                 p.Normalize();
                 p.multipleIntegrate(y0, yf);
 
@@ -81,9 +81,9 @@ namespace MuMech
         [Fact]
             public void optimizationFunctionComplex()
             {
-                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, mu: mu);
-                p.AddArc(ArcType.COAST, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0);
-                p.AddArc(type: ArcType.BURN, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0, isp: 316, thrust: 232.7 * 1000);
+                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, mu: mu);
+                p.AddArc(ArcType.COAST, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0);
+                p.AddArc(type: ArcType.BURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0, isp: 316, thrust: 232.7 * 1000);
                 p.terminal5constraint(rT, vT);
                 p.Normalize();
 
@@ -101,9 +101,9 @@ namespace MuMech
         [Fact]
             public void OptimizeFiniteBurn()
             {
-                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, mu: mu);
-                p.AddArc(ArcType.COAST, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0);
-                p.AddArc(type: ArcType.BURN, r0: Vector3d.zero, v0: Vector3d.zero, pv0: Vector3d.zero, pr0: Vector3d.zero, m0: 32740, dt0: 0, isp: 316, thrust: 232.7 * 1000);
+                Pontryagin p = new Pontryagin(type: ProbType.COASTBURN, mu: mu);
+                p.AddArc(ArcType.COAST, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0);
+                p.AddArc(type: ArcType.BURN, r0: new Vector3d(r185,0,0), v0: new Vector3d(0,v185,0), m0: 32740, pv0: Vector3d.zero, pr0: Vector3d.zero, dt0: 0, isp: 316, thrust: 232.7 * 1000);
                 p.terminal5constraint(rT, vT);
                 p.Normalize();
 
@@ -124,7 +124,7 @@ namespace MuMech
             {
                 Vector3d r0 = new Vector3d(rearth,0,0);
                 Vector3d v0 = new Vector3d(0,0,0);
-                Pontryagin p = new Pontryagin(type: ProbType.MULTIBURN, r0: r0, v0: v0, m0: 149600 + 3580, mu: mu);
+                Pontryagin p = new Pontryagin(type: ProbType.MULTIBURN, mu: mu);
                 double inc = 45;
                 double heading = Math.Asin( Math.Cos(inc * UtilMath.Deg2Rad) / Math.Cos(0) );
 

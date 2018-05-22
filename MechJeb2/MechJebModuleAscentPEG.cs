@@ -88,16 +88,18 @@ namespace MuMech
         private void setTarget()
         {
 
+            /*
             if (pegCoast)
                 peg.SetCoast(coastSecs, coastAfterStage);
             else
                 peg.SetCoast(-1, 0);
+                */
 
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
                 peg.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
                 // fix the desired inclination display for the user
-                autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg;
+                // autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg;
             }
             else
             {
