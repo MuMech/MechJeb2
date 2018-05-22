@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -24,6 +23,11 @@ namespace MuMech {
             public Vector3d v0_bar, r0_bar;
             public double dt0_bar;
             public double max_bt, max_bt_bar;
+
+            public override string ToString()
+            {
+                return type + " isp:" + isp + " thrust:" + thrust + " maxt:" + max_bt + " r0:" + r0 + " r0_bar:" + r0_bar + " v0:" + v0 + " v0_bar" + v0_bar + " pv0:" + pv0 + " pr0: " + pr0;
+            }
 
             public Arc(ArcType type, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double m0, double dt0, double isp = 0, double thrust = 0, double max_bt = 0)
             {
@@ -60,6 +64,17 @@ namespace MuMech {
                 this.v_scale = v_scale;
                 this.r_scale = r_scale;
                 this.t0 = t0;
+            }
+
+            public double tgo(double t)
+            {
+                double tbar = ( t - t0 ) / t_scale;
+                return ( tmax() - tbar ) * t_scale;
+            }
+
+            public double tf()
+            {
+                return tmax() * t_scale;
             }
 
             public Vector3d r(double t)
@@ -125,6 +140,16 @@ namespace MuMech {
                         alglib.polynomialbuildeqdist(tmin, tmax, yi, out interpolant[i]);
                     }
                 }
+            }
+
+            public double tmax()
+            {
+                return segments[segments.Count-1].tmax;
+            }
+
+            public double tmin()
+            {
+                return segments[0].tmin;
             }
 
             /* double alglib.barycentriccalc(p_eqdist, double t) */
@@ -230,7 +255,7 @@ namespace MuMech {
             Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
             Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d n = new Vector3d(0, 0, 1);
+            Vector3d n = new Vector3d(0, 1, 0);
             Vector3d rn = Vector3d.Cross(rf, n);
             Vector3d vn = Vector3d.Cross(vf, n);
             Vector3d hf = Vector3d.Cross(rf, vf);
@@ -457,12 +482,13 @@ namespace MuMech {
             Vector3d pr1 = new Vector3d(yf[9], yf[10], yf[11]);
 
             /* magnitude of initial costate vector = 1.0 (dummy constraint for H(tf)=0 because BC is keplerian) */
-            z[26] = 0.0;
+            int n = 13 * numArcs;
+            z[n] = 0.0;
             for(int i = 0; i < 6; i++)
-                z[26] = z[26] + y0[6+i] * y0[6+i];
-            z[26] = Math.Sqrt(z[26]) - 1.0;
+                z[n] = z[n] + y0[6+i] * y0[6+i];
+            z[n] = Math.Sqrt(z[n]) - 1.0;
 
-            if (z.Length == 28)
+            if (z.Length == 28)  /* FIXME: superhacky */
                 /* switching condition for coast */
                 z[27] = Vector3d.Dot(pr1, v1) - Vector3d.Dot(pv1, r1) / ( r1.magnitude * r1.magnitude * r1.magnitude );  /* H0(t1) = 0 */
 
@@ -472,11 +498,11 @@ namespace MuMech {
         }
 
 
-        double lmEpsx = 1e-25;
+        double lmEpsx = 1e-10;
         int lmIter = 10000;
         double lmDiffStep = 0.000001;
 
-        public void runOptimizer()
+        public bool runOptimizer()
         {
 
             alglib.minlmstate state;
@@ -484,12 +510,14 @@ namespace MuMech {
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
             alglib.minlmsetcond(state, lmEpsx, lmIter);
             //alglib.minlmsetcond(state, 0, 0);
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
+            /*Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start(); */
             alglib.minlmoptimize(state, optimizationFunction, null, null);
             alglib.minlmresultsbuf(state, ref y0, rep);
-            stopWatch.Stop();
+            return rep.terminationtype == 2;
+
             /*
+            stopWatch.Stop();
             Console.WriteLine("Report Code: " + rep.terminationtype);
             Console.WriteLine("Iterations: " + rep.iterationscount);
             Console.WriteLine("NFunc: " + rep.nfunc);
@@ -552,34 +580,48 @@ namespace MuMech {
                 UpdateY0Arc(0, false);
             }
 
-            runOptimizer();
+            if ( runOptimizer() )
+            {
+                double[] z = new double[13 * numArcs + numTimes];
+                optimizationFunction(y0, z, null);
+                for(int i = 0; i < z.Length; i++)
+                    Debug.Log("z[" + i + "] = " + z[i]);
 
-            Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
+                Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
 
-            multipleIntegrate(y0, sol, 8);
+                for(int i = 0; i < y0.Length; i++)
+                    Debug.Log("y0[" + i + "] = " + y0[i]);
 
-            this.solution = sol;
+                multipleIntegrate(y0, sol, 8);
+
+                this.solution = sol;
+
+                Debug.Log("rf = " + sol.r(sol.tf()) + " vf = " + sol.v(sol.tf()));
+            }
         }
 
         private Thread thread;
 
         public void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, Vector3d r0, Vector3d v0, Vector3d lambda, Vector3d lambdaDot)
         {
-            if (thread.IsAlive)
+            if (thread != null && thread.IsAlive)
                 return;
 
             arcs.Clear();
 
-            for(int i = 0; i < kspstages.Count; i++)
+            for(int k = 0; k < kspstages.Count; k++)
             {
-                AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: lambda, pr0: lambdaDot, m0: vacStats[i].startMass, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust, max_bt: vacStats[i].deltaTime);
-                NormalizeArc(i);
+                int i = kspstages[k];
+                AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: lambda, pr0: lambdaDot, m0: vacStats[i].startMass*1000, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust, max_bt: vacStats[i].deltaTime);
+                NormalizeArc(k);
             }
+            for(int k = 0; k < arcs.Count; k++)
+                Debug.Log(arcs[k]);
         }
 
         public bool threadStart(double t0)
         {
-            if (thread.IsAlive)
+            if (thread != null && thread.IsAlive)
                 return false;
             thread = new Thread(() => Optimize(t0));
             thread.Start();
