@@ -234,9 +234,6 @@ namespace MuMech {
             dy[11] = y[8] / r3 - 3 / r5 * rdotpv * y[2];
             /* m = mdot */
             dy[12] = ( arc.thrust == 0 ) ? 0 : - arc.thrust / arc.c;
-
-            if ( y[12] < 1 )
-                dy[12] = Double.NaN;
         }
 
         // 4-constraint PEG with free LAN
@@ -314,7 +311,7 @@ namespace MuMech {
             z[5] = trans;
         }
 
-        double ckEps = 1e-6;
+        double ckEps = 1e-10;
 
         /* used to update y0 to yf without intermediate values */
         public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, Arc e)
@@ -500,7 +497,7 @@ namespace MuMech {
 
         double lmEpsx = 1e-10;
         int lmIter = 10000;
-        double lmDiffStep = 0.000001;
+        double lmDiffStep = 0.0001;
 
         public bool runOptimizer()
         {
@@ -574,6 +571,9 @@ namespace MuMech {
 
                 if ( type == ProbType.MULTIBURN )
                     y0[numArcs*13] = arcs[0].dt0_bar;
+
+                for(int i = 0; i < y0.Length; i++)
+                    Debug.Log("  y0[" + i + "] = " + y0[i]);
             }
             else
             {
