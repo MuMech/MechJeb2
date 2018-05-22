@@ -142,6 +142,9 @@ namespace MuMech
             converge();
 
             update_pitch_and_heading();
+
+            if (tgo < 0)
+                Done();
         }
 
         // state for next iteration
@@ -181,7 +184,7 @@ namespace MuMech
                 lambdaDot = Vector3d.zero;
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(vesselState.latitude, inc);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
-                Vector3d desiredThrustVector = Math.Cos(45.0 * UtilMath.Deg2Rad) * desiredHeadingVector;
+                Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
             }
         }
@@ -227,12 +230,14 @@ namespace MuMech
 
             last_call = vesselState.time;
 
+            /*
             if ( status == PegStatus.CONVERGED && tgo < 5 )
             {
                 last_call = 0;
                 status = PegStatus.TERMINAL;
                 return;
             }
+            */
 
             if (p.solution == null)
                 status = PegStatus.INITIALIZING;
@@ -255,6 +260,9 @@ namespace MuMech
             pitch = 90.0 - Vector3d.Angle(iF, vesselState.up);
             Vector3d headingDir = iF - Vector3d.Project(iF, vesselState.up);
             heading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(headingDir, vesselState.east), Vector3d.Dot(headingDir, vesselState.north));
+
+            tgo = p.solution.tgo(vesselState.time);
+            Debug.Log("north = " + vesselState.north + " east = " + vesselState.east);
         }
 
         private void Done()
