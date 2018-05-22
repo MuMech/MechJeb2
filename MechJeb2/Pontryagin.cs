@@ -489,6 +489,7 @@ namespace MuMech {
             alglib.minlmoptimize(state, optimizationFunction, null, null);
             alglib.minlmresultsbuf(state, ref y0, rep);
             stopWatch.Stop();
+            /*
             Console.WriteLine("Report Code: " + rep.terminationtype);
             Console.WriteLine("Iterations: " + rep.iterationscount);
             Console.WriteLine("NFunc: " + rep.nfunc);
@@ -498,6 +499,7 @@ namespace MuMech {
             TimeSpan ts = stopWatch.Elapsed;
             string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
             Console.WriteLine("RunTime " + elapsedTime);
+            */
         }
 
         public double[] y0;
