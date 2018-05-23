@@ -184,8 +184,9 @@ namespace MuMech
                 lambdaDot = Vector3d.zero;
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(vesselState.latitude, inc);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
-                Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector;  /* 45 pitch guess */
-                lambda = desiredThrustVector;
+                Vector3d desiredThrustVector = Math.Cos(0 * UtilMath.Deg2Rad) * desiredHeadingVector;  /* 45 pitch guess */
+                // lambda = desiredThrustVector;
+                lambda = vesselState.orbitalVelocity.normalized;
             }
         }
 
