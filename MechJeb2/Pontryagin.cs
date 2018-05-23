@@ -252,7 +252,7 @@ namespace MuMech {
             Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
             Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d n = new Vector3d(0, 1, 0);
+            Vector3d n = new Vector3d(0, -1, 0);
             Vector3d rn = Vector3d.Cross(rf, n);
             Vector3d vn = Vector3d.Cross(vf, n);
             Vector3d hf = Vector3d.Cross(rf, vf);
@@ -284,7 +284,7 @@ namespace MuMech {
 
             Vector3d hT = Vector3d.Cross(rT_bar, vT_bar);
 
-            if (hT[2] == 0)
+            if (hT[1] == 0)
             {
                 /* degenerate inc=90 case so swap all the coordinates */
                 rf = rf.Reorder(231);
@@ -307,7 +307,7 @@ namespace MuMech {
             z[1] = hmiss[1];
             z[2] = hmiss[2];
             z[3] = emiss[0];
-            z[4] = emiss[1];
+            z[4] = emiss[2];
             z[5] = trans;
         }
 
@@ -495,7 +495,7 @@ namespace MuMech {
         }
 
 
-        double lmEpsx = 1e-10;
+        double lmEpsx = 0; // 1e-10;
         int lmIter = 10000;
         double lmDiffStep = 0.0001;
 
@@ -572,8 +572,8 @@ namespace MuMech {
                 if ( type == ProbType.MULTIBURN )
                     y0[numArcs*13] = arcs[0].dt0_bar;
 
-                for(int i = 0; i < y0.Length; i++)
-                    Debug.Log("  y0[" + i + "] = " + y0[i]);
+                //for(int i = 0; i < y0.Length; i++)
+                    //Debug.Log("  y0[" + i + "] = " + y0[i]);
             }
             else
             {
@@ -584,19 +584,19 @@ namespace MuMech {
             {
                 double[] z = new double[13 * numArcs + numTimes];
                 optimizationFunction(y0, z, null);
-                for(int i = 0; i < z.Length; i++)
-                    Debug.Log("z[" + i + "] = " + z[i]);
+                //for(int i = 0; i < z.Length; i++)
+                    //Debug.Log("z[" + i + "] = " + z[i]);
 
                 Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
 
-                for(int i = 0; i < y0.Length; i++)
-                    Debug.Log("y0[" + i + "] = " + y0[i]);
+                //for(int i = 0; i < y0.Length; i++)
+                    //Debug.Log("y0[" + i + "] = " + y0[i]);
 
                 multipleIntegrate(y0, sol, 8);
 
                 this.solution = sol;
 
-                Debug.Log("rf = " + sol.r(sol.tf()) + " vf = " + sol.v(sol.tf()));
+                //Debug.Log("rf = " + sol.r(sol.tf()) + " vf = " + sol.v(sol.tf()));
             }
         }
 
@@ -615,8 +615,8 @@ namespace MuMech {
                 AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: lambda, pr0: lambdaDot, m0: vacStats[i].startMass*1000, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust, max_bt: vacStats[i].deltaTime);
                 NormalizeArc(k);
             }
-            for(int k = 0; k < arcs.Count; k++)
-                Debug.Log(arcs[k]);
+            //for(int k = 0; k < arcs.Count; k++)
+                //Debug.Log(arcs[k]);
         }
 
         public bool threadStart(double t0)
