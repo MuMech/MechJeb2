@@ -341,6 +341,8 @@ namespace MuMech
         public string status { get; set; }
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
+        private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
+        private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
 
         public abstract bool DriveAscent(FlightCtrlState s);
 
@@ -405,6 +407,24 @@ namespace MuMech
         //
         protected void attitudeTo(double desiredPitch, double desiredHeading)
         {
+            if ( ( vesselState.thrustCurrent == 0 ) || ( (vesselState.thrustCurrent / vesselState.thrustAvailable) < 0.90) || (vacStats[vacStats.Length-1].deltaTime < 2) )
+            {
+                core.attitude.attitudeDeactivate();
+                return;
+            }
+            else
+            {
+                core.attitude.users.Add(this);
+                if (vacStats[vacStats.Length-1].deltaTime < 2)
+                {
+                    core.attitude.attitudeKILLROT = true;
+                    var attitude = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
+                    var reference = AttitudeReference.INERTIAL;
+                    core.attitude.attitudeTo(attitude, reference, this);
+                    return;
+                }
+            }
+
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
 
             Vector3d desiredThrustVector = Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector
