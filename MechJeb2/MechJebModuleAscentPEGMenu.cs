@@ -44,7 +44,6 @@ namespace MuMech
                 s.normal.textColor = Color.yellow;
                 GUILayout.Label("Apoapsis < Periapsis: circularizing orbit at periapsis", s);
             }
-            GuiUtils.SimpleTextBox("leading angle to plane: ", autopilot.launchLANDifference, "°");
 
             GuiUtils.SimpleTextBox("Booster Pitch start:", path.pitchStartTime, "s");
             GuiUtils.SimpleTextBox("Booster Pitch rate:", path.pitchRate, "°/s");
@@ -60,22 +59,6 @@ namespace MuMech
             if (path.pegAfterStageToggle)
                 GuiUtils.SimpleTextBox("", path.pegAfterStage);
             GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            path.pegCoast = GUILayout.Toggle(path.pegCoast, "Coast");
-            if (path.pegCoast)
-            {
-                GuiUtils.SimpleTextBox("", path.coastSecs, "s");
-            }
-            GUILayout.EndHorizontal();
-            if (path.pegCoast)
-            {
-                GuiUtils.SimpleTextBox("after stage#", path.coastAfterStage);
-            }
-            GUILayout.BeginHorizontal();
-            path.pegManualAzimuthToggle = GUILayout.Toggle(path.pegManualAzimuthToggle, "Manual Azimuth:");
-            if (path.pegManualAzimuthToggle)
-                GuiUtils.SimpleTextBox("", path.pegManualAzimuth);
-            GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reset PEG"))
@@ -90,10 +73,6 @@ namespace MuMech
             GUILayout.Label(String.Format("tgo: {0:F3}", peg.tgo));
             GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
             GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
-            /* GUILayout.Label(String.Format("phi: {0:F2}", peg.phi * UtilMath.Rad2Deg));
-            GUILayout.Label(String.Format("iy inc: {0:F4}", Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg));
-            */
-            GUILayout.Label(String.Format("orth. test: {0:F5}", Vector3d.Dot(peg.lambda, peg.lambdaDot)));
             GUILayout.BeginHorizontal();
             GUIStyle si = new GUIStyle(GUI.skin.label);
             if ( peg.isStable() )
@@ -104,10 +83,8 @@ namespace MuMech
                 si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
             GUILayout.Label("PEG Status: " + peg.status, si);
             GUILayout.EndHorizontal();
-            /* GUILayout.Label("PEG TargetMode: " + peg.tmode);
-            GUILayout.Label("PEG IncMode: " + peg.imode); */
 
-            GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
+//            GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 
 
             if (autopilot.enabled)

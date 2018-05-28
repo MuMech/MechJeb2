@@ -111,6 +111,8 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            update_pitch_and_heading();
+
             if ( isLoadedPrincipia )
             {
                 // Debug.Log("FOUND PRINCIPIA!!!");
@@ -118,7 +120,6 @@ namespace MuMech
 
             if ( !HighLogic.LoadedSceneIsFlight )
             {
-                // something is leaving PEG enabled in ways I don't understand and it creates NRE spam in the VAB when PEG is still running
                 Debug.Log("MechJebModulePEGController [BUG]: PEG enabled in non-flight mode.  How does this happen?");
                 Done();
             }
@@ -132,18 +133,12 @@ namespace MuMech
                 return;
             }
 
-            // FIXME: we need to add liveStats to vacStats and atmoStats from MechJebModuleStageStats so we don't have to force liveSLT here
-            stats.liveSLT = true;
-            stats.RequestUpdate(this, true);
-
             if ( status == PegStatus.FAILED )
                 Reset();
 
             converge();
 
-            update_pitch_and_heading();
-
-            if (tgo < 0)
+            if (p != null && p.solution != null && tgo < TimeWarp.fixedDeltaTime)
                 Done();
         }
 
@@ -178,15 +173,16 @@ namespace MuMech
             this.r0m = PeA + mainBody.Radius;
             this.v0m = Math.Sqrt(mainBody.gravParameter/r0m);
             this.inc = inc;
-            if (p == null || p.solution == null)
+            if (p == null)
             {
                 /* this guesses the costate */
                 lambdaDot = Vector3d.zero;
-                double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(vesselState.latitude, inc);
+                double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
-                Vector3d desiredThrustVector = Math.Cos(0 * UtilMath.Deg2Rad) * desiredHeadingVector;  /* 45 pitch guess */
-                // lambda = desiredThrustVector;
-                lambda = vesselState.orbitalVelocity.normalized;
+                Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
+                lambda = desiredThrustVector;
+                p = new Pontryagin(type: ProbType.MULTIBURN, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero);
+                p.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
             }
         }
 
@@ -208,38 +204,25 @@ namespace MuMech
         }
 
         private double last_call;        // this is the last call to converge
-
         private Pontryagin p;
 
-        // main PEG outer routine, more concerned with KSP issues than PEG itself
         private void converge()
         {
-            oldstatus = status;
-            oldlambda = lambda;
-            oldlambdaDot = lambdaDot;
-            oldt_lambda = t_lambda;
+            if (p == null)
+                return;
 
-            if (p == null) {
-                p = new Pontryagin(type: ProbType.MULTIBURN, mu: mainBody.gravParameter);
-                // p.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
-                p.terminal5constraint(vesselState.orbitalPosition.normalized * 6556000 , vesselState.orbitalVelocity.normalized * 7797.4);
-            }
+            // FIXME: we need to add liveStats to vacStats and atmoStats from MechJebModuleStageStats so we don't have to force liveSLT here
+            stats.liveSLT = true;
+            stats.RequestUpdate(this, true);
 
             UpdateStages();
+
+            p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
 
             if ( p.threadStart(vesselState.time) )
                 Debug.Log("started thread");
 
             last_call = vesselState.time;
-
-            /*
-            if ( status == PegStatus.CONVERGED && tgo < 5 )
-            {
-                last_call = 0;
-                status = PegStatus.TERMINAL;
-                return;
-            }
-            */
 
             if (p.solution == null)
                 status = PegStatus.INITIALIZING;
@@ -255,16 +238,15 @@ namespace MuMech
             if (p == null || p.solution == null)
                 return;
 
+            if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
+                p.solution.t0 = vesselState.time;
+
             lambda = p.solution.pv(vesselState.time);
             lambdaDot = p.solution.pr(vesselState.time);
             iF = lambda.normalized;
-
-            pitch = 90.0 - Vector3d.Angle(iF, vesselState.up);
-            Vector3d headingDir = iF - Vector3d.Project(iF, vesselState.up);
-            heading = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(headingDir, vesselState.east), Vector3d.Dot(headingDir, vesselState.north));
-
+            p.solution.pitch_and_heading(vesselState.time, ref pitch, ref heading);
             tgo = p.solution.tgo(vesselState.time);
-            Debug.Log("north = " + vesselState.north + " east = " + vesselState.east);
+            vgo = p.solution.vgo(vesselState.time);
         }
 
         private void Done()
@@ -279,8 +261,7 @@ namespace MuMech
         public void Reset()
         {
             // lambda and lambdaDot are deliberately not cleared here
-            /* if ( imode == IncMode.FREE_LAN )
-                SetPlaneFromInclination(incval); */
+            p = null;
             status = PegStatus.INITIALIZING;
             last_PEG = 0.0;
             last_call = 0.0;
@@ -295,7 +276,7 @@ namespace MuMech
                     kspstages.Add(i);
 
             if (p != null)
-                p.SynchStages(kspstages, vacStats, vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot);
+                p.SynchStages(kspstages, vacStats);
         }
 
         public static bool isLoadedPrincipia = false;
