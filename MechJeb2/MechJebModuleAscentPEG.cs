@@ -27,17 +27,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool pegAfterStageToggle = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool pegCoast = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool pegManualAzimuthToggle = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pegManualAzimuth = new EditableDouble(0);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegAfterStage = new EditableDouble(0);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble coastSecs = new EditableDouble(0.00);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableInt coastAfterStage = new EditableInt(-1);
 
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDouble pitchBias = new EditableDouble(0);
@@ -113,8 +103,6 @@ namespace MuMech
 
             if (surfHeading)
                 heading = srfvelHeading();
-            else if (handleManualAz && pegManualAzimuthToggle)
-                heading = pegManualAzimuth;
             else
                 heading = peg.heading;
 
@@ -189,10 +177,7 @@ namespace MuMech
                     mode = AscentMode.PEG;
                     return;
                 }
-                if (pegManualAzimuthToggle)
-                    attitudeToPEG(pitch, surfHeading: true);
-                else
-                    attitudeToPEG(pitch);
+                attitudeToPEG(pitch);
             }
             else if ( peg.isStable() )
             {
