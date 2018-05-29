@@ -3,19 +3,18 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleSmartRcs : DisplayModule
+    class MechJebModuleSmartRcs : DisplayModule
     {
 
         public enum Target
         {
             OFF,
             ZERO_RVEL,
-            ZERO_VEL,
         }
 
-        public static readonly string[] TargetTexts = { "OFF", "ZERO RELATIVE VELOCITY", "ZERO VELOCITY"};
+        public static readonly string[] TargetTexts = { "OFF", "ZERO RVEL"};
 
-        public Target target = Target.OFF;
+        public Target target;
 
         private static GUIStyle btNormal, btActive, btAuto;
 
@@ -75,13 +74,17 @@ namespace MuMech
                 }
                 GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
             }
+            else if (core.target.Target == null)
+            {
+                GUILayout.Label("Choose a target");
+            }
             else
             {
                 GUILayout.BeginVertical();
 
                 TargetButton(Target.OFF);
                 TargetButton(Target.ZERO_RVEL);
-                TargetButton(Target.ZERO_VEL);
+                //TargetButton(Target.HOLD_RPOS);
 
                 GUILayout.EndVertical();
             }
@@ -101,10 +104,6 @@ namespace MuMech
                 case Target.ZERO_RVEL:
                     core.rcs.users.Add(this);
                     core.rcs.SetTargetRelative(Vector3d.zero);
-                    break;
-                case Target.ZERO_VEL:
-                    core.rcs.users.Add(this);
-                    core.rcs.SetTargetWorldVelocity(Vector3d.zero);
                     break;
             }
         }

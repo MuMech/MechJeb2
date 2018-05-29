@@ -163,11 +163,8 @@ namespace MuMech
             this.users.Clear();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            // Do not disable RCS, because it is still useful for stabilizing the rocket
-            if (vessel.LandedOrSplashed)
-            {
-                core.EngageSmartRcsControl(MechJebModuleSmartRcs.Target.ZERO_VEL, true);
-            }
+            if (core.landing.rcsAdjustment)
+                core.rcs.enabled = false;
             setStep(null);
         }
 
@@ -208,7 +205,7 @@ namespace MuMech
             // Consider lowering the langing gear
             {
                 double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
-                if (deployGears && !deployedGears && (minalt < 2000))
+                if (deployGears && !deployedGears && (minalt < 1000))
                     DeployLandingGears();
             }
 
@@ -235,7 +232,8 @@ namespace MuMech
             predictor.descentSpeedPolicy = null;
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            // Do not disable RCS, because it is still useful for stabilizing the rocket
+            if (core.landing.rcsAdjustment)
+                core.rcs.enabled = false;
             setStep(null);
         }
 
