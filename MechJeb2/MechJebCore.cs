@@ -144,16 +144,68 @@ namespace MuMech
             {
                 MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
 
-                if (masterSmartASS != null && !masterSmartASS.hidden)
+                if (!masterSmartASS.hidden)
                 {
-                    masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
+                    EngageSmartASSControl(MechJebModuleSmartASS.Mode.ORBITAL, target, false);
+                }
+            }
+        }
+
+        public void EngageSmartASSControl(MechJebModuleSmartASS.Mode mode, MechJebModuleSmartASS.Target target, bool forceEnable)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
+
+                if (masterSmartASS != null)
+                {
+                    if (forceEnable)
+                    {
+                        // Prevent that the presence of other attitude controllers disables SmartASS
+                        masterSmartASS.autoDisableSmartASS = false;
+                    }
+                    masterSmartASS.mode = mode;
                     masterSmartASS.target = target;
 
                     masterSmartASS.Engage();
+                    masterSmartASS.enabled = true; // show GUI
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for control.");
+                }
+            }
+            else
+            {
+                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+            }
+        }
+
+        public void EngageSmartRcsControl(MechJebModuleSmartRcs.Target target, bool forceEnable)
+        {
+            MechJebCore masterMechJeb = this.vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleSmartRcs masterSmartRcs = masterMechJeb.GetComputerModule<MechJebModuleSmartRcs>();
+
+                if (masterSmartRcs != null)
+                {
+                    if (forceEnable)
+                    {
+                        // Prevent that the presence of other rcs controllers disables SmartRcs
+                        masterSmartRcs.autoDisableSmartRCS = false;
+                    }
+                    masterSmartRcs.target = target;
+
+                    masterSmartRcs.Engage();
+                    masterSmartRcs.enabled = true; // show GUI
+                }
+                else
+                {
+                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartRcs for control.");
                 }
             }
             else

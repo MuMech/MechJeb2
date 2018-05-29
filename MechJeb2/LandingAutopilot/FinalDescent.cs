@@ -9,6 +9,8 @@ namespace MuMech
         {
 
             private IDescentSpeedPolicy aggressivePolicy;
+            private float thrustAt200Meters;
+            private bool forceVerticalMode = false;
 
             public FinalDescent(MechJebCore core) : base(core)
             {
@@ -81,26 +83,42 @@ namespace MuMech
                         double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
                         aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);  // this constant policy creation is wastefull...
                         core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity));
+                        thrustAt200Meters = (float)vesselState.limitedMaxThrustAccel; // this gets updated until we are below 200 meters
                     }
                 }
                 else
                 {
-                    // last 200 meters:
-                    core.thrust.trans_spd_act = -Mathf.Lerp(0, (float)Math.Sqrt((vesselState.limitedMaxThrustAccel - vesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
+                    float previous_trans_spd_act = Math.Abs(core.thrust.trans_spd_act); // avoid issues going from KEEP_SURFACE mode to KEEP_VERTICAL mode
+
+                    // Last 200 meters, at this point the rocket has a TWR that will rise rapidly, so be sure to use the same policy based on an older
+                    // TWR. Otherwise we would suddenly get a large jump in desired speed leading to a landing that is too fast.
+                    core.thrust.trans_spd_act = Mathf.Lerp(0, (float)Math.Sqrt((thrustAt200Meters - vesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
+
+                    // Sometimes during the descent we end up going up a bit due to overthrusting during breaking, avoid thrusting up even more and destabilizing the rocket
+                    core.thrust.trans_spd_act = (float)Math.Min(previous_trans_spd_act, core.thrust.trans_spd_act);
 
                     // take into account desired landing speed:
-                    core.thrust.trans_spd_act = (float)Math.Min(-core.landing.touchdownSpeed, core.thrust.trans_spd_act);
+                    core.thrust.trans_spd_act = (float)Math.Max(core.landing.touchdownSpeed, core.thrust.trans_spd_act);
 
-//                    core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-//                    core.thrust.trans_kill_h = true;
-
-//                    if (Math.Abs(Vector3d.Angle(-vessel.surfaceVelocity, vesselState.up)) < 10)
+                    // Prevent that we switch back from Vertical mode to KeepSurface mode
+                    // When that happens the rocket will start tilting and end up falling over
                     if (vesselState.speedSurfaceHorizontal < 5)
+                    {
+                        forceVerticalMode = true;
+                    }
+
+                    if (forceVerticalMode)
                     {
                         // if we're falling more or less straight down, control vertical speed and 
                         // kill horizontal velocity
                         core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-                        core.thrust.trans_kill_h = true;
+                        core.thrust.trans_spd_act *= -1;
+                        core.thrust.trans_kill_h = false; // rockets are long, and will fall over if you attempt to do any manouvers to kill that last bit of horizontal speed
+                        if (core.landing.rcsAdjustment) // If allowed, use RCS to stablize the rocket
+                            core.rcs.enabled = true;
+                        // Turn on SAS because we are likely to have a bit of horizontal speed left that needs to stabilize
+                        // Use SmartASS, because Mechjeb doesn't expect SAS to be used (i.e. it is automatically turned off again)
+                        core.EngageSmartASSControl(MechJebModuleSmartASS.Mode.SURFACE, MechJebModuleSmartASS.Target.VERTICAL_PLUS, true);
                     }
                     else
                     {
@@ -109,7 +127,6 @@ namespace MuMech
                         // by thrusting directly retrograde
                         core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                         core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
-                        core.thrust.trans_spd_act *= -1;
                     }
                 }
 
