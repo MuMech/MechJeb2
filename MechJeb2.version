@@ -1,0 +1,14 @@
+{
+  "NAME": "MechJeb2",
+  "URL": "https://raw.githubusercontent.com/MuMech/MechJeb2/master/GameData/MechJeb2/MechJeb2.version",
+  "VERSION": {
+    "MAJOR": 2,
+    "MINOR": 2,
+    "PATCH": 0
+  },
+  "KSP_VERSION": {
+    "MAJOR": 0,
+    "MINOR": 23,
+    "PATCH": 5
+  }
+}
