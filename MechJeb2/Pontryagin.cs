@@ -173,20 +173,20 @@ namespace MuMech {
                     tmax = t[n-1];
                     for(int i = 0; i < 14; i++)
                     {
+                        /*
                         double[] yi = new double[n];
                         for(int j = 0; j < n; j++)
                         {
                             yi[j] = y[j,i];
                         }
                         alglib.polynomialbuildeqdist(tmin, tmax, yi, out interpolant[i]);
-/*
+                        */
                         double[] yi = new double[n-2];
                         for(int j = 1; j < (n-1); j++)
                         {
-                            yi[j-1] = y[j,i];
+                            yi[n-j-2] = y[j,i];  // reverse the array and omit the endpoints for chebyshev interpolation
                         }
                         alglib.polynomialbuildcheb1(tmin, tmax, yi, out interpolant[i]);
-                        */
                     }
                 }
             }
@@ -411,17 +411,16 @@ namespace MuMech {
                 dt = 0.9999 * tau;
 
             double[] x = new double[count];
-            for(int i = 0; i < count; i++)
-                x[i] = t + dt * i / (count - 1 );
-
-            /*
             // Chebyshev sampling
-            for(int i = 1; i <= (count-2); i++)
-                x[i] = 0.5 * (t + dt ) + 0.5 * (dt - t) * Math.Cos(Math.PI*(2*i-1)/(2*(count-2)));
+            for(int k = 1; k < (count-1); k++)
+            {
+                int l = count - 2;
+                x[k] = t + 0.5 * dt  + 0.5 * dt * Math.Cos(Math.PI*(2*(l-k)+1)/(2*l));
+            }
+
             // But also get the endpoints exactly
             x[0] = t;
             x[count-1] = t + dt;
-            */
 
             double[] xtbl;
             double[,] ytbl;
