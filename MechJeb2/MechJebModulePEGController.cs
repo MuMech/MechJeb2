@@ -181,8 +181,11 @@ namespace MuMech
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
                 Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
-                p = new Pontryagin(type: ProbType.MULTIBURN, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero);
-                p.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
+                Debug.Log("r0 = " + vesselState.orbitalPosition + " v0 = " + vesselState.orbitalVelocity);
+                Debug.Log("desiredHeading = " + desiredHeading + " desiredHeadingVector = " + desiredHeadingVector + " desiredThrustVector = " + desiredThrustVector);
+                PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                solver.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
+                p = solver;
             }
         }
 
@@ -204,7 +207,7 @@ namespace MuMech
         }
 
         private double last_call;        // this is the last call to converge
-        private Pontryagin p;
+        private PontryaginBase p;
 
         private void converge()
         {
@@ -272,11 +275,11 @@ namespace MuMech
             List<int>kspstages = new List<int>();
 
             for ( int i = vacStats.Length-1; i >= 0; i-- )
-                if ( vacStats[i].deltaV > 0 )
+                if ( vacStats[i].deltaV > 20 )
                     kspstages.Add(i);
 
             if (p != null)
-                p.SynchStages(kspstages, vacStats);
+                p.SynchStages(kspstages, vacStats, vesselState.mass);
         }
 
         public static bool isLoadedPrincipia = false;
