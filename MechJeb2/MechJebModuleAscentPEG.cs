@@ -38,11 +38,13 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             mode = AscentMode.VERTICAL_ASCENT;
+            Debug.Log("MechJebModuleAscentPEG enabled, peg should be enabled now");
             peg.enabled = true;
         }
 
         public override void OnModuleDisabled()
         {
+            Debug.Log("MechJebModuleAscentPEG disabled, peg should be disabled now");
             peg.enabled = false;
         }
 
