@@ -6,13 +6,7 @@ using UnityEngine;
 namespace MuMech {
     public enum ArcType { COAST, BURN };
 
-    /*
-     * MULTIBURN - strictly N burns without coasts, with a single overall optimized burntime, with mass jettison
-     */
-
-    public enum ProbType { MULTIBURN, COASTBURN };
-
-    public class Pontryagin {
+    public abstract class PontryaginBase {
         public class Arc
         {
             public double isp, thrust;
@@ -112,8 +106,12 @@ namespace MuMech {
             public Vector3d pv(double t)
             {
                 double tbar = ( t - t0 ) / t_scale;
-                var pv = new Vector3d( interpolate(6, tbar), interpolate(7, tbar), interpolate(8, tbar) );
                 return Planetarium.fetch.rotation * new Vector3d( interpolate(6, tbar), interpolate(7, tbar), interpolate(8, tbar) );
+            }
+
+            public Vector3d pv_bar(double tbar)
+            {
+                return new Vector3d( interpolate(6, tbar), interpolate(7, tbar), interpolate(8, tbar) );
             }
 
             public Vector3d pr(double t)
@@ -122,9 +120,19 @@ namespace MuMech {
                 return Planetarium.fetch.rotation * new Vector3d( interpolate(9, tbar), interpolate(10, tbar), interpolate(11, tbar) );
             }
 
+            public Vector3d pr_bar(double tbar)
+            {
+                return new Vector3d( interpolate(9, tbar), interpolate(10, tbar), interpolate(11, tbar) );
+            }
+
             public double m(double t)
             {
                 double tbar = ( t - t0 ) / t_scale;
+                return interpolate(12, tbar);
+            }
+
+            public double m_bar(double tbar)
+            {
                 return interpolate(12, tbar);
             }
 
@@ -201,37 +209,43 @@ namespace MuMech {
         public double mu;
         public Action<double[], double[]> bcfun;
         public const double g0 = 9.80665;
-        public ProbType type;
         public Vector3d r0, v0, r0_bar, v0_bar;
         public Vector3d pv0, pr0;
         public double tgo, tgo_bar, vgo, vgo_bar;
         public double g_bar, r_scale, v_scale, t_scale;  /* problem scaling */
+        public double dV, dV_bar;  /* guess at dV */
 
-
-        public Pontryagin(ProbType type, double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0)
+        public PontryaginBase(double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV)
         {
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
-            this.r0 = rot * r0;
-            this.v0 = rot * v0;
+            r0 = rot * r0;
+            v0 = rot * v0;
+            pv0 = rot * pv0;
+            pr0 = rot * pr0;
+            this.r0 = r0;
+            this.v0 = v0;
             this.arcs = new List<Arc>();
             this.mu = mu;
-            this.type = type;
-            this.pv0 = rot * pv0;
-            this.pr0 = rot * pr0;
-            double r0m = r0.magnitude;
+            this.pv0 = pv0;
+            this.pr0 = pr0;
+            this.dV = dV;
+            double r0m = this.r0.magnitude;
             g_bar = mu / ( r0m * r0m );
             r_scale = r0m;
             v_scale = Math.Sqrt( r0m * g_bar );
             t_scale = Math.Sqrt( r0m / g_bar );
-            r0_bar = r0 / r_scale;
-            v0_bar = v0 / v_scale;
+            r0_bar = this.r0 / r_scale;
+            v0_bar = this.v0 / v_scale;
+            dV_bar = dV / v_scale;
         }
 
         public void UpdatePosition(Vector3d r0, Vector3d v0, Vector3d lambda, Vector3d lambdaDot, double tgo, double vgo)
         {
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
-            this.r0 = rot * r0;
-            this.v0 = rot * v0;
+            r0 = rot * r0;
+            v0 = rot * v0;
+            this.r0 = r0;
+            this.v0 = v0;
             if (solution != null)
             {
                 /* uhm, FIXME: this round trip is silly */
@@ -242,8 +256,8 @@ namespace MuMech {
                 this.vgo = vgo;
                 this.vgo_bar = vgo / v_scale;
             }
-            r0_bar = r0 / r_scale;
-            v0_bar = v0 / v_scale;
+            r0_bar = this.r0 / r_scale;
+            v0_bar = this.v0 / v_scale;
         }
 
         public void NormalizeArc(int i)
@@ -264,8 +278,6 @@ namespace MuMech {
             arcs.Add(new Arc(type, m0, dt0, isp, thrust, max_bt));
         }
 
-        public int numArcs { get { return arcs.Count; } }
-        private int arcIndex { get { return 2; } }
 
         public void centralForceThrust(double[] y, double x, double[] dy, object o)
         {
@@ -299,37 +311,7 @@ namespace MuMech {
             dy[13] = At;
         }
 
-        // 4-constraint PEG with free LAN
-        public void flightangle4constraint(double rTm, double vTm, double gamma, double inc)
-        {
-            bcfun = (double[] yT, double[] zterm) => flightangle4constraint(yT, zterm, rTm, vTm, gamma, inc);
-        }
-
-        private void flightangle4constraint(double[] yT, double[] z, double rTm, double vTm, double gamma, double inc)
-        {
-            double rTm_bar = rTm / r_scale;
-            double vTm_bar = vTm / v_scale;
-
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP */
-            Vector3d rn = Vector3d.Cross(rf, n);
-            Vector3d vn = Vector3d.Cross(vf, n);
-            Vector3d hf = Vector3d.Cross(rf, vf);
-
-            z[0] = ( rf.magnitude * rf.magnitude - rTm_bar * rTm_bar ) / 2.0;
-            z[1] = ( vf.magnitude * vf.magnitude - vTm_bar * vTm_bar ) / 2.0;
-            z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(inc);
-            z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
-            z[4] = rTm_bar * rTm_bar * ( Vector3d.Dot(vf, prf) - vTm_bar * Math.Sin(gamma) / rTm_bar * Vector3d.Dot(rf, prf) ) -
-                vTm_bar * vTm_bar * ( Vector3d.Dot(rf, pvf) - rTm_bar * Math.Sin(gamma) / vTm_bar * Vector3d.Dot(vf, pvf) );
-            z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn);
-        }
-
-        // free attachment into the orbit defined by rT + vT
+        /*
         public void terminal5constraint(Vector3d rT, Vector3d vT)
         {
             bcfun = (double[] yT, double[] zterm) => terminal5constraint(yT, zterm, rT, vT);
@@ -350,7 +332,6 @@ namespace MuMech {
 
             if (hT[1] == 0)
             {
-                /* degenerate inc=90 case so swap all the coordinates */
                 rf = rf.Reorder(231);
                 vf = vf.Reorder(231);
                 rT_bar = rT_bar.Reorder(231);
@@ -374,8 +355,9 @@ namespace MuMech {
             z[4] = emiss[2];
             z[5] = trans;
         }
+        */
 
-        double ckEps = 1e-9;
+        double ckEps = 1e-7;
 
         /* used to update y0 to yf without intermediate values */
         public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, Arc e, ref double dV)
@@ -387,6 +369,8 @@ namespace MuMech {
         {
             singleIntegrate(y0, null, sol, n, ref t, dt, e, count, ref dV);
         }
+
+        public abstract int arcIndex { get; }
 
         public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, Arc e, int count, ref double dV)
         {
@@ -407,8 +391,8 @@ namespace MuMech {
             double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
 
             /* clip the integration so we don't burn the whole rocket (causes infinite spinning) */
-            if ( dt > 0.9999 * tau )
-                dt = 0.9999 * tau;
+            if ( dt > 0.999 * tau )
+                dt = 0.999 * tau;
 
             double[] x = new double[count];
             // Chebyshev sampling
@@ -437,6 +421,7 @@ namespace MuMech {
 
             if (sol != null && dt != 0)
             {
+                //Debug.Log("dt / tau: " + dt / tau);
                 sol.AddSegment(xtbl, ytbl, e);
             }
 
@@ -450,17 +435,17 @@ namespace MuMech {
             }
         }
 
-        public void multipleIntegrate(double[] y0, double[] yf)
+        public void multipleIntegrate(double[] y0, double[] yf, List<Arc> arcs)
         {
-            multipleIntegrate(y0, yf, null);
+            multipleIntegrate(y0, yf, null, arcs);
         }
 
-        public void multipleIntegrate(double[] y0, Solution sol, int count)
+        public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
-            multipleIntegrate(y0, null, sol, count);
+            multipleIntegrate(y0, null, sol, arcs, count);
         }
 
-        public void multipleIntegrate(double[] y0, double[] yf, Solution sol, int count = 2)
+        public void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2)
         {
             double t = 0;
 
@@ -490,112 +475,52 @@ namespace MuMech {
             }
         }
 
-        public void optimizationFunction(double[] y0, double[] z, object o)
-        {
-            double[] yf = new double[numArcs*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
-            multipleIntegrate(y0, yf);
+        public abstract void optimizationFunction(double[] y0, double[] z, object o);
 
-            /* initial conditions */
-            z[0] = y0[arcIndex+0] - r0_bar[0];
-            z[1] = y0[arcIndex+1] - r0_bar[1];
-            z[2] = y0[arcIndex+2] - r0_bar[2];
-            z[3] = y0[arcIndex+3] - v0_bar[0];
-            z[4] = y0[arcIndex+4] - v0_bar[1];
-            z[5] = y0[arcIndex+5] - v0_bar[2];
-            z[6] = y0[arcIndex+12] - arcs[0].m0;
-
-            /* terminal constraints */
-            double[] yT = new double[13];
-            Array.Copy(yf, (numArcs-1)*13, yT, 0, 13);
-            double[] zterm = new double[6];
-            if ( bcfun == null )
-                throw new Exception("No bcfun was provided to the Pontryagin optimizer");
-
-            bcfun(yT, zterm);
-
-            z[7] = zterm[0];
-            z[8] = zterm[1];
-            z[9] = zterm[2];
-            z[10] = zterm[3];
-            z[11] = zterm[4];
-            z[12] = zterm[5];
-
-            /* multiple shooting continuity */
-            for(int i = 1; i < numArcs; i++)
-            {
-                for(int j = 0; j < 13; j++)
-                {
-                    if ( j == 12 )
-                    {
-                        /* mass jettison */
-                        z[j+13*i] = y0[j+13*i+arcIndex] - arcs[i].m0;
-                        //z[j+13*i] = y0[j+13*i] - yf[j+13*(i-1)];
-                    }
-                    else
-                        z[j+13*i] = y0[j+13*i+arcIndex] - yf[j+13*(i-1)];
-                }
-            }
-
-            Vector3d r1 = new Vector3d(yf[0], yf[1], yf[2]);
-            Vector3d v1 = new Vector3d(yf[3], yf[4], yf[5]);
-            Vector3d pv1 = new Vector3d(yf[6], yf[7], yf[8]);
-            Vector3d pr1 = new Vector3d(yf[9], yf[10], yf[11]);
-
-            /* magnitude of initial costate vector = 1.0 (dummy constraint for H(tf)=0 because BC is keplerian) */
-            int n = 13 * numArcs;
-            z[n] = 0.0;
-            for(int i = 0; i < 6; i++)
-                z[n] = z[n] + y0[6+i+arcIndex] * y0[6+i+arcIndex];
-            z[n] = Math.Sqrt(z[n]) - 1.0;
-
-            // positive arc time constraint
-            z[n+1] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) * 1000 : 0;
-
-            /* if (z.Length == 28)
-                z[27] = Vector3d.Dot(pr1, v1) - Vector3d.Dot(pv1, r1) / ( r1.magnitude * r1.magnitude * r1.magnitude );  /* H0(t1) = 0 */
-
-            /* construct sum of the squares of the residuals for levenberg marquardt */
-            for(int i = 0; i < z.Length; i++)
-                z[i] = z[i] * z[i];
-        }
-
-
-        double lmEpsx = 0; // 1e-15;
+        double lmEpsx = 1e-9; // 1e-15;
         int lmIter = 20000;
-        double lmDiffStep = 0.0001;
+        double lmDiffStep = 0.00001;
 
-        public bool runOptimizer()
+        public bool runOptimizer(List<Arc> arcs)
         {
 
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
             alglib.minlmsetcond(state, lmEpsx, lmIter);
-            //alglib.minlmsetcond(state, 0, 0);
-            /*Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start(); */
-            alglib.minlmoptimize(state, optimizationFunction, null, null);
+            alglib.minlmoptimize(state, optimizationFunction, null, arcs);
             alglib.minlmresultsbuf(state, ref y0, rep);
-            return rep.terminationtype == 2;
+            if ((rep.terminationtype != 2) && (rep.terminationtype != 7))
+            {
+                Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+            }
 
-            /*
-            stopWatch.Stop();
-            Console.WriteLine("Report Code: " + rep.terminationtype);
-            Console.WriteLine("Iterations: " + rep.iterationscount);
-            Console.WriteLine("NFunc: " + rep.nfunc);
-            Console.WriteLine("NJac: " + rep.njac);
-            Console.WriteLine("NHess: " + rep.nhess);
-            Console.WriteLine("NCholesky: " + rep.ncholesky);
-            TimeSpan ts = stopWatch.Elapsed;
-            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
-            Console.WriteLine("RunTime " + elapsedTime);
-            */
+            double[] z = new double[13 * arcs.Count + arcIndex];
+            optimizationFunction(y0, z, arcs);
+
+            double znorm = 0.0;
+
+            for(int i = 0; i < z.Length; i++)
+            {
+                znorm += z[i] * z[i];
+                //Debug.Log("z[" + i + "] = " + z[i]);
+            }
+
+            znorm = Math.Sqrt(znorm);
+            //Debug.Log("znorm = " + znorm);
+
+            if (znorm > 1e-5)
+                return false;
+
+            return (rep.terminationtype == 2) || (rep.terminationtype == 7);
         }
 
         public double[] y0;
 
+        /* FIXME: this only ever gets called with i = 0 */
         public void UpdateY0Arc(int i)
         {
+            /* FIXME: some of the round tripping here is silly */
             Arc a = arcs[i];
             y0[arcIndex+i*13] = r0_bar[0];
             y0[arcIndex+i*13+1] = r0_bar[1];
@@ -614,90 +539,15 @@ namespace MuMech {
             y0[1] = 0;
         }
 
+        public abstract void Optimize(double t0);
+
         public Solution solution;
 
-        public void Optimize(double t0)
-        {
-            try {
-                int numTimes = 2; /* MULTIBURN */
-
-                // FIXME: staging happened so we reconverge the entire problem
-                if ( y0 != null )
-                {
-                    if ( y0.Length > 13*numArcs + numTimes )
-                    {
-                        /* probably normal staging */
-                        double[] y0_old = y0;
-                        y0 = new double[13*numArcs + numTimes];
-                        Array.Copy(y0_old, 0, y0, 0, 13*numArcs + numTimes);
-                    }
-                    else if ( y0.Length != 13*numArcs + numTimes )
-                    {
-                        y0 = null;
-                    }
-                }
-
-                NormalizeArcs();
-
-                if (y0 == null)
-                {
-                    y0 = new double[13*numArcs + numTimes];
-
-                    for(int i = 0; i < numArcs; i++)
-                    {
-                        UpdateY0Arc(i);
-                    }
-                }
-                else
-                {
-                    UpdateY0Arc(0);
-                }
-
-                for(int i = 0; i < y0.Length; i++)
-                    Debug.Log("  y0[" + i + "] = " + y0[i]);
-
-                if ( runOptimizer() )
-                {
-                    double[] z = new double[13 * numArcs + numTimes];
-                    optimizationFunction(y0, z, null);
-                    double znorm = 0.0;
-                    for(int i = 0; i < z.Length; i++)
-                    {
-                        znorm += z[i] * z[i];
-                        Debug.Log("z[" + i + "] = " + z[i]);
-                    }
-                    znorm = Math.Sqrt(znorm);
-                    Debug.Log("znorm = " + znorm);
-
-                    if (znorm < 1e-5 && y0[13 * numArcs] > 0)
-                    {
-                        Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
-
-                        for(int i = 0; i < y0.Length; i++)
-                            Debug.Log("y0[" + i + "] = " + y0[i]);
-
-                        multipleIntegrate(y0, sol, 10);
-
-                        this.solution = sol;
-
-                        Debug.Log("rf = " + sol.r_bar(sol.tmax()) + "(" + sol.r_bar(sol.tmax()).magnitude + ") vf = " + sol.v_bar(sol.tmax()) + "(" + sol.v_bar(sol.tmax()).magnitude + ")");
-                        Debug.Log("rf = " + sol.r(sol.tf()) + "(" + sol.r(sol.tf()).magnitude + ") vf = " + sol.v(sol.tf()) + "(" + sol.v(sol.tf()).magnitude + ")");
-                    } else {
-                      y0 = null;
-                    }
-                } else {
-                    y0 = null;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
-        }
+        public bool initializing;
 
         private Thread thread;
 
-        public void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats)
+        public void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, double m0)
         {
             if (thread != null && thread.IsAlive)
                 return;
@@ -707,7 +557,8 @@ namespace MuMech {
             for(int k = 0; k < kspstages.Count; k++)
             {
                 int i = kspstages[k];
-                AddArc(type: ArcType.BURN, m0: vacStats[i].startMass*1000, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust * 1000, max_bt: vacStats[i].deltaTime);
+
+                AddArc(type: ArcType.BURN, m0: ( (k == 0) ? m0 : vacStats[i].startMass )*1000, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust * 1000, max_bt: vacStats[i].deltaTime);
             }
             for(int k = 0; k < arcs.Count; k++)
                 Debug.Log(arcs[k]);
