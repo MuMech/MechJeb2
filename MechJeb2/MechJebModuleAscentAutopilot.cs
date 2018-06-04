@@ -126,6 +126,8 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            ascentPath.enabled = true;
+
             mode = AscentMode.PRELAUNCH;
 
             placedCircularizeNode = false;
@@ -139,6 +141,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            ascentPath.enabled = false;
             core.attitude.attitudeDeactivate();
             if (!core.rssMode)
                 core.thrust.ThrustOff();
