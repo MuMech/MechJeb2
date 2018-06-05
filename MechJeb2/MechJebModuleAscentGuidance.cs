@@ -137,75 +137,86 @@ namespace MuMech
                     desiredInclination.val = vesselState.latitude;
                 GUILayout.EndHorizontal();
 
-                navBall.NavBallGuidance = GUILayout.Toggle(navBall.NavBallGuidance, "Show ascent navball guidance");
-                core.thrust.LimitToPreventOverheatsInfoItem();
-                //core.thrust.LimitToTerminalVelocityInfoItem();
-                core.thrust.LimitToMaxDynamicPressureInfoItem();
-                core.thrust.LimitAccelerationInfoItem();
-                core.thrust.LimitThrottleInfoItem();
-                core.thrust.LimiterMinThrottleInfoItem();
-                core.thrust.LimitElectricInfoItem();
-                GUILayout.BeginHorizontal();
-                autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
-                if (autopilot.forceRoll)
+                if (autopilot.showSettings)
                 {
-                    GuiUtils.SimpleTextBox("climb", autopilot.verticalRoll, "º", 30f);
-                    GuiUtils.SimpleTextBox("turn", autopilot.turnRoll, "º", 30f);
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                GUIStyle s = new GUIStyle(GUI.skin.toggle);
-                if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
-                autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA to", s, GUILayout.ExpandWidth(true));
-                autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
-                GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
-                GUILayout.EndHorizontal();
+                    if (GUILayout.Button("Hide settings"))
+                        autopilot.showSettings = false;
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(25);
-                if (autopilot.limitAoA)
-                {
-                    GUIStyle sl = new GUIStyle(GUI.skin.label);
-                    if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
-                        sl.normal.textColor = sl.hover.textColor = Color.green;
-                    GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50, sl);
-                }
-                GUILayout.EndHorizontal();
-
-                if ( ascentPathIdx == 0 )
-                {
-                    // corrective steering only applies to Classic
+                    navBall.NavBallGuidance = GUILayout.Toggle(navBall.NavBallGuidance, "Show ascent navball guidance");
+                    core.thrust.LimitToPreventOverheatsInfoItem();
+                    //core.thrust.LimitToTerminalVelocityInfoItem();
+                    core.thrust.LimitToMaxDynamicPressureInfoItem();
+                    core.thrust.LimitAccelerationInfoItem();
+                    core.thrust.LimitThrottleInfoItem();
+                    core.thrust.LimiterMinThrottleInfoItem();
+                    core.thrust.LimitElectricInfoItem();
                     GUILayout.BeginHorizontal();
-                    autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering", GUILayout.ExpandWidth(false));
-                    if (autopilot.correctiveSteering)
+                    autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
+                    if (autopilot.forceRoll)
                     {
-                        GUILayout.Label("Gain", GUILayout.ExpandWidth(false));
-                        autopilot.correctiveSteeringGain.text = GUILayout.TextField(autopilot.correctiveSteeringGain.text, GUILayout.Width(40));
+                        GuiUtils.SimpleTextBox("climb", autopilot.verticalRoll, "º", 30f);
+                        GuiUtils.SimpleTextBox("turn", autopilot.turnRoll, "º", 30f);
+                    }
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUIStyle s = new GUIStyle(GUI.skin.toggle);
+                    if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
+                    autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA to", s, GUILayout.ExpandWidth(true));
+                    autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
+                    GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(25);
+                    if (autopilot.limitAoA)
+                    {
+                        GUIStyle sl = new GUIStyle(GUI.skin.label);
+                        if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
+                            sl.normal.textColor = sl.hover.textColor = Color.green;
+                        GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50, sl);
+                    }
+                    GUILayout.EndHorizontal();
+
+                    if ( ascentPathIdx == 0 )
+                    {
+                        // corrective steering only applies to Classic
+                        GUILayout.BeginHorizontal();
+                        autopilot.correctiveSteering = GUILayout.Toggle(autopilot.correctiveSteering, "Corrective steering", GUILayout.ExpandWidth(false));
+                        if (autopilot.correctiveSteering)
+                        {
+                            GUILayout.Label("Gain", GUILayout.ExpandWidth(false));
+                            autopilot.correctiveSteeringGain.text = GUILayout.TextField(autopilot.correctiveSteeringGain.text, GUILayout.Width(40));
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+
+                    autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
+                    if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();
+
+                    autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels,
+                            "Auto-deploy solar panels");
+
+                    autopilot.autoDeployAntennas = GUILayout.Toggle(autopilot.autoDeployAntennas,
+                            "Auto-deploy antennas");
+
+                    GUILayout.BeginHorizontal();
+                    core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+                    if ( ascentPathIdx != 2 )
+                    {
+                        autopilot.skipCircularization = GUILayout.Toggle(autopilot.skipCircularization, "Skip Circularization");
+                    }
+                    else
+                    {
+                        // skipCircularization is always true for PEG
+                        autopilot.skipCircularization = true;
                     }
                     GUILayout.EndHorizontal();
                 }
-
-                autopilot.autostage = GUILayout.Toggle(autopilot.autostage, "Autostage");
-                if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();
-
-                autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels,
-                        "Auto-deploy solar panels");
-
-                autopilot.autoDeployAntennas = GUILayout.Toggle(autopilot.autoDeployAntennas,
-                        "Auto-deploy antennas");
-
-                GUILayout.BeginHorizontal();
-                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
-                if ( ascentPathIdx != 2 )
-                {
-                    autopilot.skipCircularization = GUILayout.Toggle(autopilot.skipCircularization, "Skip Circularization");
-                }
                 else
                 {
-                    // skipCircularization is always true for PEG
-                    autopilot.skipCircularization = true;
+                    if (GUILayout.Button("Show settings"))
+                        autopilot.showSettings = true;
                 }
-                GUILayout.EndHorizontal();
 
                 if (vessel.LandedOrSplashed)
                 {

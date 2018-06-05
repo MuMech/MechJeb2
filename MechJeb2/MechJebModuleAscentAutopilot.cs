@@ -76,6 +76,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
 
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showSettings = true;
+
         public bool timedLaunch = false;
         public double launchTime = 0;
 
