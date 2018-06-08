@@ -177,25 +177,25 @@ namespace MuMech {
         {
             y0 = new double[13 + arcIndex];
             double ve = g0 * arcs[0].isp;
-            //Debug.Log("dV = " + dV);
+            Debug.Log("dV = " + dV);
             tgo = ve * arcs[0].m0 / arcs[0].thrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
-            //Debug.Log("tgo = " + tgo);
-            //Debug.Log("tgo_bar = " + tgo_bar);
+            Debug.Log("tgo = " + tgo);
+            Debug.Log("tgo_bar = " + tgo_bar);
             UpdateY0Arc(0);
 
             for(int i = 1; i < arcs.Count; i++)
             {
-                //for(int j = 0; j < y0.Length; j++)
-                    //Debug.Log("  " + i + " y0[" + j + "] = " + y0[j]);
+                for(int j = 0; j < y0.Length; j++)
+                    Debug.Log("  " + i + " y0[" + j + "] = " + y0[j]);
 
                 List<Arc> subarcs = arcs.GetRange(0, i);
                 runOptimizer(subarcs);  // FIXME: check return value
 
                 Solution sol = new Solution(t_scale, v_scale, r_scale, 0);
 
-                //for(int j = 0; j < y0.Length; j++)
-                    //Debug.Log(i + " y0[" + j + "] = " + y0[j]);
+                for(int j = 0; j < y0.Length; j++)
+                    Debug.Log(i + " y0[" + j + "] = " + y0[j]);
 
                 multipleIntegrate(y0, sol, subarcs, 10);
 
@@ -258,8 +258,8 @@ namespace MuMech {
                     UpdateY0Arc(0);
                 }
 
-                //for(int i = 0; i < y0.Length; i++)
-                    //Debug.Log("n y0[" + i + "] = " + y0[i]);
+                for(int i = 0; i < y0.Length; i++)
+                    Debug.Log("n y0[" + i + "] = " + y0[i]);
 
                 if ( runOptimizer(arcs) )
                 {
@@ -271,15 +271,15 @@ namespace MuMech {
 
                     Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
 
-                    //for(int i = 0; i < y0.Length; i++)
-                        //Debug.Log("y0[" + i + "] = " + y0[i]);
+                    for(int i = 0; i < y0.Length; i++)
+                        Debug.Log("y0[" + i + "] = " + y0[i]);
 
                     multipleIntegrate(y0, sol, arcs, 10);
 
                     this.solution = sol;
 
-                    //Debug.Log("rf = " + sol.r_bar(sol.tmax()) + "(" + sol.r_bar(sol.tmax()).magnitude + ") vf = " + sol.v_bar(sol.tmax()) + "(" + sol.v_bar(sol.tmax()).magnitude + ")");
-                    //Debug.Log("rf = " + sol.r(sol.tf()) + "(" + sol.r(sol.tf()).magnitude + ") vf = " + sol.v(sol.tf()) + "(" + sol.v(sol.tf()).magnitude + ")");
+                    Debug.Log("rf = " + sol.r_bar(sol.tmax()) + "(" + sol.r_bar(sol.tmax()).magnitude + ") vf = " + sol.v_bar(sol.tmax()) + "(" + sol.v_bar(sol.tmax()).magnitude + ")");
+                    Debug.Log("rf = " + sol.r(sol.tf()) + "(" + sol.r(sol.tf()).magnitude + ") vf = " + sol.v(sol.tf()) + "(" + sol.v(sol.tf()).magnitude + ")");
 
                 } else {
                     y0 = null;

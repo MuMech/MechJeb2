@@ -36,30 +36,6 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            GuiUtils.SimpleTextBox("Target Periapsis:", autopilot.desiredOrbitAltitude, "km");
-            GuiUtils.SimpleTextBox("Target Apoapsis:", path.desiredApoapsis, "km");
-            if ( path.desiredApoapsis >= 0 && path.desiredApoapsis < autopilot.desiredOrbitAltitude )
-            {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                s.normal.textColor = Color.yellow;
-                GUILayout.Label("Apoapsis < Periapsis: circularizing orbit at periapsis", s);
-            }
-
-            GuiUtils.SimpleTextBox("Booster Pitch start:", path.pitchStartTime, "s");
-            GuiUtils.SimpleTextBox("Booster Pitch rate:", path.pitchRate, "°/s");
-            GUILayout.BeginHorizontal();
-            path.pitchEndToggle = GUILayout.Toggle(path.pitchEndToggle, "Booster Pitch end:");
-            if (path.pitchEndToggle)
-                GuiUtils.SimpleTextBox("", path.pitchEndTime, "s");
-            GUILayout.EndHorizontal();
-            if (path.pitchEndToggle)
-                GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (path.pitchEndTime - path.pitchStartTime)*path.pitchRate));
-            GUILayout.BeginHorizontal();
-            path.pegAfterStageToggle = GUILayout.Toggle(path.pegAfterStageToggle, "Start PEG after KSP Stage #");
-            if (path.pegAfterStageToggle)
-                GuiUtils.SimpleTextBox("", path.pegAfterStage);
-            GUILayout.EndHorizontal();
-            GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
             GUILayout.Label("Stage Stats");
             if (GUILayout.Button("Reset PEG"))
                 peg.Reset();
@@ -69,20 +45,6 @@ namespace MuMech
                 GUILayout.Label(String.Format("{0:D}: {1:D} {2:F1} {3:F1}", i, peg.stages[i].kspStage, peg.stages[i].dt, peg.stages[i].Li));
             }
             */
-            GUILayout.Label(String.Format("vgo: {0:F1}", peg.vgo));
-            GUILayout.Label(String.Format("tgo: {0:F3}", peg.tgo));
-            GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
-            GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
-            GUILayout.BeginHorizontal();
-            GUIStyle si = new GUIStyle(GUI.skin.label);
-            if ( peg.isStable() )
-                si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-            else if ( peg.isInitializing() || peg.status == PegStatus.FINISHED )
-                si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
-            else
-                si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
-            GUILayout.Label("PEG Status: " + peg.status, si);
-            GUILayout.EndHorizontal();
 
 //            GuiUtils.SimpleTextBox("Emergency pitch adj.:", path.pitchBias, "°");
 

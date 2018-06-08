@@ -18,6 +18,9 @@ namespace MuMech
         public double interplanetaryWindowUT;
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
+        public MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
+        public MechJebModuleAscentPEG pegascent { get { return core.GetComputerModule<MechJebModuleAscentPEG>(); } }
+
         public MechJebModuleAscentBase path;
         public MechJebModuleAscentMenuBase editor;
 
@@ -123,23 +126,78 @@ namespace MuMech
                     }
                 }
 
-                GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
-                autopilot.desiredInclination = desiredInclination;
+                if (autopilot.showTargeting || (ascentPathIdx != 2))
+                {
+                    if (ascentPathIdx == 2)
+                    {
+                        if (GUILayout.Button("Hide Targeting"))
+                            autopilot.showTargeting = false;
 
-                GUIStyle si = new GUIStyle(GUI.skin.label);
-                if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
-                    si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
-                desiredInclination.text = GUILayout.TextField(desiredInclination.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
-                GUILayout.Label("º", GUILayout.ExpandWidth(false));
-                if (GUILayout.Button("Current"))
-                    desiredInclination.val = vesselState.latitude;
-                GUILayout.EndHorizontal();
+                        GuiUtils.SimpleTextBox("Target Periapsis", autopilot.desiredOrbitAltitude, "km");
+                        GuiUtils.SimpleTextBox("Target Apoapsis:", pegascent.desiredApoapsis, "km");
+                        if ( pegascent.desiredApoapsis >= 0 && pegascent.desiredApoapsis < autopilot.desiredOrbitAltitude )
+                        {
+                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = Color.yellow;
+                            GUILayout.Label("Apoapsis < Periapsis: circularizing orbit at periapsis", s);
+                        }
+                    }
+                    else
+                    {
+                        GuiUtils.SimpleTextBox("Orbit altitude", autopilot.desiredOrbitAltitude, "km");
+                    }
+
+                    GUIStyle si = new GUIStyle(GUI.skin.label);
+                    if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
+                    desiredInclination.text = GUILayout.TextField(desiredInclination.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
+                    GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                    if (GUILayout.Button("Current"))
+                        desiredInclination.val = vesselState.latitude;
+                    GUILayout.EndHorizontal();
+                    autopilot.desiredInclination = desiredInclination;
+                }
+                else
+                {
+                    if (GUILayout.Button("Show Targeting"))
+                        autopilot.showTargeting = true;
+                }
+
+                if (ascentPathIdx == 2)
+                {
+                    if (autopilot.showGuidanceSettings)
+                    {
+                        if (GUILayout.Button("Hide Guidance Settings"))
+                            autopilot.showGuidanceSettings = false;
+
+                        GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
+                        GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
+                        GUILayout.BeginHorizontal();
+                        pegascent.pitchEndToggle = GUILayout.Toggle(pegascent.pitchEndToggle, "Booster Pitch end:");
+                        if (pegascent.pitchEndToggle)
+                            GuiUtils.SimpleTextBox("", pegascent.pitchEndTime, "s");
+                        GUILayout.EndHorizontal();
+                        if (pegascent.pitchEndToggle)
+                            GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (pegascent.pitchEndTime - pegascent.pitchStartTime)*pegascent.pitchRate));
+                        GUILayout.BeginHorizontal();
+                        pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start PEG after KSP Stage #");
+                        if (pegascent.pegAfterStageToggle)
+                            GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
+                        GUILayout.EndHorizontal();
+                        GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Show Guidance Settings"))
+                            autopilot.showGuidanceSettings = true;
+                    }
+                }
 
                 if (autopilot.showSettings)
                 {
-                    if (GUILayout.Button("Hide settings"))
+                    if (GUILayout.Button("Hide Settings"))
                         autopilot.showSettings = false;
 
                     navBall.NavBallGuidance = GUILayout.Toggle(navBall.NavBallGuidance, "Show ascent navball guidance");
@@ -214,8 +272,37 @@ namespace MuMech
                 }
                 else
                 {
-                    if (GUILayout.Button("Show settings"))
+                    if (GUILayout.Button("Show Settings"))
                         autopilot.showSettings = true;
+                }
+
+                if (ascentPathIdx == 2)
+                {
+                    if (autopilot.showStatus)
+                    {
+                        if (GUILayout.Button("Hide Status Output"))
+                            autopilot.showStatus = false;
+
+                        GUILayout.Label(String.Format("vgo: {0:F1}", peg.vgo));
+                        GUILayout.Label(String.Format("tgo: {0:F3}", peg.tgo));
+                        GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
+                        GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
+                        GUILayout.BeginHorizontal();
+                        GUIStyle si = new GUIStyle(GUI.skin.label);
+                        if ( peg.isStable() )
+                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
+                        else if ( peg.isInitializing() || peg.status == PegStatus.FINISHED )
+                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                        else
+                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
+                        GUILayout.Label("PEG Status: " + peg.status, si);
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Show Status Output"))
+                            autopilot.showStatus = true;
+                    }
                 }
 
                 if (vessel.LandedOrSplashed)
@@ -349,7 +436,8 @@ namespace MuMech
                 editor.enabled = last_enabled;
             }
 
-            if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
+            if (ascentPathIdx != 2)
+                if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
 
