@@ -170,12 +170,25 @@ namespace MuMech
 
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc, double leadingAngle)
         {
-            this.r0m = PeA + mainBody.Radius;
-            this.v0m = Math.Sqrt(mainBody.gravParameter/r0m);
-            this.inc = inc;
-            if (p == null)
+            bool doupdate = false;
+
+            if (r0m != this.r0m || v0m != this.v0m || inc != this.inc)
             {
+                this.r0m = PeA + mainBody.Radius;
+                this.v0m = Math.Sqrt(mainBody.gravParameter/r0m);
+                this.inc = inc;
+                doupdate = true;
+            }
+
+            if (p == null || doupdate)
+            {
+                if (p != null)
+                    p.KillThread();
+
                 /* this guesses the costate */
+                Debug.Log("v0m = " + v0m);
+                Debug.Log("r0m = " + r0m);
+                Debug.Log("inc = " + inc);
                 lambdaDot = Vector3d.zero;
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;

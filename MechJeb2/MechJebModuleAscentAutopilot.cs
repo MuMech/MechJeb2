@@ -78,6 +78,12 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Global))]
         public bool showSettings = true;
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showTargeting = true;
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showGuidanceSettings = true;
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showStatus = true;
 
         public bool timedLaunch = false;
         public double launchTime = 0;

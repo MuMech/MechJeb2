@@ -391,8 +391,8 @@ namespace MuMech {
             double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
 
             /* clip the integration so we don't burn the whole rocket (causes infinite spinning) */
-            if ( dt > 0.999 * tau )
-                dt = 0.999 * tau;
+            if ( dt > 0.99999 * tau )
+                dt = 0.99999 * tau;
 
             double[] x = new double[count];
             // Chebyshev sampling
@@ -421,7 +421,7 @@ namespace MuMech {
 
             if (sol != null && dt != 0)
             {
-                //Debug.Log("dt / tau: " + dt / tau);
+                Debug.Log("dt / tau: " + dt / tau);
                 sol.AddSegment(xtbl, ytbl, e);
             }
 
@@ -477,7 +477,7 @@ namespace MuMech {
 
         public abstract void optimizationFunction(double[] y0, double[] z, object o);
 
-        double lmEpsx = 1e-9; // 1e-15;
+        double lmEpsx = 1e-12; // 1e-15;
         int lmIter = 20000;
         double lmDiffStep = 0.00001;
 
@@ -503,11 +503,11 @@ namespace MuMech {
             for(int i = 0; i < z.Length; i++)
             {
                 znorm += z[i] * z[i];
-                //Debug.Log("z[" + i + "] = " + z[i]);
+                Debug.Log("z[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
-            //Debug.Log("znorm = " + znorm);
+            Debug.Log("znorm = " + znorm);
 
             if (znorm > 1e-5)
                 return false;
@@ -571,6 +571,12 @@ namespace MuMech {
             thread = new Thread(() => Optimize(t0));
             thread.Start();
             return true;
+        }
+
+        public void KillThread()
+        {
+            if (thread != null)
+                thread.Abort();
         }
     }
 }
