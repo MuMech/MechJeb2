@@ -4,56 +4,59 @@ using System.Threading;
 using UnityEngine;
 
 namespace MuMech {
-    public class PontryaginLaunch : PontryaginBase {
-        public PontryaginLaunch(double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV) : base(mu, r0, v0, pv0, pr0, dV)
+    public class PontryaginNode : PontryaginBase {
+        public PontryaginNode(double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV) : base(mu, r0, v0, pv0, pr0, dV)
         {
         }
 
-        public override int arcIndex { get { return 3; } }
+        public override int arcIndex { get { return 4; } }
 
-        double rTm;
-        double vTm;
-        double gamma;
-        double inc;
+        public Orbit before;
+        public Orbit after;
+        public bool coasting = true;
+        public double Ti_guess;  /* set to node.UT - est BT/2 and let the initial coast phase in the optimizer fix it */
+        public double Tf_guess;  /* set to node.UT + est BT/2 and let the final coast phase in the optimizer fix it */
 
-        // 4-constraint PEG with free LAN
-        public void flightangle4constraint(double rTm, double vTm, double gamma, double inc)
+        public void intercept(Orbit before, Orbit after, bool coasting)
         {
-            this.rTm = rTm;
-            this.vTm = vTm;
-            this.gamma = gamma;
-            this.inc = inc;
-            bcfun = flightangle4constraint;
+            this.before = before;
+            this.after = after;
+            this.coasting = coasting;
+            bcfun = intercept;
         }
 
-        private void flightangle4constraint(double[] yT, double[] z)
+        private void intercept(double[] yT, double[] z)
         {
-            double rTm_bar = rTm / r_scale;
-            double vTm_bar = vTm / v_scale;
+            Vector3d rf;
+            Vector3d vf;
+            after.GetOrbitalStateVectorsAtUT(Tf_guess, out rf, out vf);
 
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP */
-            Vector3d rn = Vector3d.Cross(rf, n);
-            Vector3d vn = Vector3d.Cross(vf, n);
-            Vector3d hf = Vector3d.Cross(rf, vf);
-
-            z[0] = ( rf.magnitude * rf.magnitude - rTm_bar * rTm_bar ) / 2.0;
-            z[1] = ( vf.magnitude * vf.magnitude - vTm_bar * vTm_bar ) / 2.0;
-            z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(inc);
-            z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
-            z[4] = rTm_bar * rTm_bar * ( Vector3d.Dot(vf, prf) - vTm_bar * Math.Sin(gamma) / rTm_bar * Vector3d.Dot(rf, prf) ) -
-                vTm_bar * vTm_bar * ( Vector3d.Dot(rf, pvf) - rTm_bar * Math.Sin(gamma) / vTm_bar * Vector3d.Dot(vf, pvf) );
-            z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn);
+            z[0] = yT[0] - rf[0];
+            z[1] = yT[1] - rf[1];
+            z[2] = yT[2] - rf[2];
+            z[3] = yT[3] - vf[0];
+            z[4] = yT[4] - vf[1];
+            z[5] = yT[5] - vf[2];
         }
 
         public override void optimizationFunction(double[] y0, double[] z, object o)
         {
             List<Arc> arcs = (List<Arc>)o;
             base.optimizationFunction(y0, z, o);
+
+            Vector3d r1 = new Vector3d(yf[0], yf[1], yf[2]);
+            Vector3d v1 = new Vector3d(yf[3], yf[4], yf[5]);
+            Vector3d pv1 = new Vector3d(yf[6], yf[7], yf[8]);
+            Vector3d pr1 = new Vector3d(yf[9], yf[10], yf[11]);
+            double r1m = r1.magnitude;
+
+            int w = 13 * ( arcs.Count - 2 );
+            /* final minus one */
+            Vector3d rfm1 = new Vector3d(yf[w+0], yf[w+1], yf[w+2]);
+            Vector3d vfm1 = new Vector3d(yf[w+3], yf[w+4], yf[w+5]);
+            Vector3d pvfm1 = new Vector3d(yf[w+6], yf[w+7], yf[w+8]);
+            Vector3d prfm1 = new Vector3d(yf[w+9], yf[w+10], yf[w+11]);
+            double rfm1m = rfm1.magnitude;
 
             /* magnitude of initial costate vector = 1.0 (dummy constraint for H(tf)=0 because BC is keplerian) */
             int n = 13 * arcs.Count;
@@ -62,10 +65,17 @@ namespace MuMech {
                 z[n] = z[n] + y0[6+i+arcIndex] * y0[6+i+arcIndex];
             z[n] = Math.Sqrt(z[n]) - 1.0;
 
-            // positive arc time constraint
-            z[n+1] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) * 1000 : y0[1] * y0[1];
+            // optimization of the burntime
+            z[n+1] = Vector3d.Dot(prfm1, vfm1) - Vector3d.Dot(pvfm1, rfm1) / (rfm1m * rfm1m * rfm1m );
 
-            z[n+2] = y0[2] * y0[2]; // FIXME: remove this if its unnecessary now
+            // positive arc time constraint
+            z[n+2] = ( y0[1] < 0 ) ? ( y0[1] - y0[2] * y0[2] ) * 1000 : y0[2] * y0[2];
+
+            /* H0t1 = 0 to optimize the time of the initial coast */
+            if (coasting)
+                z[n+3] = Vector3d.Dot(pr1, v1) - Vector3d.Dot(pv1, r1) / (r1m * r1m * r1m );
+            else
+                z[n+3] = y0[3];
 
             /* construct sum of the squares of the residuals for levenberg marquardt */
             for(int i = 0; i < z.Length; i++)
@@ -188,6 +198,13 @@ namespace MuMech {
             {
                 Debug.Log(e);
             }
+        }
+
+        public override void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, double m0)
+        {
+            AddArc(type: ArcType.COAST, m0: m0, dt0: 0, isp: 0, thrust: 0); /* FIXME: dt */
+            base.SynchStages(kspstages, vacStats, m0);
+            AddArc(type: ArcType.COAST, m0: -1, dt0: 0, isp: 0, thrust: 0); /* FIXME: dt */
         }
     }
 }
