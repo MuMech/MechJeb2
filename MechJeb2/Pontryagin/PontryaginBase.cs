@@ -475,7 +475,68 @@ namespace MuMech {
             }
         }
 
-        public abstract void optimizationFunction(double[] y0, double[] z, object o);
+        public double[] yf;
+
+        public virtual void optimizationFunction(double[] y0, double[] z, object o)
+        {
+            List<Arc> arcs = (List<Arc>)o;
+            yf = new double[arcs.Count*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
+            multipleIntegrate(y0, yf, arcs);
+
+            /* initial conditions */
+            z[0] = y0[arcIndex+0] - r0_bar[0];
+            z[1] = y0[arcIndex+1] - r0_bar[1];
+            z[2] = y0[arcIndex+2] - r0_bar[2];
+            z[3] = y0[arcIndex+3] - v0_bar[0];
+            z[4] = y0[arcIndex+4] - v0_bar[1];
+            z[5] = y0[arcIndex+5] - v0_bar[2];
+            z[6] = y0[arcIndex+12] - arcs[0].m0;
+
+            /* terminal constraints */
+            // FIXME: we could move the terminal constraints after the continuity conditions and
+            // drop the bcfun indirection junk entirely
+            double[] yT = new double[13];
+            Array.Copy(yf, (arcs.Count-1)*13, yT, 0, 13);
+            double[] zterm = new double[6];
+            if ( bcfun == null )
+                throw new Exception("No bcfun was provided to the Pontryagin optimizer");
+
+            bcfun(yT, zterm);
+
+            z[7] = zterm[0];
+            z[8] = zterm[1];
+            z[9] = zterm[2];
+            z[10] = zterm[3];
+            z[11] = zterm[4];
+            z[12] = zterm[5];
+
+            /* multiple shooting continuity */
+            for(int i = 1; i < arcs.Count; i++)
+            {
+                for(int j = 0; j < 13; j++)
+                {
+                    if ( j == 12 )
+                    {
+                        if (arcs[i].m0 < 0) // negative mass => continuity rather than mass jettison
+                        {
+                            /* continuity */
+                            z[j+13*i] = y0[j+13*i] - yf[j+13*(i-1)];
+                        }
+                        else
+                        {
+                            /* mass jettison */
+                            z[j+13*i] = y0[j+13*i+arcIndex] - arcs[i].m0;
+                        }
+                    }
+                    else
+                    {
+                        z[j+13*i] = y0[j+13*i+arcIndex] - yf[j+13*(i-1)];
+                    }
+                }
+            }
+
+            /* NOTE SUBCLASSES SHOULD OVERRIDE THIS FUNCTION, CALL THIS BASE CLASS, ADD SWITCHING CONDITIONS, AND THEN SQUARE THE RESIDUALS */
+        }
 
         double lmEpsx = 1e-12; // 1e-15;
         int lmIter = 20000;
@@ -547,7 +608,7 @@ namespace MuMech {
 
         private Thread thread;
 
-        public void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, double m0)
+        public virtual void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, double m0)
         {
             if (thread != null && thread.IsAlive)
                 return;

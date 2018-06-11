@@ -95,7 +95,7 @@ namespace MuMech
             }
             else
             {
-                peg.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination, autopilot.launchLANDifference);
+                peg.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination);
             }
         }
 

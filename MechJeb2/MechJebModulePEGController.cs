@@ -149,9 +149,19 @@ namespace MuMech
          * TARGET APIs
          */
 
+        public bool coasting;
+
         public void TargetNode(ManeuverNode node, bool force_vgo = false)
         {
-            throw new Exception("FIXME");
+            if (p == null)
+            {
+                coasting = true;
+                lambda = node.GetBurnVector(orbit).normalized;
+                lambdaDot = Vector3d.zero;
+                PontryaginNode solver = new PontryaginNode(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                solver.intercept(orbit, node.nextPatch, coasting);
+                p = solver;
+            }
         }
 
         public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
@@ -168,7 +178,7 @@ namespace MuMech
         double r0m;
         double inc;
 
-        public void TargetPeInsertMatchInc(double PeA, double ApA, double inc, double leadingAngle)
+        public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
             bool doupdate = false;
 
