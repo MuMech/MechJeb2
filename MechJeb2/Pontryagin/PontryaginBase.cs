@@ -4,39 +4,59 @@ using System.Threading;
 using UnityEngine;
 
 namespace MuMech {
-    public enum ArcType { COAST, BURN };
-
     public abstract class PontryaginBase {
         public class Arc
         {
-            public double isp, thrust;
-            public double c;
-            public ArcType type;
-            public double m0, dt0;
-            public double dt0_bar;
-            public double max_bt, max_bt_bar;
+            public Stage stage;
             public double dV;  /* actual integrated time of the burn */
+
+            public double isp { get { return stage.isp; } }
+            public double thrust { get { return stage.thrust; } }
+            public double m0 { get { return stage.m0; } }
+            public double max_bt { get { return stage.max_bt; } }
+            public double c { get { return stage.c; } }
+            public double max_bt_bar { get { return stage.max_bt_bar; } }
+
+            public bool infinite;  /* zero mdot, infinite burntime+isp */
 
             public override string ToString()
             {
-                return type + " isp:" + isp + " thrust:" + thrust + " maxt:" + max_bt;
+                return "stage: " + stage;
             }
 
-            public Arc(ArcType type, double m0, double dt0, double isp = 0, double thrust = 0, double max_bt = 0)
+            public Arc(Stage stage)
             {
-                if (type == ArcType.COAST && ( isp != 0 || thrust != 0 ) )
-                    throw new Exception("Non zero isp and/or thrust given to coast arc");
+                this.stage = stage;
+            }
+        }
 
-                if (type == ArcType.BURN && ( isp  == 0 || thrust == 0 ) )
-                    throw new Exception("Zero isp and/or thrust given to burn arc");
+        /* these objects track KSP stages */
+        public class Stage
+        {
+            public double isp, thrust, m0, max_bt;
+            public double c, max_bt_bar;
+            public int ksp_stage;
+            public bool staged = false;  /* if this stage has been jettisoned */
 
+            public override string ToString()
+            {
+                return "ksp_stage: "+ ksp_stage + " isp:" + isp + " thrust:" + thrust + " m0: " + m0 + " maxt:" + max_bt + " maxtbar: " + max_bt_bar + " c: " + c;
+            }
+
+            public Stage(PontryaginBase p, double m0, double isp = 0, double thrust = 0, double max_bt = 0, int ksp_stage = -1)
+            {
+                UpdateStage(p, m0, isp, thrust, max_bt, ksp_stage);
+            }
+
+            public void UpdateStage(PontryaginBase p, double m0, double isp = 0, double thrust = 0, double max_bt = 0, int ksp_stage = -1)
+            {
                 this.isp = isp;
                 this.thrust = thrust;
-                this.type = type;
-                this.c = 0;
                 this.m0 = m0;
-                this.dt0 = dt0;
                 this.max_bt = max_bt;
+                this.c = g0 * isp / Math.Sqrt( p.r_scale / p.g_bar );  /* FIXME: is this not just / v_scale ? */
+                this.max_bt_bar = max_bt / p.t_scale;
+                this.ksp_stage = ksp_stage;
             }
         }
 
@@ -205,7 +225,8 @@ namespace MuMech {
             }
         }
 
-        public List<Arc> arcs;
+        public List<Stage> stages = new List<Stage>();
+        public List<Arc> last_arcs;
         public double mu;
         public Action<double[], double[]> bcfun;
         public const double g0 = 9.80665;
@@ -224,7 +245,7 @@ namespace MuMech {
             pr0 = rot * pr0;
             this.r0 = r0;
             this.v0 = v0;
-            this.arcs = new List<Arc>();
+            this.last_arcs = null;
             this.mu = mu;
             this.pv0 = pv0;
             this.pr0 = pr0;
@@ -241,6 +262,9 @@ namespace MuMech {
 
         public void UpdatePosition(Vector3d r0, Vector3d v0, Vector3d lambda, Vector3d lambdaDot, double tgo, double vgo)
         {
+            if (thread != null && thread.IsAlive)
+                return;
+
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
             v0 = rot * v0;
@@ -259,25 +283,6 @@ namespace MuMech {
             r0_bar = this.r0 / r_scale;
             v0_bar = this.v0 / v_scale;
         }
-
-        public void NormalizeArc(int i)
-        {
-            arcs[i].c = g0 * arcs[i].isp / Math.Sqrt( r_scale / g_bar );
-            arcs[i].dt0_bar = arcs[i].dt0 / t_scale;
-            arcs[i].max_bt_bar = arcs[i].max_bt / t_scale;
-        }
-
-        public void NormalizeArcs()
-        {
-            for(int i = 0; i < arcs.Count; i++)
-                NormalizeArc(i);
-        }
-
-        public void AddArc(ArcType type, double m0, double dt0, double isp = 0, double thrust = 0, double max_bt = 0)
-        {
-            arcs.Add(new Arc(type, m0, dt0, isp, thrust, max_bt));
-        }
-
 
         public void centralForceThrust(double[] y, double x, double[] dy, object o)
         {
@@ -308,6 +313,7 @@ namespace MuMech {
             dy[11] = y[8] / r3 - 3 / r5 * rdotpv * y[2];
             /* m = mdot */
             dy[12] = ( arc.thrust == 0 ) ? 0 : - arc.thrust / arc.c;
+            /* accumulated ∆v of the arc */
             dy[13] = At;
         }
 
@@ -365,6 +371,7 @@ namespace MuMech {
             singleIntegrate(y0, yf, null, n, ref t, dt, e, 2, ref dV);
         }
 
+        /* used to pull intermediate values off to do chebyshev polynomial interpolation */
         public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, Arc e, int count, ref double dV)
         {
             singleIntegrate(y0, null, sol, n, ref t, dt, e, count, ref dV);
@@ -376,6 +383,11 @@ namespace MuMech {
         {
             if ( count < 2)
                 count = 2;
+
+            /* clip negative thrusting burns to zero */
+            if ( dt < 0 && e.thrust != 0)
+                Debug.Log("WARNING: negative time thrusting burn!!!!!");
+            //    dt = 0;
 
             if ( dt == 0 && yf != null)
             {
@@ -391,8 +403,12 @@ namespace MuMech {
             double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
 
             /* clip the integration so we don't burn the whole rocket (causes infinite spinning) */
-            if ( dt > 0.99999 * tau )
-                dt = 0.99999 * tau;
+            if ( dt > 0.999 * tau )
+            {
+                Debug.Log("WARNING: TAU CLIPPING!!! " + dt / tau);
+                dt = 0.999 * tau;  /* don't add any more 9's or we get infinite loops */
+            }
+
 
             double[] x = new double[count];
             // Chebyshev sampling
@@ -421,7 +437,6 @@ namespace MuMech {
 
             if (sol != null && dt != 0)
             {
-                Debug.Log("dt / tau: " + dt / tau);
                 sol.AddSegment(xtbl, ytbl, e);
             }
 
@@ -538,28 +553,49 @@ namespace MuMech {
             /* NOTE SUBCLASSES SHOULD OVERRIDE THIS FUNCTION, CALL THIS BASE CLASS, ADD SWITCHING CONDITIONS, AND THEN SQUARE THE RESIDUALS */
         }
 
-        double lmEpsx = 1e-12; // 1e-15;
+        double lmEpsx = 1e-9; // 1e-15;
         int lmIter = 20000;
         double lmDiffStep = 0.00001;
 
         public bool runOptimizer(List<Arc> arcs)
         {
+            Debug.Log("arcs in runOptimizer:");
+            for(int i = 0; i < arcs.Count; i++)
+                Debug.Log(arcs[i]);
+
+            for(int i = 0; i < y0.Length; i++)
+                Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
+
+            double[] z = new double[13 * arcs.Count + arcIndex];
+            optimizationFunction(y0, z, arcs);
+
+            double znorm = 0.0;
+
+            for(int i = 0; i < z.Length; i++)
+            {
+                znorm += z[i] * z[i];
+                Debug.Log("zbefore[" + i + "] = " + z[i]);
+            }
+
+            znorm = Math.Sqrt(znorm);
+            Debug.Log("znorm = " + znorm);
 
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
             alglib.minlmsetcond(state, lmEpsx, lmIter);
             alglib.minlmoptimize(state, optimizationFunction, null, arcs);
-            alglib.minlmresultsbuf(state, ref y0, rep);
-            if ((rep.terminationtype != 2) && (rep.terminationtype != 7))
-            {
-                Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
-            }
 
-            double[] z = new double[13 * arcs.Count + arcIndex];
+            double[] y0_new = new double[y0.Length];
+            alglib.minlmresultsbuf(state, ref y0_new, rep);
+            Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+
+            if (rep.terminationtype == 2)
+                y0 = y0_new;
+
             optimizationFunction(y0, z, arcs);
 
-            double znorm = 0.0;
+            znorm = 0.0;
 
             for(int i = 0; i < z.Length; i++)
             {
@@ -578,24 +614,23 @@ namespace MuMech {
 
         public double[] y0;
 
-        /* FIXME: this only ever gets called with i = 0 */
-        public void UpdateY0Arc(int i)
+        public void UpdateY0()
         {
             /* FIXME: some of the round tripping here is silly */
-            Arc a = arcs[i];
-            y0[arcIndex+i*13] = r0_bar[0];
-            y0[arcIndex+i*13+1] = r0_bar[1];
-            y0[arcIndex+i*13+2] = r0_bar[2];
-            y0[arcIndex+i*13+3] = v0_bar[0];
-            y0[arcIndex+i*13+4] = v0_bar[1];
-            y0[arcIndex+i*13+5] = v0_bar[2];
-            y0[arcIndex+i*13+6] = pv0[0];
-            y0[arcIndex+i*13+7] = pv0[1];
-            y0[arcIndex+i*13+8] = pv0[2];
-            y0[arcIndex+i*13+9] = pr0[0];
-            y0[arcIndex+i*13+10] = pr0[1];
-            y0[arcIndex+i*13+11] = pr0[2];
-            y0[arcIndex+i*13+12] = a.m0;
+            Stage s = stages[0];
+            y0[arcIndex] = r0_bar[0];
+            y0[arcIndex+1] = r0_bar[1];
+            y0[arcIndex+2] = r0_bar[2];
+            y0[arcIndex+3] = v0_bar[0];
+            y0[arcIndex+4] = v0_bar[1];
+            y0[arcIndex+5] = v0_bar[2];
+            y0[arcIndex+6] = pv0[0];
+            y0[arcIndex+7] = pv0[1];
+            y0[arcIndex+8] = pv0[2];
+            y0[arcIndex+9] = pr0[0];
+            y0[arcIndex+10] = pr0[1];
+            y0[arcIndex+11] = pr0[2];
+            y0[arcIndex+12] = s.m0;
             y0[0] = tgo_bar;
             y0[1] = 0;
         }
@@ -604,40 +639,84 @@ namespace MuMech {
 
         public Solution solution;
 
-        public bool initializing;
-
         private Thread thread;
+        private Mutex mut = new Mutex();
 
-        public virtual void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, double m0)
+        /* very simple stage tracking for now */
+        public virtual void SynchStages(List<int> kspstages, FuelFlowSimulation.Stats[] vacStats, double vesselMass)
         {
             if (thread != null && thread.IsAlive)
                 return;
 
-            arcs.Clear();
+            bool first_thrusting = true;
 
-            for(int k = 0; k < kspstages.Count; k++)
+            if (stages == null)
+                stages = new List<Stage>();
+
+            /* if the kspstages list shrank assume staging at position 0 */
+            if (stages.Count > kspstages.Count)
             {
-                int i = kspstages[k];
-
-                AddArc(type: ArcType.BURN, m0: ( (k == 0) ? m0 : vacStats[i].startMass )*1000, dt0: 1, isp: vacStats[i].isp, thrust: vacStats[i].startThrust * 1000, max_bt: vacStats[i].deltaTime);
+                for(int i = 0; i < (stages.Count - kspstages.Count); i++)
+                {
+                    Debug.Log("shrinking stage list by one");
+                    stages[0].staged = true;
+                    stages.RemoveAt(0);
+                }
             }
-            for(int k = 0; k < arcs.Count; k++)
-                Debug.Log(arcs[k]);
+
+            for(int stage_index = 0; stage_index < kspstages.Count; stage_index++)
+            {
+                int ksp_stage = kspstages[stage_index];
+
+                double m0 = ( first_thrusting ? vesselMass : vacStats[ksp_stage].startMass ) * 1000;
+                double isp = vacStats[ksp_stage].isp;
+                double thrust = vacStats[ksp_stage].startThrust * 1000;
+                double max_bt = vacStats[ksp_stage].deltaTime;
+
+                if (stage_index >= stages.Count)
+                {
+                    Debug.Log("adding a new found stage");
+                    stages.Add(new Stage(this, m0: m0, isp: isp, thrust: thrust, max_bt: max_bt, ksp_stage: ksp_stage));
+                }
+                else
+                {
+                    stages[stage_index].UpdateStage(this, m0: m0, isp: isp, thrust: thrust, max_bt: max_bt, ksp_stage: ksp_stage);
+                }
+
+                first_thrusting = false;
+            }
         }
 
         public bool threadStart(double t0)
         {
-            if (thread != null && thread.IsAlive)
-                return false;
-            thread = new Thread(() => Optimize(t0));
-            thread.Start();
-            return true;
+            bool ret = false;
+
+            if (mut.WaitOne(1000)) {
+                if (thread != null && thread.IsAlive)
+                {
+                    ret = false;
+                }
+                else
+                {
+                    if (thread != null)
+                        thread.Abort();
+
+                    thread = new Thread(() => Optimize(t0));
+                    thread.Start();
+                    ret = true;
+                }
+                mut.ReleaseMutex();
+            }
+            return ret;
         }
 
         public void KillThread()
         {
-            if (thread != null)
-                thread.Abort();
+            if (mut.WaitOne(1000)) {
+                if (thread != null)
+                    thread.Abort();
+                mut.ReleaseMutex();
+            }
         }
     }
 }
