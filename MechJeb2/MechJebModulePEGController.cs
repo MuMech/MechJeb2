@@ -158,9 +158,11 @@ namespace MuMech
                 coasting = true;
                 lambda = node.GetBurnVector(orbit).normalized;
                 lambdaDot = Vector3d.zero;
+                /*
                 PontryaginNode solver = new PontryaginNode(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 solver.intercept(orbit, node.nextPatch, coasting);
                 p = solver;
+                */
             }
         }
 
@@ -236,6 +238,12 @@ namespace MuMech
         {
             if (p == null)
                 return;
+
+            if (p != null && p.solution != null && tgo < 2)
+            {
+                status = PegStatus.TERMINAL;
+                return;
+            }
 
             // FIXME: we need to add liveStats to vacStats and atmoStats from MechJebModuleStageStats so we don't have to force liveSLT here
             stats.liveSLT = true;
