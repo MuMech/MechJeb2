@@ -216,7 +216,8 @@
     <Compile Include="OrbitalManeuverCalculator.cs" />
     <Compile Include="PIDController.cs" />
     <Compile Include="PartExtensions.cs" />
-    <Compile Include="Pontryagin.cs" />
+    <Compile Include="Pontryagin\PontryaginBase.cs" />
+    <Compile Include="Pontryagin\PontryaginLaunch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
     <Compile Include="RCSSolver.cs" />

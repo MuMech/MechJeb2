@@ -52,6 +52,7 @@ namespace MuMech {
 
         public override void optimizationFunction(double[] y0, double[] z, object o)
         {
+
             List<Arc> arcs = (List<Arc>)o;
             base.optimizationFunction(y0, z, o);
 
@@ -70,100 +71,143 @@ namespace MuMech {
             /* construct sum of the squares of the residuals for levenberg marquardt */
             for(int i = 0; i < z.Length; i++)
                 z[i] = z[i] * z[i];
+
         }
 
         public void Bootstrap()
         {
+            Solution new_sol = null;
+            List<Arc> new_arcs = new List<Arc>();
             y0 = new double[13 + arcIndex];
-            double ve = g0 * arcs[0].isp;
-            Debug.Log("dV = " + dV);
-            tgo = ve * arcs[0].m0 / arcs[0].thrust * ( 1 - Math.Exp(-dV/ve) );
+            double ve = g0 * stages[0].isp;
+            tgo = ve * stages[0].m0 / stages[0].thrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
-            Debug.Log("tgo = " + tgo);
-            Debug.Log("tgo_bar = " + tgo_bar);
-            UpdateY0Arc(0);
+            UpdateY0();
+            y0[0] = tgo_bar;
+            y0[1] = 0;
 
-            for(int i = 1; i < arcs.Count; i++)
+            for(int i = 0; i < stages.Count; i++)
             {
+                new_arcs.Add(new Arc(stages[i]));
+
+                /*
+                for(int j = 0; i < (new_arcs.Count-1); j++)
+                    new_arcs[j].infinite = false;
+
+                new_arcs[new_arcs.Count-1].infinite = true;
+                */
+
                 for(int j = 0; j < y0.Length; j++)
-                    Debug.Log("  " + i + " y0[" + j + "] = " + y0[j]);
+                    Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
 
-                List<Arc> subarcs = arcs.GetRange(0, i);
-                runOptimizer(subarcs);  // FIXME: check return value
+                Debug.Log("running optimizer");
 
-                Solution sol = new Solution(t_scale, v_scale, r_scale, 0);
+                if ( !runOptimizer(new_arcs) )
+                {
+                    Debug.Log("optimizer failed");
+                    y0 = null;
+                    return;
+                }
 
-                for(int j = 0; j < y0.Length; j++)
-                    Debug.Log(i + " y0[" + j + "] = " + y0[j]);
+                if (y0[0] < 0)
+                {
+                    Debug.Log("optimizer failed2");
+                    y0 = null;
+                    return;
+                }
 
-                multipleIntegrate(y0, sol, subarcs, 10);
+                Debug.Log("optimizer done");
 
-                double[] y0_new = new double[13 * (i + 1) + arcIndex];
-                Array.Copy(y0, 0, y0_new, 0, 13*i + arcIndex);
-                y0 = y0_new;
+                new_sol = new Solution(t_scale, v_scale, r_scale, 0);
 
-                double t = arcs[i-1].max_bt_bar;
-                Vector3d r = sol.r_bar(t);
-                Vector3d v = sol.v_bar(t);
-                Vector3d pv = sol.pv_bar(t);
-                Vector3d pr = sol.pr_bar(t);
-                double m = sol.m_bar(t);
+                for(int k = 0; k < y0.Length; k++)
+                    Debug.Log("y0[" + k + "] = " + y0[k]);
 
-                y0[arcIndex + 13 * i + 0] = r[0];
-                y0[arcIndex + 13 * i + 1] = r[1];
-                y0[arcIndex + 13 * i + 2] = r[2];
-                y0[arcIndex + 13 * i + 3] = v[0];
-                y0[arcIndex + 13 * i + 4] = v[1];
-                y0[arcIndex + 13 * i + 5] = v[2];
-                y0[arcIndex + 13 * i + 6] = pv[0];
-                y0[arcIndex + 13 * i + 7] = pv[1];
-                y0[arcIndex + 13 * i + 8] = pv[2];
-                y0[arcIndex + 13 * i + 9] = pr[0];
-                y0[arcIndex + 13 * i + 10] = pr[1];
-                y0[arcIndex + 13 * i + 11] = pr[2];
-                y0[arcIndex + 13 * i + 12] = m;
+                multipleIntegrate(y0, new_sol, new_arcs, 10);
+
+                if (i < (stages.Count - 1))
+                {
+                    double[] y0_new = new double[13 * (i + 2) + arcIndex];
+                    Array.Copy(y0, 0, y0_new, 0, 13*(i+1) + arcIndex);
+                    y0 = y0_new;
+
+                    double t    = new_arcs[i].max_bt_bar;
+                    Vector3d r  = new_sol.r_bar(t);
+                    Vector3d v  = new_sol.v_bar(t);
+                    Vector3d pv = new_sol.pv_bar(t);
+                    Vector3d pr = new_sol.pr_bar(t);
+                    double m    = new_sol.m_bar(t);
+
+                    y0[arcIndex + 13 * (i+1) + 0] = r[0];
+                    y0[arcIndex + 13 * (i+1) + 1] = r[1];
+                    y0[arcIndex + 13 * (i+1) + 2] = r[2];
+                    y0[arcIndex + 13 * (i+1) + 3] = v[0];
+                    y0[arcIndex + 13 * (i+1) + 4] = v[1];
+                    y0[arcIndex + 13 * (i+1) + 5] = v[2];
+                    y0[arcIndex + 13 * (i+1) + 6] = pv[0];
+                    y0[arcIndex + 13 * (i+1) + 7] = pv[1];
+                    y0[arcIndex + 13 * (i+1) + 8] = pv[2];
+                    y0[arcIndex + 13 * (i+1) + 9] = pr[0];
+                    y0[arcIndex + 13 * (i+1) + 10] = pr[1];
+                    y0[arcIndex + 13 * (i+1) + 11] = pr[2];
+                    y0[arcIndex + 13 * (i+1) + 12] = m;
+                }
+
+                for(int k = 0; k < y0.Length; k++)
+                    Debug.Log("new y0[" + k + "] = " + y0[k]);
             }
+            this.solution = new_sol;
+            Debug.Log("done with bootstrap");
+            last_arcs = new_arcs;
         }
 
         public override void Optimize(double t0)
         {
-            initializing = false;
-
             try {
-                if ( y0 != null )
+                Debug.Log("starting optimize");
+                if (stages != null)
                 {
-                    if ( y0.Length > 13*arcs.Count + arcIndex )
-                    {
-                        /* probably normal staging, so just shrink */
-                        double[] y0_old = y0;
-                        y0 = new double[13*arcs.Count + arcIndex];
-                        Array.Copy(y0_old, 0, y0, 0, 13*arcs.Count + arcIndex);
-                    }
-                    else if ( y0.Length != 13*arcs.Count + arcIndex )
-                    {
-                        y0 = null;
-                    }
+                    Debug.Log("stages: ");
+                    for(int i = 0; i < stages.Count; i++)
+                        Debug.Log(stages[i]);
                 }
-
-                NormalizeArcs();
+                if (last_arcs != null)
+                {
+                    Debug.Log("arcs: ");
+                    for(int i = 0; i < last_arcs.Count; i++)
+                        Debug.Log(last_arcs[i]);
+                }
 
                 if (y0 == null)
                 {
-                    initializing = true;
                     Bootstrap();
                 }
                 else
                 {
-                    UpdateY0Arc(0);
-                }
+                    while(last_arcs[0].stage.staged)
+                    {
+                        Debug.Log("shrinking y0 array");
+                        double[] y0_old = y0;
+                        y0 = new double[13*last_arcs.Count + arcIndex];
+                        Array.Copy(y0_old, 0, y0, 0, 13*last_arcs.Count + arcIndex);
+                        last_arcs.RemoveAt(0);
+                    }
 
-                for(int i = 0; i < y0.Length; i++)
-                    Debug.Log("n y0[" + i + "] = " + y0[i]);
+                    UpdateY0();
+                    y0[0] = tgo_bar;
+                    y0[1] = 0;
+                    Debug.Log("normal optimizer run start");
 
-                if ( runOptimizer(arcs) )
-                {
+                    if ( !runOptimizer(last_arcs) )
+                    {
+                        Debug.Log("optimizer failed3");
+                        y0 = null;
+                        return;
+                    }
+
                     if (y0[0] < 0)
                     {
+                        Debug.Log("optimizer failed4");
                         y0 = null;
                         return;
                     }
@@ -173,15 +217,12 @@ namespace MuMech {
                     for(int i = 0; i < y0.Length; i++)
                         Debug.Log("y0[" + i + "] = " + y0[i]);
 
-                    multipleIntegrate(y0, sol, arcs, 10);
+                    multipleIntegrate(y0, sol, last_arcs, 10);
 
                     this.solution = sol;
 
                     Debug.Log("rf = " + sol.r_bar(sol.tmax()) + "(" + sol.r_bar(sol.tmax()).magnitude + ") vf = " + sol.v_bar(sol.tmax()) + "(" + sol.v_bar(sol.tmax()).magnitude + ")");
                     Debug.Log("rf = " + sol.r(sol.tf()) + "(" + sol.r(sol.tf()).magnitude + ") vf = " + sol.v(sol.tf()) + "(" + sol.v(sol.tf()).magnitude + ")");
-
-                } else {
-                    y0 = null;
                 }
             }
             catch (Exception e)
