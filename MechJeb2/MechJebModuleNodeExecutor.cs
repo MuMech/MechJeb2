@@ -140,7 +140,7 @@ namespace MuMech
 
         private void burn()
         {
-            peg.AssertStart(false);
+            peg.AssertStart();
             if (peg.status == PegStatus.FINISHED)
                 burn_finished();
         }
@@ -162,7 +162,7 @@ namespace MuMech
 
             if (timeToPEGEnable <= 0)
             {
-                peg.AssertStart(true);
+                peg.AssertStart();
                 if (peg.isStable())
                 {
                     core.attitude.attitudeTo(peg.iF, AttitudeReference.INERTIAL, this);
@@ -172,7 +172,7 @@ namespace MuMech
                         /* if (( peg.t_lambda >= node.UT && peg.phi < 40 * UtilMath.Deg2Rad ) || timeToHalfBT <= 0.0 ) */
                         {
                             core.thrust.targetThrottle = 1.0F;
-                            peg.AssertStart(false);
+                            peg.AssertStart();
                             burnTriggered = true;
                         }
                     }
