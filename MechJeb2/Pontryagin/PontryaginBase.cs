@@ -16,6 +16,9 @@ namespace MuMech {
             public double max_bt { get { return stage.max_bt; } }
             public double c { get { return stage.c; } }
             public double max_bt_bar { get { return stage.max_bt_bar; } }
+            public double ksp_stage { get { return stage.ksp_stage; } }
+
+            public bool complete_burn = false;
 
             public bool infinite;  /* zero mdot, infinite burntime+isp */
 
@@ -81,6 +84,35 @@ namespace MuMech {
                 return ( tmax() - tbar ) * t_scale;
             }
 
+            public double tgo(double t, int n) // tgo for each segment/arc in the solution
+            {
+                double tbar = ( t - t0 ) / t_scale;
+                if (tbar > segments[n].tmin)
+                    return ( segments[n].tmax - tbar ) * t_scale;
+                else
+                    return ( segments[n].tmax - segments[n].tmin ) * t_scale;
+            }
+
+            public String ArcString(double t, int n)
+            {
+                Arc arc = arcs[n];
+                if (arc.thrust == 0)
+                {
+                    return String.Format("coast for {0:F1}s", tgo(t, n));
+                }
+                else
+                {
+                    if (arc.complete_burn)
+                    {
+                        return "burn stage " + arc.ksp_stage + " to exhaustion";
+                    }
+                    else
+                    {
+                        return String.Format("burn stage {0} for {1:F1}s {2:F1} m/s", arc.ksp_stage, tgo(t, n), dV(t, n));
+                    }
+                }
+            }
+
             public double vgo(double t)
             {
                 return dV(tf()) - dV(t);
@@ -89,6 +121,11 @@ namespace MuMech {
             public double tf() // kerbal time
             {
                 return t0 + tmax() * t_scale;
+            }
+
+            public Vector3d vf()
+            {
+                return v(tf());
             }
 
             public double tmax() // normalized time
@@ -162,6 +199,18 @@ namespace MuMech {
                 return interpolate(13, tbar) * v_scale;
             }
 
+            public double dV(double t, int n)
+            {
+                double tbar = ( t - t0 ) / t_scale;
+                double tmin = segments[n].tmin;
+                double tmax = segments[n].tmax;
+
+                if (tbar > tmin)
+                    tmin = tbar;
+
+                return ( interpolate(13, tmax) - interpolate(13, tmin) ) * v_scale;
+            }
+
             public void pitch_and_heading(double t, ref double pitch, ref double heading)
             {
                 double tbar = ( t - t0 ) / t_scale;
@@ -185,17 +234,34 @@ namespace MuMech {
                 return alglib.barycentriccalc(segments[segments.Count-1].interpolant[i], tbar);
             }
 
-            List<Segment> segments = new List<Segment>();
+            public int num_segments { get { return segments.Count; } }
+            public List<Segment> segments = new List<Segment>();
+            public List<Arc> arcs = new List<Arc>();
 
-            class Segment
+            public Arc arc(int n)
             {
-                public Arc arc;
+                return arcs[n];
+            }
+
+            public Arc arc(double t)
+            {
+                double tbar = ( t - t0 ) / t_scale;
+                for(int k = 0; k < segments.Count; k++)
+                {
+                    Segment s = segments[k];
+                    if (tbar < s.tmax)
+                        return arcs[k];
+                }
+                return arcs[segments.Count-1];
+            }
+
+            public class Segment
+            {
                 public double tmin, tmax;
                 public alglib.barycentricinterpolant[] interpolant = new alglib.barycentricinterpolant[14];
 
-                public Segment(double[] t, double[,] y, Arc a)
+                public Segment(double[] t, double[,] y)
                 {
-                    arc = a;
                     int n = t.Length;
                     tmin = t[0];
                     tmax = t[n-1];
@@ -221,7 +287,8 @@ namespace MuMech {
 
             public void AddSegment(double[] t, double[,] y, Arc a)
             {
-                segments.Add(new Segment(t, y, a));
+                segments.Add(new Segment(t, y));
+                arcs.Add(a);
             }
         }
 
@@ -363,41 +430,45 @@ namespace MuMech {
         }
         */
 
-        double ckEps = 1e-7;
+        double ckEps = 1e-9;
 
         /* used to update y0 to yf without intermediate values */
-        public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, Arc e, ref double dV)
+        public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, List<Arc> arcs, ref double dV)
         {
-            singleIntegrate(y0, yf, null, n, ref t, dt, e, 2, ref dV);
+            singleIntegrate(y0: y0, yf: yf, sol: null, n: n, t: ref t, dt: dt, arcs: arcs, count: 2, dV: ref dV);
         }
 
         /* used to pull intermediate values off to do chebyshev polynomial interpolation */
-        public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, Arc e, int count, ref double dV)
+        public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
         {
-            singleIntegrate(y0, null, sol, n, ref t, dt, e, count, ref dV);
+            singleIntegrate(y0: y0, yf: null, sol: sol, n: n, t: ref t, dt: dt, arcs: arcs, count: count, dV: ref dV);
         }
 
-        public abstract int arcIndex { get; }
-
-        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, Arc e, int count, ref double dV)
+        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
         {
+            Arc e = arcs[n];
+
             if ( count < 2)
                 count = 2;
 
-            /* clip negative thrusting burns to zero */
-            if ( dt < 0 && e.thrust != 0)
-                Debug.Log("WARNING: negative time thrusting burn!!!!!");
-            //    dt = 0;
+            // negative burns or coasts don't work with alglib, need to replace the rkf45 implementation
+            if ( dt < 0 )
+                dt = 0;
 
-            if ( dt == 0 && yf != null)
+            // zero time segments also don't work with alglib either
+            if ( dt < 1e-16 && yf != null)
             {
-                Array.Copy(y0, 13*n+arcIndex, yf, 13*n, 13);
+                Array.Copy(y0, arcIndex(arcs,n), yf, 13*n, 13);
                 return;
             }
 
+            if ( dt < 1e-16 )
+                throw new Exception("dt is zero");
+
             double[] y = new double[14];
-            Array.Copy(y0, 13*n+arcIndex, y, 0, 13);
+            Array.Copy(y0, arcIndex(arcs,n), y, 0, 13);
             y[13] = dV;
+
 
             /* time to burn the entire stage */
             double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
@@ -405,7 +476,6 @@ namespace MuMech {
             /* clip the integration so we don't burn the whole rocket (causes infinite spinning) */
             if ( dt > 0.999 * tau )
             {
-                Debug.Log("WARNING: TAU CLIPPING!!! " + dt / tau);
                 dt = 0.999 * tau;  /* don't add any more 9's or we get infinite loops */
             }
 
@@ -430,8 +500,11 @@ namespace MuMech {
             alglib.odesolverrkck(y, 14, x, count, ckEps, 0, out s);
             alglib.odesolversolve(s, centralForceThrust, e);
             alglib.odesolverresults(s, out m, out xtbl, out ytbl, out rep);
-            t = t + dt;
 
+            if (rep.terminationtype != 1)
+                Debug.Log("MechJeb odesolversolve termination code: " + rep.terminationtype + " dt: " + dt);
+
+            t = t + dt;
             e.dV = ( ytbl[count-1,13] - dV ) * v_scale;
             dV = ytbl[count-1,13];
 
@@ -450,17 +523,30 @@ namespace MuMech {
             }
         }
 
-        public void multipleIntegrate(double[] y0, double[] yf, List<Arc> arcs)
+        // normal integration with no midpoints
+        public void multipleIntegrate(double[] y0, double[] yf, List<Arc> arcs, bool initialize = false)
         {
-            multipleIntegrate(y0, yf, null, arcs);
+            multipleIntegrate(y0, yf, null, arcs, initialize: initialize);
         }
 
+        // for generating the interpolated chebyshev solution
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
-            multipleIntegrate(y0, null, sol, arcs, count);
+            multipleIntegrate(y0, null, sol, arcs, count: count);
         }
 
-        public void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2)
+        // copy the nth yf to the n+1th y0 for the next iteration
+        private void copy_yf_to_y0(double[] y0, double[] yf, int n, List<Arc> arcs)
+        {
+            int yf_index = 13 * n;
+            int y0_index = arcIndex(arcs, n+1);
+            Array.Copy(yf, yf_index, y0, y0_index, 13);
+            double m0 = arcs[n+1].m0;
+            if (m0 > 0)
+                y0[y0_index+12] = m0;
+        }
+
+        private void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2, bool initialize = false)
         {
             double t = 0;
 
@@ -469,26 +555,55 @@ namespace MuMech {
 
             for(int i = 0; i < arcs.Count; i++)
             {
-                if ( (tgo <= arcs[i].max_bt_bar) || (i == arcs.Count-1) )
+                if (arcs[i].thrust == 0)
                 {
+                    double coast_time = y0[arcIndex(arcs, i, parameters: true)];
                     if (yf != null) {
-                        singleIntegrate(y0, yf, i, ref t, tgo, arcs[i], ref dV);
+                        // normal integration with no midpoints
+                        singleIntegrate(y0, yf, i, ref t, coast_time, arcs, ref dV);
+                        if (initialize && i < (arcs.Count - 1))
+                            copy_yf_to_y0(y0, yf, i, arcs);
                     } else {
-                        singleIntegrate(y0, sol, i, ref t, tgo, arcs[i], count, ref dV);
+                        // for generating the interpolated chebyshev solution
+                        singleIntegrate(y0, sol, i, ref t, coast_time, arcs, count, ref dV);
                     }
-                    tgo = 0;
+                    arcs[i].complete_burn = false;
                 }
                 else
                 {
-                    if (yf != null) {
-                        singleIntegrate(y0, yf, i, ref t, arcs[i].max_bt_bar, arcs[i], ref dV);
-                    } else {
-                        singleIntegrate(y0, sol, i, ref t, arcs[i].max_bt_bar, arcs[i], count, ref dV);
+                    if ( (tgo <= arcs[i].max_bt_bar) || (i == arcs.Count-1) ) // FIXME?: we're still allowing overburning here
+                    {
+                        if (yf != null) {
+                            // normal integration with no midpoints
+                            singleIntegrate(y0, yf, i, ref t, tgo, arcs, ref dV);
+                            if (initialize && i < (arcs.Count - 1))
+                                copy_yf_to_y0(y0, yf, i, arcs);
+                        } else {
+                            // for generating the interpolated chebyshev solution
+                            singleIntegrate(y0, sol, i, ref t, tgo, arcs, count, ref dV);
+                        }
+                        arcs[i].complete_burn = false;
+                        tgo = 0;
                     }
-                    tgo -= arcs[i].max_bt_bar;
+                    else
+                    {
+                        if (yf != null) {
+                            // normal integration with no midpoints
+                            singleIntegrate(y0, yf, i, ref t, arcs[i].max_bt_bar, arcs, ref dV);
+                            if (initialize && i < (arcs.Count - 1))
+                                copy_yf_to_y0(y0, yf, i, arcs);
+                        } else {
+                            // for generating the interpolated chebyshev solution
+                            singleIntegrate(y0, sol, i, ref t, arcs[i].max_bt_bar, arcs, count, ref dV);
+                        }
+                        arcs[i].complete_burn = true;
+                        tgo -= arcs[i].max_bt_bar;
+                    }
                 }
             }
         }
+
+        public abstract int arcIndex(List<Arc> arcs, int n, bool parameters = false);
 
         public double[] yf;
 
@@ -499,17 +614,15 @@ namespace MuMech {
             multipleIntegrate(y0, yf, arcs);
 
             /* initial conditions */
-            z[0] = y0[arcIndex+0] - r0_bar[0];
-            z[1] = y0[arcIndex+1] - r0_bar[1];
-            z[2] = y0[arcIndex+2] - r0_bar[2];
-            z[3] = y0[arcIndex+3] - v0_bar[0];
-            z[4] = y0[arcIndex+4] - v0_bar[1];
-            z[5] = y0[arcIndex+5] - v0_bar[2];
-            z[6] = y0[arcIndex+12] - arcs[0].m0;
+            z[0] = y0[arcIndex(arcs,0)+0] - r0_bar[0];
+            z[1] = y0[arcIndex(arcs,0)+1] - r0_bar[1];
+            z[2] = y0[arcIndex(arcs,0)+2] - r0_bar[2];
+            z[3] = y0[arcIndex(arcs,0)+3] - v0_bar[0];
+            z[4] = y0[arcIndex(arcs,0)+4] - v0_bar[1];
+            z[5] = y0[arcIndex(arcs,0)+5] - v0_bar[2];
+            z[6] = y0[arcIndex(arcs,0)+12] - arcs[0].m0;
 
             /* terminal constraints */
-            // FIXME: we could move the terminal constraints after the continuity conditions and
-            // drop the bcfun indirection junk entirely
             double[] yT = new double[13];
             Array.Copy(yf, (arcs.Count-1)*13, yT, 0, 13);
             double[] zterm = new double[6];
@@ -535,17 +648,17 @@ namespace MuMech {
                         if (arcs[i].m0 < 0) // negative mass => continuity rather than mass jettison
                         {
                             /* continuity */
-                            z[j+13*i] = y0[j+13*i] - yf[j+13*(i-1)];
+                            z[j+13*i] = y0[j+arcIndex(arcs,i)] - yf[j+13*(i-1)];
                         }
                         else
                         {
                             /* mass jettison */
-                            z[j+13*i] = y0[j+13*i+arcIndex] - arcs[i].m0;
+                            z[j+13*i] = y0[j+arcIndex(arcs,i)] - arcs[i].m0;
                         }
                     }
                     else
                     {
-                        z[j+13*i] = y0[j+13*i+arcIndex] - yf[j+13*(i-1)];
+                        z[j+13*i] = y0[j+arcIndex(arcs,i)] - yf[j+13*(i-1)];
                     }
                 }
             }
@@ -553,9 +666,9 @@ namespace MuMech {
             /* NOTE SUBCLASSES SHOULD OVERRIDE THIS FUNCTION, CALL THIS BASE CLASS, ADD SWITCHING CONDITIONS, AND THEN SQUARE THE RESIDUALS */
         }
 
-        double lmEpsx = 1e-9; // 1e-15;
+        double lmEpsx = 1e-10; // 1e-15;
         int lmIter = 20000;
-        double lmDiffStep = 0.00001;
+        double lmDiffStep = 1e-6;
 
         public bool runOptimizer(List<Arc> arcs)
         {
@@ -566,7 +679,7 @@ namespace MuMech {
             for(int i = 0; i < y0.Length; i++)
                 Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
 
-            double[] z = new double[13 * arcs.Count + arcIndex];
+            double[] z = new double[arcIndex(arcs,arcs.Count)];
             optimizationFunction(y0, z, arcs);
 
             double znorm = 0.0;
@@ -596,9 +709,12 @@ namespace MuMech {
             optimizationFunction(y0, z, arcs);
 
             znorm = 0.0;
+            double max_z = 0.0;
 
             for(int i = 0; i < z.Length; i++)
             {
+                if (z[i] > max_z)
+                    max_z = z[i];
                 znorm += z[i] * z[i];
                 Debug.Log("z[" + i + "] = " + z[i]);
             }
@@ -606,31 +722,35 @@ namespace MuMech {
             znorm = Math.Sqrt(znorm);
             Debug.Log("znorm = " + znorm);
 
-            if (znorm > 1e-5)
+            if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
                 return false;
 
-            return (rep.terminationtype == 2) || (rep.terminationtype == 7);
+            if (max_z < 1e-4)
+                return true;
+
+            return false;
         }
 
         public double[] y0;
 
-        public void UpdateY0()
+        public void UpdateY0(List<Arc> arcs)
         {
             /* FIXME: some of the round tripping here is silly */
             Stage s = stages[0];
-            y0[arcIndex] = r0_bar[0];
-            y0[arcIndex+1] = r0_bar[1];
-            y0[arcIndex+2] = r0_bar[2];
-            y0[arcIndex+3] = v0_bar[0];
-            y0[arcIndex+4] = v0_bar[1];
-            y0[arcIndex+5] = v0_bar[2];
-            y0[arcIndex+6] = pv0[0];
-            y0[arcIndex+7] = pv0[1];
-            y0[arcIndex+8] = pv0[2];
-            y0[arcIndex+9] = pr0[0];
-            y0[arcIndex+10] = pr0[1];
-            y0[arcIndex+11] = pr0[2];
-            y0[arcIndex+12] = s.m0;
+            int arcindex = arcIndex(arcs,0);
+            y0[arcindex]   = r0_bar[0];
+            y0[arcindex+1] = r0_bar[1];
+            y0[arcindex+2] = r0_bar[2];
+            y0[arcindex+3] = v0_bar[0];
+            y0[arcindex+4] = v0_bar[1];
+            y0[arcindex+5] = v0_bar[2];
+            y0[arcindex+6] = pv0[0];
+            y0[arcindex+7] = pv0[1];
+            y0[arcindex+8] = pv0[2];
+            y0[arcindex+9] = pr0[0];
+            y0[arcindex+10] = pr0[1];
+            y0[arcindex+11] = pr0[2];
+            y0[arcindex+12] = s.m0;
             y0[0] = tgo_bar;
             y0[1] = 0;
         }
