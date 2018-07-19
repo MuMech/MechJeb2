@@ -54,7 +54,7 @@ namespace MuMech
         public override bool DriveAscent(FlightCtrlState s)
         {
             setTarget();
-            peg.AssertStart();
+            peg.AssertStart(allow_execution: true);
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -116,7 +116,6 @@ namespace MuMech
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeToPEG(90, handleManualAz: true);
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
 
