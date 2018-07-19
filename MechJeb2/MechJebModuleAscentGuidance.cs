@@ -283,6 +283,12 @@ namespace MuMech
                         if (GUILayout.Button("Hide Status Output"))
                             autopilot.showStatus = false;
 
+                        if (peg.solution != null)
+                        {
+                            for(int i = 0; i < peg.solution.num_segments; i++)
+                                GUILayout.Label(String.Format("{0}: {1}", i, peg.solution.ArcString(vesselState.time, i)));
+                        }
+
                         GUILayout.Label(String.Format("vgo: {0:F1}", peg.vgo));
                         GUILayout.Label(String.Format("tgo: {0:F3}", peg.tgo));
                         GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));

@@ -55,7 +55,7 @@ using System.Reflection;
 
 namespace MuMech
 {
-    public enum PegStatus { ENABLED, INITIALIZING, INITIALIZED, SLEWING, CONVERGED, STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED, COASTING };
+    public enum PegStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
 
     public class MechJebModulePEGController : ComputerModule
     {
@@ -64,17 +64,19 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pegInterval = new EditableDouble(0.01);
 
+        // these variables will persist even if Reset() completely blows away the solution, so that pitch+heading will still be stable
+        // until a new solution is found.
         public Vector3d lambda;
         public Vector3d lambdaDot;
         public double t_lambda;
-        public Vector3d oldlambda;
-        public Vector3d oldlambdaDot;
-        public double oldt_lambda;
         public Vector3d iF;
         public double pitch;
         public double heading;
         public double tgo;
         public double vgo;
+
+        public PontryaginBase.Solution solution { get { return ( p != null ) ? p.solution : null; } }
+        public List<PontryaginBase.Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
 
         public PegStatus status;
         public PegStatus oldstatus;
@@ -96,17 +98,20 @@ namespace MuMech
         {
             core.attitude.users.Remove(this);
             status = PegStatus.FINISHED;
+            p.KillThread();
             p = null;
         }
 
-        // peg can now control thrust in converge_vgo() but consumers may want it to not burn
-        private bool suppressBurning;
-        // this can be hammered on repetetively, peg will start updating data.
-        public void AssertStart(bool suppressBurning = false)
+        public bool allow_execution = false;
+
+        // ENABLED just means the module is enabled, by calling Reset here we transition from ENABLED to INITIALIZING
+        //
+        // by setting allow_execution here we allow moving to COASTING or BURNING from INITIALIZED
+        public void AssertStart(bool allow_execution = true)
         {
-            this.suppressBurning = suppressBurning;
             if (status == PegStatus.ENABLED )
                 Reset();
+            this.allow_execution = allow_execution;
         }
 
         public override void OnFixedUpdate()
@@ -136,10 +141,20 @@ namespace MuMech
             if ( status == PegStatus.FAILED )
                 Reset();
 
+            handle_staging();
+
             converge();
 
             if (p != null && p.solution != null && tgo < TimeWarp.fixedDeltaTime)
+            {
+                // normal exit
+                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
+                Debug.Log("dV = " + dVleft.magnitude + " angle = " + Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg);
+                status = PegStatus.FINISHED;
                 Done();
+            }
+
+            handle_throttle();
         }
 
         // state for next iteration
@@ -176,21 +191,21 @@ namespace MuMech
             throw new Exception("FIXME");
         }
 
-        double v0m;
-        double r0m;
-        double inc;
+        double old_v0m;
+        double old_r0m;
+        double old_inc;
 
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
             bool doupdate = false;
 
-            if (r0m != this.r0m || v0m != this.v0m || inc != this.inc)
-            {
-                this.r0m = PeA + mainBody.Radius;
-                this.v0m = Math.Sqrt(mainBody.gravParameter/r0m);
-                this.inc = inc;
+            double v0m, r0m;
+
+            r0m = PeA + mainBody.Radius;
+            v0m = Math.Sqrt(mainBody.gravParameter/r0m);
+
+            if (r0m != old_r0m || v0m != old_v0m || inc != old_inc)
                 doupdate = true;
-            }
 
             if (p == null || doupdate)
             {
@@ -212,32 +227,71 @@ namespace MuMech
                 solver.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
                 p = solver;
             }
+
+            old_v0m = v0m;
+            old_r0m = r0m;
+            old_inc = inc;
         }
 
         /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
         public bool isStable()
         {
-            return status == PegStatus.CONVERGED || status == PegStatus.STAGING || status == PegStatus.COASTING || isTerminalGuidance();
+            return isNormal() || isTerminalGuidance();
+        }
+
+        // not TERMINAL guidance or TERMINAL_RCS
+        public bool isNormal()
+        {
+            return status == PegStatus.CONVERGED || status == PegStatus.BURNING || status == PegStatus.COASTING;
         }
 
         public bool isTerminalGuidance()
         {
-            return status == PegStatus.SLEWING || status == PegStatus.TERMINAL || status == PegStatus.TERMINAL_RCS;
+            return status == PegStatus.TERMINAL || status == PegStatus.TERMINAL_RCS;
         }
 
         /* normal pre-states but not usefully converged */
         public bool isInitializing()
         {
-            return status == PegStatus.ENABLED || status == PegStatus.INITIALIZING || status == PegStatus.INITIALIZED;
+            return status == PegStatus.ENABLED || status == PegStatus.INITIALIZING;
         }
 
         private double last_call;        // this is the last call to converge
         private PontryaginBase p;
 
+        private void handle_staging()
+        {
+            if (p == null || p.solution == null)
+                return;
+
+            var current_arc = p.solution.arcs[0];
+
+            // remove thrust arcs for stages that have been dropped and timed stages that have <= 0 tgo
+            while( ( current_arc.thrust != 0 && current_arc.ksp_stage > StageManager.CurrentStage) || (p.solution.tgo(vesselState.time, 0) <= 0) )
+            {
+                p.solution.arcs.RemoveAt(0);
+                p.solution.segments.RemoveAt(0);
+                current_arc = p.solution.arcs[0];
+            }
+
+            if (current_arc.thrust == 0)
+                coasting = true;
+            else
+                coasting = false;
+        }
+
         private void converge()
         {
             if (p == null)
+            {
+                status = PegStatus.INITIALIZING;
                 return;
+            }
+
+            if (p.solution == null)
+            {
+                status = PegStatus.INITIALIZING;
+            }
 
             if (p != null && p.solution != null && tgo < 2)
             {
@@ -258,12 +312,30 @@ namespace MuMech
 
             last_call = vesselState.time;
 
-            if (p.solution == null)
-                status = PegStatus.INITIALIZING;
-            else
+            if (status == PegStatus.INITIALIZING && p.solution != null)
                 status = PegStatus.CONVERGED;
 
             last_PEG = vesselState.time;
+        }
+
+        private void handle_throttle()
+        {
+            if ( !isNormal() )
+                return;
+
+            if ( !allow_execution )
+                return;
+
+            if ( coasting )
+            {
+                status = PegStatus.COASTING;
+                ThrustOff();
+            }
+            else
+            {
+                status = PegStatus.BURNING;
+                ThrustOn();
+            }
         }
 
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
@@ -272,6 +344,7 @@ namespace MuMech
             if (p == null || p.solution == null)
                 return;
 
+            // if we're not flying yet, continuously update the t0 of the solution
             if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
                 p.solution.t0 = vesselState.time;
 
@@ -283,11 +356,28 @@ namespace MuMech
             vgo = p.solution.vgo(vesselState.time);
         }
 
+        private void ThrustOn()
+        {
+            core.thrust.targetThrottle = 1.0F;
+            vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
+        }
+
+        private void RCSOn()
+        {
+            core.thrust.ThrustOff();
+            vessel.ctrlState.Z = -1.0F;
+        }
+
+        private void ThrustOff()
+        {
+            core.thrust.ThrustOff();
+            vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
+        }
+
         private void Done()
         {
             users.Clear();
-            core.thrust.ThrustOff();
-            vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
+            ThrustOff();
             status = PegStatus.FINISHED;
             enabled = false;
         }
@@ -295,6 +385,7 @@ namespace MuMech
         public void Reset()
         {
             // lambda and lambdaDot are deliberately not cleared here
+            p.KillThread();
             p = null;
             status = PegStatus.INITIALIZING;
             last_PEG = 0.0;
