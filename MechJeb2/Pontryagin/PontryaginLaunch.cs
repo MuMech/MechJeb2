@@ -9,7 +9,37 @@ namespace MuMech {
         {
         }
 
-        public override int arcIndex { get { return 3; } }
+        /*
+         * 2 parameters at the start for total burntime, each coast has 2 parameters, each burn has 0 parameters
+         *
+         * 0 - total burntime
+         * 1 - slack variable for burntime
+         * 2-14 - y0 for burn0
+         * 15 - coast time
+         * 16 - slack for coast time
+         * 17-29 - y0 for coast0
+         * 30-42 - y0 for burn0
+         */
+        public override int arcIndex(List<Arc> arcs, int n, bool parameters = false)
+        {
+            int index = 2;
+            for(int i=0; i<n; i++)
+            {
+                if (arcs[i].thrust == 0)
+                    index += 15;
+                else
+                    index += 13;
+            }
+            // by default this gives the offset to the continuity variables (the common case)
+            // set parameters to true to bypass adding that offset and get the index to the parameters instead
+            if (!parameters && n != arcs.Count)
+            {
+                if (arcs[n].thrust == 0)
+                    index += 2;
+            }
+
+            return index;
+        }
 
         double rTm;
         double vTm;
@@ -56,17 +86,57 @@ namespace MuMech {
             List<Arc> arcs = (List<Arc>)o;
             base.optimizationFunction(y0, z, o);
 
-            /* magnitude of initial costate vector = 1.0 (dummy constraint for H(tf)=0 because BC is keplerian) */
+            /* magnitude of initial costate vector = 1.0 (dummy constraint for H(tf)=0 to optimize burntime because BC is keplerian) */
             int n = 13 * arcs.Count;
             z[n] = 0.0;
             for(int i = 0; i < 6; i++)
-                z[n] = z[n] + y0[6+i+arcIndex] * y0[6+i+arcIndex];
+                z[n] = z[n] + y0[i+6+arcIndex(arcs,0)] * y0[i+6+arcIndex(arcs,0)];
             z[n] = Math.Sqrt(z[n]) - 1.0;
 
-            // positive arc time constraint
-            z[n+1] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) * 1000 : y0[1] * y0[1];
+            n++;
 
-            z[n+2] = y0[2] * y0[2]; // FIXME: remove this if its unnecessary now
+            // positive arc time constraint
+            z[n] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) : 0;
+
+            n++;
+
+            double total_bt_bar = 0;
+            for(int i = 0; i < arcs.Count; i++)
+            {
+                if ( arcs[i].thrust == 0 )
+                {
+                    int index = arcIndex(arcs, i, parameters: true);
+                    if (total_bt_bar > y0[0])
+                    {
+                        // force unreachable coasts to zero
+                        z[n] = Math.Abs(y0[index]);
+                        n++;
+                        z[n] = Math.Abs(y0[index+1]);
+                        n++;
+                    }
+                    else
+                    {
+                        // optimized coast
+                        double y0sum = 0.0;
+                        double yfsum = 0.0;
+                        for(int j = 0; j < 3; j++)
+                        {
+                            // squared magnitude of the primer vector before + after
+                            y0sum += y0[index+2+6+j] * y0[index+2+6+j];
+                            yfsum += yf[13*i+6+j] * yf[13*i+6+j];
+                        }
+                        z[n] = Math.Sqrt(yfsum) - Math.Sqrt(y0sum);
+                        n++;
+                        z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : 0;
+                        n++;
+                    }
+                }
+                else
+                {
+                    // sum up burntime of burn arcs
+                    total_bt_bar += arcs[i].max_bt_bar;
+                }
+            }
 
             /* construct sum of the squares of the residuals for levenberg marquardt */
             for(int i = 0; i < z.Length; i++)
@@ -76,89 +146,81 @@ namespace MuMech {
 
         public void Bootstrap()
         {
-            Solution new_sol = null;
-            List<Arc> new_arcs = new List<Arc>();
-            y0 = new double[13 + arcIndex];
+            // build arcs off of ksp stages, with coasts
+            List<Arc> arcs = new List<Arc>();
+            for(int i = 0; i < stages.Count; i++)
+            {
+                if (i != 0)
+                    arcs.Add(new Arc(new Stage(this, m0: stages[i].m0, isp: 0, thrust: 0)));
+                arcs.Add(new Arc(stages[i]));
+            }
+
+            // allocate y0
+            y0 = new double[arcIndex(arcs, arcs.Count)];
+
+            // update initial position and guess for first arc
             double ve = g0 * stages[0].isp;
             tgo = ve * stages[0].m0 / stages[0].thrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
-            UpdateY0();
+            UpdateY0(arcs);
+
+            // initialize overall burn time
             y0[0] = tgo_bar;
             y0[1] = 0;
 
-            for(int i = 0; i < stages.Count; i++)
+            // initialize coasts to zero
+            for(int i = 0; i < arcs.Count; i++)
             {
-                new_arcs.Add(new Arc(stages[i]));
-
-                /*
-                for(int j = 0; i < (new_arcs.Count-1); j++)
-                    new_arcs[j].infinite = false;
-
-                new_arcs[new_arcs.Count-1].infinite = true;
-                */
-
-                for(int j = 0; j < y0.Length; j++)
-                    Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
-
-                Debug.Log("running optimizer");
-
-                if ( !runOptimizer(new_arcs) )
+                if (arcs[i].thrust == 0)
                 {
-                    Debug.Log("optimizer failed");
-                    y0 = null;
-                    return;
+                    int index = arcIndex(arcs, i, parameters: true);
+                    y0[index] = 0;
+                    y0[index+1] = 0;
                 }
-
-                if (y0[0] < 0)
-                {
-                    Debug.Log("optimizer failed2");
-                    y0 = null;
-                    return;
-                }
-
-                Debug.Log("optimizer done");
-
-                new_sol = new Solution(t_scale, v_scale, r_scale, 0);
-
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("y0[" + k + "] = " + y0[k]);
-
-                multipleIntegrate(y0, new_sol, new_arcs, 10);
-
-                if (i < (stages.Count - 1))
-                {
-                    double[] y0_new = new double[13 * (i + 2) + arcIndex];
-                    Array.Copy(y0, 0, y0_new, 0, 13*(i+1) + arcIndex);
-                    y0 = y0_new;
-
-                    double t    = new_arcs[i].max_bt_bar;
-                    Vector3d r  = new_sol.r_bar(t);
-                    Vector3d v  = new_sol.v_bar(t);
-                    Vector3d pv = new_sol.pv_bar(t);
-                    Vector3d pr = new_sol.pr_bar(t);
-                    double m    = new_sol.m_bar(t);
-
-                    y0[arcIndex + 13 * (i+1) + 0] = r[0];
-                    y0[arcIndex + 13 * (i+1) + 1] = r[1];
-                    y0[arcIndex + 13 * (i+1) + 2] = r[2];
-                    y0[arcIndex + 13 * (i+1) + 3] = v[0];
-                    y0[arcIndex + 13 * (i+1) + 4] = v[1];
-                    y0[arcIndex + 13 * (i+1) + 5] = v[2];
-                    y0[arcIndex + 13 * (i+1) + 6] = pv[0];
-                    y0[arcIndex + 13 * (i+1) + 7] = pv[1];
-                    y0[arcIndex + 13 * (i+1) + 8] = pv[2];
-                    y0[arcIndex + 13 * (i+1) + 9] = pr[0];
-                    y0[arcIndex + 13 * (i+1) + 10] = pr[1];
-                    y0[arcIndex + 13 * (i+1) + 11] = pr[2];
-                    y0[arcIndex + 13 * (i+1) + 12] = m;
-                }
-
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("new y0[" + k + "] = " + y0[k]);
             }
+
+            // seed continuity initial conditions
+            yf = new double[arcs.Count*13];
+            multipleIntegrate(y0, yf, arcs, initialize: true);
+
+            for(int j = 0; j < y0.Length; j++)
+                Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
+
+            Debug.Log("running optimizer");
+
+            if ( !runOptimizer(arcs) )
+            {
+                for(int k = 0; k < y0.Length; k++)
+                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                Debug.Log("optimizer failed");
+                y0 = null;
+                return;
+            }
+
+            if (y0[0] < 0)
+            {
+                for(int k = 0; k < y0.Length; k++)
+                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                Debug.Log("optimizer failed2");
+                y0 = null;
+                return;
+            }
+
+            Debug.Log("optimizer done");
+
+            Solution new_sol = new Solution(t_scale, v_scale, r_scale, 0);
+
+            for(int k = 0; k < y0.Length; k++)
+                Debug.Log("y0[" + k + "] = " + y0[k]);
+
+            multipleIntegrate(y0, new_sol, arcs, 10);
+
+            for(int k = 0; k < y0.Length; k++)
+                Debug.Log("new y0[" + k + "] = " + y0[k]);
+
             this.solution = new_sol;
             Debug.Log("done with bootstrap");
-            last_arcs = new_arcs;
+            last_arcs = arcs;
         }
 
         public override void Optimize(double t0)
@@ -188,12 +250,12 @@ namespace MuMech {
                     {
                         Debug.Log("shrinking y0 array");
                         double[] y0_old = y0;
-                        y0 = new double[13*last_arcs.Count + arcIndex];
-                        Array.Copy(y0_old, 0, y0, 0, 13*last_arcs.Count + arcIndex);
+                        y0 = new double[arcIndex(last_arcs, last_arcs.Count-1)];
+                        Array.Copy(y0_old, 0, y0, 0, arcIndex(last_arcs, last_arcs.Count-1));
                         last_arcs.RemoveAt(0);
                     }
 
-                    UpdateY0();
+                    UpdateY0(last_arcs);
                     y0[0] = tgo_bar;
                     y0[1] = 0;
                     Debug.Log("normal optimizer run start");

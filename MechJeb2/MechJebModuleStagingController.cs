@@ -33,6 +33,9 @@ namespace MuMech
 
         public bool waitingForFirstStaging = false;
 
+        // this is for other modules to temporarily disable autostaging (e.g. PEG coast phases)
+        public int autostageLimitInternal = 0;
+
         private readonly List<ModuleEngines> activeModuleEngines = new List<ModuleEngines>();
         private readonly List<int> burnedResources = new List<int>();
 
@@ -58,6 +61,11 @@ namespace MuMech
         {
             users.Add(user);
             autostagingOnce = true;
+        }
+
+        public override void OnModuleEnabled()
+        {
+            autostageLimitInternal = 0;
         }
 
         public override void OnModuleDisabled()
@@ -109,7 +117,7 @@ namespace MuMech
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
+            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit || StageManager.CurrentStage <= autostageLimitInternal
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
@@ -176,7 +184,7 @@ namespace MuMech
             }
             return false;
         }
-        
+
         public void UpdateActiveModuleEngines()
         {
             activeModuleEngines.Clear();
@@ -337,8 +345,8 @@ namespace MuMech
         // determine if there is a fairing to be deployed
         public static bool HasFairing(int inverseStage, Vessel v)
         {
-            return v.parts.Slinq().Any((p,_inverseStage) => 
-                p.inverseStage == _inverseStage && 
+            return v.parts.Slinq().Any((p,_inverseStage) =>
+                p.inverseStage == _inverseStage &&
                 (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))), inverseStage);
         }
     }

@@ -419,16 +419,23 @@ namespace MuMech
         //
         protected void attitudeTo(double desiredPitch, double desiredHeading)
         {
-            if ( ( vesselState.thrustCurrent == 0 ) || ( (vesselState.thrustCurrent / vesselState.thrustAvailable) < 0.90) || (vacStats[vacStats.Length-1].deltaTime < 2) )
+            Vector6 rcs = vesselState.rcsThrustAvailable;
+
+            // FIXME?  should this be up/down and not forward/back?  seems wrong?  why was i using down before for the ullage direction?
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( rcs.left > 0.01 ) && ( rcs.right > 0.01 ) && ( rcs.forward > 0.01 ) && ( rcs.back > 0.01 );
+
+            if ( (vesselState.thrustCurrent / vesselState.thrustAvailable < 0.50) && !has_rcs )
             {
+                // if engines are spooled up at less than 50% and we have no RCS in the stage, do not issue any guidance commands yet
                 core.attitude.attitudeDeactivate();
                 return;
             }
             else
             {
                 core.attitude.users.Add(this);
-                if (vacStats[vacStats.Length-1].deltaTime < 2)
+                if (vacStats[vacStats.Length-1].deltaTime < 1)
                 {
+                    // freeze guidance forwards for last second of stage
                     core.attitude.attitudeKILLROT = true;
                     var attitude = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
                     var reference = AttitudeReference.INERTIAL;
