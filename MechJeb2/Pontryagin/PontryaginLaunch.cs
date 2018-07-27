@@ -144,16 +144,31 @@ namespace MuMech {
 
         }
 
+        /* insert coast before the ith stage */
+        private void InsertCoast(List<Arc> arcs, int i)
+        {
+            int i0_old = arcIndex(arcs, i, parameters: true);
+            int i0_old_continuity = arcIndex(arcs, i, parameters: false);
+            int n_old = y0.Length;
+            arcs.Insert(i, new Arc(new Stage(this, m0: stages[i].m0, isp: 0, thrust: 0)));
+            //Array.Copy(y0, 0, y0_new, 0, i0_old);
+            //int i0_new_continuity = arcIndex(arcs, i, parameters: false);
+            //Array.Copy(y0, i0_old_continuity, y0_new, i0_new_continuity, 13);
+            //y0 = y0_new;
+        }
+
         public void Bootstrap()
         {
             // build arcs off of ksp stages, with coasts
             List<Arc> arcs = new List<Arc>();
             for(int i = 0; i < stages.Count; i++)
             {
-                if (i != 0)
-                    arcs.Add(new Arc(new Stage(this, m0: stages[i].m0, isp: 0, thrust: 0)));
+                //if (i != 0)
+                    //arcs.Add(new Arc(new Stage(this, m0: stages[i].m0, isp: 0, thrust: 0)));
                 arcs.Add(new Arc(stages[i]));
             }
+
+            //arcs[arcs.Count-1].infinite = true;
 
             // allocate y0
             y0 = new double[arcIndex(arcs, arcs.Count)];
@@ -162,13 +177,9 @@ namespace MuMech {
             double ve = g0 * stages[0].isp;
             tgo = ve * stages[0].m0 / stages[0].thrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
-            UpdateY0(arcs);
-
-            // initialize overall burn time
-            y0[0] = tgo_bar;
-            y0[1] = 0;
 
             // initialize coasts to zero
+            /*
             for(int i = 0; i < arcs.Count; i++)
             {
                 if (arcs[i].thrust == 0)
@@ -178,6 +189,13 @@ namespace MuMech {
                     y0[index+1] = 0;
                 }
             }
+            */
+
+            // initialize overall burn time
+            y0[0] = tgo_bar;
+            y0[1] = 0;
+
+            UpdateY0(arcs);
 
             // seed continuity initial conditions
             yf = new double[arcs.Count*13];
@@ -209,11 +227,36 @@ namespace MuMech {
             Debug.Log("optimizer done");
 
             Solution new_sol = new Solution(t_scale, v_scale, r_scale, 0);
-
-            for(int k = 0; k < y0.Length; k++)
-                Debug.Log("y0[" + k + "] = " + y0[k]);
-
             multipleIntegrate(y0, new_sol, arcs, 10);
+
+            //for(int i = arcs.Count-1; i > 0 ; i--)
+                //InsertCoast(arcs, i);
+            //InsertCoast(arcs, arcs.Count-1);
+
+            /*
+            Debug.Log("running optimizer");
+
+            if ( !runOptimizer(arcs) )
+            {
+                for(int k = 0; k < y0.Length; k++)
+                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                Debug.Log("optimizer failed");
+                return;
+            }
+
+            if (y0[0] < 0)
+            {
+                for(int k = 0; k < y0.Length; k++)
+                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                Debug.Log("optimizer failed2");
+                return;
+            }
+
+            Debug.Log("optimizer done");
+
+            new_sol = new Solution(t_scale, v_scale, r_scale, 0);
+            multipleIntegrate(y0, new_sol, arcs, 10);
+            */
 
             for(int k = 0; k < y0.Length; k++)
                 Debug.Log("new y0[" + k + "] = " + y0[k]);
