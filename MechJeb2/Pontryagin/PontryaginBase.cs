@@ -260,7 +260,7 @@ namespace MuMech {
                 public double tmin, tmax;
                 public alglib.barycentricinterpolant[] interpolant = new alglib.barycentricinterpolant[14];
 
-                public Segment(double[] t, double[,] y)
+                public Segment(double[] t, double[][] y)
                 {
                     int n = t.Length;
                     tmin = t[0];
@@ -278,14 +278,14 @@ namespace MuMech {
                         double[] yi = new double[n-2];
                         for(int j = 1; j < (n-1); j++)
                         {
-                            yi[n-j-2] = y[j,i];  // reverse the array and omit the endpoints for chebyshev interpolation
+                            yi[n-j-2] = y[i][j];  // reverse the array and omit the endpoints for chebyshev interpolation
                         }
                         alglib.polynomialbuildcheb1(tmin, tmax, yi, out interpolant[i]);
                     }
                 }
             }
 
-            public void AddSegment(double[] t, double[,] y, Arc a)
+            public void AddSegment(double[] t, double[][] y, Arc a)
             {
                 segments.Add(new Segment(t, y));
                 arcs.Add(a);
@@ -355,6 +355,7 @@ namespace MuMech {
         {
             Arc arc = (Arc)o;
             double At = arc.thrust / ( y[12] * g_bar );
+            if (arc.infinite) At = At * 2;
             double r2 = y[0]*y[0] + y[1]*y[1] + y[2]*y[2];
             double r = Math.Sqrt(r2);
             double r3 = r2 * r;
@@ -379,7 +380,7 @@ namespace MuMech {
             dy[10] = y[7] / r3 - 3 / r5 * rdotpv * y[1];
             dy[11] = y[8] / r3 - 3 / r5 * rdotpv * y[2];
             /* m = mdot */
-            dy[12] = ( arc.thrust == 0 ) ? 0 : - arc.thrust / arc.c;
+            dy[12] = ( arc.thrust == 0 || arc.infinite ) ? 0 : - arc.thrust / arc.c;
             /* accumulated ∆v of the arc */
             dy[13] = At;
         }
@@ -430,7 +431,7 @@ namespace MuMech {
         }
         */
 
-        double ckEps = 1e-9;
+        double ckEps = 1e-7;
 
         /* used to update y0 to yf without intermediate values */
         public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, List<Arc> arcs, ref double dV)
@@ -473,12 +474,9 @@ namespace MuMech {
             /* time to burn the entire stage */
             double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
 
-            /* clip the integration so we don't burn the whole rocket (causes infinite spinning) */
-            if ( dt > 0.999 * tau )
-            {
-                dt = 0.999 * tau;  /* don't add any more 9's or we get infinite loops */
-            }
-
+            /* clip dt at tau */
+            if ( dt > tau && !e.infinite )
+                dt = tau;
 
             double[] x = new double[count];
             // Chebyshev sampling
@@ -492,25 +490,16 @@ namespace MuMech {
             x[0] = t;
             x[count-1] = t + dt;
 
-            double[] xtbl;
-            double[,] ytbl;
-            int m;
-            alglib.odesolverstate s;
-            alglib.odesolverreport rep;
-            alglib.odesolverrkck(y, 14, x, count, ckEps, 0, out s);
-            alglib.odesolversolve(s, centralForceThrust, e);
-            alglib.odesolverresults(s, out m, out xtbl, out ytbl, out rep);
-
-            if (rep.terminationtype != 1)
-                Debug.Log("MechJeb odesolversolve termination code: " + rep.terminationtype + " dt: " + dt);
+            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-5); // , maxiter: 1000000);
+            ode.RKF45(centralForceThrust, e);
 
             t = t + dt;
-            e.dV = ( ytbl[count-1,13] - dV ) * v_scale;
-            dV = ytbl[count-1,13];
+            e.dV = ( ode.ytbl[13][count-1] - dV ) * v_scale;
+            dV = ode.ytbl[13][count-1];
 
             if (sol != null && dt != 0)
             {
-                sol.AddSegment(xtbl, ytbl, e);
+                sol.AddSegment(x, ode.ytbl, e);
             }
 
             if (yf != null)
@@ -518,7 +507,7 @@ namespace MuMech {
                 for(int i = 0; i < 13; i++)
                 {
                     int j = 13*n+i;
-                    yf[j] = ytbl[1,i];
+                    yf[j] = ode.ytbl[i][1];
                 }
             }
         }
@@ -666,7 +655,7 @@ namespace MuMech {
             /* NOTE SUBCLASSES SHOULD OVERRIDE THIS FUNCTION, CALL THIS BASE CLASS, ADD SWITCHING CONDITIONS, AND THEN SQUARE THE RESIDUALS */
         }
 
-        double lmEpsx = 1e-10; // 1e-15;
+        double lmEpsx = 1e-7; // 1e-15;
         int lmIter = 20000;
         double lmDiffStep = 1e-6;
 
