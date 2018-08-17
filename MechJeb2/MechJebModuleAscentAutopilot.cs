@@ -430,6 +430,8 @@ namespace MuMech
                 core.attitude.attitudeDeactivate();
                 return;
             }
+
+            /*
             else
             {
                 core.attitude.users.Add(this);
@@ -439,10 +441,11 @@ namespace MuMech
                     core.attitude.attitudeKILLROT = true;
                     var attitude = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
                     var reference = AttitudeReference.INERTIAL;
-                    core.attitude.attitudeTo(attitude, reference, this);
+                    core.attitude.attitudeTo(attitude, reference, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                     return;
                 }
             }
+            */
 
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
 
@@ -476,15 +479,14 @@ namespace MuMech
 
             if (autopilot.forceRoll)
             {
-                core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
-
+                core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 if ( desiredPitch == 90.0)
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this);
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 }
                 else
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this);
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 }
             }
             else

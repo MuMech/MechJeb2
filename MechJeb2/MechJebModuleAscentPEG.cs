@@ -117,7 +117,7 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeToPEG(90, handleManualAz: true);
 
-            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
+            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
 
             if (!vessel.LiftedOff() || vessel.Landed) {
                 status = "Awaiting liftoff";

@@ -13,15 +13,13 @@ namespace MuMech {
 
         public Orbit before;
         public Orbit after;
-        public bool coasting = true;
         public double Ti_guess;  /* set to node.UT - est BT/2 and let the initial coast phase in the optimizer fix it */
         public double Tf_guess;  /* set to node.UT + est BT/2 and let the final coast phase in the optimizer fix it */
 
-        public void intercept(Orbit before, Orbit after, bool coasting)
+        public void intercept(Orbit before, Orbit after)
         {
             this.before = before;
             this.after = after;
-            this.coasting = coasting;
             bcfun = intercept;
         }
 
