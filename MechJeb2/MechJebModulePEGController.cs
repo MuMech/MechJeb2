@@ -25,11 +25,6 @@ using System.Reflection;
  *  Higher Priority / Nearer Term TODO list:
  *
  *  - UX overhaul
- *    - move most of the ascent buttons into the main ascent menu.
- *    - hide things like corrective steering when using PEG that do not apply.
- *    - consider drop down for different kinds of PEG targets in the UX
- *    - debug vector toggle button somewhere
- *    - PEG details hidden by default
  *    - bring back stock node executor and allow switching
  *    - embed PEG details into maneuver planner when PEG is doing the node executor
  *
@@ -55,7 +50,7 @@ using System.Reflection;
 
 namespace MuMech
 {
-    public enum PegStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
+    public enum PegStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, BURNING_STAGING, COASTING_STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
 
     public class MechJebModulePEGController : ComputerModule
     {
@@ -85,7 +80,24 @@ namespace MuMech
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
         private FuelFlowSimulation.Stats[] atmoStats { get { return stats.atmoStats; } }
 
-        // should only be called once per burn/ascent
+        public double last_stage_time = 0.0;
+        public double last_optimizer_time = 0.0;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            GameEvents.onStageActivate.Add(handleStageEvent);
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onStageActivate.Remove(handleStageEvent);
+        }
+
+        private void handleStageEvent(int data)
+        {
+            last_stage_time = vesselState.time;
+        }
+
         public override void OnModuleEnabled()
         {
             // coast phases are deliberately not reset in Reset() so we never get a completed coast phase again after whacking Reset()
@@ -116,6 +128,8 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            pegInterval = MuUtils.Clamp(pegInterval, 0.10, 1.00);
+
             update_pitch_and_heading();
 
             if ( isLoadedPrincipia )
@@ -141,36 +155,59 @@ namespace MuMech
             if ( status == PegStatus.FAILED )
                 Reset();
 
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
+
+            if (p != null && p.solution != null && tgo < TimeWarp.fixedDeltaTime)
+            {
+                if (has_rcs)
+                {
+                    status = PegStatus.TERMINAL_RCS;
+                }
+                else
+                {
+                    Done();
+                    return;
+                }
+            }
+
+            if ( p != null && p.solution != null && tgo < 10 )
+            {
+                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
+                double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
+                Debug.Log("dVleft = " + dVleft + " angle = " + angle);
+            }
+
+            if ( status == PegStatus.TERMINAL_RCS )
+            {
+                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
+                double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
+                if (angle > 45)
+                {
+                    Done();
+                    return;
+                }
+            }
+
+
+            handle_throttle();
+
+            handle_vacstats();
+
             handle_staging();
 
             converge();
 
-            if (p != null && p.solution != null && tgo < TimeWarp.fixedDeltaTime)
-            {
-                // normal exit
-                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
-                Debug.Log("dV = " + dVleft.magnitude + " angle = " + Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg);
-                status = PegStatus.FINISHED;
-                Done();
-            }
-
-            handle_throttle();
         }
 
-        // state for next iteration
-        private double last_PEG;    // this is the last PEG update time
 
         /*
          * TARGET APIs
          */
 
-        public bool coasting;
-
         public void TargetNode(ManeuverNode node, bool force_vgo = false)
         {
             if (p == null)
             {
-                coasting = true;
                 lambda = node.GetBurnVector(orbit).normalized;
                 lambdaDot = Vector3d.zero;
                 /*
@@ -213,19 +250,15 @@ namespace MuMech
                     p.KillThread();
 
                 /* this guesses the costate */
-                Debug.Log("v0m = " + v0m);
-                Debug.Log("r0m = " + r0m);
-                Debug.Log("inc = " + inc);
                 lambdaDot = Vector3d.zero;
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
                 Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
-                Debug.Log("r0 = " + vesselState.orbitalPosition + " v0 = " + vesselState.orbitalVelocity);
-                Debug.Log("desiredHeading = " + desiredHeading + " desiredHeadingVector = " + desiredHeadingVector + " desiredThrustVector = " + desiredThrustVector);
                 PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 solver.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
                 p = solver;
+                //Debug.Log("MechJeb started new targetting thread");
             }
 
             old_v0m = v0m;
@@ -242,7 +275,12 @@ namespace MuMech
         // not TERMINAL guidance or TERMINAL_RCS
         public bool isNormal()
         {
-            return status == PegStatus.CONVERGED || status == PegStatus.BURNING || status == PegStatus.COASTING;
+            return status == PegStatus.CONVERGED || status == PegStatus.BURNING || status == PegStatus.BURNING_STAGING || status == PegStatus.COASTING || status == PegStatus.COASTING_STAGING;
+        }
+
+        public bool isStaging()
+        {
+            return status == PegStatus.BURNING_STAGING || status == PegStatus.COASTING_STAGING;
         }
 
         public bool isTerminalGuidance()
@@ -256,7 +294,6 @@ namespace MuMech
             return status == PegStatus.ENABLED || status == PegStatus.INITIALIZING;
         }
 
-        private double last_call;        // this is the last call to converge
         private PontryaginBase p;
 
         private void handle_staging()
@@ -264,20 +301,42 @@ namespace MuMech
             if (p == null || p.solution == null)
                 return;
 
-            var current_arc = p.solution.arcs[0];
+            if (isStaging())
+                return;
 
-            // remove thrust arcs for stages that have been dropped and timed stages that have <= 0 tgo
-            while( ( current_arc.thrust != 0 && current_arc.ksp_stage > StageManager.CurrentStage) || (p.solution.tgo(vesselState.time, 0) <= 0) )
+            PontryaginBase.Arc current_arc = null;
+
+            for(int i = 0; i < p.solution.arcs.Count; i++)
             {
-                p.solution.arcs.RemoveAt(0);
-                p.solution.segments.RemoveAt(0);
-                current_arc = p.solution.arcs[0];
+                current_arc = p.solution.arcs[i];
+
+                if ( ( current_arc.thrust != 0 && current_arc.ksp_stage > StageManager.CurrentStage) || (p.solution.tgo(vesselState.time, i) <= 0) )
+                {
+                    current_arc.done = true;
+                }
+                else
+                {
+                    break;
+                }
             }
 
-            if (current_arc.thrust == 0)
-                coasting = true;
-            else
-                coasting = false;
+        }
+
+        private void handle_vacstats()
+        {
+            if (p == null)
+                return;
+
+            stats.RequestUpdate(this, true);
+
+            List<int>kspstages = new List<int>();
+
+            for ( int i = vacStats.Length-1; i >= 0; i-- )
+                if ( vacStats[i].deltaV > 20 ) // FIXME: tweakable
+                    kspstages.Add(i);
+
+            if (p != null)
+                p.SynchStages(kspstages, vacStats, vesselState.mass, vesselState.thrustCurrent, vesselState.time);
         }
 
         private void converge()
@@ -290,50 +349,107 @@ namespace MuMech
 
             if (p.solution == null)
             {
+                /* we have a solver but no solution */
                 status = PegStatus.INITIALIZING;
             }
-
-            if (p != null && p.solution != null && tgo < 2)
+            else
             {
-                status = PegStatus.TERMINAL;
-                return;
+                /* we have a solver and have a valid solution */
+                if ( isTerminalGuidance() )
+                    return;
+
+                /* hardcoded 1 second of terminal guidance */
+                if ( tgo < 1 )
+                {
+                    status = PegStatus.TERMINAL;
+                    return;
+                }
             }
 
-            // FIXME: we need to add liveStats to vacStats and atmoStats from MechJebModuleStageStats so we don't have to force liveSLT here
-            stats.liveSLT = true;
-            stats.RequestUpdate(this, true);
+            if ( (vesselState.time - last_optimizer_time) < pegInterval )
+                return;
 
-            UpdateStages();
+            if ( isStaging() )
+                return;
+
+            // for last 120 seconds of coast phase don't recompute (FIXME: i set this up before fixing a terrible coast optimization bug, could probably lower or eliminate this now?)
+            if ( p.solution != null && p.solution.arc(vesselState.time).thrust == 0 && p.solution.current_tgo(vesselState.time) < 120 )
+                return;
 
             p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
 
-            if ( p.threadStart(vesselState.time) )
-                Debug.Log("started thread");
-
-            last_call = vesselState.time;
+            p.threadStart(vesselState.time);
+            //if ( p.threadStart(vesselState.time) )
+                //Debug.Log("MechJeb: started optimizer thread");
 
             if (status == PegStatus.INITIALIZING && p.solution != null)
                 status = PegStatus.CONVERGED;
 
-            last_PEG = vesselState.time;
+            last_optimizer_time = vesselState.time;
+        }
+
+        private int last_burning_stage;
+        private bool last_burning_stage_complete;
+        private double last_coasting_time = 0.0;
+
+        // if we're transitioning from a complete thrust phase to a coast, wait for staging, otherwise
+        // just go off of whatever the solution says for the current time.
+        private bool actuallyCoasting()
+        {
+            PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
+
+            if ( last_burning_stage_complete && last_burning_stage <= StageManager.CurrentStage )
+                return false;
+            return current_arc.thrust == 0;
         }
 
         private void handle_throttle()
         {
-            if ( !isNormal() )
+            if ( p == null || p.solution == null )
                 return;
 
             if ( !allow_execution )
                 return;
 
-            if ( coasting )
+            if ( status == PegStatus.TERMINAL_RCS )
             {
-                status = PegStatus.COASTING;
+                RCSOn();
+                return;
+            }
+
+            PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
+
+            if ( current_arc.thrust != 0 )
+            {
+                last_burning_stage = current_arc.ksp_stage;
+                last_burning_stage_complete = current_arc.complete_burn;
+            }
+
+            if ( actuallyCoasting() )
+            {
+                if ( !isTerminalGuidance() )
+                {
+                    if (vesselState.time < last_stage_time + 4)
+                        status = PegStatus.COASTING_STAGING;
+                    else
+                        status = PegStatus.COASTING;
+                }
+                last_coasting_time = vesselState.time;
+
+                core.staging.autostageLimitInternal = last_burning_stage - 1;
                 ThrustOff();
             }
             else
             {
-                status = PegStatus.BURNING;
+                if ( !isTerminalGuidance() )
+                {
+                    if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
+                        status = PegStatus.BURNING_STAGING;
+                    else
+                        status = PegStatus.BURNING;
+                }
+
+                core.staging.autostageLimitInternal = 0;
                 ThrustOn();
             }
         }
@@ -341,6 +457,7 @@ namespace MuMech
         /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
         private void update_pitch_and_heading()
         {
+            // FIXME: if we have no solution update off of lambda + lambdaDot + last update time
             if (p == null || p.solution == null)
                 return;
 
@@ -348,12 +465,20 @@ namespace MuMech
             if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
                 p.solution.t0 = vesselState.time;
 
-            lambda = p.solution.pv(vesselState.time);
-            lambdaDot = p.solution.pr(vesselState.time);
-            iF = lambda.normalized;
-            p.solution.pitch_and_heading(vesselState.time, ref pitch, ref heading);
-            tgo = p.solution.tgo(vesselState.time);
-            vgo = p.solution.vgo(vesselState.time);
+            if ( status == PegStatus.TERMINAL_RCS )
+            {
+                /* leave pitch, heading and lambda at the last values, also stop updating vgo/tgo */
+                lambdaDot = Vector3d.zero;
+            }
+            else
+            {
+                lambda = p.solution.pv(vesselState.time);
+                lambdaDot = p.solution.pr(vesselState.time);
+                iF = lambda.normalized;
+                p.solution.pitch_and_heading(vesselState.time, ref pitch, ref heading);
+                tgo = p.solution.tgo(vesselState.time);
+                vgo = p.solution.vgo(vesselState.time);
+            }
         }
 
         private void ThrustOn()
@@ -388,20 +513,9 @@ namespace MuMech
             p.KillThread();
             p = null;
             status = PegStatus.INITIALIZING;
-            last_PEG = 0.0;
-            last_call = 0.0;
-        }
-
-        private void UpdateStages()
-        {
-            List<int>kspstages = new List<int>();
-
-            for ( int i = vacStats.Length-1; i >= 0; i-- )
-                if ( vacStats[i].deltaV > 20 )
-                    kspstages.Add(i);
-
-            if (p != null)
-                p.SynchStages(kspstages, vacStats, vesselState.mass);
+            last_stage_time = 0.0;
+            last_optimizer_time = 0.0;
+            last_coasting_time = 0.0;
         }
 
         public static bool isLoadedPrincipia = false;
