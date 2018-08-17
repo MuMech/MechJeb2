@@ -18,7 +18,6 @@ namespace MuMech
         public double interplanetaryWindowUT;
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
-        public MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
         public MechJebModuleAscentPEG pegascent { get { return core.GetComputerModule<MechJebModuleAscentPEG>(); } }
 
         public MechJebModuleAscentBase path;
@@ -28,7 +27,7 @@ namespace MuMech
 
         /* XXX: this is all a bit janky, could rub some reflection on it */
         public int ascentPathIdx { get { return autopilot.ascentPathIdx; } set { autopilot.ascentPathIdx = value; } }
-        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Powered Explicit Guidance (RSS/RO)" };
+        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)" };
 
         private void get_path_and_editor(int i, out MechJebModuleAscentBase p, out MechJebModuleAscentMenuBase e)
         {
@@ -44,8 +43,8 @@ namespace MuMech
             }
             else if ( i == 2 )
             {
-                p = core.GetComputerModule<MechJebModuleAscentPEG>();
-                e = core.GetComputerModule<MechJebModuleAscentPEGMenu>();
+                p = pegascent;
+                e = null;
             }
             else
             {
@@ -90,6 +89,7 @@ namespace MuMech
                 desiredInclination = autopilot.desiredInclination;
             }
             navBall = core.GetComputerModule<MechJebModuleAscentNavBall>();
+            enable_path_module(ascentPathIdx);
         }
 
         public override void OnModuleEnabled()
@@ -182,11 +182,13 @@ namespace MuMech
                         if (pegascent.pitchEndToggle)
                             GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (pegascent.pitchEndTime - pegascent.pitchStartTime)*pegascent.pitchRate));
                         GUILayout.BeginHorizontal();
-                        pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start PEG after KSP Stage #");
+                        pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start Guidance after KSP Stage #");
                         if (pegascent.pegAfterStageToggle)
                             GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
                         GUILayout.EndHorizontal();
-                        GuiUtils.SimpleTextBox("PEG Update Interval:", peg.pegInterval, "s");
+                        GuiUtils.SimpleTextBox("Guidance Update Interval:", core.optimizer.pegInterval, "s");
+                        if (GUILayout.Button("Reset Guidance"))
+                            core.optimizer.Reset();
                     }
                     else
                     {
@@ -265,7 +267,7 @@ namespace MuMech
                     }
                     else
                     {
-                        // skipCircularization is always true for PEG
+                        // skipCircularization is always true for Optimizer
                         autopilot.skipCircularization = true;
                     }
                     GUILayout.EndHorizontal();
@@ -283,25 +285,28 @@ namespace MuMech
                         if (GUILayout.Button("Hide Status Output"))
                             autopilot.showStatus = false;
 
-                        if (peg.solution != null)
+                        if (core.optimizer.solution != null)
                         {
-                            for(int i = 0; i < peg.solution.num_segments; i++)
-                                GUILayout.Label(String.Format("{0}: {1}", i, peg.solution.ArcString(vesselState.time, i)));
+                            for(int i = 0; i < core.optimizer.solution.num_segments; i++)
+                                GUILayout.Label(String.Format("{0}: {1}", i, core.optimizer.solution.ArcString(vesselState.time, i)));
                         }
 
-                        GUILayout.Label(String.Format("vgo: {0:F1}", peg.vgo));
-                        GUILayout.Label(String.Format("tgo: {0:F3}", peg.tgo));
-                        GUILayout.Label(String.Format("heading: {0:F1}", peg.heading));
-                        GUILayout.Label(String.Format("pitch: {0:F1}", peg.pitch));
+                        GUILayout.Label(String.Format("vgo: {0:F1}", core.optimizer.vgo));
+                        GUILayout.Label(String.Format("tgo: {0:F3}", core.optimizer.tgo));
+                        GUILayout.Label(String.Format("heading: {0:F1}", core.optimizer.heading));
+                        GUILayout.Label(String.Format("pitch: {0:F1}", core.optimizer.pitch));
                         GUILayout.BeginHorizontal();
                         GUIStyle si = new GUIStyle(GUI.skin.label);
-                        if ( peg.isStable() )
+                        if ( core.optimizer.isStable() )
                             si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-                        else if ( peg.isInitializing() || peg.status == PegStatus.FINISHED )
+                        else if ( core.optimizer.isInitializing() || core.optimizer.status == PegStatus.FINISHED )
                             si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                         else
                             si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
-                        GUILayout.Label("PEG Status: " + peg.status, si);
+                        GUILayout.Label("Guidance Status: " + core.optimizer.status, si);
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("core.optimizer Status: *FIXME*");
                         GUILayout.EndHorizontal();
                     }
                     else
