@@ -318,9 +318,6 @@ namespace MuMech
 
                 if (vessel.LandedOrSplashed)
                 {
-                    // disable plane/rendezvous/interplanetary for now
-                    if ( ascentPathIdx != 2 )
-                    {
                         if (core.target.NormalTargetExists)
                         {
                             if (core.node.autowarp)
@@ -334,18 +331,22 @@ namespace MuMech
                             }
                             if (!launchingToPlane && !launchingToRendezvous && !launchingToInterplanetary)
                             {
-                                GUILayout.BeginHorizontal();
-                                if (GUILayout.Button("Launch to rendezvous:", GUILayout.ExpandWidth(false)))
+                                // disable plane/rendezvous/interplanetary for now
+                                if ( ascentPathIdx != 2 )
                                 {
-                                    launchingToRendezvous = true;
-                                    autopilot.StartCountdown(vesselState.time +
-                                            LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle,
-                                                mainBody, vesselState.longitude, core.target.TargetOrbit));
+                                    GUILayout.BeginHorizontal();
+                                    if (GUILayout.Button("Launch to rendezvous:", GUILayout.ExpandWidth(false)))
+                                    {
+                                        launchingToRendezvous = true;
+                                        autopilot.StartCountdown(vesselState.time +
+                                                LaunchTiming.TimeToPhaseAngle(autopilot.launchPhaseAngle,
+                                                    mainBody, vesselState.longitude, core.target.TargetOrbit));
+                                    }
+                                    autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text,
+                                            GUILayout.Width(60));
+                                    GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                                    GUILayout.EndHorizontal();
                                 }
-                                autopilot.launchPhaseAngle.text = GUILayout.TextField(autopilot.launchPhaseAngle.text,
-                                        GUILayout.Width(60));
-                                GUILayout.Label("º", GUILayout.ExpandWidth(false));
-                                GUILayout.EndHorizontal();
 
                                 GUILayout.BeginHorizontal();
                                 if (GUILayout.Button("Launch into plane of target", GUILayout.ExpandWidth(false)))
@@ -419,7 +420,6 @@ namespace MuMech
                                 launchingToInterplanetary =
                                     launchingToPlane = launchingToRendezvous = autopilot.timedLaunch = false;
                         }
-                    }
                 }
 
                 if (autopilot.enabled)
