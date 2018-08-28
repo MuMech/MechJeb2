@@ -70,6 +70,9 @@ namespace MuMech
         public double tgo;
         public double vgo;
 
+        // this is a public setting to control autowarping
+        public bool autowarp = false;
+
         public PontryaginBase.Solution solution { get { return ( p != null ) ? p.solution : null; } }
         public List<PontryaginBase.Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
 
@@ -119,6 +122,7 @@ namespace MuMech
         // ENABLED just means the module is enabled, by calling Reset here we transition from ENABLED to INITIALIZING
         //
         // by setting allow_execution here we allow moving to COASTING or BURNING from INITIALIZED
+        // FIXME: we don't seem to need allow_execution = false now?
         public void AssertStart(bool allow_execution = true)
         {
             if (status == PegStatus.ENABLED )
@@ -155,7 +159,7 @@ namespace MuMech
             if ( status == PegStatus.FAILED )
                 Reset();
 
-            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.down > 0.01 );
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.up > 0.01 );
 
             if (p != null && p.solution != null && tgo < TimeWarp.fixedDeltaTime)
             {
@@ -199,47 +203,96 @@ namespace MuMech
 
         }
 
-
         /*
          * TARGET APIs
          */
 
-        public void TargetNode(ManeuverNode node, bool force_vgo = false)
+        public void TargetNode(ManeuverNode node, double burntime)
         {
-            if (p == null)
+            if (p == null || isCoasting())
             {
-                lambda = node.GetBurnVector(orbit).normalized;
-                lambdaDot = Vector3d.zero;
-                /*
-                PontryaginNode solver = new PontryaginNode(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
-                solver.intercept(orbit, node.nextPatch, coasting);
+                PontryaginNode solver = p as PontryaginNode;
+                if (solver == null)
+                    solver = new PontryaginNode(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: node.GetBurnVector(orbit).normalized, pr0: Vector3d.zero, dV: node.GetBurnVector(orbit).magnitude, bt: burntime);
+                solver.intercept(node.nextPatch);
                 p = solver;
-                */
             }
         }
 
+        /*
         public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
         {
             throw new Exception("FIXME");
         }
+        */
 
-        public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o)
+
+        /* converts PeA + ApA into r0m/v0m for periapsis insertion.
+           - handles hyperbolic orbits
+           - remaps ApA < PeA onto circular orbits */
+        private void ConvertToRadVel(double PeA, double ApA, out double r0m, out double v0m, out double sma)
         {
-            throw new Exception("FIXME");
+            double PeR = mainBody.Radius + PeA;
+            double ApR = mainBody.Radius + ApA;
+
+            r0m = PeR;
+
+            sma = (PeR + ApR) / 2;
+
+            /* remap nonsense ApAs onto circular orbits */
+            if ( ApA >= 0 && ApA < PeA )
+                sma = PeR;
+
+            v0m = Math.Sqrt( mainBody.gravParameter * ( 2 / PeR - 1 / sma ) );
         }
 
         double old_v0m;
         double old_r0m;
         double old_inc;
 
+        public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o)
+        {
+            bool doupdate = false;
+
+            double v0m, r0m, sma;
+
+            ConvertToRadVel(PeA, ApA, out r0m, out v0m, out sma);
+
+            if (r0m != old_r0m || v0m != old_v0m)
+                doupdate = true;
+
+            if (p == null || doupdate)
+            {
+                if (p != null)
+                    p.KillThread();
+
+                lambdaDot = Vector3d.zero;
+                double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(o.inclination, vesselState.latitude);
+                Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
+                Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
+                lambda = desiredThrustVector;
+                PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
+                Debug.Log("o.h = " + -o.h.xzy);
+                Vector3d pos, vel;
+                o.GetOrbitalStateVectorsAtUT(vesselState.time, out pos, out vel);
+                Debug.Log("r x v = " + Vector3d.Cross(rot * pos.xzy, rot * vel.xzy));
+                double hTm = v0m * r0m; // FIXME: gamma
+                solver.flightangle5constraint(sma, 0, o.h.normalized * hTm);
+                p = solver;
+            }
+
+            old_v0m = v0m;
+            old_r0m = r0m;
+        }
+
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
             bool doupdate = false;
 
-            double v0m, r0m;
+            double v0m, r0m, sma;
 
-            r0m = PeA + mainBody.Radius;
-            v0m = Math.Sqrt(mainBody.gravParameter/r0m);
+            ConvertToRadVel(PeA, ApA, out r0m, out v0m, out sma);
 
             if (r0m != old_r0m || v0m != old_v0m || inc != old_inc)
                 doupdate = true;
@@ -249,7 +302,6 @@ namespace MuMech
                 if (p != null)
                     p.KillThread();
 
-                /* this guesses the costate */
                 lambdaDot = Vector3d.zero;
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
@@ -258,7 +310,6 @@ namespace MuMech
                 PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 solver.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
                 p = solver;
-                //Debug.Log("MechJeb started new targetting thread");
             }
 
             old_v0m = v0m;
@@ -276,6 +327,11 @@ namespace MuMech
         public bool isNormal()
         {
             return status == PegStatus.CONVERGED || status == PegStatus.BURNING || status == PegStatus.BURNING_STAGING || status == PegStatus.COASTING || status == PegStatus.COASTING_STAGING;
+        }
+
+        public bool isCoasting()
+        {
+            return status == PegStatus.COASTING || status == PegStatus.COASTING_STAGING;
         }
 
         public bool isStaging()
@@ -306,7 +362,9 @@ namespace MuMech
 
             PontryaginBase.Arc current_arc = null;
 
-            for(int i = 0; i < p.solution.arcs.Count; i++)
+            int i;
+
+            for(i = 0; i < p.solution.arcs.Count; i++)
             {
                 current_arc = p.solution.arcs[i];
 
@@ -320,6 +378,10 @@ namespace MuMech
                 }
             }
 
+            if (i == p.solution.arcs.Count && current_arc.thrust == 0)
+            {
+                current_arc.done = true;
+            }
         }
 
         private void handle_vacstats()
@@ -449,8 +511,14 @@ namespace MuMech
                         status = PegStatus.BURNING;
                 }
 
-                core.staging.autostageLimitInternal = 0;
-                ThrustOn();
+                if (core.staging.autostageLimitInternal > 0)
+                {
+                    core.staging.autostageLimitInternal = 0;
+                }
+                else
+                {
+                    ThrustOn();
+                }
             }
         }
 
@@ -516,6 +584,8 @@ namespace MuMech
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
             last_coasting_time = 0.0;
+            autowarp = false;
+            if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
 
         public static bool isLoadedPrincipia = false;
