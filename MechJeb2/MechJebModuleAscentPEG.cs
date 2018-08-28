@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /*
- * Space-Shuttle PEG launches for RSS/RO
+ * Optimized launches for RSS/RO
  */
 
 namespace MuMech
@@ -32,29 +32,28 @@ namespace MuMech
         /* this deliberately does not persist, it is for emergencies only */
         public EditableDouble pitchBias = new EditableDouble(0);
 
-        private MechJebModulePEGController peg { get { return core.GetComputerModule<MechJebModulePEGController>(); } }
         private MechJebModuleAscentGuidance ascentGuidance { get { return core.GetComputerModule<MechJebModuleAscentGuidance>(); } }
 
         public override void OnModuleEnabled()
         {
             mode = AscentMode.VERTICAL_ASCENT;
-            Debug.Log("MechJebModuleAscentPEG enabled, peg should be enabled now");
-            peg.enabled = true;
+            Debug.Log("MechJebModuleAscentPEG enabled, optimizer should be enabled now");
+            core.optimizer.enabled = true;
         }
 
         public override void OnModuleDisabled()
         {
-            Debug.Log("MechJebModuleAscentPEG disabled, peg should be disabled now");
-            peg.enabled = false;
+            Debug.Log("MechJebModuleAscentPEG disabled, optimizer should be disabled now");
+            core.optimizer.enabled = false;
         }
 
-        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, PEG, EXIT };
+        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, GUIDANCE, EXIT };
         private AscentMode mode;
 
         public override bool DriveAscent(FlightCtrlState s)
         {
             setTarget();
-            peg.AssertStart(allow_execution: true);
+            core.optimizer.AssertStart(allow_execution: true);
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -69,8 +68,8 @@ namespace MuMech
                     DriveGravityTurn(s);
                     break;
 
-                case AscentMode.PEG:
-                    DrivePEG(s);
+                case AscentMode.GUIDANCE:
+                    DriveGuidance(s);
                     break;
             }
 
@@ -79,34 +78,25 @@ namespace MuMech
 
         private void setTarget()
         {
-
-            /*
-            if (pegCoast)
-                peg.SetCoast(coastSecs, coastAfterStage);
-            else
-                peg.SetCoast(-1, 0);
-                */
-
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                peg.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
-                // fix the desired inclination display for the user
-                // autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, peg.iy)) * UtilMath.Rad2Deg;
+                core.optimizer.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
+                //autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, core.optimizer.iy)) * UtilMath.Rad2Deg;
             }
             else
             {
-                peg.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination);
+                core.optimizer.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination);
             }
         }
 
-        private void attitudeToPEG(double pitch, bool handleManualAz = false, bool surfHeading = false)
+        private void attitudeToGuidance(double pitch, bool handleManualAz = false, bool surfHeading = false)
         {
             double heading;
 
             if (surfHeading)
                 heading = srfvelHeading();
             else
-                heading = peg.heading;
+                heading = core.optimizer.heading;
 
             attitudeTo(pitch, heading);
         }
@@ -115,7 +105,7 @@ namespace MuMech
         {
 
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeToPEG(90, handleManualAz: true);
+            attitudeToGuidance(90, handleManualAz: true);
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
 
@@ -149,15 +139,15 @@ namespace MuMech
                 }
                 status = String.Format("Pitch program {0:F2} s", pitchEndTime - pitchStartTime - dt);
             } else {
-                if ( pitch < peg.pitch )
+                if ( pitch < core.optimizer.pitch )
                 {
-                    mode = AscentMode.PEG;
+                    mode = AscentMode.GUIDANCE;
                     return;
                 }
-                status = String.Format("Pitch program {0:F2} °", pitch - peg.pitch);
+                status = String.Format("Pitch program {0:F2} °", pitch - core.optimizer.pitch);
             }
 
-            attitudeToPEG(pitch, handleManualAz: true);
+            attitudeToGuidance(pitch, handleManualAz: true);
         }
 
         private void DriveGravityTurn(FlightCtrlState s)
@@ -175,45 +165,45 @@ namespace MuMech
             {
                 if ( StageManager.CurrentStage < pegAfterStage )
                 {
-                    mode = AscentMode.PEG;
+                    mode = AscentMode.GUIDANCE;
                     return;
                 }
-                attitudeToPEG(pitch);
+                attitudeToGuidance(pitch);
             }
-            else if ( peg.isStable() )
+            else if ( core.optimizer.isStable() )
             {
-                if ( pitch < peg.pitch )
+                if ( pitch < core.optimizer.pitch )
                 {
-                    mode = AscentMode.PEG;
+                    mode = AscentMode.GUIDANCE;
                     return;
                 }
                 else
                 {
-                    attitudeToPEG(pitch);
+                    attitudeToGuidance(pitch);
                 }
             }
             else
             {
-                attitudeToPEG(pitch, surfHeading: true);
+                attitudeToGuidance(pitch, surfHeading: true);
             }
 
             status = "Unguided Gravity Turn";
         }
 
-        private void DrivePEG(FlightCtrlState s)
+        private void DriveGuidance(FlightCtrlState s)
         {
-            if (peg.status == PegStatus.FINISHED)
+            if (core.optimizer.status == PegStatus.FINISHED)
             {
                 mode = AscentMode.EXIT;
                 return;
             }
 
-            if (peg.isStable())
-                status = "Stable PEG Guidance";
+            if (core.optimizer.isStable())
+                status = "Stable Guidance";
             else
                 status = "WARNING: Unstable Guidance";
 
-            attitudeToPEG(peg.pitch);
+            attitudeToGuidance(core.optimizer.pitch);
         }
     }
 }
