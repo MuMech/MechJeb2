@@ -285,23 +285,28 @@ namespace MuMech
             isLoadedRealFuels = ReflectionUtils.isAssemblyLoaded("RealFuels");
             if (isLoadedRealFuels)
             {
+                Debug.Log("MechJeb: RealFuels Assembly is loaded");
                 RFPropStatusField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "propellantStatus");
                 if (RFPropStatusField == null)
                 {
-                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no propellantStatus field, disabling RF");
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no propellantStatus field, disabling RF");
                     isLoadedRealFuels = false;
                 }
                 RFignitionsField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
                 if (RFignitionsField == null)
                 {
-                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
                     isLoadedRealFuels = false;
                 }
                 RFullageField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
                 if (RFullageField == null)
                 {
-                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
                     isLoadedRealFuels = false;
+                }
+                if (isLoadedRealFuels)
+                {
+                    Debug.Log("MechJeb: RealFuels Assembly is wired up properly");
                 }
             }
             isLoadedFAR = ReflectionUtils.isAssemblyLoaded("FerramAerospaceResearch");
@@ -1333,16 +1338,16 @@ namespace MuMech
                 {
                     ullage = RFullageField.GetValue(e) as bool?;
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e1)
                 {
-                    Debug.Log("ArgumentError thrown while getting ullage from RealFuels, ullage integration disabled");
+                    Debug.Log("MechJeb BUG ArgumentError thrown while getting ullage from RealFuels, ullage integration disabled: " + e1.Message);
                     RFullageField = null;
                     return;
                 }
 
                 if (ullage == null)
                 {
-                    Debug.Log("BUG: getting ullage from RealFuels casted to null, ullage status likely broken");
+                    Debug.Log("MechJeb BUG: getting ullage from RealFuels casted to null, ullage status likely broken");
                     return;
                 }
 
@@ -1357,16 +1362,16 @@ namespace MuMech
                 {
                     ignitions = RFignitionsField.GetValue(e) as int?;
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e2)
                 {
-                    Debug.Log("ArgumentError thrown while getting ignitions from RealFuels, ullage integration disabled");
+                    Debug.Log("MechJeb BUG ArgumentError thrown while getting ignitions from RealFuels, ullage integration disabled: " + e2.Message);
                     RFignitionsField = null;
                     return;
                 }
 
                 if (ignitions == null)
                 {
-                    Debug.Log("BUG: getting ignitions from RealFuels casted to null, ullage status likely broken");
+                    Debug.Log("MechJeb BUG: getting ignitions from RealFuels casted to null, ullage status likely broken");
                     return;
                 }
 
@@ -1383,17 +1388,17 @@ namespace MuMech
                 {
                     propellantStatus = RFPropStatusField.GetValue(e) as String;
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e3)
                 {
                     // This exception happens when users are using RealFuels, but ullage is disabled.
-                    Debug.Log("ArgumentError thrown while getting propellantStatus from RealFuels, ullage integration disabled");
+                    Debug.Log("MechJeb BUG ArgumentError thrown while getting propellantStatus from RealFuels, ullage integration disabled: " + e3.Message);
                     RFPropStatusField = null;
                     return;
                 }
 
                 if (propellantStatus == null)
                 {
-                    Debug.Log("BUG: getting propellantStatus from RealFuels casted to null, ullage status likely broken");
+                    Debug.Log("MechJeb BUG: getting propellantStatus from RealFuels casted to null, ullage status likely broken");
                     return;
                 }
 
@@ -1413,7 +1418,7 @@ namespace MuMech
                     propellantState = UllageState.VeryUnstable;
                 else {
                     propellantState = UllageState.VeryStable;
-                    Debug.Log("BUG: Unknown propellantStatus from RealFuels: " + propellantStatus);
+                    Debug.Log("MechJeb BUG: Unknown propellantStatus from RealFuels: " + propellantStatus);
                 }
 
                 if (propellantState < lowestUllage)
