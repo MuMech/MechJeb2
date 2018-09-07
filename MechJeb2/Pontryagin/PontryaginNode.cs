@@ -58,7 +58,7 @@ namespace MuMech {
                 arcs.Add(new Arc(stages[i]));
             }
 
-            arcs.Add(new Arc(new Stage(this, m0: stages[stages.Count-1].m0, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage)));
+            arcs.Add(new Arc(new Stage(this, m0: stages[stages.Count-1].m0, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
 
             arcs[arcs.Count-1].infinite = true;
             arcs[arcs.Count-1].allow_negative_coast = true;
