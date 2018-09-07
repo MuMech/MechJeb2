@@ -26,12 +26,13 @@ namespace MuMech {
 
             public override string ToString()
             {
-                return "stage: " + stage;
+                return "stage: " + stage + ( done ? " (done)" : "" );
             }
 
-            public Arc(Stage stage)
+            public Arc(Stage stage, bool done = false)
             {
                 this.stage = stage;
+                this.done = done;
             }
         }
 
@@ -69,7 +70,7 @@ namespace MuMech {
                 this.thrust = thrust;
                 this.m0 = m0;
                 this.max_bt = max_bt;
-                this.c = g0 * isp / Math.Sqrt( p.r_scale / p.g_bar );  /* FIXME: is this not just / v_scale ? */
+                this.c = g0 * isp / p.t_scale;
                 this.max_bt_bar = max_bt / p.t_scale;
                 this.ksp_stage = ksp_stage;
             }
@@ -161,6 +162,11 @@ namespace MuMech {
             public Vector3d vf()
             {
                 return v(tf());
+            }
+
+            public Vector3d rf()
+            {
+                return r(tf());
             }
 
             public double tmax() // normalized time
@@ -491,7 +497,7 @@ namespace MuMech {
         }
         */
 
-        double ckEps = 1e-9;
+        double ckEps = 1e-9;  /* matches Matlab's default 1e-6 ode45 reltol? */
 
         /* used to update y0 to yf without intermediate values */
         public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, List<Arc> arcs, ref double dV)
@@ -552,7 +558,7 @@ namespace MuMech {
             x[0] = t;
             x[count-1] = t + dt;
 
-            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-5); // , maxiter: 1000000);
+            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-5, maxiter: 1000);
             ode.RKF45(centralForceThrust, e);
 
             t = t + dt;
@@ -584,6 +590,7 @@ namespace MuMech {
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count: count);
+            Debug.Log("DONE: rf = " + sol.rf() + " vf = " + sol.vf());
         }
 
         // copy the nth yf to the n+1th y0 for the next iteration
@@ -817,9 +824,9 @@ namespace MuMech {
                 z[i] = z[i] * z[i];
         }
 
-        double lmEpsx = 1e-8; // 1e-15;
-        int lmIter = 20000;
-        double lmDiffStep = 1e-6;
+        double lmEpsx = 1e-12; // 1e-15;
+        int lmIter = 10000; // 20000;
+        double lmDiffStep = 1e-4;
 
         public bool runOptimizer(List<Arc> arcs)
         {
@@ -1050,17 +1057,14 @@ namespace MuMech {
             if (stages == null)
                 stages = new List<Stage>();
 
-            /*
             if (stages.Count > kspstages.Count)
             {
                 for(int i = 0; i < (stages.Count - kspstages.Count); i++)
                 {
                     Debug.Log("shrinking stage list by one");
-                    stages[0].staged = true;
                     stages.RemoveAt(0);
                 }
             }
-            */
 
             int offset = ( stages.Count > kspstages.Count ) ? stages.Count - kspstages.Count : 0;
 
