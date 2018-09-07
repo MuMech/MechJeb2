@@ -16,12 +16,13 @@ namespace MuMech {
         double smaT;
         Vector3d hT;
 
-        // 5-constraint PEG with fixed LAN, zero flight angle
-        public void flightangle5constraint(double smaT, double gamma, Vector3d hT)
+        // 5-constraint PEG with fixed LAN
+        public void flightangle5constraint(double rTm, double vTm, double gamma, Vector3d hT)
         {
+            this.rTm = rTm / r_scale;
+            this.vTm = vTm / v_scale;
             this.gamma = gamma;
             this.hT = -hT.xzy / r_scale / v_scale;  // KSP's Orbit class has h swizzled, but not 'inverse rotated', and pointed the wrong direction
-            this.smaT = smaT / r_scale;
             bcfun = flightangle5constraint;
         }
 
@@ -33,14 +34,14 @@ namespace MuMech {
             Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
 
             Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d hmiss = hf - hT;
+            Vector3d hmiss = hf.normalized - hT.normalized;
 
             /* 5 constraints */
-            z[0] = hmiss[0];
-            z[1] = hmiss[1];
-            z[2] = hmiss[2];
-            z[3] = vf.sqrMagnitude / 2.0 - 1.0 / rf.magnitude + 1.0 / ( 2.0 * smaT );
-            z[4] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+            z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
+            z[1] = ( vf.magnitude * vf.magnitude - vTm * vTm ) / 2.0;
+            z[2] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+            z[3] = hmiss[0];
+            z[4] = hmiss[2];
 
             /* transversality - free argp */
             z[5] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hT);
@@ -215,7 +216,16 @@ namespace MuMech {
 
             this.solution = new_sol;
             Debug.Log("done with bootstrap");
-        }
 
+            yf = new double[arcs.Count*13];
+            multipleIntegrate(y0, yf, arcs);
+
+            for(int k = 0; k < yf.Length; k++)
+                Debug.Log("new yf[" + k + "] = " + yf[k]);
+
+            Debug.Log("optimizer hT = " + hT.magnitude * r_scale * v_scale);
+            Debug.Log("r_scale = " + r_scale);
+            Debug.Log("v_scale = " + v_scale);
+        }
     }
 }
