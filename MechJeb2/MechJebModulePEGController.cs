@@ -219,14 +219,7 @@ namespace MuMech
             }
         }
 
-        /*
-        public void TargetPeInsertMatchPlane(double PeA, double ApA, Vector3d tangent)
-        {
-            throw new Exception("FIXME");
-        }
-        */
-
-
+        // FIXME: convert v0m/r0m to vTm/rTm because its terminal not initial
         /* converts PeA + ApA into r0m/v0m for periapsis insertion.
            - handles hyperbolic orbits
            - remaps ApA < PeA onto circular orbits */
@@ -278,7 +271,8 @@ namespace MuMech
                 o.GetOrbitalStateVectorsAtUT(vesselState.time, out pos, out vel);
                 Debug.Log("r x v = " + Vector3d.Cross(rot * pos.xzy, rot * vel.xzy));
                 double hTm = v0m * r0m; // FIXME: gamma
-                solver.flightangle5constraint(sma, 0, o.h.normalized * hTm);
+                Debug.Log("hTm = " + hTm + " sma = " + sma);
+                solver.flightangle5constraint(r0m, v0m, 0, o.h.normalized * hTm);
                 p = solver;
             }
 
@@ -378,10 +372,12 @@ namespace MuMech
                 }
             }
 
+            /*
             if (i == p.solution.arcs.Count && current_arc.thrust == 0)
             {
                 current_arc.done = true;
             }
+            */
         }
 
         private void handle_vacstats()
@@ -434,8 +430,8 @@ namespace MuMech
             if ( isStaging() )
                 return;
 
-            // for last 120 seconds of coast phase don't recompute (FIXME: i set this up before fixing a terrible coast optimization bug, could probably lower or eliminate this now?)
-            if ( p.solution != null && p.solution.arc(vesselState.time).thrust == 0 && p.solution.current_tgo(vesselState.time) < 120 )
+            // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
+            if ( p.solution != null && p.solution.arc(vesselState.time).thrust == 0 && p.solution.current_tgo(vesselState.time) < 10 )
                 return;
 
             p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
