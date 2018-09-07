@@ -1330,6 +1330,14 @@ namespace MuMech
                 // instead of having MJ throttle it down.
                 if ((e.getFlameoutState) || (!e.EngineIgnited) || (!e.isEnabled) || (e.requestedThrottle > 0.0F))
                 {
+                    if (e.requestedThrottle > 0.0F)
+                        Debug.Log("returning because engine throttle is up");
+                    if (!e.isEnabled)
+                        Debug.Log("returning because engine is not enabled");
+                    if (!e.EngineIgnited)
+                        Debug.Log("returning because engine is not ignited");
+                    if (e.getFlameoutState)
+                        Debug.Log("returning because engine flamed out");
                     return;
                 }
 
@@ -1353,6 +1361,7 @@ namespace MuMech
 
                 if (ullage == false)
                 {
+                    Debug.Log("ullage false?");
                     return;
                 }
 
@@ -1378,6 +1387,7 @@ namespace MuMech
                 /* -1 => infinite ignitions;  0 => no ignitions left;  1+ => ignitions remaining */
                 if (ignitions == 0)
                 {
+                    Debug.Log("no ignitions?");
                     return;
                 }
 
@@ -1403,6 +1413,8 @@ namespace MuMech
                 }
 
                 UllageState propellantState;
+
+                Debug.Log("PropellantStatus: " + propellantStatus);
 
                 if (propellantStatus == "Nominal" || propellantStatus == "Very Stable" )
                     propellantState = UllageState.VeryStable;
