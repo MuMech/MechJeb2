@@ -39,7 +39,7 @@ namespace MuMech
             else if ( i == 1 )
             {
                 p = core.GetComputerModule<MechJebModuleAscentGT>();
-                e = core.GetComputerModule<MechJebModuleAscentGTMenu>();
+                e = null;
             }
             else if ( i == 2 )
             {
@@ -125,13 +125,23 @@ namespace MuMech
                         autopilot.users.Add(this);
                     }
                 }
+                if (ascentPathIdx == 2)
+                {
+                    if (GUILayout.Button("Reset Guidance"))
+                        core.optimizer.Reset();
+
+                    GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
+                    autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
+                    autopilot.showGuidanceSettings = GUILayout.Toggle(autopilot.showGuidanceSettings, "GUID");
+                    autopilot.showSettings = GUILayout.Toggle(autopilot.showSettings, "OPTS");
+                    autopilot.showStatus = GUILayout.Toggle(autopilot.showStatus, "STATUS");
+                    GUILayout.EndHorizontal();
+                }
 
                 if (autopilot.showTargeting || (ascentPathIdx != 2))
                 {
                     if (ascentPathIdx == 2)
                     {
-                        if (GUILayout.Button("Hide Targeting"))
-                            autopilot.showTargeting = false;
 
                         GuiUtils.SimpleTextBox("Target Periapsis", autopilot.desiredOrbitAltitude, "km");
                         GuiUtils.SimpleTextBox("Target Apoapsis:", pegascent.desiredApoapsis, "km");
@@ -159,19 +169,11 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                     autopilot.desiredInclination = desiredInclination;
                 }
-                else
-                {
-                    if (GUILayout.Button("Show Targeting"))
-                        autopilot.showTargeting = true;
-                }
 
                 if (ascentPathIdx == 2)
                 {
                     if (autopilot.showGuidanceSettings)
                     {
-                        if (GUILayout.Button("Hide Guidance Settings"))
-                            autopilot.showGuidanceSettings = false;
-
                         GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
                         GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
                         GUILayout.BeginHorizontal();
@@ -187,29 +189,26 @@ namespace MuMech
                             GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
                         GUILayout.EndHorizontal();
                         GuiUtils.SimpleTextBox("Guidance Update Interval:", core.optimizer.pegInterval, "s");
-                        if (GUILayout.Button("Reset Guidance"))
-                            core.optimizer.Reset();
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Show Guidance Settings"))
-                            autopilot.showGuidanceSettings = true;
                     }
                 }
 
                 if (autopilot.showSettings)
                 {
-                    if (GUILayout.Button("Hide Settings"))
-                        autopilot.showSettings = false;
-
                     navBall.NavBallGuidance = GUILayout.Toggle(navBall.NavBallGuidance, "Show ascent navball guidance");
-                    core.thrust.LimitToPreventOverheatsInfoItem();
-                    //core.thrust.LimitToTerminalVelocityInfoItem();
-                    core.thrust.LimitToMaxDynamicPressureInfoItem();
-                    core.thrust.LimitAccelerationInfoItem();
-                    core.thrust.LimitThrottleInfoItem();
-                    core.thrust.LimiterMinThrottleInfoItem();
-                    core.thrust.LimitElectricInfoItem();
+                    if ( ascentPathIdx != 2 )
+                    {
+                        core.thrust.LimitToPreventOverheatsInfoItem();
+                        //core.thrust.LimitToTerminalVelocityInfoItem();
+                        core.thrust.LimitToMaxDynamicPressureInfoItem();
+                        core.thrust.LimitAccelerationInfoItem();
+                        core.thrust.LimitThrottleInfoItem();
+                        core.thrust.LimiterMinThrottleInfoItem();
+                        core.thrust.LimitElectricInfoItem();
+                    }
+                    else
+                    {
+                        GUILayout.Label("FIXME: throttle limiters are down for maintenance");
+                    }
                     GUILayout.BeginHorizontal();
                     autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
                     if (autopilot.forceRoll)
@@ -272,18 +271,11 @@ namespace MuMech
                     }
                     GUILayout.EndHorizontal();
                 }
-                else
-                {
-                    if (GUILayout.Button("Show Settings"))
-                        autopilot.showSettings = true;
-                }
 
                 if (ascentPathIdx == 2)
                 {
                     if (autopilot.showStatus)
                     {
-                        if (GUILayout.Button("Hide Status Output"))
-                            autopilot.showStatus = false;
 
                         if (core.optimizer.solution != null)
                         {
@@ -308,11 +300,6 @@ namespace MuMech
                         GUILayout.BeginHorizontal();
                         GUILayout.Label("core.optimizer Status: *FIXME*");
                         GUILayout.EndHorizontal();
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Show Status Output"))
-                            autopilot.showStatus = true;
                     }
                 }
 
@@ -447,7 +434,7 @@ namespace MuMech
                 editor.enabled = last_enabled;
             }
 
-            if (ascentPathIdx != 2)
+            if (ascentPathIdx == 0)
                 if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
