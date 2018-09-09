@@ -52,6 +52,7 @@ namespace MuMech {
         {
             this.rTm = rTm / r_scale;
             this.vTm = vTm / v_scale;
+            Debug.Log("4constraint vTm = " + vTm + " v_scale = " + v_scale + " vTm_bar = " + this.vTm );
             this.gamma = gamma;
             this.inc = inc;
             bcfun = flightangle4constraint;
@@ -157,8 +158,10 @@ namespace MuMech {
 
             //for(int i = arcs.Count-1; i > 0 ; i--)
                 //InsertCoast(arcs, i);
+
             InsertCoast(arcs, arcs.Count-1, new_sol);
 
+            /*
             Debug.Log("running optimizer2");
 
             if ( !runOptimizer(arcs) )
@@ -183,6 +186,7 @@ namespace MuMech {
 
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
+            */
 
             arcs[arcs.Count-1].infinite = false;
 
@@ -226,6 +230,8 @@ namespace MuMech {
             Debug.Log("optimizer hT = " + hT.magnitude * r_scale * v_scale);
             Debug.Log("r_scale = " + r_scale);
             Debug.Log("v_scale = " + v_scale);
+            Debug.Log("rTm = " + rTm * r_scale);
+            Debug.Log("vTm = " + vTm * v_scale + " " + vTm);
         }
     }
 }

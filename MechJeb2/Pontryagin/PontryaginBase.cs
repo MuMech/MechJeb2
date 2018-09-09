@@ -26,7 +26,7 @@ namespace MuMech {
 
             public override string ToString()
             {
-                return "stage: " + stage + ( done ? " (done)" : "" );
+                return "stage: " + stage + ( done ? " (done)" : "" ) + ( infinite ? " (infinite) " : "" );
             }
 
             public Arc(Stage stage, bool done = false)
@@ -333,20 +333,20 @@ namespace MuMech {
                     tmax = t[n-1];
                     for(int i = 0; i < 14; i++)
                     {
-                        /*
                         double[] yi = new double[n];
                         for(int j = 0; j < n; j++)
                         {
-                            yi[j] = y[j,i];
+                            yi[j] = y[i][j];
                         }
                         alglib.polynomialbuildeqdist(tmin, tmax, yi, out interpolant[i]);
-                        */
+                        /*
                         double[] yi = new double[n-2];
                         for(int j = 1; j < (n-1); j++)
                         {
                             yi[n-j-2] = y[i][j];  // reverse the array and omit the endpoints for chebyshev interpolation
                         }
                         alglib.polynomialbuildcheb1(tmin, tmax, yi, out interpolant[i]);
+                        */
                     }
                 }
             }
@@ -497,7 +497,7 @@ namespace MuMech {
         }
         */
 
-        double ckEps = 1e-9;  /* matches Matlab's default 1e-6 ode45 reltol? */
+        double ckEps = 1e-6;  /* matches Matlab's default 1e-6 ode45 reltol? */
 
         /* used to update y0 to yf without intermediate values */
         public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, List<Arc> arcs, ref double dV)
@@ -542,11 +542,16 @@ namespace MuMech {
             /* time to burn the entire stage */
             double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
 
-            /* clip dt at tau */
-            if ( dt > tau && !e.infinite )
-                dt = tau;
+            /* clip dt at 99.9% of tau */
+            if ( dt > 0.999 * tau && !e.infinite )
+                dt = 0.999 * tau;
 
             double[] x = new double[count];
+
+            for(int i = 0; i < count; i++)
+                x[i] = t + dt * i / (count - 1 );
+
+            /*
             // Chebyshev sampling
             for(int k = 1; k < (count-1); k++)
             {
@@ -557,8 +562,9 @@ namespace MuMech {
             // But also get the endpoints exactly
             x[0] = t;
             x[count-1] = t + dt;
+            */
 
-            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-5, maxiter: 1000);
+            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-6);
             ode.RKF45(centralForceThrust, e);
 
             t = t + dt;
@@ -590,7 +596,7 @@ namespace MuMech {
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count: count);
-            Debug.Log("DONE: rf = " + sol.rf() + " vf = " + sol.vf());
+            Debug.Log("DONE: rf = " + sol.rf() + " vf = " + sol.vf() + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()) + " r_barf = " + sol.r_bar(sol.tmax()) );
         }
 
         // copy the nth yf to the n+1th y0 for the next iteration
@@ -766,14 +772,14 @@ namespace MuMech {
             /* magnitude of terminal costate vector = 1.0 (dummy constraint for H(tf)=0 to optimize burntime because BC is keplerian) */
             int n = 13 * arcs.Count;
             z[n] = 0.0;
-            for(int i = 0; i < 6; i++)
+            for(int i = 0; i < 3; i++)
                 z[n] = z[n] + yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
             z[n] = Math.Sqrt(z[n]) - 1.0;
 
             n++;
 
             // positive arc time constraint
-            z[n] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) : 0;
+            z[n] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) : y0[1];
 
             n++;
 
@@ -786,11 +792,11 @@ namespace MuMech {
                     if (total_bt_bar > y0[0] || (i == arcs.Count -1))
                     {
                         // force unreachable coasts to zero (unless its the terminal coast)
-                        z[n] = Math.Abs(y0[index]);
+                        z[n] = y0[index];
                         n++;
                         if (!arcs[i].allow_negative_coast)
                         {
-                            z[n] = Math.Abs(y0[index+1]);
+                            z[n] = y0[index+1];
                             n++;
                         }
                     }
@@ -803,11 +809,22 @@ namespace MuMech {
                         Vector3d pr = new Vector3d(y0[index+11], y0[index+12], y0[index+13]);
                         double rm = r.magnitude;
 
-                        z[n] = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
+                        Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
+
+                        if (i == 0 || i == arcs.Count - 1)
+                        {
+                            // first or last coast
+                            z[n] = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
+                        }
+                        else
+                        {
+                            // interior coasts
+                            z[n] = pv2.magnitude - pv.magnitude;
+                        }
                         n++;
                         if (!arcs[i].allow_negative_coast)
                         {
-                            z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : 0;
+                            z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
                             n++;
                         }
                     }
@@ -824,9 +841,9 @@ namespace MuMech {
                 z[i] = z[i] * z[i];
         }
 
-        double lmEpsx = 1e-12; // 1e-15;
-        int lmIter = 10000; // 20000;
-        double lmDiffStep = 1e-4;
+        double lmEpsx = 1e-10;
+        int lmIter = 100000;
+        double lmDiffStep = 1e-8;
 
         public bool runOptimizer(List<Arc> arcs)
         {
@@ -849,7 +866,7 @@ namespace MuMech {
             }
 
             znorm = Math.Sqrt(znorm);
-            //Debug.Log("znorm = " + znorm);
+            Debug.Log("znorm = " + znorm);
 
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
