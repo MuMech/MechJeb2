@@ -428,6 +428,8 @@ namespace MuMech
             }
         }
 
+        private double last_update;
+
         //public static bool SupportsGimbalExtension<T>() where T : PartModule
         //{
         //    return gimbalExtDict.ContainsKey(typeof(T));
@@ -437,9 +439,11 @@ namespace MuMech
         //{
         //    gimbalExtDict[typeof(T)] = gimbalExtension;
         //}
-
         public bool Update(Vessel vessel)
         {
+            if (last_update == Planetarium.GetUniversalTime())
+                return true;
+
             if (vessel.rootPart.rb == null) return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
             TestStuff(vessel);
@@ -461,6 +465,8 @@ namespace MuMech
             ToggleRCSThrust(vessel);
 
             UpdateMoIAndAngularMom(vessel);
+
+            last_update = Planetarium.GetUniversalTime();;
 
             return true;
         }

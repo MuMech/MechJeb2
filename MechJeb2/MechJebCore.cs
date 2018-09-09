@@ -1017,6 +1017,10 @@ namespace MuMech
 
         private void Drive(FlightCtrlState s)
         {
+            Profiler.BeginSample("vesselState");
+            ready = vesselState.Update(vessel);
+            Profiler.EndSample();
+
             Profiler.BeginSample("MechJebCore.Drive");
             if (this == vessel.GetMasterMechJeb())
             {
