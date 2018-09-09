@@ -130,6 +130,8 @@ namespace MuMech
             this.allow_execution = allow_execution;
         }
 
+        double last_dVleft = Double.MaxValue;
+
         public override void OnFixedUpdate()
         {
             pegInterval = MuUtils.Clamp(pegInterval, 0.10, 1.00);
@@ -183,13 +185,16 @@ namespace MuMech
 
             if ( status == PegStatus.TERMINAL_RCS )
             {
-                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
+                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity; // should probably do something here to rotate vf() around in the orbit at least...
                 double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
-                if (angle > 45)
+
+                if ( dVleft.magnitude > last_dVleft || angle > 90 )
                 {
                     Done();
                     return;
                 }
+
+                last_dVleft = dVleft.magnitude;
             }
 
 
@@ -237,6 +242,16 @@ namespace MuMech
                 sma = PeR;
 
             v0m = Math.Sqrt( mainBody.gravParameter * ( 2 / PeR - 1 / sma ) );
+
+            /* Debug.Log("mainBody.gravParameter = " + mainBody.gravParameter);
+            Debug.Log("mainBody.Radius = " + mainBody.Radius);
+            Debug.Log("PeA = " + PeA);
+            Debug.Log("ApA = " + ApA);
+            Debug.Log("PeR = " + PeR);
+            Debug.Log("ApR = " + ApR);
+            Debug.Log("SMA = " + sma);
+            Debug.Log("v0m = " + v0m);
+            Debug.Log("r0m = " + r0m); */
         }
 
         double old_v0m;
@@ -548,7 +563,6 @@ namespace MuMech
         private void ThrustOn()
         {
             core.thrust.targetThrottle = 1.0F;
-            vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
         }
 
         private void RCSOn()
@@ -560,7 +574,6 @@ namespace MuMech
         private void ThrustOff()
         {
             core.thrust.ThrustOff();
-            vessel.ctrlState.X = vessel.ctrlState.Y = vessel.ctrlState.Z = 0.0f;
         }
 
         private void Done()
@@ -580,6 +593,7 @@ namespace MuMech
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
             last_coasting_time = 0.0;
+            last_dVleft = Double.MaxValue;
             autowarp = false;
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
