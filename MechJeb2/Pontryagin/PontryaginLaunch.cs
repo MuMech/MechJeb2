@@ -215,6 +215,35 @@ namespace MuMech {
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
 
+            if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
+            {
+                /* coast is less than one second */
+                RetryCoast(arcs, arcs.Count-2, new_sol);
+                Debug.Log("running optimizer4");
+
+                if ( !runOptimizer(arcs) )
+                {
+                    for(int k = 0; k < y0.Length; k++)
+                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                    Debug.Log("optimizer failed");
+                    y0 = null;
+                    return;
+                }
+
+                if (y0[0] < 0)
+                {
+                    for(int k = 0; k < y0.Length; k++)
+                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                    Debug.Log("optimizer failed2");
+                    y0 = null;
+                    return;
+                }
+
+                Debug.Log("optimizer done");
+                new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+                multipleIntegrate(y0, new_sol, arcs, 10);
+            }
+
             for(int k = 0; k < y0.Length; k++)
                 Debug.Log("new y0[" + k + "] = " + y0[k]);
 

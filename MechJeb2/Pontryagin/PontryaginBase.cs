@@ -21,6 +21,7 @@ namespace MuMech {
             public bool complete_burn = false;
             public bool done = false;
             public bool allow_negative_coast = false;
+            public bool coast_after_jettison = false;
 
             public bool infinite = false;  /* zero mdot, infinite burntime+isp */
 
@@ -29,10 +30,11 @@ namespace MuMech {
                 return "stage: " + stage + ( done ? " (done)" : "" ) + ( infinite ? " (infinite) " : "" );
             }
 
-            public Arc(Stage stage, bool done = false)
+            public Arc(Stage stage, bool done = false, bool coast_after_jettison = false)
             {
                 this.stage = stage;
                 this.done = done;
+                this.coast_after_jettison = coast_after_jettison;
             }
         }
 
@@ -134,17 +136,17 @@ namespace MuMech {
                 Arc arc = arcs[n];
                 if (arc.thrust == 0)
                 {
-                    return String.Format("coast for {0:F1}s", tgo(t, n));
+                    return String.Format("coast: {0:F1}s", tgo(t, n));
                 }
                 else
                 {
                     if (arc.complete_burn)
                     {
-                        return String.Format("burn stage {0} for {1:F1}s {2:F1} m/s (complete)", arc.ksp_stage, tgo(t, n), dV(t, n));
+                        return String.Format("burn {0}: {1:F1}s {2:F1} m/s (complete)", arc.ksp_stage, tgo(t, n), dV(t, n));
                     }
                     else
                     {
-                        return String.Format("burn stage {0} for {1:F1}s {2:F1} m/s", arc.ksp_stage, tgo(t, n), dV(t, n));
+                        return String.Format("burn {0}: {1:F1}s {2:F1} m/s", arc.ksp_stage, tgo(t, n), dV(t, n));
                     }
                 }
             }
@@ -325,29 +327,42 @@ namespace MuMech {
             {
                 public double tmin, tmax;
                 public alglib.barycentricinterpolant[] interpolant = new alglib.barycentricinterpolant[14];
+                // public double[14] ysaved; // hack around alglib exploding on zero delta t
 
                 public Segment(double[] t, double[][] y)
                 {
                     int n = t.Length;
                     tmin = t[0];
                     tmax = t[n-1];
-                    for(int i = 0; i < 14; i++)
+                    // if tmin == tmax alglib explodes
+                    if (tmin != tmax)
                     {
-                        double[] yi = new double[n];
-                        for(int j = 0; j < n; j++)
+                        for(int i = 0; i < 14; i++)
                         {
-                            yi[j] = y[i][j];
+                            double[] yi = new double[n];
+                            for(int j = 0; j < n; j++)
+                            {
+                                yi[j] = y[i][j];
+                            }
+                            alglib.polynomialbuildeqdist(tmin, tmax, yi, out interpolant[i]);
+                            /*
+                               double[] yi = new double[n-2];
+                               for(int j = 1; j < (n-1); j++)
+                               {
+                               yi[n-j-2] = y[i][j];  // reverse the array and omit the endpoints for chebyshev interpolation
+                               }
+                               alglib.polynomialbuildcheb1(tmin, tmax, yi, out interpolant[i]);
+                               */
                         }
-                        alglib.polynomialbuildeqdist(tmin, tmax, yi, out interpolant[i]);
-                        /*
-                        double[] yi = new double[n-2];
-                        for(int j = 1; j < (n-1); j++)
-                        {
-                            yi[n-j-2] = y[i][j];  // reverse the array and omit the endpoints for chebyshev interpolation
-                        }
-                        alglib.polynomialbuildcheb1(tmin, tmax, yi, out interpolant[i]);
-                        */
                     }
+                  /*  else
+                    {
+                        for(int i = 0; i < 14; i++)
+                        {
+                            ysaved[i] = y[i][0];
+                        }
+                    }
+                    */
                 }
             }
 
@@ -571,7 +586,7 @@ namespace MuMech {
             e.dV = ( ode.ytbl[13][count-1] - dV ) * v_scale;
             dV = ode.ytbl[13][count-1];
 
-            if (sol != null && dt != 0)
+            if (sol != null)
             {
                 sol.AddSegment(x, ode.ytbl, e);
             }
@@ -610,6 +625,8 @@ namespace MuMech {
                 y0[y0_index+12] = m0;
         }
 
+        const double MAX_COAST_TAU = 2;
+
         private void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2, bool initialize = false)
         {
             double t = 0;
@@ -621,7 +638,15 @@ namespace MuMech {
             {
                 if (arcs[i].thrust == 0)
                 {
-                    double coast_time = y0[arcIndex(arcs, i, parameters: true)];
+                    double coast_time;
+
+                    /*
+                    if (arcs[i].coast_after_jettison)
+                        coast_time = MAX_COAST_TAU / 2 * ( Math.Sin(y0[arcIndex(arcs, i, parameters: true)]) + 1 );
+                    else
+                    */
+                        coast_time = y0[arcIndex(arcs, i, parameters: true)];
+
                     if (yf != null) {
                         // normal integration with no midpoints
                         singleIntegrate(y0, yf, i, ref t, coast_time, arcs, ref dV);
@@ -792,7 +817,13 @@ namespace MuMech {
                     if (total_bt_bar > y0[0] || (i == arcs.Count -1))
                     {
                         // force unreachable coasts to zero (unless its the terminal coast)
-                        z[n] = y0[index];
+                        /*
+                        if (arcs[i].coast_after_jettison)
+                            z[n] = y0[index] + Math.PI / 2.0;
+                        else
+                        */
+                            z[n] = y0[index];
+
                         n++;
                         if (!arcs[i].allow_negative_coast)
                         {
@@ -802,29 +833,53 @@ namespace MuMech {
                     }
                     else
                     {
-                        /* H0 at the start of the coast = 0 */
                         Vector3d r = new Vector3d(y0[index+2], y0[index+3], y0[index+4]);
                         Vector3d v = new Vector3d(y0[index+5], y0[index+6], y0[index+7]);
                         Vector3d pv = new Vector3d(y0[index+8], y0[index+9], y0[index+10]);
                         Vector3d pr = new Vector3d(y0[index+11], y0[index+12], y0[index+13]);
                         double rm = r.magnitude;
 
+                        Vector3d r2 = new Vector3d(yf[i*13+0], yf[i*13+1], yf[i*13+2]);
+                        Vector3d v2 = new Vector3d(yf[i*13+3], yf[i*13+4], yf[i*13+5]);
                         Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
+                        Vector3d pr2 = new Vector3d(yf[i*13+9], yf[i*13+10], yf[i*13+11]);
+                        double r2m = r2.magnitude;
 
+                        double H0t1 = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
+                        double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
+                        if (arcs[i].coast_after_jettison)
+                        {
+                            //z[n] = y0[index];
+                            z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-4 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - 2.0 ) / 1e-4 - 1.0 ) );
+                            // z[n] = pv2.magnitude - pv.magnitude;
+                        }
+                        else
+                        {
+                            /* H0 at the end of the coast = 0 */
+                            z[n] = H0t2;
+                        }
+
+                        /*
                         if (i == 0 || i == arcs.Count - 1)
                         {
                             // first or last coast
-                            z[n] = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
+                            z[n] = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
                         }
                         else
                         {
                             // interior coasts
                             z[n] = pv2.magnitude - pv.magnitude;
                         }
+                        */
+
                         n++;
                         if (!arcs[i].allow_negative_coast)
                         {
-                            z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
+                            if (arcs[i].coast_after_jettison)
+                            //    z[n] = y0[index+1];
+                                z[n] = ( y0[index] > 2 ) ? ( y0[index] - 2 + y0[index+1] * y0[index+1] ) : y0[index+1];
+                            else
+                                z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
                             n++;
                         }
                     }
@@ -841,9 +896,11 @@ namespace MuMech {
                 z[i] = z[i] * z[i];
         }
 
-        double lmEpsx = 1e-10;
-        int lmIter = 100000;
-        double lmDiffStep = 1e-8;
+        // NOTE TO SELF:  STOP FUCKING WITH THESE NUMBERS
+        double lmEpsx = 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
+                               // 1e-8 produces plenty accurate numbers, unless the transversality conditions are broken in some way
+        int lmIter = 20000;
+        double lmDiffStep = 1e-8; // this matching lmEspx probably makes sense
 
         public bool runOptimizer(List<Arc> arcs)
         {
@@ -946,7 +1003,7 @@ namespace MuMech {
             if ( arcs[i].thrust == 0 )
                 throw new Exception("adding a coast before a coast");
 
-            arcs.Insert(i, new Arc(new Stage(this, m0: arcs[i].m0, isp: 0, thrust: 0, ksp_stage: arcs[i].ksp_stage)));
+            arcs.Insert(i, new Arc(new Stage(this, m0: arcs[i].m0, isp: 0, thrust: 0, ksp_stage: arcs[i].ksp_stage), coast_after_jettison: true));
             double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
 
             double tmin = sol.segments[i].tmin;
@@ -955,6 +1012,7 @@ namespace MuMech {
             // copy all the lower arcs
             Array.Copy(y0, 0, y0_new, 0, bottom);
             // initialize the coast
+            //y0_new[bottom] = Math.Asin(MuUtils.Clamp(0.5 / MAX_COAST_TAU - 1, -1, 1));
             y0_new[bottom] = dt/2.0;
             y0_new[bottom+1] = 0.0;
             // subtract half the burn time of the upper stage
@@ -963,6 +1021,23 @@ namespace MuMech {
             // FIXME: copy the rest of the parameters for upper stage coasts
             y0 = y0_new;
             yf = new double[arcs.Count*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
+            multipleIntegrate(y0, yf, arcs, initialize: true);
+        }
+
+        /* tweak coast at the ith stage, inserting burntime of the ith stage / 2 */
+        protected void RetryCoast(List<Arc> arcs, int i, Solution sol)
+        {
+            int bottom = arcIndex(arcs, i, parameters: true);
+
+            if ( arcs[i].thrust != 0 )
+                throw new Exception("trying to update a non-coasting coast");
+
+            double tmin = sol.segments[i+1].tmin;
+            double dt = sol.segments[i+1].tmax - tmin;
+
+            y0[bottom] = dt/2.0;
+            y0[bottom+1] = 0.0;
+
             multipleIntegrate(y0, yf, arcs, initialize: true);
         }
 
@@ -1021,6 +1096,14 @@ namespace MuMech {
                         y0 = null;
                         Bootstrap(t0);
                         return;
+                    }
+
+                    // fix up coast stage mass for boiloff
+                    for(int i = 0; i < last_arcs.Count; i++)
+                    {
+                        if (last_arcs[i].thrust == 0 && i < last_arcs.Count - 1)
+                            last_arcs[i].stage.m0 = last_arcs[i+1].m0;
+                        //FIXME: what about mass continuity for final coasts?
                     }
 
 
@@ -1096,10 +1179,10 @@ namespace MuMech {
                 if ( first_thrusting && solution != null && solution.tgo(time) < 10 )
                 {
                     if (Math.Abs(vesselMass * 1000 - m0) > m0 * 0.01)
-                        Debug.Log("MechJeb: mass of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display.");
+                        Debug.Log("MechJeb: mass of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display (or you're on RCS and this is normal).");
 
                     if (Math.Abs(currentThrust * 1000 - thrust) > thrust *0.01)
-                        Debug.Log("MechJeb: thrust of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display.");
+                        Debug.Log("MechJeb: thrust of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display (or you're on RCS and this is normal).");
 
                 //    m0 = vesselMass * 1000;
                 //    thrust = currentThrust * 1000;

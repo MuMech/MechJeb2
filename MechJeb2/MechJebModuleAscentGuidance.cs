@@ -127,7 +127,7 @@ namespace MuMech
                 }
                 if (ascentPathIdx == 2)
                 {
-                    if (GUILayout.Button("Reset Guidance"))
+                    if (GUILayout.Button("Reset Guidance (DO NOT PRESS)"))
                         core.optimizer.Reset();
 
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
@@ -183,11 +183,14 @@ namespace MuMech
                         GUILayout.EndHorizontal();
                         if (pegascent.pitchEndToggle)
                             GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (pegascent.pitchEndTime - pegascent.pitchStartTime)*pegascent.pitchRate));
+                        /*
                         GUILayout.BeginHorizontal();
                         pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start Guidance after KSP Stage #");
                         if (pegascent.pegAfterStageToggle)
                             GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
+
                         GUILayout.EndHorizontal();
+                        */
                         GuiUtils.SimpleTextBox("Guidance Update Interval:", core.optimizer.pegInterval, "s");
                     }
                 }
