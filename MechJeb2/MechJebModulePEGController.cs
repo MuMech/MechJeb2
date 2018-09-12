@@ -107,13 +107,20 @@ namespace MuMech
             status = PegStatus.ENABLED;
             // core.AddToPostDrawQueue(DrawCSE);
             core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
+            core.staging.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.users.Remove(this);
+            core.attitude.attitudeDeactivate();
+            if (!core.rssMode)
+                core.thrust.ThrustOff();
+            core.thrust.users.Remove(this);
+            core.staging.users.Remove(this);
             status = PegStatus.FINISHED;
-            p.KillThread();
+            if (p != null)
+                p.KillThread();
             p = null;
         }
 
@@ -200,7 +207,7 @@ namespace MuMech
 
             handle_throttle();
 
-            handle_vacstats();
+            handle_vacstats(); // must come before handle_staging
 
             handle_staging();
 
@@ -377,7 +384,7 @@ namespace MuMech
             {
                 current_arc = p.solution.arcs[i];
 
-                if ( ( current_arc.thrust != 0 && current_arc.ksp_stage > StageManager.CurrentStage) || (p.solution.tgo(vesselState.time, i) <= 0) )
+                if ( ( current_arc.thrust != 0 && current_arc.ksp_stage > StageManager.CurrentStage) || (p.solution.tgo(vesselState.time, i) <= 0) || current_arc.stage.staged )
                 {
                     current_arc.done = true;
                 }

@@ -366,6 +366,22 @@ namespace MuMech
         double raiseApoapsisLastUT = 0;
         MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
 
+        public override void OnModuleEnabled()
+        {
+            core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
+            if (autopilot.autostage) core.staging.users.Add(this);
+        }
+
+        public override void OnModuleDisabled()
+        {
+            core.attitude.attitudeDeactivate();
+            if (!core.rssMode)
+                core.thrust.ThrustOff();
+            core.thrust.users.Remove(this);
+            core.staging.users.Remove(this);
+        }
+
         //gives a throttle setting that reduces as we approach the desired apoapsis
         //so that we can precisely match the desired apoapsis instead of overshooting it
         protected float ThrottleToRaiseApoapsis(double currentApR, double finalApR)
@@ -427,7 +443,7 @@ namespace MuMech
             if ( (vesselState.thrustCurrent / vesselState.thrustAvailable < 0.50) && !has_rcs )
             {
                 // if engines are spooled up at less than 50% and we have no RCS in the stage, do not issue any guidance commands yet
-                core.attitude.attitudeDeactivate();
+                //core.attitude.attitudeDeactivate(); // ehrm, no that's bad.
                 return;
             }
 
