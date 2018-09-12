@@ -116,7 +116,7 @@ namespace MuMech
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
             double timeToNode = node.UT - vesselState.time;
-            double timeToGuidance = timeToNode - BurnTime(dVLeft);
+            double timeToGuidance = timeToNode - Math.Max(BurnTime(dVLeft), 30);   /* leave at least 15 seconds for optimizer convergence */
 
             if (timeToGuidance <= 0)
             {
