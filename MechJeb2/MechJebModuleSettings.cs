@@ -4,8 +4,8 @@ namespace MuMech
 {
     public class MechJebModuleSettings : DisplayModule
     {
-        public MechJebModuleSettings(MechJebCore core) : base(core) 
-        { 
+        public MechJebModuleSettings(MechJebCore core) : base(core)
+        {
             ShowInEditor = true;
             ShowInFlight = true;
         }
@@ -22,14 +22,14 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool dontUseDropDownMenu = false;
-        
+
         [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool hideBrakeOnEject = false;
 
         [ToggleInfoItem("Use only the titlebar for window dragging", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool useTitlebarDragging = false;
 
-        [ToggleInfoItem("RO/RSS Special handling (WIP)", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("Module disabling does not kill throtle (RSS/RO)", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool rssMode = false;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -61,7 +61,7 @@ namespace MuMech
 
             GUILayout.Label("Current skin: " + (GuiUtils.SkinType)skinId );
             if (GuiUtils.skin == null || skinId != 1)
-            {                
+            {
                 if (GUILayout.Button("Use MechJeb 1 GUI skin"))
                 {
                     GuiUtils.LoadSkin(GuiUtils.SkinType.MechJeb1);
@@ -99,11 +99,11 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.useTitlebarDragging").DrawItem();
-            
+
             ed.registry.Find(i => i.id == "Toggle:Menu.useAppLauncher").DrawItem();
             if (ToolbarManager.ToolbarAvailable || core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
-            
+
             ed.registry.Find(i => i.id == "General:Menu.MenuPosition").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.rssMode").DrawItem();

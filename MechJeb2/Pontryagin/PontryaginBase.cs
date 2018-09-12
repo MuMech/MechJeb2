@@ -54,7 +54,7 @@ namespace MuMech {
             public double isp, thrust, m0, max_bt;
             public double c, max_bt_bar;
             public int ksp_stage;
-           // public bool staged = false;  /* if this stage has been jettisoned */
+            public bool staged = false;  /* if this stage has been jettisoned */
 
             public override string ToString()
             {
@@ -1162,6 +1162,7 @@ namespace MuMech {
                 for(int i = 0; i < (stages.Count - kspstages.Count); i++)
                 {
                     Debug.Log("shrinking stage list by one");
+                    stages[0].staged = true;
                     stages.RemoveAt(0);
                 }
             }
