@@ -36,6 +36,7 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            base.OnModuleEnabled();
             mode = AscentMode.VERTICAL_ASCENT;
             Debug.Log("MechJebModuleAscentPEG enabled, optimizer should be enabled now");
             core.optimizer.enabled = true;
@@ -43,6 +44,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
+            base.OnModuleDisabled();
             Debug.Log("MechJebModuleAscentPEG disabled, optimizer should be disabled now");
             core.optimizer.enabled = false;
         }
