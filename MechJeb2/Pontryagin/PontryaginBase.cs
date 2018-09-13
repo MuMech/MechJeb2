@@ -899,7 +899,7 @@ namespace MuMech {
         // NOTE TO SELF:  STOP FUCKING WITH THESE NUMBERS
         double lmEpsx = 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
                                // 1e-8 produces plenty accurate numbers, unless the transversality conditions are broken in some way
-        int lmIter = 20000;
+        int lmIter = 20000;    // 20,000 does seem roughly appropriate -- 12,000 has been necessary to find some solutions
         double lmDiffStep = 1e-8; // this matching lmEspx probably makes sense
 
         public bool runOptimizer(List<Arc> arcs)
@@ -935,7 +935,8 @@ namespace MuMech {
 
             double[] y0_new = new double[y0.Length];
             alglib.minlmresultsbuf(state, ref y0_new, rep);
-            //Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+            Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+            Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
 
             if (rep.terminationtype == 2)
                 y0 = y0_new;
@@ -956,11 +957,12 @@ namespace MuMech {
             znorm = Math.Sqrt(znorm);
             Debug.Log("znorm = " + znorm);
 
-            if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
-                return false;
-
+            // this comes first because after max-iterations we may have an acceptable solution
             if (max_z < 1e-4)
                 return true;
+
+            if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
+                return false;
 
             return false;
         }
@@ -970,9 +972,9 @@ namespace MuMech {
         public void UpdateY0(List<Arc> arcs)
         {
             /* FIXME: some of the round tripping here is silly */
-            Stage s = stages[0];
+            Stage s = stages[0];  // FIXME: shouldn't we be using the arcs.stages?
             int arcindex = arcIndex(arcs,0);
-            y0[arcindex]   = r0_bar[0];
+            y0[arcindex]   = r0_bar[0];  // FIXME: shouldn't we pull all this off of the current solution?
             y0[arcindex+1] = r0_bar[1];
             y0[arcindex+2] = r0_bar[2];
             y0[arcindex+3] = v0_bar[0];
@@ -984,14 +986,22 @@ namespace MuMech {
             y0[arcindex+9] = pr0[0];
             y0[arcindex+10] = pr0[1];
             y0[arcindex+11] = pr0[2];
-            y0[arcindex+12] = s.m0;
+
+            for(int i = 0; i < arcs.Count; i++)
+            {
+                arcindex = arcIndex(arcs,i);
+                y0[arcindex+12] = arcs[i].m0;  // update all stages for the m0 in stage stats (boiloff may update upper stages)
+            }
+
             if (solution != null)
             {
                 //Debug.Log("tburn_bar = " + solution.tburn_bar(0));
                 y0[0] = solution.tburn_bar(0); // FIXME: need to pass actual t0 here
             }
             else
+            {
                 y0[0] = tgo_bar;
+            }
             y0[1] = 0;
         }
 
@@ -1038,6 +1048,28 @@ namespace MuMech {
             y0[bottom] = dt/2.0;
             y0[bottom+1] = 0.0;
 
+            multipleIntegrate(y0, yf, arcs, initialize: true);
+        }
+
+        /* tweak coast at the ith stage, inserting burntime of the ith stage / 2 */
+        protected void RemoveCoast(List<Arc> arcs, int i, Solution sol)
+        {
+            int bottom = arcIndex(arcs, i, parameters: true);
+            int top = arcIndex(arcs, i+1, parameters: true);
+
+            if ( arcs[i].thrust != 0 )
+                throw new Exception("trying to remove a non-coasting coast");
+
+            arcs.RemoveAt(i);
+
+            double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
+            // copy all the lower arcs
+            Array.Copy(y0, 0, y0_new, 0, bottom);
+            // copy all the upper arcs
+            Array.Copy(y0, top, y0_new, bottom, y0_new.Length - bottom);
+
+            y0 = y0_new;
+            yf = new double[arcs.Count*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
             multipleIntegrate(y0, yf, arcs, initialize: true);
         }
 
@@ -1088,6 +1120,9 @@ namespace MuMech {
                         int end = y0_old.Length;
                         Array.Copy(y0_old, start, y0, 2, end - start);
                         last_arcs.RemoveAt(0);
+
+                        if (last_arcs[0].thrust == 0)
+                            last_arcs[0].coast_after_jettison = false;  /* we can't be after a jettison if we're first */
                     }
 
                     if (last_arcs.Count == 0)
@@ -1112,14 +1147,14 @@ namespace MuMech {
 
                     if ( !runOptimizer(last_arcs) )
                     {
-                        //Debug.Log("optimizer failed3");
+                        Debug.Log("optimizer failed3");
                         y0 = null;
                         return;
                     }
 
                     if (y0[0] < 0)
                     {
-                        //Debug.Log("optimizer failed4");
+                        Debug.Log("optimizer failed4");
                         y0 = null;
                         return;
                     }
