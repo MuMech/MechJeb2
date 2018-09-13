@@ -207,7 +207,10 @@ namespace MuMech
 
             handle_throttle();
 
-            handle_vacstats(); // must come before handle_staging
+            if ( isStaging() )
+                return;
+
+            handle_vacstats(); // must come before handle_staging to mark stages as dropped
 
             handle_staging();
 
@@ -447,9 +450,6 @@ namespace MuMech
             }
 
             if ( (vesselState.time - last_optimizer_time) < pegInterval )
-                return;
-
-            if ( isStaging() )
                 return;
 
             // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
