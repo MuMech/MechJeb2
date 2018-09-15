@@ -19,6 +19,8 @@ namespace MuMech {
         private double tc1, tc1_bar;
         private double tc2, tc2_bar;
         private double Tf;
+        private Vector3d rf;
+        private Vector3d vf;
 
         public void intercept(Orbit target)
         {
@@ -28,13 +30,6 @@ namespace MuMech {
 
         private void intercept(double[] yT, double[] z)
         {
-            Vector3d rf;
-            Vector3d vf;
-            target.GetOrbitalStateVectorsAtUT(Tf, out rf, out vf);
-            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
-            rf = rot * (rf.xzy / r_scale);
-            vf = rot * (vf.xzy / v_scale);
-
             z[0] = yT[0] - rf[0];
             z[1] = yT[1] - rf[1];
             z[2] = yT[2] - rf[2];
@@ -48,6 +43,11 @@ namespace MuMech {
             // set the final time guess
             Tf = t0 + tgo * 3.0 / 2.0;
 
+            target.GetOrbitalStateVectorsAtUT(Tf, out rf, out vf);
+            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
+            rf = rot * (rf.xzy / r_scale);
+            vf = rot * (vf.xzy / v_scale);
+
             // build arcs off of ksp stages, with coasts
             List<Arc> arcs = new List<Arc>();
 
@@ -59,6 +59,7 @@ namespace MuMech {
             }
 
             arcs.Add(new Arc(new Stage(this, m0: stages[stages.Count-1].m0, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
+            // arcs.Add(new Arc(new Stage(this, m0: -1, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
 
             arcs[arcs.Count-1].infinite = true;
             arcs[arcs.Count-1].allow_negative_coast = true;

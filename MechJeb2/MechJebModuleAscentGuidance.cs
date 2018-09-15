@@ -135,8 +135,26 @@ namespace MuMech
                     autopilot.showStatus = GUILayout.Toggle(autopilot.showStatus, "STATUS");
                     GUILayout.EndHorizontal();
                 }
+                else if (ascentPathIdx == 1)
+                {
+                    GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
+                    autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
+                    autopilot.showGuidanceSettings = GUILayout.Toggle(autopilot.showGuidanceSettings, "GUID");
+                    autopilot.showSettings = GUILayout.Toggle(autopilot.showSettings, "OPTS");
+                    GUILayout.EndHorizontal();
+                    autopilot.showStatus = false;
+                }
+                else if (ascentPathIdx == 0)
+                {
+                    GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
+                    autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
+                    autopilot.showSettings = GUILayout.Toggle(autopilot.showSettings, "OPTS");
+                    GUILayout.EndHorizontal();
+                    autopilot.showGuidanceSettings = false;
+                    autopilot.showStatus = false;
+                }
 
-                if (autopilot.showTargeting || (ascentPathIdx != 2))
+                if (autopilot.showTargeting)
                 {
                     if (ascentPathIdx == 2)
                     {
@@ -168,29 +186,26 @@ namespace MuMech
                     autopilot.desiredInclination = desiredInclination;
                 }
 
-                if (ascentPathIdx == 2)
+                if (autopilot.showGuidanceSettings)
                 {
-                    if (autopilot.showGuidanceSettings)
-                    {
-                        GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
-                        GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
-                        GUILayout.BeginHorizontal();
-                        pegascent.pitchEndToggle = GUILayout.Toggle(pegascent.pitchEndToggle, "Booster Pitch end:");
-                        if (pegascent.pitchEndToggle)
-                            GuiUtils.SimpleTextBox("", pegascent.pitchEndTime, "s");
-                        GUILayout.EndHorizontal();
-                        if (pegascent.pitchEndToggle)
-                            GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (pegascent.pitchEndTime - pegascent.pitchStartTime)*pegascent.pitchRate));
-                        /*
-                        GUILayout.BeginHorizontal();
-                        pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start Guidance after KSP Stage #");
-                        if (pegascent.pegAfterStageToggle)
-                            GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
+                    GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
+                    GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
+                    GUILayout.BeginHorizontal();
+                    pegascent.pitchEndToggle = GUILayout.Toggle(pegascent.pitchEndToggle, "Booster Pitch end:");
+                    if (pegascent.pitchEndToggle)
+                        GuiUtils.SimpleTextBox("", pegascent.pitchEndTime, "s");
+                    GUILayout.EndHorizontal();
+                    if (pegascent.pitchEndToggle)
+                        GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (pegascent.pitchEndTime - pegascent.pitchStartTime)*pegascent.pitchRate));
+                    /*
+                       GUILayout.BeginHorizontal();
+                       pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start Guidance after KSP Stage #");
+                       if (pegascent.pegAfterStageToggle)
+                       GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
 
-                        GUILayout.EndHorizontal();
-                        */
-                        GuiUtils.SimpleTextBox("Guidance Update Interval:", core.optimizer.pegInterval, "s");
-                    }
+                       GUILayout.EndHorizontal();
+                       */
+                    GuiUtils.SimpleTextBox("Guidance Update Interval:", core.optimizer.pegInterval, "s");
                 }
 
                 if (autopilot.showSettings)
@@ -273,35 +288,32 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                 }
 
-                if (ascentPathIdx == 2)
+                if (autopilot.showStatus)
                 {
-                    if (autopilot.showStatus)
+
+                    if (core.optimizer.solution != null)
                     {
-
-                        if (core.optimizer.solution != null)
-                        {
-                            for(int i = 0; i < core.optimizer.solution.num_segments; i++)
-                                GUILayout.Label(String.Format("{0}: {1}", i, core.optimizer.solution.ArcString(vesselState.time, i)));
-                        }
-
-                        GUILayout.Label(String.Format("vgo: {0:F1}", core.optimizer.vgo));
-                        GUILayout.Label(String.Format("tgo: {0:F3}", core.optimizer.tgo));
-                        GUILayout.Label(String.Format("heading: {0:F1}", core.optimizer.heading));
-                        GUILayout.Label(String.Format("pitch: {0:F1}", core.optimizer.pitch));
-                        GUILayout.BeginHorizontal();
-                        GUIStyle si = new GUIStyle(GUI.skin.label);
-                        if ( core.optimizer.isStable() )
-                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-                        else if ( core.optimizer.isInitializing() || core.optimizer.status == PegStatus.FINISHED )
-                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
-                        else
-                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
-                        GUILayout.Label("Guidance Status: " + core.optimizer.status, si);
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label("core.optimizer Status: *FIXME*");
-                        GUILayout.EndHorizontal();
+                        for(int i = 0; i < core.optimizer.solution.num_segments; i++)
+                            GUILayout.Label(String.Format("{0}: {1}", i, core.optimizer.solution.ArcString(vesselState.time, i)));
                     }
+
+                    GUILayout.Label(String.Format("vgo: {0:F1}", core.optimizer.vgo));
+                    GUILayout.Label(String.Format("tgo: {0:F3}", core.optimizer.tgo));
+                    GUILayout.Label(String.Format("heading: {0:F1}", core.optimizer.heading));
+                    GUILayout.Label(String.Format("pitch: {0:F1}", core.optimizer.pitch));
+                    GUILayout.BeginHorizontal();
+                    GUIStyle si = new GUIStyle(GUI.skin.label);
+                    if ( core.optimizer.isStable() )
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
+                    else if ( core.optimizer.isInitializing() || core.optimizer.status == PegStatus.FINISHED )
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                    else
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
+                    GUILayout.Label("Guidance Status: " + core.optimizer.status, si);
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("core.optimizer Status: *FIXME*");
+                    GUILayout.EndHorizontal();
                 }
 
                 if (vessel.LandedOrSplashed)
@@ -428,15 +440,10 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (last_idx != ascentPathIdx) {
-                bool last_enabled = editor.enabled;
-
                 wire_path_and_editor(ascentPathIdx);
-
-                editor.enabled = last_enabled;
             }
 
-            if (ascentPathIdx == 0)
-                if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
+            if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
 
