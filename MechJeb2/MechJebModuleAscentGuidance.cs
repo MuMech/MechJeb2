@@ -70,16 +70,14 @@ namespace MuMech
             }
         }
 
-        private void enable_path_module(int index)
+        private void wire_path_and_editor(int index)
         {
             disable_path_modules(index);
 
             get_path_and_editor(index, out path, out editor);
 
-            if (path != null) path.enabled = true;
-
             autopilot.ascentPath = path;
-            /* the editor is not necessarily enabled by this, or the window will always pop up */
+            editor = editor;
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -89,12 +87,12 @@ namespace MuMech
                 desiredInclination = autopilot.desiredInclination;
             }
             navBall = core.GetComputerModule<MechJebModuleAscentNavBall>();
-            enable_path_module(ascentPathIdx);
+            wire_path_and_editor(ascentPathIdx);
         }
 
         public override void OnModuleEnabled()
         {
-            enable_path_module(ascentPathIdx);
+            wire_path_and_editor(ascentPathIdx);
         }
 
         public override void OnModuleDisabled()
@@ -432,7 +430,7 @@ namespace MuMech
             if (last_idx != ascentPathIdx) {
                 bool last_enabled = editor.enabled;
 
-                enable_path_module(ascentPathIdx);
+                wire_path_and_editor(ascentPathIdx);
 
                 editor.enabled = last_enabled;
             }
