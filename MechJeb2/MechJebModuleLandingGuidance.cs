@@ -245,7 +245,7 @@ namespace MuMech
 
                     if (launchSiteName == null || lat == null || lon == null)
                     {
-                        print("un null");
+                        print("Ignore langing site with null value");
                         continue;
                     }
 
