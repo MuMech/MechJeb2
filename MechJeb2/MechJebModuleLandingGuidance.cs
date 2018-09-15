@@ -269,31 +269,7 @@ namespace MuMech
                     }
                 }
             }
-
-
-            if (GameDatabase.Instance.GetConfigs("REALSOLARSYSTEM").Length == 0)
-            {
-                // Don't add the default site if RSS is present
-                // Create a default config file in MJ dir for those ?
-                if (!landingSites.Any(p => p.name == "KSC Pad"))
-                    landingSites.Add(new LandingSite()
-                    {
-                        name = "KSC Pad",
-                        latitude = -0.09694444,
-                        longitude = -74.5575,
-                        body = Planetarium.fetch.Home
-                    });
-
-                if (!landingSites.Any(p => p.name == "VAB"))
-                    landingSites.Add(new LandingSite()
-                    {
-                        name = "VAB",
-                        latitude = -0.09694444,
-                        longitude = -74.617,
-                        body = Planetarium.fetch.Home
-                    });
-            }
-
+            
             // Import KerbTown/Kerbal-Konstructs launch site
             foreach (var config in GameDatabase.Instance.GetConfigs("STATIC"))
             {
