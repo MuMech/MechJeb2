@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MuMech
 {
@@ -14,13 +15,16 @@ namespace MuMech
         public double hmin, hmax;
         public int maxiter;  // since maxiter results in a throw it should be very high
         public double[][] ytbl;
+        public List<double []> ylist;
+        public List<double> xlist;
+        public bool allvals;
 
         // y0  - array of starting y0 values
         // n   - dimensionality of the problem
         // x   - array of x values to evaluate at
         // eps - accuracy
         // h   - starting step-size (can be zero)
-        public ODE(double[] y0, int n, double[] xtbl, double eps, double h, double hmin = 0, double hmax = 0, int maxiter = 0)
+        public ODE(double[] y0, int n, double[] xtbl, double eps, double h, double hmin = 0, double hmax = 0, int maxiter = 0, bool allvals = false)
         {
             this.y0      = y0;
             this.n       = n;
@@ -30,6 +34,9 @@ namespace MuMech
             this.hmin    = hmin;
             this.hmax    = hmax;
             this.maxiter = maxiter;
+            this.allvals = allvals;
+            ylist = new List<double []>();
+            xlist = new List<double>();
         }
 
         // adds an array to another array, with a constant multiplier
@@ -66,7 +73,7 @@ namespace MuMech
             // auto-guess starting value of h based on smallest dx in xtbl
             if ( h == 0 )
             {
-                double v = xtbl[1] - xtbl[0];
+                double v = Math.Abs(xtbl[1] - xtbl[0]);
                 for(int i = 1; i < xtbl.Length-1; i++)
                 {
                     v = Math.Min(v, Math.Abs(xtbl[i+1]-xtbl[i]));
@@ -74,13 +81,24 @@ namespace MuMech
                 h = 0.001*v;
             }
 
+            // xtbl controls the direcction of integration, the sign of h is not relevant
+            h = Math.Sign(xtbl[1] - xtbl[0]) * Math.Abs(h);
+
             bool at_hmin;
             double niter = 0;
 
             int j = 0;
 
+            // add the initial conditions
             for(int i = 0; i < n; i++)
+            {
                 ytbl[i][j] = y[i];
+            }
+
+            double[] ydup2 = new double[n];
+            y.CopyTo(ydup2, 0);
+            ylist.Add(ydup2);
+            xlist.Add(x);
 
             j++;
 
@@ -88,7 +106,7 @@ namespace MuMech
             {
                 double xf = xtbl[j];
 
-                while (Math.Abs(x) < Math.Abs(xf))
+                while ( (h > 0) ? x < xf : x > xf )
                 {
                     at_hmin = false;
                     if (hmax > 0 && Math.Abs(h) > hmax)
@@ -98,6 +116,8 @@ namespace MuMech
                         h = hmin * Math.Sign(h);
                         at_hmin = true;
                     }
+
+                    // we may violate hmin in order to exactly hit the boundary conditions
                     if (Math.Abs(h) > Math.Abs(xf - x))
                         h = xf - x;
 
@@ -174,6 +194,14 @@ namespace MuMech
                         s = 4;
                     h = h*s;
 
+                    if (allvals)
+                    {
+                        double[] ydup = new double[n];
+                        Array.Copy(y, ydup, n);
+                        ylist.Add(ydup);
+                        xlist.Add(x);
+                    }
+
                     if (maxiter > 0 && niter++ >= maxiter)
                         throw new ArgumentException("maximum iterations exceeded");
                 }
@@ -204,14 +232,21 @@ namespace MuMech
         static void Main(string[] args)
         {
             double[] y0 = { 1, 0, 0, 0, 1, 0 };
-            double[] x = { 0, -0.78539816339, -2 * 0.78539816339, -3 * 0.78539816339, -4 * 0.78539816339 };
-            ODE ode = new ODE(y0, 6, x, 1e-9, 0);
+            double[] x = { 0 * 0.78539816339, 1 * 0.78539816339, 2 * 0.78539816339, 3 * 0.78539816339, 4 * 0.78539816339 };
+            ODE ode = new ODE(y0, 6, x, 1e-9, 0, allvals: true);
             ode.RKF45(centralForce, null);
-            for(int i = 0; i < 5; i++)
+            for(int i = 0; i < ode.xlist.Count; i++)
+            {
+                Console.Write(ode.xlist[i]);
+                if (i != ode.xlist.Count - 1)
+                    Console.Write(", ");
+            }
+            Console.Write("\n");
+            for(int i = 0; i < ode.ylist.Count; i++)
             {
                 for(int j = 0; j < 6; j++)
                 {
-                    Console.Write(ode.ytbl[j][i]);
+                    Console.Write(ode.ylist[i][j]);
                     if (j != 5)
                         Console.Write(", ");
                 }
