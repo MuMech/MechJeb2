@@ -186,6 +186,14 @@ namespace MuMech
                         rkadd(y, k4, 2197.0/4104.0);
                         rkadd(y, k5, -0.2);
                         x = x + h;
+
+                        if (allvals)
+                        {
+                            double[] ydup = new double[n];
+                            Array.Copy(y, ydup, n);
+                            ylist.Add(ydup);
+                            xlist.Add(x);
+                        }
                     }
 
                     if (s < 0.1)
@@ -193,14 +201,6 @@ namespace MuMech
                     if (s > 4)
                         s = 4;
                     h = h*s;
-
-                    if (allvals)
-                    {
-                        double[] ydup = new double[n];
-                        Array.Copy(y, ydup, n);
-                        ylist.Add(ydup);
-                        xlist.Add(x);
-                    }
 
                     if (maxiter > 0 && niter++ >= maxiter)
                         throw new ArgumentException("maximum iterations exceeded");
