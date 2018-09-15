@@ -355,6 +355,7 @@ namespace MuMech {
                         for(int j = 0; j < n; j++)
                         {
                             ti[j] = t[j];
+                            Debug.Log(ti[j]);
                         }
 
                         for(int i = 0; i < 14; i++)
@@ -602,6 +603,9 @@ namespace MuMech {
 
             if (sol != null)
             {
+                Debug.Log("--------------");
+                for(int i = 0; i < count; i++)
+                    Debug.Log(x[i]);
                 Debug.Log("ylist.Count = " + ode.ylist.Count);
                 sol.AddSegment(ode.xlist, ode.ylist, e);
             }
@@ -891,10 +895,18 @@ namespace MuMech {
                         if (!arcs[i].allow_negative_coast)
                         {
                             if (arcs[i].coast_after_jettison)
-                            //    z[n] = y0[index+1];
-                                z[n] = ( y0[index] > 2 ) ? ( y0[index] - 2 + y0[index+1] * y0[index+1] ) : y0[index+1];
+                            {
+                                if (y0[index] > 2)
+                                    z[n] = y0[index] - 2 + y0[index+1] * y0[index+1];
+                                else if (y0[index] < 0)
+                                    z[n] = y0[index] - y0[index+1] * y0[index+1];
+                                else
+                                    z[n] = y0[index+1];
+                            }
                             else
+                            {
                                 z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
+                            }
                             n++;
                         }
                     }
