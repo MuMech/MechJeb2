@@ -289,9 +289,9 @@ namespace MuMech {
                 {
                     Segment s = segments[k];
                     if (tbar < s.tmax)
-                        return alglib.barycentriccalc(s.interpolant[i], tbar);
+                        return s.interpolate(i, tbar);
                 }
-                return alglib.barycentriccalc(segments[segments.Count-1].interpolant[i], tbar);
+                return segments[segments.Count-1].interpolate(i, tbar);
             }
 
             public int num_segments { get { return segments.Count; } }
@@ -326,47 +326,53 @@ namespace MuMech {
             public class Segment
             {
                 public double tmin, tmax;
-                public alglib.barycentricinterpolant[] interpolant = new alglib.barycentricinterpolant[14];
-                // public double[14] ysaved; // hack around alglib exploding on zero delta t
+                public alglib.spline1dinterpolant[] interpolant = new alglib.spline1dinterpolant[14];
+                public double[] ysaved;
 
-                public Segment(double[] t, double[][] y)
+                public double interpolate(int i, double tbar)
                 {
-                    int n = t.Length;
+                    if (interpolant[i] != null)
+                        return alglib.spline1dcalc(interpolant[i], tbar);
+                    else
+                        return ysaved[i];
+                }
+
+                public Segment(List<double> t, List<double[]> y)
+                {
+                    int n = t.Count;
+                    double[] ti = new double[n];
+
+                    Debug.Log("t.Count = " + t.Count);
+                    Debug.Log("y.Count = " + y.Count);
+                    Debug.Log("y[0].Length = " + y[0].Length);
+
                     tmin = t[0];
                     tmax = t[n-1];
-                    // if tmin == tmax alglib explodes
+
+                    // if tmin == tmax (zero delta-t arc) alglib explodes
                     if (tmin != tmax)
                     {
+                        for(int j = 0; j < n; j++)
+                        {
+                            ti[j] = t[j];
+                        }
+
                         for(int i = 0; i < 14; i++)
                         {
                             double[] yi = new double[n];
                             for(int j = 0; j < n; j++)
                             {
-                                yi[j] = y[i][j];
+                                yi[j] = y[j][i];
                             }
-                            alglib.polynomialbuildeqdist(tmin, tmax, yi, out interpolant[i]);
-                            /*
-                               double[] yi = new double[n-2];
-                               for(int j = 1; j < (n-1); j++)
-                               {
-                               yi[n-j-2] = y[i][j];  // reverse the array and omit the endpoints for chebyshev interpolation
-                               }
-                               alglib.polynomialbuildcheb1(tmin, tmax, yi, out interpolant[i]);
-                               */
+                            alglib.spline1dbuildcubic(ti, yi, out interpolant[i]);
                         }
+                    } else {
+                        ysaved = y[0];
                     }
-                  /*  else
-                    {
-                        for(int i = 0; i < 14; i++)
-                        {
-                            ysaved[i] = y[i][0];
-                        }
-                    }
-                    */
                 }
             }
 
-            public void AddSegment(double[] t, double[][] y, Arc a)
+            public void AddSegment(List<double> t, List<double[]> y, Arc a)
             {
                 segments.Add(new Segment(t, y));
                 arcs.Add(a);
@@ -561,6 +567,14 @@ namespace MuMech {
             if ( dt > 0.999 * tau && !e.infinite )
                 dt = 0.999 * tau;
 
+            // XXX: remove this hack
+            bool allvals;
+            if (sol != null)
+                allvals = true;
+            else
+                allvals = false;
+            //count = 2;
+
             double[] x = new double[count];
 
             for(int i = 0; i < count; i++)
@@ -579,7 +593,7 @@ namespace MuMech {
             x[count-1] = t + dt;
             */
 
-            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-6);
+            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-6, allvals: allvals);
             ode.RKF45(centralForceThrust, e);
 
             t = t + dt;
@@ -588,7 +602,8 @@ namespace MuMech {
 
             if (sol != null)
             {
-                sol.AddSegment(x, ode.ytbl, e);
+                Debug.Log("ylist.Count = " + ode.ylist.Count);
+                sol.AddSegment(ode.xlist, ode.ylist, e);
             }
 
             if (yf != null)
@@ -611,7 +626,7 @@ namespace MuMech {
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count: count);
-            Debug.Log("DONE: rf = " + sol.rf() + " vf = " + sol.vf() + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()) + " r_barf = " + sol.r_bar(sol.tmax()) );
+            Debug.Log("DONE: rf = " + sol.rf().xzy + "; vf = " + sol.vf().xzy + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()).xzy + "; r_barf = " + sol.r_bar(sol.tmax()).xzy + " vf2 = " + sol.v_bar(sol.tmax()).xzy * v_scale + "; rf2 = " + sol.r_bar(sol.tmax()).xzy * r_scale );
         }
 
         // copy the nth yf to the n+1th y0 for the next iteration
@@ -990,7 +1005,8 @@ namespace MuMech {
             for(int i = 0; i < arcs.Count; i++)
             {
                 arcindex = arcIndex(arcs,i);
-                y0[arcindex+12] = arcs[i].m0;  // update all stages for the m0 in stage stats (boiloff may update upper stages)
+                if (arcs[i].m0 > 0)  // don't update guess if we're not staging (optimizer has to find the terminal mass of prior stage)
+                    y0[arcindex+12] = arcs[i].m0;  // update all stages for the m0 in stage stats (boiloff may update upper stages)
             }
 
             if (solution != null)
@@ -1136,8 +1152,8 @@ namespace MuMech {
                     // fix up coast stage mass for boiloff
                     for(int i = 0; i < last_arcs.Count; i++)
                     {
-                        if (last_arcs[i].thrust == 0 && i < last_arcs.Count - 1)
-                            last_arcs[i].stage.m0 = last_arcs[i+1].m0;
+                        if (last_arcs[i].thrust == 0 && last_arcs[i].m0 > 0 && i < last_arcs.Count - 1)
+                            last_arcs[i].stage.m0 = last_arcs[i+1].stage.m0;
                         //FIXME: what about mass continuity for final coasts?
                     }
 
@@ -1167,6 +1183,15 @@ namespace MuMech {
                     multipleIntegrate(y0, sol, last_arcs, 10);
 
                     this.solution = sol;
+
+                    yf = new double[last_arcs.Count*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
+                    multipleIntegrate(y0, yf, last_arcs);
+
+                    for(int i = 0; i < yf.Length; i++)
+                        Debug.Log("yf[" + i + "] = " + yf[i]);
+
+                    Debug.Log("r_scale = " + r_scale + " v_scale = " + v_scale);
+
 
                     //Debug.Log("Optimize done");
                 }
