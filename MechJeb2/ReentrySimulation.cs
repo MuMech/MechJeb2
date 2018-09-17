@@ -493,7 +493,7 @@ namespace MuMech
                 double pressure = Pressure(xForChuteSim);
 
                 Vector3d airVel = SurfaceVelocity(xForChuteSim, v + dv);
-                double airDensity = AirDensity(xForChuteSim);
+                double airDensity = AirDensity(xForChuteSim, altASL);
                 double speedOfSound = mainBody.GetSpeedOfSound(Pressure(xForChuteSim), airDensity);
                 double velocity = airVel.magnitude;
                 double mach = Math.Min(velocity / speedOfSound, 50f);
@@ -582,25 +582,36 @@ namespace MuMech
         Vector3d TotalAccel(Vector3d pos, Vector3d vel, bool record=false)
         {
             Vector3d airVel = SurfaceVelocity(pos, vel);
-            double airDensity = AirDensity(pos);
-            double speedOfSound = mainBody.GetSpeedOfSound(Pressure(pos), airDensity);
+            double altitude = pos.magnitude - bodyRadius;
+            
+            double airDensity = AirDensity(pos, altitude);
+            double pressure = Pressure(pos);
+            double speedOfSound = mainBody.GetSpeedOfSound(pressure, airDensity);
             float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
 
             float dynamicPressurekPa = (float)(0.0005 * airDensity * airVel.sqrMagnitude);
 
+            double pseudoReynolds = airDensity * airVel.magnitude;
+            double pseudoReDragMult = (double)simCurves.DragCurvePseudoReynolds.Evaluate((float)pseudoReynolds);
+            
             if (once)
             {
-                result.prediction.firstDrag = DragAccel(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
-                result.prediction.firstLift = LiftAccel(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
+                result.prediction.firstDrag = DragForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
+                result.prediction.firstLift = LiftForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
                 result.prediction.mach = mach;
                 result.prediction.speedOfSound = speedOfSound;
                 result.prediction.dynamicPressurekPa = dynamicPressurekPa;
             }
-            Vector3d dragAccel = (1d / vessel.totalMass) * DragAccel(pos, vel, dynamicPressurekPa, mach);
+            Vector3d dragAccel = DragForce(pos, vel, dynamicPressurekPa, mach) * pseudoReDragMult / vessel.totalMass;
 
             if (record)
                 lastRecordedDrag = dragAccel;
-            Vector3d totalAccel = GravAccel(pos) + dragAccel + LiftAccel(pos, vel, dynamicPressurekPa, mach);
+            
+            Vector3d gravAccel = GravAccel(pos);
+            Vector3d liftAccel = LiftForce(pos, vel, dynamicPressurekPa, mach) / vessel.totalMass;
+
+            Vector3d totalAccel = gravAccel + dragAccel + liftAccel;
+            
             if (once)
                 once = false;
 
@@ -612,7 +623,7 @@ namespace MuMech
             return -(gravParameter / pos.sqrMagnitude) * pos.normalized;
         }
 
-        Vector3d DragAccel(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
+        Vector3d DragForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
             if (!bodyHasAtmosphere) return Vector3d.zero;
             
@@ -626,7 +637,7 @@ namespace MuMech
 
             //if (once)
             //{
-            //    string msg = "DragAccel";
+            //    string msg = "DragForce";
             //    msg += "\n " + mach.ToString("F3") + " " + vessel.parts[0].oPart.machNumber.ToString("F3");
             //    msg += "\n " + Pressure(pos).ToString("F7") + " " + vessel.parts[0].oPart.vessel.staticPressurekPa.ToString("F7");
             //    msg += "\n " + AirDensity(pos).ToString("F7") + " " + vessel.parts[0].oPart.atmDensity.ToString("F7");
@@ -654,13 +665,13 @@ namespace MuMech
             //    MechJebCore.print(msg);
             //}
 
-            //MechJebCore.print("DragAccel " + airVel.magnitude.ToString("F4") + " " + mach.ToString("F4") + " " + shipDrag.magnitude.ToString("F4"));
-            //MechJebCore.print("DragAccel " + AirDensity(pos).ToString("F4") + " " + airVel.sqrMagnitude.ToString("F4") + " " + dynamicPressurekPa.ToString("F4"));
+            //MechJebCore.print("DragForce " + airVel.magnitude.ToString("F4") + " " + mach.ToString("F4") + " " + shipDrag.magnitude.ToString("F4"));
+            //MechJebCore.print("DragForce " + AirDensity(pos).ToString("F4") + " " + airVel.sqrMagnitude.ToString("F4") + " " + dynamicPressurekPa.ToString("F4"));
 
             return - airVel.normalized * shipDrag.magnitude;
         }
 
-        private Vector3d LiftAccel(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
+        private Vector3d LiftForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
             if (!bodyHasAtmosphere) return Vector3d.zero;
             
@@ -687,11 +698,10 @@ namespace MuMech
             return vel - Vector3d.Cross(bodyAngularVelocity, pos);
         }
 
-        double AirDensity(Vector3d pos)
+        double AirDensity(Vector3d pos, double altitude)
         {
-            double altitude = pos.magnitude - bodyRadius;
             double pressure = StaticPressure(altitude);
-            double temp = GetTemperature(pos);
+            double temp = GetTemperature(pos, altitude);
                
             return FlightGlobals.getAtmDensity(pressure, temp, mainBody);
         }
@@ -718,9 +728,8 @@ namespace MuMech
             return Mathf.Lerp(0f, (float)mainBody.atmospherePressureSeaLevel, simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
         }
 
-        public double GetTemperature(Vector3d pos)
+        public double GetTemperature(Vector3d pos, double altitude)
         {
-            double altitude = pos.magnitude - bodyRadius;
             double temperature;
             if (altitude >= mainBody.atmosphereDepth)
             {
@@ -768,12 +777,12 @@ namespace MuMech
                 double altitude = pos.magnitude - bodyRadius;
                 Vector3d airVel = SurfaceVelocity(pos, vel);
 
-                double atmosphericTemperature = GetTemperature(pos);
+                double atmosphericTemperature = GetTemperature(pos, altitude);
 
-                double speedOfSound = mainBody.GetSpeedOfSound(Pressure(pos), AirDensity(pos));
+                double speedOfSound = mainBody.GetSpeedOfSound(Pressure(pos), AirDensity(pos, altitude));
                 float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
 
-                float dynamicPressurekPa = (float)(0.0005 * AirDensity(pos) * airVel.sqrMagnitude);
+                float dynamicPressurekPa = (float)(0.0005 * AirDensity(pos, altitude) * airVel.sqrMagnitude);
 
 
 
@@ -843,6 +852,8 @@ namespace MuMech
                     dragCurve           = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
                     dragMachCurve       = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragMachCurve.Curve.keys);
 
+                    dragCurvePseudoReynolds = new FloatCurve(PhysicsGlobals.DragCurvePseudoReynolds.Curve.keys);
+
                     spaceTemperature = PhysicsGlobals.SpaceTemperature;
                     loaded = true;
                 }
@@ -887,6 +898,8 @@ namespace MuMech
             private FloatCurve axialTemperatureSunMultCurve;
 
             private FloatCurve atmosphereTemperatureCurve;
+            
+            private FloatCurve dragCurvePseudoReynolds;
 
             private double spaceTemperature;
             
@@ -970,11 +983,15 @@ namespace MuMech
                 get { return atmosphereTemperatureCurve; }
             }
 
+            public FloatCurve DragCurvePseudoReynolds
+            {
+                get { return dragCurvePseudoReynolds; }
+            }
+
             public double SpaceTemperature
             {
                 get { return spaceTemperature; }
             }
-
         }
 
 
