@@ -13,6 +13,8 @@ namespace MuMech {
             tc1_bar = tc1 / t_scale;
             tgo_bar = tgo / t_scale;
             tc2_bar = tc2 / t_scale;
+
+            fixed_final_time = true;
         }
 
         private Orbit target;
@@ -61,8 +63,9 @@ namespace MuMech {
             arcs.Add(new Arc(new Stage(this, m0: stages[stages.Count-1].m0, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
             // arcs.Add(new Arc(new Stage(this, m0: -1, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
 
-            arcs[arcs.Count-1].infinite = true;
-            arcs[arcs.Count-1].allow_negative_coast = true;
+            arcs[arcs.Count-1].use_fixed_time = true;
+            arcs[arcs.Count-1].fixed_time = Tf;
+            arcs[arcs.Count-1].fixed_tbar = ( Tf - t0 ) / t_scale;
 
             // allocate y0
             y0 = new double[arcIndex(arcs, arcs.Count)];
@@ -76,8 +79,6 @@ namespace MuMech {
             // add guesses for coast burntimes
             y0[arcIndex(arcs, 0, parameters: true)] = tc1_bar;
             y0[arcIndex(arcs, 0, parameters: true)+1] = 0;
-            y0[arcIndex(arcs, arcs.Count-1, parameters: true)] = tc2_bar;
-
 
             // seed continuity initial conditions
             yf = new double[arcs.Count*13];
@@ -105,62 +106,38 @@ namespace MuMech {
                 return;
             }
 
-            //Debug.Log("optimizer done");
-
             Solution new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
 
-            //Debug.Log("running optimizer");
-
-            if ( !runOptimizer(arcs) )
-            {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                //Debug.Log("optimizer failed");
-                y0 = null;
-                return;
-            }
-
-            if (y0[0] < 0)
-            {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                //Debug.Log("optimizer failed2");
-                y0 = null;
-                return;
-            }
-
             //Debug.Log("optimizer done");
-
-            new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
-
-            arcs[arcs.Count-1].infinite = false;
-
-            //Debug.Log("running optimizer");
-
-            if ( !runOptimizer(arcs) )
+            if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
             {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                //Debug.Log("optimizer failed");
-                y0 = null;
-                return;
+                /* coast is less than one second, delete it and reconverge */
+                RemoveCoast(arcs, arcs.Count-2, new_sol);
+                Debug.Log("running optimizer4");
+
+                if ( !runOptimizer(arcs) )
+                {
+                    for(int k = 0; k < y0.Length; k++)
+                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                    Debug.Log("optimizer failed");
+                    y0 = null;
+                    return;
+                }
+
+                if (y0[0] < 0)
+                {
+                    for(int k = 0; k < y0.Length; k++)
+                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                    Debug.Log("optimizer failed2");
+                    y0 = null;
+                    return;
+                }
+
+                Debug.Log("optimizer done");
+                new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+                multipleIntegrate(y0, new_sol, arcs, 10);
             }
-
-            if (y0[0] < 0)
-            {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                //Debug.Log("optimizer failed2");
-                y0 = null;
-                return;
-            }
-
-            //Debug.Log("optimizer done");
-
-            new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
 
             for(int k = 0; k < y0.Length; k++)
                 Debug.Log("new y0[" + k + "] = " + y0[k]);

@@ -20,8 +20,10 @@ namespace MuMech {
 
             public bool complete_burn = false;
             public bool done = false;
-            public bool allow_negative_coast = false;
             public bool coast_after_jettison = false;
+            public bool use_fixed_time = false;
+            public double fixed_time = 0;
+            public double fixed_tbar = 0;
 
             public bool infinite = false;  /* zero mdot, infinite burntime+isp */
 
@@ -30,11 +32,13 @@ namespace MuMech {
                 return "stage: " + stage + ( done ? " (done)" : "" ) + ( infinite ? " (infinite) " : "" );
             }
 
-            public Arc(Stage stage, bool done = false, bool coast_after_jettison = false)
+            public Arc(Stage stage, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0)
             {
                 this.stage = stage;
                 this.done = done;
                 this.coast_after_jettison = coast_after_jettison;
+                this.use_fixed_time = use_fixed_time;
+                this.fixed_time = fixed_time;
             }
         }
 
@@ -390,6 +394,8 @@ namespace MuMech {
         public double g_bar, r_scale, v_scale, t_scale;  /* problem scaling */
         public double dV, dV_bar;  /* guess at dV */
 
+        protected bool fixed_final_time;
+
         public PontryaginBase(double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV)
         {
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
@@ -413,6 +419,7 @@ namespace MuMech {
             v0_bar = this.v0 / v_scale;
             Debug.Log("LAN1 = " + LAN(r0_bar, v0_bar) + " r = " + r0_bar + " v = " + v0_bar);
             dV_bar = dV / v_scale;
+            fixed_final_time = false;
         }
 
         public void UpdatePosition(Vector3d r0, Vector3d v0, Vector3d lambda, Vector3d lambdaDot, double tgo, double vgo)
@@ -659,12 +666,13 @@ namespace MuMech {
                 {
                     double coast_time;
 
-                    /*
-                    if (arcs[i].coast_after_jettison)
-                        coast_time = MAX_COAST_TAU / 2 * ( Math.Sin(y0[arcIndex(arcs, i, parameters: true)]) + 1 );
+                    if (arcs[i].use_fixed_time)
+                        coast_time = arcs[i].fixed_tbar - t;
                     else
-                    */
                         coast_time = y0[arcIndex(arcs, i, parameters: true)];
+
+                    if (sol != null)
+                        Debug.Log("coast_time = " + coast_time + " t = " + t);
 
                     if (yf != null) {
                         // normal integration with no midpoints
@@ -729,8 +737,8 @@ namespace MuMech {
             {
                 if (arcs[i].thrust == 0)
                 {
-                    if (arcs[i].allow_negative_coast)
-                        index += 14;
+                    if (arcs[i].use_fixed_time)
+                        index += 13;
                     else
                         index += 15;
                 }
@@ -745,9 +753,7 @@ namespace MuMech {
             {
                 if (arcs[n].thrust == 0)
                 {
-                    if (arcs[n].allow_negative_coast)
-                        index += 1;
-                    else
+                    if (!arcs[n].use_fixed_time)
                         index += 2;
                 }
             }
@@ -816,9 +822,35 @@ namespace MuMech {
             /* magnitude of terminal costate vector = 1.0 (dummy constraint for H(tf)=0 to optimize burntime because BC is keplerian) */
             int n = 13 * arcs.Count;
             z[n] = 0.0;
-            for(int i = 0; i < 3; i++)
-                z[n] = z[n] + yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
-            z[n] = Math.Sqrt(z[n]) - 1.0;
+
+            // FIXME: this isn't fixed_final_time, it is optimized terminal burn to a fixed final time coast.
+            if (fixed_final_time)
+            {
+                int i = 0;
+
+                // find the last burn arc
+                for(int j = 0; j < arcs.Count; j++)
+                {
+                    if (arcs[j].thrust > 0)
+                        i = j;
+                }
+
+                Vector3d r2 = new Vector3d(yf[i*13+0], yf[i*13+1], yf[i*13+2]);
+                Vector3d v2 = new Vector3d(yf[i*13+3], yf[i*13+4], yf[i*13+5]);
+                Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
+                Vector3d pr2 = new Vector3d(yf[i*13+9], yf[i*13+10], yf[i*13+11]);
+                double r2m = r2.magnitude;
+
+                /* H0 at the end of the final burn = 0 */
+                double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
+                z[n] = H0t2;
+            }
+            else
+            {
+                for(int i = 0; i < 3; i++)
+                    z[n] = z[n] + yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
+                z[n] = Math.Sqrt(z[n]) - 1.0;
+            }
 
             n++;
 
@@ -830,7 +862,7 @@ namespace MuMech {
             double total_bt_bar = 0;
             for(int i = 0; i < arcs.Count; i++)
             {
-                if ( arcs[i].thrust == 0 )
+                if ( arcs[i].thrust == 0 && !arcs[i].use_fixed_time )
                 {
                     int index = arcIndex(arcs, i, parameters: true);
                     if (total_bt_bar > y0[0] || (i == arcs.Count -1))
@@ -844,11 +876,8 @@ namespace MuMech {
                             z[n] = y0[index];
 
                         n++;
-                        if (!arcs[i].allow_negative_coast)
-                        {
-                            z[n] = y0[index+1];
-                            n++;
-                        }
+                        z[n] = y0[index+1];
+                        n++;
                     }
                     else
                     {
@@ -892,30 +921,26 @@ namespace MuMech {
                         */
 
                         n++;
-                        if (!arcs[i].allow_negative_coast)
+
+                        if (arcs[i].coast_after_jettison)
                         {
-                            if (arcs[i].coast_after_jettison)
-                            {
-                                if (y0[index] > 2)
-                                    z[n] = y0[index] - 2 + y0[index+1] * y0[index+1];
-                                else if (y0[index] < 0)
-                                    z[n] = y0[index] - y0[index+1] * y0[index+1];
-                                else
-                                    z[n] = y0[index+1];
-                            }
+                            if (y0[index] > 2)
+                                z[n] = y0[index] - 2 + y0[index+1] * y0[index+1];
+                            else if (y0[index] < 0)
+                                z[n] = y0[index] - y0[index+1] * y0[index+1];
                             else
-                            {
-                                z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
-                            }
-                            n++;
+                                z[n] = y0[index+1];
                         }
+                        else
+                        {
+                            z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
+                        }
+                        n++;
                     }
                 }
-                else
-                {
-                    // sum up burntime of burn arcs
+                // sum up burntime of burn arcs
+                if ( arcs[i].thrust > 0 )
                     total_bt_bar += arcs[i].max_bt_bar;
-                }
             }
 
             /* construct sum of the squares of the residuals for levenberg marquardt */
@@ -924,7 +949,7 @@ namespace MuMech {
         }
 
         // NOTE TO SELF:  STOP FUCKING WITH THESE NUMBERS
-        double lmEpsx = 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
+        double lmEpsx = 1e-9;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
                                // 1e-8 produces plenty accurate numbers, unless the transversality conditions are broken in some way
         int lmIter = 20000;    // 20,000 does seem roughly appropriate -- 12,000 has been necessary to find some solutions
         double lmDiffStep = 1e-8; // this matching lmEspx probably makes sense
@@ -1124,6 +1149,14 @@ namespace MuMech {
                 }
                 if (last_arcs != null)
                 {
+                    // since we shift the zero of tbar forwards on every re-optimize we have to do this here
+                    for(int i = 0; i < last_arcs.Count; i++)
+                    {
+                        if ( last_arcs[i].use_fixed_time )
+                        {
+                            last_arcs[i].fixed_tbar = ( last_arcs[i].fixed_time - t0 ) / t_scale;
+                        }
+                    }
                     Debug.Log("arcs: ");
                     for(int i = 0; i < last_arcs.Count; i++)
                         Debug.Log(last_arcs[i]);
