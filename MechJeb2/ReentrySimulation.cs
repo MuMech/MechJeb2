@@ -727,14 +727,35 @@ namespace MuMech
             }
             return Mathf.Lerp(0f, (float)mainBody.atmospherePressureSeaLevel, simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
         }
-
-        public double GetTemperature(Vector3d pos, double altitude)
+        
+        // Lifted from the Trajectories mod.
+        private double GetTemperature(Vector3d position, double altitude)
         {
-            double temperature;
-            if (altitude >= mainBody.atmosphereDepth)
+            if (!mainBody.atmosphere)
+                return PhysicsGlobals.SpaceTemperature;
+
+            if (altitude > mainBody.atmosphereDepth)
+                return PhysicsGlobals.SpaceTemperature;
+
+            Vector3 up = position.normalized;
+            float polarAngle = Mathf.Acos(Vector3.Dot(mainBody.bodyTransform.up, up));
+            if (polarAngle > Mathf.PI * 0.5f)
             {
-                return simCurves.SpaceTemperature;
+                polarAngle = Mathf.PI - polarAngle;
             }
+            float time = (Mathf.PI * 0.5f - polarAngle) * Mathf.Rad2Deg;
+
+            Vector3 sunVector = (FlightGlobals.Bodies[0].position - position + mainBody.position).normalized;
+            float sunAxialDot = Vector3.Dot(sunVector, mainBody.bodyTransform.up);
+            float bodyPolarAngle = Mathf.Acos(Vector3.Dot(mainBody.bodyTransform.up, up));
+            float sunPolarAngle = Mathf.Acos(sunAxialDot);
+            float sunBodyMaxDot = (1.0f + Mathf.Cos(sunPolarAngle - bodyPolarAngle)) * 0.5f;
+            float sunBodyMinDot = (1.0f + Mathf.Cos(sunPolarAngle + bodyPolarAngle)) * 0.5f;
+            float sunDotCorrected = (1.0f + Vector3.Dot(sunVector, Quaternion.AngleAxis(45f * Mathf.Sign((float)mainBody.rotationPeriod), mainBody.bodyTransform.up) * up)) * 0.5f;
+            float sunDotNormalized = (sunDotCorrected - sunBodyMinDot) / (sunBodyMaxDot - sunBodyMinDot);
+            double atmosphereTemperatureOffset = (double)simCurves.LatitudeTemperatureBiasCurve.Evaluate(time) + (double)simCurves.LatitudeTemperatureSunMultCurve.Evaluate(time) * sunDotNormalized + (double)simCurves.AxialTemperatureSunMultCurve.Evaluate(sunAxialDot);
+            
+            double temperature;
             if (!mainBody.atmosphereUseTemperatureCurve)
             {
                 temperature = mainBody.atmosphereTemperatureSeaLevel - mainBody.atmosphereTemperatureLapseRate * altitude;
@@ -745,15 +766,12 @@ namespace MuMech
                     simCurves.AtmosphereTemperatureCurve.Evaluate((float)altitude) :
                     UtilMath.Lerp(simCurves.SpaceTemperature, mainBody.atmosphereTemperatureSeaLevel, simCurves.AtmosphereTemperatureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
             }
-            double latitude = referenceFrame.Latitude(pos);
-            temperature += simCurves.AtmosphereTemperatureSunMultCurve.Evaluate((float)altitude)
-                             * (simCurves.LatitudeTemperatureBiasCurve.Evaluate((float)latitude)
-                                + simCurves.LatitudeTemperatureSunMultCurve.Evaluate((float)latitude)
-                                + simCurves.AxialTemperatureSunMultCurve.Evaluate(0)); 
+            
+            temperature += (double)simCurves.AtmosphereTemperatureSunMultCurve.Evaluate((float)altitude) * atmosphereTemperatureOffset;
 
             return temperature;
         }
-
+        
         private double ShockTemperature(double velocity, double mach)
         {
             double newtonianTemperatureFactor = velocity * PhysicsGlobals.NewtonianTemperatureFactor;
