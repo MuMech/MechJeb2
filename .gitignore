@@ -8,6 +8,8 @@ Thumbs.db
 /MechJeb2-Unity/*.csproj
 /MechJeb2-Unity/*.sln
 
+.vs/*
+
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
 [Oo]bj/
 build/
