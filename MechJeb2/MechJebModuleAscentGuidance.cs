@@ -224,6 +224,14 @@ namespace MuMech
                     else
                     {
                         GUILayout.Label("FIXME: throttle limiters are down for maintenance");
+                        core.thrust.limitToPreventOverheats = false;
+                        core.thrust.limitDynamicPressure = false;
+                        core.thrust.limitAcceleration = false;
+                        core.thrust.limitThrottle = false;
+                        core.thrust.limiterMinThrottle = false;
+                        core.thrust.limitToTerminalVelocity = false;
+                        core.thrust.electricThrottle = false;
+
                     }
                     GUILayout.BeginHorizontal();
                     autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
