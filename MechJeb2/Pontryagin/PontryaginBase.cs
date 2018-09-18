@@ -949,7 +949,7 @@ namespace MuMech {
         }
 
         // NOTE TO SELF:  STOP FUCKING WITH THESE NUMBERS
-        double lmEpsx = 1e-9;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
+        double lmEpsx = 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
                                // 1e-8 produces plenty accurate numbers, unless the transversality conditions are broken in some way
         int lmIter = 20000;    // 20,000 does seem roughly appropriate -- 12,000 has been necessary to find some solutions
         double lmDiffStep = 1e-8; // this matching lmEspx probably makes sense
