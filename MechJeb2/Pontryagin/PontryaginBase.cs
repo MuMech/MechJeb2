@@ -47,8 +47,6 @@ namespace MuMech {
             Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
             Vector3d h = Vector3d.Cross(r, v);
             Vector3d an = -Vector3d.Cross(n, h);  /* needs to be negative (or swapped) in left handed coordinate system */
-            if ( an[2] < 0 )
-                Debug.Log("an[2] < 0");
             return ( an[2] >= 0 ) ? Math.Acos(an[0] / an.magnitude) : ( 2.0 * Math.PI - Math.Acos(an[0] / an.magnitude) );
         }
 
@@ -346,9 +344,9 @@ namespace MuMech {
                     int n = t.Count;
                     double[] ti = new double[n];
 
-                    Debug.Log("t.Count = " + t.Count);
-                    Debug.Log("y.Count = " + y.Count);
-                    Debug.Log("y[0].Length = " + y[0].Length);
+                    //Debug.Log("t.Count = " + t.Count);
+                    //Debug.Log("y.Count = " + y.Count);
+                    //Debug.Log("y[0].Length = " + y[0].Length);
 
                     tmin = t[0];
                     tmax = t[n-1];
@@ -359,7 +357,7 @@ namespace MuMech {
                         for(int j = 0; j < n; j++)
                         {
                             ti[j] = t[j];
-                            Debug.Log(ti[j]);
+                            //Debug.Log(ti[j]);
                         }
 
                         for(int i = 0; i < 14; i++)
@@ -401,7 +399,7 @@ namespace MuMech {
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
             v0 = rot * v0;
-            Debug.Log("LAN1 = " + LAN(r0, v0) + " r = " + r0 + " v = " + v0);
+            //Debug.Log("LAN1 = " + LAN(r0, v0) + " r = " + r0 + " v = " + v0);
             pv0 = rot * pv0;
             pr0 = rot * pr0;
             this.r0 = r0;
@@ -417,7 +415,7 @@ namespace MuMech {
             t_scale = Math.Sqrt( r0m / g_bar );
             r0_bar = this.r0 / r_scale;
             v0_bar = this.v0 / v_scale;
-            Debug.Log("LAN1 = " + LAN(r0_bar, v0_bar) + " r = " + r0_bar + " v = " + v0_bar);
+            //Debug.Log("LAN1 = " + LAN(r0_bar, v0_bar) + " r = " + r0_bar + " v = " + v0_bar);
             dV_bar = dV / v_scale;
             fixed_final_time = false;
         }
@@ -610,10 +608,10 @@ namespace MuMech {
 
             if (sol != null)
             {
-                Debug.Log("--------------");
-                for(int i = 0; i < count; i++)
-                    Debug.Log(x[i]);
-                Debug.Log("ylist.Count = " + ode.ylist.Count);
+                //Debug.Log("--------------");
+                //for(int i = 0; i < count; i++)
+                //    Debug.Log(x[i]);
+                //Debug.Log("ylist.Count = " + ode.ylist.Count);
                 sol.AddSegment(ode.xlist, ode.ylist, e);
             }
 
@@ -637,7 +635,7 @@ namespace MuMech {
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count: count);
-            Debug.Log("DONE: rf = " + sol.rf().xzy + "; vf = " + sol.vf().xzy + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()).xzy + "; r_barf = " + sol.r_bar(sol.tmax()).xzy + " vf2 = " + sol.v_bar(sol.tmax()).xzy * v_scale + "; rf2 = " + sol.r_bar(sol.tmax()).xzy * r_scale );
+            //Debug.Log("DONE: rf = " + sol.rf().xzy + "; vf = " + sol.vf().xzy + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()).xzy + "; r_barf = " + sol.r_bar(sol.tmax()).xzy + " vf2 = " + sol.v_bar(sol.tmax()).xzy * v_scale + "; rf2 = " + sol.r_bar(sol.tmax()).xzy * r_scale );
         }
 
         // copy the nth yf to the n+1th y0 for the next iteration
@@ -671,8 +669,8 @@ namespace MuMech {
                     else
                         coast_time = y0[arcIndex(arcs, i, parameters: true)];
 
-                    if (sol != null)
-                        Debug.Log("coast_time = " + coast_time + " t = " + t);
+                    //if (sol != null)
+                    //    Debug.Log("coast_time = " + coast_time + " t = " + t);
 
                     if (yf != null) {
                         // normal integration with no midpoints
@@ -956,12 +954,12 @@ namespace MuMech {
 
         public bool runOptimizer(List<Arc> arcs)
         {
-            Debug.Log("arcs in runOptimizer:");
-            for(int i = 0; i < arcs.Count; i++)
-               Debug.Log(arcs[i]);
+            //Debug.Log("arcs in runOptimizer:");
+            //for(int i = 0; i < arcs.Count; i++)
+            //   Debug.Log(arcs[i]);
 
-            for(int i = 0; i < y0.Length; i++)
-                Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
+            //for(int i = 0; i < y0.Length; i++)
+            //    Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
 
             double[] z = new double[arcIndex(arcs,arcs.Count)];
             optimizationFunction(y0, z, arcs);
@@ -971,11 +969,11 @@ namespace MuMech {
             for(int i = 0; i < z.Length; i++)
             {
                 znorm += z[i] * z[i];
-                Debug.Log("zbefore[" + i + "] = " + z[i]);
+                //Debug.Log("zbefore[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
-            Debug.Log("znorm = " + znorm);
+            //Debug.Log("znorm = " + znorm);
 
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
@@ -1003,7 +1001,7 @@ namespace MuMech {
                 if (z[i] > max_z)
                     max_z = z[i];
                 znorm += z[i] * z[i];
-                Debug.Log("z[" + i + "] = " + z[i]);
+                //Debug.Log("z[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
@@ -1140,12 +1138,12 @@ namespace MuMech {
             }
 
             try {
-                Debug.Log("starting optimize");
+                //Debug.Log("starting optimize");
                 if (stages != null)
                 {
-                    Debug.Log("stages: ");
-                    for(int i = 0; i < stages.Count; i++)
-                        Debug.Log(stages[i]);
+                    //Debug.Log("stages: ");
+                    //for(int i = 0; i < stages.Count; i++)
+                    //    Debug.Log(stages[i]);
                 }
                 if (last_arcs != null)
                 {
@@ -1157,9 +1155,9 @@ namespace MuMech {
                             last_arcs[i].fixed_tbar = ( last_arcs[i].fixed_time - t0 ) / t_scale;
                         }
                     }
-                    Debug.Log("arcs: ");
-                    for(int i = 0; i < last_arcs.Count; i++)
-                        Debug.Log(last_arcs[i]);
+                    //Debug.Log("arcs: ");
+                    //for(int i = 0; i < last_arcs.Count; i++)
+                    //    Debug.Log(last_arcs[i]);
                 }
 
                 if (y0 == null)
@@ -1222,8 +1220,8 @@ namespace MuMech {
 
                     Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
 
-                    for(int i = 0; i < y0.Length; i++)
-                        Debug.Log("y0[" + i + "] = " + y0[i]);
+                    //for(int i = 0; i < y0.Length; i++)
+                    //    Debug.Log("y0[" + i + "] = " + y0[i]);
 
                     multipleIntegrate(y0, sol, last_arcs, 10);
 
@@ -1232,10 +1230,10 @@ namespace MuMech {
                     yf = new double[last_arcs.Count*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
                     multipleIntegrate(y0, yf, last_arcs);
 
-                    for(int i = 0; i < yf.Length; i++)
-                        Debug.Log("yf[" + i + "] = " + yf[i]);
+                    //for(int i = 0; i < yf.Length; i++)
+                    //    Debug.Log("yf[" + i + "] = " + yf[i]);
 
-                    Debug.Log("r_scale = " + r_scale + " v_scale = " + v_scale);
+                    //Debug.Log("r_scale = " + r_scale + " v_scale = " + v_scale);
 
 
                     //Debug.Log("Optimize done");
