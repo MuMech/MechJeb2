@@ -156,38 +156,13 @@ namespace MuMech {
             Debug.Log("arcs.Count = " + arcs.Count);
             Debug.Log("segments.Count = " + new_sol.segments.Count);
 
-            //for(int i = arcs.Count-1; i > 0 ; i--)
-                //InsertCoast(arcs, i);
+            bool insertedCoast = false;
 
-            InsertCoast(arcs, arcs.Count-1, new_sol);
-
-            /*
-            Debug.Log("running optimizer2");
-
-            if ( !runOptimizer(arcs) )
+            if (arcs.Count > 1)
             {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                Debug.Log("optimizer failed");
-                y0 = null;
-                return;
+                InsertCoast(arcs, arcs.Count-1, new_sol);
+                insertedCoast = true;
             }
-
-            if (y0[0] < 0)
-            {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                Debug.Log("optimizer failed2");
-                y0 = null;
-                return;
-            }
-
-            Debug.Log("optimizer done");
-
-            new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
-            */
-
             arcs[arcs.Count-1].infinite = false;
 
             Debug.Log("running optimizer3");
@@ -215,62 +190,66 @@ namespace MuMech {
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
 
-            if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
+            if (insertedCoast)
             {
-                /* coast is less than one second, try extending it again without infinite */
-                RetryCoast(arcs, arcs.Count-2, new_sol);
-                Debug.Log("running optimizer4");
 
-                if ( !runOptimizer(arcs) )
+                if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
                 {
-                    for(int k = 0; k < y0.Length; k++)
-                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                    Debug.Log("optimizer failed");
-                    y0 = null;
-                    return;
+                    /* coast is less than one second, try extending it again without infinite */
+                    RetryCoast(arcs, arcs.Count-2, new_sol);
+                    Debug.Log("running optimizer4");
+
+                    if ( !runOptimizer(arcs) )
+                    {
+                        for(int k = 0; k < y0.Length; k++)
+                            Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                        Debug.Log("optimizer failed");
+                        y0 = null;
+                        return;
+                    }
+
+                    if (y0[0] < 0)
+                    {
+                        for(int k = 0; k < y0.Length; k++)
+                            Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                        Debug.Log("optimizer failed2");
+                        y0 = null;
+                        return;
+                    }
+
+                    Debug.Log("optimizer done");
+                    new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+                    multipleIntegrate(y0, new_sol, arcs, 10);
                 }
 
-                if (y0[0] < 0)
+                if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
                 {
-                    for(int k = 0; k < y0.Length; k++)
-                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                    Debug.Log("optimizer failed2");
-                    y0 = null;
-                    return;
+                    /* coast is less than one second, delete it and reconverge */
+                    RemoveCoast(arcs, arcs.Count-2, new_sol);
+                    Debug.Log("running optimizer4");
+
+                    if ( !runOptimizer(arcs) )
+                    {
+                        for(int k = 0; k < y0.Length; k++)
+                            Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                        Debug.Log("optimizer failed");
+                        y0 = null;
+                        return;
+                    }
+
+                    if (y0[0] < 0)
+                    {
+                        for(int k = 0; k < y0.Length; k++)
+                            Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                        Debug.Log("optimizer failed2");
+                        y0 = null;
+                        return;
+                    }
+
+                    Debug.Log("optimizer done");
+                    new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+                    multipleIntegrate(y0, new_sol, arcs, 10);
                 }
-
-                Debug.Log("optimizer done");
-                new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-                multipleIntegrate(y0, new_sol, arcs, 10);
-            }
-
-            if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
-            {
-                /* coast is less than one second, delete it and reconverge */
-                RemoveCoast(arcs, arcs.Count-2, new_sol);
-                Debug.Log("running optimizer4");
-
-                if ( !runOptimizer(arcs) )
-                {
-                    for(int k = 0; k < y0.Length; k++)
-                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                    Debug.Log("optimizer failed");
-                    y0 = null;
-                    return;
-                }
-
-                if (y0[0] < 0)
-                {
-                    for(int k = 0; k < y0.Length; k++)
-                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                    Debug.Log("optimizer failed2");
-                    y0 = null;
-                    return;
-                }
-
-                Debug.Log("optimizer done");
-                new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-                multipleIntegrate(y0, new_sol, arcs, 10);
             }
 
             for(int k = 0; k < y0.Length; k++)
