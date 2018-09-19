@@ -18,7 +18,7 @@ else
 			KSPDIR  := ${HOME}/Library/Application Support/Steam/SteamApps/common/Kerbal Space Program
 		endif
 		ifndef MANAGED
-		MANAGED := ${KSPDIR}/KSP.app/Contents/Resources/Data/Managed/
+		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 		endif
 	endif
 
@@ -58,7 +58,7 @@ build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
 	${MCS} -t:library -lib:"${MANAGED}" \
-		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI,,UnityEngine.CoreModule,UnityEngine.IMGUIModule,UnityEngine.VehiclesModule,UnityEngine.PhysicsModule,UnityEngine.AnimationModule,UnityEngine.TextRenderingModule \
+		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI \
 		-out:$@ \
 		${MECHJEBFILES} \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
