@@ -141,7 +141,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            pegInterval = MuUtils.Clamp(pegInterval, 0.10, 1.00);
+            pegInterval = MuUtils.Clamp(pegInterval, 1.00, 30.00);
 
             update_pitch_and_heading();
 

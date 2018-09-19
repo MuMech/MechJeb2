@@ -176,9 +176,13 @@ namespace MuMech
             if (core.optimizer.isStable())
             {
                 core.attitude.attitudeTo(core.optimizer.iF, AttitudeReference.INERTIAL, this);
+            }
+            else
+            {
                 if (core.optimizer.status == PegStatus.FINISHED)
                    state = NodeState.FINISH;
             }
+
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
 
