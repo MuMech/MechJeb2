@@ -40,7 +40,7 @@ namespace MuMech
         public void Set(ITargetable t)
         {
             target = t;
-            if (vessel != null && vessel.isActiveVessel)
+            if (vessel != null)
             {
                 if (FlightGlobals.fetch != null) FlightGlobals.fetch.SetVesselTarget(target);
             }

@@ -41,12 +41,12 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Assembly-CSharp.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_141MH\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_141MH\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System">
@@ -56,12 +56,12 @@
     </Reference>
     <Reference Include="UnityEngine">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>UnityEngine.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_141MH\KSP_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>UnityEngine.UI.dll</HintPath>
+      <HintPath>G:\GAMES\KERBAL\Kerbal Space Program_DEV_141MH\KSP_Data\Managed\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -156,7 +156,6 @@
     <Compile Include="MechJebModuleMenu.cs" />
     <Compile Include="MechJebModuleNodeEditor.cs" />
     <Compile Include="MechJebModuleNodeExecutor.cs" />
-    <Compile Include="MechJebModuleQuickTest.cs" />
     <Compile Include="MechJebModuleRCSBalancer.cs" />
     <Compile Include="MechJebModuleRCSBalancerWindow.cs" />
     <Compile Include="MechJebModuleRCSController.cs" />
@@ -269,6 +268,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <StartAction>Project</StartAction>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent />
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

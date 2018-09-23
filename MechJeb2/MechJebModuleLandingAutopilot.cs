@@ -583,6 +583,12 @@ namespace MuMech
                 return "N/A";
             }
         }
+
+        public void SetTargetKSC(MechJebCore controller)
+        {
+            users.Add(controller);
+            core.target.SetPositionTarget(mainBody, MechJebModuleLandingGuidance.landingSites[0].latitude, MechJebModuleLandingGuidance.landingSites[0].longitude);
+        }
     }
 
 

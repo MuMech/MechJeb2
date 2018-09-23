@@ -150,6 +150,13 @@ namespace MuMech
             LandTarget();
         }
 
+        [KSPAction("Set target KSC")]
+        public void OnSetTargetKSCAction(KSPActionParam param)
+        {
+            landing.SetTargetKSC(this);
+        }
+
+      
         private void LandTarget()
         {
             landing.LandAtPositionTarget(this);

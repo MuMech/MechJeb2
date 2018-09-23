@@ -117,8 +117,6 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (!vessel.isActiveVessel)
-                return;
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
