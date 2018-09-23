@@ -274,6 +274,12 @@ namespace MuMech
 
         static VesselState()
         {
+            FARVesselAoA = null;
+            FARVesselSideslip = null;
+            FARVesselDragCoeff = null;
+            FARVesselRefArea = null;
+            FARVesselTermVelEst = null;
+            FARVesselDynPres = null;
             isLoadedProceduralFairing = isAssemblyLoaded("ProceduralFairings");
             isLoadedRealFuels = isAssemblyLoaded("RealFuels");
             if (isLoadedRealFuels)
@@ -1229,7 +1235,7 @@ namespace MuMech
             Matrix4x4 inertiaMatrix = Matrix4x4.identity;
             Matrix4x4 productMatrix = Matrix4x4.identity;
 
-            QuaternionD invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation); 
+            QuaternionD invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation);
             Transform vesselReferenceTransform = vessel.ReferenceTransform;
             int count = vessel.parts.Count;
             for (int i = 0; i < count; ++i)
@@ -1244,7 +1250,7 @@ namespace MuMech
 
                     Matrix4x4 rotMatrix = Matrix4x4.TRS(Vector3.zero, rot, Vector3.one);
                     Matrix4x4 invMatrix = Matrix4x4.TRS(Vector3.zero, inv, Vector3.one);
-                    
+
                     KSPUtil.Add(ref tensor, rotMatrix * partTensor * invMatrix);
                     Vector3 position = vesselReferenceTransform.InverseTransformDirection(part.rb.position - vessel.CoMD);
 

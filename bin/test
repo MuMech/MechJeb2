@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+case `uname -s` in
+  Linux )
+    XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+    KSPDIR="${KSPDIR:-${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program}"
+    MANAGED="${KSPDIR}/KSP_Data/Managed"
+    ;;
+  Darwin )
+    KSPDIR="${KSPDIR:-/Users/lamont/Library/Application Support/Steam/steamapps/common/Kerbal Space Program}"
+    MANAGED="${KSPDIR}/KSP.app/Contents/Resources/Data/Managed"
+    ;;
+  * )
+    echo "this may go badly for you..."
+    ;;
+esac
+
+nuget restore MechJeb2.sln
+msbuild /p:Configuration=Release /p:ReferencePath="${MANAGED}" MechJeb2.sln
+
+runtest="mono ./packages/xunit.runner.console.*/tools/*/xunit.console.exe"
+
+echo "Running tests..."
+
+$runtest ./MechJeb2Tests/bin/Release/MechJeb2Tests.dll
+
+echo "Finished running tests"

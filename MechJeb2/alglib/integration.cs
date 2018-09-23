@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,13 +18,14 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     Computation of nodes and weights for a Gauss quadrature formula
 
@@ -41,12 +42,12 @@ public partial class alglib
     Mu0 = integral(W(x)dx,a,b)
 
     INPUT PARAMETERS:
-        Alpha   –   array[0..N-1], alpha coefficients
-        Beta    –   array[0..N-1], beta coefficients
+        Alpha   -   array[0..N-1], alpha coefficients
+        Beta    -   array[0..N-1], beta coefficients
                     Zero-indexed element is not used and may be arbitrary.
                     Beta[I]>0.
-        Mu0     –   zeroth moment of the weight function.
-        N       –   number of nodes of the quadrature formula, N>=1
+        Mu0     -   zeroth moment of the weight function.
+        N       -   number of nodes of the quadrature formula, N>=1
 
     OUTPUT PARAMETERS:
         Info    -   error code:
@@ -69,7 +70,7 @@ public partial class alglib
         gq.gqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref w);
         return;
     }
-
+    
     /*************************************************************************
     Computation of nodes and weights for a Gauss-Lobatto quadrature formula
 
@@ -86,14 +87,14 @@ public partial class alglib
     Mu0 = integral(W(x)dx,a,b)
 
     INPUT PARAMETERS:
-        Alpha   –   array[0..N-2], alpha coefficients
-        Beta    –   array[0..N-2], beta coefficients.
+        Alpha   -   array[0..N-2], alpha coefficients
+        Beta    -   array[0..N-2], beta coefficients.
                     Zero-indexed element is not used, may be arbitrary.
                     Beta[I]>0
-        Mu0     –   zeroth moment of the weighting function.
-        A       –   left boundary of the integration interval.
-        B       –   right boundary of the integration interval.
-        N       –   number of nodes of the quadrature formula, N>=3
+        Mu0     -   zeroth moment of the weighting function.
+        A       -   left boundary of the integration interval.
+        B       -   right boundary of the integration interval.
+        N       -   number of nodes of the quadrature formula, N>=3
                     (including the left and right boundary nodes).
 
     OUTPUT PARAMETERS:
@@ -117,7 +118,7 @@ public partial class alglib
         gq.gqgenerategausslobattorec(alpha, beta, mu0, a, b, n, ref info, ref x, ref w);
         return;
     }
-
+    
     /*************************************************************************
     Computation of nodes and weights for a Gauss-Radau quadrature formula
 
@@ -134,13 +135,13 @@ public partial class alglib
     Mu0 = integral(W(x)dx,a,b)
 
     INPUT PARAMETERS:
-        Alpha   –   array[0..N-2], alpha coefficients.
-        Beta    –   array[0..N-1], beta coefficients
+        Alpha   -   array[0..N-2], alpha coefficients.
+        Beta    -   array[0..N-1], beta coefficients
                     Zero-indexed element is not used.
                     Beta[I]>0
-        Mu0     –   zeroth moment of the weighting function.
-        A       –   left boundary of the integration interval.
-        N       –   number of nodes of the quadrature formula, N>=2
+        Mu0     -   zeroth moment of the weighting function.
+        A       -   left boundary of the integration interval.
+        N       -   number of nodes of the quadrature formula, N>=2
                     (including the left boundary node).
 
     OUTPUT PARAMETERS:
@@ -165,7 +166,7 @@ public partial class alglib
         gq.gqgenerategaussradaurec(alpha, beta, mu0, a, n, ref info, ref x, ref w);
         return;
     }
-
+    
     /*************************************************************************
     Returns nodes/weights for Gauss-Legendre quadrature on [-1,1] with N
     nodes.
@@ -198,7 +199,7 @@ public partial class alglib
         gq.gqgenerategausslegendre(n, ref info, ref x, ref w);
         return;
     }
-
+    
     /*************************************************************************
     Returns  nodes/weights  for  Gauss-Jacobi quadrature on [-1,1] with weight
     function W(x)=Power(1-x,Alpha)*Power(1+x,Beta).
@@ -234,7 +235,7 @@ public partial class alglib
         gq.gqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref w);
         return;
     }
-
+    
     /*************************************************************************
     Returns  nodes/weights  for  Gauss-Laguerre  quadrature  on  [0,+inf) with
     weight function W(x)=Power(x,Alpha)*Exp(-x)
@@ -269,7 +270,7 @@ public partial class alglib
         gq.gqgenerategausslaguerre(n, alpha, ref info, ref x, ref w);
         return;
     }
-
+    
     /*************************************************************************
     Returns  nodes/weights  for  Gauss-Hermite  quadrature on (-inf,+inf) with
     weight function W(x)=Exp(-x*x)
@@ -306,7 +307,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     Computation of nodes and weights of a Gauss-Kronrod quadrature formula
 
@@ -324,12 +325,12 @@ public partial class alglib
 
 
     INPUT PARAMETERS:
-        Alpha       –   alpha coefficients, array[0..floor(3*K/2)].
-        Beta        –   beta coefficients,  array[0..ceil(3*K/2)].
+        Alpha       -   alpha coefficients, array[0..floor(3*K/2)].
+        Beta        -   beta coefficients,  array[0..ceil(3*K/2)].
                         Beta[0] is not used and may be arbitrary.
                         Beta[I]>0.
-        Mu0         –   zeroth moment of the weight function.
-        N           –   number of nodes of the Gauss-Kronrod quadrature formula,
+        Mu0         -   zeroth moment of the weight function.
+        N           -   number of nodes of the Gauss-Kronrod quadrature formula,
                         N >= 3,
                         N =  2*K+1.
 
@@ -362,7 +363,7 @@ public partial class alglib
         gkq.gkqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref wkronrod, ref wgauss);
         return;
     }
-
+    
     /*************************************************************************
     Returns   Gauss   and   Gauss-Kronrod   nodes/weights  for  Gauss-Legendre
     quadrature with N points.
@@ -401,7 +402,7 @@ public partial class alglib
         gkq.gkqgenerategausslegendre(n, ref info, ref x, ref wkronrod, ref wgauss);
         return;
     }
-
+    
     /*************************************************************************
     Returns   Gauss   and   Gauss-Kronrod   nodes/weights   for   Gauss-Jacobi
     quadrature on [-1,1] with weight function
@@ -447,7 +448,7 @@ public partial class alglib
         gkq.gkqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref wkronrod, ref wgauss);
         return;
     }
-
+    
     /*************************************************************************
     Returns Gauss and Gauss-Kronrod nodes for quadrature with N points.
 
@@ -483,7 +484,7 @@ public partial class alglib
         gkq.gkqlegendrecalc(n, ref info, ref x, ref wkronrod, ref wgauss);
         return;
     }
-
+    
     /*************************************************************************
     Returns Gauss and Gauss-Kronrod nodes for quadrature with N  points  using
     pre-calculated table. Nodes/weights were  computed  with  accuracy  up  to
@@ -540,7 +541,7 @@ public partial class alglib
         public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
         public int nfev { get { return _innerobj.nfev; } set { _innerobj.nfev = value; } }
         public int nintervals { get { return _innerobj.nintervals; } set { _innerobj.nintervals = value; } }
-
+    
         public autogkreport()
         {
             _innerobj = new autogk.autogkreport();
@@ -550,7 +551,7 @@ public partial class alglib
         {
             return new autogkreport((autogk.autogkreport)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -583,7 +584,7 @@ public partial class alglib
         public double xminusa { get { return _innerobj.xminusa; } set { _innerobj.xminusa = value; } }
         public double bminusx { get { return _innerobj.bminusx; } set { _innerobj.bminusx = value; } }
         public double f { get { return _innerobj.f; } set { _innerobj.f = value; } }
-
+    
         public autogkstate()
         {
             _innerobj = new autogk.autogkstate();
@@ -593,7 +594,7 @@ public partial class alglib
         {
             return new autogkstate((autogk.autogkstate)_innerobj.make_copy());
         }
-
+    
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
@@ -605,7 +606,7 @@ public partial class alglib
             _innerobj = obj;
         }
     }
-
+    
     /*************************************************************************
     Integration of a smooth function F(x) on a finite interval [a,b].
 
@@ -638,7 +639,7 @@ public partial class alglib
         autogk.autogksmooth(a, b, state.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     Integration of a smooth function F(x) on a finite interval [a,b].
 
@@ -668,7 +669,7 @@ public partial class alglib
         autogk.autogksmoothw(a, b, xwidth, state.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     Integration on a finite interval [A,B].
     Integrand have integrable singularities at A/B.
@@ -707,7 +708,7 @@ public partial class alglib
         autogk.autogksingular(a, b, alpha, beta, state.innerobj);
         return;
     }
-
+    
     /*************************************************************************
     This function provides reverse communication interface
     Reverse communication interface is not documented or recommended to use.
@@ -715,7 +716,7 @@ public partial class alglib
     *************************************************************************/
     public static bool autogkiteration(autogkstate state)
     {
-
+    
         bool result = autogk.autogkiteration(state.innerobj);
         return result;
     }
@@ -747,7 +748,7 @@ public partial class alglib
             throw new alglibexception("ALGLIB: unexpected error in 'autogksolve'");
         }
     }
-
+    
     /*************************************************************************
     Adaptive integration results
 
@@ -792,12 +793,12 @@ public partial class alglib
         Mu0 = integral(W(x)dx,a,b)
 
         INPUT PARAMETERS:
-            Alpha   –   array[0..N-1], alpha coefficients
-            Beta    –   array[0..N-1], beta coefficients
+            Alpha   -   array[0..N-1], alpha coefficients
+            Beta    -   array[0..N-1], beta coefficients
                         Zero-indexed element is not used and may be arbitrary.
                         Beta[I]>0.
-            Mu0     –   zeroth moment of the weight function.
-            N       –   number of nodes of the quadrature formula, N>=1
+            Mu0     -   zeroth moment of the weight function.
+            N       -   number of nodes of the quadrature formula, N>=1
 
         OUTPUT PARAMETERS:
             Info    -   error code:
@@ -891,14 +892,14 @@ public partial class alglib
         Mu0 = integral(W(x)dx,a,b)
 
         INPUT PARAMETERS:
-            Alpha   –   array[0..N-2], alpha coefficients
-            Beta    –   array[0..N-2], beta coefficients.
+            Alpha   -   array[0..N-2], alpha coefficients
+            Beta    -   array[0..N-2], beta coefficients.
                         Zero-indexed element is not used, may be arbitrary.
                         Beta[I]>0
-            Mu0     –   zeroth moment of the weighting function.
-            A       –   left boundary of the integration interval.
-            B       –   right boundary of the integration interval.
-            N       –   number of nodes of the quadrature formula, N>=3
+            Mu0     -   zeroth moment of the weighting function.
+            A       -   left boundary of the integration interval.
+            B       -   right boundary of the integration interval.
+            N       -   number of nodes of the quadrature formula, N>=3
                         (including the left and right boundary nodes).
 
         OUTPUT PARAMETERS:
@@ -1070,13 +1071,13 @@ public partial class alglib
         Mu0 = integral(W(x)dx,a,b)
 
         INPUT PARAMETERS:
-            Alpha   –   array[0..N-2], alpha coefficients.
-            Beta    –   array[0..N-1], beta coefficients
+            Alpha   -   array[0..N-2], alpha coefficients.
+            Beta    -   array[0..N-1], beta coefficients
                         Zero-indexed element is not used.
                         Beta[I]>0
-            Mu0     –   zeroth moment of the weighting function.
-            A       –   left boundary of the integration interval.
-            N       –   number of nodes of the quadrature formula, N>=2
+            Mu0     -   zeroth moment of the weighting function.
+            A       -   left boundary of the integration interval.
+            N       -   number of nodes of the quadrature formula, N>=2
                         (including the left boundary node).
 
         OUTPUT PARAMETERS:
@@ -1528,12 +1529,12 @@ public partial class alglib
 
 
         INPUT PARAMETERS:
-            Alpha       –   alpha coefficients, array[0..floor(3*K/2)].
-            Beta        –   beta coefficients,  array[0..ceil(3*K/2)].
+            Alpha       -   alpha coefficients, array[0..floor(3*K/2)].
+            Beta        -   beta coefficients,  array[0..ceil(3*K/2)].
                             Beta[0] is not used and may be arbitrary.
                             Beta[I]>0.
-            Mu0         –   zeroth moment of the weight function.
-            N           –   number of nodes of the Gauss-Kronrod quadrature formula,
+            Mu0         -   zeroth moment of the weight function.
+            N           -   number of nodes of the Gauss-Kronrod quadrature formula,
                             N >= 3,
                             N =  2*K+1.
 
@@ -2781,17 +2782,17 @@ public partial class alglib
             }
             else
             {
-                s = -983;
-                tmp = -989;
-                eps = -834;
-                a = 900;
-                b = -287;
-                x = 364;
-                t = 214;
-                alpha = -338;
-                beta = -686;
-                v1 = 912;
-                v2 = 585;
+                s = 359;
+                tmp = -58;
+                eps = -919;
+                a = -909;
+                b = 81;
+                x = 255;
+                t = 74;
+                alpha = -788;
+                beta = 809;
+                v1 = 205;
+                v2 = -838;
             }
             if( state.rstate.stage==0 )
             {
@@ -3152,19 +3153,19 @@ public partial class alglib
             }
             else
             {
-                i = 497;
-                j = -271;
-                ns = -581;
-                info = 745;
-                c1 = -533;
-                c2 = -77;
-                intg = 678;
-                intk = -293;
-                inta = 316;
-                v = 647;
-                ta = -756;
-                tb = 830;
-                qeps = -871;
+                i = 939;
+                j = -526;
+                ns = 763;
+                info = -541;
+                c1 = -698;
+                c2 = -900;
+                intg = -318;
+                intk = -940;
+                inta = 1016;
+                v = -229;
+                ta = -536;
+                tb = 487;
+                qeps = -115;
             }
             if( state.rstate.stage==0 )
             {

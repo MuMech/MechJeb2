@@ -207,7 +207,7 @@ namespace MuMech
 
             if (GUILayout.Button("Online Manual"))
             {
-                Application.OpenURL("http://wiki.mechjeb.com/index.php?title=Manual");
+                Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki");
             }
 
             GUILayout.EndVertical();

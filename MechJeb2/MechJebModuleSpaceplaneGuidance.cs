@@ -54,7 +54,7 @@ namespace MuMech
                 GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
                 GuiUtils.SimpleTextBox("Touchdown speed:", autoland.touchdownSpeed);
                 autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, "Reverse thrust upon touchdown");
-                autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, "Break As Soon As Landed");
+                autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, "Brake as soon as landed");
 
                 if (autoland.enabled)
                 {

@@ -10,8 +10,9 @@ Thumbs.db
 
 
 
+.vs/*
+
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
-[Bb]in/
 [Oo]bj/
 build/
 
@@ -105,7 +106,6 @@ csx
 AppPackages/
 
 # Others
-[Bb]in
 [Oo]bj
 sql
 TestResults

@@ -101,7 +101,7 @@ namespace MuMech
 
             Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
             
-            cubes.SetDrag(-dragVectorDirLocal, mach);
+            cubes.SetDrag(dragVectorDirLocal, mach);
             
             Vector3d drag = -vesselVelocity.normalized * cubes.AreaDrag * dragFactor;
             
@@ -164,7 +164,7 @@ namespace MuMech
             // direction of the lift in a vessel centric reference
             Vector3d liftV = partToVessel * ((Vector3d)cubes.LiftForce * bodyLiftMultiplier * liftFactor);
 
-            Vector3d liftVector = liftV.ProjectOnPlane(-vesselVelocity);
+            Vector3d liftVector = liftV.ProjectOnPlane(vesselVelocity);
 
             //if (vesselVelocity.sqrMagnitude > 1 && oPart.DragCubes.LiftForce.sqrMagnitude > 0.001)
             //{

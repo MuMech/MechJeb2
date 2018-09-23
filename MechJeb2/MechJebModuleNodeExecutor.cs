@@ -34,7 +34,7 @@ namespace MuMech
             ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
             double dV = node.GetBurnVector(orbit).magnitude;
             double halfBurnTIme;
-            double burnTIme = BurnTime(dV, out halfBurnTIme);
+            BurnTime(dV, out halfBurnTIme);
             return GuiUtils.TimeToDHMS(node.UT - halfBurnTIme - vesselState.time);
         }
 
@@ -120,7 +120,7 @@ namespace MuMech
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
             double halfBurnTime;
-            double burnTime = BurnTime(dVLeft, out halfBurnTime);
+            BurnTime(dVLeft, out halfBurnTime);
 
             double timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0

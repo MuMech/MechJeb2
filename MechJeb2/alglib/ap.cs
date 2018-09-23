@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -274,6 +274,32 @@ public partial class alglib
     * in native ALGLIB it turns on allocation counting.
     ********************************************************************/
     public static void alloc_counter_activate()
+    {
+    }
+    
+    /********************************************************************
+    This function allows to set one of the debug flags.
+    In managed ALGLIB does nothing (dummy).
+    ********************************************************************/
+    public static void set_dbg_flag(long flag_id, long flag_value)
+    {
+    }
+    
+    /********************************************************************
+    This function allows to get one of the debug counters.
+    In managed ALGLIB does nothing (dummy).
+    ********************************************************************/
+    public static long get_dbg_value(long id)
+    {
+        return 0;
+    }
+    
+    /********************************************************************
+    Activization of the allocation counter:
+    * in managed ALGLIB it does nothing (dummy code)
+    * in native ALGLIB it turns on allocation counting.
+    ********************************************************************/
+    public static void free_disposed_items()
     {
     }
     
@@ -886,7 +912,7 @@ public partial class alglib
     ********************************************************************/
     public class serializer
     {
-        enum SMODE { DEFAULT, ALLOC, TO_STRING, FROM_STRING };
+        enum SMODE { DEFAULT, ALLOC, TO_STRING, FROM_STRING, TO_STREAM, FROM_STREAM };
         private const int SER_ENTRIES_PER_ROW = 5;
         private const int SER_ENTRY_LENGTH    = 11;
         
@@ -898,12 +924,26 @@ public partial class alglib
         private int bytes_read;
         private char[] out_str;
         private char[] in_str;
+        private System.IO.Stream io_stream;
+        
+        // local temporaries
+        private char[] entry_buf_char;
+        private byte[] entry_buf_byte; 
         
         public serializer()
         {
             mode = SMODE.DEFAULT;
             entries_needed = 0;
             bytes_asked = 0;
+            entry_buf_byte = new byte[SER_ENTRY_LENGTH+2];
+            entry_buf_char = new char[SER_ENTRY_LENGTH+2];
+        }
+
+        public void clear_buffers()
+        {
+            out_str = null;
+            in_str = null;
+            io_stream = null;
         }
 
         public void alloc_start()
@@ -931,7 +971,7 @@ public partial class alglib
             // if no entries needes (degenerate case)
             if( entries_needed==0 )
             {
-                bytes_asked = 1;
+                bytes_asked = 4; /* a pair of chars for \r\n, one for space, one for dot */ 
                 return bytes_asked;
             }
             
@@ -945,9 +985,10 @@ public partial class alglib
             }
             
             // calculate result size
-            result  = ((rows-1)*SER_ENTRIES_PER_ROW+lastrowsize)*SER_ENTRY_LENGTH;
-            result +=  (rows-1)*(SER_ENTRIES_PER_ROW-1)+(lastrowsize-1);
-            result += rows*2;
+            result  = ((rows-1)*SER_ENTRIES_PER_ROW+lastrowsize)*SER_ENTRY_LENGTH;  /* data size */
+            result +=  (rows-1)*(SER_ENTRIES_PER_ROW-1)+(lastrowsize-1);            /* space symbols */
+            result += rows*2;                                                       /* newline symbols */
+            result += 1;                                                            /* trailing dot */
             bytes_asked = result;
             return result;
         }
@@ -955,6 +996,10 @@ public partial class alglib
         public void sstart_str()
         {
             int allocsize = get_alloc_size();
+            
+            // clear input/output buffers which may hold pointers to unneeded memory
+            // NOTE: it also helps us to avoid errors when data are written to incorrect location
+            clear_buffers();
             
             // check and change mode
             if( mode!=SMODE.ALLOC )
@@ -967,8 +1012,25 @@ public partial class alglib
             bytes_written = 0;
         }
 
+        public void sstart_stream(System.IO.Stream o_stream)
+        {   
+            // clear input/output buffers which may hold pointers to unneeded memory
+            // NOTE: it also helps us to avoid errors when data are written to incorrect location
+            clear_buffers();
+            
+            // check and change mode
+            if( mode!=SMODE.ALLOC )
+                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            mode = SMODE.TO_STREAM;
+            io_stream = o_stream;
+        }
+
         public void ustart_str(string s)
         {
+            // clear input/output buffers which may hold pointers to unneeded memory
+            // NOTE: it also helps us to avoid errors when data are written to incorrect location
+            clear_buffers();
+            
             // check and change mode
             if( mode!=SMODE.DEFAULT )
                 throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
@@ -978,91 +1040,198 @@ public partial class alglib
             bytes_read = 0;
         }
 
-        public void serialize_bool(bool v)
+        public void ustart_stream(System.IO.Stream i_stream)
         {
-            if( mode!=SMODE.TO_STRING )
+            // clear input/output buffers which may hold pointers to unneeded memory
+            // NOTE: it also helps us to avoid errors when data are written to incorrect location
+            clear_buffers();
+            
+            // check and change mode
+            if( mode!=SMODE.DEFAULT )
                 throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            bool2str(v, out_str, ref bytes_written);
+            mode = SMODE.FROM_STREAM;
+            io_stream = i_stream;
+        }
+
+        private void serialize_value(bool v0, int v1, double v2, int val_idx)
+        {
+            // prepare serialization
+            char[] arr_out = null;
+            int cnt_out = 0;
+            if( mode==SMODE.TO_STRING )
+            {
+                arr_out = out_str;
+                cnt_out = bytes_written;
+            }
+            else if( mode==SMODE.TO_STREAM )
+            {
+                arr_out = entry_buf_char;
+                cnt_out = 0;
+            }
+            else
+                throw new alglib.alglibexception("ALGLIB: internal error during serialization");
+            
+            // serialize
+            if( val_idx==0 )
+                bool2str(  v0, arr_out, ref cnt_out);
+            else if( val_idx==1 )
+                int2str(   v1, arr_out, ref cnt_out);
+            else if( val_idx==2 )
+                double2str(v2, arr_out, ref cnt_out);
+            else
+                throw new alglib.alglibexception("ALGLIB: internal error during serialization");
             entries_saved++;
             if( entries_saved%SER_ENTRIES_PER_ROW!=0 )
             {
-                out_str[bytes_written] = ' ';
-                bytes_written++;
+                arr_out[cnt_out] = ' ';
+                cnt_out++;
             }
             else
             {
-                out_str[bytes_written+0] = '\r';
-                out_str[bytes_written+1] = '\n';
-                bytes_written+=2;
-            }            
+                arr_out[cnt_out+0] = '\r';
+                arr_out[cnt_out+1] = '\n';
+                cnt_out+=2;
+            }
+            
+            // post-process
+            if( mode==SMODE.TO_STRING )
+            {
+                bytes_written = cnt_out;
+                return;
+            }
+            else if( mode==SMODE.TO_STREAM )
+            {
+                for(int k=0; k<cnt_out; k++)
+                    entry_buf_byte[k] = (byte)entry_buf_char[k];
+                io_stream.Write(entry_buf_byte, 0, cnt_out);
+                return;
+            }
+            else
+                throw new alglib.alglibexception("ALGLIB: internal error during serialization");
+        }
+
+        private void unstream_entry_char()
+        {
+            if( mode!=SMODE.FROM_STREAM )
+                throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+            int c;
+            for(;;)
+            {
+                c = io_stream.ReadByte();
+                if( c<0 )
+                    throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+                if( c!=' ' && c!='\t' && c!='\n' && c!='\r' )
+                    break;
+            }
+            entry_buf_char[0] = (char)c;
+            for(int k=1; k<SER_ENTRY_LENGTH; k++)
+            {
+                c = io_stream.ReadByte();
+                entry_buf_char[k] = (char)c;
+                if( c<0 || c==' ' || c=='\t' || c=='\n' || c=='\r' )
+                    throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+            }
+            entry_buf_char[SER_ENTRY_LENGTH] = (char)0;
+        }
+
+        public void serialize_bool(bool v)
+        {
+            serialize_value(v, 0, 0, 0);
         }
 
         public void serialize_int(int v)
         {
-            if( mode!=SMODE.TO_STRING )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            int2str(v, out_str, ref bytes_written);
-            entries_saved++;
-            if( entries_saved%SER_ENTRIES_PER_ROW!=0 )
-            {
-                out_str[bytes_written] = ' ';
-                bytes_written++;
-            }
-            else
-            {
-                out_str[bytes_written+0] = '\r';
-                out_str[bytes_written+1] = '\n';
-                bytes_written+=2;
-            }
+            serialize_value(false, v, 0, 1);
         }
 
         public void serialize_double(double v)
         {
-            if( mode!=SMODE.TO_STRING )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            double2str(v, out_str, ref bytes_written);
-            entries_saved++;
-            if( entries_saved%SER_ENTRIES_PER_ROW!=0 )
-            {
-                out_str[bytes_written] = ' ';
-                bytes_written++;
-            }
-            else
-            {
-                out_str[bytes_written+0] = '\r';
-                out_str[bytes_written+1] = '\n';
-                bytes_written+=2;
-            }
+            serialize_value(false, 0, v, 2);
         }
 
         public bool unserialize_bool()
         {
-            if( mode!=SMODE.FROM_STRING )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            return str2bool(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STRING )
+                return str2bool(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STREAM )
+            {
+                unstream_entry_char();
+                int dummy = 0;
+                return str2bool(entry_buf_char, ref dummy);
+            }
+            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public int unserialize_int()
         {
-            if( mode!=SMODE.FROM_STRING )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            return str2int(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STRING )
+                return str2int(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STREAM )
+            {
+                unstream_entry_char();
+                int dummy = 0;
+                return str2int(entry_buf_char, ref dummy);
+            }
+            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public double unserialize_double()
         {
-            if( mode!=SMODE.FROM_STRING )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            return str2double(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STRING )
+                return str2double(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STREAM )
+            {
+                unstream_entry_char();
+                int dummy = 0;
+                return str2double(entry_buf_char, ref dummy);
+            }
+            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public void stop()
         {
+            if( mode==SMODE.TO_STRING )
+            {
+                out_str[bytes_written] = '.';
+                bytes_written++;
+                return;
+            }
+            if( mode==SMODE.FROM_STRING )
+            {
+                //
+                // because input string may be from pre-3.11 serializer,
+                // which does not include trailing dot, we do not test
+                // string for presence of "." symbol. Anyway, because string
+                // is not stream, we do not have to read ALL trailing symbols.
+                //
+                return;
+            }
+            if( mode==SMODE.TO_STREAM )
+            {
+                io_stream.WriteByte((byte)'.');
+                return;
+            }
+            if( mode==SMODE.FROM_STREAM )
+            {
+                for(;;)
+                {
+                    int c = io_stream.ReadByte();
+                    if( c==' ' || c=='\t' || c=='\n' || c=='\r' )
+                        continue;
+                    if( c=='.' )
+                        break;
+                    throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+                }
+                return;
+            }
+            throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
         }
 
         public string get_string()
         {
-            return new string(out_str, 0, bytes_written);
+            if( mode!=SMODE.TO_STRING )
+                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+             return new string(out_str, 0, bytes_written);
         }
 
 

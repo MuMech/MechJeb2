@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.10.0 (source code generated 2015-08-19)
+ALGLIB 3.13.0 (source code generated 2017-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -18,13 +18,14 @@ http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
 #pragma warning disable 162
+#pragma warning disable 164
 #pragma warning disable 219
 using System;
 
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     1-dimensional complex FFT.
 
@@ -56,21 +57,21 @@ public partial class alglib
     *************************************************************************/
     public static void fftc1d(ref complex[] a, int n)
     {
-
+    
         fft.fftc1d(ref a, n);
         return;
     }
     public static void fftc1d(ref complex[] a)
     {
         int n;
-
-
+    
+    
         n = ap.len(a);
         fft.fftc1d(ref a, n);
-
+    
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional complex inverse FFT.
 
@@ -93,21 +94,21 @@ public partial class alglib
     *************************************************************************/
     public static void fftc1dinv(ref complex[] a, int n)
     {
-
+    
         fft.fftc1dinv(ref a, n);
         return;
     }
     public static void fftc1dinv(ref complex[] a)
     {
         int n;
-
-
+    
+    
         n = ap.len(a);
         fft.fftc1dinv(ref a, n);
-
+    
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional real FFT.
 
@@ -140,14 +141,14 @@ public partial class alglib
     public static void fftr1d(double[] a, out complex[] f)
     {
         int n;
-
+    
         f = new complex[0];
         n = ap.len(a);
         fft.fftr1d(a, n, ref f);
-
+    
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional real inverse FFT.
 
@@ -192,11 +193,11 @@ public partial class alglib
     public static void fftr1dinv(complex[] f, out double[] a)
     {
         int n;
-
+    
         a = new double[0];
         n = ap.len(f);
         fft.fftr1dinv(f, n, ref a);
-
+    
         return;
     }
 
@@ -204,7 +205,59 @@ public partial class alglib
 public partial class alglib
 {
 
+    
+    /*************************************************************************
+    1-dimensional Fast Hartley Transform.
 
+    Algorithm has O(N*logN) complexity for any N (composite or prime).
+
+    INPUT PARAMETERS
+        A   -   array[0..N-1] - real function to be transformed
+        N   -   problem size
+
+    OUTPUT PARAMETERS
+        A   -   FHT of a input array, array[0..N-1],
+                A_out[k] = sum(A_in[j]*(cos(2*pi*j*k/N)+sin(2*pi*j*k/N)), j=0..N-1)
+
+
+      -- ALGLIB --
+         Copyright 04.06.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void fhtr1d(ref double[] a, int n)
+    {
+    
+        fht.fhtr1d(ref a, n);
+        return;
+    }
+    
+    /*************************************************************************
+    1-dimensional inverse FHT.
+
+    Algorithm has O(N*logN) complexity for any N (composite or prime).
+
+    INPUT PARAMETERS
+        A   -   array[0..N-1] - complex array to be transformed
+        N   -   problem size
+
+    OUTPUT PARAMETERS
+        A   -   inverse FHT of a input array, array[0..N-1]
+
+
+      -- ALGLIB --
+         Copyright 29.05.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void fhtr1dinv(ref double[] a, int n)
+    {
+    
+        fht.fhtr1dinv(ref a, n);
+        return;
+    }
+
+}
+public partial class alglib
+{
+
+    
     /*************************************************************************
     1-dimensional complex convolution.
 
@@ -240,7 +293,7 @@ public partial class alglib
         conv.convc1d(a, m, b, n, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional complex non-circular deconvolution (inverse of ConvC1D()).
 
@@ -273,7 +326,7 @@ public partial class alglib
         conv.convc1dinv(a, m, b, n, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional circular complex convolution.
 
@@ -308,7 +361,7 @@ public partial class alglib
         conv.convc1dcircular(s, m, r, n, ref c);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional circular complex deconvolution (inverse of ConvC1DCircular()).
 
@@ -341,7 +394,7 @@ public partial class alglib
         conv.convc1dcircularinv(a, m, b, n, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional real convolution.
 
@@ -370,7 +423,7 @@ public partial class alglib
         conv.convr1d(a, m, b, n, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional real deconvolution (inverse of ConvC1D()).
 
@@ -403,7 +456,7 @@ public partial class alglib
         conv.convr1dinv(a, m, b, n, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional circular real convolution.
 
@@ -432,7 +485,7 @@ public partial class alglib
         conv.convr1dcircular(s, m, r, n, ref c);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional complex deconvolution (inverse of ConvC1D()).
 
@@ -470,7 +523,7 @@ public partial class alglib
 public partial class alglib
 {
 
-
+    
     /*************************************************************************
     1-dimensional complex cross-correlation.
 
@@ -513,7 +566,7 @@ public partial class alglib
         corr.corrc1d(signal, n, pattern, m, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional circular complex cross-correlation.
 
@@ -547,7 +600,7 @@ public partial class alglib
         corr.corrc1dcircular(signal, m, pattern, n, ref c);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional real cross-correlation.
 
@@ -590,7 +643,7 @@ public partial class alglib
         corr.corrr1d(signal, n, pattern, m, ref r);
         return;
     }
-
+    
     /*************************************************************************
     1-dimensional circular real cross-correlation.
 
@@ -622,58 +675,6 @@ public partial class alglib
     {
         c = new double[0];
         corr.corrr1dcircular(signal, m, pattern, n, ref c);
-        return;
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    1-dimensional Fast Hartley Transform.
-
-    Algorithm has O(N*logN) complexity for any N (composite or prime).
-
-    INPUT PARAMETERS
-        A   -   array[0..N-1] - real function to be transformed
-        N   -   problem size
-
-    OUTPUT PARAMETERS
-        A   -   FHT of a input array, array[0..N-1],
-                A_out[k] = sum(A_in[j]*(cos(2*pi*j*k/N)+sin(2*pi*j*k/N)), j=0..N-1)
-
-
-      -- ALGLIB --
-         Copyright 04.06.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void fhtr1d(ref double[] a, int n)
-    {
-
-        fht.fhtr1d(ref a, n);
-        return;
-    }
-
-    /*************************************************************************
-    1-dimensional inverse FHT.
-
-    Algorithm has O(N*logN) complexity for any N (composite or prime).
-
-    INPUT PARAMETERS
-        A   -   array[0..N-1] - complex array to be transformed
-        N   -   problem size
-
-    OUTPUT PARAMETERS
-        A   -   inverse FHT of a input array, array[0..N-1]
-
-
-      -- ALGLIB --
-         Copyright 29.05.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void fhtr1dinv(ref double[] a, int n)
-    {
-
-        fht.fhtr1dinv(ref a, n);
         return;
     }
 
@@ -1161,6 +1162,99 @@ public partial class alglib
                 a[n-i] = t*(x+y);
             }
             a[n2] = buf[1]/n;
+        }
+
+
+    }
+    public class fht
+    {
+        /*************************************************************************
+        1-dimensional Fast Hartley Transform.
+
+        Algorithm has O(N*logN) complexity for any N (composite or prime).
+
+        INPUT PARAMETERS
+            A   -   array[0..N-1] - real function to be transformed
+            N   -   problem size
+            
+        OUTPUT PARAMETERS
+            A   -   FHT of a input array, array[0..N-1],
+                    A_out[k] = sum(A_in[j]*(cos(2*pi*j*k/N)+sin(2*pi*j*k/N)), j=0..N-1)
+
+
+          -- ALGLIB --
+             Copyright 04.06.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void fhtr1d(ref double[] a,
+            int n)
+        {
+            int i = 0;
+            complex[] fa = new complex[0];
+
+            alglib.ap.assert(n>0, "FHTR1D: incorrect N!");
+            
+            //
+            // Special case: N=1, FHT is just identity transform.
+            // After this block we assume that N is strictly greater than 1.
+            //
+            if( n==1 )
+            {
+                return;
+            }
+            
+            //
+            // Reduce FHt to real FFT
+            //
+            fft.fftr1d(a, n, ref fa);
+            for(i=0; i<=n-1; i++)
+            {
+                a[i] = fa[i].x-fa[i].y;
+            }
+        }
+
+
+        /*************************************************************************
+        1-dimensional inverse FHT.
+
+        Algorithm has O(N*logN) complexity for any N (composite or prime).
+
+        INPUT PARAMETERS
+            A   -   array[0..N-1] - complex array to be transformed
+            N   -   problem size
+
+        OUTPUT PARAMETERS
+            A   -   inverse FHT of a input array, array[0..N-1]
+
+
+          -- ALGLIB --
+             Copyright 29.05.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void fhtr1dinv(ref double[] a,
+            int n)
+        {
+            int i = 0;
+
+            alglib.ap.assert(n>0, "FHTR1DInv: incorrect N!");
+            
+            //
+            // Special case: N=1, iFHT is just identity transform.
+            // After this block we assume that N is strictly greater than 1.
+            //
+            if( n==1 )
+            {
+                return;
+            }
+            
+            //
+            // Inverse FHT can be expressed in terms of the FHT as
+            //
+            //     invfht(x) = fht(x)/N
+            //
+            fhtr1d(ref a, n);
+            for(i=0; i<=n-1; i++)
+            {
+                a[i] = a[i]/n;
+            }
         }
 
 
@@ -3187,99 +3281,6 @@ public partial class alglib
                 {
                     c[i_] = b[i_+i1_];
                 }
-            }
-        }
-
-
-    }
-    public class fht
-    {
-        /*************************************************************************
-        1-dimensional Fast Hartley Transform.
-
-        Algorithm has O(N*logN) complexity for any N (composite or prime).
-
-        INPUT PARAMETERS
-            A   -   array[0..N-1] - real function to be transformed
-            N   -   problem size
-            
-        OUTPUT PARAMETERS
-            A   -   FHT of a input array, array[0..N-1],
-                    A_out[k] = sum(A_in[j]*(cos(2*pi*j*k/N)+sin(2*pi*j*k/N)), j=0..N-1)
-
-
-          -- ALGLIB --
-             Copyright 04.06.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void fhtr1d(ref double[] a,
-            int n)
-        {
-            int i = 0;
-            complex[] fa = new complex[0];
-
-            alglib.ap.assert(n>0, "FHTR1D: incorrect N!");
-            
-            //
-            // Special case: N=1, FHT is just identity transform.
-            // After this block we assume that N is strictly greater than 1.
-            //
-            if( n==1 )
-            {
-                return;
-            }
-            
-            //
-            // Reduce FHt to real FFT
-            //
-            fft.fftr1d(a, n, ref fa);
-            for(i=0; i<=n-1; i++)
-            {
-                a[i] = fa[i].x-fa[i].y;
-            }
-        }
-
-
-        /*************************************************************************
-        1-dimensional inverse FHT.
-
-        Algorithm has O(N*logN) complexity for any N (composite or prime).
-
-        INPUT PARAMETERS
-            A   -   array[0..N-1] - complex array to be transformed
-            N   -   problem size
-
-        OUTPUT PARAMETERS
-            A   -   inverse FHT of a input array, array[0..N-1]
-
-
-          -- ALGLIB --
-             Copyright 29.05.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void fhtr1dinv(ref double[] a,
-            int n)
-        {
-            int i = 0;
-
-            alglib.ap.assert(n>0, "FHTR1DInv: incorrect N!");
-            
-            //
-            // Special case: N=1, iFHT is just identity transform.
-            // After this block we assume that N is strictly greater than 1.
-            //
-            if( n==1 )
-            {
-                return;
-            }
-            
-            //
-            // Inverse FHT can be expressed in terms of the FHT as
-            //
-            //     invfht(x) = fht(x)/N
-            //
-            fhtr1d(ref a, n);
-            for(i=0; i<=n-1; i++)
-            {
-                a[i] = a[i]/n;
             }
         }
 
