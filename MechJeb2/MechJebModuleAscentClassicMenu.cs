@@ -65,7 +65,7 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Turn start when Altitude is ", GUILayout.ExpandWidth(false));
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude, -1, 2) + "m", GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude, -1, 2) + "m ", GUILayout.ExpandWidth(false));
                 GUILayout.Label("or Velocity reach ", GUILayout.ExpandWidth(false));
                 GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
