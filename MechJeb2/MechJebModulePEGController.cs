@@ -168,10 +168,13 @@ namespace MuMech
             if ( status == PegStatus.FAILED )
                 Reset();
 
-            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.up > 0.01 );
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.up > 0 );
 
-            if (p != null && p.solution != null && tgo < TimeWarp.fixedDeltaTime)
+            if (p != null && p.solution != null && tgo < ( 2 * TimeWarp.fixedDeltaTime) )  // FIXME: why do I need 2x here?
             {
+                Debug.Log("has_rcs = " + has_rcs + " up = " + vesselState.rcsThrustAvailable.up);
+                Debug.Log("kraken = " + Krakensbane.GetFrameVelocity() );
+
                 if (has_rcs)
                 {
                     status = PegStatus.TERMINAL_RCS;
@@ -183,7 +186,7 @@ namespace MuMech
                 }
             }
 
-            if ( p != null && p.solution != null && tgo < 10 )
+            if ( p != null && p.solution != null && tgo < 1 )
             {
                 Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
                 double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
@@ -192,10 +195,41 @@ namespace MuMech
 
             if ( status == PegStatus.TERMINAL_RCS )
             {
-                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity; // should probably do something here to rotate vf() around in the orbit at least...
+                if (!vessel.ActionGroups[KSPActionGroup.RCS])  // if someone disables RCS
+                {
+                    Done();
+                    return;
+                }
+
+                QuaternionD rot;
+
+                Vector3d axis = Vector3d.Cross(p.solution.rf().normalized, vesselState.orbitalPosition.normalized);
+                double ang = 0.0;
+
+                if (axis == Vector3d.zero)
+                {
+                    rot = QuaternionD.identity;
+                }
+                else
+                {
+                    axis = axis.normalized;
+                    ang = Vector3d.Angle(p.solution.rf().normalized, vesselState.orbitalPosition.normalized);
+
+                    rot = QuaternionD.AngleAxis(ang, axis);
+                }
+
+                Debug.Log("axis = " + axis);
+                Debug.Log("angle = " + ang);
+                Debug.Log("vf = " +  p.solution.vf());
+                Debug.Log("vf' = " +  rot * p.solution.vf());
+                Debug.Log("rf = " + p.solution.rf());
+                Debug.Log("r = " + vesselState.orbitalPosition);
+                Debug.Log("v = " + vesselState.orbitalVelocity);
+
+                Vector3d dVleft = rot * p.solution.vf() - vesselState.orbitalVelocity; // should probably do something here to rotate vf() around in the orbit at least...
                 double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
 
-                if ( dVleft.magnitude > last_dVleft || angle > 90 )
+                if ( dVleft.magnitude > last_dVleft ) // || angle > 90 )
                 {
                     Done();
                     return;
@@ -224,6 +258,9 @@ namespace MuMech
 
         public void TargetNode(ManeuverNode node, double burntime)
         {
+            if ( status == PegStatus.ENABLED )
+                return;
+
             if (p == null || isCoasting())
             {
                 PontryaginNode solver = p as PontryaginNode;
@@ -270,6 +307,9 @@ namespace MuMech
 
         public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o)
         {
+            if ( status == PegStatus.ENABLED )
+                return;
+
             bool doupdate = false;
 
             double v0m, r0m, sma;
@@ -291,12 +331,12 @@ namespace MuMech
                 lambda = desiredThrustVector;
                 PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
-                Debug.Log("o.h = " + -o.h.xzy);
+                //Debug.Log("o.h = " + -o.h.xzy);
                 Vector3d pos, vel;
                 o.GetOrbitalStateVectorsAtUT(vesselState.time, out pos, out vel);
-                Debug.Log("r x v = " + Vector3d.Cross(rot * pos.xzy, rot * vel.xzy));
+                //Debug.Log("r x v = " + Vector3d.Cross(rot * pos.xzy, rot * vel.xzy));
                 double hTm = v0m * r0m; // FIXME: gamma
-                Debug.Log("hTm = " + hTm + " sma = " + sma);
+                //Debug.Log("hTm = " + hTm + " sma = " + sma);
                 solver.flightangle5constraint(r0m, v0m, 0, o.h.normalized * hTm);
                 p = solver;
             }
@@ -307,6 +347,9 @@ namespace MuMech
 
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
         {
+            if ( status == PegStatus.ENABLED )
+                return;
+
             bool doupdate = false;
 
             double v0m, r0m, sma;
@@ -314,13 +357,21 @@ namespace MuMech
             ConvertToRadVel(PeA, ApA, out r0m, out v0m, out sma);
 
             if (r0m != old_r0m || v0m != old_v0m || inc != old_inc)
+            {
+                //Debug.Log("old settings changed");
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
                 if (p != null)
+                {
+                    //Debug.Log("killing a thread if its there to kill");
                     p.KillThread();
+                }
 
+                //Debug.Log("mainbody.Radius = " + mainBody.Radius);
+                //Debug.Log("mainbody.gravParameter = " + mainBody.gravParameter);
                 lambdaDot = Vector3d.zero;
                 double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
@@ -594,8 +645,12 @@ namespace MuMech
         public void Reset()
         {
             // lambda and lambdaDot are deliberately not cleared here
-            p.KillThread();
-            p = null;
+            //Debug.Log("call stack: + " + Environment.StackTrace);
+            if (p != null)
+            {
+                p.KillThread();
+                p = null;
+            }
             status = PegStatus.INITIALIZING;
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;

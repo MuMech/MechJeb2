@@ -58,14 +58,18 @@ namespace MuMech
         }
 
 
+        /* classic AoA limter */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool limitAoA = true;
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble maxAoA = 5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(2500);
         public bool limitingAoA = false;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble limitQa = 2;
+        public bool limitQaEnabled = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
@@ -435,6 +439,7 @@ namespace MuMech
         //
         protected void attitudeTo(double desiredPitch, double desiredHeading)
         {
+            /*
             Vector6 rcs = vesselState.rcsThrustAvailable;
 
             // FIXME?  should this be up/down and not forward/back?  seems wrong?  why was i using down before for the ullage direction?
@@ -443,23 +448,7 @@ namespace MuMech
             if ( (vesselState.thrustCurrent / vesselState.thrustAvailable < 0.50) && !has_rcs )
             {
                 // if engines are spooled up at less than 50% and we have no RCS in the stage, do not issue any guidance commands yet
-                //core.attitude.attitudeDeactivate(); // ehrm, no that's bad.
                 return;
-            }
-
-            /*
-            else
-            {
-                core.attitude.users.Add(this);
-                if (vacStats[vacStats.Length-1].deltaTime < 1)
-                {
-                    // freeze guidance forwards for last second of stage
-                    core.attitude.attitudeKILLROT = true;
-                    var attitude = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
-                    var reference = AttitudeReference.INERTIAL;
-                    core.attitude.attitudeTo(attitude, reference, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
-                    return;
-                }
             }
             */
 
@@ -468,11 +457,12 @@ namespace MuMech
             Vector3d desiredThrustVector = Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector
                 + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * vesselState.up;
 
-            thrustVectorForNavball = desiredThrustVector;
-
             desiredThrustVector = desiredThrustVector.normalized;
 
-            if (autopilot.limitAoA)
+            thrustVectorForNavball = desiredThrustVector;
+
+            /* old style AoA limiter */
+            if (autopilot.limitAoA && !autopilot.limitQaEnabled)
             {
                 float fade = vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure ? (float)(autopilot.aoALimitFadeoutPressure / vesselState.dynamicPressure) : 1;
                 autopilot.currentMaxAoA = Math.Min(fade * autopilot.maxAoA, 180d);
@@ -484,7 +474,19 @@ namespace MuMech
                 }
             }
 
+            /* AoA limiter for PVG */
+            if (autopilot.limitQaEnabled)
+            {
+                autopilot.limitingAoA = vesselState.dynamicPressure * Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > ( autopilot.limitQa * 1000 );
+                if (autopilot.limitingAoA)
+                {
+                    autopilot.currentMaxAoA = ( autopilot.limitQa * 1000 ) / vesselState.dynamicPressure * UtilMath.Rad2Deg;
+                    desiredThrustVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(autopilot.currentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
+                }
+            }
+
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
+
             double hdg;
 
             if (pitch > 89.9) {

@@ -17,20 +17,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pitchStartTime = new EditableDouble(10);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pitchRate = new EditableDouble(0.75);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pitchEndTime = new EditableDouble(55);
+        public EditableDouble pitchRate = new EditableDouble(0.50);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool pitchEndToggle = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool pegAfterStageToggle = false;
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pegAfterStage = new EditableDouble(0);
-
-        /* this deliberately does not persist, it is for emergencies only */
-        public EditableDouble pitchBias = new EditableDouble(0);
 
         private MechJebModuleAscentGuidance ascentGuidance { get { return core.GetComputerModule<MechJebModuleAscentGuidance>(); } }
 
@@ -49,7 +38,7 @@ namespace MuMech
             core.optimizer.enabled = false;
         }
 
-        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, GUIDANCE, EXIT };
+        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GUIDANCE, EXIT };
         private AscentMode mode;
 
         public override bool DriveAscent(FlightCtrlState s)
@@ -64,10 +53,6 @@ namespace MuMech
 
                 case AscentMode.INITIATE_TURN:
                     DriveInitiateTurn(s);
-                    break;
-
-                case AscentMode.GRAVITY_TURN:
-                    DriveGravityTurn(s);
                     break;
 
                 case AscentMode.GUIDANCE:
@@ -91,23 +76,11 @@ namespace MuMech
             }
         }
 
-        private void attitudeToGuidance(double pitch, bool handleManualAz = false, bool surfHeading = false)
-        {
-            double heading;
-
-            if (surfHeading)
-                heading = srfvelHeading();
-            else
-                heading = core.optimizer.heading;
-
-            attitudeTo(pitch, heading);
-        }
-
         private void DriveVerticalAscent(FlightCtrlState s)
         {
 
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeToGuidance(90, handleManualAz: true);
+            attitudeTo(90, core.optimizer.heading);
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
 
@@ -130,82 +103,68 @@ namespace MuMech
         {
             double dt = autopilot.MET - pitchStartTime;
             double theta = dt * pitchRate;
-            double pitch = 90 - theta + pitchBias;
+            double pitch_program = 90 - theta;
+            double pitch;
 
-            if (pitchEndToggle)
+            if ( !mainBody.atmosphere )
             {
-                if ( autopilot.MET > pitchEndTime )
-                {
-                    mode = AscentMode.GRAVITY_TURN;
-                    return;
-                }
-                status = String.Format("Pitch program {0:F2} s", pitchEndTime - pitchStartTime - dt);
-            } else {
-                if ( pitch < core.optimizer.pitch )
-                {
-                    mode = AscentMode.GUIDANCE;
-                    return;
-                }
-                status = String.Format("Pitch program {0:F2} °", pitch - core.optimizer.pitch);
-            }
-
-            attitudeToGuidance(pitch, handleManualAz: true);
-        }
-
-        private void DriveGravityTurn(FlightCtrlState s)
-        {
-            double pitch = Math.Min(Math.Min(90, srfvelPitch() + pitchBias), vesselState.vesselPitch);
-
-            if (pitchEndToggle && autopilot.MET < pitchEndTime)
-            {
-                // this can happen when users update the endtime box
-                mode = AscentMode.INITIATE_TURN;
+                mode = AscentMode.GUIDANCE;
                 return;
             }
 
-            if ( pegAfterStageToggle )
+            if ( pitch_program > srfvelPitch() )
             {
-                if ( StageManager.CurrentStage < pegAfterStage )
-                {
-                    mode = AscentMode.GUIDANCE;
-                    return;
-                }
-                attitudeToGuidance(pitch);
-            }
-            else if ( core.optimizer.isStable() )
-            {
-                if ( pitch < core.optimizer.pitch )
-                {
-                    mode = AscentMode.GUIDANCE;
-                    return;
-                }
-                else
-                {
-                    attitudeToGuidance(pitch);
-                }
+                pitch = srfvelPitch();
+                status = String.Format("Gravity Turn {0:F}° to guidance", pitch - core.optimizer.pitch);
             }
             else
             {
-                attitudeToGuidance(pitch, surfHeading: true);
+                pitch = pitch_program;
+                status = String.Format("Pitch program {0:F}° to guidance", pitch - core.optimizer.pitch);
             }
 
-            status = "Unguided Gravity Turn";
+            if ( pitch <= core.optimizer.pitch && core.optimizer.isStable() )
+            {
+                mode = AscentMode.GUIDANCE;
+                return;
+            }
+
+            if ( (vesselState.maxDynamicPressure > 0) && (vesselState.maxDynamicPressure * 0.90 > vesselState.dynamicPressure) )
+            {
+                mode = AscentMode.GUIDANCE;
+                return;
+            }
+
+            if (mainBody.atmosphere && vesselState.maxDynamicPressure > 0)
+            {
+                // from 95% to 90% of dynamic pressure apply a "fade" from the pitch selected above to the guidance pitch
+                double fade = MuUtils.Clamp( (0.95 - vesselState.dynamicPressure / vesselState.maxDynamicPressure) * 20.0, 0.0, 1.0);
+                pitch = fade * core.optimizer.pitch + ( 1.0 - fade ) * pitch;
+            }
+
+            attitudeTo(pitch, core.optimizer.heading);
         }
 
         private void DriveGuidance(FlightCtrlState s)
         {
-            if (core.optimizer.status == PegStatus.FINISHED)
+            if ( core.optimizer.status == PegStatus.FINISHED )
             {
                 mode = AscentMode.EXIT;
                 return;
             }
 
-            if (core.optimizer.isStable())
-                status = "Stable Guidance";
-            else
+            if ( !core.optimizer.isStable() )
+            {
+                double pitch = Math.Min(Math.Min(90, srfvelPitch()), vesselState.vesselPitch);
+                attitudeTo(pitch, srfvelHeading());
                 status = "WARNING: Unstable Guidance";
+            }
+            else
+            {
 
-            attitudeToGuidance(core.optimizer.pitch);
+                status = "Stable Guidance";
+                attitudeTo(core.optimizer.pitch, core.optimizer.heading);
+            }
         }
     }
 }
